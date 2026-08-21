@@ -1,0 +1,132 @@
+//! Pure Digital Life Companion domain rules.
+//!
+//! Database repositories, model-provider calls, worker scheduling, and HTTP
+//! adapters belong to the backend crate.
+
+mod decision;
+mod fingerprint;
+mod memory;
+mod onboarding;
+mod performance;
+mod persona;
+mod policy;
+mod prompt;
+mod quality;
+mod report_dna;
+mod rig;
+mod rig_contract;
+mod rig_outfit;
+mod rig_semantics;
+mod rig_spatial;
+mod runtime;
+mod safety;
+mod visual_prompt;
+mod visual_contract;
+
+pub use decision::{
+    apply_decision, parse_and_validate_decision, AppliedDecision, DecisionError, LiteDecision,
+    SpeakGate, ValidatedDecision, DECISION_SCHEMA_VERSION,
+};
+pub use fingerprint::{companion_fingerprint, FingerprintInput};
+pub use memory::{rank_memories, MemoryCandidate, ScoredMemory};
+pub use onboarding::{
+    apply_onboarding_patch, build_onboarding_dna, build_onboarding_dna_with_report,
+    build_onboarding_persona, initial_onboarding_state, sanitize_onboarding_tags,
+    CharacterVisualSlot, OnboardingPatch, OnboardingPatchError, DNA_SCHEMA_VERSION,
+    MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS, ONBOARDING_SCHEMA_VERSION,
+    TOTAL_ONBOARDING_STEPS,
+};
+pub use performance::{
+    parse_chat_performance, ChatPerformanceCue, ChatPerformancePlan, ParsedChatPerformance,
+};
+pub use persona::{
+    fallback_persona_draft, persona_draft_is_complete, sanitize_persona_draft,
+};
+pub use policy::{AutonomyFrequency, CompanionPolicy, FrequencyProfile};
+pub use prompt::{
+    build_chat_system_prompt, build_consolidation_prompt, build_deliberation_prompt, PromptMemory,
+};
+pub use quality::{
+    chat_quality_guidance, deliberation_quality_guidance, deterministic_consolidation_note,
+    deterministic_fallback_decision, is_low_quality_speak, preferred_consolidate_tier,
+    score_memory_importance, select_autonomy_model_tier, select_chat_tier, select_deliberate_tier,
+    should_desire_proactive_speak, should_enqueue_consolidate, AutonomyModelTier,
+    DeliberateTierContext, ProEscalationContext, MAX_PRO_CONSOLIDATES_PER_DAY,
+    MAX_PRO_DELIBERATES_PER_DAY, MAX_STANDARD_DELIBERATES_PER_DAY, MIN_HOURS_BETWEEN_PRO_CONSOLIDATES,
+    MIN_HOURS_BETWEEN_PRO_DELIBERATES, MIN_HOURS_BETWEEN_STANDARD_DELIBERATES,
+};
+pub use report_dna::{
+    build_report_dna_bundle, complete_ai_tag_deck, fallback_tag_deck, is_reasonable_persona_tag,
+    localize_report_seed_keys, looks_like_job_or_identity_label, looks_like_media_catalog_label,
+    report_dna_json, sample_tag_deck, sanitize_report_dna_tags, seed_shuffle, ReportDnaBundle,
+    ReportDnaEvidence, ReportDnaProvenance, ReportDnaSource, MAX_REPORT_DNA_REPORTS,
+    MAX_REPORT_INSIGHT_CHARS, MAX_REPORT_NOTE_CHARS, MAX_REPORT_SUMMARY_CHARS, PERSONA_POOL_KEYS,
+};
+pub use rig::{
+    build_portrait_fallback_rig, build_portrait_fallback_rig_with_generation,
+    build_standard_face_rig_clips,
+    build_standard_face_rig_clips_for_semantics, compile_layered_rig, default_rig_motion_profile,
+    infer_outfit_profile, migrate_rig_manifest, validate_character_asset_source,
+    RigBlinkMotionProfile, RigBone, RigBoneHandle,
+    RigBreathMotionProfile, RigClip, RigClipEvent,
+    RigClipGenerationProfile, RigClipPresentation, RigCompileError, RigCompileSource,
+    RigExpressionPresentation, RigKeyframe, RigLayerMeshSource, RigLayerSource, RigManifest,
+    RigMotionProfile, RigOutfitProfile, RigOutfitTopology, RigPart, RigPoint,
+    RigPresentationKeyframe, RigQuality,
+    RigRect, RigSecondaryMotionProfile, RigSemanticAnchor, RigSize, RigTexture, RigTrack,
+    RigTransform, RigValidationError, RigVertex, MAX_RIG_BONES,
+    MAX_RIG_CLIPS, MAX_RIG_COLLISION_VOLUMES, MAX_RIG_KEYFRAMES_PER_TRACK, MAX_RIG_PARTS,
+    MAX_RIG_TEXTURES, MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART,
+    MIN_SUPPORTED_RIG_IR_VERSION, RIG_IR_VERSION, RIG_SCHEMA_VERSION,
+};
+pub use rig_semantics::RigSemantics;
+pub use rig_spatial::{RigCollisionVolume, RigSpatialProfile};
+pub use rig_contract::{
+    CHARACTER_ASSET_CONTRACT_VERSION, CHARACTER_ASSET_REQUIRED_CAPABILITIES,
+    MAX_RIGID_ARM_ROTATION_DEGREES, PORTRAIT_ASPECT_HEIGHT, PORTRAIT_ASPECT_WIDTH,
+    PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, PORTRAIT_GENERATION_HEIGHT,
+    PORTRAIT_GENERATION_WIDTH,
+};
+pub use runtime::{
+    apply_chat_message_buff, apply_life_event, catch_up, should_apply_chat_idle, should_deliberate,
+    Activity, CatchUpResult, CharacterStatus, DeliberationContext, LifeEvent, RuntimeState,
+    CHAT_IDLE_AFTER_MINUTES,
+};
+pub use safety::is_safe_companion_output;
+pub use visual_prompt::{build_character_visual_prompt, COMPANION_VISUAL_SCHOOL};
+pub use visual_contract::{
+    build_character_asset_contract, character_asset_contract_fingerprint,
+};
+
+pub const MIN_TICK_SECONDS: u64 = 15;
+pub const MAX_TICK_SECONDS: u64 = 3_600;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureRuntimeConfig {
+    pub enabled: bool,
+    pub worker_enabled: bool,
+    pub tick_seconds: u64,
+}
+
+impl FeatureRuntimeConfig {
+    pub fn new(enabled: bool, worker_requested: bool, tick_seconds: u64) -> Self {
+        Self {
+            enabled,
+            worker_enabled: enabled && worker_requested,
+            tick_seconds: tick_seconds.clamp(MIN_TICK_SECONDS, MAX_TICK_SECONDS),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn disabled_feature_never_reports_worker_active() {
+        let config = FeatureRuntimeConfig::new(false, true, 2);
+        assert!(!config.worker_enabled);
+        assert_eq!(config.tick_seconds, MIN_TICK_SECONDS);
+    }
+}
