@@ -5,33 +5,30 @@ use std::fmt::Write;
 use crate::rig_contract::{
     CHARACTER_ASSET_CONTRACT_VERSION, CHARACTER_ASSET_REQUIRED_CAPABILITIES,
     MAX_RIGID_ARM_ROTATION_DEGREES, PORTRAIT_ASPECT_HEIGHT, PORTRAIT_ASPECT_WIDTH,
-    PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH,
+    PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, PORTRAIT_GENERATION_HEIGHT,
+    PORTRAIT_GENERATION_WIDTH,
 };
-use crate::CharacterVisualSlot;
 
-/// Immutable input snapshot for one generated character asset.
+/// Immutable input snapshot for the generated master portrait.
 ///
 /// The portrait URL identifies pixels; this contract identifies what those
 /// pixels were supposed to depict and which downstream rig contract they use.
+/// `slot` is always `"master"` so existing generation fingerprints remain valid.
 pub fn build_character_asset_contract(
     name: &str,
-    persona: &Value,
     visual_profile: &Value,
-    slot: CharacterVisualSlot,
     additional_requirements: Option<&str>,
 ) -> Value {
-    let (width, height) = slot.dimensions();
     json!({
         "contractVersion": CHARACTER_ASSET_CONTRACT_VERSION,
-        "slot": slot.as_str(),
+        "slot": "master",
         "identity": {
             "name": bounded_text(name, 50),
-            "persona": persona,
             "visualProfile": visual_profile,
         },
         "output": {
-            "width": width,
-            "height": height,
+            "width": PORTRAIT_GENERATION_WIDTH,
+            "height": PORTRAIT_GENERATION_HEIGHT,
             "portraitAspect": {
                 "width": PORTRAIT_ASPECT_WIDTH,
                 "height": PORTRAIT_ASPECT_HEIGHT,
@@ -83,11 +80,10 @@ mod tests {
     fn master_contract_carries_identity_output_and_rig_invariants() {
         let contract = build_character_asset_contract(
             " Nova ",
-            &json!({ "summary": "calm" }),
             &json!({ "gender": "nonbinary" }),
-            CharacterVisualSlot::Master,
             Some(" gold eyes "),
         );
+        assert_eq!(contract["slot"], "master");
         assert_eq!(contract["identity"]["name"], "Nova");
         assert_eq!(contract["output"]["width"], 1152);
         assert_eq!(contract["output"]["height"], 1536);
@@ -115,15 +111,11 @@ mod tests {
         let first = build_character_asset_contract(
             "Nova",
             &json!({ "visualIdentity": { "hairShape": "bob" } }),
-            &json!({}),
-            CharacterVisualSlot::Master,
             None,
         );
         let second = build_character_asset_contract(
             "Nova",
             &json!({ "visualIdentity": { "hairShape": "ponytail" } }),
-            &json!({}),
-            CharacterVisualSlot::Master,
             None,
         );
         assert_ne!(

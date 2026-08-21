@@ -22,6 +22,7 @@ mod runtime;
 mod safety;
 mod visual_prompt;
 mod visual_contract;
+mod visual_design;
 
 pub use decision::{
     apply_decision, parse_and_validate_decision, AppliedDecision, DecisionError, LiteDecision,
@@ -30,11 +31,7 @@ pub use decision::{
 pub use fingerprint::{companion_fingerprint, FingerprintInput};
 pub use memory::{rank_memories, MemoryCandidate, ScoredMemory};
 pub use onboarding::{
-    apply_onboarding_patch, build_onboarding_dna, build_onboarding_dna_with_report,
-    build_onboarding_persona, initial_onboarding_state, sanitize_onboarding_tags,
-    CharacterVisualSlot, OnboardingPatch, OnboardingPatchError, DNA_SCHEMA_VERSION,
-    MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS, ONBOARDING_SCHEMA_VERSION,
-    TOTAL_ONBOARDING_STEPS,
+    sanitize_onboarding_tags, MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS,
 };
 pub use performance::{
     parse_chat_performance, ChatPerformanceCue, ChatPerformancePlan, ParsedChatPerformance,
@@ -96,6 +93,10 @@ pub use safety::is_safe_companion_output;
 pub use visual_prompt::{build_character_visual_prompt, COMPANION_VISUAL_SCHOOL};
 pub use visual_contract::{
     build_character_asset_contract, character_asset_contract_fingerprint,
+};
+pub use visual_design::{
+    sanitize_upper_body_visual_identity, upper_body_visual_identity_is_complete,
+    UPPER_BODY_VISUAL_IDENTITY_FIELDS,
 };
 
 pub const MIN_TICK_SECONDS: u64 = 15;

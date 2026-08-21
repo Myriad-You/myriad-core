@@ -8,39 +8,18 @@ pub fn fallback_persona_draft(
     name: &str,
     language: &str,
     tags: &[String],
-    outfit_design: Option<&Value>,
 ) -> Value {
     let tags = sanitize_onboarding_tags(tags);
     let summary = fallback_summary(name, language, &tags);
-    let visual_identity = outfit_design
-        .and_then(Value::as_object)
-        .map(|outfit| {
-            json!({
-                "hairShape": "",
-                "outfitConstruction": string_from(outfit, &["layersEn", "designZh"], 1_200),
-                "heroAccessory": string_from(outfit, &["heroAccessoryZh"], 500),
-                "paletteHint": string_from(outfit, &["paletteHintZh"], 500),
-            })
-        })
-        .unwrap_or_else(|| {
-            json!({
-                "hairShape": "",
-                "outfitConstruction": "",
-                "heroAccessory": "",
-                "paletteHint": "",
-            })
-        });
     json!({
         "displayName": bounded_text(name, 50),
         "summary": summary,
         "temperament": tags,
-        "traits": tags,
         "likes": [],
         "drives": [],
         "socialStyle": "",
         "speechStyle": "",
         "language": bounded_text(language, 16),
-        "visualIdentity": visual_identity,
         "draftSource": "fallback",
     })
 }
@@ -59,9 +38,6 @@ pub fn sanitize_persona_draft(value: &Value, fallback: &Value) -> Option<Value> 
         "temperament",
         &["temperament", "traits"],
     );
-    if let Some(temperament) = result.get("temperament").cloned() {
-        result.insert("traits".into(), temperament);
-    }
     replace_list(&mut result, source, "likes", &["likes"]);
     replace_list(&mut result, source, "drives", &["drives", "motivations"]);
     replace_text(
@@ -79,47 +55,8 @@ pub fn sanitize_persona_draft(value: &Value, fallback: &Value) -> Option<Value> 
         500,
     );
 
-    let fallback_visual = result
-        .get("visualIdentity")
-        .and_then(Value::as_object)
-        .cloned()
-        .unwrap_or_default();
-    let visual_source = source
-        .get("visualIdentity")
-        .or_else(|| source.get("visual_identity"))
-        .and_then(Value::as_object);
-    let mut visual = fallback_visual;
-    if let Some(visual_source) = visual_source {
-        replace_text(
-            &mut visual,
-            visual_source,
-            "hairShape",
-            &["hairShape", "hair", "hair_shape"],
-            500,
-        );
-        replace_text(
-            &mut visual,
-            visual_source,
-            "outfitConstruction",
-            &["outfitConstruction", "outfit", "outfit_construction"],
-            1_200,
-        );
-        replace_text(
-            &mut visual,
-            visual_source,
-            "heroAccessory",
-            &["heroAccessory", "accessory", "hero_accessory"],
-            500,
-        );
-        replace_text(
-            &mut visual,
-            visual_source,
-            "paletteHint",
-            &["paletteHint", "palette", "palette_hint"],
-            500,
-        );
-    }
-    result.insert("visualIdentity".into(), Value::Object(visual));
+    result.remove("visualIdentity");
+    result.remove("visual_identity");
     result.insert("draftSource".into(), json!("ai"));
     Some(Value::Object(result))
 }
@@ -134,7 +71,26 @@ pub fn persona_draft_is_complete(value: &Value) -> bool {
         .is_some_and(|summary| summary.trim().chars().count() >= 8);
     let temperament_ready = list_from(source, &["temperament", "traits"])
         .is_some_and(|items| !items.is_empty());
-    summary_ready && temperament_ready
+    let likes_ready = list_from(source, &["likes"]).is_some_and(|items| !items.is_empty());
+    let drives_ready =
+        list_from(source, &["drives", "motivations"]).is_some_and(|items| !items.is_empty());
+    let social_ready = source
+        .get("socialStyle")
+        .or_else(|| source.get("social_style"))
+        .and_then(Value::as_str)
+        .is_some_and(|value| !value.trim().is_empty());
+    let speech_ready = source
+        .get("speechStyle")
+        .or_else(|| source.get("speech_style"))
+        .or_else(|| source.get("voice"))
+        .and_then(Value::as_str)
+        .is_some_and(|value| !value.trim().is_empty());
+    summary_ready
+        && temperament_ready
+        && likes_ready
+        && drives_ready
+        && social_ready
+        && speech_ready
 }
 
 fn fallback_summary(name: &str, language: &str, tags: &[String]) -> String {
@@ -210,13 +166,6 @@ fn list_from(source: &Map<String, Value>, keys: &[&str]) -> Option<Vec<String>> 
     Some(sanitized)
 }
 
-fn string_from(source: &Map<String, Value>, keys: &[&str], max_chars: usize) -> String {
-    keys.iter()
-        .find_map(|key| source.get(*key).and_then(Value::as_str))
-        .map(|value| bounded_text(value, max_chars))
-        .unwrap_or_default()
-}
-
 fn bounded_text(value: &str, max_chars: usize) -> String {
     value
         .trim()
@@ -231,37 +180,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fallback_persona_is_character_only_and_uses_outfit() {
+    fn fallback_persona_is_character_only() {
         let draft = fallback_persona_draft(
             "Nova",
             "en-US",
             &["calm".into(), "curious".into()],
-            Some(&json!({
-                "layersEn": "layered short coat and structured boots",
-                "heroAccessoryZh": "星形胸针",
-                "paletteHintZh": "雾蓝 / 银",
-            })),
         );
-        assert!(persona_draft_is_complete(&draft));
+        assert!(!persona_draft_is_complete(&draft));
         assert_eq!(draft["draftSource"], "fallback");
-        assert_eq!(
-            draft["visualIdentity"]["outfitConstruction"],
-            "layered short coat and structured boots"
-        );
+        assert!(draft.get("visualIdentity").is_none());
         for forbidden in ["room", "world", "furniture", "environment"] {
             assert!(draft.get(forbidden).is_none());
         }
     }
 
     #[test]
-    fn sanitizes_model_persona_without_dropping_fallback_identity() {
-        let fallback = fallback_persona_draft("Nova", "zh-CN", &["安静".into()], None);
+    fn sanitizes_model_persona_and_drops_visual_fields() {
+        let fallback = fallback_persona_draft("Nova", "zh-CN", &["安静".into()]);
         let draft = sanitize_persona_draft(
             &json!({
                 "persona": {
                     "summary": "安静但会认真回应重要事情的数字生命。",
                     "temperament": ["克制", "细心", "克制"],
                     "likes": "雨声、旧书",
+                    "drives": ["理解别人"],
+                    "socialStyle": "先听，再回应。",
+                    "speechStyle": "简洁但温和。",
                     "visualIdentity": { "hair": "银灰短发" }
                 }
             }),
@@ -270,7 +214,8 @@ mod tests {
         .unwrap();
         assert_eq!(draft["displayName"], "Nova");
         assert_eq!(draft["temperament"], json!(["克制", "细心"]));
-        assert_eq!(draft["visualIdentity"]["hairShape"], "银灰短发");
+        assert!(draft.get("visualIdentity").is_none());
+        assert!(persona_draft_is_complete(&draft));
         assert_eq!(draft["draftSource"], "ai");
     }
 

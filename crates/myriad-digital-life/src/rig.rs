@@ -250,6 +250,9 @@ pub struct RigManifest {
     pub semantics: Option<RigSemantics>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spatial_profile: Option<RigSpatialProfile>,
+    /// Warp/stencil playback document replicated from Anime2.5DRig (MIT).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub anime25d_playback: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -304,6 +307,7 @@ pub struct RigCompileSource {
     pub semantic_anchors: HashMap<String, RigSemanticAnchor>,
     pub semantics: Option<RigSemantics>,
     pub spatial_profile: Option<RigSpatialProfile>,
+    pub anime25d_playback: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, PartialEq, Error)]
@@ -857,6 +861,7 @@ pub fn build_portrait_fallback_rig_with_generation(
         semantic_anchors,
         semantics: Some(semantics),
         spatial_profile: Some(spatial_profile),
+        anime25d_playback: None,
     }
 }
 
@@ -1884,6 +1889,7 @@ pub fn compile_layered_rig(source: RigCompileSource) -> Result<RigManifest, RigC
         semantic_anchors,
         semantics,
         spatial_profile,
+        anime25d_playback: source.anime25d_playback,
     };
     manifest.validate()?;
     Ok(manifest)

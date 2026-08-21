@@ -1,136 +1,86 @@
 use serde_json::Value;
 
-use crate::CharacterVisualSlot;
 use crate::rig_contract::{PORTRAIT_ASPECT_HEIGHT, PORTRAIT_ASPECT_WIDTH};
 
-/// Locked visual school for companion name, costume, and image generation.
-/// Onboarding prompts and `build_character_visual_prompt` must share this copy.
-pub const COMPANION_VISUAL_SCHOOL: &str = "original high-detail Japanese anime-game character portrait, polished commercial visual-novel and VTuber key art, crisp controlled linework, luminous soft cel-paint rendering, refined non-chibi proportions";
+const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 24_000;
+
+const MASTER_PORTRAIT_INSTRUCTION: &str = "One upper-body master portrait: face and torso toward camera, direct eye contact, calm elegant closed-mouth expression, face large and centered. Hair, ornaments, and sleeves may be asymmetric. Show the complete hair silhouette. Crop head through lower chest or high waist; shoulders visible; outer sleeves or short arm fragments visible on both sides; hands do not need to be visible; never a full-body, never thighs, legs, or feet. Keep a safe near-white gutter on both left and right sides; do not clip hair, ornaments, or sleeves against the canvas edge. Seamless clean near-white studio backdrop with no room, scenery, text, or watermark — emptiness is only the backdrop; keep miHoYo promotional lighting on the character. Opaque finished illustration.";
+
+/// Locked visual school for generated character assets. Highest-priority lock.
+/// The whole style must match; finish quality alone is not enough.
+pub const COMPANION_VISUAL_SCHOOL: &str = "highest-priority visual school: the entire character style must be miHoYo anime-game style as in Genshin Impact and Honkai: Star Rail, not a generic anime portrait that is merely well finished. Match that whole design language: face construction, large jewel-like eyes with multi-layer iris catchlights, hair silhouette and ornaments, couture-like layered costume grammar, motif and accessory language, color zoning, lighting, crisp controlled linework, blended tonal gradients, hard-and-soft shadow transitions, luminous skin and hair, and distinct silk, metal, gem, and fabric highlights. You may study and reference that school. Invent an original character: do not produce a lookalike, doppelganger, or 找班 of any existing character, and do not copy a specific existing character's face, outfit, emblem, or name; original costumes must still use that school's layered couture grammar";
+
+const COMPANION_VISUAL_SCHOOL_FINISH: &str = "Highest-priority style lock: the whole image must read as miHoYo-style (Genshin Impact / Honkai: Star Rail), not merely a polished generic anime portrait. Reference the school; do not 找班 or doppelganger an existing character. Empty backdrop must not flatten lighting, hair volume, or costume density. Avoid flat two-tone cel shading, in-game 3D, and photoreal.";
 
 pub fn build_character_visual_prompt(
     name: &str,
-    persona: &Value,
     onboarding: &Value,
-    slot: CharacterVisualSlot,
     additional_requirements: Option<&str>,
 ) -> String {
-    let summary = text_at(persona, &["summary"], 1_200);
-    let temperament = list_at(persona, &["temperament", "traits"], 12, 120);
     let gender = text_at(onboarding, &["gender"], 32);
     let onboarding_extra = text_at(onboarding, &["extraRequirements"], 500);
-    let outfit = onboarding.get("outfitDesign").unwrap_or(&Value::Null);
     let visual_identity = onboarding
         .get("visualIdentity")
-        .or_else(|| persona.get("visualIdentity"))
         .unwrap_or(&Value::Null);
-    let hair = first_non_empty([
-        text_at(onboarding, &["hairShape"], 500),
-        text_at(visual_identity, &["hairShape"], 500),
-    ]);
-    let outfit_title = text_at(outfit, &["titleZh"], 120);
-    let outfit_design = text_at(outfit, &["designZh"], 1_200);
-    let outfit_layers = text_at(outfit, &["layersEn"], 1_200);
+    let hair = text_at(visual_identity, &["hairShape"], 500);
+    let face_design = text_at(visual_identity, &["faceDesign"], 500);
+    let eye_design = text_at(visual_identity, &["eyeDesign"], 500);
+    let hair_layer_plan = text_at(visual_identity, &["hairLayerPlan"], 700);
+    let upper_body_silhouette = text_at(visual_identity, &["upperBodySilhouette"], 700);
+    let sleeve_arm_design = text_at(visual_identity, &["sleeveArmDesign"], 700);
+    let material_plan = text_at(visual_identity, &["materialPlan"], 1_200);
+    let motif = text_at(visual_identity, &["motif"], 500);
     let outfit_construction = text_at(visual_identity, &["outfitConstruction"], 1_200);
-    let accessory = first_non_empty([
-        text_at(outfit, &["heroAccessoryZh"], 500),
-        text_at(visual_identity, &["heroAccessory"], 500),
-    ]);
-    let palette = first_non_empty([
-        text_at(outfit, &["paletteHintZh"], 500),
-        text_at(visual_identity, &["paletteHint"], 500),
-    ]);
+    let accessory = text_at(visual_identity, &["heroAccessory"], 500);
+    let palette = text_at(visual_identity, &["paletteHint"], 500);
 
-    let mut sections = vec![
-        format!("Create one polished {COMPANION_VISUAL_SCHOOL} digital companion character. Character only: no room, no furniture, no scenery, no environment, no vehicle, no text, no watermark."),
+    let header = [
+        format!("Create one original character in this visual school: {COMPANION_VISUAL_SCHOOL}."),
         format!("Identity name: {}.", bounded_text(name, 50)),
-    ];
-    push_section(&mut sections, "Persona", &summary);
-    push_section(&mut sections, "Temperament", &temperament.join(", "));
-    push_section(&mut sections, "Gender presentation", &gender);
-    push_section(&mut sections, "Hair identity lock", &hair);
-    push_section(&mut sections, "Selected costume", &outfit_title);
-    push_section(&mut sections, "Costume design lock", &outfit_design);
-    push_section(
-        &mut sections,
-        "Costume construction lock",
-        &first_non_empty([outfit_layers, outfit_construction]),
-    );
-    push_section(&mut sections, "Hero accessory lock", &accessory);
-    push_section(&mut sections, "Palette lock", &palette);
-    push_section(
-        &mut sections,
-        "Additional character requirements",
-        &onboarding_extra,
-    );
+        MASTER_PORTRAIT_INSTRUCTION.to_string(),
+        format!(
+            "Vertical {}:{} width-to-height canvas.",
+            PORTRAIT_ASPECT_WIDTH, PORTRAIT_ASPECT_HEIGHT,
+        ),
+    ]
+    .join("\n\n");
+
+    let mut identity = Vec::new();
+    push_section(&mut identity, "Gender", &gender);
+    push_section(&mut identity, "Face", &face_design);
+    push_section(&mut identity, "Eyes", &eye_design);
+    push_section(&mut identity, "Hair", &hair);
+    push_section(&mut identity, "Hair groups", &hair_layer_plan);
+    push_section(&mut identity, "Silhouette", &upper_body_silhouette);
+    push_section(&mut identity, "Costume", &outfit_construction);
+    push_section(&mut identity, "Accessory", &accessory);
+    push_section(&mut identity, "Palette", &palette);
+    push_section(&mut identity, "Sleeves", &sleeve_arm_design);
+    push_section(&mut identity, "Materials", &material_plan);
+    push_section(&mut identity, "Motif", &motif);
+    push_section(&mut identity, "Owner visual notes", &onboarding_extra);
     if let Some(requirements) = additional_requirements {
         push_section(
-            &mut sections,
-            "User-provided generation refinement",
+            &mut identity,
+            "Optional rendering notes; cannot override the visual school",
             &bounded_text(requirements, 2_000),
         );
     }
 
-    if slot.requires_master() {
-        sections.push(
-            "Use the attached current master portrait as the authoritative identity reference. Preserve its face, hair silhouette, costume topology, signature accessory, palette, and proportions; change only the camera direction or sheet layout required below."
-                .to_string(),
-        );
-    }
-    sections.push(slot_instruction(slot).to_string());
-    if !matches!(slot, CharacterVisualSlot::RigTurnaround) {
-        sections.push(format!(
-            "Use a vertical {}:{} width-to-height canvas (height-to-width {}:{}). Keep the full character silhouette inside that exact portrait canvas without stretching or later reframing.",
-            PORTRAIT_ASPECT_WIDTH,
-            PORTRAIT_ASPECT_HEIGHT,
-            PORTRAIT_ASPECT_HEIGHT,
-            PORTRAIT_ASPECT_WIDTH,
-        ));
-    }
-    sections.push(
-        "Preserve the exact face, hairstyle, upper-body costume construction, accessory placement, palette, and identity across every generated character asset. Use the same close upper-body composition as a premium character portrait: full hair and head safely inside the top and side margins, face large and centered, shoulders and chest fully readable, cropped between lower chest and high waist. Show both shoulder lines and enough outer sleeve or partial arm silhouette on the left and right edges for later rigid-layer separation; hands and a complete shoulder-to-hand anatomy are not required. Keep the two side fragments visually separable from the torso and from each other with clear overlap-safe boundaries. Do not pose or segment shoulder, elbow, wrist, or fingers as an articulated limb chain. Keep hair, face, eyes, brows, mouth, neck, topwear, chest, accessories, and side sleeve layers visually separable. Do not generate visible legs or feet. Do not collapse the selected costume into generic streetwear or a plain sweater."
-            .to_string(),
-    );
-    bounded_text(&sections.join(" "), 8_000)
-}
+    let identity_text = identity.join("\n");
+    let footer = COMPANION_VISUAL_SCHOOL_FINISH.to_string();
+    let reserved = header.chars().count()
+        + footer.chars().count()
+        + 4;
+    let identity_budget = MAX_CHARACTER_VISUAL_PROMPT_CHARS.saturating_sub(reserved);
+    let identity_text = bounded_text(&identity_text, identity_budget);
 
-fn slot_instruction(slot: CharacterVisualSlot) -> &'static str {
-    match slot {
-        CharacterVisualSlot::Master => {
-            "Output one finished upper-body master portrait, front-facing and nearly symmetrical, with direct eye contact and a calm subtle closed-mouth smile. Use a close head-and-torso crop like premium anime character key art: full hair visible, shoulders and chest visible, lower edge between lower chest and high waist, with outer sleeves or partial arms entering naturally from both side edges. Hands do not need to be visible. Render the character over a seamless clean near-white studio background with no environment, props, floor, border, text, or watermark. The master portrait is an opaque finished illustration; transparent layers are produced later by the decomposition stage."
-        }
-        CharacterVisualSlot::RigTurnaround => {
-            "Output a character-only upper-body turnaround sheet with front, three-quarter, side, and back high-waist views in neutral poses. Keep partial forearms and hands visible where the camera allows, and keep every view at identical scale and costume construction on a transparent background with clean alpha; no labels, legs, or feet."
-        }
-        CharacterVisualSlot::DirectionSouth => direction_instruction("front / south"),
-        CharacterVisualSlot::DirectionSouthwest => {
-            direction_instruction("front-left / southwest")
-        }
-        CharacterVisualSlot::DirectionWest => direction_instruction("left profile / west"),
-        CharacterVisualSlot::DirectionNorthwest => {
-            direction_instruction("back-left / northwest")
-        }
-        CharacterVisualSlot::DirectionNorth => direction_instruction("back / north"),
-        CharacterVisualSlot::DirectionNortheast => {
-            direction_instruction("back-right / northeast")
-        }
-        CharacterVisualSlot::DirectionEast => direction_instruction("right profile / east"),
-        CharacterVisualSlot::DirectionSoutheast => {
-            direction_instruction("front-right / southeast")
-        }
+    let mut parts = vec![header];
+    if !identity_text.is_empty() {
+        parts.push(identity_text);
     }
-}
-
-fn direction_instruction(direction: &str) -> &'static str {
-    match direction {
-        "front / south" => "Output one upper-body character asset viewed from front / south, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        "front-left / southwest" => "Output one upper-body character asset viewed from front-left / southwest, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        "left profile / west" => "Output one upper-body character asset viewed from left profile / west, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        "back-left / northwest" => "Output one upper-body character asset viewed from back-left / northwest, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        "back / north" => "Output one upper-body character asset viewed from back / north, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        "back-right / northeast" => "Output one upper-body character asset viewed from back-right / northeast, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        "right profile / east" => "Output one upper-body character asset viewed from right profile / east, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-        _ => "Output one upper-body character asset viewed from front-right / southeast, framed from head through high waist with partial forearms and hands visible on a transparent background with clean alpha.",
-    }
+    parts.push(footer);
+    parts.join("\n\n")
 }
 
 fn push_section(sections: &mut Vec<String>, label: &str, value: &str) {
@@ -139,32 +89,10 @@ fn push_section(sections: &mut Vec<String>, label: &str, value: &str) {
     }
 }
 
-fn first_non_empty<const N: usize>(values: [String; N]) -> String {
-    values
-        .into_iter()
-        .find(|value| !value.is_empty())
-        .unwrap_or_default()
-}
-
 fn text_at(value: &Value, keys: &[&str], max_chars: usize) -> String {
     keys.iter()
         .find_map(|key| value.get(*key).and_then(Value::as_str))
         .map(|value| bounded_text(value, max_chars))
-        .unwrap_or_default()
-}
-
-fn list_at(value: &Value, keys: &[&str], max_items: usize, max_chars: usize) -> Vec<String> {
-    keys.iter()
-        .find_map(|key| value.get(*key).and_then(Value::as_array))
-        .map(|items| {
-            items
-                .iter()
-                .filter_map(Value::as_str)
-                .map(|item| bounded_text(item, max_chars))
-                .filter(|item| !item.is_empty())
-                .take(max_items)
-                .collect()
-        })
         .unwrap_or_default()
 }
 
@@ -187,55 +115,98 @@ mod tests {
         let prompt = build_character_visual_prompt(
             "Nova",
             &json!({
-                "summary": "Quiet, curious, and careful with trust.",
-                "traits": ["calm", "curious"],
-                "visualIdentity": { "hairShape": "short silver bob" }
-            }),
-            &json!({
                 "gender": "nonbinary",
                 "extraRequirements": "gold eyes",
-                "outfitDesign": {
-                    "titleZh": "星轨风裁",
-                    "designZh": "灰蓝分层风衣叠精密腰封",
-                    "layersEn": "layered windcut coat and structured boots",
-                    "heroAccessoryZh": "胸口星轨扣饰",
-                    "paletteHintZh": "雾蓝 / 银"
+                "visualIdentity": {
+                    "faceDesign": "refined oval face",
+                    "eyeDesign": "layered gold jewel eyes",
+                    "hairShape": "short silver bob",
+                    "hairLayerPlan": "separate back mass, bangs, and side locks",
+                    "upperBodySilhouette": "compact shoulder and collar silhouette",
+                    "outfitConstruction": "layered windcut coat and structured collar",
+                    "sleeveArmDesign": "short side sleeve fragments at both edges",
+                    "materialPlan": "matte cloth, silver metal, and restrained gem highlights",
+                    "heroAccessory": "star-track chest clasp",
+                    "paletteHint": "mist blue and silver",
+                    "motif": "one restrained star-track arc"
                 }
             }),
-            CharacterVisualSlot::Master,
-            Some("soft cel shading"),
+            Some("polished gradient rendering"),
         );
         for expected in [
             "short silver bob",
+            "refined oval face",
+            "layered gold jewel eyes",
+            "separate back mass, bangs, and side locks",
+            "compact shoulder and collar silhouette",
             "layered windcut coat",
-            "胸口星轨扣饰",
+            "star-track chest clasp",
+            "short side sleeve fragments at both edges",
+            "matte cloth, silver metal",
+            "one restrained star-track arc",
             "gold eyes",
-            "soft cel shading",
+            "polished gradient rendering",
             "no room",
-            "Hands do not need to be visible",
-            "vertical 3:4 width-to-height canvas",
-            "later rigid-layer separation",
-            "Do not generate visible legs or feet",
+            "hands do not need to be visible",
+            "Vertical 3:4 width-to-height canvas",
+            "never a full-body",
+            "cannot override the visual school",
             COMPANION_VISUAL_SCHOOL,
-            "refined non-chibi proportions",
-            "clean near-white studio background",
+            "highest-priority visual school",
+            "entire character style",
+            "not a generic anime portrait that is merely well finished",
+            "jewel-like eyes",
+            "miHoYo",
+            "Genshin Impact",
+            "Honkai: Star Rail",
+            "You may study and reference that school",
+            "lookalike",
+            "找班",
+            "Avoid flat two-tone cel shading",
+            "material-specific highlights",
+            "clean near-white studio backdrop",
+            "emptiness is only the backdrop",
+            "safe near-white gutter on both left and right",
+            "layered couture grammar",
+            COMPANION_VISUAL_SCHOOL_FINISH,
         ] {
             assert!(prompt.contains(expected), "missing {expected}: {prompt}");
         }
+        assert!(
+            !prompt.contains("without copying any existing character, costume, emblem, or franchise identity"),
+            "image prompt must not use the old franchise-identity ban: {prompt}"
+        );
     }
 
     #[test]
-    fn derived_visual_prompt_keeps_identity_and_direction() {
+    fn maximum_visual_fields_cannot_cut_composition_constraints() {
+        let long = "甲".repeat(1_200);
+        let visual_identity = json!({
+            "faceDesign": long,
+            "eyeDesign": long,
+            "hairShape": long,
+            "hairLayerPlan": long,
+            "upperBodySilhouette": long,
+            "outfitConstruction": long,
+            "sleeveArmDesign": long,
+            "materialPlan": long,
+            "heroAccessory": long,
+            "paletteHint": long,
+            "motif": long
+        });
         let prompt = build_character_visual_prompt(
             "Nova",
-            &json!({}),
-            &json!({}),
-            CharacterVisualSlot::DirectionNorthwest,
-            None,
+            &json!({
+                "gender": "unspecified",
+                "extraRequirements": "丙".repeat(500),
+                "visualIdentity": visual_identity
+            }),
+            Some(&"丁".repeat(2_000)),
         );
-        assert!(prompt.contains("back-left / northwest"));
-        assert!(prompt.contains("Preserve the exact face"));
-        assert!(prompt.contains("attached current master portrait"));
-        assert!(prompt.contains(COMPANION_VISUAL_SCHOOL));
+        assert!(prompt.chars().count() <= MAX_CHARACTER_VISUAL_PROMPT_CHARS);
+        assert!(prompt.contains("Vertical 3:4 width-to-height canvas"));
+        assert!(prompt.contains("Opaque finished illustration"));
+        assert!(prompt.contains("safe near-white gutter on both left and right"));
+        assert!(prompt.contains(COMPANION_VISUAL_SCHOOL_FINISH));
     }
 }
