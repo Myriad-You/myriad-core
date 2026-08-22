@@ -5,26 +5,26 @@ use crate::visual_design::UPPER_BODY_VISUAL_IDENTITY_FIELDS;
 
 const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 24_000;
 
-const MASTER_PORTRAIT_INSTRUCTION: &str = "One upper-body master portrait, face and torso toward camera, direct eye contact, calm closed mouth, face large and centered. Complete hair silhouette. Crop head through lower chest or high waist; both sleeves or short arm fragments visible; hands optional; never full-body, thighs, legs, or feet. Safe near-white gutter on both sides; do not clip hair, ornaments, or sleeves. Seamless near-white studio backdrop, no room, scenery, text, or watermark. Opaque finished illustration.";
+const MASTER_PORTRAIT_INSTRUCTION: &str = "One upper-body portrait, face and torso toward camera, direct eye contact, calm closed mouth. Fill the 3:4 canvas: large head, face close and readable, shoulders almost the full width. Keep the entire head and complete hair silhouette inside the frame, including the crown, bangs, and side hair. Thin side air only — one-sixteenth of the canvas width on the LEFT and the same on the RIGHT, just enough that hair, sleeves, cuffs, and ornaments do not touch or leave either side. A slim near-white gutter above the hair. Do not pull the camera back. Do not shrink the figure into a stamp in the middle of white. Do not leave wide side panels. Do not cut or clip the head, crown, hair, sleeves, or ornaments. Frame from the top of the hair down through lower chest or high waist; both sleeves or short arm fragments visible; hands optional; never full-body, thighs, legs, or feet. Seamless near-white studio backdrop, no room, scenery, text, or watermark. Opaque finished illustration.";
 
-const SPLASH_CONSTRUCTION: &str = "Fixed construction, not from identity fields: official splash face with oversized multi-stop jewel eyes, tiny graphic nose, tiny graphic mouth, short clean jaw, untextured skin planes. Hair is stacked color masses with sheet highlights, not strand-by-strand painting. Cloth is designed costume shapes with graphic folds, not fashion-illustration drapery.";
+const SPLASH_CONSTRUCTION: &str = "Fixed face and paint construction, not from identity fields. Crown to chin about half the canvas height. Each eye about one-quarter of the face height and taller than the nose and mouth together; multi-stop jewel iris; hard graphic catchlights; simple lids; no eye-socket depth, tear trough, or eyelid thickness. Tiny wedge nose, tiny graphic mouth, short small chin, large forehead, flat untextured skin with no pores, contour, or blush-modeling. Hair in stacked color masses with colored highlight sheets, not strand-by-strand painting. Costume in designed shapes with graphic folds and hard shine on cloth, metal, and gem. High chroma; dark clothes stay saturated, not gray or brown-muted. Not a muted painterly web portrait, not a realistic person, not fashion-illustration drapery.";
 
-/// Single paint-finish lock for design sheets and image prompts.
+/// Paint-finish lock for design sheets and image prompts.
 /// Costume, palette, and ornaments come from identity fields — not from this string.
-pub const COMPANION_VISUAL_SCHOOL: &str = "Official miHoYo Genshin Impact / Honkai: Star Rail character splash painting. Stylized anime construction first: oversized multi-stop jewel iris, tiny graphic nose and mouth, clean untextured face planes, designed hair masses with colored highlight sheets. Key-visual lighting: warm key, cool rim, graphic shine on cloth, metal, and gem. 2D official character card. Not semi-realistic, not oil painting, not photoreal. Not generic web-illustration anime, not fashion illustration, not pixiv illustration, not thick outlines, not flat cel, not in-game 3D";
+pub const COMPANION_VISUAL_SCHOOL: &str = "Genshin Impact / Honkai: Star Rail 2D anime paint. 2D anime face, not a real face. Eyes about one-quarter of the face height and taller than the nose and mouth together; multi-stop jewel iris; hard graphic catchlights; simple lids with no eye-socket depth, tear trough, or eyelid thickness. Tiny wedge nose; tiny graphic mouth; short small chin; large forehead; flat untextured skin with no pores, contour, or blush-modeling. Hair as stacked color masses with colored highlight sheets, not strand-by-strand painting. Costume as designed game-outfit shapes with graphic folds and hard shine on cloth, metal, and gem. Warm key light, cool rim, hard material highlights. High chroma even on dark clothes. Not semi-realistic, not oil painting, not photoreal. Not generic web-illustration anime, not fashion illustration, not pixiv illustration, not a pretty illustration portrait, not a muted web illustration, not thick outlines, not flat cel, not in-game 3D";
 
 const IDENTITY_PROMPT_FIELDS: &[(&str, &str)] = &[
     ("faceDesign", "Face color and expression only"),
-    ("eyeDesign", "Iris color only"),
+    ("eyeDesign", "Eyes: iris, pupil, and catchlights"),
     ("hairShape", "Hair color and cut"),
     ("hairLayerPlan", "Hair groups"),
     ("upperBodySilhouette", "Silhouette"),
     ("outfitConstruction", "Costume"),
-    ("heroAccessory", "Accessory"),
-    ("paletteHint", "Palette"),
+    ("heroAccessory", "Accessories: hero piece plus supporting ornaments, placements, and colors"),
+    ("paletteHint", "Costume palette: main, secondary, accent on named parts"),
     ("sleeveArmDesign", "Sleeves"),
     ("materialPlan", "Costume materials"),
-    ("motif", "Motif"),
+    ("motif", "Motif on garments and accessories"),
 ];
 
 const STYLE_LOCK_BANS: &[&str] = &[
@@ -80,7 +80,8 @@ pub fn build_character_visual_prompt(
     onboarding: &Value,
     additional_requirements: Option<&str>,
 ) -> String {
-    let visual_identity = onboarding.get("visualIdentity").unwrap_or(&Value::Null);
+    let visual_identity = crate::visual_design::flatten_visual_identity(onboarding)
+        .unwrap_or_else(|| onboarding.get("visualIdentity").cloned().unwrap_or(Value::Null));
     let header = [
         format!("Create one original character in this visual school: {COMPANION_VISUAL_SCHOOL}."),
         SPLASH_CONSTRUCTION.to_string(),
@@ -94,9 +95,18 @@ pub fn build_character_visual_prompt(
     .join("\n\n");
 
     let mut identity = Vec::new();
+    if let Some(style) = crate::visual_design::clothing_style_of(onboarding) {
+        if let Some(grammar) = crate::visual_design::clothing_style_grammar(style) {
+            push_section(
+                &mut identity,
+                "Costume language for garments and accessories",
+                grammar,
+            );
+        }
+    }
     for (key, label) in IDENTITY_PROMPT_FIELDS {
         let max_chars = field_limit(key);
-        push_section(&mut identity, label, &text_at(visual_identity, &[key], max_chars));
+        push_section(&mut identity, label, &text_at(&visual_identity, &[key], max_chars));
     }
     push_section(
         &mut identity,
@@ -111,7 +121,7 @@ pub fn build_character_visual_prompt(
         );
     }
 
-    let closer = "Hard lock: keep the fixed splash construction. Identity fields only recolor hair, eyes, costume, and motif. They cannot shrink the eyes, sculpt a realistic face, or switch the finish to web illustration.";
+    let closer = "Hard lock: keep the fixed face construction and high-chroma 2D anime paint. Fill the 3:4 canvas. Character fields stay the same person. Outfit fields may change with a later costume swap. Garments and accessories stay in the costume language; do not add court crests or frog-button hardware unless that language asks for them. Notes cannot shrink the eyes, soften them into illustration eyes, sculpt a realistic face, add facial anatomy, switch to muted web illustration, or shrink the figure into empty side panels.";
     let reserved = header.chars().count() + closer.chars().count() + 4;
     let identity_text = bounded_text(
         &identity.join("\n"),
@@ -129,7 +139,7 @@ pub fn build_character_visual_prompt(
 pub fn build_character_visual_edit_prompt(notes: &str) -> String {
     let notes = neutralize_style_overrides(&bounded_text(notes, 2_000));
     format!(
-        "Edit this existing upper-body master portrait. Keep the same character, face, hair, costume, palette, materials, ornaments, 3:4 crop, near-white studio backdrop, and side gutters. Apply only these adjustments: {notes}. Do not invent a new character or turn this into a full-body shot."
+        "Edit this existing upper-body master portrait. Keep the same character, face, hair, costume, palette, materials, ornaments, 3:4 fill, near-white studio backdrop, and only thin side air of one-sixteenth canvas width. Keep the entire head, hair, and both sleeves inside the frame. Do not pull the camera back or shrink the figure. Apply only these adjustments: {notes}. Do not invent a new character, cut the head, clip the sleeves, or turn this into a full-body shot."
     )
 }
 
@@ -145,13 +155,76 @@ pub fn style_lock_violation_in(text: &str) -> bool {
 }
 
 pub fn visual_identity_violates_style_lock(value: &Value) -> bool {
-    let source = value.get("visualIdentity").unwrap_or(value);
-    let Some(fields) = source.as_object() else {
-        return false;
-    };
-    fields
-        .values()
-        .any(|field| field.as_str().is_some_and(style_lock_violation_in))
+    any_string_matches(value.get("visualIdentity").unwrap_or(value), style_lock_violation_in)
+}
+
+const LITERARY_SLUDGE: &[&str] = &[
+    "质感",
+    "美学",
+    "余温",
+    "藏锋",
+    "证明存在",
+    "取自",
+    "像把",
+    "像在",
+    "在心里",
+    "过夜",
+    "才肯",
+    "才出声",
+    "写完才",
+    "moonlight aesthetic",
+];
+
+pub fn literary_sludge_in(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    LITERARY_SLUDGE.iter().any(|ban| {
+        if ban.is_ascii() {
+            lower.contains(ban)
+        } else {
+            text.contains(ban)
+        }
+    })
+}
+
+pub fn visual_identity_has_literary_sludge(value: &Value) -> bool {
+    any_string_matches(value.get("visualIdentity").unwrap_or(value), literary_sludge_in)
+}
+
+const PERSONA_LITERARY_SLUDGE: &[&str] = &[
+    "质感",
+    "美学",
+    "余温",
+    "藏锋",
+    "证明存在",
+    "取自",
+    "像把",
+    "像在",
+    "在心里",
+    "moonlight aesthetic",
+];
+
+pub fn persona_literary_sludge_in(text: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    PERSONA_LITERARY_SLUDGE.iter().any(|ban| {
+        if ban.is_ascii() {
+            lower.contains(ban)
+        } else {
+            text.contains(ban)
+        }
+    })
+}
+
+pub fn persona_has_literary_sludge(value: &Value) -> bool {
+    any_string_matches(value.get("persona").unwrap_or(value), persona_literary_sludge_in)
+}
+
+fn any_string_matches(value: &Value, check: fn(&str) -> bool) -> bool {
+    match value {
+        Value::String(text) => check(text),
+        Value::Object(fields) => fields.values().any(|field| any_string_matches(field, check)),
+        Value::Array(items) => items.iter().any(|item| any_string_matches(item, check)),
+        _ => false,
+    }
 }
 
 fn neutralize_style_overrides(text: &str) -> String {
@@ -202,6 +275,7 @@ mod tests {
             "Nova",
             &json!({
                 "gender": "nonbinary",
+                "clothingStyle": "idol",
                 "extraRequirements": "gold eyes",
                 "visualIdentity": {
                     "faceDesign": "refined oval face",
@@ -238,20 +312,36 @@ mod tests {
             "never full-body",
             "cannot override the visual school",
             COMPANION_VISUAL_SCHOOL,
-            "miHoYo",
             "Genshin Impact",
             "Honkai: Star Rail",
-            "character splash painting",
+            "2D anime paint",
             "Not generic web-illustration anime",
             "Not semi-realistic",
-            "Stylized anime construction first",
-            "2D official character card",
+            "2D anime face",
             "multi-stop jewel iris",
             "near-white studio backdrop",
-            "Safe near-white gutter on both sides",
+            "gutter above the hair",
+            "one-sixteenth of the canvas width",
+            "Fill the 3:4 canvas",
+            "Do not pull the camera back",
+            "Do not shrink the figure",
+            "do not touch or leave either side",
+            "Do not cut or clip the head",
+            "High chroma",
+            "stacked color masses",
             "Hard lock",
-            "Fixed construction",
-            "recolor hair",
+            "Fixed face and paint construction",
+            "Hair color and cut",
+            "Face color and expression only",
+            "Outfit fields may change",
+            "Costume language for garments and accessories",
+            "live-stage / performance wear",
+            "not always a cropped jacket",
+            "stay in the costume language",
+            "court crests or frog-button hardware",
+            "Not court ceremonial dress",
+            "not a pretty illustration portrait",
+            "high-chroma 2D anime paint",
         ] {
             assert!(prompt.contains(expected), "missing {expected}: {prompt}");
         }
@@ -268,6 +358,33 @@ mod tests {
             !prompt.contains("without copying any existing character, costume, emblem, or franchise identity"),
             "image prompt must not use the old franchise-identity ban: {prompt}"
         );
+
+        let modular_prompt = build_character_visual_prompt(
+            "Nova",
+            &json!({
+                "visualIdentity": {
+                    "character": {
+                        "faceDesign": "refined oval face",
+                        "eyeDesign": "layered gold jewel eyes",
+                        "hairShape": "short silver bob",
+                        "hairLayerPlan": "separate back mass, bangs, and side locks"
+                    },
+                    "outfit": {
+                        "upperBodySilhouette": "compact shoulder and collar silhouette",
+                        "outfitConstruction": "layered windcut coat and structured collar",
+                        "sleeveArmDesign": "short side sleeve fragments at both edges",
+                        "materialPlan": "matte cloth, silver metal, and restrained gem highlights",
+                        "heroAccessory": "star-track chest clasp",
+                        "paletteHint": "mist blue and silver",
+                        "motif": "one restrained star-track arc"
+                    }
+                }
+            }),
+            None,
+        );
+        assert!(modular_prompt.contains("short silver bob"));
+        assert!(modular_prompt.contains("layered windcut coat"));
+        assert!(modular_prompt.contains("Outfit fields may change"));
     }
 
     #[test]
@@ -298,7 +415,13 @@ mod tests {
         assert!(prompt.chars().count() <= MAX_CHARACTER_VISUAL_PROMPT_CHARS);
         assert!(prompt.contains("Vertical 3:4 width-to-height canvas"));
         assert!(prompt.contains("Opaque finished illustration"));
-        assert!(prompt.contains("Safe near-white gutter on both sides"));
+        assert!(prompt.contains("gutter above the hair"));
+        assert!(prompt.contains("one-sixteenth of the canvas width"));
+        assert!(prompt.contains("Fill the 3:4 canvas"));
+        assert!(!prompt.contains("official card"));
+        assert!(!prompt.contains("wish card"));
+        assert!(!prompt.contains("character-card"));
+        assert!(prompt.contains("Do not cut or clip the head"));
         assert!(prompt.contains("Hard lock"));
         assert!(prompt.contains(COMPANION_VISUAL_SCHOOL));
     }
@@ -343,6 +466,27 @@ mod tests {
         assert!(prompt.contains("keep the face large"));
         assert!(!prompt.contains("更写实"));
         assert!(!prompt.contains("oil painting skin texture"));
+        assert!(literary_sludge_in("色彩取自过夜的纸条"));
+        assert!(literary_sludge_in("像把话在心里过完整才肯露面"));
+        assert!(!literary_sludge_in("主色暖象牙，辅色墨青，强调色朱砂"));
+        assert!(visual_identity_has_literary_sludge(&json!({
+            "visualIdentity": {
+                "paletteHint": "色彩取自叠在杯底过夜的纸条"
+            }
+        })));
+        assert!(persona_literary_sludge_in("像把话在心里过完整才肯露面"));
+        assert!(persona_literary_sludge_in("色彩取自叠在杯底过夜的纸条"));
+        assert!(!persona_literary_sludge_in("先听，熟了才肯把句子拉长"));
+        assert!(persona_has_literary_sludge(&json!({
+            "persona": {
+                "likes": ["色彩取自过夜的纸条"]
+            }
+        })));
+        assert!(!persona_has_literary_sludge(&json!({
+            "persona": {
+                "likes": ["夜里听雨", "把桌面重新排好"]
+            }
+        })));
     }
 
     #[test]

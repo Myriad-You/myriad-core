@@ -387,6 +387,7 @@ pub fn is_reasonable_persona_tag(label: &str) -> bool {
     }
     const LITERARY: &[&str] = &[
         "质感", "美学", "信仰", "虔诚", "月光", "余温", "藏锋", "证明存在", "消化情绪",
+        "取自", "像把", "在心里",
     ];
     if LITERARY.iter().any(|blocked| label.contains(blocked)) {
         return false;
@@ -814,5 +815,7 @@ mod tests {
         assert_eq!(tags, ["慢热"]);
         assert!(looks_like_job_or_identity_label("铁路工程师"));
         assert!(is_reasonable_persona_tag("边界感强"));
+        assert!(!is_reasonable_persona_tag("取自过夜"));
+        assert!(!is_reasonable_persona_tag("在心里"));
     }
 }

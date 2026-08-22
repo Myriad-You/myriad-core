@@ -89,7 +89,9 @@ pub use runtime::{
 pub use safety::is_safe_companion_output;
 pub use visual_prompt::{
     build_character_visual_edit_prompt, build_character_visual_prompt,
-    style_lock_violation_in, visual_identity_violates_style_lock,
+    literary_sludge_in, persona_has_literary_sludge, persona_literary_sludge_in,
+    style_lock_violation_in,
+    visual_identity_has_literary_sludge, visual_identity_violates_style_lock,
     COMPANION_VISUAL_SCHOOL,
 };
 pub use visual_contract::{
@@ -97,8 +99,10 @@ pub use visual_contract::{
     character_asset_contract_fingerprint,
 };
 pub use visual_design::{
-    sanitize_upper_body_visual_identity, upper_body_visual_identity_is_complete,
-    UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+    character_module, clothing_style_grammar, clothing_style_of, flatten_visual_identity,
+    normalize_clothing_style, outfit_module, sanitize_upper_body_visual_identity,
+    stamp_clothing_style, upper_body_visual_identity_is_complete, CHARACTER_VISUAL_FIELDS,
+    CLOTHING_STYLES, OUTFIT_VISUAL_FIELDS, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
 };
 
 pub const MIN_TICK_SECONDS: u64 = 15;
