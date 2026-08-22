@@ -24,20 +24,20 @@ pub const CLOTHING_STYLES: [&str; 17] = [
 ];
 
 pub const CHARACTER_VISUAL_FIELDS: [(&str, usize); 4] = [
-    ("faceDesign", 500),
-    ("eyeDesign", 500),
-    ("hairShape", 500),
-    ("hairLayerPlan", 700),
+    ("faceDesign", 260),
+    ("eyeDesign", 360),
+    ("hairShape", 300),
+    ("hairLayerPlan", 380),
 ];
 
 pub const OUTFIT_VISUAL_FIELDS: [(&str, usize); 7] = [
-    ("upperBodySilhouette", 700),
-    ("outfitConstruction", 1_200),
-    ("sleeveArmDesign", 700),
-    ("materialPlan", 1_200),
-    ("heroAccessory", 500),
-    ("paletteHint", 500),
-    ("motif", 500),
+    ("upperBodySilhouette", 320),
+    ("outfitConstruction", 520),
+    ("sleeveArmDesign", 360),
+    ("materialPlan", 420),
+    ("heroAccessory", 420),
+    ("paletteHint", 340),
+    ("motif", 280),
 ];
 
 /// Flat field list for prompts and language checks. Order is character then outfit.
@@ -64,55 +64,55 @@ pub fn normalize_clothing_style(raw: &str) -> Option<&'static str> {
 pub fn clothing_style_grammar(id: &str) -> Option<&'static str> {
     Some(match normalize_clothing_style(id)? {
         "everyday" => {
-            "contemporary casual everyday clothes. Invent a new cut each time. Not historical dress, not a national costume, not court crests or frog-button hardware."
+            "Contemporary casual wear built around one changing upper-body silhouette driver: a wrapped layer, cropped overshirt, shaped knit panel, relaxed vest, or utility yoke. Combine familiar cloth construction with one crisp color-block interruption and a small practical fastening."
         }
         "uniform" => {
-            "school, academy, or service uniform. Invent a new cut each time — not always a sailor collar and neckerchief."
+            "An original academy or service uniform with disciplined repeating trim and one strong structural driver such as a split yoke, offset tabard, short mantle, fitted vest, or layered overshirt. Make the collar, closure, and shoulder line belong to the same invented institution."
         }
         "fantasy" => {
-            "original fantasy-adventure costume. Invent a new cut each time — not always a capelet and one chest brooch. Not locked to any real-world nation or dynasty."
+            "Original fantasy-adventure wear combining a practical inner layer with one silhouette-changing outer device such as a split mantle, plated shoulder petal, wrapped harness panel, floating oversleeve, or sculpted collar. Integrate the hero ornament into a clasp, hinge, chain, or frame."
         }
         "urban" => {
-            "contemporary city clothes or smart streetwear. Invent a new cut each time — not always a hoodie and zipper."
+            "Contemporary city wear or smart streetwear driven by an offset lapel, modular shoulder panel, cropped technical layer, diagonal placket, or folded hood architecture. Use purposeful hardware and graphic color blocking with a clean everyday fit."
         }
         "east-asian" => {
-            "Chinese-inspired layered traditional or modern-hanfu fusion, only because the owner chose it. Invent a new cut each time — not always the same cross-collar and frog buttons."
+            "Chinese-inspired layered traditional or modern-hanfu fusion selected explicitly by the owner. Vary the upper-body skeleton through overlapping lapels, cloud-shoulder geometry, sleeveless beizi layers, structured standing collars, or wrapped short jackets, with culturally coherent closures and trim."
         }
         "japanese" => {
-            "Japanese-inspired traditional, shrine, or modern-wa fusion, only because the owner chose it. Invent a new cut each time — not always a shrine-maiden collar and rope."
+            "Japanese-inspired traditional, shrine, or modern-wa fusion selected explicitly by the owner. Build a fresh upper-body silhouette from layered eri collars, haori-derived panels, kosode wrapping, obi-linked upper structures, or modern tailored wa details with coherent cords and fastenings."
         }
         "sci-fi" => {
-            "science-fiction or futurist costume. Invent a new cut each time — not always white plates and a chest light."
+            "Science-fiction or futurist wear built from soft technical garments plus one dominant engineered structure: an articulated collar, asymmetric interface panel, segmented shoulder shell, tension harness, or translucent data layer. Use restrained luminous accents as part of seams and closures."
         }
         "formal" => {
-            "contemporary formalwear or evening tailoring. Invent a new cut each time. Not a wedding-dress cliché, not idol stage badges or bows."
+            "Contemporary formalwear or evening tailoring centered on one designed line: asymmetric lapel, sculpted drape, corseted waist panel, cape sleeve, architectural neckline, or layered waistcoat. Let precise tailoring, restrained jewelry, and material contrast carry the focal hierarchy."
         }
         "sport" => {
-            "athletic or outdoor sport topwear. Invent a new cut each time — not always a track jacket with a chest logo. Not stage jewelry, not court metalwork."
+            "Athletic or outdoor sport topwear with functional paneling, ventilation zones, compression or shell layering, and one silhouette driver such as an offset wind guard, climbing yoke, protective shoulder cap, or wrap closure. Turn the motif into seam rhythm and hardware rather than a printed brand."
         }
         "royal" => {
-            "original court or royal ceremonial costume. Invent a new cut each time — not always a gold crest and a tiara. Not a real dynasty uniform, not idol stagewear."
+            "An original fictional court or royal ceremonial costume with controlled hierarchy: sculpted collar or mantle, tailored inner coat, one asymmetrical sash or shoulder structure, dimensional insignia hardware, and restrained precious trim. Invent a coherent court language rather than copying a real dynasty."
         }
         "idol" => {
-            "original idol or stage performance costume. Stay in live-stage / performance wear. Invent a new cut each time — not always a cropped jacket with bows and an ear headset. Not court ceremonial dress, not frog-button or hanfu hardware, not a real group uniform."
+            "Original live-stage performance wear with one strong upper-body silhouette driver: a shoulder fan, ribbon-panel capelet, structured peplum, split oversleeve, sculpted collar, or asymmetric stage drape. Use rhythmic color-block planes, movement-ready layering, and one dimensional seam-anchored hero ornament so the costume reads clearly under stage light."
         }
         "gothic" => {
-            "contemporary gothic or dark-romantic costume. Invent a new cut each time — not always a black lace collar and one choker."
+            "Contemporary gothic or dark-romantic wear shaped by an architectural neckline, corset-derived panel, split lace oversleeve, short mourning cape, or asymmetric ruffle cascade. Balance dark fabric masses with one jewel tone and dimensional metal or enamel hardware."
         }
         "lounge" => {
-            "soft indoor loungewear or knit home clothes. Invent a new cut each time — not always an open cardigan over a camisole."
+            "Soft indoor loungewear or knit home clothes using enveloping but designed layers: a wrapped knit, shaped shawl collar, quilted shoulder panel, loose henley, or soft cropped robe. Create identity through knit direction, piping, pocket or tie construction, and one tactile accessory."
         }
         "mystic" => {
-            "original mystic, occult, or ritual costume. Invent a new cut each time — not always a hooded cloak and one amulet. Not clerical dress of a real faith."
+            "An original fictional mystic or ritual costume organized around one readable apparatus: orbiting collar frame, layered stole, geometric shoulder veil, talisman harness, or split ceremonial oversleeve. Integrate symbols into cutouts, clasps, chains, and borders without borrowing a real faith's vestments."
         }
         "travel" => {
-            "layered traveler or expedition outerwear. Invent a new cut each time — not always a utility vest and one satchel strap."
+            "Layered traveler or expedition outerwear with a practical inner layer and one silhouette-changing weather or carrying system: map-pocket yoke, short storm cape, crossed strap frame, modular scarf collar, or reinforced shoulder wrap. Keep fastenings and accessories usable and geographically neutral."
         }
         "vintage" => {
-            "vintage or retro mid-century civilian clothes. Invent a new cut each time — not always a peter-pan collar and one brooch."
+            "Vintage or retro mid-century civilian wear built from era-aware tailoring, knit, pleat, piping, and button rhythm. Vary the silhouette through a shaped bolero, diagonal blouse drape, fitted waistcoat, sculpted collar, or short cape sleeve, then add one period-coherent dimensional accessory."
         }
         "rain" => {
-            "rain-coat or trench family outerwear. Invent a new cut each time — not always the same storm-flap trench."
+            "Raincoat or trench-family outerwear using waterproof layering, sealed closures, and a changing weather silhouette such as an asymmetric storm shield, translucent shoulder cape, folded hood collar, belted wrap panel, or modular cuff guard. Make reflective and translucent details follow construction seams."
         }
         _ => return None,
     })
@@ -333,25 +333,25 @@ mod tests {
         assert_eq!(normalize_clothing_style("国风"), None);
         assert_eq!(normalize_clothing_style("zh-CN"), None);
         let grammar = clothing_style_grammar("everyday").unwrap();
-        assert!(grammar.contains("Not historical"));
+        assert!(grammar.contains("silhouette driver"));
         assert!(clothing_style_grammar("east-asian")
             .unwrap()
-            .contains("only because the owner chose it"));
+            .contains("selected explicitly by the owner"));
         assert!(clothing_style_grammar("royal")
             .unwrap()
-            .contains("Not a real dynasty"));
+            .contains("coherent court language"));
         assert!(clothing_style_grammar("idol")
             .unwrap()
-            .contains("Not court ceremonial dress"));
+            .contains("live-stage performance wear"));
         assert!(clothing_style_grammar("idol")
             .unwrap()
-            .contains("not always a cropped jacket"));
+            .contains("dimensional seam-anchored hero ornament"));
         assert!(clothing_style_grammar("uniform")
             .unwrap()
-            .contains("Invent a new cut each time"));
+            .contains("strong structural driver"));
         assert!(clothing_style_grammar("rain")
             .unwrap()
-            .contains("not always the same storm-flap trench"));
+            .contains("weather silhouette"));
     }
 
     #[test]

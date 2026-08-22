@@ -88,11 +88,18 @@ pub use runtime::{
 };
 pub use safety::is_safe_companion_output;
 pub use visual_prompt::{
-    build_character_visual_edit_prompt, build_character_visual_prompt,
-    literary_sludge_in, persona_has_literary_sludge, persona_literary_sludge_in,
-    style_lock_violation_in,
-    visual_identity_has_literary_sludge, visual_identity_violates_style_lock,
-    COMPANION_VISUAL_SCHOOL,
+    body_proportion_drift_in, build_character_visual_edit_prompt, build_character_visual_prompt,
+    camera_composition_drift_in, facial_construction_drift_in, literary_sludge_in,
+    normalize_visual_identity_for_prompt, normalize_visual_requirements_for_design,
+    normalize_visual_requirements_for_design_with_gender, persona_has_literary_sludge,
+    persona_literary_sludge_in,
+    portrait_adjustment_changes_identity, portrait_adjustment_is_within_scope,
+    style_lock_violation_in, visual_identity_has_body_proportion_drift,
+    visual_identity_has_camera_composition_drift,
+    visual_identity_has_facial_construction_drift, visual_identity_has_literary_sludge,
+    visual_identity_matches_gender_presentation, visual_identity_violates_style_lock,
+    COMPANION_STYLE_REFERENCE_SHA256, COMPANION_VISUAL_SCHOOL,
+    COMPANION_VISUAL_SCHOOL_VERSION,
 };
 pub use visual_contract::{
     appearance_visual_profile, build_character_asset_contract,
