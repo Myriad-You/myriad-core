@@ -60,19 +60,16 @@ pub use report_dna::{
     MAX_REPORT_INSIGHT_CHARS, MAX_REPORT_NOTE_CHARS, MAX_REPORT_SUMMARY_CHARS, PERSONA_POOL_KEYS,
 };
 pub use rig::{
-    build_portrait_fallback_rig, build_portrait_fallback_rig_with_generation,
-    build_standard_face_rig_clips,
-    build_standard_face_rig_clips_for_semantics, compile_layered_rig, default_rig_motion_profile,
+    compile_layered_rig, default_rig_motion_profile,
     infer_outfit_profile, migrate_rig_manifest, validate_character_asset_source,
     RigBlinkMotionProfile, RigBone, RigBoneHandle,
-    RigBreathMotionProfile, RigClip, RigClipEvent,
-    RigClipGenerationProfile, RigClipPresentation, RigCompileError, RigCompileSource,
-    RigExpressionPresentation, RigKeyframe, RigLayerMeshSource, RigLayerSource, RigManifest,
+    RigBreathMotionProfile, RigCompileError, RigCompileSource,
+    RigLayerMeshSource, RigLayerSource, RigManifest,
     RigMotionProfile, RigOutfitProfile, RigOutfitTopology, RigPart, RigPoint,
-    RigPresentationKeyframe, RigQuality,
-    RigRect, RigSecondaryMotionProfile, RigSemanticAnchor, RigSize, RigTexture, RigTrack,
-    RigTransform, RigValidationError, RigVertex, MAX_RIG_BONES,
-    MAX_RIG_CLIPS, MAX_RIG_COLLISION_VOLUMES, MAX_RIG_KEYFRAMES_PER_TRACK, MAX_RIG_PARTS,
+    RigQuality,
+    RigRect, RigSecondaryMotionProfile, RigSemanticAnchor, RigSize, RigTexture,
+    RigValidationError, RigVertex, MAX_RIG_BONES,
+    MAX_RIG_COLLISION_VOLUMES, MAX_RIG_PARTS,
     MAX_RIG_TEXTURES, MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART,
     MIN_SUPPORTED_RIG_IR_VERSION, RIG_IR_VERSION, RIG_SCHEMA_VERSION,
 };
@@ -90,9 +87,14 @@ pub use runtime::{
     CHAT_IDLE_AFTER_MINUTES,
 };
 pub use safety::is_safe_companion_output;
-pub use visual_prompt::{build_character_visual_prompt, COMPANION_VISUAL_SCHOOL};
+pub use visual_prompt::{
+    build_character_visual_edit_prompt, build_character_visual_prompt,
+    style_lock_violation_in, visual_identity_violates_style_lock,
+    COMPANION_VISUAL_SCHOOL,
+};
 pub use visual_contract::{
-    build_character_asset_contract, character_asset_contract_fingerprint,
+    appearance_visual_profile, build_character_asset_contract,
+    character_asset_contract_fingerprint,
 };
 pub use visual_design::{
     sanitize_upper_body_visual_identity, upper_body_visual_identity_is_complete,

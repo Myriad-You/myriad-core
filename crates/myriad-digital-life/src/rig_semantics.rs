@@ -160,7 +160,7 @@ fn connected(chain: &[String], bones: &[RigBone]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rig::{build_standard_face_rig_clips_for_semantics, RigPoint};
+    use crate::rig::RigPoint;
     use crate::rig_outfit::default_semantic_anchors;
 
     #[test]
@@ -183,12 +183,6 @@ mod tests {
             secondary_bone_ids: Vec::new(),
         };
         assert!(rig_semantics_are_valid(&semantics, &bones));
-        let clips = build_standard_face_rig_clips_for_semantics(&bones, Some(&semantics))
-            .expect("standard clips map to custom bones");
-        assert!(clips
-            .iter()
-            .flat_map(|clip| &clip.tracks)
-            .all(|track| { ["hips-x", "spine-x", "skull-x"].contains(&track.bone_id.as_str()) }));
         let anchors = default_semantic_anchors(&bones, Some(&semantics));
         assert_eq!(anchors["forehead"].bone_id, "skull-x");
         assert_eq!(anchors["temple-right"].bone_id, "skull-x");

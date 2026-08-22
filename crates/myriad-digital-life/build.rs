@@ -19,7 +19,6 @@ fn main() {
         "pub const RIG_SCHEMA_VERSION: u8 = {};\n\
          pub const RIG_IR_VERSION: u16 = {};\n\
          pub const MIN_SUPPORTED_RIG_IR_VERSION: u16 = {};\n\
-         pub const STANDARD_CLIP_LIBRARY_VERSION: u16 = {};\n\
          pub const CHARACTER_ASSET_CONTRACT_VERSION: u16 = {};\n\
          pub const PORTRAIT_ASPECT_WIDTH: u32 = {};\n\
          pub const PORTRAIT_ASPECT_HEIGHT: u32 = {};\n\
@@ -34,13 +33,10 @@ fn main() {
          pub const MAX_RIG_PARTS: usize = {};\n\
          pub const MAX_RIG_VERTICES_PER_PART: usize = {};\n\
          pub const MAX_RIG_TOTAL_VERTICES: usize = {};\n\
-         pub const MAX_RIG_CLIPS: usize = {};\n\
-         pub const MAX_RIG_KEYFRAMES_PER_TRACK: usize = {};\n\
          pub const MAX_RIG_COLLISION_VOLUMES: usize = {};\n",
         number(&["schemaVersion"]),
         number(&["rigIrVersion"]),
         number(&["minSupportedRigIrVersion"]),
-        number(&["standardClipLibraryVersion"]),
         number(&["characterAsset", "contractVersion"]),
         number(&["characterAsset", "portrait", "aspect", "width"]),
         number(&["characterAsset", "portrait", "aspect", "height"]),
@@ -61,8 +57,6 @@ fn main() {
         number(&["limits", "maxParts"]),
         number(&["limits", "maxVerticesPerPart"]),
         number(&["limits", "maxTotalVertices"]),
-        number(&["limits", "maxClips"]),
-        number(&["limits", "maxKeyframesPerTrack"]),
         number(&["limits", "maxCollisionVolumes"]),
     );
     assert!(

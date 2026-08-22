@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "rigIrVersion": 4,
   "minSupportedRigIrVersion": 2,
-  "standardClipLibraryVersion": 10,
   "characterAsset": {
     "contractVersion": 2,
     "portrait": {
@@ -58,8 +57,6 @@
     "maxParts": 64,
     "maxVerticesPerPart": 16384,
     "maxTotalVertices": 65535,
-    "maxClips": 64,
-    "maxKeyframesPerTrack": 256,
     "maxCollisionVolumes": 16
   },
   "secondaryPartPatterns": [

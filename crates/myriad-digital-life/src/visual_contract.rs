@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use sha2::{Digest, Sha256};
 use std::fmt::Write;
 
@@ -8,6 +8,25 @@ use crate::rig_contract::{
     PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, PORTRAIT_GENERATION_HEIGHT,
     PORTRAIT_GENERATION_WIDTH,
 };
+
+const APPEARANCE_VISUAL_PROFILE_KEYS: &[&str] =
+    &["extraRequirements", "visualIdentity"];
+
+/// Keep only the fields that actually change generated pixels.
+/// Gender already shaped the confirmed visual design; language, tag seeds,
+/// and persona extras stay on the profile for onboarding.
+pub fn appearance_visual_profile(visual_profile: &Value) -> Value {
+    let Some(source) = visual_profile.as_object() else {
+        return visual_profile.clone();
+    };
+    let mut appearance = Map::new();
+    for key in APPEARANCE_VISUAL_PROFILE_KEYS {
+        if let Some(value) = source.get(*key) {
+            appearance.insert((*key).to_string(), value.clone());
+        }
+    }
+    Value::Object(appearance)
+}
 
 /// Immutable input snapshot for the generated master portrait.
 ///
@@ -24,7 +43,7 @@ pub fn build_character_asset_contract(
         "slot": "master",
         "identity": {
             "name": bounded_text(name, 50),
-            "visualProfile": visual_profile,
+            "visualProfile": appearance_visual_profile(visual_profile),
         },
         "output": {
             "width": PORTRAIT_GENERATION_WIDTH,
@@ -121,6 +140,46 @@ mod tests {
         assert_ne!(
             character_asset_contract_fingerprint(&first),
             character_asset_contract_fingerprint(&second)
+        );
+    }
+
+    #[test]
+    fn onboarding_seeds_do_not_change_portrait_fingerprint() {
+        let core = json!({
+            "gender": "female",
+            "language": "zh-CN",
+            "extraRequirements": "金色眼睛",
+            "visualIdentity": { "hairShape": "短发" }
+        });
+        let mut with_seeds = core.clone();
+        with_seeds["sourceTags"] = json!(["慢热"]);
+        with_seeds["personaExtraRequirements"] = json!("话少");
+        assert_eq!(
+            character_asset_contract_fingerprint(&build_character_asset_contract(
+                "Nova", &core, None
+            )),
+            character_asset_contract_fingerprint(&build_character_asset_contract(
+                "Nova", &with_seeds, None
+            )),
+        );
+        assert!(appearance_visual_profile(&with_seeds)
+            .get("sourceTags")
+            .is_none());
+        assert!(appearance_visual_profile(&with_seeds)
+            .get("language")
+            .is_none());
+        assert!(appearance_visual_profile(&with_seeds)
+            .get("gender")
+            .is_none());
+        let mut other_language = core.clone();
+        other_language["language"] = json!("en-US");
+        assert_eq!(
+            character_asset_contract_fingerprint(&build_character_asset_contract(
+                "Nova", &core, None
+            )),
+            character_asset_contract_fingerprint(&build_character_asset_contract(
+                "Nova", &other_language, None
+            )),
         );
     }
 }
