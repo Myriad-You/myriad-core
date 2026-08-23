@@ -97,23 +97,13 @@ pub fn score_memory_importance(note: &str, runtime: &RuntimeState) -> f64 {
     let mut score: f64 = 0.48;
     let lower = note.to_lowercase();
     let markers = [
-        "喜欢",
-        "讨厌",
-        "偏好",
-        "习惯",
-        "记得",
-        "名字",
-        "工作",
-        "生日",
-        "prefer",
-        "always",
-        "never",
-        "love",
-        "hate",
-        "name",
-        "job",
+        "喜欢", "讨厌", "偏好", "习惯", "记得", "名字", "工作", "生日", "prefer", "always",
+        "never", "love", "hate", "name", "job",
     ];
-    if markers.iter().any(|marker| lower.contains(marker) || note.contains(marker)) {
+    if markers
+        .iter()
+        .any(|marker| lower.contains(marker) || note.contains(marker))
+    {
         score += 0.18;
     }
     let len = note.chars().count();

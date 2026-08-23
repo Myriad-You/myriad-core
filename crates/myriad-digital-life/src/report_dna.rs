@@ -94,9 +94,9 @@ pub fn seed_shuffle<T>(items: &mut [T], seed: &str) {
     if items.len() <= 1 {
         return;
     }
-    let mut state = seed
-        .bytes()
-        .fold(0u32, |acc, byte| acc.wrapping_mul(33).wrapping_add(byte as u32));
+    let mut state = seed.bytes().fold(0u32, |acc, byte| {
+        acc.wrapping_mul(33).wrapping_add(byte as u32)
+    });
     if state == 0 {
         state = 1;
     }
@@ -183,7 +183,12 @@ pub fn fallback_tag_deck(
 
 /// @deprecated Prefer [`complete_ai_tag_deck`] or [`fallback_tag_deck`].
 /// Kept as an alias of fallback for any external call sites.
-pub fn sample_tag_deck(primary: &[String], language: &str, seed: &str, target: usize) -> Vec<String> {
+pub fn sample_tag_deck(
+    primary: &[String],
+    language: &str,
+    seed: &str,
+    target: usize,
+) -> Vec<String> {
     fallback_tag_deck(primary, language, seed, target)
 }
 
@@ -386,16 +391,23 @@ pub fn is_reasonable_persona_tag(label: &str) -> bool {
         return false;
     }
     const LITERARY: &[&str] = &[
-        "质感", "美学", "信仰", "虔诚", "月光", "余温", "藏锋", "证明存在", "消化情绪",
-        "取自", "像把", "在心里",
+        "质感",
+        "美学",
+        "信仰",
+        "虔诚",
+        "月光",
+        "余温",
+        "藏锋",
+        "证明存在",
+        "消化情绪",
+        "取自",
+        "像把",
+        "在心里",
     ];
     if LITERARY.iter().any(|blocked| label.contains(blocked)) {
         return false;
     }
-    if label.contains('(')
-        || label.contains(')')
-        || label.contains('（')
-        || label.contains('）')
+    if label.contains('(') || label.contains(')') || label.contains('（') || label.contains('）')
     {
         return false;
     }

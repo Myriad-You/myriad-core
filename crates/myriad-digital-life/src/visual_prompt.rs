@@ -699,8 +699,14 @@ const FEMALE_REQUIREMENT_REWRITES: &[(&str, &str)] = &[
     ("boyish young-adult", "feminine young-adult"),
     ("boyish", "feminine young-adult"),
     ("adolescent-male", "young-adult feminine"),
-    ("short flat thick brows", "clear softly shaped feminine brows"),
-    ("short thick straight brows", "clear softly shaped feminine brows"),
+    (
+        "short flat thick brows",
+        "clear softly shaped feminine brows",
+    ),
+    (
+        "short thick straight brows",
+        "clear softly shaped feminine brows",
+    ),
     ("少年らしい", "若い女性らしい"),
     ("男の子っぽい", "若い女性らしい"),
     ("太く短い平眉", "柔らかく整えた女性的な眉"),
@@ -870,10 +876,7 @@ pub fn normalize_visual_requirements_for_design(text: &str) -> String {
     normalize_visual_requirements_for_design_with_gender(text, "unspecified")
 }
 
-pub fn normalize_visual_requirements_for_design_with_gender(
-    text: &str,
-    gender: &str,
-) -> String {
+pub fn normalize_visual_requirements_for_design_with_gender(text: &str, gender: &str) -> String {
     let normalized = normalize_gendered_requirement_cues(
         &normalize_facial_identity_cue(&bounded_text(text, 500)),
         gender,
@@ -1450,7 +1453,9 @@ mod tests {
     fn style_lock_rejects_realism_and_strips_override_notes() {
         assert!(style_lock_violation_in("semi-realistic oil painting"));
         assert!(style_lock_violation_in("皮肤带毛孔的半写实厚涂"));
-        assert!(style_lock_violation_in("soft watercolor airbrush rendering"));
+        assert!(style_lock_violation_in(
+            "soft watercolor airbrush rendering"
+        ));
         assert!(style_lock_violation_in("水彩喷枪风格"));
         assert!(!style_lock_violation_in("layered pink bob and jewel eyes"));
         assert!(visual_identity_violates_style_lock(&json!({

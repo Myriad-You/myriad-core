@@ -71,7 +71,10 @@ pub fn parse_and_validate_decision(
 
     let thought = safe_output(normalize_text("thought", decision.thought, 500)?);
     let mut speak = safe_output(normalize_text("speak", decision.speak, 280)?);
-    if speak.as_ref().is_some_and(|value| is_low_quality_speak(value)) {
+    if speak
+        .as_ref()
+        .is_some_and(|value| is_low_quality_speak(value))
+    {
         speak = None;
     }
     // Drop speak that is identical to thought (private monologue leaked as chat).
@@ -256,16 +259,20 @@ mod tests {
     fn filler_speak_is_stripped_and_low_pressure_runtime_blocks_proactive() {
         let mut value: serde_json::Value = serde_json::from_str(&valid_json()).unwrap();
         value["speak"] = serde_json::json!("在吗");
-        let decision =
-            parse_and_validate_decision(&serde_json::to_string(&value).unwrap(), &CompanionPolicy::default())
-                .unwrap();
+        let decision = parse_and_validate_decision(
+            &serde_json::to_string(&value).unwrap(),
+            &CompanionPolicy::default(),
+        )
+        .unwrap();
         assert!(decision.speak.is_none());
 
         let mut rich = serde_json::from_str::<serde_json::Value>(&valid_json()).unwrap();
         rich["speak"] = serde_json::json!("忙完记得休息一下。");
-        let decision =
-            parse_and_validate_decision(&serde_json::to_string(&rich).unwrap(), &CompanionPolicy::default())
-                .unwrap();
+        let decision = parse_and_validate_decision(
+            &serde_json::to_string(&rich).unwrap(),
+            &CompanionPolicy::default(),
+        )
+        .unwrap();
         let now = Utc::now();
         let mut calm = RuntimeState::new(now);
         calm.boredom = 10.0;

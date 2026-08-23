@@ -3,13 +3,13 @@ use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-pub use crate::rig_contract::{
-    CHARACTER_ASSET_CONTRACT_VERSION, MAX_RIG_BONES,
-    MAX_RIG_COLLISION_VOLUMES, MAX_RIG_PARTS, MAX_RIG_TEXTURES,
-    MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART, MIN_SUPPORTED_RIG_IR_VERSION,
-    PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, RIG_IR_VERSION, RIG_SCHEMA_VERSION,
-};
 use crate::rig_contract::PRESENTATION_SLOT_VARIANTS;
+pub use crate::rig_contract::{
+    CHARACTER_ASSET_CONTRACT_VERSION, MAX_RIG_BONES, MAX_RIG_COLLISION_VOLUMES, MAX_RIG_PARTS,
+    MAX_RIG_TEXTURES, MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART,
+    MIN_SUPPORTED_RIG_IR_VERSION, PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, RIG_IR_VERSION,
+    RIG_SCHEMA_VERSION,
+};
 use crate::rig_outfit::{
     default_semantic_anchors, outfit_profile_is_valid, semantic_anchors_are_valid,
 };
@@ -17,9 +17,7 @@ pub use crate::rig_outfit::{
     infer_outfit_profile, RigOutfitProfile, RigOutfitTopology, RigSemanticAnchor,
 };
 pub use crate::rig_semantics::RigSemantics;
-use crate::rig_semantics::{
-    default_rig_semantics, migrate_rig_semantics, rig_semantics_are_valid,
-};
+use crate::rig_semantics::{default_rig_semantics, migrate_rig_semantics, rig_semantics_are_valid};
 use crate::rig_spatial::{infer_spatial_profile, spatial_profile_is_valid, RigSpatialProfile};
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -286,7 +284,8 @@ impl RigManifest {
                 .source_generation_fingerprint
                 .as_deref()
                 .is_some_and(|value| {
-                    value.len() != 64 || !value.chars().all(|character| character.is_ascii_hexdigit())
+                    value.len() != 64
+                        || !value.chars().all(|character| character.is_ascii_hexdigit())
                 })
         {
             return Err(RigValidationError::AssetContract);
@@ -496,11 +495,8 @@ pub fn migrate_rig_manifest(
         .as_ref()
         .map(|profile| profile.secondary_part_ids.as_slice())
         .unwrap_or_default();
-    let migrated_semantics = migrate_rig_semantics(
-        manifest.semantics.as_ref(),
-        &manifest.bones,
-        secondary,
-    );
+    let migrated_semantics =
+        migrate_rig_semantics(manifest.semantics.as_ref(), &manifest.bones, secondary);
     if manifest.semantics.as_ref() != Some(&migrated_semantics) {
         manifest.semantics = Some(migrated_semantics);
         changed = true;
@@ -550,9 +546,9 @@ pub fn validate_character_asset_source(
         })
     };
     let parent_is = |bone_id: &str, parent_id: &str| {
-        bones.iter().any(|bone| {
-            bone.id == bone_id && bone.parent.as_deref() == Some(parent_id)
-        })
+        bones
+            .iter()
+            .any(|bone| bone.id == bone_id && bone.parent.as_deref() == Some(parent_id))
     };
     let rigid_fragment = |side: &str| {
         let layer_id = format!("a25d-handwear-{side}");
@@ -1228,8 +1224,8 @@ mod tests {
             parent: parent.map(str::to_string),
             pivot: RigPoint { x: 0.5, y: 0.5 },
         };
-        let layer = |id: &str, slot: Option<&str>, variant: Option<&str>, bone_id: &str| {
-            RigLayerSource {
+        let layer =
+            |id: &str, slot: Option<&str>, variant: Option<&str>, bone_id: &str| RigLayerSource {
                 id: id.to_string(),
                 texture_id: "atlas".to_string(),
                 texture_bounds: RigRect {
@@ -1250,8 +1246,7 @@ mod tests {
                     end: RigPoint { x: 1.0, y: 1.0 },
                     falloff: 1.0,
                 }],
-            }
-        };
+            };
         let mut bones = vec![
             bone("root", None),
             bone("body", Some("root")),

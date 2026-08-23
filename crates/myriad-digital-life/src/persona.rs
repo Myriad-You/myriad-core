@@ -4,11 +4,7 @@ use crate::sanitize_onboarding_tags;
 
 const MAX_PERSONA_LIST_ITEMS: usize = 12;
 
-pub fn fallback_persona_draft(
-    name: &str,
-    language: &str,
-    tags: &[String],
-) -> Value {
+pub fn fallback_persona_draft(name: &str, language: &str, tags: &[String]) -> Value {
     let tags = sanitize_onboarding_tags(tags);
     let summary = fallback_summary(name, language, &tags);
     json!({
@@ -25,10 +21,7 @@ pub fn fallback_persona_draft(
 }
 
 pub fn sanitize_persona_draft(value: &Value, fallback: &Value) -> Option<Value> {
-    let source = value
-        .get("persona")
-        .unwrap_or(value)
-        .as_object()?;
+    let source = value.get("persona").unwrap_or(value).as_object()?;
     let mut result = fallback.as_object()?.clone();
 
     replace_text(&mut result, source, "summary", &["summary"], 1_200);
@@ -69,8 +62,8 @@ pub fn persona_draft_is_complete(value: &Value) -> bool {
         .get("summary")
         .and_then(Value::as_str)
         .is_some_and(|summary| summary.trim().chars().count() >= 8);
-    let temperament_ready = list_from(source, &["temperament", "traits"])
-        .is_some_and(|items| !items.is_empty());
+    let temperament_ready =
+        list_from(source, &["temperament", "traits"]).is_some_and(|items| !items.is_empty());
     let likes_ready = list_from(source, &["likes"]).is_some_and(|items| !items.is_empty());
     let drives_ready =
         list_from(source, &["drives", "motivations"]).is_some_and(|items| !items.is_empty());
@@ -104,8 +97,14 @@ fn fallback_summary(name: &str, language: &str, tags: &[String]) -> String {
         };
     }
     match language {
-        "ja-JP" => format!("{name}は、{}という気質を持つデジタルコンパニオンです。", traits.join("、")),
-        "en-US" => format!("{name} is a digital companion with a {} temperament.", traits.join(", ")),
+        "ja-JP" => format!(
+            "{name}は、{}という気質を持つデジタルコンパニオンです。",
+            traits.join("、")
+        ),
+        "en-US" => format!(
+            "{name} is a digital companion with a {} temperament.",
+            traits.join(", ")
+        ),
         _ => format!("{name}是一个带有{}气质的数字生命。", traits.join("、")),
     }
 }
@@ -181,11 +180,7 @@ mod tests {
 
     #[test]
     fn fallback_persona_is_character_only() {
-        let draft = fallback_persona_draft(
-            "Nova",
-            "en-US",
-            &["calm".into(), "curious".into()],
-        );
+        let draft = fallback_persona_draft("Nova", "en-US", &["calm".into(), "curious".into()]);
         assert!(!persona_draft_is_complete(&draft));
         assert_eq!(draft["draftSource"], "fallback");
         assert!(draft.get("visualIdentity").is_none());
@@ -222,6 +217,8 @@ mod tests {
     #[test]
     fn incomplete_model_payload_is_detected_before_sanitized_fallback() {
         assert!(!persona_draft_is_complete(&json!({"summary": "短"})));
-        assert!(!persona_draft_is_complete(&json!({"temperament": ["calm"]})));
+        assert!(!persona_draft_is_complete(
+            &json!({"temperament": ["calm"]})
+        ));
     }
 }

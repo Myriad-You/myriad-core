@@ -159,8 +159,7 @@ pub fn clothing_style_of(value: &Value) -> Option<&'static str> {
     [
         value.get("clothingStyle"),
         root.get("clothingStyle"),
-        root
-            .get("outfit")
+        root.get("outfit")
             .and_then(|outfit| outfit.get("clothingStyle")),
     ]
     .into_iter()
@@ -228,10 +227,7 @@ fn sanitize_fields(source: &Value, fields: &[(&str, usize)]) -> Option<Value> {
     let mut sanitized = Map::new();
     for (key, max_chars) in fields {
         let raw = source.get(*key)?.as_str()?.trim();
-        if raw.is_empty()
-            || raw.chars().count() > *max_chars
-            || raw.chars().any(char::is_control)
-        {
+        if raw.is_empty() || raw.chars().count() > *max_chars || raw.chars().any(char::is_control) {
             return None;
         }
         sanitized.insert((*key).to_string(), Value::String(raw.to_string()));
@@ -319,7 +315,10 @@ mod tests {
     #[test]
     fn missing_or_control_text_rejects_the_design() {
         let mut missing = complete_flat();
-        missing["visualIdentity"].as_object_mut().unwrap().remove("eyeDesign");
+        missing["visualIdentity"]
+            .as_object_mut()
+            .unwrap()
+            .remove("eyeDesign");
         assert!(!upper_body_visual_identity_is_complete(&missing));
         let mut control = complete_flat();
         control["visualIdentity"]["motif"] = json!("星轨\u{0000}");
@@ -357,7 +356,10 @@ mod tests {
     #[test]
     fn clothing_style_survives_on_the_outfit_module() {
         let mut identity = sanitize_upper_body_visual_identity(&complete_flat()).unwrap();
-        assert_eq!(stamp_clothing_style(&mut identity, "sci-fi"), Some("sci-fi"));
+        assert_eq!(
+            stamp_clothing_style(&mut identity, "sci-fi"),
+            Some("sci-fi")
+        );
         assert_eq!(identity["outfit"]["clothingStyle"], "sci-fi");
         assert_eq!(clothing_style_of(&identity), Some("sci-fi"));
         assert_eq!(
