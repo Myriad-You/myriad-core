@@ -8,15 +8,15 @@ const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 12_000;
 /// Bump when the shared construction/rendering school or its reference role changes.
 /// The value is part of the portrait fingerprint, so an old portrait cannot be
 /// mistaken for one generated under the current art-direction contract.
-pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "mihoyo-rpg-reference-v3";
+pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "mihoyo-rpg-reference-v4";
 pub const MEROPE_STYLE_REFERENCE_SHA256: &str =
     "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67";
 
-const MASTER_PORTRAIT_INSTRUCTION: &str = "One polished upper-body portrait on a vertical 3:4 canvas. Use a strict centered eye-level frontal reference view with zero head yaw, roll, and pitch: the face plane and torso are square to the camera; nose bridge, philtrum, chin, neck, and sternum share one vertical centerline; both eyes sit level at equal perspective scale; both cheeks have balanced frontal projection; and the anatomical shoulders are level with equal foreshortening. Preserve confirmed asymmetric lid acting as eye expression, while hairstyle, costume, and accessory asymmetry remain decorative around the square frontal anatomy. Preserve the confirmed apparent maturity, gaze direction, lid acting, stable brow design and tension, pupil focus, catchlights, and default mouth. Fill the canvas with a large readable head and shoulders almost the full width. Keep the complete head and hair silhouette inside the frame with a slim near-white top gutter and equal one-sixteenth-width side clearance. Crop through lower chest or high waist with both sleeves, cuffs, or short arm fragments visible; hands are optional. Use a seamless near-white studio backdrop and an opaque finished illustration.";
+const MASTER_PORTRAIT_INSTRUCTION: &str = "One polished upper-body portrait on a vertical 3:4 canvas. Use a strict centered eye-level frontal reference view with zero head yaw, roll, and pitch: the face plane and torso are square to the camera; nose bridge, philtrum, chin, neck, and sternum share one vertical centerline; both eyes sit level at equal perspective scale; both cheeks have balanced frontal projection; and the anatomical shoulders are level with equal foreshortening. Preserve confirmed asymmetric lid acting as eye expression, while hairstyle, costume, and accessory asymmetry remain decorative around the square frontal anatomy. Preserve the confirmed apparent maturity, gaze direction, lid acting, stable brow design and tension, pupil focus, catchlights, and default mouth. Fill the canvas with a large readable head and shoulders almost the full width. Keep the complete head and hair silhouette inside the frame with a slim near-white top gutter and equal one-sixteenth-width side clearance. The neck from jaw to collarbone stays fully visible and unobstructed by fabric. Crop through lower chest or high waist with both sleeves, cuffs, or short arm fragments visible; hands are optional. Use a seamless near-white studio backdrop and an opaque finished illustration.";
 
 /// Shared character-construction and rendering lock for design sheets and image prompts.
 /// Identity fields still own the actual hair, costume family, palette, and ornaments.
-pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-RPG character key art in the polished miHoYo character-design language associated with Genshin Impact and Honkai: Star Rail. Use a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, tiny clean nose and mouth, and readable medium-to-large eyes whose layered irises occupy most of the eye opening. Shape the eyes with crisp graphic upper lashes, precise lower-lid accents, clear pupils, and deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Build hair from a few broad tapered ribbon masses with clean overlaps, controlled color shifts, broad specular bands, and only a few flyaways. Use thin colored linework, crisp focal contours, and a clear hard/soft edge hierarchy. Build the selected costume as an unmistakable layered silhouette with a designed collar and closure, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes. Render with a clean cel-to-gradient hybrid: two or three intentional value planes, controlled soft gradients, graphic shadows, pearlescent frontal light, a restrained cool rim, and sharp accents on eyes, hair, metal, and gems. Finish with luminous near-white presentation, clear values, selective saturation, and polished game-production color clarity. Keep the person, costume, emblem, and name original";
+pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-RPG character key art in the polished miHoYo character-design language associated with Genshin Impact and Honkai: Star Rail. Use a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, tiny clean nose and mouth, and readable medium-to-large eyes whose layered irises occupy most of the eye opening. Shape the eyes with crisp graphic upper lashes, precise lower-lid accents, clear pupils, and deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Build hair from a few broad tapered ribbon masses with clean overlaps, controlled color shifts, broad specular bands, and only a few flyaways. Use thin colored linework, crisp focal contours, and a clear hard/soft edge hierarchy. Build the selected costume as an unmistakable layered silhouette with a designed open neckline and closure that leaves the neck uncovered, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes. Render with a clean cel-to-gradient hybrid: two or three intentional value planes, controlled soft gradients, graphic shadows, pearlescent frontal light, a restrained cool rim, and sharp accents on eyes, hair, metal, and gems. Finish with luminous near-white presentation, clear values, selective saturation, and polished game-production color clarity. Keep the person, costume, emblem, and name original";
 
 const STYLE_REFERENCE_ROLE_INSTRUCTION: &str = "Use the attached image as a rendering-technique reference only. Match its compact anime face scale, prominent jewel-eye scale, graphic lashes, broad hair-group construction, thin colored contours, clean cel-gradient planes, pastel clarity, and material separation. The confirmed identity below remains authoritative for gender, maturity, face variant, eye acting and colors, hair cut and colors, costume family and construction, palette, motif, and every accessory; do not transfer the reference character's pink hair, lavender sailor outfit, stars, birdcage earrings, or identity.";
 
@@ -639,6 +639,144 @@ const BODY_PROPORTION_REWRITES: &[(&str, &str)] = &[
     ("肩幅がかなり狭い", "肩線は柔らかく均整の取れた比率"),
 ];
 
+const HIGH_COLLAR_BANS: &[&str] = &[
+    "turtleneck",
+    "turtle neck",
+    "mock-neck",
+    "mock neck",
+    "funnel neck",
+    "funnel-neck",
+    "high-collared",
+    "high collar",
+    "high-collar",
+    "high neckline",
+    "high-neck",
+    "high neck",
+    "standing collar",
+    "stand-up collar",
+    "stand collar",
+    "mandarin collar",
+    "cowl neck",
+    "crew neck",
+    "crewneck",
+    "shawl collar",
+    "eri collar",
+    "layered eri",
+    "articulated collar",
+    "sculpted collar",
+    "folded hood collar",
+    "scarf collar",
+    "orbiting collar",
+    "covering the neck",
+    "covers the neck",
+    "wrapped around the neck",
+    "高领内搭",
+    "半高领",
+    "中高领",
+    "高领口",
+    "高领",
+    "立领",
+    "竖领",
+    "堆领",
+    "遮住脖子",
+    "遮挡脖子",
+    "包裹脖子",
+    "裹住脖子",
+    "围住脖子",
+    "盖住脖子",
+    "紧贴颈部",
+    "詰襟",
+    "立襟",
+    "ハイネック",
+    "タートルネック",
+    "スタンドカラー",
+    "首を覆",
+    "首元を隠",
+];
+
+const HIGH_COLLAR_REWRITES: &[(&str, &str)] = &[
+    ("turtleneck", "open neckline that leaves the neck uncovered"),
+    ("turtle neck", "open neckline that leaves the neck uncovered"),
+    ("mock-neck", "open neckline that leaves the neck uncovered"),
+    ("mock neck", "open neckline that leaves the neck uncovered"),
+    ("funnel neck", "open neckline that leaves the neck uncovered"),
+    ("funnel-neck", "open neckline that leaves the neck uncovered"),
+    ("high-collared", "open-necklined"),
+    ("high collar", "open neckline that leaves the neck uncovered"),
+    ("high-collar", "open neckline that leaves the neck uncovered"),
+    (
+        "high neckline",
+        "open neckline that leaves the neck uncovered",
+    ),
+    ("high-neck", "open neckline that leaves the neck uncovered"),
+    ("high neck", "open neckline that leaves the neck uncovered"),
+    (
+        "standing collar",
+        "open neckline that leaves the neck uncovered",
+    ),
+    (
+        "stand-up collar",
+        "open neckline that leaves the neck uncovered",
+    ),
+    ("stand collar", "open neckline that leaves the neck uncovered"),
+    (
+        "mandarin collar",
+        "open neckline that leaves the neck uncovered",
+    ),
+    ("cowl neck", "open neckline that leaves the neck uncovered"),
+    ("crew neck", "open neckline that leaves the neck uncovered"),
+    ("crewneck", "open neckline that leaves the neck uncovered"),
+    ("shawl collar", "open neckline that leaves the neck uncovered"),
+    (
+        "eri collar",
+        "open overlapping lapel that leaves the neck uncovered",
+    ),
+    (
+        "layered eri",
+        "open overlapping lapels that leave the neck uncovered",
+    ),
+    (
+        "articulated collar",
+        "open engineered neckline that leaves the neck uncovered",
+    ),
+    (
+        "sculpted collar",
+        "open sculpted neckline that leaves the neck uncovered",
+    ),
+    (
+        "folded hood collar",
+        "open hood resting off the neck",
+    ),
+    (
+        "scarf collar",
+        "open scarf drape that leaves the neck uncovered",
+    ),
+    (
+        "orbiting collar",
+        "orbiting shoulder frame that leaves the neck uncovered",
+    ),
+    ("高领内搭", "敞开领口内搭"),
+    ("半高领", "敞开领口、脖子不被衣服遮挡"),
+    ("中高领", "敞开领口、脖子不被衣服遮挡"),
+    ("高领口", "敞开领口、脖子不被衣服遮挡"),
+    ("高领", "敞开领口、脖子不被衣服遮挡"),
+    ("立领", "敞开领口、脖子不被衣服遮挡"),
+    ("竖领", "敞开领口、脖子不被衣服遮挡"),
+    ("堆领", "敞开领口、脖子不被衣服遮挡"),
+    ("遮住脖子", "脖子不被衣服遮挡"),
+    ("遮挡脖子", "脖子不被衣服遮挡"),
+    ("包裹脖子", "脖子不被衣服遮挡"),
+    ("裹住脖子", "脖子不被衣服遮挡"),
+    ("围住脖子", "脖子不被衣服遮挡"),
+    ("盖住脖子", "脖子不被衣服遮挡"),
+    ("紧贴颈部", "领口离开颈部"),
+    ("詰襟", "首が露出した開き襟"),
+    ("立襟", "首が露出した開き襟"),
+    ("ハイネック", "首が露出した開き襟"),
+    ("タートルネック", "首が露出した開き襟"),
+    ("スタンドカラー", "首が露出した開き襟"),
+];
+
 const FACIAL_CUE_REWRITES: &[(&str, &str)] = &[
     (
         "elongated oval face",
@@ -853,6 +991,7 @@ pub fn portrait_adjustment_is_within_scope(text: &str) -> bool {
         || phrase_list_matches(text, PORTRAIT_ADJUSTMENT_HARD_BANS)
         || camera_composition_drift_in(text)
         || phrase_list_matches(text, FIXED_FRAMING_CONFLICT_BANS)
+        || high_collar_violation_in(text)
         || prompt_override_in(text)
     {
         return false;
@@ -881,6 +1020,7 @@ pub fn normalize_visual_requirements_for_design_with_gender(text: &str, gender: 
         &normalize_facial_identity_cue(&bounded_text(text, 500)),
         gender,
     );
+    let normalized = normalize_neckline_cue(&normalized);
     normalized
         .split(|character: char| "。．.!！；;，,、\n".contains(character))
         .map(str::trim)
@@ -888,6 +1028,7 @@ pub fn normalize_visual_requirements_for_design_with_gender(text: &str, gender: 
             !clause.is_empty()
                 && !style_lock_violation_in(clause)
                 && !camera_composition_drift_in(clause)
+                && !high_collar_violation_in(clause)
                 && !prompt_override_in(clause)
         })
         .collect::<Vec<_>>()
@@ -968,7 +1109,14 @@ pub fn normalize_visual_identity_for_prompt(value: &Value) -> Option<Value> {
             let normalized = if matches!(*key, "faceDesign" | "eyeDesign") {
                 normalize_identity_field(&normalize_facial_identity_cue(raw))
             } else if *key == "upperBodySilhouette" {
-                normalize_identity_field(&normalize_body_proportion_cue(raw))
+                normalize_identity_field(&normalize_neckline_cue(
+                    &normalize_body_proportion_cue(raw),
+                ))
+            } else if matches!(
+                *key,
+                "outfitConstruction" | "sleeveArmDesign" | "heroAccessory" | "materialPlan"
+            ) {
+                normalize_identity_field(&normalize_neckline_cue(raw))
             } else {
                 normalize_identity_field(raw)
             };
@@ -1079,6 +1227,17 @@ pub fn body_proportion_drift_in(text: &str) -> bool {
 pub fn visual_identity_has_body_proportion_drift(value: &Value) -> bool {
     let root = value.get("visualIdentity").unwrap_or(value);
     visual_identity_field(root, "upperBodySilhouette").is_some_and(body_proportion_drift_in)
+}
+
+pub fn high_collar_violation_in(text: &str) -> bool {
+    phrase_list_matches(text, HIGH_COLLAR_BANS)
+}
+
+pub fn visual_identity_has_high_collar(value: &Value) -> bool {
+    any_string_matches(
+        value.get("visualIdentity").unwrap_or(value),
+        high_collar_violation_in,
+    )
 }
 
 const LITERARY_SLUDGE: &[&str] = &[
@@ -1203,8 +1362,16 @@ fn normalize_facial_identity_cue(text: &str) -> String {
 }
 
 fn normalize_body_proportion_cue(text: &str) -> String {
+    apply_rewrites(text, BODY_PROPORTION_REWRITES)
+}
+
+fn normalize_neckline_cue(text: &str) -> String {
+    apply_rewrites(text, HIGH_COLLAR_REWRITES)
+}
+
+fn apply_rewrites(text: &str, rewrites: &[(&str, &str)]) -> String {
     let mut normalized = text.to_string();
-    for (from, to) in BODY_PROPORTION_REWRITES {
+    for (from, to) in rewrites {
         if from.is_ascii() {
             loop {
                 let lower = normalized.to_ascii_lowercase();
@@ -1582,6 +1749,31 @@ mod tests {
         assert!(!prompt.contains("肩宽明显偏窄"));
         assert!(prompt.contains("颈部采用视觉校准的均衡比例"));
         assert!(prompt.contains("肩线柔和且比例均衡"));
+        assert!(visual_identity_has_high_collar(&onboarding));
+        assert_eq!(
+            normalized["outfit"]["outfitConstruction"],
+            "敞开领口内搭叠短外套"
+        );
+        assert!(!prompt.contains("高领"));
+        assert!(prompt.contains("敞开领口"));
+    }
+
+    #[test]
+    fn high_collar_is_banned_and_rewritten() {
+        assert!(high_collar_violation_in("black turtleneck under a coat"));
+        assert!(high_collar_violation_in("高领内搭叠短外套"));
+        assert!(high_collar_violation_in("スタンドカラーのコート"));
+        assert!(!high_collar_violation_in("sailor collar and open neckline"));
+        let identity = json!({
+            "outfit": {
+                "outfitConstruction": "turtleneck under a short jacket"
+            }
+        });
+        assert!(visual_identity_has_high_collar(&identity));
+        assert_eq!(
+            normalize_neckline_cue("高领内搭叠短外套"),
+            "敞开领口内搭叠短外套"
+        );
     }
 
     #[test]

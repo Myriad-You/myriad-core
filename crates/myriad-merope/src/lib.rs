@@ -92,14 +92,15 @@ pub use visual_design::{
 };
 pub use visual_prompt::{
     body_proportion_drift_in, build_character_visual_edit_prompt, build_character_visual_prompt,
-    camera_composition_drift_in, facial_construction_drift_in, literary_sludge_in,
-    normalize_visual_identity_for_prompt, normalize_visual_requirements_for_design,
-    normalize_visual_requirements_for_design_with_gender, persona_has_literary_sludge,
-    persona_literary_sludge_in, portrait_adjustment_changes_identity,
+    camera_composition_drift_in, facial_construction_drift_in, high_collar_violation_in,
+    literary_sludge_in, normalize_visual_identity_for_prompt,
+    normalize_visual_requirements_for_design, normalize_visual_requirements_for_design_with_gender,
+    persona_has_literary_sludge, persona_literary_sludge_in, portrait_adjustment_changes_identity,
     portrait_adjustment_is_within_scope, style_lock_violation_in,
     visual_identity_has_body_proportion_drift, visual_identity_has_camera_composition_drift,
-    visual_identity_has_facial_construction_drift, visual_identity_has_literary_sludge,
-    visual_identity_matches_gender_presentation, visual_identity_violates_style_lock,
+    visual_identity_has_facial_construction_drift, visual_identity_has_high_collar,
+    visual_identity_has_literary_sludge, visual_identity_matches_gender_presentation,
+    visual_identity_violates_style_lock,
     MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
 };
 

@@ -127,7 +127,7 @@ mod tests {
                 "hairShape": "银灰齐颌短发与偏分刘海",
                 "hairLayerPlan": "后发、刘海和左右侧发形成独立轮廓",
                 "upperBodySilhouette": "紧凑肩线、清楚领口与胸前焦点",
-                "outfitConstruction": "高领内搭叠短外套并止于高腰",
+                "outfitConstruction": "敞开领口内搭叠短外套并止于高腰",
                 "sleeveArmDesign": "左右袖片携局部前臂进入画面",
                 "materialPlan": material_plan,
                 "heroAccessory": "左胸星轨扣饰",
@@ -248,7 +248,7 @@ mod tests {
                 },
                 "outfit": {
                     "upperBodySilhouette": "紧凑肩胸",
-                    "outfitConstruction": "高领内搭叠短外套",
+                    "outfitConstruction": "敞开领口内搭叠短外套",
                     "sleeveArmDesign": "左右袖片",
                     "materialPlan": "哑光布料",
                     "heroAccessory": "左胸星扣",

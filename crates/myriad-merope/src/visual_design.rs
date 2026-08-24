@@ -64,55 +64,55 @@ pub fn normalize_clothing_style(raw: &str) -> Option<&'static str> {
 pub fn clothing_style_grammar(id: &str) -> Option<&'static str> {
     Some(match normalize_clothing_style(id)? {
         "everyday" => {
-            "Contemporary casual wear built around one changing upper-body silhouette driver: a wrapped layer, cropped overshirt, shaped knit panel, relaxed vest, or utility yoke. Combine familiar cloth construction with one crisp color-block interruption and a small practical fastening."
+            "Contemporary casual wear built around one changing upper-body silhouette driver: a wrapped layer, cropped overshirt, shaped knit panel, relaxed vest, or utility yoke. Combine familiar cloth construction with one crisp color-block interruption and a small practical fastening. Keep an open neckline so the neck from jaw to collarbone stays uncovered. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         "uniform" => {
-            "An original academy or service uniform with disciplined repeating trim and one strong structural driver such as a split yoke, offset tabard, short mantle, fitted vest, or layered overshirt. Make the collar, closure, and shoulder line belong to the same invented institution."
+            "An original academy or service uniform with disciplined repeating trim and one strong structural driver such as a split yoke, offset tabard, short mantle, fitted vest, or layered overshirt. Make the open neckline, closure, and shoulder line belong to the same invented institution. Never cover the neck with a closed high neckline. Palette: institutional dyes such as navy, bottle green, charcoal, and cream, plus one school or service accent. Not festival red-gold, gothic mourning black-wine, or idol holographic candy."
         }
         "fantasy" => {
-            "Original fantasy-adventure wear combining a practical inner layer with one silhouette-changing outer device such as a split mantle, plated shoulder petal, wrapped harness panel, floating oversleeve, or sculpted collar. Integrate the hero ornament into a clasp, hinge, chain, or frame."
+            "Original fantasy-adventure wear combining a practical inner layer with one silhouette-changing outer device such as a split mantle, plated shoulder petal, wrapped harness panel, floating oversleeve, or open sculpted neckline. Integrate the hero ornament into a clasp, hinge, chain, or frame. The neck stays fully visible. Palette: default weathered adventure dyes, travel leather, muted metal, and one magical jewel accent. Owner extras may override this default."
         }
         "urban" => {
-            "Contemporary city wear or smart streetwear driven by an offset lapel, modular shoulder panel, cropped technical layer, diagonal placket, or folded hood architecture. Use purposeful hardware and graphic color blocking with a clean everyday fit."
+            "Contemporary city wear or smart streetwear driven by an offset lapel, modular shoulder panel, cropped technical layer, diagonal placket, or open hood resting off the neck. Use purposeful hardware and graphic color blocking with a clean everyday fit. Keep the neck unobstructed. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         "east-asian" => {
-            "Chinese-inspired layered traditional or modern-hanfu fusion selected explicitly by the owner. Vary the upper-body skeleton through overlapping lapels, cloud-shoulder geometry, sleeveless beizi layers, structured standing collars, or wrapped short jackets, with culturally coherent closures and trim."
+            "Chinese-inspired layered traditional or modern-hanfu fusion selected explicitly by the owner. Vary the upper-body skeleton through open overlapping lapels, cloud-shoulder geometry, sleeveless beizi layers, or wrapped short jackets that leave the neck uncovered, with culturally coherent closures and trim. Palette: ink, cinnabar, lacquer, jade, tea, indigo, bone, and gold thread. Not idol candy neon, holographic pastel, or cyber magenta-cyan."
         }
         "japanese" => {
-            "Japanese-inspired traditional, shrine, or modern-wa fusion selected explicitly by the owner. Build a fresh upper-body silhouette from layered eri collars, haori-derived panels, kosode wrapping, obi-linked upper structures, or modern tailored wa details with coherent cords and fastenings."
+            "Japanese-inspired traditional, shrine, or modern-wa fusion selected explicitly by the owner. Build a fresh upper-body silhouette from open haori lapels, kosode wrapping that stays off the neck, obi-linked upper structures, or modern tailored wa details with coherent cords and fastenings. Do not stack closed inner collars over the neck. Palette: indigo, shrine vermilion, unbleached linen, black, gold, muted moss or restrained sakura. Not cyber neon or a full European mourning lace kit."
         }
         "sci-fi" => {
-            "Science-fiction or futurist wear built from soft technical garments plus one dominant engineered structure: an articulated collar, asymmetric interface panel, segmented shoulder shell, tension harness, or translucent data layer. Use restrained luminous accents as part of seams and closures."
+            "Science-fiction or futurist wear built from soft technical garments plus one dominant engineered structure: an open engineered neckline, asymmetric interface panel, segmented shoulder shell, tension harness, or translucent data layer. Use restrained luminous accents as part of seams and closures. Leave the neck uncovered. Palette: graphite, ice, gunmetal, and one luminous accent such as cyan, white, or pale violet. Not mineral 国风 red-gold-jade, not cute stage candy."
         }
         "formal" => {
-            "Contemporary formalwear or evening tailoring centered on one designed line: asymmetric lapel, sculpted drape, corseted waist panel, cape sleeve, architectural neckline, or layered waistcoat. Let precise tailoring, restrained jewelry, and material contrast carry the focal hierarchy."
+            "Contemporary formalwear or evening tailoring centered on one designed line: asymmetric lapel, sculpted drape, corseted waist panel, cape sleeve, open architectural neckline, or layered waistcoat. Let precise tailoring, restrained jewelry, and material contrast carry the focal hierarchy. The neck stays visible. Palette: default black, ivory, champagne, one deep evening jewel, and restrained metal. Owner extras may override this default."
         }
         "sport" => {
-            "Athletic or outdoor sport topwear with functional paneling, ventilation zones, compression or shell layering, and one silhouette driver such as an offset wind guard, climbing yoke, protective shoulder cap, or wrap closure. Turn the motif into seam rhythm and hardware rather than a printed brand."
+            "Athletic or outdoor sport topwear with functional paneling, ventilation zones, compression or shell layering, and one silhouette driver such as an offset wind guard, climbing yoke, protective shoulder cap, or wrap closure. Turn the motif into seam rhythm and hardware rather than a printed brand. Use an open sport neckline that does not cover the neck. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         "royal" => {
-            "An original fictional court or royal ceremonial costume with controlled hierarchy: sculpted collar or mantle, tailored inner coat, one asymmetrical sash or shoulder structure, dimensional insignia hardware, and restrained precious trim. Invent a coherent court language rather than copying a real dynasty."
+            "An original fictional court or royal ceremonial costume with controlled hierarchy: open ceremonial neckline or mantle that leaves the neck uncovered, tailored inner coat, one asymmetrical sash or shoulder structure, dimensional insignia hardware, and restrained precious trim. Invent a coherent court language rather than copying a real dynasty. Palette: deep jewel, ivory, gold or silver metal, and one heraldic accent. Not stage-candy pastels, street camo, or a copied real-dynasty flag set."
         }
         "idol" => {
-            "Original live-stage performance wear with one strong upper-body silhouette driver: a shoulder fan, ribbon-panel capelet, structured peplum, split oversleeve, sculpted collar, or asymmetric stage drape. Use rhythmic color-block planes, movement-ready layering, and one dimensional seam-anchored hero ornament so the costume reads clearly under stage light."
+            "Original live-stage performance wear with one strong upper-body silhouette driver: a shoulder fan, ribbon-panel capelet, structured peplum, split oversleeve, open stage neckline, or asymmetric stage drape. Use rhythmic color-block planes, movement-ready layering, and one dimensional seam-anchored hero ornament so the costume reads clearly under stage light. Keep the neck uncovered. Palette: high-chroma stage candy, white or black contrast, and a holographic or metallic accent that reads under lights. Never a 国风 mineral set of cinnabar, imperial yellow, jade, and ink-wash, and never a whole-costume gothic mourning black-wine."
         }
         "gothic" => {
-            "Contemporary gothic or dark-romantic wear shaped by an architectural neckline, corset-derived panel, split lace oversleeve, short mourning cape, or asymmetric ruffle cascade. Balance dark fabric masses with one jewel tone and dimensional metal or enamel hardware."
+            "Contemporary gothic or dark-romantic wear shaped by an open architectural neckline, corset-derived panel, split lace oversleeve, short mourning cape, or asymmetric ruffle cascade. Balance dark fabric masses with one jewel tone and dimensional metal or enamel hardware. Never hide the neck under a high collar. Palette: black, charcoal, bone, one jewel such as wine, amethyst, or emerald, and oxidized silver. Not idol candy pastel, not bright 国风 red-gold-jade."
         }
         "lounge" => {
-            "Soft indoor loungewear or knit home clothes using enveloping but designed layers: a wrapped knit, shaped shawl collar, quilted shoulder panel, loose henley, or soft cropped robe. Create identity through knit direction, piping, pocket or tie construction, and one tactile accessory."
+            "Soft indoor loungewear or knit home clothes using enveloping but designed layers: a wrapped knit, open knit neckline, quilted shoulder panel, loose open henley, or soft cropped robe. Create identity through knit direction, piping, pocket or tie construction, and one tactile accessory. The neck stays uncovered. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         "mystic" => {
-            "An original fictional mystic or ritual costume organized around one readable apparatus: orbiting collar frame, layered stole, geometric shoulder veil, talisman harness, or split ceremonial oversleeve. Integrate symbols into cutouts, clasps, chains, and borders without borrowing a real faith's vestments."
+            "An original fictional mystic or ritual costume organized around one readable apparatus: orbiting shoulder frame that leaves the neck uncovered, layered stole, geometric shoulder veil, talisman harness, or split ceremonial oversleeve. Integrate symbols into cutouts, clasps, chains, and borders without borrowing a real faith's vestments. Palette: dusk violet, bone, tarnished gold, ink, and one sigil accent. Not sports neon, not cute idol rainbow."
         }
         "travel" => {
-            "Layered traveler or expedition outerwear with a practical inner layer and one silhouette-changing weather or carrying system: map-pocket yoke, short storm cape, crossed strap frame, modular scarf collar, or reinforced shoulder wrap. Keep fastenings and accessories usable and geographically neutral."
+            "Layered traveler or expedition outerwear with a practical inner layer and one silhouette-changing weather or carrying system: map-pocket yoke, short storm cape, crossed strap frame, open storm flap, or reinforced shoulder wrap. Keep fastenings and accessories usable and geographically neutral. Do not wrap a scarf or collar over the neck. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         "vintage" => {
-            "Vintage or retro mid-century civilian wear built from era-aware tailoring, knit, pleat, piping, and button rhythm. Vary the silhouette through a shaped bolero, diagonal blouse drape, fitted waistcoat, sculpted collar, or short cape sleeve, then add one period-coherent dimensional accessory."
+            "Vintage or retro mid-century civilian wear built from era-aware tailoring, knit, pleat, piping, and button rhythm. Vary the silhouette through a shaped bolero, diagonal blouse drape, fitted waistcoat, open period neckline, or short cape sleeve, then add one period-coherent dimensional accessory. Keep the neck visible. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         "rain" => {
-            "Raincoat or trench-family outerwear using waterproof layering, sealed closures, and a changing weather silhouette such as an asymmetric storm shield, translucent shoulder cape, folded hood collar, belted wrap panel, or modular cuff guard. Make reflective and translucent details follow construction seams."
+            "Raincoat or trench-family outerwear using waterproof layering, sealed closures, and a changing weather silhouette such as an asymmetric storm shield, translucent shoulder cape, open trench neckline, belted wrap panel, or modular cuff guard. Make reflective and translucent details follow construction seams. Never fold a hood or high collar over the neck. Palette: open. Owner extras and persona may pick any readable game-production palette."
         }
         _ => return None,
     })
@@ -351,6 +351,25 @@ mod tests {
         assert!(clothing_style_grammar("rain")
             .unwrap()
             .contains("weather silhouette"));
+        for id in CLOTHING_STYLES {
+            let grammar = clothing_style_grammar(id).unwrap();
+            assert!(
+                !grammar.contains("standing collar")
+                    && !grammar.contains("turtleneck")
+                    && !grammar.contains("shawl collar")
+                    && !grammar.contains("sculpted collar")
+                    && !grammar.contains("eri collar"),
+                "{id} grammar still offers a neck-covering collar"
+            );
+            assert!(
+                grammar.contains("neck"),
+                "{id} grammar must state the uncovered-neck lock"
+            );
+            assert!(
+                grammar.contains("Palette:"),
+                "{id} grammar must state a common-sense palette family"
+            );
+        }
     }
 
     #[test]
@@ -377,7 +396,7 @@ mod tests {
         let character = character_module(&first).unwrap();
         let mut swapped = first.clone();
         swapped["outfit"]["outfitConstruction"] =
-            json!("高领内搭叠短风衣，胸前只有一条结构线，止于高腰");
+            json!("敞开领口内搭叠短风衣，胸前只有一条结构线，止于高腰");
         stamp_clothing_style(&mut swapped, "urban");
         assert_eq!(character_module(&swapped).unwrap(), character);
         assert_ne!(
