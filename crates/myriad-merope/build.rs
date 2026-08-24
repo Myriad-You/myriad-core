@@ -3,12 +3,12 @@ use std::{env, fs, path::PathBuf};
 use serde_json::Value;
 
 fn main() {
-    let contract_path = PathBuf::from("../../shared/digital_life_rig_contract.json");
+    let contract_path = PathBuf::from("../../shared/merope_rig_contract.json");
     println!("cargo:rerun-if-changed={}", contract_path.display());
     let contract: Value = serde_json::from_str(
-        &fs::read_to_string(&contract_path).expect("read digital life rig contract"),
+        &fs::read_to_string(&contract_path).expect("read merope rig contract"),
     )
-    .expect("parse digital life rig contract");
+    .expect("parse merope rig contract");
     let number = |path: &[&str]| -> u64 {
         path.iter()
             .fold(&contract, |value, key| &value[*key])
@@ -183,6 +183,6 @@ fn main() {
         ));
     }
     let output =
-        PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR")).join("digital_life_rig_contract.rs");
+        PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR")).join("merope_rig_contract.rs");
     fs::write(output, generated).expect("write generated rig contract");
 }

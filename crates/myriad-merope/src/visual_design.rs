@@ -1,6 +1,6 @@
 use serde_json::{json, Map, Value};
 
-/// Required visual-identity fields for a close upper-body companion portrait.
+/// Required visual-identity fields for a close upper-body Merope portrait.
 /// Lower-body garments, footwear, and articulated limb design intentionally do
 /// not belong to this contract.
 pub const CLOTHING_STYLES: [&str; 17] = [

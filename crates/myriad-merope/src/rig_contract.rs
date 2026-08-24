@@ -4,6 +4,6 @@ pub(crate) struct RigOutfitSafetyContract {
     pub secondary_motion_scale: f32,
 }
 
-include!(concat!(env!("OUT_DIR"), "/digital_life_rig_contract.rs"));
+include!(concat!(env!("OUT_DIR"), "/merope_rig_contract.rs"));
 
 const _: () = assert!(MAX_GPU_RIG_BONES >= MAX_RIG_BONES);

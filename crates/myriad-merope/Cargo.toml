@@ -1,9 +1,9 @@
 [package]
-name = "myriad-digital-life"
+name = "myriad-merope"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Pure Digital Life Companion domain rules and contracts for Myriad."
+description = "Pure Merope domain rules and contracts for Myriad."
 authors = ["Myriad Contributors"]
 
 [dependencies]

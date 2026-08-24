@@ -8,15 +8,15 @@ const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 12_000;
 /// Bump when the shared construction/rendering school or its reference role changes.
 /// The value is part of the portrait fingerprint, so an old portrait cannot be
 /// mistaken for one generated under the current art-direction contract.
-pub const COMPANION_VISUAL_SCHOOL_VERSION: &str = "mihoyo-rpg-reference-v3";
-pub const COMPANION_STYLE_REFERENCE_SHA256: &str =
+pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "mihoyo-rpg-reference-v3";
+pub const MEROPE_STYLE_REFERENCE_SHA256: &str =
     "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67";
 
 const MASTER_PORTRAIT_INSTRUCTION: &str = "One polished upper-body portrait on a vertical 3:4 canvas. Use a strict centered eye-level frontal reference view with zero head yaw, roll, and pitch: the face plane and torso are square to the camera; nose bridge, philtrum, chin, neck, and sternum share one vertical centerline; both eyes sit level at equal perspective scale; both cheeks have balanced frontal projection; and the anatomical shoulders are level with equal foreshortening. Preserve confirmed asymmetric lid acting as eye expression, while hairstyle, costume, and accessory asymmetry remain decorative around the square frontal anatomy. Preserve the confirmed apparent maturity, gaze direction, lid acting, stable brow design and tension, pupil focus, catchlights, and default mouth. Fill the canvas with a large readable head and shoulders almost the full width. Keep the complete head and hair silhouette inside the frame with a slim near-white top gutter and equal one-sixteenth-width side clearance. Crop through lower chest or high waist with both sleeves, cuffs, or short arm fragments visible; hands are optional. Use a seamless near-white studio backdrop and an opaque finished illustration.";
 
 /// Shared character-construction and rendering lock for design sheets and image prompts.
 /// Identity fields still own the actual hair, costume family, palette, and ornaments.
-pub const COMPANION_VISUAL_SCHOOL: &str = "Premium original 2D anime-RPG character key art in the polished miHoYo character-design language associated with Genshin Impact and Honkai: Star Rail. Use a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, tiny clean nose and mouth, and readable medium-to-large eyes whose layered irises occupy most of the eye opening. Shape the eyes with crisp graphic upper lashes, precise lower-lid accents, clear pupils, and deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Build hair from a few broad tapered ribbon masses with clean overlaps, controlled color shifts, broad specular bands, and only a few flyaways. Use thin colored linework, crisp focal contours, and a clear hard/soft edge hierarchy. Build the selected costume as an unmistakable layered silhouette with a designed collar and closure, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes. Render with a clean cel-to-gradient hybrid: two or three intentional value planes, controlled soft gradients, graphic shadows, pearlescent frontal light, a restrained cool rim, and sharp accents on eyes, hair, metal, and gems. Finish with luminous near-white presentation, clear values, selective saturation, and polished game-production color clarity. Keep the person, costume, emblem, and name original";
+pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-RPG character key art in the polished miHoYo character-design language associated with Genshin Impact and Honkai: Star Rail. Use a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, tiny clean nose and mouth, and readable medium-to-large eyes whose layered irises occupy most of the eye opening. Shape the eyes with crisp graphic upper lashes, precise lower-lid accents, clear pupils, and deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Build hair from a few broad tapered ribbon masses with clean overlaps, controlled color shifts, broad specular bands, and only a few flyaways. Use thin colored linework, crisp focal contours, and a clear hard/soft edge hierarchy. Build the selected costume as an unmistakable layered silhouette with a designed collar and closure, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes. Render with a clean cel-to-gradient hybrid: two or three intentional value planes, controlled soft gradients, graphic shadows, pearlescent frontal light, a restrained cool rim, and sharp accents on eyes, hair, metal, and gems. Finish with luminous near-white presentation, clear values, selective saturation, and polished game-production color clarity. Keep the person, costume, emblem, and name original";
 
 const STYLE_REFERENCE_ROLE_INSTRUCTION: &str = "Use the attached image as a rendering-technique reference only. Match its compact anime face scale, prominent jewel-eye scale, graphic lashes, broad hair-group construction, thin colored contours, clean cel-gradient planes, pastel clarity, and material separation. The confirmed identity below remains authoritative for gender, maturity, face variant, eye acting and colors, hair cut and colors, costume family and construction, palette, motif, and every accessory; do not transfer the reference character's pink hair, lavender sailor outfit, stars, birdcage earrings, or identity.";
 
@@ -737,7 +737,7 @@ pub fn build_character_visual_prompt(
         .and_then(|identity| crate::visual_design::flatten_visual_identity(&identity))
         .unwrap_or(Value::Null);
     let mut header = vec![
-        format!("Render one confirmed original character in this visual school: {COMPANION_VISUAL_SCHOOL}."),
+        format!("Render one confirmed original character in this visual school: {MEROPE_VISUAL_SCHOOL}."),
         STYLE_REFERENCE_ROLE_INSTRUCTION.to_string(),
         format!("Identity name: {}.", bounded_text(name, 50)),
     ];
@@ -1294,7 +1294,7 @@ mod tests {
             "hands are optional",
             "Vertical 3:4 width-to-height canvas",
             "inside the locked visual school",
-            COMPANION_VISUAL_SCHOOL,
+            MEROPE_VISUAL_SCHOOL,
             "miHoYo",
             "Genshin Impact",
             "Honkai: Star Rail",
@@ -1346,7 +1346,7 @@ mod tests {
             assert!(prompt.contains(expected), "missing {expected}: {prompt}");
         }
         assert_eq!(
-            prompt.matches(COMPANION_VISUAL_SCHOOL).count(),
+            prompt.matches(MEROPE_VISUAL_SCHOOL).count(),
             1,
             "school must appear once: {prompt}"
         );
@@ -1446,7 +1446,7 @@ mod tests {
         assert!(!prompt.contains("character-card"));
         assert!(prompt.contains("complete head and hair silhouette"));
         assert!(prompt.contains("Priority order"));
-        assert!(prompt.contains(COMPANION_VISUAL_SCHOOL));
+        assert!(prompt.contains(MEROPE_VISUAL_SCHOOL));
     }
 
     #[test]

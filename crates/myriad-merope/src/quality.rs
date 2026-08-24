@@ -2,7 +2,7 @@
 //! consolidation heuristics, and **Lite / Standard / Pro demand mapping**.
 //! No site actions; no template spam speak.
 //!
-//! # Model demand map (Companion)
+//! # Model demand map (Merope)
 //!
 //! | Demand | Tier | Why |
 //! |--------|------|-----|
@@ -12,7 +12,7 @@
 //!
 //! Fallback chains always go down: Pro → Standard → Lite → rules (never invent speak).
 
-use crate::{Activity, CompanionPolicy, LifeEvent, RuntimeState, ValidatedDecision};
+use crate::{Activity, MeropePolicy, MeropeEvent, RuntimeState, ValidatedDecision};
 
 /// Low-value proactive lines that waste the daily speak budget.
 const LOW_QUALITY_SPEAK_EXACT: &[&str] = &[
@@ -83,7 +83,7 @@ fn is_cjk(ch: char) -> bool {
         || ('\u{3040}'..='\u{30ff}').contains(&ch)
 }
 
-/// Whether the companion has a *reason* to interrupt the user right now.
+/// Whether the persona has a *reason* to interrupt the user right now.
 /// Cooldown / DND / daily caps are applied elsewhere.
 pub fn should_desire_proactive_speak(runtime: &RuntimeState) -> bool {
     runtime.boredom >= 52.0
@@ -113,7 +113,7 @@ pub fn score_memory_importance(note: &str, runtime: &RuntimeState) -> f64 {
     if len >= 80 {
         score += 0.06;
     }
-    // Salience when the companion is emotionally charged.
+    // Salience when the persona is emotionally charged.
     if runtime.mood <= 40.0 || runtime.affection >= 70.0 {
         score += 0.05;
     }
@@ -124,7 +124,7 @@ pub fn score_memory_importance(note: &str, runtime: &RuntimeState) -> f64 {
 /// Never fabricates proactive speak (plan: no template spam).
 pub fn deterministic_fallback_decision(
     runtime: &RuntimeState,
-    policy: &CompanionPolicy,
+    policy: &MeropePolicy,
 ) -> ValidatedDecision {
     let profile = policy.autonomy_frequency.profile();
     let (mood_delta, energy_delta, boredom_delta, activity, thought) = if runtime.boredom >= 60.0 {
@@ -213,7 +213,7 @@ impl AutonomyModelTier {
 
 #[derive(Debug, Clone, Copy)]
 pub struct DeliberateTierContext {
-    pub event: Option<LifeEvent>,
+    pub event: Option<MeropeEvent>,
     pub do_not_disturb: bool,
     pub pro_calls_today: u16,
     pub standard_calls_today: u16,
@@ -290,13 +290,13 @@ fn standard_deliberate_budget_ok(ctx: &DeliberateTierContext) -> bool {
 }
 
 fn is_pro_deliberate_demand(
-    event: Option<LifeEvent>,
+    event: Option<MeropeEvent>,
     silence_hours: f64,
     ctx: &DeliberateTierContext,
 ) -> bool {
     match event {
-        Some(LifeEvent::LifeEnabled) => true,
-        Some(LifeEvent::UserSeen) if silence_hours >= 8.0 || !ctx.has_recent_conversation => true,
+        Some(MeropeEvent::Enabled) => true,
+        Some(MeropeEvent::UserSeen) if silence_hours >= 8.0 || !ctx.has_recent_conversation => true,
         _ if ctx.mood <= 28.0 && silence_hours >= 3.0 => true,
         _ if ctx.social <= 28.0 && silence_hours >= 6.0 && ctx.has_recent_conversation => true,
         _ if ctx.affection >= 70.0
@@ -312,14 +312,14 @@ fn is_pro_deliberate_demand(
 }
 
 fn is_standard_deliberate_demand(
-    event: Option<LifeEvent>,
+    event: Option<MeropeEvent>,
     silence_hours: f64,
     ctx: &DeliberateTierContext,
 ) -> bool {
     match event {
         // Mild daily return without multi-hour silence.
-        Some(LifeEvent::UserSeen) => true,
-        Some(LifeEvent::ChatIdle)
+        Some(MeropeEvent::UserSeen) => true,
+        Some(MeropeEvent::ChatIdle)
             if ctx.boredom >= 40.0 || ctx.social <= 48.0 || ctx.mood <= 45.0 =>
         {
             true
@@ -385,7 +385,7 @@ pub fn deliberation_quality_guidance() -> &'static str {
 }
 
 pub fn chat_quality_guidance() -> &'static str {
-    "Reply as the companion persona only. Use recalled memories when relevant. \
+    "Reply as the site persona only. Use recalled memories when relevant. \
      Keep one to three short sentences unless the user asked for detail. \
      Do not lecture, do not offer to operate the site, and do not invent facts not in persona/memories."
 }
@@ -456,7 +456,7 @@ mod tests {
             boredom: 70.0,
             ..RuntimeState::new(Utc::now())
         };
-        let decision = deterministic_fallback_decision(&runtime, &CompanionPolicy::default());
+        let decision = deterministic_fallback_decision(&runtime, &MeropePolicy::default());
         assert!(decision.speak.is_none());
         assert!(decision.thought.is_some());
         assert!(decision.next_check_minutes >= 12);
@@ -507,15 +507,15 @@ mod tests {
     #[test]
     fn mid_pressure_uses_standard() {
         let mut ctx = base_ctx();
-        ctx.event = Some(LifeEvent::ChatIdle);
+        ctx.event = Some(MeropeEvent::ChatIdle);
         ctx.boredom = 45.0;
         assert_eq!(select_deliberate_tier(ctx), AutonomyModelTier::Standard);
     }
 
     #[test]
-    fn life_enabled_uses_pro_within_budget() {
+    fn enabled_uses_pro_within_budget() {
         let mut ctx = base_ctx();
-        ctx.event = Some(LifeEvent::LifeEnabled);
+        ctx.event = Some(MeropeEvent::Enabled);
         assert_eq!(select_deliberate_tier(ctx), AutonomyModelTier::Pro);
         ctx.pro_calls_today = MAX_PRO_DELIBERATES_PER_DAY;
         // Pro exhausted → Standard, not Lite.
@@ -525,7 +525,7 @@ mod tests {
     #[test]
     fn dnd_forces_lite_even_for_pro_demand() {
         let mut ctx = base_ctx();
-        ctx.event = Some(LifeEvent::LifeEnabled);
+        ctx.event = Some(MeropeEvent::Enabled);
         ctx.do_not_disturb = true;
         assert_eq!(select_deliberate_tier(ctx), AutonomyModelTier::Lite);
     }

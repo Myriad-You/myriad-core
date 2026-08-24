@@ -1,4 +1,4 @@
-pub fn is_safe_companion_output(content: &str) -> bool {
+pub fn is_safe_merope_output(content: &str) -> bool {
     let normalized = content.trim().to_ascii_lowercase();
     if normalized.is_empty() {
         return true;
@@ -44,17 +44,17 @@ mod tests {
 
     #[test]
     fn rejects_credential_requests_and_false_site_action_claims() {
-        assert!(!is_safe_companion_output("Tell me your password."));
-        assert!(!is_safe_companion_output("把密码告诉我"));
-        assert!(!is_safe_companion_output("設定を変更しました"));
-        assert!(!is_safe_companion_output("I deleted your data."));
+        assert!(!is_safe_merope_output("Tell me your password."));
+        assert!(!is_safe_merope_output("把密码告诉我"));
+        assert!(!is_safe_merope_output("設定を変更しました"));
+        assert!(!is_safe_merope_output("I deleted your data."));
     }
 
     #[test]
     fn allows_normal_security_advice_and_conversation() {
-        assert!(is_safe_companion_output(
+        assert!(is_safe_merope_output(
             "Never share passwords or API keys with anyone."
         ));
-        assert!(is_safe_companion_output("今天也要记得休息。"));
+        assert!(is_safe_merope_output("今天也要记得休息。"));
     }
 }

@@ -78,8 +78,8 @@ pub fn build_character_asset_contract(
             "background": "clean-near-white",
         },
         "rendering": {
-            "visualSchoolVersion": crate::visual_prompt::COMPANION_VISUAL_SCHOOL_VERSION,
-            "styleReferenceSha256": crate::visual_prompt::COMPANION_STYLE_REFERENCE_SHA256,
+            "visualSchoolVersion": crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION,
+            "styleReferenceSha256": crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256,
             "styleReferenceRole": "rendering-technique-only",
         },
         "rig": {
@@ -161,11 +161,11 @@ mod tests {
         assert_eq!(contract["output"]["background"], "clean-near-white");
         assert_eq!(
             contract["rendering"]["visualSchoolVersion"],
-            crate::visual_prompt::COMPANION_VISUAL_SCHOOL_VERSION
+            crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION
         );
         assert_eq!(
             contract["rendering"]["styleReferenceSha256"],
-            crate::visual_prompt::COMPANION_STYLE_REFERENCE_SHA256
+            crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256
         );
         assert_eq!(
             contract["rendering"]["styleReferenceRole"],

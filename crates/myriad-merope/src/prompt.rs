@@ -1,4 +1,4 @@
-use crate::{chat_quality_guidance, deliberation_quality_guidance, CompanionPolicy, RuntimeState};
+use crate::{chat_quality_guidance, deliberation_quality_guidance, MeropePolicy, RuntimeState};
 use serde::Serialize;
 use serde_json::Value;
 
@@ -16,7 +16,7 @@ pub fn build_chat_system_prompt(
     memories: &[PromptMemory],
 ) -> String {
     format!(
-        "You are the site companion {name}. Stay in character and reply in the user's language.\n\
+        "You are {name}. Stay in character and reply in the user's language.\n\
          Persona JSON: {persona}\n\
          Current state JSON: {runtime}\n\
          Recalled memories JSON: {memories}\n\
@@ -40,12 +40,12 @@ pub fn build_deliberation_prompt(
     name: &str,
     persona: &Value,
     runtime: &RuntimeState,
-    policy: &CompanionPolicy,
+    policy: &MeropePolicy,
     memories: &[PromptMemory],
     recent_conversation: &Value,
 ) -> String {
     format!(
-        "Companion: {name}\n\
+        "Persona: {name}\n\
          Persona JSON: {persona}\n\
          Runtime JSON: {runtime}\n\
          Policy JSON: {policy}\n\
@@ -76,10 +76,10 @@ pub fn build_consolidation_prompt(
     memories: &[PromptMemory],
 ) -> String {
     format!(
-        "Companion: {name}\n\
+        "Persona: {name}\n\
          Persona JSON: {persona}\n\
          Active episodic memories JSON ({count} items, ranked): {memories}\n\
-         Task: compress episodic notes into ONE durable memoryNote the companion must keep.\n\
+         Task: compress episodic notes into ONE durable memoryNote the persona must keep.\n\
          Preservation rules (critical):\n\
          - KEEP concrete durable facts: names, preferences, habits, commitments, work/life context, \
            relationship beats, and user-stated boundaries.\n\
@@ -144,7 +144,7 @@ mod tests {
             "Mira",
             &json!({ "summary": "kind" }),
             &RuntimeState::new(Utc::now()),
-            &CompanionPolicy::default(),
+            &MeropePolicy::default(),
             &[],
             &json!([]),
         );

@@ -91,21 +91,21 @@ fn fallback_summary(name: &str, language: &str, tags: &[String]) -> String {
     let traits = tags.iter().take(5).cloned().collect::<Vec<_>>();
     if traits.is_empty() {
         return match language {
-            "ja-JP" => format!("{name}は、これから個性を育てていくデジタルコンパニオンです。"),
-            "en-US" => format!("{name} is a digital companion whose personality will grow through shared experiences."),
-            _ => format!("{name}是一个会在相处中逐渐形成独特个性的数字生命。"),
+            "ja-JP" => format!("{name}は、これから個性を育てていきます。"),
+            "en-US" => format!("{name}'s personality will grow through shared experiences."),
+            _ => format!("{name}会在相处中逐渐形成独特个性。"),
         };
     }
     match language {
         "ja-JP" => format!(
-            "{name}は、{}という気質を持つデジタルコンパニオンです。",
+            "{name}は、{}という気質を持っています。",
             traits.join("、")
         ),
         "en-US" => format!(
-            "{name} is a digital companion with a {} temperament.",
+            "{name} has a {} temperament.",
             traits.join(", ")
         ),
-        _ => format!("{name}是一个带有{}气质的数字生命。", traits.join("、")),
+        _ => format!("{name}带有{}气质。", traits.join("、")),
     }
 }
 
@@ -195,7 +195,7 @@ mod tests {
         let draft = sanitize_persona_draft(
             &json!({
                 "persona": {
-                    "summary": "安静但会认真回应重要事情的数字生命。",
+                    "summary": "安静但会认真回应重要事情。",
                     "temperament": ["克制", "细心", "克制"],
                     "likes": "雨声、旧书",
                     "drives": ["理解别人"],

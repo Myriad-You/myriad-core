@@ -52,7 +52,7 @@ impl AutonomyFrequency {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CompanionPolicy {
+pub struct MeropePolicy {
     #[serde(default = "default_true")]
     pub enabled: bool,
     #[serde(default)]
@@ -71,7 +71,7 @@ pub struct CompanionPolicy {
     pub collapsed_by_default: bool,
 }
 
-impl Default for CompanionPolicy {
+impl Default for MeropePolicy {
     fn default() -> Self {
         Self {
             enabled: true,
@@ -86,7 +86,7 @@ impl Default for CompanionPolicy {
     }
 }
 
-impl CompanionPolicy {
+impl MeropePolicy {
     pub fn normalized(mut self) -> Self {
         let profile = self.autonomy_frequency.profile();
         self.max_proactive_speaks_per_day = self.max_proactive_speaks_per_day.clamp(0, 48);

@@ -4,7 +4,7 @@ fn core_crate_has_no_infrastructure_dependencies() {
     for forbidden in ["sea-orm", "axum", "tokio", "reqwest"] {
         assert!(
             !manifest.contains(forbidden),
-            "myriad-digital-life must not depend on {forbidden}"
+            "myriad-merope must not depend on {forbidden}"
         );
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
-    is_low_quality_speak, is_safe_companion_output, score_memory_importance,
-    should_desire_proactive_speak, Activity, CompanionPolicy, RuntimeState,
+    is_low_quality_speak, is_safe_merope_output, score_memory_importance,
+    should_desire_proactive_speak, Activity, MeropePolicy, RuntimeState,
 };
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -51,7 +51,7 @@ pub enum DecisionError {
 
 pub fn parse_and_validate_decision(
     raw: &str,
-    policy: &CompanionPolicy,
+    policy: &MeropePolicy,
 ) -> Result<ValidatedDecision, DecisionError> {
     let decision: LiteDecision =
         serde_json::from_str(raw).map_err(|error| DecisionError::InvalidJson(error.to_string()))?;
@@ -124,7 +124,7 @@ pub struct AppliedDecision {
 pub fn apply_decision(
     runtime: &mut RuntimeState,
     decision: ValidatedDecision,
-    policy: &CompanionPolicy,
+    policy: &MeropePolicy,
     gate: SpeakGate,
 ) -> AppliedDecision {
     runtime.mood += decision.mood_delta;
@@ -186,7 +186,7 @@ fn normalize_text(
 }
 
 fn safe_output(value: Option<String>) -> Option<String> {
-    value.filter(|content| is_safe_companion_output(content))
+    value.filter(|content| is_safe_merope_output(content))
 }
 
 #[cfg(test)]
@@ -212,7 +212,7 @@ mod tests {
     #[test]
     fn validation_clamps_deltas_and_ignores_unknown_fields() {
         let decision =
-            parse_and_validate_decision(&valid_json(), &CompanionPolicy::default()).unwrap();
+            parse_and_validate_decision(&valid_json(), &MeropePolicy::default()).unwrap();
         assert_eq!(decision.mood_delta, 15.0);
         assert_eq!(decision.energy_delta, -15.0);
         assert_eq!(decision.next_check_minutes, 12);
@@ -221,9 +221,9 @@ mod tests {
     #[test]
     fn dnd_discards_speak_and_repairs_talking_activity() {
         let now = Utc::now();
-        let policy = CompanionPolicy {
+        let policy = MeropePolicy {
             do_not_disturb: true,
-            ..CompanionPolicy::default()
+            ..MeropePolicy::default()
         };
         let decision = parse_and_validate_decision(&valid_json(), &policy).unwrap();
         let mut runtime = RuntimeState::new(now);
@@ -248,7 +248,7 @@ mod tests {
         value["memoryNote"] = serde_json::json!("我修改了你的设置");
         let decision = parse_and_validate_decision(
             &serde_json::to_string(&value).unwrap(),
-            &CompanionPolicy::default(),
+            &MeropePolicy::default(),
         )
         .unwrap();
         assert!(decision.speak.is_none());
@@ -261,7 +261,7 @@ mod tests {
         value["speak"] = serde_json::json!("在吗");
         let decision = parse_and_validate_decision(
             &serde_json::to_string(&value).unwrap(),
-            &CompanionPolicy::default(),
+            &MeropePolicy::default(),
         )
         .unwrap();
         assert!(decision.speak.is_none());
@@ -270,7 +270,7 @@ mod tests {
         rich["speak"] = serde_json::json!("忙完记得休息一下。");
         let decision = parse_and_validate_decision(
             &serde_json::to_string(&rich).unwrap(),
-            &CompanionPolicy::default(),
+            &MeropePolicy::default(),
         )
         .unwrap();
         let now = Utc::now();
@@ -281,7 +281,7 @@ mod tests {
         let applied = apply_decision(
             &mut calm,
             decision,
-            &CompanionPolicy::default(),
+            &MeropePolicy::default(),
             SpeakGate {
                 now,
                 last_speak_at: None,

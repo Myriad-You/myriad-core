@@ -1,4 +1,4 @@
-use crate::{AutonomyFrequency, CompanionPolicy};
+use crate::{AutonomyFrequency, MeropePolicy};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -109,20 +109,20 @@ pub enum CharacterStatus {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum LifeEvent {
-    LifeEnabled,
+pub enum MeropeEvent {
+    Enabled,
     UserSeen,
     ChatMessage,
     ChatIdle,
 }
 
-pub fn apply_life_event(state: &mut RuntimeState, event: LifeEvent, now: DateTime<Utc>) -> bool {
+pub fn apply_merope_event(state: &mut RuntimeState, event: MeropeEvent, now: DateTime<Utc>) -> bool {
     match event {
-        LifeEvent::LifeEnabled => {
+        MeropeEvent::Enabled => {
             state.curiosity += 12.0;
             state.mood += 3.0;
         }
-        LifeEvent::UserSeen => {
+        MeropeEvent::UserSeen => {
             if state
                 .last_user_seen_at
                 .is_some_and(|seen_at| seen_at.date_naive() == now.date_naive())
@@ -133,8 +133,8 @@ pub fn apply_life_event(state: &mut RuntimeState, event: LifeEvent, now: DateTim
             state.mood += 2.0;
             state.last_user_seen_at = Some(now);
         }
-        LifeEvent::ChatMessage => apply_chat_message_buff(state, now),
-        LifeEvent::ChatIdle => {
+        MeropeEvent::ChatMessage => apply_chat_message_buff(state, now),
+        MeropeEvent::ChatIdle => {
             state.boredom += 4.0;
             state.curiosity += 2.0;
             state.last_chat_idle_at = Some(now);
@@ -162,7 +162,7 @@ pub fn should_apply_chat_idle(
 #[derive(Debug, Clone)]
 pub struct DeliberationContext<'a> {
     pub status: CharacterStatus,
-    pub policy: &'a CompanionPolicy,
+    pub policy: &'a MeropePolicy,
     pub runtime: &'a RuntimeState,
     pub now: DateTime<Utc>,
     pub last_deliberated_at: Option<DateTime<Utc>>,
@@ -172,7 +172,7 @@ pub struct DeliberationContext<'a> {
     pub last_simulated_at: DateTime<Utc>,
     pub has_queued_or_running_deliberate: bool,
     pub deliberate_calls_today: u16,
-    pub event: Option<LifeEvent>,
+    pub event: Option<MeropeEvent>,
 }
 
 pub fn should_deliberate(context: &DeliberationContext<'_>) -> bool {
@@ -202,16 +202,16 @@ pub fn should_deliberate(context: &DeliberationContext<'_>) -> bool {
     let low_mood_due = context.runtime.mood <= 32.0
         && elapsed_minutes(context.last_user_message_at, context.now) >= 20;
     let event_due = match context.event {
-        Some(LifeEvent::LifeEnabled) => true,
-        Some(LifeEvent::UserSeen) => {
+        Some(MeropeEvent::Enabled) => true,
+        Some(MeropeEvent::UserSeen) => {
             elapsed_minutes(context.last_speak_at, context.now)
                 >= context.policy.min_speak_interval_minutes as i64
         }
         // Mild deliberate after a quiet stretch in the current conversation.
-        Some(LifeEvent::ChatIdle) => {
+        Some(MeropeEvent::ChatIdle) => {
             context.runtime.boredom >= 40.0 || context.runtime.social <= 48.0
         }
-        Some(LifeEvent::ChatMessage) | None => false,
+        Some(MeropeEvent::ChatMessage) | None => false,
     };
     let fallback_due =
         (context.now - context.last_simulated_at).num_minutes() >= profile.max_check_minutes as i64;
@@ -256,7 +256,7 @@ mod tests {
     #[test]
     fn deliberation_requires_all_gates_and_one_trigger() {
         let now = Utc::now();
-        let policy = CompanionPolicy::default();
+        let policy = MeropePolicy::default();
         let mut runtime = RuntimeState::new(now);
         runtime.boredom = 55.0;
         let context = DeliberationContext {
@@ -290,25 +290,25 @@ mod tests {
             .unwrap()
             .with_timezone(&Utc);
         let mut runtime = RuntimeState::new(now);
-        assert!(apply_life_event(&mut runtime, LifeEvent::UserSeen, now));
+        assert!(apply_merope_event(&mut runtime, MeropeEvent::UserSeen, now));
         let social = runtime.social;
-        assert!(!apply_life_event(
+        assert!(!apply_merope_event(
             &mut runtime,
-            LifeEvent::UserSeen,
+            MeropeEvent::UserSeen,
             now + Duration::hours(2)
         ));
         assert_eq!(runtime.social, social);
-        assert!(apply_life_event(
+        assert!(apply_merope_event(
             &mut runtime,
-            LifeEvent::UserSeen,
+            MeropeEvent::UserSeen,
             now + Duration::days(1)
         ));
     }
 
     #[test]
-    fn life_enabled_is_an_explicit_deliberation_trigger() {
+    fn enabled_is_an_explicit_deliberation_trigger() {
         let now = Utc::now();
-        let policy = CompanionPolicy::default();
+        let policy = MeropePolicy::default();
         let runtime = RuntimeState::new(now);
         assert!(should_deliberate(&DeliberationContext {
             status: CharacterStatus::Active,
@@ -322,7 +322,7 @@ mod tests {
             last_simulated_at: now,
             has_queued_or_running_deliberate: false,
             deliberate_calls_today: 0,
-            event: Some(LifeEvent::LifeEnabled),
+            event: Some(MeropeEvent::Enabled),
         }));
     }
 
@@ -338,7 +338,7 @@ mod tests {
         ));
 
         let mut runtime = RuntimeState::new(last_message);
-        assert!(apply_life_event(&mut runtime, LifeEvent::ChatIdle, now));
+        assert!(apply_merope_event(&mut runtime, MeropeEvent::ChatIdle, now));
         assert_eq!(runtime.last_chat_idle_at, Some(now));
         assert_eq!(runtime.boredom, 24.0);
     }
