@@ -162,6 +162,8 @@ fn sanitize_cue(cue: RawCue) -> Option<ChatPerformanceCue> {
         "emphasize",
         "listen",
         "notify",
+        "think",
+        "dizzy",
     ];
     const INTERRUPTS: &[&str] = &["replace", "queue", "if-lower"];
     if !INTENTS.contains(&cue.intent.as_str())
@@ -248,6 +250,18 @@ mod tests {
         assert_eq!(baseline.posture, "open");
         assert_eq!(baseline.motion_energy, 1.4);
         assert_eq!(baseline.attention, 0.0);
+    }
+
+    #[test]
+    fn accepts_think_and_dizzy_as_bounded_semantic_cues() {
+        let plan = parse_performance_plan(
+            r#"{"cues":[{"intent":"think","atMs":0,"intensity":0.9,"tempo":0.8,"fadeInMs":160,"fadeOutMs":320,"interrupt":"queue"},{"intent":"dizzy","atMs":120,"intensity":1.2,"tempo":0.8,"fadeInMs":180,"fadeOutMs":420,"interrupt":"if-lower"}]}"#,
+        )
+        .unwrap();
+        assert_eq!(plan.cues.len(), 2);
+        assert_eq!(plan.cues[0].intent, "think");
+        assert_eq!(plan.cues[1].intent, "dizzy");
+        assert_eq!(plan.cues[1].at_ms, 120);
     }
 
     #[test]

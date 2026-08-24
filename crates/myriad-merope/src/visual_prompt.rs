@@ -696,14 +696,29 @@ const HIGH_COLLAR_BANS: &[&str] = &[
 
 const HIGH_COLLAR_REWRITES: &[(&str, &str)] = &[
     ("turtleneck", "open neckline that leaves the neck uncovered"),
-    ("turtle neck", "open neckline that leaves the neck uncovered"),
+    (
+        "turtle neck",
+        "open neckline that leaves the neck uncovered",
+    ),
     ("mock-neck", "open neckline that leaves the neck uncovered"),
     ("mock neck", "open neckline that leaves the neck uncovered"),
-    ("funnel neck", "open neckline that leaves the neck uncovered"),
-    ("funnel-neck", "open neckline that leaves the neck uncovered"),
+    (
+        "funnel neck",
+        "open neckline that leaves the neck uncovered",
+    ),
+    (
+        "funnel-neck",
+        "open neckline that leaves the neck uncovered",
+    ),
     ("high-collared", "open-necklined"),
-    ("high collar", "open neckline that leaves the neck uncovered"),
-    ("high-collar", "open neckline that leaves the neck uncovered"),
+    (
+        "high collar",
+        "open neckline that leaves the neck uncovered",
+    ),
+    (
+        "high-collar",
+        "open neckline that leaves the neck uncovered",
+    ),
     (
         "high neckline",
         "open neckline that leaves the neck uncovered",
@@ -718,7 +733,10 @@ const HIGH_COLLAR_REWRITES: &[(&str, &str)] = &[
         "stand-up collar",
         "open neckline that leaves the neck uncovered",
     ),
-    ("stand collar", "open neckline that leaves the neck uncovered"),
+    (
+        "stand collar",
+        "open neckline that leaves the neck uncovered",
+    ),
     (
         "mandarin collar",
         "open neckline that leaves the neck uncovered",
@@ -726,7 +744,10 @@ const HIGH_COLLAR_REWRITES: &[(&str, &str)] = &[
     ("cowl neck", "open neckline that leaves the neck uncovered"),
     ("crew neck", "open neckline that leaves the neck uncovered"),
     ("crewneck", "open neckline that leaves the neck uncovered"),
-    ("shawl collar", "open neckline that leaves the neck uncovered"),
+    (
+        "shawl collar",
+        "open neckline that leaves the neck uncovered",
+    ),
     (
         "eri collar",
         "open overlapping lapel that leaves the neck uncovered",
@@ -743,10 +764,7 @@ const HIGH_COLLAR_REWRITES: &[(&str, &str)] = &[
         "sculpted collar",
         "open sculpted neckline that leaves the neck uncovered",
     ),
-    (
-        "folded hood collar",
-        "open hood resting off the neck",
-    ),
+    ("folded hood collar", "open hood resting off the neck"),
     (
         "scarf collar",
         "open scarf drape that leaves the neck uncovered",
@@ -1109,9 +1127,9 @@ pub fn normalize_visual_identity_for_prompt(value: &Value) -> Option<Value> {
             let normalized = if matches!(*key, "faceDesign" | "eyeDesign") {
                 normalize_identity_field(&normalize_facial_identity_cue(raw))
             } else if *key == "upperBodySilhouette" {
-                normalize_identity_field(&normalize_neckline_cue(
-                    &normalize_body_proportion_cue(raw),
-                ))
+                normalize_identity_field(&normalize_neckline_cue(&normalize_body_proportion_cue(
+                    raw,
+                )))
             } else if matches!(
                 *key,
                 "outfitConstruction" | "sleeveArmDesign" | "heroAccessory" | "materialPlan"

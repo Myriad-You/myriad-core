@@ -12,7 +12,7 @@
 //!
 //! Fallback chains always go down: Pro → Standard → Lite → rules (never invent speak).
 
-use crate::{Activity, MeropePolicy, MeropeEvent, RuntimeState, ValidatedDecision};
+use crate::{Activity, MeropeEvent, MeropePolicy, RuntimeState, ValidatedDecision};
 
 /// Low-value proactive lines that waste the daily speak budget.
 const LOW_QUALITY_SPEAK_EXACT: &[&str] = &[

@@ -116,7 +116,11 @@ pub enum MeropeEvent {
     ChatIdle,
 }
 
-pub fn apply_merope_event(state: &mut RuntimeState, event: MeropeEvent, now: DateTime<Utc>) -> bool {
+pub fn apply_merope_event(
+    state: &mut RuntimeState,
+    event: MeropeEvent,
+    now: DateTime<Utc>,
+) -> bool {
     match event {
         MeropeEvent::Enabled => {
             state.curiosity += 12.0;

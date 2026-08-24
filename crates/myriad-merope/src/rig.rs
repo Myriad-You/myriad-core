@@ -594,8 +594,12 @@ pub fn validate_character_asset_source(
         && has_layer("a25d-topwear")
         && has_variant("eye-left", "open")
         && has_variant("eye-left", "closed")
+        && has_variant("eye-left", "dizzy")
+        && has_variant("eye-left", "squeeze")
         && has_variant("eye-right", "open")
         && has_variant("eye-right", "closed")
+        && has_variant("eye-right", "dizzy")
+        && has_variant("eye-right", "squeeze")
         && has_variant("mouth", "open")
         && has_variant("mouth", "closed")
         && rigid_fragment("left")
@@ -1277,6 +1281,18 @@ mod tests {
                 "left-eye",
             ),
             layer(
+                "a25d-eye-dizzy-left",
+                Some("eye-left"),
+                Some("dizzy"),
+                "left-eye",
+            ),
+            layer(
+                "a25d-eye-squeeze-left",
+                Some("eye-left"),
+                Some("squeeze"),
+                "left-eye",
+            ),
+            layer(
                 "a25d-eye-open-right",
                 Some("eye-right"),
                 Some("open"),
@@ -1286,6 +1302,18 @@ mod tests {
                 "a25d-eye-close-right",
                 Some("eye-right"),
                 Some("closed"),
+                "right-eye",
+            ),
+            layer(
+                "a25d-eye-dizzy-right",
+                Some("eye-right"),
+                Some("dizzy"),
+                "right-eye",
+            ),
+            layer(
+                "a25d-eye-squeeze-right",
+                Some("eye-right"),
+                Some("squeeze"),
                 "right-eye",
             ),
             layer("a25d-mouth-open", Some("mouth"), Some("open"), "mouth"),

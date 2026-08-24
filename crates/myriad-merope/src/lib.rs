@@ -36,7 +36,7 @@ pub use performance::{
     ChatPerformancePlan, ParsedChatPerformance,
 };
 pub use persona::{fallback_persona_draft, persona_draft_is_complete, sanitize_persona_draft};
-pub use policy::{AutonomyFrequency, MeropePolicy, FrequencyProfile};
+pub use policy::{AutonomyFrequency, FrequencyProfile, MeropePolicy};
 pub use prompt::{
     build_chat_system_prompt, build_consolidation_prompt, build_deliberation_prompt, PromptMemory,
 };
@@ -76,9 +76,9 @@ pub use rig_contract::{
 pub use rig_semantics::RigSemantics;
 pub use rig_spatial::{RigCollisionVolume, RigSpatialProfile};
 pub use runtime::{
-    apply_chat_message_buff, apply_merope_event, catch_up, should_apply_chat_idle, should_deliberate,
-    Activity, CatchUpResult, CharacterStatus, DeliberationContext, MeropeEvent, RuntimeState,
-    CHAT_IDLE_AFTER_MINUTES,
+    apply_chat_message_buff, apply_merope_event, catch_up, should_apply_chat_idle,
+    should_deliberate, Activity, CatchUpResult, CharacterStatus, DeliberationContext, MeropeEvent,
+    RuntimeState, CHAT_IDLE_AFTER_MINUTES,
 };
 pub use safety::is_safe_merope_output;
 pub use visual_contract::{
@@ -100,8 +100,8 @@ pub use visual_prompt::{
     visual_identity_has_body_proportion_drift, visual_identity_has_camera_composition_drift,
     visual_identity_has_facial_construction_drift, visual_identity_has_high_collar,
     visual_identity_has_literary_sludge, visual_identity_matches_gender_presentation,
-    visual_identity_violates_style_lock,
-    MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
+    visual_identity_violates_style_lock, MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL,
+    MEROPE_VISUAL_SCHOOL_VERSION,
 };
 
 pub const MIN_TICK_SECONDS: u64 = 15;
