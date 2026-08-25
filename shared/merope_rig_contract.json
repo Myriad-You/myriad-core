@@ -3,7 +3,7 @@
   "rigIrVersion": 4,
   "minSupportedRigIrVersion": 2,
   "characterAsset": {
-    "contractVersion": 5,
+    "contractVersion": 7,
     "portrait": {
       "aspect": {
         "width": 3,
@@ -28,6 +28,8 @@
         "blink",
         "dizzy-eye-variant",
         "squeeze-eye-variant",
+        "cry-eye-variant",
+        "cry-mouth-variant",
         "mouth-shapes",
         "separate-front-hair",
         "separate-back-hair",
@@ -91,12 +93,12 @@
     "eye-left": {
       "fallback": "open",
       "replacesBase": true,
-      "variants": ["open", "closed", "dizzy", "squeeze"]
+      "variants": ["open", "closed", "dizzy", "squeeze", "cry"]
     },
     "eye-right": {
       "fallback": "open",
       "replacesBase": true,
-      "variants": ["open", "closed", "dizzy", "squeeze"]
+      "variants": ["open", "closed", "dizzy", "squeeze", "cry"]
     },
     "iris-left": {
       "fallback": "visible",
@@ -119,7 +121,8 @@
         "round",
         "narrow",
         "surprised",
-        "sad"
+        "sad",
+        "cry"
       ]
     }
   },

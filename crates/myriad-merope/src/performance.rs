@@ -164,6 +164,7 @@ fn sanitize_cue(cue: RawCue) -> Option<ChatPerformanceCue> {
         "notify",
         "think",
         "dizzy",
+        "cry",
     ];
     const INTERRUPTS: &[&str] = &["replace", "queue", "if-lower"];
     if !INTENTS.contains(&cue.intent.as_str())
@@ -253,15 +254,17 @@ mod tests {
     }
 
     #[test]
-    fn accepts_think_and_dizzy_as_bounded_semantic_cues() {
+    fn accepts_think_dizzy_and_cry_as_bounded_semantic_cues() {
         let plan = parse_performance_plan(
-            r#"{"cues":[{"intent":"think","atMs":0,"intensity":0.9,"tempo":0.8,"fadeInMs":160,"fadeOutMs":320,"interrupt":"queue"},{"intent":"dizzy","atMs":120,"intensity":1.2,"tempo":0.8,"fadeInMs":180,"fadeOutMs":420,"interrupt":"if-lower"}]}"#,
+            r#"{"cues":[{"intent":"think","atMs":0,"intensity":0.9,"tempo":0.8,"fadeInMs":160,"fadeOutMs":320,"interrupt":"queue"},{"intent":"dizzy","atMs":120,"intensity":1.2,"tempo":0.8,"fadeInMs":180,"fadeOutMs":420,"interrupt":"if-lower"},{"intent":"cry","atMs":180,"intensity":1.4,"tempo":0.7,"fadeInMs":260,"fadeOutMs":500,"interrupt":"replace"}]}"#,
         )
         .unwrap();
-        assert_eq!(plan.cues.len(), 2);
+        assert_eq!(plan.cues.len(), 3);
         assert_eq!(plan.cues[0].intent, "think");
         assert_eq!(plan.cues[1].intent, "dizzy");
         assert_eq!(plan.cues[1].at_ms, 120);
+        assert_eq!(plan.cues[2].intent, "cry");
+        assert_eq!(plan.cues[2].fade_out_ms, 500);
     }
 
     #[test]

@@ -596,12 +596,15 @@ pub fn validate_character_asset_source(
         && has_variant("eye-left", "closed")
         && has_variant("eye-left", "dizzy")
         && has_variant("eye-left", "squeeze")
+        && has_variant("eye-left", "cry")
         && has_variant("eye-right", "open")
         && has_variant("eye-right", "closed")
         && has_variant("eye-right", "dizzy")
         && has_variant("eye-right", "squeeze")
+        && has_variant("eye-right", "cry")
         && has_variant("mouth", "open")
         && has_variant("mouth", "closed")
+        && has_variant("mouth", "cry")
         && rigid_fragment("left")
         && rigid_fragment("right");
     if canonical_skeleton && required_layers && !forbidden_bone && !forbidden_layer {
@@ -1293,6 +1296,12 @@ mod tests {
                 "left-eye",
             ),
             layer(
+                "a25d-eye-cry-left",
+                Some("eye-left"),
+                Some("cry"),
+                "left-eye",
+            ),
+            layer(
                 "a25d-eye-open-right",
                 Some("eye-right"),
                 Some("open"),
@@ -1316,8 +1325,15 @@ mod tests {
                 Some("squeeze"),
                 "right-eye",
             ),
+            layer(
+                "a25d-eye-cry-right",
+                Some("eye-right"),
+                Some("cry"),
+                "right-eye",
+            ),
             layer("a25d-mouth-open", Some("mouth"), Some("open"), "mouth"),
             layer("a25d-mouth-close", Some("mouth"), Some("closed"), "mouth"),
+            layer("a25d-mouth-cry", Some("mouth"), Some("cry"), "mouth"),
             layer("a25d-handwear-left", None, None, "a25d-handwear-left"),
             layer("a25d-handwear-right", None, None, "a25d-handwear-right"),
         ];
