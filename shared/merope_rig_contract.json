@@ -3,7 +3,7 @@
   "rigIrVersion": 4,
   "minSupportedRigIrVersion": 2,
   "characterAsset": {
-    "contractVersion": 8,
+    "contractVersion": 9,
     "portrait": {
       "aspect": {
         "width": 3,
