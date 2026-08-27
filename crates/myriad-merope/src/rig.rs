@@ -605,6 +605,7 @@ pub fn validate_character_asset_source(
         && has_variant("mouth", "open")
         && has_variant("mouth", "closed")
         && has_variant("mouth", "cry")
+        && has_variant("mouth", "maniac")
         && rigid_fragment("left")
         && rigid_fragment("right");
     if canonical_skeleton && required_layers && !forbidden_bone && !forbidden_layer {
@@ -1334,6 +1335,12 @@ mod tests {
             layer("a25d-mouth-open", Some("mouth"), Some("open"), "mouth"),
             layer("a25d-mouth-close", Some("mouth"), Some("closed"), "mouth"),
             layer("a25d-mouth-cry", Some("mouth"), Some("cry"), "mouth"),
+            layer(
+                "a25d-mouth-maniac",
+                Some("mouth"),
+                Some("maniac"),
+                "mouth",
+            ),
             layer("a25d-handwear-left", None, None, "a25d-handwear-left"),
             layer("a25d-handwear-right", None, None, "a25d-handwear-right"),
         ];

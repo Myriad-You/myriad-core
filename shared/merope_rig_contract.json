@@ -3,7 +3,7 @@
   "rigIrVersion": 4,
   "minSupportedRigIrVersion": 2,
   "characterAsset": {
-    "contractVersion": 10,
+    "contractVersion": 11,
     "portrait": {
       "aspect": {
         "width": 3,
@@ -30,6 +30,7 @@
         "squeeze-eye-variant",
         "cry-eye-variant",
         "cry-mouth-variant",
+        "maniac-mouth-variant",
         "mouth-shapes",
         "separate-front-hair",
         "separate-back-hair",
@@ -122,7 +123,8 @@
         "narrow",
         "surprised",
         "sad",
-        "cry"
+        "cry",
+        "maniac"
       ]
     }
   },

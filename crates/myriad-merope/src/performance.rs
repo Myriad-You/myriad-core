@@ -165,6 +165,9 @@ fn sanitize_cue(cue: RawCue) -> Option<ChatPerformanceCue> {
         "think",
         "dizzy",
         "cry",
+        "angry",
+        "speechless",
+        "maniac",
     ];
     const INTERRUPTS: &[&str] = &["replace", "queue", "if-lower"];
     if !INTENTS.contains(&cue.intent.as_str())
@@ -265,6 +268,18 @@ mod tests {
         assert_eq!(plan.cues[1].at_ms, 120);
         assert_eq!(plan.cues[2].intent, "cry");
         assert_eq!(plan.cues[2].fade_out_ms, 500);
+    }
+
+    #[test]
+    fn accepts_stylized_semantic_cues() {
+        let plan = parse_performance_plan(
+            r#"{"cues":[{"intent":"angry","intensity":1.1},{"intent":"speechless","intensity":0.8},{"intent":"maniac","intensity":1.0}]}"#,
+        )
+        .unwrap();
+        assert_eq!(plan.cues.len(), 3);
+        assert_eq!(plan.cues[0].intent, "angry");
+        assert_eq!(plan.cues[1].intent, "speechless");
+        assert_eq!(plan.cues[2].intent, "maniac");
     }
 
     #[test]
