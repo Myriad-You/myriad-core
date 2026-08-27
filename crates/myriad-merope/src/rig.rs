@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use crate::rig_contract::PRESENTATION_SLOT_VARIANTS;
 pub use crate::rig_contract::{
-    CHARACTER_ASSET_CONTRACT_VERSION, MAX_RIG_BONES, MAX_RIG_COLLISION_VOLUMES, MAX_RIG_PARTS,
+    CHARACTER_ASSET_CONTRACT_VERSION, MAX_RIG_BONES, MAX_RIG_PARTS,
     MAX_RIG_TEXTURES, MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART,
     MIN_SUPPORTED_RIG_IR_VERSION, PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, RIG_IR_VERSION,
     RIG_SCHEMA_VERSION,
@@ -14,7 +14,7 @@ use crate::rig_outfit::{
     default_semantic_anchors, outfit_profile_is_valid, semantic_anchors_are_valid,
 };
 pub use crate::rig_outfit::{
-    infer_outfit_profile, RigOutfitProfile, RigOutfitTopology, RigSemanticAnchor,
+    infer_outfit_profile, RigOutfitProfile, RigSemanticAnchor,
 };
 pub use crate::rig_semantics::RigSemantics;
 use crate::rig_semantics::{default_rig_semantics, migrate_rig_semantics, rig_semantics_are_valid};
@@ -1043,6 +1043,7 @@ fn motion_profile_is_valid(profile: &RigMotionProfile) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rig_outfit::RigOutfitTopology;
 
     fn sample_vertex(x: f32, y: f32) -> RigVertex {
         RigVertex {

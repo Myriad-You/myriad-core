@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde::Serialize;
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 pub const MAX_REPORT_DNA_REPORTS: usize = 12;
@@ -32,13 +32,6 @@ pub struct ReportDnaBundle {
     pub fallback_seed_keys: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub struct ReportDnaProvenance {
-    pub fingerprint: String,
-    pub report_count: usize,
-    pub platforms: Vec<String>,
-}
 
 pub fn build_report_dna_bundle(sources: &[ReportDnaSource]) -> ReportDnaBundle {
     let evidence = sources
@@ -179,17 +172,6 @@ pub fn fallback_tag_deck(
     seed_shuffle(&mut result, seed);
     result.truncate(target);
     crate::sanitize_onboarding_tags(&result)
-}
-
-/// @deprecated Prefer [`complete_ai_tag_deck`] or [`fallback_tag_deck`].
-/// Kept as an alias of fallback for any external call sites.
-pub fn sample_tag_deck(
-    primary: &[String],
-    language: &str,
-    seed: &str,
-    target: usize,
-) -> Vec<String> {
-    fallback_tag_deck(primary, language, seed, target)
 }
 
 pub fn localize_report_seed_keys(keys: &[String], language: &str) -> Vec<String> {
@@ -450,16 +432,6 @@ pub fn sanitize_report_dna_tags(tags: &[String]) -> Vec<String> {
     crate::sanitize_onboarding_tags(&filtered)
 }
 
-pub fn report_dna_json(tags: &[String], provenance: &ReportDnaProvenance) -> Value {
-    json!({
-        "fingerprint": provenance.fingerprint,
-        "reportCount": provenance.report_count,
-        "platforms": provenance.platforms,
-        "rawReportsStored": false,
-        "selectedTags": tags,
-    })
-}
-
 fn report_evidence(source: &ReportDnaSource) -> ReportDnaEvidence {
     let summary = string_field(
         &source.report,
@@ -717,6 +689,8 @@ fn infer_seed_keys(evidence: &[ReportDnaEvidence]) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
+    use serde_json::json;
+
     use super::*;
 
     #[test]

@@ -30,20 +30,6 @@ pub struct ChatPerformanceCue {
     pub interrupt: String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ParsedChatPerformance {
-    pub reply: String,
-    pub plan: Option<ChatPerformancePlan>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct RawEnvelope {
-    reply: String,
-    #[serde(default, rename = "performance")]
-    _performance: Option<RawPlan>,
-}
-
 #[derive(Debug, Deserialize)]
 struct RawPlan {
     #[serde(default)]
@@ -79,32 +65,6 @@ struct RawCue {
     fade_out_ms: u32,
     #[serde(default = "default_interrupt")]
     interrupt: String,
-}
-
-pub fn parse_chat_performance(raw: &str) -> ParsedChatPerformance {
-    let trimmed = raw.trim();
-    let json = strip_json_fence(trimmed);
-    let Ok(envelope) = serde_json::from_str::<RawEnvelope>(json) else {
-        return ParsedChatPerformance {
-            reply: trimmed.chars().take(2_000).collect(),
-            plan: None,
-        };
-    };
-    let reply = envelope
-        .reply
-        .trim()
-        .chars()
-        .take(2_000)
-        .collect::<String>();
-    if reply.is_empty() {
-        return ParsedChatPerformance {
-            reply: trimmed.chars().take(2_000).collect(),
-            plan: None,
-        };
-    }
-    // Semantic acting is exclusively selected by the strict-Lite motion
-    // director. A reply model's embedded performance payload is ignored.
-    ParsedChatPerformance { reply, plan: None }
 }
 
 /// Parses the Lite motion director's plan. This is deliberately separate from
@@ -224,13 +184,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn chat_parser_ignores_non_lite_performance() {
-        let parsed = parse_chat_performance(
-            r#"{"reply":"Hello!","performance":{"cues":[{"intent":"delight","atMs":9000,"intensity":9,"tempo":0.1,"interrupt":"unsafe"}]}}"#,
-        );
-        assert_eq!(parsed.reply, "Hello!");
-        assert!(parsed.plan.is_none());
-
+    fn lite_plan_parser_bounds_out_of_range_cues() {
         let plan = parse_performance_plan(
             r#"{"cues":[{"intent":"delight","atMs":9000,"intensity":9,"tempo":0.1,"interrupt":"unsafe"}]}"#,
         )
@@ -284,12 +238,6 @@ mod tests {
 
     #[test]
     fn preserves_plain_replies_and_discards_invalid_cues() {
-        assert_eq!(parse_chat_performance("plain reply").reply, "plain reply");
-        assert!(parse_chat_performance("plain reply").plan.is_none());
-        let invalid = parse_chat_performance(
-            r#"{"reply":"Hi","performance":{"cues":[{"intent":"execute-code"}]}}"#,
-        );
-        assert!(invalid.plan.is_none());
         assert!(parse_performance_plan(
             r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#
         )
