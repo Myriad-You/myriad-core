@@ -394,8 +394,7 @@ mod tests {
         stamp_clothing_style(&mut swapped, "urban");
         assert_eq!(character_module(&swapped).unwrap(), character);
         assert_ne!(
-            sanitize_upper_body_visual_identity(&swapped).unwrap()["outfit"]
-                ["outfitConstruction"],
+            sanitize_upper_body_visual_identity(&swapped).unwrap()["outfit"]["outfitConstruction"],
             first["outfit"]["outfitConstruction"]
         );
         assert_eq!(clothing_style_of(&swapped), Some("urban"));

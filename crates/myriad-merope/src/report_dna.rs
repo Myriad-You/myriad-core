@@ -32,7 +32,6 @@ pub struct ReportDnaBundle {
     pub fallback_seed_keys: Vec<String>,
 }
 
-
 pub fn build_report_dna_bundle(sources: &[ReportDnaSource]) -> ReportDnaBundle {
     let evidence = sources
         .iter()

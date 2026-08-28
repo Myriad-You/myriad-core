@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
 
+use crate::rig_contract::{
+    PERFORMANCE_BASELINE_EXPRESSIONS, PERFORMANCE_CUE_INTENTS, PERFORMANCE_INTERRUPT_MODES,
+    PERFORMANCE_POSTURES,
+};
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatPerformancePlan {
@@ -67,8 +72,8 @@ struct RawCue {
     interrupt: String,
 }
 
-/// Parses the Lite motion director's plan. This is deliberately separate from
-/// `parse_chat_performance`: the motion model never gets to author the reply.
+/// Parses the Lite motion director's plan. Semantic acting is selected here and
+/// nowhere else: a reply model never gets to author its own performance.
 pub fn parse_performance_plan(raw: &str) -> Option<ChatPerformancePlan> {
     serde_json::from_str::<RawPlan>(strip_json_fence(raw.trim()))
         .ok()
@@ -96,10 +101,8 @@ fn sanitize_plan(plan: RawPlan) -> Option<ChatPerformancePlan> {
 }
 
 fn sanitize_baseline(baseline: RawBaseline) -> Option<ChatPerformanceBaseline> {
-    const EXPRESSIONS: &[&str] = &["withdrawn", "subdued", "steady", "warm"];
-    const POSTURES: &[&str] = &["closed", "neutral", "open"];
-    if !EXPRESSIONS.contains(&baseline.expression.as_str())
-        || !POSTURES.contains(&baseline.posture.as_str())
+    if !PERFORMANCE_BASELINE_EXPRESSIONS.contains(&baseline.expression.as_str())
+        || !PERFORMANCE_POSTURES.contains(&baseline.posture.as_str())
         || !baseline.motion_energy.is_finite()
         || !baseline.attention.is_finite()
     {
@@ -114,23 +117,7 @@ fn sanitize_baseline(baseline: RawBaseline) -> Option<ChatPerformanceBaseline> {
 }
 
 fn sanitize_cue(cue: RawCue) -> Option<ChatPerformanceCue> {
-    const INTENTS: &[&str] = &[
-        "greet",
-        "respond",
-        "question",
-        "delight",
-        "emphasize",
-        "listen",
-        "notify",
-        "think",
-        "dizzy",
-        "cry",
-        "angry",
-        "speechless",
-        "maniac",
-    ];
-    const INTERRUPTS: &[&str] = &["replace", "queue", "if-lower"];
-    if !INTENTS.contains(&cue.intent.as_str())
+    if !PERFORMANCE_CUE_INTENTS.contains(&cue.intent.as_str())
         || !cue.intensity.is_finite()
         || !cue.tempo.is_finite()
     {
@@ -143,7 +130,7 @@ fn sanitize_cue(cue: RawCue) -> Option<ChatPerformanceCue> {
         tempo: cue.tempo.clamp(0.5, 1.6),
         fade_in_ms: cue.fade_in_ms.clamp(40, 600),
         fade_out_ms: cue.fade_out_ms.clamp(60, 800),
-        interrupt: if INTERRUPTS.contains(&cue.interrupt.as_str()) {
+        interrupt: if PERFORMANCE_INTERRUPT_MODES.contains(&cue.interrupt.as_str()) {
             cue.interrupt
         } else {
             default_interrupt()
@@ -227,17 +214,23 @@ mod tests {
     #[test]
     fn accepts_stylized_semantic_cues() {
         let plan = parse_performance_plan(
-            r#"{"cues":[{"intent":"angry","intensity":1.1},{"intent":"speechless","intensity":0.8},{"intent":"maniac","intensity":1.0}]}"#,
+            r#"{"cues":[{"intent":"angry","intensity":1.1},{"intent":"speechless","intensity":0.8},{"intent":"silly","intensity":1.0}]}"#,
         )
         .unwrap();
         assert_eq!(plan.cues.len(), 3);
         assert_eq!(plan.cues[0].intent, "angry");
         assert_eq!(plan.cues[1].intent, "speechless");
-        assert_eq!(plan.cues[2].intent, "maniac");
+        assert_eq!(plan.cues[2].intent, "silly");
     }
 
     #[test]
-    fn preserves_plain_replies_and_discards_invalid_cues() {
+    fn accepts_lovestruck_as_a_semantic_cue() {
+        let plan = parse_performance_plan(r#"{"cues":[{"intent":"lovestruck"}]}"#).unwrap();
+        assert_eq!(plan.cues[0].intent, "lovestruck");
+    }
+
+    #[test]
+    fn discards_plans_whose_baseline_is_out_of_vocabulary() {
         assert!(parse_performance_plan(
             r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#
         )
