@@ -41,8 +41,6 @@ struct RawPlan {
     baseline: Option<RawBaseline>,
     #[serde(default)]
     cues: Vec<RawCue>,
-    #[serde(default, rename = "continue")]
-    continue_acting: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -92,12 +90,6 @@ fn strip_json_fence(value: &str) -> &str {
 }
 
 fn sanitize_plan(plan: RawPlan) -> Option<ChatPerformancePlan> {
-    if plan.continue_acting {
-        return Some(ChatPerformancePlan {
-            baseline: None,
-            cues: Vec::new(),
-        });
-    }
     let baseline = plan.baseline.and_then(sanitize_baseline);
     let cues = plan
         .cues
@@ -106,10 +98,7 @@ fn sanitize_plan(plan: RawPlan) -> Option<ChatPerformancePlan> {
         .filter_map(sanitize_cue)
         .collect::<Vec<_>>();
     if baseline.is_none() && cues.is_empty() {
-        return Some(ChatPerformancePlan {
-            baseline: None,
-            cues: Vec::new(),
-        });
+        return None;
     }
     Some(ChatPerformancePlan { baseline, cues })
 }
@@ -245,18 +234,20 @@ mod tests {
 
     #[test]
     fn discards_plans_whose_baseline_is_out_of_vocabulary() {
-        let plan = parse_performance_plan(
+        assert!(parse_performance_plan(
             r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#,
         )
-        .unwrap();
-        assert!(plan.baseline.is_none());
-        assert!(plan.cues.is_empty());
+        .is_none());
     }
 
     #[test]
-    fn explicit_continue_is_an_empty_plan_not_a_parse_failure() {
-        let plan = parse_performance_plan(r#"{"continue":true}"#).unwrap();
-        assert!(plan.baseline.is_none());
-        assert!(plan.cues.is_empty());
+    fn empty_object_is_not_a_plan() {
+        assert!(parse_performance_plan("{}").is_none());
+        assert!(parse_performance_plan(r#"{"cues":[]}"#).is_none());
+    }
+
+    #[test]
+    fn continue_is_not_a_public_plan() {
+        assert!(parse_performance_plan(r#"{"continue":true}"#).is_none());
     }
 }

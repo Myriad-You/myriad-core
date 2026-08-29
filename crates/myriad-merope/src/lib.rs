@@ -18,7 +18,9 @@ mod visual_design;
 mod visual_prompt;
 
 pub use onboarding::{sanitize_onboarding_tags, MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS};
-pub use performance::{parse_performance_plan, ChatPerformanceCue, ChatPerformancePlan};
+pub use performance::{
+    parse_performance_plan, ChatPerformanceBaseline, ChatPerformanceCue, ChatPerformancePlan,
+};
 pub use persona::{fallback_persona_draft, persona_draft_is_complete, sanitize_persona_draft};
 pub use report_dna::{
     build_report_dna_bundle, complete_ai_tag_deck, fallback_tag_deck, is_reasonable_persona_tag,
@@ -41,8 +43,9 @@ pub use rig_contract::{
 pub use rig_semantics::RigSemantics;
 pub use rig_spatial::RigSpatialProfile;
 pub use rig_state::{
-    motion_style_from_persona, plan_is_empty, refine_performance_plan, sanitize_rig_state,
-    RigStateSummary, MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_SPECIAL_INTENTS,
+    motion_style_from_persona, motion_style_from_persona_json, plan_is_empty,
+    refine_performance_plan, round_motion_style, sanitize_rig_state, RigStateSummary,
+    MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES, RIG_STATE_SPECIAL_INTENTS,
 };
 pub use visual_contract::{
     appearance_visual_profile, build_character_asset_contract, character_asset_contract_fingerprint,

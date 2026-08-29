@@ -60,7 +60,6 @@ pub const RIG_STATE_MUSIC_ENERGIES: &[&str] = &["quiet", "soft", "present", "str
 pub const RIG_STATE_BEAT_PHASES: &[&str] = &["rest", "downbeat", "pulse", "hold"];
 pub const RIG_STATE_MOTION_STYLES: &[&str] = &["restrained", "even", "open"];
 pub const MAX_RECENT_ACTIONS: usize = 6;
-pub const CONTINUE_REMAINING_MS: u32 = 400;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -298,6 +297,40 @@ pub fn plan_is_empty(plan: &ChatPerformancePlan) -> bool {
     plan.baseline.is_none() && plan.cues.is_empty()
 }
 
+/// Client `motionStyle` is a fallback. A loaded persona always wins.
+pub fn round_motion_style(
+    client_style: Option<&str>,
+    persona_json: Option<&serde_json::Value>,
+    persona_found: bool,
+    mood: i32,
+) -> String {
+    if persona_found {
+        return motion_style_from_persona_json(persona_json, mood).to_string();
+    }
+    allow(client_style, RIG_STATE_MOTION_STYLES, "even")
+}
+
+pub fn motion_style_from_persona_json(
+    persona_json: Option<&serde_json::Value>,
+    mood: i32,
+) -> &'static str {
+    let temperament = persona_json
+        .and_then(|value| value.get("temperament"))
+        .and_then(|value| value.as_array())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|item| item.as_str().map(str::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    let social = persona_json
+        .and_then(|value| value.get("socialStyle"))
+        .and_then(|value| value.as_str())
+        .unwrap_or("");
+    motion_style_from_persona(&temperament, social, mood)
+}
+
 pub fn motion_style_from_persona(
     temperament: &[String],
     social_style: &str,
@@ -338,13 +371,15 @@ fn contains_any(haystack: &str, needles: &[&str]) -> bool {
 }
 
 /// Drop cues the current face cannot play, and keep music groove when music owns the body.
+///
+/// `capabilities = []` is fail-closed: special sticker expressions and head-body
+/// occupancy are forbidden. Generic listen/respond/think remain. Callers that
+/// have no `rigState` at all skip this function so old clients keep prior
+/// behavior.
 pub fn refine_performance_plan(
     mut plan: ChatPerformancePlan,
     state: &RigStateSummary,
 ) -> ChatPerformancePlan {
-    if state.acting.remaining_ms >= CONTINUE_REMAINING_MS && plan_is_empty(&plan) {
-        return plan;
-    }
     let last_special = state
         .recent_intents
         .iter()
@@ -352,6 +387,12 @@ pub fn refine_performance_plan(
         .find(|intent| RIG_STATE_SPECIAL_INTENTS.contains(&intent.as_str()))
         .cloned();
     let music_owns_body = state.owners.head_body == "music" || state.singing;
+    let has_head_body = has_cap(&state.capabilities, "head-body");
+    if let Some(baseline) = plan.baseline.as_mut() {
+        if baseline.posture != "neutral" && !has_head_body {
+            baseline.posture = "neutral".to_string();
+        }
+    }
     plan.cues.retain(|cue| {
         if !capability_allows(&state.capabilities, &cue.intent) {
             return false;
@@ -369,20 +410,20 @@ pub fn refine_performance_plan(
     plan
 }
 
+fn has_cap(capabilities: &[String], name: &str) -> bool {
+    capabilities.iter().any(|cap| cap == name)
+}
+
 fn capability_allows(capabilities: &[String], intent: &str) -> bool {
-    if capabilities.is_empty() {
-        return true;
+    if RIG_STATE_HEAD_BODY_INTENTS.contains(&intent) && !has_cap(capabilities, "head-body") {
+        return false;
     }
     match intent {
-        "dizzy" => capabilities.iter().any(|cap| cap == "dizzy-eye"),
-        "cry" => capabilities
-            .iter()
-            .any(|cap| cap == "cry-eye" || cap == "cry-mouth"),
-        "silly" => capabilities
-            .iter()
-            .any(|cap| cap == "silly-eye" || cap == "silly-mouth"),
-        "maniac" => capabilities.iter().any(|cap| cap == "maniac-mouth"),
-        "lovestruck" => capabilities.iter().any(|cap| cap == "lovestruck"),
+        "dizzy" => has_cap(capabilities, "dizzy-eye"),
+        "cry" => has_cap(capabilities, "cry-eye") || has_cap(capabilities, "cry-mouth"),
+        "silly" => has_cap(capabilities, "silly-eye") || has_cap(capabilities, "silly-mouth"),
+        "maniac" => has_cap(capabilities, "maniac-mouth"),
+        "lovestruck" => has_cap(capabilities, "lovestruck"),
         _ => true,
     }
 }
@@ -466,5 +507,79 @@ mod tests {
         let refined = refine_performance_plan(plan, &state);
         assert_eq!(refined.cues.len(), 1);
         assert_eq!(refined.cues[0].intent, "listen");
+    }
+
+    #[test]
+    fn empty_capabilities_fail_closed_on_specials_and_head_body() {
+        let state = sanitize_rig_state(&json!({
+            "capabilities": []
+        }))
+        .unwrap();
+        assert!(state.capabilities.is_empty());
+        let plan = ChatPerformancePlan {
+            baseline: Some(crate::ChatPerformanceBaseline {
+                expression: "warm".into(),
+                posture: "open".into(),
+                motion_energy: 1.0,
+                attention: 0.8,
+            }),
+            cues: vec![
+                crate::ChatPerformanceCue {
+                    intent: "dizzy".into(),
+                    at_ms: 0,
+                    intensity: 1.0,
+                    tempo: 1.0,
+                    fade_in_ms: 80,
+                    fade_out_ms: 120,
+                    interrupt: "replace".into(),
+                },
+                crate::ChatPerformanceCue {
+                    intent: "greet".into(),
+                    at_ms: 0,
+                    intensity: 1.0,
+                    tempo: 1.0,
+                    fade_in_ms: 80,
+                    fade_out_ms: 120,
+                    interrupt: "replace".into(),
+                },
+                crate::ChatPerformanceCue {
+                    intent: "listen".into(),
+                    at_ms: 0,
+                    intensity: 1.0,
+                    tempo: 1.0,
+                    fade_in_ms: 80,
+                    fade_out_ms: 120,
+                    interrupt: "if-lower".into(),
+                },
+                crate::ChatPerformanceCue {
+                    intent: "think".into(),
+                    at_ms: 40,
+                    intensity: 1.0,
+                    tempo: 1.0,
+                    fade_in_ms: 80,
+                    fade_out_ms: 120,
+                    interrupt: "if-lower".into(),
+                },
+            ],
+        };
+        let refined = refine_performance_plan(plan, &state);
+        assert_eq!(refined.baseline.as_ref().unwrap().posture, "neutral");
+        let intents: Vec<_> = refined.cues.iter().map(|cue| cue.intent.as_str()).collect();
+        assert_eq!(intents, vec!["listen", "think"]);
+    }
+
+    #[test]
+    fn persona_overrides_client_motion_style() {
+        assert_eq!(
+            round_motion_style(
+                Some("open"),
+                Some(&json!({"socialStyle": "内向"})),
+                true,
+                70
+            ),
+            "restrained"
+        );
+        assert_eq!(round_motion_style(Some("open"), None, false, 20), "open");
+        assert_eq!(round_motion_style(None, None, false, 20), "even");
     }
 }
