@@ -41,6 +41,8 @@ struct RawPlan {
     baseline: Option<RawBaseline>,
     #[serde(default)]
     cues: Vec<RawCue>,
+    #[serde(default, rename = "continue")]
+    continue_acting: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,6 +92,12 @@ fn strip_json_fence(value: &str) -> &str {
 }
 
 fn sanitize_plan(plan: RawPlan) -> Option<ChatPerformancePlan> {
+    if plan.continue_acting {
+        return Some(ChatPerformancePlan {
+            baseline: None,
+            cues: Vec::new(),
+        });
+    }
     let baseline = plan.baseline.and_then(sanitize_baseline);
     let cues = plan
         .cues
@@ -97,7 +105,13 @@ fn sanitize_plan(plan: RawPlan) -> Option<ChatPerformancePlan> {
         .take(3)
         .filter_map(sanitize_cue)
         .collect::<Vec<_>>();
-    (baseline.is_some() || !cues.is_empty()).then_some(ChatPerformancePlan { baseline, cues })
+    if baseline.is_none() && cues.is_empty() {
+        return Some(ChatPerformancePlan {
+            baseline: None,
+            cues: Vec::new(),
+        });
+    }
+    Some(ChatPerformancePlan { baseline, cues })
 }
 
 fn sanitize_baseline(baseline: RawBaseline) -> Option<ChatPerformanceBaseline> {
@@ -231,9 +245,18 @@ mod tests {
 
     #[test]
     fn discards_plans_whose_baseline_is_out_of_vocabulary() {
-        assert!(parse_performance_plan(
-            r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#
+        let plan = parse_performance_plan(
+            r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#,
         )
-        .is_none());
+        .unwrap();
+        assert!(plan.baseline.is_none());
+        assert!(plan.cues.is_empty());
+    }
+
+    #[test]
+    fn explicit_continue_is_an_empty_plan_not_a_parse_failure() {
+        let plan = parse_performance_plan(r#"{"continue":true}"#).unwrap();
+        assert!(plan.baseline.is_none());
+        assert!(plan.cues.is_empty());
     }
 }
