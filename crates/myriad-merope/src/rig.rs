@@ -4,18 +4,15 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub use crate::rig_contract::{
-    CHARACTER_ASSET_CONTRACT_VERSION, MAX_RIG_BONES, MAX_RIG_PARTS,
-    MAX_RIG_TEXTURES, MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART,
-    MIN_SUPPORTED_RIG_IR_VERSION, PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, RIG_IR_VERSION,
-    RIG_SCHEMA_VERSION,
+    CHARACTER_ASSET_CONTRACT_VERSION, MAX_RIG_BONES, MAX_RIG_PARTS, MAX_RIG_TEXTURES,
+    MAX_RIG_TOTAL_VERTICES, MAX_RIG_VERTICES_PER_PART, MIN_SUPPORTED_RIG_IR_VERSION,
+    PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, RIG_IR_VERSION, RIG_SCHEMA_VERSION,
 };
 use crate::rig_contract::{CHARACTER_ASSET_REQUIRED_CAPABILITIES, PRESENTATION_SLOT_VARIANTS};
 use crate::rig_outfit::{
     default_semantic_anchors, outfit_profile_is_valid, semantic_anchors_are_valid,
 };
-pub use crate::rig_outfit::{
-    infer_outfit_profile, RigOutfitProfile, RigSemanticAnchor,
-};
+pub use crate::rig_outfit::{infer_outfit_profile, RigOutfitProfile, RigSemanticAnchor};
 pub use crate::rig_semantics::RigSemantics;
 use crate::rig_semantics::{default_rig_semantics, migrate_rig_semantics, rig_semantics_are_valid};
 use crate::rig_spatial::{infer_spatial_profile, spatial_profile_is_valid, RigSpatialProfile};
@@ -239,6 +236,8 @@ pub enum RigValidationError {
     Semantics,
     #[error("rig spatial profile is invalid")]
     SpatialProfile,
+    #[error("Anime2.5D playback contract is invalid")]
+    Anime25DPlayback,
 }
 
 #[derive(Debug, Clone, PartialEq, Error)]
@@ -296,6 +295,13 @@ impl RigManifest {
             || self.canvas.height <= 0.0
         {
             return Err(RigValidationError::Canvas);
+        }
+        if self
+            .anime25d_playback
+            .as_ref()
+            .is_some_and(|playback| !crate::anime25d_contract::playback_is_valid(playback))
+        {
+            return Err(RigValidationError::Anime25DPlayback);
         }
         if self.bones.is_empty() || self.bones.len() > MAX_RIG_BONES {
             return Err(RigValidationError::TooManyBones);
@@ -1145,6 +1151,16 @@ mod tests {
                 height: PORTRAIT_CANVAS_HEIGHT,
             }
         );
+    }
+
+    #[test]
+    fn manifest_rejects_invalid_anime25d_playback() {
+        let mut rig = sample_manifest();
+        rig.anime25d_playback = Some(serde_json::json!({
+            "kind": "anime-2.5d-rig",
+            "version": 6
+        }));
+        assert_eq!(rig.validate(), Err(RigValidationError::Anime25DPlayback));
     }
 
     #[test]

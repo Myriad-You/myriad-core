@@ -3,6 +3,7 @@
 //! Database repositories, model-provider calls, worker scheduling, and HTTP
 //! adapters belong to the backend crate.
 
+mod anime25d_contract;
 mod onboarding;
 mod performance;
 mod persona;
