@@ -389,7 +389,7 @@ pub fn refine_performance_plan(
     let music_owns_body = state.owners.head_body == "music" || state.singing;
     let has_head_body = has_cap(&state.capabilities, "head-body");
     if let Some(baseline) = plan.baseline.as_mut() {
-        if baseline.posture != "neutral" && !has_head_body {
+        if baseline.posture != "neutral" && (!has_head_body || music_owns_body) {
             baseline.posture = "neutral".to_string();
         }
     }
@@ -405,6 +405,9 @@ pub fn refine_performance_plan(
         if music_owns_body && RIG_STATE_HEAD_BODY_INTENTS.contains(&cue.intent.as_str()) {
             return false;
         }
+        if state.speaking && cue_takes_mouth(&cue.intent) {
+            return false;
+        }
         true
     });
     plan
@@ -412,6 +415,10 @@ pub fn refine_performance_plan(
 
 fn has_cap(capabilities: &[String], name: &str) -> bool {
     capabilities.iter().any(|cap| cap == name)
+}
+
+fn cue_takes_mouth(intent: &str) -> bool {
+    intent.contains("mouth")
 }
 
 fn capability_allows(capabilities: &[String], intent: &str) -> bool {
@@ -501,6 +508,71 @@ mod tests {
                     fade_in_ms: 80,
                     fade_out_ms: 120,
                     interrupt: "if-lower".into(),
+                },
+            ],
+        };
+        let refined = refine_performance_plan(plan, &state);
+        assert_eq!(refined.cues.len(), 1);
+        assert_eq!(refined.cues[0].intent, "listen");
+    }
+
+    #[test]
+    fn refine_neutralizes_open_posture_while_singing() {
+        let state = sanitize_rig_state(&json!({
+            "owners": { "headBody": "music" },
+            "singing": true,
+            "capabilities": ["head-body"]
+        }))
+        .unwrap();
+        let plan = ChatPerformancePlan {
+            baseline: Some(crate::ChatPerformanceBaseline {
+                expression: "warm".into(),
+                posture: "open".into(),
+                motion_energy: 1.0,
+                attention: 1.0,
+            }),
+            cues: vec![crate::ChatPerformanceCue {
+                intent: "listen".into(),
+                at_ms: 0,
+                intensity: 1.0,
+                tempo: 1.0,
+                fade_in_ms: 80,
+                fade_out_ms: 120,
+                interrupt: "replace".into(),
+            }],
+        };
+        let refined = refine_performance_plan(plan, &state);
+        assert_eq!(refined.baseline.as_ref().unwrap().posture, "neutral");
+        assert_eq!(refined.cues[0].intent, "listen");
+    }
+
+    #[test]
+    fn refine_drops_mouth_cues_while_speaking() {
+        let state = sanitize_rig_state(&json!({
+            "speaking": true,
+            "capabilities": ["head-body"]
+        }))
+        .unwrap();
+        let plan = ChatPerformancePlan {
+            baseline: None,
+            cues: vec![
+                crate::ChatPerformanceCue {
+                    intent: "listen".into(),
+                    at_ms: 0,
+                    intensity: 1.0,
+                    tempo: 1.0,
+                    fade_in_ms: 80,
+                    fade_out_ms: 120,
+                    interrupt: "replace".into(),
+                },
+                crate::ChatPerformanceCue {
+                    intent: "mouth-open".into(),
+                    at_ms: 0,
+                    intensity: 1.0,
+                    tempo: 1.0,
+                    fade_in_ms: 80,
+                    fade_out_ms: 120,
+                    interrupt: "replace".into(),
                 },
             ],
         };
