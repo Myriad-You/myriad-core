@@ -392,7 +392,7 @@ pub fn refine_performance_plan(
     plan.cues.retain(|cue| {
         capability_allows(&state.capabilities, &cue.intent)
             && !(music_owns_body && RIG_STATE_HEAD_BODY_INTENTS.contains(&cue.intent.as_str()))
-            && !(state.speaking && cue_takes_mouth(&cue.intent))
+            && !cue_blocked_by_speech(&cue.intent, state.speaking, &state.capabilities)
     });
     plan
 }
@@ -401,8 +401,18 @@ fn has_cap(capabilities: &[String], name: &str) -> bool {
     capabilities.iter().any(|cap| cap == name)
 }
 
-fn cue_takes_mouth(intent: &str) -> bool {
-    RIG_STATE_MOUTH_INTENTS.contains(&intent)
+/// Speech keeps the articulating mouth. Maniac is mouth-only so it waits.
+/// Silly/cry still play through the eyes; the client yields their mouth layers.
+fn cue_blocked_by_speech(intent: &str, speaking: bool, capabilities: &[String]) -> bool {
+    if !speaking {
+        return false;
+    }
+    match intent {
+        "maniac" => true,
+        "silly" => !has_cap(capabilities, "silly-eye"),
+        "cry" => !has_cap(capabilities, "cry-eye"),
+        _ => false,
+    }
 }
 
 /// Sticker cues need their layer; generic acting needs `head-body` when the
@@ -587,6 +597,34 @@ mod tests {
         let refined = refine_performance_plan(plan, &state);
         assert_eq!(refined.cues.len(), 1);
         assert_eq!(refined.cues[0].intent, "listen");
+    }
+
+    #[test]
+    fn refine_keeps_silly_eyes_while_speaking() {
+        let state = sanitize_rig_state(&json!({
+            "speaking": true,
+            "capabilities": ["head-body", "silly-eye", "silly-mouth"]
+        }))
+        .unwrap();
+        let plan = crate::parse_performance_plan(
+            r#"{"cues":[{"intent":"listen","atMs":0,"intensity":1,"tempo":1,"fadeInMs":80,"fadeOutMs":120,"interrupt":"replace"},{"intent":"silly","atMs":0,"intensity":1,"tempo":1,"fadeInMs":80,"fadeOutMs":120,"interrupt":"replace"}]}"#,
+        )
+        .unwrap();
+        let refined = refine_performance_plan(plan, &state);
+        assert!(refined.cues.iter().any(|cue| cue.intent == "silly"));
+        let mouth_only = sanitize_rig_state(&json!({
+            "speaking": true,
+            "capabilities": ["head-body", "silly-mouth"]
+        }))
+        .unwrap();
+        let dropped = refine_performance_plan(
+            crate::parse_performance_plan(
+                r#"{"cues":[{"intent":"silly","atMs":0,"intensity":1,"tempo":1,"fadeInMs":80,"fadeOutMs":120,"interrupt":"replace"}]}"#,
+            )
+            .unwrap(),
+            &mouth_only,
+        );
+        assert!(dropped.cues.is_empty());
     }
 
     #[test]
