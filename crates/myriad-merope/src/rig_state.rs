@@ -375,43 +375,24 @@ fn contains_any(haystack: &str, needles: &[&str]) -> bool {
 
 /// Drop cues the current face cannot play, and keep music groove when music owns the body.
 ///
-/// `capabilities = []` is fail-closed: special sticker expressions and head-body
-/// occupancy are forbidden. Generic listen/respond/think remain. Callers that
-/// have no `rigState` at all skip this function so old clients keep prior
+/// Sticker expressions still need their layers. Generic acting is allowed when
+/// `capabilities` is empty so a missing summary does not wipe the face. Callers
+/// that have no `rigState` at all skip this function so old clients keep prior
 /// behavior.
 pub fn refine_performance_plan(
     mut plan: ChatPerformancePlan,
     state: &RigStateSummary,
 ) -> ChatPerformancePlan {
-    let last_special = state
-        .recent_intents
-        .iter()
-        .rev()
-        .find(|intent| RIG_STATE_SPECIAL_INTENTS.contains(&intent.as_str()))
-        .cloned();
     let music_owns_body = state.owners.head_body == "music" || state.singing;
-    let has_head_body = has_cap(&state.capabilities, "head-body");
     if let Some(baseline) = plan.baseline.as_mut() {
-        if baseline.posture != "neutral" && (!has_head_body || music_owns_body) {
+        if baseline.posture != "neutral" && music_owns_body {
             baseline.posture = "neutral".to_string();
         }
     }
     plan.cues.retain(|cue| {
-        if !capability_allows(&state.capabilities, &cue.intent) {
-            return false;
-        }
-        if last_special.as_deref() == Some(cue.intent.as_str())
-            && RIG_STATE_SPECIAL_INTENTS.contains(&cue.intent.as_str())
-        {
-            return false;
-        }
-        if music_owns_body && RIG_STATE_HEAD_BODY_INTENTS.contains(&cue.intent.as_str()) {
-            return false;
-        }
-        if state.speaking && cue_takes_mouth(&cue.intent) {
-            return false;
-        }
-        true
+        capability_allows(&state.capabilities, &cue.intent)
+            && !(music_owns_body && RIG_STATE_HEAD_BODY_INTENTS.contains(&cue.intent.as_str()))
+            && !(state.speaking && cue_takes_mouth(&cue.intent))
     });
     plan
 }
@@ -425,16 +406,18 @@ fn cue_takes_mouth(intent: &str) -> bool {
 }
 
 fn capability_allows(capabilities: &[String], intent: &str) -> bool {
-    if RIG_STATE_HEAD_BODY_INTENTS.contains(&intent) && !has_cap(capabilities, "head-body") {
-        return false;
-    }
     match intent {
         "dizzy" => has_cap(capabilities, "dizzy-eye"),
         "cry" => has_cap(capabilities, "cry-eye") || has_cap(capabilities, "cry-mouth"),
         "silly" => has_cap(capabilities, "silly-eye") || has_cap(capabilities, "silly-mouth"),
         "maniac" => has_cap(capabilities, "maniac-mouth"),
         "lovestruck" => has_cap(capabilities, "lovestruck"),
-        _ => true,
+        _ => {
+            if capabilities.is_empty() {
+                return true;
+            }
+            !RIG_STATE_HEAD_BODY_INTENTS.contains(&intent) || has_cap(capabilities, "head-body")
+        }
     }
 }
 
@@ -474,7 +457,31 @@ mod tests {
     }
 
     #[test]
-    fn refine_drops_repeated_specials_and_body_cues_while_singing() {
+    fn refine_keeps_a_repeated_special_when_the_face_can_play_it() {
+        let state = sanitize_rig_state(&json!({
+            "recentIntents": ["silly"],
+            "capabilities": ["silly-eye", "head-body"]
+        }))
+        .unwrap();
+        let plan = ChatPerformancePlan {
+            baseline: None,
+            cues: vec![crate::ChatPerformanceCue {
+                intent: "silly".into(),
+                at_ms: 0,
+                intensity: 1.0,
+                tempo: 1.0,
+                fade_in_ms: 80,
+                fade_out_ms: 120,
+                interrupt: "replace".into(),
+            }],
+        };
+        let refined = refine_performance_plan(plan, &state);
+        assert_eq!(refined.cues.len(), 1);
+        assert_eq!(refined.cues[0].intent, "silly");
+    }
+
+    #[test]
+    fn refine_drops_body_cues_while_singing() {
         let state = sanitize_rig_state(&json!({
             "owners": { "headBody": "music" },
             "singing": true,
@@ -577,7 +584,7 @@ mod tests {
     }
 
     #[test]
-    fn empty_capabilities_fail_closed_on_specials_and_head_body() {
+    fn empty_capabilities_drop_stickers_but_keep_generic_acting() {
         let state = sanitize_rig_state(&json!({
             "capabilities": []
         }))
@@ -630,9 +637,9 @@ mod tests {
             ],
         };
         let refined = refine_performance_plan(plan, &state);
-        assert_eq!(refined.baseline.as_ref().unwrap().posture, "neutral");
+        assert_eq!(refined.baseline.as_ref().unwrap().posture, "open");
         let intents: Vec<_> = refined.cues.iter().map(|cue| cue.intent.as_str()).collect();
-        assert_eq!(intents, vec!["listen", "think"]);
+        assert_eq!(intents, vec!["greet", "listen", "think"]);
     }
 
     #[test]
