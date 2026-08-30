@@ -4,10 +4,10 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::ChatPerformancePlan;
 use crate::rig_contract::{
     PERFORMANCE_BASELINE_EXPRESSIONS, PERFORMANCE_CUE_INTENTS, PERFORMANCE_POSTURES,
 };
-use crate::ChatPerformancePlan;
 
 pub const RIG_STATE_CHANNEL_OWNERS: &[&str] = &[
     "preview",
@@ -30,6 +30,9 @@ pub const RIG_STATE_SPECIAL_INTENTS: &[&str] = &[
     "silly",
     "lovestruck",
 ];
+/// Cue intents that occupy the mouth. Capability names (`cry-mouth`) are not
+/// intents; substring matching them would never fire on a parsed plan.
+pub const RIG_STATE_MOUTH_INTENTS: &[&str] = &["cry", "maniac", "silly"];
 pub const RIG_STATE_HEAD_BODY_INTENTS: &[&str] = &[
     "greet",
     "question",
@@ -418,7 +421,7 @@ fn has_cap(capabilities: &[String], name: &str) -> bool {
 }
 
 fn cue_takes_mouth(intent: &str) -> bool {
-    intent.contains("mouth")
+    RIG_STATE_MOUTH_INTENTS.contains(&intent)
 }
 
 fn capability_allows(capabilities: &[String], intent: &str) -> bool {
@@ -548,34 +551,26 @@ mod tests {
 
     #[test]
     fn refine_drops_mouth_cues_while_speaking() {
+        assert!(
+            !RIG_STATE_MOUTH_INTENTS.is_empty(),
+            "emptying RIG_STATE_MOUTH_INTENTS silently disables the speaking-mouth filter",
+        );
+        for intent in RIG_STATE_MOUTH_INTENTS {
+            assert!(
+                PERFORMANCE_CUE_INTENTS.contains(intent),
+                "{intent} must survive parse_performance_plan",
+            );
+        }
         let state = sanitize_rig_state(&json!({
             "speaking": true,
-            "capabilities": ["head-body"]
+            "capabilities": ["head-body", "maniac-mouth", "cry-mouth", "silly-mouth"]
         }))
         .unwrap();
-        let plan = ChatPerformancePlan {
-            baseline: None,
-            cues: vec![
-                crate::ChatPerformanceCue {
-                    intent: "listen".into(),
-                    at_ms: 0,
-                    intensity: 1.0,
-                    tempo: 1.0,
-                    fade_in_ms: 80,
-                    fade_out_ms: 120,
-                    interrupt: "replace".into(),
-                },
-                crate::ChatPerformanceCue {
-                    intent: "mouth-open".into(),
-                    at_ms: 0,
-                    intensity: 1.0,
-                    tempo: 1.0,
-                    fade_in_ms: 80,
-                    fade_out_ms: 120,
-                    interrupt: "replace".into(),
-                },
-            ],
-        };
+        let plan = crate::parse_performance_plan(
+            r#"{"cues":[{"intent":"listen","atMs":0,"intensity":1,"tempo":1,"fadeInMs":80,"fadeOutMs":120,"interrupt":"replace"},{"intent":"maniac","atMs":0,"intensity":1,"tempo":1,"fadeInMs":80,"fadeOutMs":120,"interrupt":"replace"}]}"#,
+        )
+        .unwrap();
+        assert_eq!(plan.cues.len(), 2);
         let refined = refine_performance_plan(plan, &state);
         assert_eq!(refined.cues.len(), 1);
         assert_eq!(refined.cues[0].intent, "listen");
