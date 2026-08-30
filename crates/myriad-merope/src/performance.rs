@@ -5,7 +5,7 @@ use crate::rig_contract::{
     PERFORMANCE_POSTURES,
 };
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ChatPerformancePlan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -234,12 +234,10 @@ mod tests {
 
     #[test]
     fn discards_plans_whose_baseline_is_out_of_vocabulary() {
-        assert!(
-            parse_performance_plan(
-                r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#,
-            )
-            .is_none()
-        );
+        assert!(parse_performance_plan(
+            r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#,
+        )
+        .is_none());
     }
 
     #[test]

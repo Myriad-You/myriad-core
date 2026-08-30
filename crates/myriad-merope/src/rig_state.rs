@@ -4,10 +4,10 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::ChatPerformancePlan;
 use crate::rig_contract::{
     PERFORMANCE_BASELINE_EXPRESSIONS, PERFORMANCE_CUE_INTENTS, PERFORMANCE_POSTURES,
 };
+use crate::ChatPerformancePlan;
 
 pub const RIG_STATE_CHANNEL_OWNERS: &[&str] = &[
     "preview",
@@ -403,6 +403,12 @@ fn has_cap(capabilities: &[String], name: &str) -> bool {
 
 fn cue_takes_mouth(intent: &str) -> bool {
     RIG_STATE_MOUTH_INTENTS.contains(&intent)
+}
+
+/// Sticker cues need their layer; generic acting needs `head-body` when the
+/// capability list is present.
+pub fn cue_is_playable(capabilities: &[String], intent: &str) -> bool {
+    capability_allows(capabilities, intent)
 }
 
 fn capability_allows(capabilities: &[String], intent: &str) -> bool {
