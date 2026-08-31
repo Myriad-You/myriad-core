@@ -18,7 +18,6 @@ pub const RIG_STATE_CHANNEL_OWNERS: &[&str] = &[
     "mood",
     "pointer",
     "ambient",
-    "autonomy",
     "idle",
 ];
 pub const RIG_STATE_SPECIAL_INTENTS: &[&str] = &[
@@ -62,7 +61,53 @@ pub const RIG_STATE_CAPABILITIES: &[&str] = &[
 pub const RIG_STATE_MUSIC_ENERGIES: &[&str] = &["quiet", "soft", "present", "strong"];
 pub const RIG_STATE_BEAT_PHASES: &[&str] = &["rest", "downbeat", "pulse", "hold"];
 pub const RIG_STATE_MOTION_STYLES: &[&str] = &["restrained", "even", "open"];
+pub const RIG_STATE_BEHAVIOR_FUNCTIONS: &[&str] = &[
+    "orient",
+    "attend",
+    "acknowledge",
+    "understand",
+    "agree",
+    "disagree",
+    "uncertain",
+    "prepareSpeech",
+    "yieldTurn",
+    "emphasize",
+    "surprise",
+    "celebrate",
+    "relief",
+    "settle",
+    "entrain",
+    "express",
+    "idleShift",
+];
+pub const RIG_STATE_BEHAVIOR_PHASES: &[&str] = &[
+    "planned",
+    "preparing",
+    "committed",
+    "holding",
+    "recovering",
+    "complete",
+    "rejected",
+];
+pub const RIG_STATE_BEHAVIOR_SOURCES: &[&str] =
+    &["performance", "coSpeech", "music", "mood", "ambient"];
+pub const RIG_STATE_BEHAVIOR_RESOURCES: &[&str] = &[
+    "face.mouth",
+    "face.expression",
+    "face.gaze",
+    "body.head",
+    "body.torso",
+    "body.arm.left",
+    "body.arm.right",
+    "body.hand.left",
+    "body.hand.right",
+    "body.legs",
+    "secondary.hair",
+    "secondary.clothing",
+    "secondary.bust",
+];
 pub const MAX_RECENT_ACTIONS: usize = 6;
+pub const MAX_ACTIVE_BEHAVIORS: usize = 8;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -70,6 +115,21 @@ pub struct RigActingSummary {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub intent: Option<String>,
     pub phase: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub function: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lifecycle: Option<String>,
+    pub remaining_ms: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RigActiveBehavior {
+    pub function: String,
+    pub lifecycle: String,
+    pub source: String,
+    #[serde(default)]
+    pub resources: Vec<String>,
     pub remaining_ms: u32,
 }
 
@@ -95,6 +155,8 @@ pub struct RigStateSummary {
     pub expression: String,
     pub posture: String,
     pub acting: RigActingSummary,
+    #[serde(default)]
+    pub active_behaviors: Vec<RigActiveBehavior>,
     pub owners: RigChannelOwners,
     pub speaking: bool,
     pub singing: bool,
@@ -119,6 +181,8 @@ struct RawSummary {
     posture: Option<String>,
     #[serde(default)]
     acting: Option<RawActing>,
+    #[serde(default)]
+    active_behaviors: Vec<RawActiveBehavior>,
     #[serde(default)]
     owners: Option<RawOwners>,
     #[serde(default)]
@@ -148,6 +212,25 @@ struct RawActing {
     intent: Option<String>,
     #[serde(default)]
     phase: Option<String>,
+    #[serde(default)]
+    function: Option<String>,
+    #[serde(default)]
+    lifecycle: Option<String>,
+    #[serde(default)]
+    remaining_ms: u32,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawActiveBehavior {
+    #[serde(default)]
+    function: Option<String>,
+    #[serde(default)]
+    lifecycle: Option<String>,
+    #[serde(default)]
+    source: Option<String>,
+    #[serde(default)]
+    resources: Vec<String>,
     #[serde(default)]
     remaining_ms: u32,
 }
@@ -216,6 +299,18 @@ fn sanitize_raw(raw: RawSummary) -> RigStateSummary {
         .as_ref()
         .map(|acting| acting.remaining_ms.min(12_000))
         .unwrap_or(0);
+    let behavior_function = raw
+        .acting
+        .as_ref()
+        .and_then(|acting| acting.function.as_deref())
+        .filter(|value| RIG_STATE_BEHAVIOR_FUNCTIONS.contains(value))
+        .map(str::to_string);
+    let behavior_lifecycle = raw
+        .acting
+        .as_ref()
+        .and_then(|acting| acting.lifecycle.as_deref())
+        .filter(|value| RIG_STATE_BEHAVIOR_PHASES.contains(value))
+        .map(str::to_string);
     let owners = RigChannelOwners {
         mouth: owner(
             raw.owners
@@ -238,6 +333,34 @@ fn sanitize_raw(raw: RawSummary) -> RigStateSummary {
                 .and_then(|owners| owners.head_body.as_deref()),
         ),
     };
+    let active_behaviors = raw
+        .active_behaviors
+        .into_iter()
+        .filter_map(|behavior| {
+            let function = behavior
+                .function
+                .filter(|value| RIG_STATE_BEHAVIOR_FUNCTIONS.contains(&value.as_str()))?;
+            let lifecycle = behavior
+                .lifecycle
+                .filter(|value| RIG_STATE_BEHAVIOR_PHASES.contains(&value.as_str()))?;
+            let source = behavior
+                .source
+                .filter(|value| RIG_STATE_BEHAVIOR_SOURCES.contains(&value.as_str()))?;
+            Some(RigActiveBehavior {
+                function,
+                lifecycle,
+                source,
+                resources: behavior
+                    .resources
+                    .into_iter()
+                    .filter(|resource| RIG_STATE_BEHAVIOR_RESOURCES.contains(&resource.as_str()))
+                    .take(8)
+                    .collect(),
+                remaining_ms: behavior.remaining_ms.min(12_000),
+            })
+        })
+        .take(MAX_ACTIVE_BEHAVIORS)
+        .collect();
     let music = raw.music.and_then(|music| {
         let energy = allow(music.energy.as_deref(), RIG_STATE_MUSIC_ENERGIES, "");
         let beat = allow(music.beat.as_deref(), RIG_STATE_BEAT_PHASES, "");
@@ -260,8 +383,11 @@ fn sanitize_raw(raw: RawSummary) -> RigStateSummary {
         acting: RigActingSummary {
             intent: acting_intent,
             phase,
+            function: behavior_function,
+            lifecycle: behavior_lifecycle,
             remaining_ms,
         },
+        active_behaviors,
         owners,
         speaking: raw.speaking,
         singing: raw.singing,
@@ -373,25 +499,20 @@ fn contains_any(haystack: &str, needles: &[&str]) -> bool {
     needles.iter().any(|needle| haystack.contains(needle))
 }
 
-/// Drop cues the current face cannot play, and keep music groove when music owns the body.
+/// Drop cues the current face cannot play.
 ///
 /// Sticker expressions still need their layers. Generic acting is allowed when
 /// `capabilities` is empty so a missing summary does not wipe the face. Callers
 /// that have no `rigState` at all skip this function so old clients keep prior
-/// behavior.
+/// behavior. Runtime resource conflicts belong to the behavior scheduler: the
+/// backend must not silently erase a replace/queue decision just because music
+/// currently owns the coarse body channel.
 pub fn refine_performance_plan(
     mut plan: ChatPerformancePlan,
     state: &RigStateSummary,
 ) -> ChatPerformancePlan {
-    let music_owns_body = state.owners.head_body == "music" || state.singing;
-    if let Some(baseline) = plan.baseline.as_mut() {
-        if baseline.posture != "neutral" && music_owns_body {
-            baseline.posture = "neutral".to_string();
-        }
-    }
     plan.cues.retain(|cue| {
         capability_allows(&state.capabilities, &cue.intent)
-            && !(music_owns_body && RIG_STATE_HEAD_BODY_INTENTS.contains(&cue.intent.as_str()))
             && !cue_blocked_by_speech(&cue.intent, state.speaking, &state.capabilities)
     });
     plan
@@ -449,9 +570,27 @@ mod tests {
             "posture": "open",
             "angleX": 0.4,
             "driver": { "mouthOpen": 1 },
-            "owners": { "mouth": "speech", "headBody": "music" },
+            "owners": {
+                "mouth": "speech",
+                "expression": "autonomy",
+                "headBody": "music"
+            },
             "speaking": true,
             "singing": true,
+            "activeBehaviors": [
+                {
+                    "function": "attend",
+                    "lifecycle": "holding",
+                    "source": "performance",
+                    "resources": ["face.gaze", "angleX"],
+                    "remainingMs": 900
+                },
+                {
+                    "function": "unknown",
+                    "lifecycle": "holding",
+                    "source": "performance"
+                }
+            ],
             "recentIntents": ["delight", "angleZ"],
             "capabilities": ["dizzy-eye", "psd-layer"],
             "motionStyle": "open"
@@ -461,9 +600,13 @@ mod tests {
         assert!(encoded.get("angleX").is_none());
         assert!(encoded.get("driver").is_none());
         assert_eq!(summary.owners.mouth, "speech");
+        assert_eq!(summary.owners.expression, "idle");
         assert_eq!(summary.owners.head_body, "music");
         assert_eq!(summary.recent_intents, vec!["delight"]);
         assert_eq!(summary.capabilities, vec!["dizzy-eye"]);
+        assert_eq!(summary.active_behaviors.len(), 1);
+        assert_eq!(summary.active_behaviors[0].function, "attend");
+        assert_eq!(summary.active_behaviors[0].resources, vec!["face.gaze"]);
     }
 
     #[test]
@@ -497,7 +640,7 @@ mod tests {
     }
 
     #[test]
-    fn refine_drops_body_cues_while_singing() {
+    fn refine_leaves_music_conflicts_to_runtime_resource_scheduling() {
         let state = sanitize_rig_state(&json!({
             "owners": { "headBody": "music" },
             "singing": true,
@@ -538,12 +681,14 @@ mod tests {
             ],
         };
         let refined = refine_performance_plan(plan, &state);
-        assert_eq!(refined.cues.len(), 1);
-        assert_eq!(refined.cues[0].intent, "listen");
+        assert_eq!(refined.cues.len(), 3);
+        assert_eq!(refined.cues[0].intent, "silly");
+        assert_eq!(refined.cues[1].intent, "greet");
+        assert_eq!(refined.cues[2].intent, "listen");
     }
 
     #[test]
-    fn refine_neutralizes_open_posture_while_singing() {
+    fn refine_keeps_persistent_bearing_while_singing() {
         let state = sanitize_rig_state(&json!({
             "owners": { "headBody": "music" },
             "singing": true,
@@ -568,7 +713,7 @@ mod tests {
             }],
         };
         let refined = refine_performance_plan(plan, &state);
-        assert_eq!(refined.baseline.as_ref().unwrap().posture, "neutral");
+        assert_eq!(refined.baseline.as_ref().unwrap().posture, "open");
         assert_eq!(refined.cues[0].intent, "listen");
     }
 
