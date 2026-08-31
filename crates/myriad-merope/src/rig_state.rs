@@ -34,10 +34,13 @@ pub const RIG_STATE_SPECIAL_INTENTS: &[&str] = &[
 pub const RIG_STATE_MOUTH_INTENTS: &[&str] = &["cry", "maniac", "silly"];
 pub const RIG_STATE_HEAD_BODY_INTENTS: &[&str] = &[
     "greet",
+    "respond",
     "question",
     "delight",
     "emphasize",
+    "listen",
     "notify",
+    "think",
     "angry",
     "speechless",
     "maniac",
@@ -829,6 +832,16 @@ mod tests {
         assert_eq!(refined.baseline.as_ref().unwrap().posture, "open");
         let intents: Vec<_> = refined.cues.iter().map(|cue| cue.intent.as_str()).collect();
         assert_eq!(intents, vec!["greet", "listen", "think"]);
+    }
+
+    #[test]
+    fn every_generic_head_pose_requires_the_head_body_capability() {
+        let without_body = vec!["blink".to_string()];
+        let with_body = vec!["head-body".to_string()];
+        for intent in ["respond", "listen", "think"] {
+            assert!(!cue_is_playable(&without_body, intent), "{intent}");
+            assert!(cue_is_playable(&with_body, intent), "{intent}");
+        }
     }
 
     #[test]
