@@ -435,9 +435,10 @@ pub fn round_motion_style(
     persona_json: Option<&serde_json::Value>,
     persona_found: bool,
     mood: i32,
+    arousal: i32,
 ) -> String {
     if persona_found {
-        return motion_style_from_persona_json(persona_json, mood).to_string();
+        return motion_style_from_persona_json(persona_json, mood, arousal).to_string();
     }
     allow(client_style, RIG_STATE_MOTION_STYLES, "even")
 }
@@ -445,6 +446,7 @@ pub fn round_motion_style(
 pub fn motion_style_from_persona_json(
     persona_json: Option<&serde_json::Value>,
     mood: i32,
+    arousal: i32,
 ) -> &'static str {
     let temperament = persona_json
         .and_then(|value| value.get("temperament"))
@@ -460,13 +462,14 @@ pub fn motion_style_from_persona_json(
         .and_then(|value| value.get("socialStyle"))
         .and_then(|value| value.as_str())
         .unwrap_or("");
-    motion_style_from_persona(&temperament, social, mood)
+    motion_style_from_persona(&temperament, social, mood, arousal)
 }
 
 pub fn motion_style_from_persona(
     temperament: &[String],
     social_style: &str,
     mood: i32,
+    arousal: i32,
 ) -> &'static str {
     let blob = format!("{} {}", temperament.join(" "), social_style).to_lowercase();
     if mood <= 40
@@ -485,7 +488,7 @@ pub fn motion_style_from_persona(
     {
         return "restrained";
     }
-    if mood >= 75
+    if (mood >= 75 && arousal >= 55)
         || contains_any(
             &blob,
             &[
@@ -525,7 +528,7 @@ fn has_cap(capabilities: &[String], name: &str) -> bool {
     capabilities.iter().any(|cap| cap == name)
 }
 
-/// Speech keeps the articulating mouth. Maniac is mouth-only so it waits.
+/// Speech keeps the articulating mouth. Maniac needs its authored mouth, so it waits.
 /// Silly/cry still play through the eyes; the client yields their mouth layers.
 fn cue_blocked_by_speech(intent: &str, speaking: bool, capabilities: &[String]) -> bool {
     if !speaking {
@@ -550,7 +553,7 @@ fn capability_allows(capabilities: &[String], intent: &str) -> bool {
         "dizzy" => has_cap(capabilities, "dizzy-eye"),
         "cry" => has_cap(capabilities, "cry-eye") || has_cap(capabilities, "cry-mouth"),
         "silly" => has_cap(capabilities, "silly-eye") || has_cap(capabilities, "silly-mouth"),
-        "maniac" => has_cap(capabilities, "maniac-mouth"),
+        "maniac" => has_cap(capabilities, "maniac-mouth") && has_cap(capabilities, "head-body"),
         "lovestruck" => has_cap(capabilities, "lovestruck"),
         _ => {
             if capabilities.is_empty() {
@@ -614,8 +617,13 @@ mod tests {
 
     #[test]
     fn persona_style_is_restrained_when_mood_is_low() {
-        assert_eq!(motion_style_from_persona(&[], "", 20), "restrained");
-        assert_eq!(motion_style_from_persona(&["活泼".into()], "", 80), "open");
+        assert_eq!(motion_style_from_persona(&[], "", 20, 48), "restrained");
+        assert_eq!(
+            motion_style_from_persona(&["活泼".into()], "", 80, 60),
+            "open"
+        );
+        assert_eq!(motion_style_from_persona(&[], "", 90, 48), "even");
+        assert_eq!(motion_style_from_persona(&[], "", 90, 70), "open");
     }
 
     #[test]
@@ -845,17 +853,28 @@ mod tests {
     }
 
     #[test]
+    fn maniac_requires_both_its_mouth_artwork_and_head_body_motion() {
+        assert!(!cue_is_playable(&["maniac-mouth".to_string()], "maniac"));
+        assert!(!cue_is_playable(&["head-body".to_string()], "maniac"));
+        assert!(cue_is_playable(
+            &["maniac-mouth".to_string(), "head-body".to_string()],
+            "maniac"
+        ));
+    }
+
+    #[test]
     fn persona_overrides_client_motion_style() {
         assert_eq!(
             round_motion_style(
                 Some("open"),
                 Some(&json!({"socialStyle": "内向"})),
                 true,
-                70
+                70,
+                48
             ),
             "restrained"
         );
-        assert_eq!(round_motion_style(Some("open"), None, false, 20), "open");
-        assert_eq!(round_motion_style(None, None, false, 20), "even");
+        assert_eq!(round_motion_style(Some("open"), None, false, 20, 48), "open");
+        assert_eq!(round_motion_style(None, None, false, 20, 48), "even");
     }
 }
