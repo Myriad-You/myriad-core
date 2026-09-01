@@ -430,6 +430,94 @@ fn is_not_found(error_lower: &str) -> bool {
         || error_lower.contains("does not exist")
 }
 
+/// 将错误分析的修复建议应用到参数上。
+pub fn apply_param_fixes(
+    params: &HashMap<String, Value>,
+    fixes: &HashMap<String, ParamFix>,
+) -> HashMap<String, Value> {
+    let mut new_params = params.clone();
+
+    for (param_name, fix) in fixes {
+        if param_name.starts_with('_') {
+            if param_name == "_append_system" {
+                if let ParamFix::AppendToParam(text) = fix {
+                    let existing = new_params
+                        .get("systemPrompt")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    new_params.insert(
+                        "systemPrompt".to_string(),
+                        Value::String(format!("{}\n\n{}", existing, text)),
+                    );
+                }
+            }
+            continue;
+        }
+
+        match fix {
+            ParamFix::RemoveFromPrompt(words) => {
+                if let Some(Value::String(text)) = new_params.get(param_name) {
+                    let mut cleaned = text.clone();
+                    for word in words {
+                        let word_lower = word.to_lowercase();
+                        loop {
+                            let lower = cleaned.to_lowercase();
+                            if let Some(byte_pos) = lower.find(&word_lower) {
+                                let char_start = lower[..byte_pos].chars().count();
+                                let char_len = word_lower.chars().count();
+                                let before: String = cleaned.chars().take(char_start).collect();
+                                let after: String =
+                                    cleaned.chars().skip(char_start + char_len).collect();
+                                cleaned = format!("{}{}", before, after);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    new_params.insert(param_name.to_string(), Value::String(cleaned));
+                }
+            }
+            ParamFix::ReplaceInPrompt { from, to } => {
+                if let Some(Value::String(text)) = new_params.get(param_name) {
+                    let from_lower = from.to_lowercase();
+                    let mut result = text.clone();
+                    loop {
+                        let lower = result.to_lowercase();
+                        if let Some(byte_pos) = lower.find(&from_lower) {
+                            let char_start = lower[..byte_pos].chars().count();
+                            let char_len = from_lower.chars().count();
+                            let before: String = result.chars().take(char_start).collect();
+                            let after: String =
+                                result.chars().skip(char_start + char_len).collect();
+                            result = format!("{}{}{}", before, to, after);
+                        } else {
+                            break;
+                        }
+                    }
+                    new_params.insert(param_name.to_string(), Value::String(result));
+                }
+            }
+            ParamFix::SetValue(val) => {
+                new_params.insert(param_name.to_string(), val.clone());
+            }
+            ParamFix::AppendToParam(text) => {
+                let existing = new_params
+                    .get(param_name)
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                let appended = if existing.is_empty() {
+                    text.clone()
+                } else {
+                    format!("{} {}", existing, text)
+                };
+                new_params.insert(param_name.to_string(), Value::String(appended));
+            }
+        }
+    }
+
+    new_params
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -464,5 +552,19 @@ mod tests {
         let cfg = analyze_error("API key not configured", "ai.chat", &empty);
         assert_eq!(cfg.category, ErrorCategory::Configuration);
         assert!(!cfg.retryable);
+    }
+
+    #[test]
+    fn apply_param_fixes_set_value_and_append_system() {
+        let params = HashMap::from([("prompt".into(), Value::from("hello"))]);
+        let mut fixes = HashMap::new();
+        fixes.insert("prompt".into(), ParamFix::SetValue(Value::from("world")));
+        fixes.insert(
+            "_append_system".into(),
+            ParamFix::AppendToParam("steer".into()),
+        );
+        let out = apply_param_fixes(&params, &fixes);
+        assert_eq!(out["prompt"], "world");
+        assert!(out["systemPrompt"].as_str().unwrap().contains("steer"));
     }
 }

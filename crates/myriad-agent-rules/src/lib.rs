@@ -23,7 +23,7 @@ pub use schedule::{
     heartbeat_update_has_fields, parse_brew_schedule_action, parse_execution_target,
     parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
 };
-pub use error::{analyze_error, ErrorAnalysis, ErrorCategory, ParamFix};
+pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
 pub use data_read::{
     extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
 };
