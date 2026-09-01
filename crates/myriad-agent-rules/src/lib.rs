@@ -3,11 +3,13 @@
 //! No I/O. Backend services re-export moved symbols so existing imports compile.
 
 pub mod brew;
+pub mod data_read;
 pub mod image;
 pub mod prompt;
 pub mod semantic;
 pub mod steering;
 
+pub use data_read::extract_json_array_from_ai_response;
 pub use brew::{
     clamp_update_interval_minutes, collect_subscribe_url_candidates, extract_and_prioritize_feeds,
     feed_priority_score, is_disallowed_subscribe_host, is_disallowed_subscribe_ip,
