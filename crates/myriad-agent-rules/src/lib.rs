@@ -6,13 +6,13 @@ pub mod brew;
 pub mod data_read;
 pub mod error;
 pub mod external;
-pub mod retry;
-pub mod schedule;
-pub mod task;
 pub mod image;
 pub mod prompt;
+pub mod retry;
+pub mod schedule;
 pub mod semantic;
 pub mod steering;
+pub mod task;
 
 pub use brew::{
     clamp_update_interval_minutes, collect_subscribe_url_candidates, extract_and_prioritize_feeds,
@@ -21,32 +21,16 @@ pub use brew::{
     take_feed_urls_to_try, validate_subscribe_url_policy, MAX_FEED_NAME_LEN, MAX_FEED_URLS,
     MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL, MIN_UPDATE_INTERVAL,
 };
-pub use schedule::{
-    build_schedule_config, extract_raw_backend_actions, heartbeat_task_id,
-    heartbeat_update_has_fields, parse_brew_schedule_action, parse_execution_target,
-    parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
+pub use data_read::{
+    extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
 };
 pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
-pub use retry::{
-    compute_retry_delay_ms, format_retry_final_error, prepend_step_id, should_retry_step,
-    FailureStrategy, RetryConfig, RETRY_BASE_DELAY_FLOOR_MS, RETRY_DEFAULT_BASE_DELAY_MS,
-    RETRY_DELAY_CAP_MS,
-};
-pub use task::{
-    is_cancellable_task_status, is_terminal_past_retention, is_waiting_input_timed_out,
-    lane_id_from_user_session, session_id_from_lane_id, session_id_from_lane_key,
-    status_counts_from_iter, task_status_from_db_str, task_status_to_db_str, TaskStatus,
-    TERMINAL_RETENTION_HOURS, WAITING_INPUT_TIMEOUT_ERROR, WAITING_INPUT_TIMEOUT_HOURS,
-};
 pub use external::{
     classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
     http_body_size_error, http_content_length_error, http_fetch_method, mcp_arguments,
     optional_string_param, parse_http_body_value, parse_mcp_capability_id, scrape_html_too_large,
     scrape_max_length, scrape_selector, scrape_should_skip_tag, HTTP_FETCH_MAX_BODY_BYTES,
     SCRAPE_SKIP_TAGS, WEB_SCRAPE_DEFAULT_MAX_LENGTH, WEB_SCRAPE_MAX_HTML_BYTES,
-};
-pub use data_read::{
-    extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
 };
 pub use image::{
     clamp_image_dim, parse_image_dim, resolve_image_dimensions, resolve_image_prompt,
@@ -57,11 +41,27 @@ pub use prompt::{
     append_memory_to_system_prompt, merge_system_prompt, sanitize_prompt_input,
     take_recent_conversation_messages,
 };
+pub use retry::{
+    compute_retry_delay_ms, format_retry_final_error, prepend_step_id, should_retry_step,
+    FailureStrategy, RetryConfig, RETRY_BASE_DELAY_FLOOR_MS, RETRY_DEFAULT_BASE_DELAY_MS,
+    RETRY_DELAY_CAP_MS,
+};
+pub use schedule::{
+    build_schedule_config, extract_raw_backend_actions, heartbeat_task_id,
+    heartbeat_update_has_fields, parse_brew_schedule_action, parse_execution_target,
+    parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
+};
 pub use semantic::{
     capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,
 };
 pub use steering::{
     append_instruction, inject_directive_to_params, inject_steering_to_params, with_system_guidance,
+};
+pub use task::{
+    is_cancellable_task_status, is_terminal_past_retention, is_waiting_input_timed_out,
+    lane_id_from_user_session, session_id_from_lane_id, session_id_from_lane_key,
+    status_counts_from_iter, task_status_from_db_str, task_status_to_db_str, TaskStatus,
+    TERMINAL_RETENTION_HOURS, WAITING_INPUT_TIMEOUT_ERROR, WAITING_INPUT_TIMEOUT_HOURS,
 };
 
 /// Shared Unicode-scalar cap for user-authored model text (chat, generate, analyze).

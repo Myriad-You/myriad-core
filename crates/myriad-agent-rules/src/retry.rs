@@ -118,8 +118,7 @@ mod tests {
         let fallback: FailureStrategy =
             serde_json::from_value(json!({ "fallback": "ai.chat" })).unwrap();
         assert_eq!(fallback, FailureStrategy::Fallback("ai.chat".into()));
-        let default: FailureStrategy =
-            serde_json::from_value(json!({ "use_default": 1 })).unwrap();
+        let default: FailureStrategy = serde_json::from_value(json!({ "use_default": 1 })).unwrap();
         assert_eq!(default, FailureStrategy::UseDefault(json!(1)));
 
         let retry: RetryConfig = serde_json::from_value(json!({
