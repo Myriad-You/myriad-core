@@ -212,3 +212,60 @@ mod heartbeat_tests {
         assert!(heartbeat_update_has_fields(Some("n"), None, None, None));
     }
 }
+
+/// brew.schedule actions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BrewScheduleAction {
+    Start,
+    Stop,
+    Refresh,
+    Status,
+}
+
+/// Parse brew.schedule action string (default status).
+pub fn parse_brew_schedule_action(action: Option<&str>) -> Result<BrewScheduleAction, String> {
+    match action.unwrap_or("status") {
+        "start" => Ok(BrewScheduleAction::Start),
+        "stop" => Ok(BrewScheduleAction::Stop),
+        "refresh" => Ok(BrewScheduleAction::Refresh),
+        "status" => Ok(BrewScheduleAction::Status),
+        other => Err(format!("Unknown brew schedule action: {other}")),
+    }
+}
+
+/// Normalize backendActions / action field into optional array-bearing Value.
+pub fn extract_raw_backend_actions(params: &HashMap<String, Value>) -> Option<Value> {
+    params
+        .get("backendActions")
+        .or_else(|| params.get("backend_actions"))
+        .cloned()
+        .or_else(|| {
+            params.get("action").cloned().map(|action| match action {
+                Value::Array(_) => action,
+                _ => Value::Array(vec![action]),
+            })
+        })
+}
+
+#[cfg(test)]
+mod brew_schedule_tests {
+    use super::*;
+
+    #[test]
+    fn brew_schedule_action_and_backend_actions() {
+        assert_eq!(
+            parse_brew_schedule_action(None).unwrap(),
+            BrewScheduleAction::Status
+        );
+        assert_eq!(
+            parse_brew_schedule_action(Some("start")).unwrap(),
+            BrewScheduleAction::Start
+        );
+        assert!(parse_brew_schedule_action(Some("explode")).is_err());
+
+        let mut params = HashMap::new();
+        params.insert("action".into(), json!("ping"));
+        let extracted = extract_raw_backend_actions(&params).unwrap();
+        assert_eq!(extracted, json!(["ping"]));
+    }
+}
