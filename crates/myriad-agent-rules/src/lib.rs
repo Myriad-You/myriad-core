@@ -26,12 +26,12 @@ pub use data_read::{
 };
 pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
 pub use external::{
-    classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
-    http_body_size_error, http_content_length_error, http_fetch_method, match_mcp_capability_id,
-    mcp_arguments, optional_string_param, parse_http_body_value, parse_mcp_capability_id,
-    scrape_html_too_large, scrape_max_length, scrape_selector, scrape_should_skip_tag,
-    HTTP_FETCH_MAX_BODY_BYTES, SCRAPE_SKIP_TAGS, WEB_SCRAPE_DEFAULT_MAX_LENGTH,
-    WEB_SCRAPE_MAX_HTML_BYTES,
+    classify_outbound_fetch, compress_and_truncate_text, first_i64_param, first_string_param,
+    hitokoto_type, http_body_exceeds_limit, http_body_size_error, http_content_length_error,
+    http_fetch_method, match_mcp_capability_id, mcp_arguments, optional_string_param,
+    parse_http_body_value, parse_mcp_capability_id, sanitize_http_headers, scrape_html_too_large,
+    scrape_max_length, scrape_selector, scrape_should_skip_tag, HTTP_FETCH_MAX_BODY_BYTES,
+    SCRAPE_SKIP_TAGS, WEB_SCRAPE_DEFAULT_MAX_LENGTH, WEB_SCRAPE_MAX_HTML_BYTES,
 };
 pub use image::{
     clamp_image_dim, parse_image_dim, resolve_image_dimensions, resolve_image_prompt,

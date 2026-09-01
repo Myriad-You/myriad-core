@@ -517,7 +517,8 @@ pub fn refine_performance_plan(
     mut plan: ChatPerformancePlan,
     state: &RigStateSummary,
 ) -> ChatPerformancePlan {
-    plan.cues.retain(|cue| cue_survives_state(state, &cue.intent));
+    plan.cues
+        .retain(|cue| cue_survives_state(state, &cue.intent));
     plan
 }
 

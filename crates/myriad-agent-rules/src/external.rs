@@ -8,12 +8,103 @@ pub const HTTP_FETCH_MAX_BODY_BYTES: u64 = 10 * 1024 * 1024;
 
 /// Non-empty trimmed string from params.
 pub fn optional_string_param(params: &HashMap<String, Value>, key: &str) -> Option<String> {
-    params
-        .get(key)
-        .and_then(|v| v.as_str())
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(str::to_string)
+    first_string_param(params, &[key])
+}
+
+/// JSON string or number as a non-empty string, first matching key wins.
+///
+/// Compact-index `p` and schemas use camelCase (`databaseId`, `steamId`); some
+/// handlers historically read snake_case. Integer `uid` / `songId` also land
+/// here so `as_str()`-only reads stop failing planner-correct params.
+pub fn first_string_param(params: &HashMap<String, Value>, keys: &[&str]) -> Option<String> {
+    for key in keys {
+        let Some(value) = params.get(*key) else {
+            continue;
+        };
+        if let Some(s) = value.as_str().map(str::trim).filter(|s| !s.is_empty()) {
+            return Some(s.to_string());
+        }
+        if let Some(n) = value.as_i64() {
+            return Some(n.to_string());
+        }
+        if let Some(n) = value.as_u64() {
+            return Some(n.to_string());
+        }
+    }
+    None
+}
+
+/// Integer id from a JSON number or decimal string, first matching key wins.
+pub fn first_i64_param(params: &HashMap<String, Value>, keys: &[&str]) -> Option<i64> {
+    for key in keys {
+        let Some(value) = params.get(*key) else {
+            continue;
+        };
+        if let Some(n) = value.as_i64() {
+            return Some(n);
+        }
+        if let Some(n) = value.as_u64() {
+            return Some(n as i64);
+        }
+        if let Some(n) = value
+            .as_str()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .and_then(|s| s.parse::<i64>().ok())
+        {
+            return Some(n);
+        }
+    }
+    None
+}
+
+const BLOCKED_HTTP_HEADERS: &[&str] = &[
+    "host",
+    "authorization",
+    "proxy-authorization",
+    "cookie",
+    "set-cookie",
+    "connection",
+    "content-length",
+    "transfer-encoding",
+    "upgrade",
+    "te",
+    "trailer",
+    "keep-alive",
+    "expect",
+    "forwarded",
+    "x-forwarded-for",
+    "x-forwarded-host",
+    "x-forwarded-proto",
+    "x-real-ip",
+];
+
+/// Safe outbound headers from `http.fetch` params. Drops hop-by-hop / auth /
+/// forwarding names and values with CR/LF.
+pub fn sanitize_http_headers(headers: Option<&Value>) -> Vec<(String, String)> {
+    let Some(object) = headers.and_then(Value::as_object) else {
+        return Vec::new();
+    };
+    object
+        .iter()
+        .filter_map(|(name, value)| {
+            let name = name.trim();
+            if name.is_empty() || name.starts_with(':') {
+                return None;
+            }
+            if BLOCKED_HTTP_HEADERS
+                .iter()
+                .any(|blocked| name.eq_ignore_ascii_case(blocked))
+            {
+                return None;
+            }
+            let value = value.as_str()?.trim();
+            if value.is_empty() || value.contains('\r') || value.contains('\n') {
+                return None;
+            }
+            Some((name.to_string(), value.to_string()))
+        })
+        .collect()
 }
 
 /// HTTP method for http.fetch (default GET; only POST is special-cased).
@@ -103,10 +194,11 @@ pub fn scrape_selector(params: &HashMap<String, Value>) -> &str {
 
 /// Max text length for scrape (default [`WEB_SCRAPE_DEFAULT_MAX_LENGTH`]).
 pub fn scrape_max_length(params: &HashMap<String, Value>) -> usize {
-    params
-        .get("max_length")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(WEB_SCRAPE_DEFAULT_MAX_LENGTH as u64) as usize
+    first_i64_param(params, &["max_length", "maxLength"])
+        .and_then(|n| u64::try_from(n).ok())
+        .map(|n| n as usize)
+        .filter(|n| *n > 0)
+        .unwrap_or(WEB_SCRAPE_DEFAULT_MAX_LENGTH)
 }
 
 /// Whether raw HTML exceeds scrape size gate.
@@ -208,9 +300,51 @@ mod tests {
         );
         assert!(optional_string_param(&params, "empty").is_none());
 
+        params.insert("databaseId".into(), json!("abc"));
+        params.insert("uid".into(), json!(12345));
+        params.insert("songId".into(), json!("678"));
+        assert_eq!(
+            first_string_param(&params, &["databaseId", "database_id"]).as_deref(),
+            Some("abc")
+        );
+        assert_eq!(
+            first_string_param(&params, &["database_id", "databaseId"]).as_deref(),
+            Some("abc")
+        );
+        assert_eq!(
+            first_string_param(&params, &["uid"]).as_deref(),
+            Some("12345")
+        );
+        assert_eq!(first_i64_param(&params, &["songId", "song_id"]), Some(678));
+        assert_eq!(first_i64_param(&params, &["uid"]), Some(12345));
+        assert!(first_string_param(&params, &["missing"]).is_none());
+
+        params.insert("maxLength".into(), json!(42));
+        assert_eq!(scrape_max_length(&params), 42);
+        let mut snake = HashMap::new();
+        snake.insert("max_length".into(), json!(99));
+        assert_eq!(scrape_max_length(&snake), 99);
+
         params.insert("method".into(), json!("POST"));
         assert_eq!(http_fetch_method(&params), "POST");
         assert_eq!(http_fetch_method(&HashMap::new()), "GET");
+        let headers = json!({
+            "Accept": "application/json",
+            "Authorization": "secret",
+            "X-Request-Id": "abc",
+            "Host": "evil.test"
+        });
+        let allowed = sanitize_http_headers(Some(&headers));
+        assert!(allowed
+            .iter()
+            .any(|(k, v)| k == "Accept" && v == "application/json"));
+        assert!(allowed
+            .iter()
+            .any(|(k, v)| k == "X-Request-Id" && v == "abc"));
+        assert!(!allowed
+            .iter()
+            .any(|(k, _)| k.eq_ignore_ascii_case("authorization")));
+        assert!(!allowed.iter().any(|(k, _)| k.eq_ignore_ascii_case("host")));
 
         assert!(!http_body_exceeds_limit(100));
         assert!(http_body_exceeds_limit(HTTP_FETCH_MAX_BODY_BYTES + 1));

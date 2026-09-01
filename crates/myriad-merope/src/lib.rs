@@ -36,11 +36,10 @@ pub use rig_contract::{
 pub use rig_semantics::RigSemantics;
 pub use rig_spatial::RigSpatialProfile;
 pub use rig_state::{
-    cue_is_playable, cue_survives_state, motion_style_from_persona,
-    motion_style_from_persona_json, plan_is_empty,
-    refine_performance_plan, round_motion_style, sanitize_rig_state, RigStateSummary,
-    MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES, RIG_STATE_MOUTH_INTENTS,
-    RIG_STATE_SPECIAL_INTENTS,
+    cue_is_playable, cue_survives_state, motion_style_from_persona, motion_style_from_persona_json,
+    plan_is_empty, refine_performance_plan, round_motion_style, sanitize_rig_state,
+    RigStateSummary, MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES,
+    RIG_STATE_MOUTH_INTENTS, RIG_STATE_SPECIAL_INTENTS,
 };
 pub use visual_contract::{
     appearance_visual_profile, build_character_asset_contract, character_asset_contract_fingerprint,
