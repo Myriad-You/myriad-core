@@ -1,0 +1,180 @@
+//! Scheduler type parsing and config build. No I/O.
+
+use serde_json::{json, Value};
+
+/// Supported scheduler schedule types (matches DB enum names).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AgentScheduleType {
+    Cron,
+    Interval,
+    Once,
+    Daily,
+}
+
+impl AgentScheduleType {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Cron => "cron",
+            Self::Interval => "interval",
+            Self::Once => "once",
+            Self::Daily => "daily",
+        }
+    }
+}
+
+/// Parse scheduleType (cron / interval / once / daily).
+pub fn parse_schedule_type(schedule_type_name: Option<&str>) -> Result<AgentScheduleType, String> {
+    let name = schedule_type_name.ok_or_else(|| "Missing scheduleType parameter".to_string())?;
+    match name.to_ascii_lowercase().as_str() {
+        "cron" => Ok(AgentScheduleType::Cron),
+        "interval" => Ok(AgentScheduleType::Interval),
+        "once" => Ok(AgentScheduleType::Once),
+        "daily" => Ok(AgentScheduleType::Daily),
+        _ => Err(format!("Invalid scheduleType: {name}")),
+    }
+}
+
+/// Execution target for scheduled tasks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AgentExecutionTarget {
+    Backend,
+    Frontend,
+    Both,
+}
+
+impl AgentExecutionTarget {
+    pub fn requires_backend_actions(self) -> bool {
+        matches!(self, Self::Backend | Self::Both)
+    }
+}
+
+/// Parse executionTarget, defaulting by whether backend actions are present.
+pub fn parse_execution_target(
+    name: Option<&str>,
+    has_backend_actions: bool,
+) -> Result<AgentExecutionTarget, String> {
+    let default = if has_backend_actions {
+        "backend"
+    } else {
+        "frontend"
+    };
+    let name = name.unwrap_or(default);
+    match name.to_ascii_lowercase().as_str() {
+        "backend" => Ok(AgentExecutionTarget::Backend),
+        "frontend" => Ok(AgentExecutionTarget::Frontend),
+        "both" => Ok(AgentExecutionTarget::Both),
+        _ => Err(format!("Invalid executionTarget: {name}")),
+    }
+}
+
+/// Build schedule config object from params + typed schedule kind.
+pub fn build_schedule_config(
+    schedule_type: AgentScheduleType,
+    schedule_obj: Option<&Value>,
+    legacy_cron: Option<&str>,
+    interval: Option<i64>,
+    at: Option<i64>,
+    daily_time: Option<&str>,
+) -> Result<Value, String> {
+    if let Some(value) = schedule_obj {
+        if value.is_object() {
+            return Ok(value.clone());
+        }
+    }
+    match schedule_type {
+        AgentScheduleType::Cron => Ok(json!({
+            "cron": legacy_cron.ok_or("Missing cron schedule")?
+        })),
+        AgentScheduleType::Interval => Ok(json!({
+            "interval": interval.ok_or("Missing interval schedule")?
+        })),
+        AgentScheduleType::Once => Ok(json!({
+            "at": at.ok_or("Missing at schedule")?
+        })),
+        AgentScheduleType::Daily => Ok(json!({
+            "time": daily_time.ok_or("Missing daily time schedule")?
+        })),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn schedule_type_and_execution_target() {
+        assert_eq!(
+            parse_schedule_type(Some("CRON")).unwrap(),
+            AgentScheduleType::Cron
+        );
+        assert_eq!(AgentScheduleType::Cron.as_str(), "cron");
+        assert!(parse_schedule_type(None).is_err());
+        assert!(parse_schedule_type(Some("weekly")).is_err());
+
+        assert_eq!(
+            parse_execution_target(None, true).unwrap(),
+            AgentExecutionTarget::Backend
+        );
+        assert_eq!(
+            parse_execution_target(None, false).unwrap(),
+            AgentExecutionTarget::Frontend
+        );
+        assert!(parse_execution_target(Some("sideways"), false).is_err());
+        assert!(AgentExecutionTarget::Both.requires_backend_actions());
+        assert!(!AgentExecutionTarget::Frontend.requires_backend_actions());
+    }
+
+    #[test]
+    fn build_schedule_config_variants() {
+        let obj = json!({ "cron": "0 * * * *" });
+        assert_eq!(
+            build_schedule_config(AgentScheduleType::Cron, Some(&obj), None, None, None, None)
+                .unwrap(),
+            obj
+        );
+        assert_eq!(
+            build_schedule_config(
+                AgentScheduleType::Cron,
+                None,
+                Some("*/5 * * * *"),
+                None,
+                None,
+                None
+            )
+            .unwrap()["cron"],
+            "*/5 * * * *"
+        );
+        assert_eq!(
+            build_schedule_config(
+                AgentScheduleType::Interval,
+                None,
+                None,
+                Some(60),
+                None,
+                None
+            )
+            .unwrap()["interval"],
+            60
+        );
+        assert_eq!(
+            build_schedule_config(AgentScheduleType::Once, None, None, None, Some(99), None)
+                .unwrap()["at"],
+            99
+        );
+        assert_eq!(
+            build_schedule_config(
+                AgentScheduleType::Daily,
+                None,
+                None,
+                None,
+                None,
+                Some("08:00")
+            )
+            .unwrap()["time"],
+            "08:00"
+        );
+        assert!(
+            build_schedule_config(AgentScheduleType::Cron, None, None, None, None, None).is_err()
+        );
+    }
+}
