@@ -1,4 +1,5 @@
-//! HTTP fetch body helpers. MCP/scrape/classify land in later slices.
+//! HTTP fetch body helpers and MCP capability/argument projection.
+//! Scrape/classify land in later slices.
 
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -44,6 +45,26 @@ pub fn parse_http_body_value(body: &str) -> Value {
     serde_json::from_str(body).unwrap_or_else(|_| json!(body))
 }
 
+/// Parse `mcp.{server_id}.{tool_name}` capability id.
+pub fn parse_mcp_capability_id(capability_id: &str) -> Result<(&str, &str), String> {
+    let rest = capability_id
+        .strip_prefix("mcp.")
+        .ok_or_else(|| "Invalid MCP capability ID".to_string())?;
+    rest.split_once('.')
+        .ok_or_else(|| "MCP capability ID must include server and tool names".to_string())
+}
+
+/// Strip executor-only `__*` keys before crossing the MCP trust boundary.
+pub fn mcp_arguments(params: &HashMap<String, Value>) -> Value {
+    Value::Object(
+        params
+            .iter()
+            .filter(|(key, _)| !key.starts_with("__"))
+            .map(|(key, value)| (key.clone(), value.clone()))
+            .collect(),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -69,5 +90,23 @@ mod tests {
         assert_eq!(parse_http_body_value(r#"{"a":1}"#)["a"], 1);
         assert_eq!(parse_http_body_value("not-json"), json!("not-json"));
         assert_eq!(http_body_size_error(), "Response body exceeds 10MB limit");
+    }
+
+    #[test]
+    fn mcp_capability_and_arguments() {
+        assert_eq!(
+            parse_mcp_capability_id("mcp.github.search").unwrap(),
+            ("github", "search")
+        );
+        assert!(parse_mcp_capability_id("github.search").is_err());
+        assert!(parse_mcp_capability_id("mcp.only").is_err());
+
+        let params = HashMap::from([
+            ("query".to_string(), json!("myriad")),
+            ("__directive".to_string(), json!("internal")),
+            ("__user_request".to_string(), json!("private")),
+            ("__steering".to_string(), json!("new direction")),
+        ]);
+        assert_eq!(mcp_arguments(&params), json!({ "query": "myriad" }));
     }
 }
