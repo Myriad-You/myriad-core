@@ -4,8 +4,12 @@
 
 pub mod image;
 pub mod prompt;
+pub mod semantic;
 pub mod steering;
 
+pub use semantic::{
+    capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,
+};
 pub use steering::{
     append_instruction, inject_directive_to_params, inject_steering_to_params, with_system_guidance,
 };
