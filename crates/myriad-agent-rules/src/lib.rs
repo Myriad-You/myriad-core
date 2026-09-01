@@ -32,7 +32,9 @@ pub use retry::{
     FailureStrategy, RetryConfig, RETRY_BASE_DELAY_FLOOR_MS, RETRY_DEFAULT_BASE_DELAY_MS,
     RETRY_DELAY_CAP_MS,
 };
-pub use task::TaskStatus;
+pub use task::{
+    lane_id_from_user_session, session_id_from_lane_id, session_id_from_lane_key, TaskStatus,
+};
 pub use external::{
     classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
     http_body_size_error, http_content_length_error, http_fetch_method, mcp_arguments,
