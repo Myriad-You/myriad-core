@@ -4,6 +4,7 @@
 
 pub mod brew;
 pub mod data_read;
+pub mod error;
 pub mod schedule;
 pub mod image;
 pub mod prompt;
@@ -22,6 +23,7 @@ pub use schedule::{
     heartbeat_update_has_fields, parse_brew_schedule_action, parse_execution_target,
     parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
 };
+pub use error::{ErrorAnalysis, ErrorCategory, ParamFix};
 pub use data_read::{
     extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
 };
