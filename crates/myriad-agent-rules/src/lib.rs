@@ -9,7 +9,6 @@ pub mod prompt;
 pub mod semantic;
 pub mod steering;
 
-pub use data_read::extract_json_array_from_ai_response;
 pub use brew::{
     clamp_update_interval_minutes, collect_subscribe_url_candidates, extract_and_prioritize_feeds,
     feed_priority_score, is_disallowed_subscribe_host, is_disallowed_subscribe_ip,
@@ -17,6 +16,7 @@ pub use brew::{
     take_feed_urls_to_try, validate_subscribe_url_policy, MAX_FEED_NAME_LEN, MAX_FEED_URLS,
     MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL, MIN_UPDATE_INTERVAL,
 };
+pub use data_read::{extract_json_array_from_ai_response, project_time_info, weekday_zh};
 pub use image::{
     clamp_image_dim, parse_image_dim, resolve_image_dimensions, resolve_image_prompt,
     resolve_negative_prompt, DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH, IMAGE_DIM_MAX,
