@@ -2,11 +2,17 @@
 //!
 //! No I/O. Backend services re-export moved symbols so existing imports compile.
 
+pub mod brew;
 pub mod image;
 pub mod prompt;
 pub mod semantic;
 pub mod steering;
 
+pub use brew::{
+    clamp_update_interval_minutes, platform_write_cap_error, platform_write_items_over_cap,
+    sanitize_feed_name, MAX_FEED_NAME_LEN, MAX_FEED_URLS, MAX_PLATFORM_WRITE_ITEMS,
+    MAX_UPDATE_INTERVAL, MIN_UPDATE_INTERVAL,
+};
 pub use semantic::{
     capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,
 };
