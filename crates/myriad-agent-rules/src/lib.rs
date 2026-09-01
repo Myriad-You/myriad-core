@@ -2,8 +2,14 @@
 //!
 //! No I/O. Backend services re-export moved symbols so existing imports compile.
 
+pub mod image;
 pub mod prompt;
 
+pub use image::{
+    clamp_image_dim, parse_image_dim, resolve_image_dimensions, resolve_image_prompt,
+    resolve_negative_prompt, DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH, IMAGE_DIM_MAX,
+    IMAGE_DIM_MIN,
+};
 pub use prompt::{
     append_memory_to_system_prompt, merge_system_prompt, sanitize_prompt_input,
     take_recent_conversation_messages,
