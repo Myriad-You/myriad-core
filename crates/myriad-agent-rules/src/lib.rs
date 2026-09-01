@@ -4,7 +4,11 @@
 
 pub mod image;
 pub mod prompt;
+pub mod steering;
 
+pub use steering::{
+    append_instruction, inject_directive_to_params, inject_steering_to_params, with_system_guidance,
+};
 pub use image::{
     clamp_image_dim, parse_image_dim, resolve_image_dimensions, resolve_image_prompt,
     resolve_negative_prompt, DEFAULT_IMAGE_HEIGHT, DEFAULT_IMAGE_WIDTH, IMAGE_DIM_MAX,
