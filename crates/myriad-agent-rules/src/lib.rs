@@ -2,6 +2,13 @@
 //!
 //! No I/O. Backend services re-export moved symbols so existing imports compile.
 
+pub mod prompt;
+
+pub use prompt::{
+    append_memory_to_system_prompt, merge_system_prompt, sanitize_prompt_input,
+    take_recent_conversation_messages,
+};
+
 /// Shared Unicode-scalar cap for user-authored model text (chat, generate, analyze).
 pub const USER_TEXT_MAX_CHARS: usize = 32680;
 
