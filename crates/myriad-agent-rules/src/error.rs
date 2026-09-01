@@ -60,6 +60,376 @@ pub enum ParamFix {
     AppendToParam(String),
 }
 
+fn truncate_str(s: &str, max_bytes: usize) -> &str {
+    if s.len() <= max_bytes {
+        return s;
+    }
+    let mut end = max_bytes;
+    while end > 0 && !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    &s[..end]
+}
+
+/// 分析执行错误，返回分类和修复建议。
+pub fn analyze_error(
+    error: &str,
+    capability_id: &str,
+    params: &HashMap<String, Value>,
+) -> ErrorAnalysis {
+    let error_lower = error.to_lowercase();
+
+    // 0. 配置缺失 / API Key 未配置 —— 不可重试，不消耗 global_retry_budget
+    // 必须在 Unknown 默认分支之前，且优先于通用 missing-param（避免被当成可修参数）
+    if is_configuration_error(error, &error_lower) {
+        return ErrorAnalysis {
+            category: ErrorCategory::Configuration,
+            retryable: false,
+            param_fixes: HashMap::new(),
+            description: format!("配置缺失（不可重试）: {}", truncate_str(error, 100)),
+            delay_multiplier: 1.0,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
+
+    // 1. 内容策略违规
+    if let Some(analysis) = check_content_policy(&error_lower, capability_id, params) {
+        return analysis;
+    }
+
+    // 2. 参数缺失
+    if let Some(analysis) = check_missing_param(&error_lower, capability_id, params) {
+        return analysis;
+    }
+
+    // 3. 速率限制
+    if is_rate_limited(&error_lower) {
+        return ErrorAnalysis {
+            category: ErrorCategory::RateLimited,
+            retryable: true,
+            param_fixes: HashMap::new(),
+            description: "API 速率限制，等待后重试".into(),
+            delay_multiplier: 5.0,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
+
+    // 4. 服务不可用 / 网络问题
+    if is_service_unavailable(&error_lower) {
+        return ErrorAnalysis {
+            category: ErrorCategory::ServiceUnavailable,
+            retryable: true,
+            param_fixes: HashMap::new(),
+            description: "服务暂时不可用，等待后重试".into(),
+            delay_multiplier: 3.0,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
+
+    // 5. 响应解析失败
+    if is_parse_error(&error_lower) {
+        return ErrorAnalysis {
+            category: ErrorCategory::ParseError,
+            retryable: true,
+            param_fixes: HashMap::new(),
+            description: "API 响应解析失败，重试可能产生有效响应".into(),
+            delay_multiplier: 1.5,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
+
+    // 6. 权限问题（不可重试）
+    if is_permission_error(&error_lower) {
+        return ErrorAnalysis {
+            category: ErrorCategory::PermissionDenied,
+            retryable: false,
+            param_fixes: HashMap::new(),
+            description: "权限不足，需要用户授权".into(),
+            delay_multiplier: 1.0,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
+
+    // 7. 资源未找到
+    if is_not_found(&error_lower) {
+        return ErrorAnalysis {
+            category: ErrorCategory::NotFound,
+            retryable: false,
+            param_fixes: HashMap::new(),
+            description: "请求的资源不存在".into(),
+            delay_multiplier: 1.0,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
+
+    // 默认：未知错误，允许一次重试
+    ErrorAnalysis {
+        category: ErrorCategory::Unknown,
+        retryable: true,
+        param_fixes: HashMap::new(),
+        description: format!("未知错误: {}", truncate_str(error, 100)),
+        delay_multiplier: 2.0,
+        suggested_prepend_capability: None,
+        suggested_prepend_params: HashMap::new(),
+    }
+}
+
+/// API Key / 服务未配置 —— 重试无效，且不应被当成 Unknown 烧掉预算
+fn is_configuration_error(error: &str, error_lower: &str) -> bool {
+    // response_agent::api_key_not_configured → "{service} API Key 未配置"
+    if error.contains("API Key 未配置") || error_lower.contains("api key 未配置") {
+        return true;
+    }
+    if error_lower.contains("api key not configured")
+        || error_lower.contains("api_key not configured")
+        || error_lower.contains("api key is not configured")
+        || error_lower.contains("missing api key")
+        || error_lower.contains("no api key")
+        || error_lower.contains("api key is empty")
+        || error_lower.contains("api key missing")
+    {
+        return true;
+    }
+    // 通用「未配置 / not configured」（TTS、AI analyzer 等）
+    if error.contains("未配置") || error_lower.contains("not configured") {
+        return true;
+    }
+    // 英文配置缺失常见写法
+    if error_lower.contains("is not set") && error_lower.contains("key") {
+        return true;
+    }
+    false
+}
+
+/// 检测内容策略违规并生成修复建议
+fn check_content_policy(
+    error_lower: &str,
+    capability_id: &str,
+    params: &HashMap<String, Value>,
+) -> Option<ErrorAnalysis> {
+    let is_content_violation = error_lower.contains("disallowed content")
+        || error_lower.contains("content policy")
+        || error_lower.contains("safety filter")
+        || error_lower.contains("content blocked")
+        || error_lower.contains("nsfw")
+        || error_lower.contains("inappropriate")
+        || error_lower.contains("violat")
+        // Image generation content-policy patterns（收窄匹配避免误判网络/权限错误）
+        || error_lower.contains("moderation")
+        || error_lower.contains("unsafe content")
+        || error_lower.contains("content not allowed")
+        || error_lower.contains("prohibited content")
+        || error_lower.contains("sensitive content")
+        || (error_lower.contains("blocked")
+            && (error_lower.contains("content")
+                || error_lower.contains("prompt")
+                || error_lower.contains("filter")))
+        || (error_lower.contains("not allowed")
+            && (error_lower.contains("content")
+                || error_lower.contains("prompt")
+                || error_lower.contains("image")));
+
+    if !is_content_violation {
+        return None;
+    }
+
+    let mut param_fixes = HashMap::new();
+
+    // 对于图像生成，清理提示词中的敏感内容
+    if capability_id == "ai.image" || capability_id == "prompt.generate" {
+        let prompt_key = if params.contains_key("prompt") {
+            "prompt"
+        } else if params.contains_key("description") {
+            "description"
+        } else if params.contains_key("input") {
+            "input"
+        } else if params.contains_key("text") {
+            "text"
+        } else {
+            "prompt"
+        };
+
+        // 提取被拒的具体内容关键词
+        let sensitive_words = extract_sensitive_keywords(error_lower);
+        if !sensitive_words.is_empty() {
+            param_fixes.insert(
+                prompt_key.to_string(),
+                ParamFix::RemoveFromPrompt(sensitive_words.clone()),
+            );
+        }
+
+        // 追加安全修饰语
+        param_fixes.insert(
+            "_append_system".to_string(),
+            ParamFix::AppendToParam(
+                "Ensure the output is tasteful, artistic, and avoids explicit or suggestive content. Focus on aesthetic beauty, elegant composition, and emotional atmosphere.".to_string()
+            ),
+        );
+    }
+
+    Some(ErrorAnalysis {
+        category: ErrorCategory::ContentPolicy,
+        retryable: true,
+        param_fixes,
+        description: "内容策略违规，尝试清理敏感内容后重试".into(),
+        delay_multiplier: 1.0,
+        suggested_prepend_capability: None,
+        suggested_prepend_params: HashMap::new(),
+    })
+}
+
+/// 从错误消息中提取被标记的敏感关键词
+fn extract_sensitive_keywords(error_lower: &str) -> Vec<String> {
+    let mut keywords = Vec::new();
+
+    // 匹配 "disallowed content: xxx, yyy" 模式（提取所有逗号分隔的关键词）
+    if let Some(pos) = error_lower.find("disallowed content:") {
+        let prefix = "disallowed content:";
+        let after = &error_lower[pos + prefix.len()..];
+        // 截取到句号/分号/换行为止的整个短语
+        let phrase = after
+            .trim()
+            .split(['.', ';', '\n'])
+            .next()
+            .unwrap_or("")
+            .trim();
+        // 按逗号拆分每个关键词
+        for part in phrase.split(',') {
+            let word = part.trim().trim_start_matches("and ").trim();
+            if !word.is_empty() && word.len() < 50 {
+                keywords.push(word.to_string());
+            }
+        }
+    }
+
+    // 通用敏感关键词列表（会被从 prompt 中移除）
+    let common_sensitive = [
+        "sex",
+        "nude",
+        "naked",
+        "explicit",
+        "nsfw",
+        "erotic",
+        "pornographic",
+    ];
+    for w in &common_sensitive {
+        if error_lower.contains(w) {
+            keywords.push(w.to_string());
+        }
+    }
+
+    keywords.sort();
+    keywords.dedup();
+    keywords
+}
+
+/// 检测参数缺失错误并生成修复建议
+fn check_missing_param(
+    error_lower: &str,
+    capability_id: &str,
+    params: &HashMap<String, Value>,
+) -> Option<ErrorAnalysis> {
+    let is_missing = (error_lower.contains("missing")
+        && (error_lower.contains("parameter") || error_lower.contains("param")))
+        || error_lower.contains("缺少")
+        || error_lower.contains("需要提供");
+
+    if !is_missing {
+        return None;
+    }
+
+    let mut param_fixes = HashMap::new();
+    let mut suggested_prepend = None;
+    let mut suggested_prepend_params = HashMap::new();
+
+    // 特定能力的参数修复规则
+    match capability_id {
+        // 常见问题：缺少 playlistId → 建议先搜索播放列表
+        "music.playlist" if error_lower.contains("playlistid") => {
+            suggested_prepend = Some("netease.searchPlaylist".to_string());
+            // 从原始参数中提取搜索关键词
+            let keyword = params
+                .get("keyword")
+                .or_else(|| params.get("query"))
+                .or_else(|| params.get("name"))
+                .cloned()
+                .unwrap_or_else(|| Value::String("推荐歌单".to_string()));
+            suggested_prepend_params.insert("keyword".to_string(), keyword);
+        }
+        "music.control" if error_lower.contains("action") => {
+            param_fixes.insert(
+                "action".to_string(),
+                ParamFix::SetValue(serde_json::json!("play")),
+            );
+        }
+        "brew.discover" if error_lower.contains("url") || error_lower.contains("query") => {
+            param_fixes.insert(
+                "query".to_string(),
+                ParamFix::SetValue(serde_json::json!("*")),
+            );
+        }
+        _ => {}
+    }
+
+    Some(ErrorAnalysis {
+        category: ErrorCategory::MissingParameter,
+        retryable: !param_fixes.is_empty() || suggested_prepend.is_some(),
+        param_fixes,
+        description: format!("参数缺失: {}", truncate_str(error_lower, 80)),
+        delay_multiplier: 1.0,
+        suggested_prepend_capability: suggested_prepend,
+        suggested_prepend_params,
+    })
+}
+
+fn is_rate_limited(error_lower: &str) -> bool {
+    error_lower.contains("rate limit")
+        || error_lower.contains("too many requests")
+        || error_lower.contains("429")
+        || error_lower.contains("quota exceeded")
+        || error_lower.contains("throttl")
+}
+
+fn is_service_unavailable(error_lower: &str) -> bool {
+    error_lower.contains("service unavailable")
+        || error_lower.contains("503")
+        || error_lower.contains("502")
+        || error_lower.contains("connection refused")
+        || error_lower.contains("timeout")
+        || error_lower.contains("timed out")
+        || error_lower.contains("network error")
+        || error_lower.contains("temporarily unavailable")
+}
+
+fn is_parse_error(error_lower: &str) -> bool {
+    error_lower.contains("parse")
+        || error_lower.contains("deserializ")
+        || error_lower.contains("invalid json")
+        || error_lower.contains("unexpected token")
+        || error_lower.contains("failed to parse")
+}
+
+fn is_permission_error(error_lower: &str) -> bool {
+    error_lower.contains("permission denied")
+        || error_lower.contains("unauthorized")
+        || error_lower.contains("403")
+        || error_lower.contains("权限不足")
+        || error_lower.contains("access denied")
+}
+
+fn is_not_found(error_lower: &str) -> bool {
+    error_lower.contains("not found")
+        || error_lower.contains("404")
+        || error_lower.contains("no such")
+        || error_lower.contains("does not exist")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,5 +454,15 @@ mod tests {
             to: "b".into(),
         };
         let _ = ParamFix::AppendToParam("hint".into());
+    }
+
+    #[test]
+    fn analyze_error_classifies_rate_limit_and_config() {
+        let empty = HashMap::new();
+        let rate = analyze_error("429 rate limit exceeded", "ai.chat", &empty);
+        assert_eq!(rate.category, ErrorCategory::RateLimited);
+        let cfg = analyze_error("API key not configured", "ai.chat", &empty);
+        assert_eq!(cfg.category, ErrorCategory::Configuration);
+        assert!(!cfg.retryable);
     }
 }
