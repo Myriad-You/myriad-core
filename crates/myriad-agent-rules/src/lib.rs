@@ -33,7 +33,10 @@ pub use retry::{
     RETRY_DELAY_CAP_MS,
 };
 pub use task::{
-    lane_id_from_user_session, session_id_from_lane_id, session_id_from_lane_key, TaskStatus,
+    is_cancellable_task_status, is_terminal_past_retention, is_waiting_input_timed_out,
+    lane_id_from_user_session, session_id_from_lane_id, session_id_from_lane_key,
+    status_counts_from_iter, task_status_from_db_str, task_status_to_db_str, TaskStatus,
+    TERMINAL_RETENTION_HOURS, WAITING_INPUT_TIMEOUT_ERROR, WAITING_INPUT_TIMEOUT_HOURS,
 };
 pub use external::{
     classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
