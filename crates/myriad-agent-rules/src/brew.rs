@@ -1,4 +1,6 @@
-//! Brew subscribe name and write caps. No I/O.
+//! Brew subscribe name, write caps, and subscribe URL literal policy. No I/O.
+
+use std::net::IpAddr;
 
 /// 订阅源名称最大长度
 pub const MAX_FEED_NAME_LEN: usize = 255;
@@ -38,8 +40,6 @@ pub fn platform_write_items_over_cap(count: usize) -> bool {
 pub fn platform_write_cap_error() -> String {
     "Too many items to write at once".to_string()
 }
-
-use std::net::IpAddr;
 
 /// Disallowed hostname forms for subscribe URLs (before DNS).
 pub fn is_disallowed_subscribe_host(host: &str) -> bool {
@@ -116,5 +116,25 @@ mod tests {
             platform_write_cap_error(),
             "Too many items to write at once"
         );
+    }
+
+    #[test]
+    fn subscribe_url_policy_blocks_internal() {
+        use std::net::{Ipv4Addr, Ipv6Addr};
+        assert!(validate_subscribe_url_policy("https://example.com/rss.xml").is_ok());
+        assert!(validate_subscribe_url_policy("ftp://example.com/x").is_err());
+        assert!(validate_subscribe_url_policy("http://localhost/rss").is_err());
+        assert!(validate_subscribe_url_policy("http://svc.local/rss").is_err());
+        assert!(validate_subscribe_url_policy("http://192.168.0.1/rss").is_err());
+        assert!(validate_subscribe_url_policy("http://127.0.0.1/rss").is_err());
+        assert!(is_disallowed_subscribe_ip(IpAddr::V4(Ipv4Addr::new(
+            10, 0, 0, 1
+        ))));
+        assert!(is_disallowed_subscribe_ip(IpAddr::V6(Ipv6Addr::LOCALHOST)));
+        assert!(!is_disallowed_subscribe_ip(IpAddr::V4(Ipv4Addr::new(
+            8, 8, 8, 8
+        ))));
+        assert!(is_disallowed_subscribe_host("localhost"));
+        assert!(!is_disallowed_subscribe_host("example.com"));
     }
 }
