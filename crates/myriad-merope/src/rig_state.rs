@@ -64,24 +64,24 @@ pub const RIG_STATE_CAPABILITIES: &[&str] = &[
 pub const RIG_STATE_MUSIC_ENERGIES: &[&str] = &["quiet", "soft", "present", "strong"];
 pub const RIG_STATE_BEAT_PHASES: &[&str] = &["rest", "downbeat", "pulse", "hold"];
 pub const RIG_STATE_MOTION_STYLES: &[&str] = &["restrained", "even", "open"];
+/// What a behavior means, as the client is able to report it.
+///
+/// Every name here has a producer: the cue compiler, the speech prosody
+/// compiler, or the music entrainment source. Words without one described a
+/// richer body than exists and would never reach the director, so the
+/// front-end contract test fails when this list and the producers disagree.
 pub const RIG_STATE_BEHAVIOR_FUNCTIONS: &[&str] = &[
     "orient",
     "attend",
     "acknowledge",
-    "understand",
-    "agree",
-    "disagree",
     "uncertain",
     "prepareSpeech",
-    "yieldTurn",
     "emphasize",
     "surprise",
     "celebrate",
     "relief",
-    "settle",
     "entrain",
     "express",
-    "idleShift",
 ];
 pub const RIG_STATE_BEHAVIOR_PHASES: &[&str] = &[
     "planned",
@@ -92,8 +92,9 @@ pub const RIG_STATE_BEHAVIOR_PHASES: &[&str] = &[
     "complete",
     "rejected",
 ];
-pub const RIG_STATE_BEHAVIOR_SOURCES: &[&str] =
-    &["performance", "coSpeech", "music", "mood", "ambient"];
+/// Mood and ambient hold leases; neither publishes a behavior, so neither can
+/// appear on one.
+pub const RIG_STATE_BEHAVIOR_SOURCES: &[&str] = &["performance", "coSpeech", "music"];
 pub const RIG_STATE_BEHAVIOR_RESOURCES: &[&str] = &[
     "face.mouth",
     "face.expression",
@@ -516,11 +517,19 @@ pub fn refine_performance_plan(
     mut plan: ChatPerformancePlan,
     state: &RigStateSummary,
 ) -> ChatPerformancePlan {
-    plan.cues.retain(|cue| {
-        capability_allows(&state.capabilities, &cue.intent)
-            && !cue_blocked_by_speech(&cue.intent, state.speaking, &state.capabilities)
-    });
+    plan.cues.retain(|cue| cue_survives_state(state, &cue.intent));
     plan
+}
+
+/// Whether this cue would survive `refine_performance_plan` for this face.
+///
+/// The director's own schema enum and its cue index are built from this too,
+/// so it is never offered something the backend is about to delete. Offering
+/// it was not free: a plan whose only cue was unplayable came back empty, and
+/// an empty plan drops the whole Lite refinement for that round.
+pub fn cue_survives_state(state: &RigStateSummary, intent: &str) -> bool {
+    capability_allows(&state.capabilities, intent)
+        && !cue_blocked_by_speech(intent, state.speaking, &state.capabilities)
 }
 
 fn has_cap(capabilities: &[String], name: &str) -> bool {
@@ -873,7 +882,10 @@ mod tests {
             ),
             "restrained"
         );
-        assert_eq!(round_motion_style(Some("open"), None, false, 20, 48), "open");
+        assert_eq!(
+            round_motion_style(Some("open"), None, false, 20, 48),
+            "open"
+        );
         assert_eq!(round_motion_style(None, None, false, 20, 48), "even");
     }
 }

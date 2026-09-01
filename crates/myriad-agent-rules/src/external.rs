@@ -45,12 +45,36 @@ pub fn parse_http_body_value(body: &str) -> Value {
 }
 
 /// Parse `mcp.{server_id}.{tool_name}` capability id.
+///
+/// This split is only safe when `server_id` contains no `.`. Config ids allow
+/// `.` (`[A-Za-z0-9._-]`); callers that have the advertised tool list must use
+/// [`match_mcp_capability_id`] instead, or they will call the wrong tool name
+/// on the right server (`mcp.com.example.search` → tool `example.search`).
 pub fn parse_mcp_capability_id(capability_id: &str) -> Result<(&str, &str), String> {
     let rest = capability_id
         .strip_prefix("mcp.")
         .ok_or_else(|| "Invalid MCP capability ID".to_string())?;
     rest.split_once('.')
         .ok_or_else(|| "MCP capability ID must include server and tool names".to_string())
+}
+
+/// Match `mcp.{server}.{tool}` against advertised `(server_id, tool_name)` pairs.
+///
+/// Prefers the longest `server_id` if two pairs stringify to the same id
+/// (`mcp.a.b.c` as `a`/`b.c` vs `a.b`/`c`).
+pub fn match_mcp_capability_id(
+    capability_id: &str,
+    advertised: &[(String, String)],
+) -> Result<(String, String), String> {
+    if !capability_id.starts_with("mcp.") {
+        return Err("Invalid MCP capability ID".to_string());
+    }
+    advertised
+        .iter()
+        .filter(|(server, tool)| capability_id == format!("mcp.{server}.{tool}"))
+        .max_by_key(|(server, _)| server.len())
+        .cloned()
+        .ok_or_else(|| format!("Unknown MCP capability: {capability_id}"))
 }
 
 /// Strip executor-only `__*` keys before crossing the MCP trust boundary.
@@ -212,6 +236,27 @@ mod tests {
             ("__steering".to_string(), json!("new direction")),
         ]);
         assert_eq!(mcp_arguments(&params), json!({ "query": "myriad" }));
+
+        let advertised = vec![
+            ("com.example".to_string(), "search".to_string()),
+            ("github".to_string(), "search".to_string()),
+            ("a".to_string(), "b.c".to_string()),
+            ("a.b".to_string(), "c".to_string()),
+        ];
+        assert_eq!(
+            match_mcp_capability_id("mcp.com.example.search", &advertised).unwrap(),
+            ("com.example".to_string(), "search".to_string())
+        );
+        assert_eq!(
+            match_mcp_capability_id("mcp.github.search", &advertised).unwrap(),
+            ("github".to_string(), "search".to_string())
+        );
+        // Collision: longest server_id wins so the tool name stays intact.
+        assert_eq!(
+            match_mcp_capability_id("mcp.a.b.c", &advertised).unwrap(),
+            ("a.b".to_string(), "c".to_string())
+        );
+        assert!(match_mcp_capability_id("mcp.com.example.missing", &advertised).is_err());
     }
 
     #[test]

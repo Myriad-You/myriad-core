@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "baselineExpressions": ["withdrawn", "subdued", "steady", "warm"],
+  "baselineExpressions": ["withdrawn", "subdued", "steady", "warm", "tense"],
   "postures": ["closed", "neutral", "open"],
   "cueIntents": [
     "greet",
