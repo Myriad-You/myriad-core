@@ -1,5 +1,5 @@
-//! HTTP fetch body helpers and MCP capability/argument projection.
-//! Scrape/classify land in later slices.
+//! HTTP fetch, MCP capability/argument projection, and scrape text gates.
+//! Outbound-fetch classification lands in a later slice.
 
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -65,6 +65,53 @@ pub fn mcp_arguments(params: &HashMap<String, Value>) -> Value {
     )
 }
 
+/// Max HTML size for web.scrape (bytes).
+pub const WEB_SCRAPE_MAX_HTML_BYTES: usize = 5 * 1024 * 1024;
+/// Default max extracted text length for web.scrape.
+pub const WEB_SCRAPE_DEFAULT_MAX_LENGTH: usize = crate::USER_TEXT_MAX_CHARS;
+
+/// CSS selector for scrape (default body).
+pub fn scrape_selector(params: &HashMap<String, Value>) -> &str {
+    params
+        .get("selector")
+        .and_then(|v| v.as_str())
+        .unwrap_or("body")
+}
+
+/// Max text length for scrape (default [`WEB_SCRAPE_DEFAULT_MAX_LENGTH`]).
+pub fn scrape_max_length(params: &HashMap<String, Value>) -> usize {
+    params
+        .get("max_length")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(WEB_SCRAPE_DEFAULT_MAX_LENGTH as u64) as usize
+}
+
+/// Whether raw HTML exceeds scrape size gate.
+#[allow(dead_code)] // 仅测试调用：生产在各自调用点内联同等判定。
+pub fn scrape_html_too_large(html_len: usize) -> bool {
+    html_len > WEB_SCRAPE_MAX_HTML_BYTES
+}
+
+/// Collapse whitespace and truncate to max_length; returns (text, truncated).
+pub fn compress_and_truncate_text(text: &str, max_length: usize) -> (String, bool) {
+    let text: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let truncated = text.chars().count() > max_length;
+    let text: String = text.chars().take(max_length).collect();
+    (text, truncated)
+}
+
+/// Tags whose text nodes should be skipped during scrape.
+pub const SCRAPE_SKIP_TAGS: &[&str] = &["script", "style", "noscript", "svg", "iframe"];
+
+pub fn scrape_should_skip_tag(tag: &str) -> bool {
+    SCRAPE_SKIP_TAGS.contains(&tag)
+}
+
+/// Hitokoto type param (optional).
+pub fn hitokoto_type(params: &HashMap<String, Value>) -> Option<&str> {
+    params.get("type").and_then(|v| v.as_str())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,5 +155,30 @@ mod tests {
             ("__steering".to_string(), json!("new direction")),
         ]);
         assert_eq!(mcp_arguments(&params), json!({ "query": "myriad" }));
+    }
+
+    #[test]
+    fn scrape_helpers() {
+        let mut params = HashMap::new();
+        params.insert("selector".into(), json!("article"));
+        params.insert("max_length".into(), json!(10));
+        assert_eq!(scrape_selector(&params), "article");
+        assert_eq!(scrape_max_length(&params), 10);
+        assert_eq!(scrape_selector(&HashMap::new()), "body");
+        assert_eq!(
+            scrape_max_length(&HashMap::new()),
+            WEB_SCRAPE_DEFAULT_MAX_LENGTH
+        );
+        assert_eq!(WEB_SCRAPE_DEFAULT_MAX_LENGTH, crate::USER_TEXT_MAX_CHARS);
+
+        assert!(!scrape_html_too_large(100));
+        assert!(scrape_html_too_large(WEB_SCRAPE_MAX_HTML_BYTES + 1));
+
+        let (text, truncated) = compress_and_truncate_text("  a   b  c  d  e  ", 5);
+        assert!(truncated);
+        assert_eq!(text.chars().count(), 5);
+        assert!(scrape_should_skip_tag("script"));
+        assert!(!scrape_should_skip_tag("p"));
+        assert_eq!(hitokoto_type(&HashMap::from([("type".into(), json!("a"))])), Some("a"));
     }
 }

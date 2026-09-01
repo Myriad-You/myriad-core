@@ -26,9 +26,11 @@ pub use schedule::{
 };
 pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
 pub use external::{
-    http_body_exceeds_limit, http_body_size_error, http_content_length_error, http_fetch_method,
-    mcp_arguments, optional_string_param, parse_http_body_value, parse_mcp_capability_id,
-    HTTP_FETCH_MAX_BODY_BYTES,
+    compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit, http_body_size_error,
+    http_content_length_error, http_fetch_method, mcp_arguments, optional_string_param,
+    parse_http_body_value, parse_mcp_capability_id, scrape_html_too_large, scrape_max_length,
+    scrape_selector, scrape_should_skip_tag, HTTP_FETCH_MAX_BODY_BYTES, SCRAPE_SKIP_TAGS,
+    WEB_SCRAPE_DEFAULT_MAX_LENGTH, WEB_SCRAPE_MAX_HTML_BYTES,
 };
 pub use data_read::{
     extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
