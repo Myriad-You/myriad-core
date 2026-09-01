@@ -5,6 +5,7 @@
 pub mod brew;
 pub mod data_read;
 pub mod error;
+pub mod external;
 pub mod schedule;
 pub mod image;
 pub mod prompt;
@@ -24,6 +25,10 @@ pub use schedule::{
     parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
 };
 pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
+pub use external::{
+    http_body_exceeds_limit, http_body_size_error, http_content_length_error, http_fetch_method,
+    optional_string_param, parse_http_body_value, HTTP_FETCH_MAX_BODY_BYTES,
+};
 pub use data_read::{
     extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
 };
