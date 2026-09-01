@@ -8,6 +8,7 @@ pub mod error;
 pub mod external;
 pub mod retry;
 pub mod schedule;
+pub mod task;
 pub mod image;
 pub mod prompt;
 pub mod semantic;
@@ -31,6 +32,7 @@ pub use retry::{
     FailureStrategy, RetryConfig, RETRY_BASE_DELAY_FLOOR_MS, RETRY_DEFAULT_BASE_DELAY_MS,
     RETRY_DELAY_CAP_MS,
 };
+pub use task::TaskStatus;
 pub use external::{
     classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
     http_body_size_error, http_content_length_error, http_fetch_method, mcp_arguments,
