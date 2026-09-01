@@ -9,16 +9,11 @@ pub mod semantic;
 pub mod steering;
 
 pub use brew::{
-    clamp_update_interval_minutes, is_disallowed_subscribe_host, is_disallowed_subscribe_ip,
+    clamp_update_interval_minutes, collect_subscribe_url_candidates, extract_and_prioritize_feeds,
+    feed_priority_score, is_disallowed_subscribe_host, is_disallowed_subscribe_ip,
     platform_write_cap_error, platform_write_items_over_cap, sanitize_feed_name,
-    validate_subscribe_url_policy, MAX_FEED_NAME_LEN, MAX_FEED_URLS, MAX_PLATFORM_WRITE_ITEMS,
-    MAX_UPDATE_INTERVAL, MIN_UPDATE_INTERVAL,
-};
-pub use semantic::{
-    capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,
-};
-pub use steering::{
-    append_instruction, inject_directive_to_params, inject_steering_to_params, with_system_guidance,
+    take_feed_urls_to_try, validate_subscribe_url_policy, MAX_FEED_NAME_LEN, MAX_FEED_URLS,
+    MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL, MIN_UPDATE_INTERVAL,
 };
 pub use image::{
     clamp_image_dim, parse_image_dim, resolve_image_dimensions, resolve_image_prompt,
@@ -28,6 +23,12 @@ pub use image::{
 pub use prompt::{
     append_memory_to_system_prompt, merge_system_prompt, sanitize_prompt_input,
     take_recent_conversation_messages,
+};
+pub use semantic::{
+    capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,
+};
+pub use steering::{
+    append_instruction, inject_directive_to_params, inject_steering_to_params, with_system_guidance,
 };
 
 /// Shared Unicode-scalar cap for user-authored model text (chat, generate, analyze).

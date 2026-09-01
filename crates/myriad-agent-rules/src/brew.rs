@@ -1,5 +1,7 @@
-//! Brew subscribe name, write caps, and subscribe URL literal policy. No I/O.
+//! Brew subscribe name, write caps, subscribe URL policy, and feed ranking. No I/O.
 
+use serde_json::Value;
+use std::cmp::Reverse;
 use std::net::IpAddr;
 
 /// 订阅源名称最大长度
@@ -90,6 +92,83 @@ pub fn validate_subscribe_url_policy(url: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Score a candidate feed URL for brew.subscribe multi-source attempts.
+///
+/// Higher score is tried first: verified > official > HTTPS > known hosts; RSSHub demoted.
+pub fn feed_priority_score(url: &str, verified: bool, source: &str) -> i32 {
+    let mut score = 0;
+    if verified {
+        score += 100;
+    }
+    if source.contains("official") || url.contains("zhihu.com") {
+        score += 50;
+    }
+    if url.starts_with("https://") {
+        score += 20;
+    }
+    if url.contains("feedx.net") || url.contains("feedburner") {
+        score += 30;
+    }
+    if url.contains("rsshub") {
+        score -= 10;
+    }
+    score
+}
+
+/// Extract and prioritize feed URLs from a `feeds` JSON array.
+///
+/// Returns `(url, optional_name)` ordered by priority descending.
+pub fn extract_and_prioritize_feeds(feeds: &Value) -> Vec<(String, Option<String>)> {
+    let Some(feeds_arr) = feeds.as_array() else {
+        return vec![];
+    };
+
+    let mut result: Vec<(String, Option<String>, i32)> = feeds_arr
+        .iter()
+        .filter_map(|f| {
+            let url = f.get("url")?.as_str()?.to_string();
+            let name = f
+                .get("name")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            let verified = f.get("verified").and_then(|v| v.as_bool()).unwrap_or(false);
+            let source = f.get("source").and_then(|v| v.as_str()).unwrap_or("");
+            let score = feed_priority_score(&url, verified, source);
+            Some((url, name, score))
+        })
+        .collect();
+
+    result.sort_by_key(|b| Reverse(b.2));
+    result
+        .into_iter()
+        .map(|(url, name, _)| (url, name))
+        .collect()
+}
+
+/// Collect subscribe candidate URLs from `feeds` or single `url` param.
+pub fn collect_subscribe_url_candidates(
+    feeds: Option<&Value>,
+    single_url: Option<&str>,
+) -> Result<Vec<(String, Option<String>)>, String> {
+    let urls_to_try: Vec<(String, Option<String>)> = if let Some(feeds) = feeds {
+        extract_and_prioritize_feeds(feeds)
+    } else if let Some(url) = single_url {
+        vec![(url.to_string(), None)]
+    } else {
+        return Err("Missing url or feeds".to_string());
+    };
+
+    if urls_to_try.is_empty() {
+        return Err("No feed URL to try".to_string());
+    }
+    Ok(urls_to_try)
+}
+
+/// Cap the number of URLs actually attempted.
+pub fn take_feed_urls_to_try(urls: Vec<(String, Option<String>)>) -> Vec<(String, Option<String>)> {
+    urls.into_iter().take(MAX_FEED_URLS).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -136,5 +215,31 @@ mod tests {
         ))));
         assert!(is_disallowed_subscribe_host("localhost"));
         assert!(!is_disallowed_subscribe_host("example.com"));
+    }
+
+    #[test]
+    fn feed_priority_and_collect() {
+        use serde_json::json;
+        assert!(
+            feed_priority_score("https://a.com", true, "official")
+                > feed_priority_score("http://rsshub.app/x", false, "")
+        );
+
+        let feeds = json!([
+            { "url": "http://rsshub.app/x", "verified": false, "source": "mirror" },
+            { "url": "https://feedx.net/a.xml", "verified": true, "name": "A" },
+            { "url": "https://zhihu.com/rss", "verified": false, "source": "official" }
+        ]);
+        let ranked = extract_and_prioritize_feeds(&feeds);
+        assert_eq!(ranked[0].0, "https://feedx.net/a.xml");
+        assert_eq!(ranked[0].1.as_deref(), Some("A"));
+
+        let single = collect_subscribe_url_candidates(None, Some("https://ex.com/rss")).unwrap();
+        assert_eq!(single.len(), 1);
+        assert!(collect_subscribe_url_candidates(None, None).is_err());
+        assert_eq!(
+            take_feed_urls_to_try((0..20).map(|i| (format!("u{i}"), None)).collect()).len(),
+            MAX_FEED_URLS
+        );
     }
 }
