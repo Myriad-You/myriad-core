@@ -1,5 +1,4 @@
-//! HTTP fetch, MCP capability/argument projection, and scrape text gates.
-//! Outbound-fetch classification lands in a later slice.
+//! HTTP fetch, MCP projection, scrape gates, and outbound-fetch classification.
 
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -112,6 +111,64 @@ pub fn hitokoto_type(params: &HashMap<String, Value>) -> Option<&str> {
     params.get("type").and_then(|v| v.as_str())
 }
 
+/// Keep timeout / HTTP status / a short API phrase; drop client-stack and serde dumps.
+pub fn classify_outbound_fetch(label: &str, detail: &str) -> String {
+    if let Some(status) = http_status_from_text(detail) {
+        return format!("{label} (HTTP {status})");
+    }
+    let lower = detail.to_ascii_lowercase();
+    if lower.contains("timed out") || lower.contains("timeout") {
+        return format!("{label}: timed out");
+    }
+    if lower.contains("could not connect")
+        || lower.contains("connection refused")
+        || lower.contains("error trying to connect")
+    {
+        return format!("{label}: could not connect");
+    }
+    if is_internal_outbound_dump(detail) {
+        return label.to_string();
+    }
+    let rest = detail.trim();
+    if rest.is_empty() || rest.len() > 120 || rest.starts_with('{') {
+        return label.to_string();
+    }
+    format!("{label}: {rest}")
+}
+
+fn http_status_from_text(text: &str) -> Option<u16> {
+    let bytes = text.as_bytes();
+    let mut i = 0;
+    while i + 2 < bytes.len() {
+        if bytes[i].is_ascii_digit()
+            && bytes[i + 1].is_ascii_digit()
+            && bytes[i + 2].is_ascii_digit()
+            && (i == 0 || !bytes[i - 1].is_ascii_digit())
+            && (i + 3 >= bytes.len() || !bytes[i + 3].is_ascii_digit())
+        {
+            let code = (bytes[i] - b'0') as u16 * 100
+                + (bytes[i + 1] - b'0') as u16 * 10
+                + (bytes[i + 2] - b'0') as u16;
+            if (400..=599).contains(&code) {
+                return Some(code);
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
+fn is_internal_outbound_dump(detail: &str) -> bool {
+    let lower = detail.to_ascii_lowercase();
+    lower.contains("error sending request")
+        || lower.contains("builder error")
+        || lower.contains("os error")
+        || lower.contains("for url (")
+        || lower.contains("missing field")
+        || lower.contains("at line ")
+        || lower.contains("expected value")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,6 +236,42 @@ mod tests {
         assert_eq!(text.chars().count(), 5);
         assert!(scrape_should_skip_tag("script"));
         assert!(!scrape_should_skip_tag("p"));
-        assert_eq!(hitokoto_type(&HashMap::from([("type".into(), json!("a"))])), Some("a"));
+        assert_eq!(
+            hitokoto_type(&HashMap::from([("type".into(), json!("a"))])),
+            Some("a")
+        );
+    }
+
+    #[test]
+    fn outbound_fetch_keeps_status_and_drops_internal_dumps() {
+        assert_eq!(
+            classify_outbound_fetch(
+                "Failed to fetch Bangumi user",
+                "Bangumi API error: 404 Not Found"
+            ),
+            "Failed to fetch Bangumi user (HTTP 404)"
+        );
+        assert_eq!(
+            classify_outbound_fetch(
+                "Failed to fetch Bilibili user",
+                "error sending request for url (https://api.bilibili.com/x/space/acc/info)"
+            ),
+            "Failed to fetch Bilibili user"
+        );
+        assert_eq!(
+            classify_outbound_fetch("Failed to fetch weather", "timed out"),
+            "Failed to fetch weather: timed out"
+        );
+        assert_eq!(
+            classify_outbound_fetch("Failed to fetch Bilibili user", "用户不存在"),
+            "Failed to fetch Bilibili user: 用户不存在"
+        );
+        assert_eq!(
+            classify_outbound_fetch(
+                "Failed to fetch hitokoto",
+                "expected value at line 1 column 1"
+            ),
+            "Failed to fetch hitokoto"
+        );
     }
 }
