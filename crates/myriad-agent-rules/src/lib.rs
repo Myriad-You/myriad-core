@@ -26,7 +26,11 @@ pub use schedule::{
     parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
 };
 pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
-pub use retry::{FailureStrategy, RetryConfig};
+pub use retry::{
+    compute_retry_delay_ms, format_retry_final_error, prepend_step_id, should_retry_step,
+    FailureStrategy, RetryConfig, RETRY_BASE_DELAY_FLOOR_MS, RETRY_DEFAULT_BASE_DELAY_MS,
+    RETRY_DELAY_CAP_MS,
+};
 pub use external::{
     classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
     http_body_size_error, http_content_length_error, http_fetch_method, mcp_arguments,
