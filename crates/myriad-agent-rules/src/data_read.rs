@@ -187,3 +187,78 @@ mod time_tests {
         assert_eq!(offset["hour"], 20);
     }
 }
+
+/// Parse RSSHub radar-rules.js into a JSON array of route objects.
+pub fn parse_rsshub_radar_rules(content: &str) -> Value {
+    let mut routes = Vec::new();
+
+    let domain_re = regex::Regex::new(r#"'([^']+\.[^']+)':\s*\{"#).unwrap();
+    let name_re = regex::Regex::new(r#"_name:\s*['"]([^'"]+)['"]"#).unwrap();
+    let route_re = regex::Regex::new(r#"(\w+):\s*\[\s*\{\s*title:\s*['"]([^'"]+)['"]"#).unwrap();
+    let target_re = regex::Regex::new(r#"target:\s*['"]([^'"]+)['"]"#).unwrap();
+
+    let blocks: Vec<&str> = content.split("': {").collect();
+
+    for block in blocks.iter().skip(1) {
+        let domain = if let Some(prev_part) = blocks.iter().find(|b| !block.starts_with(*b)) {
+            domain_re
+                .captures(prev_part)
+                .and_then(|c| c.get(1))
+                .map(|m| m.as_str())
+                .unwrap_or("")
+        } else {
+            ""
+        };
+
+        let name = name_re
+            .captures(block)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str())
+            .unwrap_or("");
+
+        for cap in route_re.captures_iter(block) {
+            let title = cap.get(2).map(|m| m.as_str()).unwrap_or("");
+
+            if let Some(target_cap) = target_re.captures(block) {
+                let target = target_cap.get(1).map(|m| m.as_str()).unwrap_or("");
+
+                if !target.is_empty() && !name.is_empty() {
+                    let requires_config = target.contains(':')
+                        && !target.contains('?')
+                        && target.matches(':').count() > 1;
+
+                    routes.push(json!({
+                        "name": format!("{} - {}", name, title),
+                        "path": target,
+                        "description": format!("{} 的 {} 订阅", name, title),
+                        "domain": domain,
+                        "requiresConfig": requires_config
+                    }));
+                }
+            }
+        }
+    }
+
+    json!(routes)
+}
+
+#[cfg(test)]
+mod radar_tests {
+    use super::*;
+
+    #[test]
+    fn parse_rsshub_radar_rules_reads_title_and_target() {
+        let src =
+            "'zhihu.com': {\n_name: '知乎',\ndaily: [{ title: '日报', target: '/zhihu/daily' }]\n}";
+        let out = parse_rsshub_radar_rules(src);
+        let arr = out.as_array().expect("array");
+        assert_eq!(arr.len(), 1);
+        assert_eq!(arr[0]["name"], "知乎 - 日报");
+        assert_eq!(arr[0]["path"], "/zhihu/daily");
+        assert_eq!(arr[0]["requiresConfig"], false);
+        assert!(parse_rsshub_radar_rules("not radar")
+            .as_array()
+            .unwrap()
+            .is_empty());
+    }
+}
