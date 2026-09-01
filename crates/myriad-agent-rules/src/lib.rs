@@ -6,6 +6,7 @@ pub mod brew;
 pub mod data_read;
 pub mod error;
 pub mod external;
+pub mod retry;
 pub mod schedule;
 pub mod image;
 pub mod prompt;
@@ -25,6 +26,7 @@ pub use schedule::{
     parse_schedule_type, AgentExecutionTarget, AgentScheduleType, BrewScheduleAction,
 };
 pub use error::{analyze_error, apply_param_fixes, ErrorAnalysis, ErrorCategory, ParamFix};
+pub use retry::{FailureStrategy, RetryConfig};
 pub use external::{
     classify_outbound_fetch, compress_and_truncate_text, hitokoto_type, http_body_exceeds_limit,
     http_body_size_error, http_content_length_error, http_fetch_method, mcp_arguments,
