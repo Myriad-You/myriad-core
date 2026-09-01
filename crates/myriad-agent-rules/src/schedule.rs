@@ -1,6 +1,7 @@
 //! Scheduler type parsing and config build. No I/O.
 
 use serde_json::{json, Value};
+use std::collections::HashMap;
 
 /// Supported scheduler schedule types (matches DB enum names).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -176,5 +177,38 @@ mod tests {
         assert!(
             build_schedule_config(AgentScheduleType::Cron, None, None, None, None, None).is_err()
         );
+    }
+}
+
+/// Extract optional task id from heartbeat params (`id` / `taskId` / `task_id`).
+pub fn heartbeat_task_id(params: &HashMap<String, Value>) -> Option<&str> {
+    params
+        .get("id")
+        .or_else(|| params.get("taskId"))
+        .or_else(|| params.get("task_id"))
+        .and_then(Value::as_str)
+}
+
+/// Whether at least one heartbeat update field is present.
+pub fn heartbeat_update_has_fields(
+    name: Option<&str>,
+    schedule: Option<&str>,
+    action: Option<&str>,
+    enabled: Option<bool>,
+) -> bool {
+    name.is_some() || schedule.is_some() || action.is_some() || enabled.is_some()
+}
+
+#[cfg(test)]
+mod heartbeat_tests {
+    use super::*;
+
+    #[test]
+    fn heartbeat_task_id_and_update_fields() {
+        let mut params = HashMap::new();
+        params.insert("taskId".into(), json!("hb-1"));
+        assert_eq!(heartbeat_task_id(&params), Some("hb-1"));
+        assert!(!heartbeat_update_has_fields(None, None, None, None));
+        assert!(heartbeat_update_has_fields(Some("n"), None, None, None));
     }
 }

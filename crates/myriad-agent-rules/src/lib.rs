@@ -18,8 +18,8 @@ pub use brew::{
     MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL, MIN_UPDATE_INTERVAL,
 };
 pub use schedule::{
-    build_schedule_config, parse_execution_target, parse_schedule_type, AgentExecutionTarget,
-    AgentScheduleType,
+    build_schedule_config, heartbeat_task_id, heartbeat_update_has_fields, parse_execution_target,
+    parse_schedule_type, AgentExecutionTarget, AgentScheduleType,
 };
 pub use data_read::{
     extract_json_array_from_ai_response, parse_rsshub_radar_rules, project_time_info, weekday_zh,
