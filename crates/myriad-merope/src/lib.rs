@@ -7,7 +7,6 @@ mod anime25d_contract;
 mod onboarding;
 mod performance;
 mod persona;
-mod report_dna;
 mod rig;
 mod rig_contract;
 mod rig_outfit;
@@ -23,13 +22,6 @@ pub use performance::{
     parse_performance_plan, ChatPerformanceBaseline, ChatPerformanceCue, ChatPerformancePlan,
 };
 pub use persona::{fallback_persona_draft, persona_draft_is_complete, sanitize_persona_draft};
-pub use report_dna::{
-    build_report_dna_bundle, complete_ai_tag_deck, fallback_tag_deck, is_reasonable_persona_tag,
-    localize_report_seed_keys, looks_like_job_or_identity_label, looks_like_media_catalog_label,
-    sanitize_report_dna_tags, seed_shuffle, ReportDnaBundle, ReportDnaEvidence, ReportDnaSource,
-    MAX_REPORT_DNA_REPORTS, MAX_REPORT_INSIGHT_CHARS, MAX_REPORT_NOTE_CHARS,
-    MAX_REPORT_SUMMARY_CHARS, PERSONA_POOL_KEYS,
-};
 pub use rig::{
     compile_layered_rig, migrate_rig_manifest, validate_character_asset_source, RigBone,
     RigCompileSource, RigLayerSource, RigManifest, RigMotionProfile, RigOutfitProfile, RigPart,

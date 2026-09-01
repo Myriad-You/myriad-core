@@ -104,7 +104,6 @@ pub const RIG_STATE_BEHAVIOR_RESOURCES: &[&str] = &[
     "body.arm.right",
     "body.hand.left",
     "body.hand.right",
-    "body.legs",
     "secondary.hair",
     "secondary.clothing",
     "secondary.bust",
