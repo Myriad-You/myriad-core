@@ -45,18 +45,21 @@ pub use visual_contract::{
     appearance_visual_profile, build_character_asset_contract, character_asset_contract_fingerprint,
 };
 pub use visual_design::{
-    character_module, clothing_style_grammar, clothing_style_of, flatten_visual_identity,
-    normalize_clothing_style, sanitize_outfit_module, sanitize_upper_body_visual_identity,
-    sanitize_wardrobe, stamp_clothing_style, upper_body_visual_identity_is_complete, CLOTHING_STYLES,
-    MAX_WARDROBE_ID_CHARS, MAX_WARDROBE_ITEMS, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+    active_outfit_generation_fingerprint, active_outfit_rig_asset_id, bind_active_outfit_rig,
+    character_module, clothing_style_grammar, clothing_style_of, detach_active_outfit_rig,
+    ensure_default_wardrobe, flatten_visual_identity, normalize_clothing_style,
+    reconcile_wardrobe_rigs, sanitize_outfit_module, sanitize_upper_body_visual_identity,
+    sanitize_wardrobe, stamp_clothing_style, upper_body_visual_identity_is_complete,
+    CLOTHING_STYLES, DEFAULT_WARDROBE_ID, MAX_WARDROBE_ID_CHARS, MAX_WARDROBE_ITEMS,
+    UPPER_BODY_VISUAL_IDENTITY_FIELDS,
 };
 pub use visual_prompt::{
     build_character_visual_edit_prompt, build_character_visual_prompt,
-    normalize_visual_identity_for_prompt, normalize_visual_requirements_for_design_with_gender,
-    persona_has_literary_sludge, portrait_adjustment_is_within_scope,
-    visual_identity_has_body_proportion_drift, visual_identity_has_camera_composition_drift,
-    visual_identity_has_facial_construction_drift, visual_identity_has_high_collar,
-    visual_identity_has_literary_sludge, visual_identity_matches_gender_presentation,
-    visual_identity_violates_style_lock, MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL,
-    MEROPE_VISUAL_SCHOOL_VERSION,
+    ensure_visual_identity_states_gender, normalize_visual_identity_for_prompt,
+    normalize_visual_requirements_for_design_with_gender, persona_has_literary_sludge,
+    portrait_adjustment_is_within_scope, visual_identity_has_body_proportion_drift,
+    visual_identity_has_camera_composition_drift, visual_identity_has_facial_construction_drift,
+    visual_identity_has_high_collar, visual_identity_has_literary_sludge,
+    visual_identity_matches_gender_presentation, visual_identity_violates_style_lock,
+    MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
 };
