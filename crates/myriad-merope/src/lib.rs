@@ -46,8 +46,9 @@ pub use visual_contract::{
 };
 pub use visual_design::{
     character_module, clothing_style_grammar, clothing_style_of, flatten_visual_identity,
-    normalize_clothing_style, sanitize_upper_body_visual_identity, stamp_clothing_style,
-    upper_body_visual_identity_is_complete, CLOTHING_STYLES, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+    normalize_clothing_style, sanitize_outfit_module, sanitize_upper_body_visual_identity,
+    sanitize_wardrobe, stamp_clothing_style, upper_body_visual_identity_is_complete, CLOTHING_STYLES,
+    MAX_WARDROBE_ID_CHARS, MAX_WARDROBE_ITEMS, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
 };
 pub use visual_prompt::{
     build_character_visual_edit_prompt, build_character_visual_prompt,

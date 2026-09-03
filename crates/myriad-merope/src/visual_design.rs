@@ -1,4 +1,10 @@
+use std::collections::HashSet;
+
 use serde_json::{json, Map, Value};
+
+/// Saved outfits for one character. Face and hair stay on the character module.
+pub const MAX_WARDROBE_ITEMS: usize = 8;
+pub const MAX_WARDROBE_ID_CHARS: usize = 64;
 
 /// Required visual-identity fields for a close upper-body Merope portrait.
 /// Lower-body garments, footwear, and articulated limb design intentionally do
@@ -146,6 +152,41 @@ pub fn character_module(value: &Value) -> Option<Value> {
     sanitize_upper_body_visual_identity(value)?
         .get("character")
         .cloned()
+}
+
+pub fn sanitize_outfit_module(value: &Value) -> Option<Value> {
+    sanitize_fields(value, &OUTFIT_VISUAL_FIELDS)
+}
+
+/// Owner-saved outfits. Each item is one replaceable `outfit` module plus style.
+pub fn sanitize_wardrobe(value: &Value) -> Option<Vec<Value>> {
+    let items = value.as_array()?;
+    if items.len() > MAX_WARDROBE_ITEMS {
+        return None;
+    }
+    let mut out = Vec::with_capacity(items.len());
+    let mut seen = HashSet::new();
+    for item in items {
+        let id = item.get("id").and_then(Value::as_str)?.trim();
+        if id.is_empty()
+            || id.chars().count() > MAX_WARDROBE_ID_CHARS
+            || id.chars().any(char::is_control)
+            || !seen.insert(id.to_string())
+        {
+            return None;
+        }
+        let style = item
+            .get("clothingStyle")
+            .and_then(Value::as_str)
+            .and_then(normalize_clothing_style)?;
+        let outfit = sanitize_outfit_module(item.get("outfit")?)?;
+        out.push(json!({
+            "id": id,
+            "clothingStyle": style,
+            "outfit": outfit,
+        }));
+    }
+    Some(out)
 }
 
 pub fn clothing_style_of(value: &Value) -> Option<&'static str> {
@@ -398,5 +439,33 @@ mod tests {
             first["outfit"]["outfitConstruction"]
         );
         assert_eq!(clothing_style_of(&swapped), Some("urban"));
+    }
+
+    #[test]
+    fn wardrobe_keeps_outfit_modules_and_rejects_bad_ids() {
+        let outfit = json!({
+            "upperBodySilhouette": complete_flat()["visualIdentity"]["upperBodySilhouette"],
+            "outfitConstruction": complete_flat()["visualIdentity"]["outfitConstruction"],
+            "sleeveArmDesign": complete_flat()["visualIdentity"]["sleeveArmDesign"],
+            "materialPlan": complete_flat()["visualIdentity"]["materialPlan"],
+            "heroAccessory": complete_flat()["visualIdentity"]["heroAccessory"],
+            "paletteHint": complete_flat()["visualIdentity"]["paletteHint"],
+            "motif": complete_flat()["visualIdentity"]["motif"]
+        });
+        let wardrobe = json!([
+            { "id": "w-a", "clothingStyle": "urban", "outfit": outfit },
+            { "id": "w-b", "clothingStyle": "idol", "outfit": outfit }
+        ]);
+        let sanitized = sanitize_wardrobe(&wardrobe).unwrap();
+        assert_eq!(sanitized.len(), 2);
+        assert_eq!(sanitized[0]["clothingStyle"], "urban");
+        assert!(sanitize_outfit_module(&outfit).is_some());
+
+        let duplicate = json!([
+            { "id": "w-a", "clothingStyle": "urban", "outfit": outfit },
+            { "id": "w-a", "clothingStyle": "idol", "outfit": outfit }
+        ]);
+        assert!(sanitize_wardrobe(&duplicate).is_none());
+        assert!(sanitize_wardrobe(&json!([])).unwrap().is_empty());
     }
 }
