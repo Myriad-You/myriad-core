@@ -5,6 +5,7 @@
 
 mod anime25d_contract;
 mod onboarding;
+mod outfit_overlay;
 mod performance;
 mod persona;
 mod rig;
@@ -18,6 +19,10 @@ mod visual_design;
 mod visual_prompt;
 
 pub use onboarding::{sanitize_onboarding_tags, MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS};
+pub use outfit_overlay::{
+    format_chat_wardrobe_section, looks_from_visual_profile, resolve_chat_outfit_overlay,
+    wardrobe_look, worn_outfit_id, OverlayDecision, WardrobeLook,
+};
 pub use performance::{
     parse_performance_plan, ChatPerformanceBaseline, ChatPerformanceCue, ChatPerformancePlan,
 };
