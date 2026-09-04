@@ -20,8 +20,9 @@ mod visual_prompt;
 
 pub use onboarding::{sanitize_onboarding_tags, MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS};
 pub use outfit_overlay::{
-    format_chat_wardrobe_section, looks_from_visual_profile, resolve_chat_outfit_overlay,
-    wardrobe_look, worn_outfit_id, OverlayDecision, WardrobeLook,
+    format_chat_wardrobe_section, hold_incomplete_wear_marker, looks_from_visual_profile,
+    resolve_chat_outfit_overlay, resolve_wear_directive, split_chat_wear_directive, wardrobe_look,
+    worn_outfit_id, OverlayDecision, WardrobeLook, WearDirective,
 };
 pub use performance::{
     parse_performance_plan, ChatPerformanceBaseline, ChatPerformanceCue, ChatPerformancePlan,

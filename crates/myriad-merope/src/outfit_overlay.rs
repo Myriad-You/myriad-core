@@ -1,7 +1,7 @@
 //! Chat-only temporary outfit overlay.
 //!
-//! Picks an already-saved wardrobe item from the addressee's line. It never
-//! writes `activeOutfitId` or the live rig pointer.
+//! Chat Lite decides whether to change clothes. The live face only executes a
+//! saved wardrobe label. It never writes `activeOutfitId` or the live rig pointer.
 
 use serde_json::Value;
 
@@ -24,10 +24,21 @@ const CHANGE_PHRASES: &[&str] = &[
     "换装",
     "穿上",
     "改穿",
+    "想看你",
+    "看看你",
+    "看你穿",
+    "看你换",
+    "给我看",
+    "让我看",
+    "穿给我看",
+    "打扮成",
+    "装扮成",
     "着替えて",
     "着替",
     "服を換えて",
     "服を着て",
+    "着てるの見せ",
+    "見たい",
 ];
 
 const CHANGE_LATIN: &[&str] = &[
@@ -36,6 +47,11 @@ const CHANGE_LATIN: &[&str] = &[
     "change outfit",
     "put on",
     "wear",
+    "show me",
+    "let me see",
+    "want to see you",
+    "wanna see you",
+    "see you in",
 ];
 
 const REVERT_PHRASES: &[&str] = &[
@@ -86,6 +102,17 @@ pub enum OverlayDecision<'a> {
     Wear(&'a str),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WearDirective {
+    Revert,
+    Label(String),
+}
+
+const WEAR_OPEN: &str = "[[wear:";
+const WEAR_CLOSE: &str = "]]";
+const WEAR_OPEN_UNI: &str = "⟦wear:";
+const WEAR_CLOSE_UNI: &str = "⟧";
+
 pub fn worn_outfit_id(profile: &Value) -> Option<&str> {
     profile.get("activeOutfitId").and_then(Value::as_str)
 }
@@ -117,8 +144,10 @@ fn look_from_item(item: &Value) -> Option<WardrobeLook> {
         .filter(|value| !value.is_empty());
     let label = if id == DEFAULT_WARDROBE_ID {
         DEFAULT_WARDROBE_LABEL.to_string()
+    } else if let Some(name) = name {
+        name.to_string()
     } else {
-        name.unwrap_or(clothing_style).to_string()
+        spoken_style_label(clothing_style).to_string()
     };
     let construction = item
         .get("outfit")
@@ -180,7 +209,7 @@ fn clothing_style_aliases(style: &str) -> &'static [&'static str] {
         "sci-fi" => &["科幻"],
         "formal" => &["正装", "礼服"],
         "sport" => &["运动"],
-        "idol" => &["偶像"],
+        "idol" => &["偶像", "舞台", "舞台装", "舞台服", "演出", "演出服", "stage"],
         "gothic" => &["哥特"],
         "lounge" => &["居家", "睡衣"],
         "royal" => &["宫廷"],
@@ -201,23 +230,109 @@ pub fn format_chat_wardrobe_section(
         return None;
     }
     let showing_id = overlay_id.unwrap_or(worn_id);
+    let catalog: Vec<&WardrobeLook> = looks.iter().filter(|look| look.playable()).collect();
+    if catalog.is_empty() {
+        return None;
+    }
     let showing = wardrobe_look(looks, showing_id)
         .map(|look| look.label.as_str())
         .unwrap_or(showing_id);
-    let names = looks
-        .iter()
-        .map(|look| look.label.as_str())
-        .collect::<Vec<_>>()
-        .join("、");
     let wearing = if overlay_id.is_some() && overlay_id != Some(worn_id) {
         format!("这一轮你穿着：{showing}（聊天里临时换的，不是正在穿着的那套）")
     } else {
         format!("这一轮你穿着：{showing}")
     };
+    let lines = catalog
+        .iter()
+        .map(|look| format!("- {}", catalog_line(look, showing_id)))
+        .collect::<Vec<_>>()
+        .join("\n");
     Some(format!(
-        "## 衣服\n{wearing}\n衣柜里有：{names}\n\
-         对方让你换衣服时按性格接话。换装由现场处理，不要念清单或编号，也不要说你做不到换衣服。"
+        "## 衣服\n{wearing}\n{lines}\n\
+         这一轮要不要换衣服由你决定。对方点到哪套、想看哪套，对上了就换。\
+         要换时在全文最后单独一行只写 [[wear:称呼]]，称呼必须是上面每行「-」后面那个名字；\
+         换回来写 [[wear:回来]]。也可叫的名字只帮你认人，不要写进 [[wear:]]。\
+         这一行由现场执行，不要念出来。不换就不要写这一行。"
     ))
+}
+
+fn spoken_style_label(style: &str) -> &str {
+    clothing_style_aliases(style)
+        .iter()
+        .copied()
+        .find(|alias| alias.chars().any(|ch| !ch.is_ascii()))
+        .unwrap_or(style)
+}
+
+fn catalog_line(look: &WardrobeLook, showing_id: &str) -> String {
+    let mut line = look.label.clone();
+    let construction = look
+        .hints
+        .iter()
+        .filter(|hint| {
+            *hint != &look.label
+                && hint.chars().any(|ch| !ch.is_ascii())
+                && hint.chars().count() > 4
+        })
+        .max_by_key(|hint| hint.chars().count())
+        .cloned();
+    if let Some(construction) = construction.as_deref() {
+        if !look.label.contains(construction) {
+            line.push_str("：");
+            line.push_str(construction);
+        }
+    }
+    let aliases: Vec<&str> = look
+        .hints
+        .iter()
+        .map(String::as_str)
+        .filter(|hint| {
+            *hint != look.label
+                && hint.chars().any(|ch| !ch.is_ascii())
+                && !is_generic_hint(hint)
+                && hint.chars().count() <= 6
+                && construction.as_deref() != Some(*hint)
+        })
+        .take(4)
+        .collect();
+    if !aliases.is_empty() {
+        line.push_str("。也可叫");
+        line.push_str(&aliases.join("、"));
+    }
+    if look.id == showing_id {
+        line.push_str("。这一轮穿着");
+    }
+    line
+}
+
+pub fn split_chat_wear_directive(raw: &str) -> (String, Option<WearDirective>) {
+    let mut spoken = raw.to_string();
+    let mut directive = None;
+    while let Some((rest, inner)) = take_wear_marker(&spoken) {
+        spoken = rest;
+        directive = parse_wear_inner(&inner);
+    }
+    (collapse_blank_lines(&spoken), directive)
+}
+
+/// Drop an unfinished `[[wear:` / `⟦wear:` suffix so streaming does not flash it.
+pub fn hold_incomplete_wear_marker(spoken: &str) -> &str {
+    let hold = incomplete_wear_open_len(spoken);
+    &spoken[..spoken.len() - hold]
+}
+
+pub fn resolve_wear_directive<'a>(
+    directive: &WearDirective,
+    looks: &'a [WardrobeLook],
+    worn_id: &str,
+    current_overlay: Option<&str>,
+) -> OverlayDecision<'a> {
+    match directive {
+        WearDirective::Revert => finalize(OverlayDecision::Clear, worn_id, current_overlay),
+        WearDirective::Label(label) => {
+            resolve_chat_outfit_overlay(label, looks, worn_id, current_overlay)
+        }
+    }
 }
 
 pub fn resolve_chat_outfit_overlay<'a>(
@@ -230,10 +345,7 @@ pub fn resolve_chat_outfit_overlay<'a>(
     if has_revert_intent(input) {
         return finalize(OverlayDecision::Clear, worn_id, current_overlay);
     }
-    if !has_change_intent(input) {
-        return OverlayDecision::Unchanged;
-    }
-    if wants_other(input) {
+    if wants_other(input) && has_change_intent(input) {
         let others: Vec<&WardrobeLook> = looks
             .iter()
             .filter(|look| look.playable() && look.id != showing)
@@ -391,6 +503,80 @@ fn is_generic_hint(hint: &str) -> bool {
         .any(|generic| folded.eq_ignore_ascii_case(generic))
 }
 
+fn take_wear_marker(text: &str) -> Option<(String, String)> {
+    let ascii = text.find(WEAR_OPEN).map(|at| (at, WEAR_OPEN, WEAR_CLOSE));
+    let uni = text
+        .find(WEAR_OPEN_UNI)
+        .map(|at| (at, WEAR_OPEN_UNI, WEAR_CLOSE_UNI));
+    let (start, open, close) = match (ascii, uni) {
+        (Some(ascii), Some(uni)) if uni.0 < ascii.0 => uni,
+        (Some(ascii), _) => ascii,
+        (None, Some(uni)) => uni,
+        (None, None) => return None,
+    };
+    let inner_at = start + open.len();
+    let after = text.get(inner_at..)?;
+    let close_at = after.find(close)?;
+    let inner = after[..close_at].trim().to_string();
+    let end = inner_at + close_at + close.len();
+    let mut spoken = String::with_capacity(text.len().saturating_sub(end - start));
+    spoken.push_str(&text[..start]);
+    spoken.push_str(&text[end..]);
+    Some((spoken, inner))
+}
+
+fn parse_wear_inner(inner: &str) -> Option<WearDirective> {
+    let label = inner.trim();
+    if label.is_empty() {
+        return Some(WearDirective::Revert);
+    }
+    let folded = label.to_ascii_lowercase();
+    if matches!(
+        label,
+        "回来" | "换回" | "换回来" | "原来" | "默认" | "回来的"
+    ) || matches!(
+        folded.as_str(),
+        "revert" | "back" | "original" | "default"
+    ) {
+        return Some(WearDirective::Revert);
+    }
+    Some(WearDirective::Label(label.to_string()))
+}
+
+fn collapse_blank_lines(raw: &str) -> String {
+    let mut lines = Vec::new();
+    let mut blank = false;
+    for line in raw.lines() {
+        if line.trim().is_empty() {
+            if !lines.is_empty() {
+                blank = true;
+            }
+            continue;
+        }
+        if blank {
+            lines.push(String::new());
+            blank = false;
+        }
+        lines.push(line.trim_end().to_string());
+    }
+    lines.join("\n").trim().to_string()
+}
+
+fn incomplete_wear_open_len(spoken: &str) -> usize {
+    for open in [WEAR_OPEN, WEAR_OPEN_UNI] {
+        for len in (1..=open.len()).rev() {
+            if !open.is_char_boundary(len) {
+                continue;
+            }
+            let prefix = &open[..len];
+            if spoken.ends_with(prefix) {
+                return prefix.len();
+            }
+        }
+    }
+    0
+}
+
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -448,10 +634,74 @@ mod tests {
     }
 
     #[test]
-    fn naming_an_outfit_without_a_change_verb_does_not_switch() {
+    fn lite_wear_marker_is_stripped_and_resolved() {
+        let (spoken, directive) = split_chat_wear_directive("行啊，等着。我去换。\n[[wear:舞台装]]");
+        assert_eq!(spoken, "行啊，等着。我去换。");
+        assert_eq!(
+            directive,
+            Some(WearDirective::Label("舞台装".into()))
+        );
+        let (spoken, directive) = split_chat_wear_directive("[[wear:回来]]\n好。");
+        assert_eq!(spoken, "好。");
+        assert_eq!(directive, Some(WearDirective::Revert));
+        let (spoken, directive) = split_chat_wear_directive("你好");
+        assert_eq!(spoken, "你好");
+        assert_eq!(directive, None);
+        assert_eq!(hold_incomplete_wear_marker("行啊[[wear:"), "行啊");
+        assert_eq!(hold_incomplete_wear_marker("行啊。"), "行啊。");
+        let mut stage = coat();
+        stage.id = "w-stage".into();
+        stage.label = "舞台装".into();
+        stage.hints = vec!["舞台装".into()];
+        let looks = vec![default_look(), stage];
+        assert_eq!(
+            resolve_wear_directive(
+                &WearDirective::Label("舞台装".into()),
+                &looks,
+                "default",
+                None
+            ),
+            OverlayDecision::Wear("w-stage")
+        );
+        assert_eq!(
+            resolve_wear_directive(&WearDirective::Revert, &looks, "default", Some("w-stage")),
+            OverlayDecision::Clear
+        );
+    }
+
+    #[test]
+    fn naming_a_unique_outfit_switches() {
         assert_eq!(
             resolve_chat_outfit_overlay("这件冬日大衣真好看", &catalog(), "default", None),
+            OverlayDecision::Wear("w-coat")
+        );
+        assert_eq!(
+            resolve_chat_outfit_overlay("你好", &catalog(), "default", None),
             OverlayDecision::Unchanged
+        );
+    }
+
+    #[test]
+    fn asking_to_see_a_named_outfit_wears_that_set() {
+        let mut stage = coat();
+        stage.id = "w-stage".into();
+        stage.label = "舞台装".into();
+        stage.clothing_style = "idol".into();
+        stage.hints = vec![
+            "舞台装".into(),
+            "idol".into(),
+            "偶像".into(),
+            "舞台".into(),
+            "stage".into(),
+        ];
+        let looks = vec![default_look(), stage, uniform()];
+        assert_eq!(
+            resolve_chat_outfit_overlay("我想看你舞台装", &looks, "default", None),
+            OverlayDecision::Wear("w-stage")
+        );
+        assert_eq!(
+            resolve_chat_outfit_overlay("show me your stage outfit", &looks, "default", None),
+            OverlayDecision::Wear("w-stage")
         );
     }
 
@@ -556,9 +806,16 @@ mod tests {
         assert_eq!(worn_outfit_id(&profile), Some("default"));
         let section = format_chat_wardrobe_section(&looks, "default", Some("w-coat")).unwrap();
         assert!(section.contains("冬日大衣（聊天里临时换的"));
-        assert!(section.contains("默认服装、冬日大衣"));
+        assert!(section.contains("- 默认服装：水手领内搭叠短外套"));
+        assert!(section.contains("- 冬日大衣：高领内搭叠短大衣"));
+        assert!(section.contains("也可叫都市"));
+        assert!(section.contains("也可叫日常"));
+        assert!(section.contains("这一轮穿着"));
         assert!(!section.contains("w-coat"));
         assert!(!section.contains("activeOutfitId"));
         assert!(!section.contains("JSON"));
+        assert!(!section.contains("portraitAssetId"));
+        assert!(section.contains("[[wear:"));
+        assert!(section.contains("由你决定"));
     }
 }
