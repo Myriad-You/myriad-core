@@ -14,6 +14,7 @@ mod rig_outfit;
 mod rig_semantics;
 mod rig_spatial;
 mod rig_state;
+mod speech_plan;
 mod sticker_avatar;
 mod visual_contract;
 mod visual_design;
@@ -37,8 +38,9 @@ pub use rig::{
 };
 pub use rig_contract::{
     CHARACTER_ASSET_CONTRACT_VERSION, PERFORMANCE_BASELINE_EXPRESSIONS, PERFORMANCE_CUE_INTENTS,
-    PERFORMANCE_INTERRUPT_MODES, PERFORMANCE_POSTURES, PORTRAIT_CANVAS_HEIGHT,
-    PORTRAIT_CANVAS_WIDTH, PORTRAIT_GENERATION_HEIGHT, PORTRAIT_GENERATION_WIDTH,
+    PERFORMANCE_INTERRUPT_MODES, PERFORMANCE_PHRASE_INTENTS, PERFORMANCE_POSTURES,
+    PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, PORTRAIT_GENERATION_HEIGHT,
+    PORTRAIT_GENERATION_WIDTH,
 };
 pub use rig_semantics::RigSemantics;
 pub use rig_spatial::RigSpatialProfile;
@@ -48,6 +50,7 @@ pub use rig_state::{
     RigStateSummary, MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES,
     RIG_STATE_MOUTH_INTENTS, RIG_STATE_SPECIAL_INTENTS,
 };
+pub use speech_plan::{grounded_speech_phrases, SpeechPhrase};
 pub use sticker_avatar::{
     build_sticker_avatar_contract, build_sticker_avatar_prompt,
     MEROPE_STICKER_STYLE_REFERENCE_SHA256, STICKER_AVATAR_CONTRACT_VERSION, STICKER_AVATAR_SIZE,
