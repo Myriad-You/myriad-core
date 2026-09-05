@@ -231,7 +231,15 @@ fn push_hint(hints: &mut Vec<String>, raw: &str) {
 
 fn clothing_style_aliases(style: &str) -> &'static [&'static str] {
     match style {
-        "everyday" => &["日常", "便服", "日常便装", "便装", "平时", "casual", "everyday"],
+        "everyday" => &[
+            "日常",
+            "便服",
+            "日常便装",
+            "便装",
+            "平时",
+            "casual",
+            "everyday",
+        ],
         "uniform" => &["校服", "制服", "水手服", "制服裙", "uniform"],
         "fantasy" => &["幻想", "奇幻", "奇幻冒险", "fantasy"],
         "urban" => &["都市", "街头", "城市", "urban", "city"],
@@ -368,16 +376,56 @@ fn catalog_aliases<'a>(
 }
 
 const GARMENT_WORDS: &[&str] = &[
-    "马甲", "披肩", "缎带", "圆领", "方领", "高领", "水手领", "肩翼", "荷叶", "胸衣", "开窗",
-    "佩普林", "大衣", "风衣", "披风", "斗篷", "铠甲", "浴衣", "羽织", "旗袍", "汉服", "西装",
-    "背心", "衬衫", "毛衣", "睡衣", "礼服", "亮片", "夹克", "卫衣", "抹胸", "吊带", "云肩",
-    "束腰", "头纱", "面纱", "皇冠", "蝴蝶结", "围巾", "短裙", "长裙", "腰带", "水手服", "校服",
+    "马甲",
+    "披肩",
+    "缎带",
+    "圆领",
+    "方领",
+    "高领",
+    "水手领",
+    "肩翼",
+    "荷叶",
+    "胸衣",
+    "开窗",
+    "佩普林",
+    "大衣",
+    "风衣",
+    "披风",
+    "斗篷",
+    "铠甲",
+    "浴衣",
+    "羽织",
+    "旗袍",
+    "汉服",
+    "西装",
+    "背心",
+    "衬衫",
+    "毛衣",
+    "睡衣",
+    "礼服",
+    "亮片",
+    "夹克",
+    "卫衣",
+    "抹胸",
+    "吊带",
+    "云肩",
+    "束腰",
+    "头纱",
+    "面纱",
+    "皇冠",
+    "蝴蝶结",
+    "围巾",
+    "短裙",
+    "长裙",
+    "腰带",
+    "水手服",
+    "校服",
 ];
 
 const SKIP_CONSTRUCTION_PIECES: &[&str] = &[
-    "内层", "外层", "中层", "下摆", "胸前", "高腰", "无袖", "闭合", "敞开", "露出", "短身",
-    "色块", "搭扣", "中线", "主导", "轮廓", "驱动", "完全", "左右", "颈部", "锁骨", "切断",
-    "收束", "结构", "分区", "以前", "自右", "垂下", "弧形",
+    "内层", "外层", "中层", "下摆", "胸前", "高腰", "无袖", "闭合", "敞开", "露出", "短身", "色块",
+    "搭扣", "中线", "主导", "轮廓", "驱动", "完全", "左右", "颈部", "锁骨", "切断", "收束", "结构",
+    "分区", "以前", "自右", "垂下", "弧形",
 ];
 
 fn construction_tokens(construction: &str) -> Vec<String> {
@@ -784,10 +832,8 @@ fn parse_wear_inner(inner: &str) -> Option<WearDirective> {
     if matches!(
         label,
         "回来" | "换回" | "换回来" | "原来" | "默认" | "回来的"
-    ) || matches!(
-        folded.as_str(),
-        "revert" | "back" | "original" | "default"
-    ) {
+    ) || matches!(folded.as_str(), "revert" | "back" | "original" | "default")
+    {
         return Some(WearDirective::Revert);
     }
     Some(WearDirective::Label(label.to_string()))
@@ -888,19 +934,14 @@ mod tests {
 
     #[test]
     fn lite_wear_marker_is_stripped_and_resolved() {
-        let (spoken, directive) = split_chat_wear_directive("行啊，等着。我去换。\n[[wear:舞台装]]");
+        let (spoken, directive) =
+            split_chat_wear_directive("行啊，等着。我去换。\n[[wear:舞台装]]");
         assert_eq!(spoken, "行啊，等着。我去换。");
-        assert_eq!(
-            directive,
-            Some(WearDirective::Label("舞台装".into()))
-        );
+        assert_eq!(directive, Some(WearDirective::Label("舞台装".into())));
         let (spoken, directive) =
             split_chat_wear_directive("换好了。\n[[wear:舞台装：斜裁舞台马甲]]");
         assert_eq!(spoken, "换好了。");
-        assert_eq!(
-            directive,
-            Some(WearDirective::Label("舞台装".into()))
-        );
+        assert_eq!(directive, Some(WearDirective::Label("舞台装".into())));
         let (spoken, directive) = split_chat_wear_directive("[[wear:回来]]\n好。");
         assert_eq!(spoken, "好。");
         assert_eq!(directive, Some(WearDirective::Revert));
@@ -1070,7 +1111,10 @@ mod tests {
         assert!(section.contains("- 冬日大衣：高领内搭叠短大衣"));
         assert!(section.contains("也可叫都市"));
         assert!(!section.contains("也可叫日常"));
-        assert!(!looks[0].hints.iter().any(|hint| hint == "日常" || hint == "everyday"));
+        assert!(!looks[0]
+            .hints
+            .iter()
+            .any(|hint| hint == "日常" || hint == "everyday"));
         assert!(section.contains("这一轮穿着"));
         assert!(!section.contains("w-coat"));
         assert!(!section.contains("activeOutfitId"));
@@ -1101,16 +1145,14 @@ mod tests {
         });
         let looks = looks_from_visual_profile(&profile);
         assert_eq!(looks[0].label, DEFAULT_WARDROBE_LABEL);
-        assert!(
-            looks[0]
-                .hints
-                .iter()
-                .all(|hint| hint == DEFAULT_WARDROBE_LABEL
-                    || hint == "默认"
-                    || hint == "default"
-                    || hint == "default outfit"
-                    || hint.contains("方领"))
-        );
+        assert!(looks[0]
+            .hints
+            .iter()
+            .all(|hint| hint == DEFAULT_WARDROBE_LABEL
+                || hint == "默认"
+                || hint == "default"
+                || hint == "default outfit"
+                || hint.contains("方领")));
         assert_eq!(looks[1].id, "w-stage-2");
         assert_eq!(looks[1].label, "舞台装");
         let section = format_chat_wardrobe_section(&looks, "default", None).unwrap();
@@ -1265,11 +1307,7 @@ mod tests {
             None
         );
         assert_eq!(
-            wear_directive_after_reply(
-                "想看你舞台装",
-                "好。",
-                Some(WearDirective::Revert)
-            ),
+            wear_directive_after_reply("想看你舞台装", "好。", Some(WearDirective::Revert)),
             Some(WearDirective::Revert)
         );
     }

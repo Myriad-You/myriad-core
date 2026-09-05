@@ -14,6 +14,7 @@ mod rig_outfit;
 mod rig_semantics;
 mod rig_spatial;
 mod rig_state;
+mod sticker_avatar;
 mod visual_contract;
 mod visual_design;
 mod visual_prompt;
@@ -46,6 +47,10 @@ pub use rig_state::{
     plan_is_empty, refine_performance_plan, round_motion_style, sanitize_rig_state,
     RigStateSummary, MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES,
     RIG_STATE_MOUTH_INTENTS, RIG_STATE_SPECIAL_INTENTS,
+};
+pub use sticker_avatar::{
+    build_sticker_avatar_contract, build_sticker_avatar_prompt,
+    MEROPE_STICKER_STYLE_REFERENCE_SHA256, STICKER_AVATAR_CONTRACT_VERSION, STICKER_AVATAR_SIZE,
 };
 pub use visual_contract::{
     appearance_visual_profile, build_character_asset_contract, character_asset_contract_fingerprint,
