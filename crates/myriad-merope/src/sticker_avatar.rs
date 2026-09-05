@@ -7,7 +7,7 @@
 use serde_json::{json, Value};
 
 /// 造型语言或参考图角色变了就 bump。它进指纹，旧头像不会被当成新契约的产物。
-pub const STICKER_AVATAR_CONTRACT_VERSION: &str = "logo-sticker-chibi-v2";
+pub const STICKER_AVATAR_CONTRACT_VERSION: &str = "logo-sticker-chibi-v3";
 
 /// 正方形。头像位全是圆形或方形裁切，非 1:1 一定被裁掉耳朵或发梢。
 pub const STICKER_AVATAR_SIZE: u32 = 1024;
@@ -17,25 +17,29 @@ pub const MEROPE_STICKER_STYLE_REFERENCE_SHA256: &str =
     "1015f09392ee01823ce6dc1a78521d04bb734d0585864e7668f380420a4b106f";
 
 /// 从身份里挑进提示词的字段。只留重绘时最容易漂的那几项——
-/// 脸型和体型在 Q 版里本来就要重新概括，写进去反而打架。
+/// 脸型和体型在 Q 版里本来就要重新概括，写进去反而打架。领口和上装会把模型
+/// 往胸像上拉，头像只要头，所以也不带衣服结构。
 const STICKER_IDENTITY_FIELDS: &[(&str, &str)] = &[
     ("hairShape", "Hair color and cut"),
     ("eyeDesign", "Eye color and acting"),
-    ("heroAccessory", "Signature accessories to keep"),
+    ("heroAccessory", "Signature head accessories to keep"),
     ("paletteHint", "Palette"),
     ("motif", "Motif"),
-    ("outfitConstruction", "Collar and upper garment"),
 ];
 
-const STICKER_AVATAR_SCHOOL: &str = "One die-cut chibi sticker of a single character, drawn in the same souvenir-sticker language as the attached style reference: a Q-style super-deformed head roughly two thirds of the artwork, a small implied neck and shoulder sliver, large glossy jewel eyes with layered irises and bright catchlights, tiny simplified nose and mouth, soft round cheeks with a light blush, hair built from a few broad tapered ribbon masses with clean overlaps and broad specular bands, thin colored linework, pastel high-key palette, and clean cel-to-gradient shading with a luminous finish.";
+const STICKER_AVATAR_SCHOOL: &str = "One die-cut chibi sticker of a single character, drawn in the same souvenir-sticker language as the attached style reference: a floating Q-style super-deformed head that fills most of the square, large glossy jewel eyes with layered irises and bright catchlights, tiny simplified nose and mouth, soft round cheeks with a light blush, hair built from a few broad tapered ribbon masses with clean overlaps and broad specular bands, thin colored linework, pastel high-key palette, and clean cel-to-gradient shading with a luminous finish.";
 
-const STICKER_AVATAR_CUT: &str = "Finish it as a physical die-cut sticker: one thick uniform white cut border tracing the whole silhouette including hair tips and accessories, a soft narrow drop shadow just outside that border, and nothing else. The character plus its white border must sit fully inside the square with even margins on all four sides; do not crop the hair, ears, or accessories at the edge. The area outside the white border is fully transparent — no backdrop, no card, no frame, no text, no watermark, no signature, no second character, no held props, no ground shadow beyond the sticker's own.";
+/// 头像位要的是一张头，不是胸像。肩、颈、领口一旦写进画面，圆形裁切里就会
+/// 剩下一截身子。头饰可以留，身子不行。
+const STICKER_AVATAR_FRAMING: &str = "Head only. Draw the complete head and hair, including ears and any hair clips, earrings, or other ornaments that sit on the head. Do not draw a neck, shoulders, collarbone, chest, torso, arms, hands, collar, garment, or any other body. The sticker is a floating head, not a bust, not a chibi figure, and not a head-and-shoulder crop. Ignore any accessory that would need a torso to exist.";
 
-const STICKER_AVATAR_ANCHOR: &str = "The attached portrait is the immutable anchor for who this character is — not for how they are posed or framed. Keep the same person: hair color and cut, eye color, skin tone, signature ornaments, collar shape, and costume palette all carry over unchanged. Restyle the proportions into chibi and warm the expression into a small friendly smile; do not redesign the identity, do not age the character up or down, and do not swap the outfit.";
+const STICKER_AVATAR_CUT: &str = "Finish it as a physical die-cut sticker: one thick uniform white cut border tracing the whole head-and-hair silhouette including hair tips and head-worn accessories, a soft narrow drop shadow just outside that border, and nothing else. The head plus its white border must sit fully inside the square with even margins on all four sides; do not crop the hair, ears, or accessories at the edge. The area outside the white border is fully transparent — no backdrop, no card, no frame, no text, no watermark, no signature, no second character, no held props, no body, no ground shadow beyond the sticker's own.";
+
+const STICKER_AVATAR_ANCHOR: &str = "The attached portrait is the immutable anchor for who this character is — not for how they are posed or framed. Keep the same person: hair color and cut, eye color, skin tone, and signature head-worn ornaments all carry over unchanged. Restyle the proportions into a chibi head and warm the expression into a small friendly smile; do not redesign the identity, do not age the character up or down, and do not invent a neck, body, collar, or outfit under the head.";
 
 /// 主立绘是 zero-yaw 严格正视的参考视图，那是为了给骨骼编译当底图。贴纸没有
 /// 这个负担：不明说姿态自由，模型会连正视一起抄，画出一个僵着的正脸 Q 版。
-const STICKER_AVATAR_POSE: &str = "Do not copy the reference photo's locked square-frontal camera. Pose the chibi the way a character sticker is posed: a small head tilt, a gentle three-quarter turn of the head or shoulders, and a slight lean are all welcome, and a relaxed asymmetric shoulder line reads better than a squared-up one. Keep both eyes visible and readable, and keep the face turned enough toward the viewer to stay friendly. Pick one lively pose rather than a neutral reference stance.";
+const STICKER_AVATAR_POSE: &str = "Do not copy the reference photo's locked square-frontal camera. Pose the chibi head the way a character-head sticker is posed: a small head tilt and a gentle three-quarter turn of the face are welcome. Keep both eyes visible and readable, and keep the face turned enough toward the viewer to stay friendly. Pick one lively head pose rather than a neutral reference stance. There is no shoulder line to square up because there is no body.";
 
 const STICKER_AVATAR_READABILITY: &str = "It will be shown as small as 32 pixels across: keep one clear silhouette, high value contrast between hair and face, no thin floating details that vanish when downscaled, and no fine text-like ornament.";
 
@@ -64,6 +68,7 @@ pub fn build_sticker_avatar_prompt(name: &str, visual_profile: &Value) -> String
 
     let mut parts = vec![
         STICKER_AVATAR_SCHOOL.to_string(),
+        STICKER_AVATAR_FRAMING.to_string(),
         STICKER_AVATAR_ANCHOR.to_string(),
         STICKER_AVATAR_POSE.to_string(),
         STICKER_AVATAR_CUT.to_string(),
@@ -108,7 +113,7 @@ pub fn build_sticker_avatar_contract(
         "output": {
             "width": STICKER_AVATAR_SIZE,
             "height": STICKER_AVATAR_SIZE,
-            "framing": "chibi-head-and-shoulder-sliver",
+            "framing": "chibi-head-only",
             "view": "free-sticker-pose",
             "background": "transparent",
             "cut": "white-die-cut-border",
@@ -151,6 +156,31 @@ mod tests {
         assert!(prompt.contains("transparent"));
         assert!(prompt.contains("immutable anchor for who this character is"));
         assert!(prompt.contains("Identity name: Arael."));
+    }
+
+    /// 头像只要头。肩、颈、领口一旦写进提示词，模型就会画出一截身子。
+    #[test]
+    fn prompt_asks_for_a_floating_head_and_forbids_the_body() {
+        let prompt = build_sticker_avatar_prompt("Arael", &profile());
+        assert!(prompt.contains("Head only"));
+        assert!(prompt.contains("floating head"));
+        assert!(prompt.contains("Do not draw a neck, shoulders, collarbone, chest, torso"));
+        assert!(prompt.contains("There is no shoulder line to square up because there is no body"));
+        for leaked in [
+            "shoulder sliver",
+            "neck and shoulder",
+            "asymmetric shoulder",
+            "head or shoulders",
+            "collar shape",
+            "水手领上衣配蝴蝶结",
+        ] {
+            assert!(
+                !prompt.contains(leaked),
+                "body/bust cue leaked into the sticker prompt: {leaked}"
+            );
+        }
+        let contract = build_sticker_avatar_contract("Arael", &profile(), "/uploads/a.png");
+        assert_eq!(contract["output"]["framing"], "chibi-head-only");
     }
 
     /// Q 版是这份契约的全部意义。主立绘那边禁 chibi，两份提示词不能串味。
