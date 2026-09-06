@@ -63,13 +63,15 @@ pub use visual_design::{
     character_module, clothing_style_grammar, clothing_style_of, detach_active_outfit_rig,
     ensure_default_wardrobe, flatten_visual_identity, normalize_clothing_style,
     reconcile_wardrobe_rigs, sanitize_outfit_module, sanitize_upper_body_visual_identity,
-    sanitize_wardrobe, stamp_clothing_style, upper_body_visual_identity_is_complete,
-    CLOTHING_STYLES, DEFAULT_WARDROBE_ID, MAX_WARDROBE_ID_CHARS, MAX_WARDROBE_ITEMS,
-    UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+    sanitize_upper_body_visual_identity_checked, sanitize_wardrobe, sanitize_wardrobe_checked,
+    stamp_clothing_style, upper_body_visual_identity_is_complete, VisualProfileIssue,
+    VisualProfileReason, CLOTHING_STYLES, DEFAULT_WARDROBE_ID, MAX_VISUAL_NOTES_CHARS,
+    MAX_WARDROBE_ID_CHARS, MAX_WARDROBE_ITEMS, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
 };
 pub use visual_prompt::{
     build_character_visual_edit_prompt, build_character_visual_prompt,
     ensure_visual_identity_states_gender, normalize_visual_identity_for_prompt,
+    normalize_visual_identity_for_prompt_checked,
     normalize_visual_requirements_for_design_with_gender, persona_has_literary_sludge,
     portrait_adjustment_is_within_scope, visual_identity_has_body_proportion_drift,
     visual_identity_has_camera_composition_drift, visual_identity_has_facial_construction_drift,

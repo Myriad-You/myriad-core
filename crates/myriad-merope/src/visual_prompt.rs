@@ -1,7 +1,9 @@
 use serde_json::Value;
 
 use crate::rig_contract::{PORTRAIT_ASPECT_HEIGHT, PORTRAIT_ASPECT_WIDTH};
-use crate::visual_design::UPPER_BODY_VISUAL_IDENTITY_FIELDS;
+use crate::visual_design::{
+    VisualProfileIssue, VisualProfileReason, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+};
 
 const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 12_000;
 
@@ -1106,7 +1108,13 @@ fn ascii_phrase_matches(text: &str, phrase: &str) -> bool {
 /// Generated designs already satisfy these locks; this also repairs legacy or
 /// manually edited fields before they can reintroduce an obsolete art direction.
 pub fn normalize_visual_identity_for_prompt(value: &Value) -> Option<Value> {
-    let mut identity = crate::visual_design::sanitize_upper_body_visual_identity(value)?;
+    normalize_visual_identity_for_prompt_checked(value).ok()
+}
+
+pub fn normalize_visual_identity_for_prompt_checked(
+    value: &Value,
+) -> Result<Value, VisualProfileIssue> {
+    let mut identity = crate::visual_design::sanitize_upper_body_visual_identity_checked(value)?;
     for (module, fields) in [
         (
             "character",
@@ -1117,9 +1125,16 @@ pub fn normalize_visual_identity_for_prompt(value: &Value) -> Option<Value> {
             crate::visual_design::OUTFIT_VISUAL_FIELDS.as_slice(),
         ),
     ] {
-        let target = identity.get_mut(module)?.as_object_mut()?;
+        let target = identity
+            .get_mut(module)
+            .and_then(Value::as_object_mut)
+            .ok_or_else(|| VisualProfileIssue::new(module, VisualProfileReason::NotObject))?;
         for (key, _) in fields {
-            let raw = target.get(*key)?.as_str()?;
+            let field = format!("{module}.{key}");
+            let raw = target
+                .get(*key)
+                .and_then(Value::as_str)
+                .ok_or_else(|| VisualProfileIssue::new(&field, VisualProfileReason::Empty))?;
             let normalized = if matches!(*key, "faceDesign" | "eyeDesign") {
                 normalize_identity_field(&normalize_facial_identity_cue(raw))
             } else if *key == "upperBodySilhouette" {
@@ -1135,12 +1150,15 @@ pub fn normalize_visual_identity_for_prompt(value: &Value) -> Option<Value> {
                 normalize_identity_field(raw)
             };
             if normalized.is_empty() {
-                return None;
+                return Err(VisualProfileIssue::new(
+                    field,
+                    VisualProfileReason::NeutralizedEmpty,
+                ));
             }
             target.insert((*key).to_string(), Value::String(normalized));
         }
     }
-    Some(identity)
+    Ok(identity)
 }
 
 fn normalize_identity_field(text: &str) -> String {
