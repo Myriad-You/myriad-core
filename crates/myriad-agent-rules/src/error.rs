@@ -77,6 +77,19 @@ pub fn analyze_error(
     capability_id: &str,
     params: &HashMap<String, Value>,
 ) -> ErrorAnalysis {
+    // A lost cross-process mutation response is not evidence that execution failed.
+    // Retrying with a new invocation could repeat an accepted side effect.
+    if error.starts_with("Execution outcome is unknown:") {
+        return ErrorAnalysis {
+            category: ErrorCategory::Unknown,
+            retryable: false,
+            param_fixes: HashMap::new(),
+            description: "Execution outcome is unknown; automatic retry is disabled".into(),
+            delay_multiplier: 1.0,
+            suggested_prepend_capability: None,
+            suggested_prepend_params: HashMap::new(),
+        };
+    }
     let error_lower = error.to_lowercase();
 
     // 0. 配置缺失 / API Key 未配置 —— 不可重试，不消耗 global_retry_budget
@@ -569,5 +582,21 @@ mod tests {
         let out = apply_param_fixes(&params, &fixes);
         assert_eq!(out["prompt"], "world");
         assert!(out["systemPrompt"].as_str().unwrap().contains("steer"));
+    }
+}
+
+#[cfg(test)]
+mod ambiguous_execution_tests {
+    use super::*;
+    #[test]
+    fn lost_mutation_response_cannot_be_retried_as_a_network_failure() {
+        let analysis = analyze_error(
+            "Execution outcome is unknown: network timeout",
+            "scheduler.create",
+            &HashMap::new(),
+        );
+        assert!(!analysis.retryable);
+        assert!(analysis.param_fixes.is_empty());
+        assert!(analysis.suggested_prepend_capability.is_none());
     }
 }

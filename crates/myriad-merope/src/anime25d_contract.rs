@@ -5,6 +5,20 @@ use serde_json::Value;
 const PLAYBACK_KIND: &str = "anime-2.5d-rig";
 const PLAYBACK_VERSION: u64 = 7;
 const PROJECT_NAME: &str = "Anime2.5DRig";
+
+/// The authoring endpoint may change only these residuals, not the rest of a package.
+pub fn replace_anime25d_pose_corrections(playback: &mut Value, corrections: &Value) -> bool {
+    if !playback_is_valid(playback) || !pose_corrections_are_valid(corrections) {
+        return false;
+    }
+    let profile = playback["shellProfile"].as_object_mut().unwrap();
+    if corrections.as_array().is_some_and(Vec::is_empty) {
+        profile.remove("poseCorrections");
+    } else {
+        profile.insert("poseCorrections".to_owned(), corrections.clone());
+    }
+    true
+}
 const MOUTH_MATERIALS: [&str; 6] = [
     "mouthClose",
     "mouthOpen",
@@ -222,6 +236,9 @@ fn shell_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
         || torso
             .get("yawFollowScale")
             .is_some_and(|value| !number_in_range(Some(value), 0.0, 1.0))
+        || profile
+            .get("poseCorrections")
+            .is_some_and(|value| !pose_corrections_are_valid(value))
     {
         return false;
     }
@@ -241,6 +258,73 @@ fn shell_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
             return false;
         }
         previous_v = v;
+    }
+    true
+}
+
+fn pose_corrections_are_valid(value: &Value) -> bool {
+    const AXES: [&str; 5] = ["angleX", "angleY", "eyeCloseL", "eyeCloseR", "mouthOpen"];
+    let Some(corrections) = value.as_array() else {
+        return false;
+    };
+    if corrections.len() > 16 {
+        return false;
+    }
+    let mut corners = HashSet::new();
+    for correction in corrections {
+        let Some(surface @ ("head" | "front-hair" | "back-hair")) =
+            correction.get("surface").and_then(Value::as_str)
+        else {
+            return false;
+        };
+        let Some(at) = correction.get("at").and_then(Value::as_object) else {
+            return false;
+        };
+        let Some(patches) = correction.get("patches").and_then(Value::as_array) else {
+            return false;
+        };
+        if !(2..=3).contains(&at.len())
+            || !(1..=8).contains(&patches.len())
+            || !(at.contains_key("angleX") || at.contains_key("angleY"))
+        {
+            return false;
+        }
+        for (axis, value) in at {
+            let Some(value) = finite_number(Some(value)) else {
+                return false;
+            };
+            if !AXES.contains(&axis.as_str())
+                || !(-1.0..=1.0).contains(&value)
+                || if matches!(axis.as_str(), "angleX" | "angleY") {
+                    value.abs() < 0.05
+                } else {
+                    value < 0.05
+                }
+            {
+                return false;
+            }
+        }
+        let signature = AXES
+            .iter()
+            .filter_map(|axis| {
+                finite_number(at.get(*axis)).map(|v| format!("{axis}:{}", v.signum()))
+            })
+            .collect::<Vec<_>>()
+            .join(",");
+        if !corners.insert((surface, signature)) {
+            return false;
+        }
+        for patch in patches {
+            if !number_in_range(patch.get("x"), -2.0, 2.0)
+                || !number_in_range(patch.get("y"), -2.0, 2.0)
+                || !number_in_range(patch.get("radiusX"), 0.1, 2.0)
+                || !number_in_range(patch.get("radiusY"), 0.1, 2.0)
+                || !number_in_range(patch.get("dx"), -0.25, 0.25)
+                || !number_in_range(patch.get("dy"), -0.25, 0.25)
+            {
+                return false;
+            }
+        }
     }
     true
 }
@@ -387,6 +471,78 @@ mod tests {
     #[test]
     fn accepts_complete_v7_playback() {
         assert!(playback_is_valid(&sample_playback()));
+    }
+
+    #[test]
+    fn authoring_changes_only_residuals_and_rejection_is_atomic() {
+        let original = sample_playback();
+        let mut playback = original.clone();
+        assert!(!replace_anime25d_pose_corrections(
+            &mut playback,
+            &Value::Null
+        ));
+        assert_eq!(playback, original);
+        let corrections = serde_json::json!([{
+            "surface": "head", "at": { "angleX": 0.8, "angleY": -0.6 },
+            "patches": [{ "x": 0, "y": 0, "radiusX": 0.6, "radiusY": 0.4, "dx": 0.05, "dy": -0.04 }]
+        }]);
+        assert!(replace_anime25d_pose_corrections(
+            &mut playback,
+            &corrections
+        ));
+        assert_eq!(playback["shellProfile"]["poseCorrections"], corrections);
+        assert!(replace_anime25d_pose_corrections(
+            &mut playback,
+            &serde_json::json!([])
+        ));
+        assert_eq!(
+            playback, original,
+            "removing corrections restores exact package content"
+        );
+    }
+
+    #[test]
+    fn validates_combination_pose_corrections_without_dropping_them() {
+        let correction = serde_json::json!({
+            "surface": "head", "at": { "angleX": 0.8, "angleY": -0.6 },
+            "patches": [{ "x": 0, "y": 0, "radiusX": 0.6, "radiusY": 0.4, "dx": 0.05, "dy": -0.04 }]
+        });
+        let mut playback = sample_playback();
+        playback["shellProfile"]["poseCorrections"] = serde_json::json!([correction]);
+        assert!(playback_is_valid(&playback));
+        let serialized = serde_json::to_vec(&playback).unwrap();
+        let restored: Value = serde_json::from_slice(&serialized).unwrap();
+        assert_eq!(restored["shellProfile"]["poseCorrections"][0], correction);
+        for bad in [
+            Value::Null,
+            serde_json::json!({}),
+            serde_json::json!([null]),
+            serde_json::json!([correction.clone(), correction.clone()]),
+        ] {
+            playback["shellProfile"]["poseCorrections"] = bad;
+            assert!(!playback_is_valid(&playback));
+        }
+        for bad_at in [
+            serde_json::json!({ "angleX": 1 }),
+            serde_json::json!({ "angleX": 0, "angleY": 1 }),
+            serde_json::json!({ "angleX": 1, "eyeCloseL": -1 }),
+            serde_json::json!({ "angleX": 1, "angleY": 2 }),
+            serde_json::json!({ "angleX": 1, "body": 1 }),
+            serde_json::json!({ "eyeCloseL": 1, "mouthOpen": 1 }),
+        ] {
+            let mut bad = correction.clone();
+            bad["at"] = bad_at;
+            playback["shellProfile"]["poseCorrections"] = serde_json::json!([bad]);
+            assert!(!playback_is_valid(&playback));
+        }
+        for (field, value) in [("radiusX", 0.0), ("dx", 0.3), ("y", 3.0)] {
+            let mut bad = correction.clone();
+            bad["patches"][0][field] = serde_json::json!(value);
+            playback["shellProfile"]["poseCorrections"] = serde_json::json!([bad]);
+            assert!(!playback_is_valid(&playback));
+        }
+        playback["shellProfile"]["poseCorrections"] = serde_json::json!([]);
+        assert!(playback_is_valid(&playback));
     }
 
     #[test]

@@ -20,6 +20,7 @@ mod visual_contract;
 mod visual_design;
 mod visual_prompt;
 
+pub use anime25d_contract::replace_anime25d_pose_corrections;
 pub use onboarding::{sanitize_onboarding_tags, MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS};
 pub use outfit_overlay::{
     format_chat_wardrobe_section, hold_incomplete_wear_marker, looks_from_visual_profile,
