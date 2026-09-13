@@ -1198,9 +1198,7 @@ fn match_many_options(prompt: &PendingPrompt, text: &str) -> Option<String> {
     }
     let mut values = Vec::new();
     for part in parts {
-        let Some(value) = match_one_option(prompt, part) else {
-            return None;
-        };
+        let value = match_one_option(prompt, part)?;
         if !values.contains(&value) {
             values.push(value);
         }
@@ -1209,9 +1207,7 @@ fn match_many_options(prompt: &PendingPrompt, text: &str) -> Option<String> {
 }
 
 fn parse_option_index(text: &str, count: usize) -> Option<usize> {
-    let cleaned = text
-        .trim()
-        .trim_end_matches(|ch: char| matches!(ch, '.' | '、' | ')' | '）'));
+    let cleaned = text.trim().trim_end_matches(['.', '、', ')', '）']);
     let index: usize = cleaned.parse().ok()?;
     (index >= 1 && index <= count).then_some(index - 1)
 }
