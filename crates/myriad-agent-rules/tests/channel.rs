@@ -5,6 +5,17 @@
 //! finished turn is delivered, dropped, or failed visibly.
 
 use myriad_agent_rules::channel::{
+    CHANNEL_HELP_REPLY, CHANNEL_IMAGE_LIMIT, CONFIRM_HINT, ChannelCommand, ChannelEvent,
+    ChannelImageRef, ConnectFailure, ConnectFailureKind, DISCORD_CHANNEL_TYPE_DM,
+    DISCORD_CHANNEL_TYPE_GROUP_DM, DISCORD_DIRECT_MESSAGES, DISCORD_PAIRING_TAKEN_REPLY,
+    DISCORD_TEXT_LIMIT, DeliveryContext, DeliveryPlan, FEISHU_CARD_ACTION_TRIGGER,
+    FEISHU_MESSAGE_RECEIVE_V1, FEISHU_PAIRING_TAKEN_REPLY, FEISHU_TEXT_LIMIT, GROUP_AND_C2C_EVENT,
+    InboundC2cText, InboundDecision, PAIRING_INVALID_REPLY, PAIRING_OK_REPLY,
+    PAIRING_REQUIRED_REPLY, PAIRING_TAKEN_REPLY, PANEL_REQUIRED_REPLY, PENDING_EXPIRED_REPLY,
+    PENDING_STALE_REPLY, PairingBindResult, PairingLookup, PendingDecision, PendingKind,
+    PendingOption, PendingPrompt, TELEGRAM_CALLBACK_INPUT, TELEGRAM_CALLBACK_NO,
+    TELEGRAM_CALLBACK_YES, TELEGRAM_INPUT_BUTTON, TELEGRAM_PAIRING_TAKEN_REPLY,
+    TELEGRAM_TEXT_LIMIT, TelegramCallbackAction, TelegramPrivateInbound, WorkerIntent,
     channel_can_finish, clarify_base_input, clarify_followup, classify_connect_failure,
     classify_discord_rest, classify_feishu_handshake, classify_feishu_token_code,
     classify_gateway_close, collect_channel_image_urls, decide_pending_reply,
@@ -25,18 +36,7 @@ use myriad_agent_rules::channel::{
     session_key, should_deliver_sequence, split_channel_text, task_started_reply,
     telegram_callback_action, telegram_dm_capabilities, telegram_inline_keyboard,
     telegram_max_update_id, telegram_reply_markup, telegram_retry_after, telegram_worker_intent,
-    truncate_feishu_text, truncate_telegram_text, worker_intent, ChannelCommand, ChannelEvent,
-    ChannelImageRef, ConnectFailure, ConnectFailureKind, DeliveryContext, DeliveryPlan,
-    FeishuCardCallback, InboundC2cText, InboundDecision, InboundFeishuText, PairingBindResult,
-    PairingLookup, PendingDecision, PendingKind, PendingOption, PendingPrompt,
-    TelegramCallbackAction, TelegramPrivateInbound, WorkerIntent, CHANNEL_HELP_REPLY,
-    CHANNEL_IMAGE_LIMIT, CONFIRM_HINT, DISCORD_CHANNEL_TYPE_DM, DISCORD_CHANNEL_TYPE_GROUP_DM,
-    DISCORD_DIRECT_MESSAGES, DISCORD_PAIRING_TAKEN_REPLY, DISCORD_TEXT_LIMIT,
-    FEISHU_CARD_ACTION_TRIGGER, FEISHU_MESSAGE_RECEIVE_V1, FEISHU_PAIRING_TAKEN_REPLY,
-    FEISHU_TEXT_LIMIT, GROUP_AND_C2C_EVENT, PAIRING_INVALID_REPLY, PAIRING_OK_REPLY,
-    PAIRING_REQUIRED_REPLY, PAIRING_TAKEN_REPLY, PANEL_REQUIRED_REPLY, PENDING_EXPIRED_REPLY,
-    PENDING_STALE_REPLY, TELEGRAM_CALLBACK_INPUT, TELEGRAM_CALLBACK_NO, TELEGRAM_CALLBACK_YES,
-    TELEGRAM_INPUT_BUTTON, TELEGRAM_PAIRING_TAKEN_REPLY, TELEGRAM_TEXT_LIMIT,
+    truncate_feishu_text, truncate_telegram_text, worker_intent,
 };
 
 fn text(msg_id: &str, openid: &str, content: &str) -> InboundC2cText {
@@ -696,7 +696,7 @@ fn connect_failures_split_permanent_from_transient() {
         myriad_agent_rules::channel::ConnectFailureKind::Transient
     );
     assert_eq!(discord_worker_intent(true, "tok"), WorkerIntent::Run);
-    assert_eq!(discord_dm_capabilities().inbound_text, true);
+    assert!(discord_dm_capabilities().inbound_text);
     assert_eq!(DISCORD_TEXT_LIMIT, 2000);
 }
 
@@ -1282,9 +1282,11 @@ fn telegram_get_updates_keeps_private_callback() {
         }
         other => panic!("{other:?}"),
     }
-    assert!(parse_telegram_private_texts(200, body)
-        .expect("texts")
-        .is_empty());
+    assert!(
+        parse_telegram_private_texts(200, body)
+            .expect("texts")
+            .is_empty()
+    );
 }
 
 #[test]
@@ -1477,11 +1479,10 @@ fn feishu_card_callback_parses_operator_and_value_data() {
     );
     assert_eq!(callback.chat_id, "oc_c");
     assert_eq!(callback.data, "y:prompt1");
-    assert!(parse_feishu_card_callback(
-        "e",
-        &serde_json::json!({ "operator": { "open_id": "ou" } })
-    )
-    .is_none());
+    assert!(
+        parse_feishu_card_callback("e", &serde_json::json!({ "operator": { "open_id": "ou" } }))
+            .is_none()
+    );
 
     let fallback = parse_feishu_card_callback(
         "evt-cb-user",

@@ -9,13 +9,13 @@ pub use crate::rig_contract::{
     PORTRAIT_CANVAS_HEIGHT, PORTRAIT_CANVAS_WIDTH, RIG_IR_VERSION, RIG_SCHEMA_VERSION,
 };
 use crate::rig_contract::{CHARACTER_ASSET_REQUIRED_CAPABILITIES, PRESENTATION_SLOT_VARIANTS};
+pub use crate::rig_outfit::{RigOutfitProfile, RigSemanticAnchor, infer_outfit_profile};
 use crate::rig_outfit::{
     default_semantic_anchors, outfit_profile_is_valid, semantic_anchors_are_valid,
 };
-pub use crate::rig_outfit::{infer_outfit_profile, RigOutfitProfile, RigSemanticAnchor};
 pub use crate::rig_semantics::RigSemantics;
 use crate::rig_semantics::{default_rig_semantics, migrate_rig_semantics, rig_semantics_are_valid};
-use crate::rig_spatial::{infer_spatial_profile, spatial_profile_is_valid, RigSpatialProfile};
+use crate::rig_spatial::{RigSpatialProfile, infer_spatial_profile, spatial_profile_is_valid};
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -929,7 +929,7 @@ fn top_four_weights(weights: &[f32]) -> ([u8; 4], [f32; 4]) {
 
 fn mesh_adjacency(vertex_count: usize, indices: &[u16]) -> Vec<Vec<usize>> {
     let mut adjacency = vec![Vec::new(); vertex_count];
-    for triangle in indices.chunks_exact(3) {
+    for triangle in indices.as_chunks::<3>().0 {
         for (from, to) in [
             (triangle[0], triangle[1]),
             (triangle[1], triangle[2]),
@@ -1525,16 +1525,20 @@ mod tests {
         assert_eq!(rig.parts[0].indices.len(), 6);
         assert_eq!(rig.parts[1].vertices.len(), 5);
         assert_eq!(rig.parts[1].indices.len(), 12);
-        assert!(rig.parts[0].vertices.iter().any(|vertex| vertex
-            .weights
-            .iter()
-            .filter(|weight| **weight > 0.02)
-            .count()
-            >= 2));
-        assert!(rig.parts[0]
-            .vertices
-            .iter()
-            .all(|vertex| (vertex.weights.iter().sum::<f32>() - 1.0).abs() < 0.002));
+        assert!(rig.parts[0].vertices.iter().any(|vertex| {
+            vertex
+                .weights
+                .iter()
+                .filter(|weight| **weight > 0.02)
+                .count()
+                >= 2
+        }));
+        assert!(
+            rig.parts[0]
+                .vertices
+                .iter()
+                .all(|vertex| (vertex.weights.iter().sum::<f32>() - 1.0).abs() < 0.002)
+        );
     }
 
     #[test]

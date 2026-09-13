@@ -1,6 +1,6 @@
 //! Scheduler type parsing and config build. No I/O.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Supported scheduler schedule types (matches DB enum names).
@@ -77,11 +77,10 @@ pub fn build_schedule_config(
     at: Option<i64>,
     daily_time: Option<&str>,
 ) -> Result<Value, String> {
-    if let Some(value) = schedule_obj {
-        if value.is_object() {
+    if let Some(value) = schedule_obj
+        && value.is_object() {
             return Ok(value.clone());
         }
-    }
     match schedule_type {
         AgentScheduleType::Cron => Ok(json!({
             "cron": legacy_cron.ok_or("Missing cron schedule")?

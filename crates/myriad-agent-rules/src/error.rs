@@ -455,8 +455,8 @@ pub fn apply_param_fixes(
 
     for (param_name, fix) in fixes {
         if param_name.starts_with('_') {
-            if param_name == "_append_system" {
-                if let ParamFix::AppendToParam(text) = fix {
+            if param_name == "_append_system"
+                && let ParamFix::AppendToParam(text) = fix {
                     let existing = new_params
                         .get("systemPrompt")
                         .and_then(|v| v.as_str())
@@ -466,7 +466,6 @@ pub fn apply_param_fixes(
                         Value::String(format!("{}\n\n{}", existing, text)),
                     );
                 }
-            }
             continue;
         }
 

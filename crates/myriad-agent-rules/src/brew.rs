@@ -83,11 +83,10 @@ pub fn validate_subscribe_url_policy(url: &str) -> Result<(), String> {
     }
 
     // If host is already an IP literal, reject private ranges without DNS.
-    if let Ok(ip) = host.parse::<IpAddr>() {
-        if is_disallowed_subscribe_ip(ip) {
+    if let Ok(ip) = host.parse::<IpAddr>()
+        && is_disallowed_subscribe_ip(ip) {
             return Err("This address is not allowed".to_string());
         }
-    }
 
     Ok(())
 }

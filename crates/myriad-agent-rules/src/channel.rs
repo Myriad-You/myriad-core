@@ -63,7 +63,9 @@ pub const CHANNEL_HELP_REPLY: &str = "在这里发文字或图片，就是在站
 /// typing indicator. Without it a long task looks dead.
 pub fn task_started_reply(total_steps: u32) -> String {
     if total_steps > 1 {
-        format!("已开始办事，共 {total_steps} 步，完成后在这里回复。发「当前任务」看进度，「停止」取消。")
+        format!(
+            "已开始办事，共 {total_steps} 步，完成后在这里回复。发「当前任务」看进度，「停止」取消。"
+        )
     } else {
         "已开始办事，完成后在这里回复。发「当前任务」看进度，「停止」取消。".to_string()
     }
@@ -993,15 +995,14 @@ pub fn parse_telegram_callback(data: &str) -> Option<TelegramCallbackBinding> {
         return None;
     }
     if let Some(rest) = data.strip_prefix("o:") {
-        if let Some((id, index)) = rest.rsplit_once(':') {
-            if !id.is_empty() && id != TELEGRAM_CALLBACK_YES && id != TELEGRAM_CALLBACK_NO {
+        if let Some((id, index)) = rest.rsplit_once(':')
+            && !id.is_empty() && id != TELEGRAM_CALLBACK_YES && id != TELEGRAM_CALLBACK_NO {
                 let index = index.parse::<usize>().ok()?;
                 return Some(TelegramCallbackBinding {
                     prompt_id: id.to_string(),
                     kind: TelegramBoundKind::Option(index),
                 });
             }
-        }
         let index = rest.parse::<usize>().ok()?;
         return Some(TelegramCallbackBinding {
             prompt_id: String::new(),
@@ -2114,11 +2115,10 @@ pub fn split_channel_text(text: &str, limit: usize) -> Vec<String> {
             if rel > 0 {
                 end = start + rel;
             }
-        } else if let Some(rel) = window.iter().rposition(|ch| ch.is_whitespace()) {
-            if rel > 0 {
+        } else if let Some(rel) = window.iter().rposition(|ch| ch.is_whitespace())
+            && rel > 0 {
                 end = start + rel;
             }
-        }
         let chunk: String = chars[start..end].iter().collect();
         let chunk = chunk.trim().to_string();
         if !chunk.is_empty() {
@@ -2221,11 +2221,10 @@ fn display_rows<'a>(
     let Some(data) = data else {
         return Vec::new();
     };
-    if let Some(path) = display.get("dataPath").and_then(|value| value.as_str()) {
-        if let Some(found) = json_path(data, path).and_then(|value| value.as_array()) {
+    if let Some(path) = display.get("dataPath").and_then(|value| value.as_str())
+        && let Some(found) = json_path(data, path).and_then(|value| value.as_array()) {
             return found.iter().collect();
         }
-    }
     match data {
         serde_json::Value::Array(rows) => rows.iter().collect(),
         serde_json::Value::Object(map) => {
@@ -2604,11 +2603,10 @@ pub fn discord_json_code(body: &str) -> Option<i64> {
 /// Worker-level REST classification. `50007` / `50278` / `40003` stay Transient
 /// so one blocked DM does not stop the Gateway worker.
 pub fn classify_discord_rest(status: u16, body: &str) -> ConnectFailureKind {
-    if let Some(code) = discord_json_code(body) {
-        if matches!(code, 50007 | 50278 | 40003 | 20009) {
+    if let Some(code) = discord_json_code(body)
+        && matches!(code, 50007 | 50278 | 40003 | 20009) {
             return ConnectFailureKind::Transient;
         }
-    }
     classify_connect_failure(&ConnectFailure::HttpStatus { status, body })
 }
 

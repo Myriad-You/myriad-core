@@ -574,9 +574,11 @@ mod tests {
     fn accepts_an_absent_or_bounded_per_model_torso_follow() {
         // Compiled before the follow became per-model: still live.
         let playback = sample_playback();
-        assert!(playback["shellProfile"]["torso"]
-            .get("yawFollowScale")
-            .is_none());
+        assert!(
+            playback["shellProfile"]["torso"]
+                .get("yawFollowScale")
+                .is_none()
+        );
         assert!(playback_is_valid(&playback));
 
         for scale in [0.0, 0.4, 1.0] {

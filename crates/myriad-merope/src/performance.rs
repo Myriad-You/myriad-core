@@ -234,10 +234,12 @@ mod tests {
 
     #[test]
     fn discards_plans_whose_baseline_is_out_of_vocabulary() {
-        assert!(parse_performance_plan(
-            r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#,
-        )
-        .is_none());
+        assert!(
+            parse_performance_plan(
+                r#"{"baseline":{"expression":"angry","posture":"attack"},"cues":[]}"#,
+            )
+            .is_none()
+        );
     }
 
     #[test]

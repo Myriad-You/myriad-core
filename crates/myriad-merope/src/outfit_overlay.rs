@@ -331,12 +331,11 @@ fn catalog_line(look: &WardrobeLook, showing_id: &str, all: &[WardrobeLook]) -> 
         .filter(|hint| *hint != &look.label && !hint.is_ascii() && hint.chars().count() > 4)
         .max_by_key(|hint| hint.chars().count())
         .cloned();
-    if let Some(construction) = construction.as_deref() {
-        if !look.label.contains(construction) {
+    if let Some(construction) = construction.as_deref()
+        && !look.label.contains(construction) {
             line.push('：');
             line.push_str(construction);
         }
-    }
     let aliases = catalog_aliases(look, showing_id, all, construction.as_deref());
     if !aliases.is_empty() {
         line.push_str(". Also called ");
@@ -1121,10 +1120,12 @@ mod tests {
         assert!(section.contains("- 冬日大衣：高领内搭叠短大衣"));
         assert!(section.contains("Also called 都市"));
         assert!(!section.contains("Also called 日常"));
-        assert!(!looks[0]
-            .hints
-            .iter()
-            .any(|hint| hint == "日常" || hint == "everyday"));
+        assert!(
+            !looks[0]
+                .hints
+                .iter()
+                .any(|hint| hint == "日常" || hint == "everyday")
+        );
         assert!(section.contains("Wearing this round"));
         assert!(!section.contains("w-coat"));
         assert!(!section.contains("activeOutfitId"));
@@ -1155,15 +1156,17 @@ mod tests {
         });
         let looks = looks_from_visual_profile(&profile);
         assert_eq!(looks[0].label, DEFAULT_WARDROBE_LABEL);
-        assert!(looks[0]
-            .hints
-            .iter()
-            .all(|hint| hint == DEFAULT_WARDROBE_LABEL
-                || hint == "默认"
-                || hint == "默认服装"
-                || hint == "default"
-                || hint == "default outfit"
-                || hint.contains("方领")));
+        assert!(
+            looks[0]
+                .hints
+                .iter()
+                .all(|hint| hint == DEFAULT_WARDROBE_LABEL
+                    || hint == "默认"
+                    || hint == "默认服装"
+                    || hint == "default"
+                    || hint == "default outfit"
+                    || hint.contains("方领"))
+        );
         assert_eq!(looks[1].id, "w-stage-2");
         assert_eq!(looks[1].label, "stage");
         let section = format_chat_wardrobe_section(&looks, "default", None).unwrap();

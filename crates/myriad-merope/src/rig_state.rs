@@ -4,10 +4,10 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::ChatPerformancePlan;
 use crate::rig_contract::{
     PERFORMANCE_BASELINE_EXPRESSIONS, PERFORMANCE_CUE_INTENTS, PERFORMANCE_POSTURES,
 };
-use crate::ChatPerformancePlan;
 
 pub const RIG_STATE_CHANNEL_OWNERS: &[&str] = &[
     "preview",

@@ -133,9 +133,11 @@ mod tests {
 
         let too_long = "x".repeat(IMAGE_PROMPT_MAX_CHARS + 1);
         params.insert("prompt".into(), json!(too_long));
-        assert!(resolve_image_prompt(&params)
-            .unwrap_err()
-            .contains("too long"));
+        assert!(
+            resolve_image_prompt(&params)
+                .unwrap_err()
+                .contains("too long")
+        );
 
         let dims = resolve_image_dimensions(&HashMap::from([
             ("width".into(), json!("512px")),

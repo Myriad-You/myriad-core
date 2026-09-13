@@ -21,21 +21,22 @@ mod visual_design;
 mod visual_prompt;
 
 pub use anime25d_contract::replace_anime25d_pose_corrections;
-pub use onboarding::{sanitize_onboarding_tags, MAX_ONBOARDING_TAGS, MAX_ONBOARDING_TAG_CHARS};
+pub use onboarding::{MAX_ONBOARDING_TAG_CHARS, MAX_ONBOARDING_TAGS, sanitize_onboarding_tags};
 pub use outfit_overlay::{
-    format_chat_wardrobe_section, hold_incomplete_wear_marker, looks_from_visual_profile,
-    resolve_chat_outfit_overlay, resolve_wear_directive, split_chat_wear_directive, wardrobe_look,
-    wear_directive_after_reply, worn_outfit_id, OverlayDecision, WardrobeLook, WearDirective,
+    OverlayDecision, WardrobeLook, WearDirective, format_chat_wardrobe_section,
+    hold_incomplete_wear_marker, looks_from_visual_profile, resolve_chat_outfit_overlay,
+    resolve_wear_directive, split_chat_wear_directive, wardrobe_look, wear_directive_after_reply,
+    worn_outfit_id,
 };
 pub use performance::{
-    parse_performance_plan, ChatPerformanceBaseline, ChatPerformanceCue, ChatPerformancePlan,
+    ChatPerformanceBaseline, ChatPerformanceCue, ChatPerformancePlan, parse_performance_plan,
 };
 pub use persona::{fallback_persona_draft, persona_draft_is_complete, sanitize_persona_draft};
 pub use rig::{
-    compile_layered_rig, migrate_rig_manifest, validate_character_asset_source, RigBone,
-    RigCompileSource, RigLayerSource, RigManifest, RigMotionProfile, RigOutfitProfile, RigPart,
-    RigPoint, RigQuality, RigSemanticAnchor, RigSize, RigTexture, RigVertex, RIG_IR_VERSION,
-    RIG_SCHEMA_VERSION,
+    RIG_IR_VERSION, RIG_SCHEMA_VERSION, RigBone, RigCompileSource, RigLayerSource, RigManifest,
+    RigMotionProfile, RigOutfitProfile, RigPart, RigPoint, RigQuality, RigSemanticAnchor, RigSize,
+    RigTexture, RigVertex, compile_layered_rig, migrate_rig_manifest,
+    validate_character_asset_source,
 };
 pub use rig_contract::{
     CHARACTER_ASSET_CONTRACT_VERSION, PERFORMANCE_BASELINE_EXPRESSIONS, PERFORMANCE_CUE_INTENTS,
@@ -46,30 +47,31 @@ pub use rig_contract::{
 pub use rig_semantics::RigSemantics;
 pub use rig_spatial::RigSpatialProfile;
 pub use rig_state::{
-    cue_is_playable, cue_survives_state, motion_style_from_persona, motion_style_from_persona_json,
-    plan_is_empty, refine_performance_plan, round_motion_style, sanitize_rig_state,
-    RigStateSummary, MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES,
-    RIG_STATE_MOUTH_INTENTS, RIG_STATE_SPECIAL_INTENTS,
+    MAX_RECENT_ACTIONS, RIG_STATE_CAPABILITIES, RIG_STATE_MOTION_STYLES, RIG_STATE_MOUTH_INTENTS,
+    RIG_STATE_SPECIAL_INTENTS, RigStateSummary, cue_is_playable, cue_survives_state,
+    motion_style_from_persona, motion_style_from_persona_json, plan_is_empty,
+    refine_performance_plan, round_motion_style, sanitize_rig_state,
 };
-pub use speech_plan::{grounded_speech_phrases, SpeechPhrase};
+pub use speech_plan::{SpeechPhrase, grounded_speech_phrases};
 pub use sticker_avatar::{
-    build_sticker_avatar_contract, build_sticker_avatar_prompt,
     MEROPE_STICKER_STYLE_REFERENCE_SHA256, STICKER_AVATAR_CONTRACT_VERSION, STICKER_AVATAR_SIZE,
+    build_sticker_avatar_contract, build_sticker_avatar_prompt,
 };
 pub use visual_contract::{
     appearance_visual_profile, build_character_asset_contract, character_asset_contract_fingerprint,
 };
 pub use visual_design::{
+    CLOTHING_STYLES, DEFAULT_WARDROBE_ID, MAX_VISUAL_NOTES_CHARS, MAX_WARDROBE_ID_CHARS,
+    MAX_WARDROBE_ITEMS, UPPER_BODY_VISUAL_IDENTITY_FIELDS, VisualProfileIssue, VisualProfileReason,
     active_outfit_generation_fingerprint, active_outfit_rig_asset_id, bind_active_outfit_rig,
     character_module, clothing_style_grammar, clothing_style_of, detach_active_outfit_rig,
     ensure_default_wardrobe, flatten_visual_identity, normalize_clothing_style,
     reconcile_wardrobe_rigs, sanitize_outfit_module, sanitize_upper_body_visual_identity,
     sanitize_upper_body_visual_identity_checked, sanitize_wardrobe, sanitize_wardrobe_checked,
-    stamp_clothing_style, upper_body_visual_identity_is_complete, VisualProfileIssue,
-    VisualProfileReason, CLOTHING_STYLES, DEFAULT_WARDROBE_ID, MAX_VISUAL_NOTES_CHARS,
-    MAX_WARDROBE_ID_CHARS, MAX_WARDROBE_ITEMS, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+    stamp_clothing_style, upper_body_visual_identity_is_complete,
 };
 pub use visual_prompt::{
+    MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
     build_character_visual_edit_prompt, build_character_visual_prompt,
     ensure_visual_identity_states_gender, normalize_visual_identity_for_prompt,
     normalize_visual_identity_for_prompt_checked,
@@ -78,5 +80,4 @@ pub use visual_prompt::{
     visual_identity_has_camera_composition_drift, visual_identity_has_facial_construction_drift,
     visual_identity_has_high_collar, visual_identity_has_literary_sludge,
     visual_identity_matches_gender_presentation, visual_identity_violates_style_lock,
-    MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
 };

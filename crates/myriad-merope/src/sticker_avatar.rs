@@ -4,7 +4,7 @@
 //! Q 版是另一种造型语言，混用只会让两边互相拉扯。身份不靠文字复述，靠把已确认
 //! 的主立绘当身份锚附上去；文字只补那些在重绘中最容易漂掉的颜色与标志物。
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 /// 造型语言或参考图角色变了就 bump。它进指纹，旧头像不会被当成新契约的产物。
 pub const STICKER_AVATAR_CONTRACT_VERSION: &str = "logo-sticker-chibi-v3";

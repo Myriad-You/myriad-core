@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 
 /// Saved outfits for one character. Face and hair stay on the character module.
 pub const MAX_WARDROBE_ITEMS: usize = 8;
@@ -413,15 +413,14 @@ pub fn sanitize_wardrobe_checked(value: &Value) -> Result<Vec<Value>, VisualProf
         {
             obj.insert("generationFingerprint".into(), json!(fingerprint));
         }
-        if id != DEFAULT_WARDROBE_ID {
-            if let Some(name) = item
+        if id != DEFAULT_WARDROBE_ID
+            && let Some(name) = item
                 .get("name")
                 .and_then(Value::as_str)
                 .and_then(sanitize_wardrobe_name)
             {
                 obj.insert("name".into(), json!(name));
             }
-        }
         out.push(saved);
     }
     Ok(out)
@@ -498,11 +497,10 @@ pub fn ensure_default_wardrobe(profile: &mut Value, previous: Option<&Map<String
             return;
         };
         for item in items.iter_mut() {
-            if is_default_wardrobe_item(item) {
-                if let Some(obj) = item.as_object_mut() {
+            if is_default_wardrobe_item(item)
+                && let Some(obj) = item.as_object_mut() {
                     obj.remove("name");
                 }
-            }
         }
         if items.iter().any(is_default_wardrobe_item) {
             return;
@@ -542,11 +540,10 @@ pub fn ensure_default_wardrobe(profile: &mut Value, previous: Option<&Map<String
         root.insert("activeOutfitId".into(), json!(DEFAULT_WARDROBE_ID));
         return;
     }
-    if let Some(old_id) = promoted_from {
-        if root.get("activeOutfitId").and_then(Value::as_str) == Some(old_id.as_str()) {
+    if let Some(old_id) = promoted_from
+        && root.get("activeOutfitId").and_then(Value::as_str) == Some(old_id.as_str()) {
             root.insert("activeOutfitId".into(), json!(DEFAULT_WARDROBE_ID));
         }
-    }
 }
 
 fn sanitize_wardrobe_hex_id(raw: &str) -> Option<String> {
@@ -981,24 +978,36 @@ mod tests {
         assert_eq!(normalize_clothing_style("zh-CN"), None);
         let grammar = clothing_style_grammar("everyday").unwrap();
         assert!(grammar.contains("silhouette driver"));
-        assert!(clothing_style_grammar("east-asian")
-            .unwrap()
-            .contains("selected explicitly by the owner"));
-        assert!(clothing_style_grammar("royal")
-            .unwrap()
-            .contains("coherent court language"));
-        assert!(clothing_style_grammar("idol")
-            .unwrap()
-            .contains("live-stage performance wear"));
-        assert!(clothing_style_grammar("idol")
-            .unwrap()
-            .contains("dimensional seam-anchored hero ornament"));
-        assert!(clothing_style_grammar("uniform")
-            .unwrap()
-            .contains("strong structural driver"));
-        assert!(clothing_style_grammar("rain")
-            .unwrap()
-            .contains("weather silhouette"));
+        assert!(
+            clothing_style_grammar("east-asian")
+                .unwrap()
+                .contains("selected explicitly by the owner")
+        );
+        assert!(
+            clothing_style_grammar("royal")
+                .unwrap()
+                .contains("coherent court language")
+        );
+        assert!(
+            clothing_style_grammar("idol")
+                .unwrap()
+                .contains("live-stage performance wear")
+        );
+        assert!(
+            clothing_style_grammar("idol")
+                .unwrap()
+                .contains("dimensional seam-anchored hero ornament")
+        );
+        assert!(
+            clothing_style_grammar("uniform")
+                .unwrap()
+                .contains("strong structural driver")
+        );
+        assert!(
+            clothing_style_grammar("rain")
+                .unwrap()
+                .contains("weather silhouette")
+        );
         for id in CLOTHING_STYLES {
             let grammar = clothing_style_grammar(id).unwrap();
             assert!(
@@ -1134,9 +1143,11 @@ mod tests {
             "outfit": outfit,
             "rigAssetId": "not-a-package"
         }]);
-        assert!(sanitize_wardrobe(&bad_rig).unwrap()[0]
-            .get("rigAssetId")
-            .is_none());
+        assert!(
+            sanitize_wardrobe(&bad_rig).unwrap()[0]
+                .get("rigAssetId")
+                .is_none()
+        );
     }
 
     #[test]
@@ -1179,9 +1190,11 @@ mod tests {
         reconcile_wardrobe_rigs(&mut profile, Some(&previous));
         assert_eq!(profile["wardrobe"][0]["rigAssetId"], rig_a);
         assert!(profile["wardrobe"][1].get("rigAssetId").is_none());
-        assert!(profile["wardrobe"][1]
-            .get("generationFingerprint")
-            .is_none());
+        assert!(
+            profile["wardrobe"][1]
+                .get("generationFingerprint")
+                .is_none()
+        );
         detach_active_outfit_rig(&mut profile);
         assert_eq!(profile["wardrobe"][0]["rigAssetId"], rig_a);
         bind_active_outfit_rig(&mut profile, rig_b);

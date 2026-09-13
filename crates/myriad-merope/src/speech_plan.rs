@@ -66,16 +66,17 @@ mod tests {
         assert_eq!(phrases.len(), 2);
         assert_eq!(phrases[0].intent, "hesitate");
         assert_eq!(phrases[1].intent, "check-in");
-        assert!(grounded_speech_phrases(
-            &json!([{"text":"你好", "intent":"ask"}]),
-            Some("你好，你好")
-        )
-        .is_empty());
+        assert!(
+            grounded_speech_phrases(
+                &json!([{"text":"你好", "intent":"ask"}]),
+                Some("你好，你好")
+            )
+            .is_empty()
+        );
         assert!(grounded_speech_phrases(&json!([]), None).is_empty());
-        assert!(grounded_speech_phrases(
-            &json!([{"text":"哈哈", "intent":"laugh"}]),
-            Some("哈哈哈")
-        )
-        .is_empty());
+        assert!(
+            grounded_speech_phrases(&json!([{"text":"哈哈", "intent":"laugh"}]), Some("哈哈哈"))
+                .is_empty()
+        );
     }
 }

@@ -1,6 +1,6 @@
 //! HTTP fetch, MCP projection, scrape gates, and outbound-fetch classification.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 
 /// Max response body accepted by http.fetch (bytes).
@@ -329,15 +329,21 @@ mod tests {
             "Host": "evil.test"
         });
         let allowed = sanitize_http_headers(Some(&headers));
-        assert!(allowed
-            .iter()
-            .any(|(k, v)| k == "Accept" && v == "application/json"));
-        assert!(allowed
-            .iter()
-            .any(|(k, v)| k == "X-Request-Id" && v == "abc"));
-        assert!(!allowed
-            .iter()
-            .any(|(k, _)| k.eq_ignore_ascii_case("authorization")));
+        assert!(
+            allowed
+                .iter()
+                .any(|(k, v)| k == "Accept" && v == "application/json")
+        );
+        assert!(
+            allowed
+                .iter()
+                .any(|(k, v)| k == "X-Request-Id" && v == "abc")
+        );
+        assert!(
+            !allowed
+                .iter()
+                .any(|(k, _)| k.eq_ignore_ascii_case("authorization"))
+        );
         assert!(!allowed.iter().any(|(k, _)| k.eq_ignore_ascii_case("host")));
 
         assert!(!http_body_exceeds_limit(100));

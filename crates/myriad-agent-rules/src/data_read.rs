@@ -37,35 +37,31 @@ pub fn extract_json_array_from_ai_response(text: &str) -> Vec<Value> {
     let json_start = text.find('[');
     let json_end = text.rfind(']');
 
-    if let (Some(start), Some(end)) = (json_start, json_end) {
-        if end > start {
+    if let (Some(start), Some(end)) = (json_start, json_end)
+        && end > start {
             let json_str = &text[start..=end];
             if let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_str) {
                 return arr;
             }
         }
-    }
 
     if text.contains("```json") {
         let parts: Vec<&str> = text.split("```json").collect();
-        if parts.len() > 1 {
-            if let Some(json_part) = parts[1].split("```").next() {
-                if let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_part.trim()) {
+        if parts.len() > 1
+            && let Some(json_part) = parts[1].split("```").next()
+                && let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_part.trim()) {
                     return arr;
                 }
-            }
-        }
     }
 
     if text.contains("```") {
         let parts: Vec<&str> = text.split("```").collect();
         for part in parts {
             let trimmed = part.trim();
-            if trimmed.starts_with('[') {
-                if let Ok(arr) = serde_json::from_str::<Vec<Value>>(trimmed) {
+            if trimmed.starts_with('[')
+                && let Ok(arr) = serde_json::from_str::<Vec<Value>>(trimmed) {
                     return arr;
                 }
-            }
         }
     }
 
@@ -206,10 +202,12 @@ mod time_tests {
         assert_eq!(out["weekday"], "Friday"); // 2026-07-31 20:30 +08 is Friday
         assert_eq!(weekday_zh(chrono::Weekday::Fri), "Friday");
         assert_eq!(out["timestamp"], now.timestamp());
-        assert!(out["datetime"]
-            .as_str()
-            .unwrap()
-            .starts_with("2026-07-31T20:30:00"));
+        assert!(
+            out["datetime"]
+                .as_str()
+                .unwrap()
+                .starts_with("2026-07-31T20:30:00")
+        );
         assert!(project_time_info(now, "Not/AZone").is_err());
         let utc = project_time_info(now, "UTC").expect("utc");
         assert_eq!(utc["hour"], 12);
@@ -286,10 +284,12 @@ mod radar_tests {
         assert_eq!(arr[0]["name"], "知乎 - 日报");
         assert_eq!(arr[0]["path"], "/zhihu/daily");
         assert_eq!(arr[0]["requiresConfig"], false);
-        assert!(parse_rsshub_radar_rules("not radar")
-            .as_array()
-            .unwrap()
-            .is_empty());
+        assert!(
+            parse_rsshub_radar_rules("not radar")
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
     }
 }
 

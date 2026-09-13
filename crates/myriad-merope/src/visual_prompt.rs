@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use crate::rig_contract::{PORTRAIT_ASPECT_HEIGHT, PORTRAIT_ASPECT_WIDTH};
 use crate::visual_design::{
-    VisualProfileIssue, VisualProfileReason, UPPER_BODY_VISUAL_IDENTITY_FIELDS,
+    UPPER_BODY_VISUAL_IDENTITY_FIELDS, VisualProfileIssue, VisualProfileReason,
 };
 
 const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 12_000;
@@ -895,7 +895,9 @@ pub fn build_character_visual_prompt(
         .and_then(|identity| crate::visual_design::flatten_visual_identity(&identity))
         .unwrap_or(Value::Null);
     let mut header = vec![
-        format!("Render one confirmed original character in this visual school: {MEROPE_VISUAL_SCHOOL}."),
+        format!(
+            "Render one confirmed original character in this visual school: {MEROPE_VISUAL_SCHOOL}."
+        ),
         STYLE_REFERENCE_ROLE_INSTRUCTION.to_string(),
         format!("Identity name: {}.", bounded_text(name, 50)),
     ];
@@ -910,15 +912,14 @@ pub fn build_character_visual_prompt(
     let header = header.join("\n\n");
 
     let mut identity = Vec::new();
-    if let Some(style) = crate::visual_design::clothing_style_of(onboarding) {
-        if let Some(grammar) = crate::visual_design::clothing_style_grammar(style) {
+    if let Some(style) = crate::visual_design::clothing_style_of(onboarding)
+        && let Some(grammar) = crate::visual_design::clothing_style_grammar(style) {
             push_section(
                 &mut identity,
                 "Costume language for garments and accessories",
                 grammar,
             );
         }
-    }
     for (key, label) in IDENTITY_PROMPT_FIELDS {
         let max_chars = field_limit(key);
         let value = text_at(&visual_identity, &[key], max_chars);
@@ -1405,10 +1406,18 @@ fn neutralize_style_overrides(text: &str) -> String {
 
 fn gender_presentation_instruction(value: &Value) -> Option<&'static str> {
     match value.get("gender").and_then(Value::as_str) {
-        Some("female") => Some("Gender presentation hard lock: female. Keep the confirmed character unmistakably feminine through explicit feminine young-adult or adult maturity, softly shaped brow and lash balance, upper-body silhouette, and garment cut inside the fixed anime house proportions."),
-        Some("male") => Some("Gender presentation hard lock: male. Keep the confirmed character unmistakably masculine through explicit masculine young-adult or adult maturity, clearly structured brow and lash balance, upper-body silhouette, and garment cut inside the fixed anime house proportions."),
-        Some("nonbinary") => Some("Gender presentation hard lock: nonbinary. Keep the character intentionally androgynous with a consistent face read, upper-body silhouette, and garment cut within the fixed anime house proportions."),
-        Some("unspecified") => Some("Gender presentation hard lock: unspecified. Keep the character intentionally neutral with a consistent face read, upper-body silhouette, and garment cut within the fixed anime house proportions."),
+        Some("female") => Some(
+            "Gender presentation hard lock: female. Keep the confirmed character unmistakably feminine through explicit feminine young-adult or adult maturity, softly shaped brow and lash balance, upper-body silhouette, and garment cut inside the fixed anime house proportions.",
+        ),
+        Some("male") => Some(
+            "Gender presentation hard lock: male. Keep the confirmed character unmistakably masculine through explicit masculine young-adult or adult maturity, clearly structured brow and lash balance, upper-body silhouette, and garment cut inside the fixed anime house proportions.",
+        ),
+        Some("nonbinary") => Some(
+            "Gender presentation hard lock: nonbinary. Keep the character intentionally androgynous with a consistent face read, upper-body silhouette, and garment cut within the fixed anime house proportions.",
+        ),
+        Some("unspecified") => Some(
+            "Gender presentation hard lock: unspecified. Keep the character intentionally neutral with a consistent face read, upper-body silhouette, and garment cut within the fixed anime house proportions.",
+        ),
         _ => None,
     }
 }
@@ -1785,10 +1794,12 @@ mod tests {
         assert!(visual_identity_matches_gender_presentation(
             &stamped, "female"
         ));
-        assert!(stamped["character"]["faceDesign"]
-            .as_str()
-            .unwrap()
-            .starts_with("女性化。"));
+        assert!(
+            stamped["character"]["faceDesign"]
+                .as_str()
+                .unwrap()
+                .starts_with("女性化。")
+        );
     }
 
     #[test]

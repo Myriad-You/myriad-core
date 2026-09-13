@@ -141,10 +141,12 @@ mod tests {
         let instruction = params["instruction"].as_str().unwrap();
         assert!(instruction.contains("旧计划"));
         assert!(instruction.contains("只看最近数据"));
-        assert!(params["systemPrompt"]
-            .as_str()
-            .unwrap()
-            .contains("只看最近数据"));
+        assert!(
+            params["systemPrompt"]
+                .as_str()
+                .unwrap()
+                .contains("只看最近数据")
+        );
 
         let mut params = HashMap::new();
         inject_steering_to_params("ai.webSearch", "改查官方文档", &mut params);

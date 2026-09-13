@@ -38,11 +38,10 @@ pub fn extract_semantic_text(value: &Value) -> String {
         let mut parts: Vec<String> = Vec::new();
 
         for key in &text_keys {
-            if let Some(text) = obj.get(*key).and_then(|v| v.as_str()) {
-                if !text.is_empty() {
+            if let Some(text) = obj.get(*key).and_then(|v| v.as_str())
+                && !text.is_empty() {
                     parts.push(text.to_string());
                 }
-            }
         }
 
         if let Some(results) = obj.get("results").and_then(|v| v.as_array()) {

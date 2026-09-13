@@ -1,4 +1,4 @@
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
 use std::fmt::Write;
 
@@ -23,13 +23,12 @@ pub fn appearance_visual_profile(visual_profile: &Value) -> Value {
     for key in APPEARANCE_VISUAL_PROFILE_KEYS {
         if let Some(value) = source.get(*key) {
             let value = if *key == "visualIdentity" && !value.is_null() {
-                if let Some(gender) = source.get("gender").and_then(Value::as_str) {
-                    if !crate::visual_prompt::visual_identity_matches_gender_presentation(
+                if let Some(gender) = source.get("gender").and_then(Value::as_str)
+                    && !crate::visual_prompt::visual_identity_matches_gender_presentation(
                         value, gender,
                     ) {
                         continue;
                     }
-                }
                 let Some(normalized) =
                     crate::visual_prompt::normalize_visual_identity_for_prompt(value)
                 else {
@@ -283,15 +282,21 @@ mod tests {
                 None
             )),
         );
-        assert!(appearance_visual_profile(&with_seeds)
-            .get("sourceTags")
-            .is_none());
-        assert!(appearance_visual_profile(&with_seeds)
-            .get("language")
-            .is_none());
-        assert!(appearance_visual_profile(&with_seeds)
-            .get("extraRequirements")
-            .is_none());
+        assert!(
+            appearance_visual_profile(&with_seeds)
+                .get("sourceTags")
+                .is_none()
+        );
+        assert!(
+            appearance_visual_profile(&with_seeds)
+                .get("language")
+                .is_none()
+        );
+        assert!(
+            appearance_visual_profile(&with_seeds)
+                .get("extraRequirements")
+                .is_none()
+        );
         assert_eq!(appearance_visual_profile(&with_seeds)["gender"], "female");
         let mut other_language = core.clone();
         other_language["language"] = json!("en-US");

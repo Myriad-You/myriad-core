@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::rig::{RigBone, RigPart, RigPoint, RigSize, MAX_RIG_PARTS};
+use crate::rig::{MAX_RIG_PARTS, RigBone, RigPart, RigPoint, RigSize};
 use crate::rig_contract::{
     ARMOR_OUTFIT_RULE, CAPE_OUTFIT_RULE, FITTED_OUTFIT_RULE, LONG_COAT_OUTFIT_RULE,
     LONG_SKIRT_OUTFIT_RULE, SECONDARY_PART_PATTERNS, SHORT_SKIRT_OUTFIT_RULE,
