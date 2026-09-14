@@ -384,7 +384,7 @@ fn check_missing_param(
                 ParamFix::SetValue(serde_json::json!("play")),
             );
         }
-        "brew.discover" if error_lower.contains("url") || error_lower.contains("query") => {
+        "phantasi.discover" if error_lower.contains("url") || error_lower.contains("query") => {
             param_fixes.insert(
                 "query".to_string(),
                 ParamFix::SetValue(serde_json::json!("*")),

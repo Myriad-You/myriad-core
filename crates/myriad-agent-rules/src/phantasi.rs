@@ -1,4 +1,4 @@
-//! Brew subscribe name, write caps, subscribe URL policy, and feed ranking. No I/O.
+//! Phantasi subscribe name, write caps, subscribe URL policy, and feed ranking. No I/O.
 
 use serde_json::Value;
 use std::cmp::Reverse;
@@ -29,7 +29,7 @@ pub fn sanitize_feed_name(name: &str) -> Result<String, String> {
     Ok(trimmed)
 }
 
-/// Clamp brew.subscribe update_interval minutes into contract bounds.
+/// Clamp phantasi.subscribe update_interval minutes into contract bounds.
 pub fn clamp_update_interval_minutes(raw: i32) -> i32 {
     raw.clamp(MIN_UPDATE_INTERVAL, MAX_UPDATE_INTERVAL)
 }
@@ -62,7 +62,7 @@ pub fn is_disallowed_subscribe_ip(ip: IpAddr) -> bool {
     }
 }
 
-/// Parse and apply pure URL policy for brew.subscribe (scheme + host string + IP literals).
+/// Parse and apply pure URL policy for phantasi.subscribe (scheme + host string + IP literals).
 ///
 /// Hostname DNS resolution remains in the handler (IO). When the host is an IP
 /// literal it is checked here; hostname-only URLs pass if the host string is allowed.
@@ -92,7 +92,7 @@ pub fn validate_subscribe_url_policy(url: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Score a candidate feed URL for brew.subscribe multi-source attempts.
+/// Score a candidate feed URL for phantasi.subscribe multi-source attempts.
 ///
 /// Higher score is tried first: verified > official > HTTPS > known hosts; RSSHub demoted.
 pub fn feed_priority_score(url: &str, verified: bool, source: &str) -> i32 {

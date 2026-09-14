@@ -58,7 +58,7 @@ pub fn inject_steering_to_params(
         "prompt.generate" => append_instruction(params, "description", instruction),
         "ai.image" => append_instruction(params, "prompt", instruction),
         "translate.text" | "code.explain" | "ai.recommend" | "smart.filter"
-        | "brewlia.annotate" | "brewlia.podcast" => {
+        | "phantasiai.annotate" | "phantasiai.podcast" => {
             // systemPrompt trail + with_system_guidance in the handler is enough.
         }
         _ => {}

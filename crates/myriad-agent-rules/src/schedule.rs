@@ -213,23 +213,23 @@ mod heartbeat_tests {
     }
 }
 
-/// brew.schedule actions.
+/// phantasi.schedule actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BrewScheduleAction {
+pub enum PhantasiScheduleAction {
     Start,
     Stop,
     Refresh,
     Status,
 }
 
-/// Parse brew.schedule action string (default status).
-pub fn parse_brew_schedule_action(action: Option<&str>) -> Result<BrewScheduleAction, String> {
+/// Parse phantasi.schedule action string (default status).
+pub fn parse_phantasi_schedule_action(action: Option<&str>) -> Result<PhantasiScheduleAction, String> {
     match action.unwrap_or("status") {
-        "start" => Ok(BrewScheduleAction::Start),
-        "stop" => Ok(BrewScheduleAction::Stop),
-        "refresh" => Ok(BrewScheduleAction::Refresh),
-        "status" => Ok(BrewScheduleAction::Status),
-        other => Err(format!("Unknown brew schedule action: {other}")),
+        "start" => Ok(PhantasiScheduleAction::Start),
+        "stop" => Ok(PhantasiScheduleAction::Stop),
+        "refresh" => Ok(PhantasiScheduleAction::Refresh),
+        "status" => Ok(PhantasiScheduleAction::Status),
+        other => Err(format!("Unknown phantasi schedule action: {other}")),
     }
 }
 
@@ -248,20 +248,20 @@ pub fn extract_raw_backend_actions(params: &HashMap<String, Value>) -> Option<Va
 }
 
 #[cfg(test)]
-mod brew_schedule_tests {
+mod phantasi_schedule_tests {
     use super::*;
 
     #[test]
-    fn brew_schedule_action_and_backend_actions() {
+    fn phantasi_schedule_action_and_backend_actions() {
         assert_eq!(
-            parse_brew_schedule_action(None).unwrap(),
-            BrewScheduleAction::Status
+            parse_phantasi_schedule_action(None).unwrap(),
+            PhantasiScheduleAction::Status
         );
         assert_eq!(
-            parse_brew_schedule_action(Some("start")).unwrap(),
-            BrewScheduleAction::Start
+            parse_phantasi_schedule_action(Some("start")).unwrap(),
+            PhantasiScheduleAction::Start
         );
-        assert!(parse_brew_schedule_action(Some("explode")).is_err());
+        assert!(parse_phantasi_schedule_action(Some("explode")).is_err());
 
         let mut params = HashMap::new();
         params.insert("action".into(), json!("ping"));

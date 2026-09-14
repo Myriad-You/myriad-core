@@ -333,7 +333,7 @@ fn final_answer_becomes_one_c2c_text() {
 
 #[test]
 fn final_answer_with_images_keeps_text_and_image_urls() {
-    let urls = vec!["/api/brew/image-cache/ab/abcd.png".into()];
+    let urls = vec!["/api/phantasi/image-cache/ab/abcd.png".into()];
     let plan = plan_delivery(
         &ChannelEvent::Answer {
             message: "图片已经生成好了".into(),
@@ -356,12 +356,12 @@ fn collect_channel_image_urls_reads_envelope_and_step_history() {
     let urls = collect_channel_image_urls(&serde_json::json!({
         "data": {
             "format": "image",
-            "value": { "url": "/api/brew/image-cache/ab/abcd.png" }
+            "value": { "url": "/api/phantasi/image-cache/ab/abcd.png" }
         },
         "task": {
             "stepHistory": [
                 { "imageUrl": "https://cdn.example/a.png" },
-                { "imageUrl": "/api/brew/image-cache/ab/abcd.png" },
+                { "imageUrl": "/api/phantasi/image-cache/ab/abcd.png" },
                 { "imageUrl": "javascript:alert(1)" },
                 { "imageUrl": "data:image/png;base64,xx" }
             ]
@@ -370,7 +370,7 @@ fn collect_channel_image_urls_reads_envelope_and_step_history() {
     assert_eq!(
         urls,
         vec![
-            "/api/brew/image-cache/ab/abcd.png",
+            "/api/phantasi/image-cache/ab/abcd.png",
             "https://cdn.example/a.png",
         ]
     );

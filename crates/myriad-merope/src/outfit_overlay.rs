@@ -1254,14 +1254,14 @@ mod tests {
                 {
                     "id": "default",
                     "clothingStyle": "idol",
-                    "portraitAssetId": "/api/brew/image-cache/fb/default.png",
+                    "portraitAssetId": "/api/phantasi/image-cache/fb/default.png",
                     "rigAssetId": "61bf11a3fd6551f09c2c2cc1b52f20022791100de9edee6c59f625a0d6ecc4a3",
                     "outfit": { "outfitConstruction": "内层雪白方领无袖舞台胸衣，方领完全敞开" }
                 },
                 {
                     "id": "w-8d0eb1c5-837e-4b0f-9a08-87e6362b0c15",
                     "clothingStyle": "idol",
-                    "portraitAssetId": "/api/brew/image-cache/22/stage.png",
+                    "portraitAssetId": "/api/phantasi/image-cache/22/stage.png",
                     "rigAssetId": "e4575c9b16a46e32d74d3393c1d4ff73028e9d12b1a4969d6c240f9aa5f5c7d7",
                     "outfit": { "outfitConstruction": "内层低开圆领短胸衣；中层斜裁舞台马甲。外层不对称缎带板块披肩" }
                 }

@@ -1,8 +1,8 @@
-//! Pure Agent rules: prompt caps, brew write policy, error classification.
+//! Pure Agent rules: prompt caps, phantasi write policy, error classification.
 //!
 //! No I/O. Backend services re-export moved symbols so existing imports compile.
 
-pub mod brew;
+pub mod phantasi;
 pub mod channel;
 pub mod data_read;
 pub mod error;
@@ -16,7 +16,7 @@ pub mod semantic;
 pub mod steering;
 pub mod task;
 
-pub use brew::{
+pub use phantasi::{
     MAX_FEED_NAME_LEN, MAX_FEED_URLS, MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL,
     MIN_UPDATE_INTERVAL, clamp_update_interval_minutes, collect_subscribe_url_candidates,
     extract_and_prioritize_feeds, feed_priority_score, is_disallowed_subscribe_host,
@@ -55,9 +55,9 @@ pub use retry::{
     should_retry_step,
 };
 pub use schedule::{
-    AgentExecutionTarget, AgentScheduleType, BrewScheduleAction, build_schedule_config,
+    AgentExecutionTarget, AgentScheduleType, PhantasiScheduleAction, build_schedule_config,
     extract_raw_backend_actions, heartbeat_task_id, heartbeat_update_has_fields,
-    parse_brew_schedule_action, parse_execution_target, parse_schedule_type,
+    parse_phantasi_schedule_action, parse_execution_target, parse_schedule_type,
 };
 pub use semantic::{
     capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,

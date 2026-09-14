@@ -2817,7 +2817,7 @@ fn push_channel_image_url(urls: &mut Vec<String>, candidate: Option<&str>) {
     };
     if !(url.starts_with("http://")
         || url.starts_with("https://")
-        || url.starts_with("/api/brew/image-cache/"))
+        || url.starts_with("/api/phantasi/image-cache/"))
     {
         return;
     }
