@@ -332,10 +332,11 @@ fn catalog_line(look: &WardrobeLook, showing_id: &str, all: &[WardrobeLook]) -> 
         .max_by_key(|hint| hint.chars().count())
         .cloned();
     if let Some(construction) = construction.as_deref()
-        && !look.label.contains(construction) {
-            line.push('：');
-            line.push_str(construction);
-        }
+        && !look.label.contains(construction)
+    {
+        line.push('：');
+        line.push_str(construction);
+    }
     let aliases = catalog_aliases(look, showing_id, all, construction.as_deref());
     if !aliases.is_empty() {
         line.push_str(". Also called ");

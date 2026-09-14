@@ -418,9 +418,9 @@ pub fn sanitize_wardrobe_checked(value: &Value) -> Result<Vec<Value>, VisualProf
                 .get("name")
                 .and_then(Value::as_str)
                 .and_then(sanitize_wardrobe_name)
-            {
-                obj.insert("name".into(), json!(name));
-            }
+        {
+            obj.insert("name".into(), json!(name));
+        }
         out.push(saved);
     }
     Ok(out)
@@ -498,9 +498,10 @@ pub fn ensure_default_wardrobe(profile: &mut Value, previous: Option<&Map<String
         };
         for item in items.iter_mut() {
             if is_default_wardrobe_item(item)
-                && let Some(obj) = item.as_object_mut() {
-                    obj.remove("name");
-                }
+                && let Some(obj) = item.as_object_mut()
+            {
+                obj.remove("name");
+            }
         }
         if items.iter().any(is_default_wardrobe_item) {
             return;
@@ -541,9 +542,10 @@ pub fn ensure_default_wardrobe(profile: &mut Value, previous: Option<&Map<String
         return;
     }
     if let Some(old_id) = promoted_from
-        && root.get("activeOutfitId").and_then(Value::as_str) == Some(old_id.as_str()) {
-            root.insert("activeOutfitId".into(), json!(DEFAULT_WARDROBE_ID));
-        }
+        && root.get("activeOutfitId").and_then(Value::as_str) == Some(old_id.as_str())
+    {
+        root.insert("activeOutfitId".into(), json!(DEFAULT_WARDROBE_ID));
+    }
 }
 
 fn sanitize_wardrobe_hex_id(raw: &str) -> Option<String> {

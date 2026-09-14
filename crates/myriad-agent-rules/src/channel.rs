@@ -996,13 +996,16 @@ pub fn parse_telegram_callback(data: &str) -> Option<TelegramCallbackBinding> {
     }
     if let Some(rest) = data.strip_prefix("o:") {
         if let Some((id, index)) = rest.rsplit_once(':')
-            && !id.is_empty() && id != TELEGRAM_CALLBACK_YES && id != TELEGRAM_CALLBACK_NO {
-                let index = index.parse::<usize>().ok()?;
-                return Some(TelegramCallbackBinding {
-                    prompt_id: id.to_string(),
-                    kind: TelegramBoundKind::Option(index),
-                });
-            }
+            && !id.is_empty()
+            && id != TELEGRAM_CALLBACK_YES
+            && id != TELEGRAM_CALLBACK_NO
+        {
+            let index = index.parse::<usize>().ok()?;
+            return Some(TelegramCallbackBinding {
+                prompt_id: id.to_string(),
+                kind: TelegramBoundKind::Option(index),
+            });
+        }
         let index = rest.parse::<usize>().ok()?;
         return Some(TelegramCallbackBinding {
             prompt_id: String::new(),
@@ -2116,9 +2119,10 @@ pub fn split_channel_text(text: &str, limit: usize) -> Vec<String> {
                 end = start + rel;
             }
         } else if let Some(rel) = window.iter().rposition(|ch| ch.is_whitespace())
-            && rel > 0 {
-                end = start + rel;
-            }
+            && rel > 0
+        {
+            end = start + rel;
+        }
         let chunk: String = chars[start..end].iter().collect();
         let chunk = chunk.trim().to_string();
         if !chunk.is_empty() {
@@ -2222,9 +2226,10 @@ fn display_rows<'a>(
         return Vec::new();
     };
     if let Some(path) = display.get("dataPath").and_then(|value| value.as_str())
-        && let Some(found) = json_path(data, path).and_then(|value| value.as_array()) {
-            return found.iter().collect();
-        }
+        && let Some(found) = json_path(data, path).and_then(|value| value.as_array())
+    {
+        return found.iter().collect();
+    }
     match data {
         serde_json::Value::Array(rows) => rows.iter().collect(),
         serde_json::Value::Object(map) => {
@@ -2604,9 +2609,10 @@ pub fn discord_json_code(body: &str) -> Option<i64> {
 /// so one blocked DM does not stop the Gateway worker.
 pub fn classify_discord_rest(status: u16, body: &str) -> ConnectFailureKind {
     if let Some(code) = discord_json_code(body)
-        && matches!(code, 50007 | 50278 | 40003 | 20009) {
-            return ConnectFailureKind::Transient;
-        }
+        && matches!(code, 50007 | 50278 | 40003 | 20009)
+    {
+        return ConnectFailureKind::Transient;
+    }
     classify_connect_failure(&ConnectFailure::HttpStatus { status, body })
 }
 

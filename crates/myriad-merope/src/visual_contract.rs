@@ -26,9 +26,10 @@ pub fn appearance_visual_profile(visual_profile: &Value) -> Value {
                 if let Some(gender) = source.get("gender").and_then(Value::as_str)
                     && !crate::visual_prompt::visual_identity_matches_gender_presentation(
                         value, gender,
-                    ) {
-                        continue;
-                    }
+                    )
+                {
+                    continue;
+                }
                 let Some(normalized) =
                     crate::visual_prompt::normalize_visual_identity_for_prompt(value)
                 else {

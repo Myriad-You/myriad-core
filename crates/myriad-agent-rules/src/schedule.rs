@@ -78,9 +78,10 @@ pub fn build_schedule_config(
     daily_time: Option<&str>,
 ) -> Result<Value, String> {
     if let Some(value) = schedule_obj
-        && value.is_object() {
-            return Ok(value.clone());
-        }
+        && value.is_object()
+    {
+        return Ok(value.clone());
+    }
     match schedule_type {
         AgentScheduleType::Cron => Ok(json!({
             "cron": legacy_cron.ok_or("Missing cron schedule")?

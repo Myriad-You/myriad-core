@@ -38,20 +38,22 @@ pub fn extract_json_array_from_ai_response(text: &str) -> Vec<Value> {
     let json_end = text.rfind(']');
 
     if let (Some(start), Some(end)) = (json_start, json_end)
-        && end > start {
-            let json_str = &text[start..=end];
-            if let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_str) {
-                return arr;
-            }
+        && end > start
+    {
+        let json_str = &text[start..=end];
+        if let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_str) {
+            return arr;
         }
+    }
 
     if text.contains("```json") {
         let parts: Vec<&str> = text.split("```json").collect();
         if parts.len() > 1
             && let Some(json_part) = parts[1].split("```").next()
-                && let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_part.trim()) {
-                    return arr;
-                }
+            && let Ok(arr) = serde_json::from_str::<Vec<Value>>(json_part.trim())
+        {
+            return arr;
+        }
     }
 
     if text.contains("```") {
@@ -59,9 +61,10 @@ pub fn extract_json_array_from_ai_response(text: &str) -> Vec<Value> {
         for part in parts {
             let trimmed = part.trim();
             if trimmed.starts_with('[')
-                && let Ok(arr) = serde_json::from_str::<Vec<Value>>(trimmed) {
-                    return arr;
-                }
+                && let Ok(arr) = serde_json::from_str::<Vec<Value>>(trimmed)
+            {
+                return arr;
+            }
         }
     }
 

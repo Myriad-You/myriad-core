@@ -913,13 +913,14 @@ pub fn build_character_visual_prompt(
 
     let mut identity = Vec::new();
     if let Some(style) = crate::visual_design::clothing_style_of(onboarding)
-        && let Some(grammar) = crate::visual_design::clothing_style_grammar(style) {
-            push_section(
-                &mut identity,
-                "Costume language for garments and accessories",
-                grammar,
-            );
-        }
+        && let Some(grammar) = crate::visual_design::clothing_style_grammar(style)
+    {
+        push_section(
+            &mut identity,
+            "Costume language for garments and accessories",
+            grammar,
+        );
+    }
     for (key, label) in IDENTITY_PROMPT_FIELDS {
         let max_chars = field_limit(key);
         let value = text_at(&visual_identity, &[key], max_chars);

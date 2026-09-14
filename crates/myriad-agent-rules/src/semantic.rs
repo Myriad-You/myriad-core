@@ -39,9 +39,10 @@ pub fn extract_semantic_text(value: &Value) -> String {
 
         for key in &text_keys {
             if let Some(text) = obj.get(*key).and_then(|v| v.as_str())
-                && !text.is_empty() {
-                    parts.push(text.to_string());
-                }
+                && !text.is_empty()
+            {
+                parts.push(text.to_string());
+            }
         }
 
         if let Some(results) = obj.get("results").and_then(|v| v.as_array()) {

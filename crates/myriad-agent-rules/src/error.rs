@@ -456,16 +456,17 @@ pub fn apply_param_fixes(
     for (param_name, fix) in fixes {
         if param_name.starts_with('_') {
             if param_name == "_append_system"
-                && let ParamFix::AppendToParam(text) = fix {
-                    let existing = new_params
-                        .get("systemPrompt")
-                        .and_then(|v| v.as_str())
-                        .unwrap_or("");
-                    new_params.insert(
-                        "systemPrompt".to_string(),
-                        Value::String(format!("{}\n\n{}", existing, text)),
-                    );
-                }
+                && let ParamFix::AppendToParam(text) = fix
+            {
+                let existing = new_params
+                    .get("systemPrompt")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                new_params.insert(
+                    "systemPrompt".to_string(),
+                    Value::String(format!("{}\n\n{}", existing, text)),
+                );
+            }
             continue;
         }
 
