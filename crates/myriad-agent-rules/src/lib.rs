@@ -2,12 +2,12 @@
 //!
 //! No I/O. Backend services re-export moved symbols so existing imports compile.
 
-pub mod phantasi;
 pub mod channel;
 pub mod data_read;
 pub mod error;
 pub mod external;
 pub mod image;
+pub mod phantasi;
 pub mod plan_contract;
 pub mod prompt;
 pub mod retry;
@@ -16,13 +16,6 @@ pub mod semantic;
 pub mod steering;
 pub mod task;
 
-pub use phantasi::{
-    MAX_FEED_NAME_LEN, MAX_FEED_URLS, MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL,
-    MIN_UPDATE_INTERVAL, clamp_update_interval_minutes, collect_subscribe_url_candidates,
-    extract_and_prioritize_feeds, feed_priority_score, is_disallowed_subscribe_host,
-    is_disallowed_subscribe_ip, platform_write_cap_error, platform_write_items_over_cap,
-    sanitize_feed_name, take_feed_urls_to_try, validate_subscribe_url_policy,
-};
 pub use data_read::{
     extract_json_array_from_ai_response, extract_json_object_from_ai_response,
     parse_rsshub_radar_rules, project_time_info, weekday_zh,
@@ -41,6 +34,13 @@ pub use image::{
     parse_image_dim, resolve_image_dimensions, resolve_image_prompt, resolve_image_size,
     resolve_negative_prompt,
 };
+pub use phantasi::{
+    MAX_FEED_NAME_LEN, MAX_FEED_URLS, MAX_PLATFORM_WRITE_ITEMS, MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL, clamp_update_interval_minutes, collect_subscribe_url_candidates,
+    extract_and_prioritize_feeds, feed_priority_score, is_disallowed_subscribe_host,
+    is_disallowed_subscribe_ip, platform_write_cap_error, platform_write_items_over_cap,
+    sanitize_feed_name, take_feed_urls_to_try, validate_subscribe_url_policy,
+};
 pub use plan_contract::{
     MAX_PLAN_STEPS, PLAN_DATA_FLOW_RULE, PLAN_DEPENDENCY_RULE, plan_image_size_rule,
     plan_step_cap_rule,
@@ -57,7 +57,7 @@ pub use retry::{
 pub use schedule::{
     AgentExecutionTarget, AgentScheduleType, PhantasiScheduleAction, build_schedule_config,
     extract_raw_backend_actions, heartbeat_task_id, heartbeat_update_has_fields,
-    parse_phantasi_schedule_action, parse_execution_target, parse_schedule_type,
+    parse_execution_target, parse_phantasi_schedule_action, parse_schedule_type,
 };
 pub use semantic::{
     capability_needs_conversation_context, capability_needs_memory, extract_semantic_text,

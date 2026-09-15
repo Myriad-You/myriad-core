@@ -223,7 +223,9 @@ pub enum PhantasiScheduleAction {
 }
 
 /// Parse phantasi.schedule action string (default status).
-pub fn parse_phantasi_schedule_action(action: Option<&str>) -> Result<PhantasiScheduleAction, String> {
+pub fn parse_phantasi_schedule_action(
+    action: Option<&str>,
+) -> Result<PhantasiScheduleAction, String> {
     match action.unwrap_or("status") {
         "start" => Ok(PhantasiScheduleAction::Start),
         "stop" => Ok(PhantasiScheduleAction::Stop),
