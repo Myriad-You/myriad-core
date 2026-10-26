@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # rust-toolchain.toml picks the toolchain; rustup installs it on first use.
+      - run: rustup show
+      - run: cargo test --workspace --locked
+      - run: cargo test -p myriad-merope --features test-games --locked
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  staticlib:
+    runs-on: macos-15
+    strategy:
+      matrix:
+        target: [aarch64-apple-darwin, aarch64-apple-ios, aarch64-apple-ios-sim]
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup target add ${{ matrix.target }}
+      - run: cargo build --release --locked --target ${{ matrix.target }} -p myriad-core-ffi
+        env:
+          MYRIAD_CORE_UPSTREAM_COMMIT: ${{ github.sha }}

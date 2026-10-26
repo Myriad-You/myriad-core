@@ -1,0 +1,20 @@
+# The shared core: her rules, written once. Every member is a pure crate (docs/SHARED_CORE.md「边界」).
+# The release profile is the one the site used when these crates lived in Myriad, so the same input
+# gives the same bytes on every platform that builds from here.
+[workspace]
+resolver = "2"
+members = [
+    "crates/myriad-agent-rules",
+    "crates/myriad-core-ffi",
+    "crates/myriad-her-link",
+    "crates/myriad-merope",
+    "crates/myriad-perception-filter",
+    "crates/myriad-persona-log",
+    "crates/myriad-persona-sync",
+]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

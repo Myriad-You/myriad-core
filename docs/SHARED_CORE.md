@@ -1,8 +1,10 @@
 # 共用核心（myriad-core-ffi）
 
-站点以外的平台（目前是 macOS 原生 App，仓库 MyriadNative）要和站点上的她说同样的话、按同样的规则变心情，所以不各自抄一份规则，而是链接同一份 Rust 代码。`crates/myriad-core-ffi` 把纯规则 crate 包成一个静态库，对外只有一个 JSON 进、JSON 出的 C 入口。
+本仓库 2026-10-26 带着历史从 [Myriad](https://github.com/Myriad-You/Myriad) 拆出来（原来在它的 `crates/` 和 `shared/` 下，这份说明原来是它的 `docs/development/SHARED_CORE.md`），各端按一个提交钉住本仓库。
 
-站点后端不经过它，照常直接依赖 `myriad-merope`、`myriad-agent-rules`。
+站点以外的平台（目前是 macOS 原生 App）要和站点上的她说同样的话、按同样的规则变心情，所以不各自抄一份规则，而是链接同一份 Rust 代码。`crates/myriad-core-ffi` 把纯规则 crate 包成一个静态库，对外只有一个 JSON 进、JSON 出的 C 入口。
+
+站点后端不经过它，照常直接依赖 `myriad-merope`、`myriad-agent-rules` 等 crate（Myriad 用 git 子模块钉住本仓库）。
 
 ## 边界
 
@@ -37,7 +39,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 加一个调用
 
-0. 规则还在后端（`backend/`）的，先搬进纯 crate（只挪不改，后端改为 re-export 或薄包装，现有测试证明行为不变），再登记调用。回想的算术（`myriad_agent_rules::memory`）、聊天日记的门槛（`myriad_merope::diary`）、她的作息（`timing::*_at`）、聊天记录的文本（`chat_history`）就是这样进来的。
+0. 规则还在站点后端（Myriad 的 `backend/`）的，先搬进纯 crate（只挪不改，后端改为 re-export 或薄包装，现有测试证明行为不变），再登记调用。回想的算术（`myriad_agent_rules::memory`）、聊天日记的门槛（`myriad_merope::diary`）、她的作息（`timing::*_at`）、聊天记录的文本（`chat_history`）就是这样进来的。
 1. 在 `src/calls/` 里它所属领域的模块（心情、说话、她自己的生活、作息、体征、说话习惯、海龟汤、连载、先开口、换装……）写调用函数，再按名字的字典序登记进 `src/calls.rs` 的 `CALLS`。函数只做 JSON 与 crate 类型之间的转换，规则本身留在原 crate。
 2. 在 `src/tests.rs` 或 `src/tests/` 的领域模块里写一组往返测试：经 C 入口的输出要和直接调 crate 函数逐字节（浮点逐位）相同。再把名字登记进该模块的 `TESTED`（或 `every_call_is_tested_and_version_lists_them` 的列表），漏登记会失败。
    - 规则本身的输出要确定：同一输入在任何平台、任何一次运行都得出同一结果。按 `HashMap` 的遍历顺序决定先后的地方要补一个确定的次序（例如 `contrast::overused` 的同分按片段本身排）。
@@ -138,7 +140,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 她的连接的帧（`link.*`）
 
-「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer` 六个帧族，信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 [ARCHITECTURE.md](ARCHITECTURE.md)「Her link and her devices」。
+「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer` 六个帧族，信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
 
 `crates/myriad-her-link` 编译时读这份契约，按它判断一帧能不能发、能不能收，规则不会和契约漂移：信封字段、`v`、类型、`seq`／`ack`／`at`、可靠帧必须有 `id` 且符合 `idPattern`、其余帧不能有 `id`、正文的必填和可选字段、`oneOf`（例如 `facts` 和 `sealed` 恰好一个）、`maxItems`、发送方的角色、帧大小，以及密封字段的形状（`{suite, to, keyId, enc, ct}`，套件是契约里的那一个，`enc` 32 字节，`ct` 至少一个标签长）。协议 1 的帧在协议 2 的信封里照旧按它们自己的正文检查。HPKE 的封和开是各端自己的（用各自的钥匙），核心只给 `info`（`myriad-link/2 <t>`）和附加数据（规范 JSON `{from, t, to}`）的写法。
 
@@ -154,7 +156,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
 - `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：授予的检查，规则还不在核心里，现在是 `status: "pending"`、没有用例的占位。
 - `myriad-persona-log` 的测试经 crate 跑，`myriad-core-ffi` 的测试经 C 入口跑。别的平台照样把每个用例交给 `myriad_core_call`。
-- 只随一次写明理由的上游改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写所有 `output`。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
+- 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写所有 `output`。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
 
 ## 宿主过滤（`filter.*`）
 
@@ -183,11 +185,12 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 别的平台怎么链接
 
-不从工作区构建：工作区里常有别人还没提交的改动。按一个提交构建：
+不从工作区构建：工作区里常有别人还没提交的改动。按本仓库的一个提交构建：
 
-1. 取这个提交的 `crates/myriad-core-ffi` 与它的全部 path 依赖（`myriad-persona-log`、`myriad-her-link` 也在其中）、`shared/`（`myriad-merope/build.rs` 和 `myriad-her-link` 在编译期读里面的契约）、`Cargo.lock`、`rust-toolchain.toml`，`git archive` 到一个隔离目录。
-2. 在那里写一个只列这些 crate 的工作区 `Cargo.toml`，沿用根 `Cargo.toml` 的 `[profile.release]`。Cargo 只会从锁文件里去掉没用到的包，用到的每个包都要与上游 `Cargo.lock` 同版本。
-3. 设 `MYRIAD_CORE_UPSTREAM_COMMIT=<提交>`（取归档自己记录的提交号，`git get-tar-commit-id`），`cargo build --release --target <triple> -p myriad-core-ffi`。
-4. 链接 `libmyriad_core_ffi.a` 和头文件；启动或测试时断言 `meta.version` 的 `upstreamCommit` 就是钉住的提交。
+1. 把这个提交 `git archive` 到一个隔离目录（整个仓库就是要构建的全部：crate、`shared/` 里编译期读的契约、`Cargo.lock`、`rust-toolchain.toml`）。
+2. 设 `MYRIAD_CORE_UPSTREAM_COMMIT=<提交>`（取归档自己记录的提交号，`git get-tar-commit-id`），`cargo build --release --locked --target <triple> -p myriad-core-ffi`。变量名和 `meta.version` 的 `upstreamCommit` 沿用拆出来之前的名字，指的是本仓库的提交。
+3. 链接 `libmyriad_core_ffi.a` 和头文件；启动或测试时断言 `meta.version` 的 `upstreamCommit` 就是钉住的提交。
 
-macOS 原生的做法：MyriadNative 的 `CORE_PIN`、`scripts/build-core.sh` 与 `docs/CORE.md`（只有 Command Line Tools 时手工拼 xcframework 目录）。冷构建约 4 分钟，静态库约 50 MB（带着整个 std 与 LTO 后的依赖），链接后只留下用到的部分。
+用 Rust 的端（站点后端，以后的其他客户端）不经 C 入口，直接依赖 crate。
+
+macOS 原生的做法：原生 App 仓库的 `CORE_PIN`、`scripts/build-core.sh` 与 `docs/CORE.md`（只有 Command Line Tools 时手工拼 xcframework 目录）。冷构建约 4 分钟，静态库约 50 MB（带着整个 std 与 LTO 后的依赖），链接后只留下用到的部分。iOS 的静态库由持续集成构建（`.github/workflows/ci.yml`），还没有一端链接过。
