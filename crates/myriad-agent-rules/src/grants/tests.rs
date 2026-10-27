@@ -293,23 +293,33 @@ fn granted_is_where_the_three_layers_meet() {
         approved: names(&["c", "a", "b"]),
         runtime_allowed: names(&["b", "c", "x"]),
     };
-    assert_eq!(granted(&layers), Ok(names(&["c", "b"])));
+    assert_eq!(granted(&layers), names(&["c", "b"]));
     let nothing_declared = Layers {
         declared: vec![],
         approved: vec![],
         runtime_allowed: names(&["a"]),
     };
-    assert_eq!(granted(&nothing_declared), Ok(vec![]));
+    assert_eq!(granted(&nothing_declared), Vec::<String>::new());
     let not_approved = Layers {
         declared: names(&["a"]),
         approved: vec![],
         runtime_allowed: names(&["a"]),
     };
-    assert_eq!(granted(&not_approved), Ok(vec![]));
+    assert_eq!(granted(&not_approved), Vec::<String>::new());
     let undeclared = Layers {
         declared: names(&["a"]),
         approved: names(&["a", "b"]),
         runtime_allowed: names(&["a", "b"]),
     };
-    assert_eq!(granted(&undeclared), Err(UndeclaredApproval));
+    assert_eq!(
+        granted(&undeclared),
+        names(&["a"]),
+        "the undeclared is dropped"
+    );
+    let none_declared = Layers {
+        declared: vec![],
+        approved: names(&["a", "b"]),
+        runtime_allowed: names(&["a", "b"]),
+    };
+    assert_eq!(granted(&none_declared), Vec::<String>::new());
 }

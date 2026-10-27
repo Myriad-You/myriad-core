@@ -96,7 +96,7 @@ fn grant_calls_answer_as_the_crate_does() {
     };
     assert_eq!(
         ok("grants.granted", json!(layers))["granted"],
-        json!(grants::granted(&layers).unwrap())
+        json!(grants::granted(&layers))
     );
     assert_eq!(
         ok(
@@ -186,6 +186,10 @@ fn audience_admits_answers_as_the_crate_does() {
         private(&[]),
         group("telegram:-1", &["7"]),
         group("telegram:-2", &["8"]),
+        Audience {
+            members: vec![],
+            venue: Venue::Own,
+        },
     ];
     for learned in &audiences {
         for present in &audiences {
@@ -201,15 +205,45 @@ fn audience_admits_answers_as_the_crate_does() {
     }
 }
 
-/// A refusal names no permission and no person from the input.
+/// A field given as `null` reads as not given: her own with `members: null`
+/// or `group: null` is her own; a private audience with `members: null` has
+/// no members and is refused.
 #[test]
-fn refusals_quote_nothing_from_the_input() {
-    let (status, out) = ffi(
-        "grants.granted",
-        &json!({ "declared": [], "approved": ["secret:name"], "runtimeAllowed": ["secret:name"] }),
+fn null_is_the_same_as_not_given() {
+    let own = json!({ "venue": "own" });
+    let present = json!({ "venue": "private", "members": ["7"] });
+    for learned in [
+        json!({ "venue": "own", "members": null }),
+        json!({ "venue": "own", "group": null }),
+    ] {
+        assert_eq!(
+            ok(
+                "audience.admits",
+                json!({ "learned": learned, "present": present })
+            ),
+            ok(
+                "audience.admits",
+                json!({ "learned": own, "present": present })
+            ),
+            "{learned}"
+        );
+    }
+    let (status, _) = ffi(
+        "audience.admits",
+        &json!({ "learned": present, "present": { "venue": "private", "members": null } }),
     );
     assert_eq!(status, STATUS_BAD_INPUT);
-    assert!(!out.to_string().contains("secret:name"), "{out}");
+}
+
+/// An approval past the declaration is dropped, not refused, and the
+/// answer carries nothing it dropped.
+#[test]
+fn an_undeclared_approval_is_dropped() {
+    let out = ok(
+        "grants.granted",
+        json!({ "declared": ["a"], "approved": ["secret:name", "a"], "runtimeAllowed": ["a", "secret:name"] }),
+    );
+    assert_eq!(out, json!({ "granted": ["a"] }));
 }
 
 /// Malformed input is refused the same way: a field name may come back, a
@@ -250,6 +284,20 @@ fn malformed_input_quotes_nothing_from_the_input() {
             json!({
                 "learned": { "venue": "private", "members": [7] },
                 "present": { "venue": "private", "members": ["secret:person"] }
+            }),
+        ),
+        (
+            "audience.admits",
+            json!({
+                "learned": { "venue": "own", "members": ["secret:person"] },
+                "present": { "venue": "private", "members": ["7"] }
+            }),
+        ),
+        (
+            "audience.admits",
+            json!({
+                "learned": { "venue": "own", "group": "secret:group" },
+                "present": { "venue": "own" }
             }),
         ),
     ] {

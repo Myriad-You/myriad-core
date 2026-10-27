@@ -19,11 +19,10 @@ type Grant = AutonomyGrant<String>;
 
 /// `{declared, approved, runtimeAllowed}` → `{granted}`: approved, allowed
 /// at run time and declared, in the approved order. An approval of
-/// something not declared is bad input: the hosts do not agree on it.
+/// something not declared is dropped.
 pub(super) fn granted(raw: &[u8]) -> Result<Value, Failure> {
     let layers: Layers = quiet_input(raw)?;
-    let granted = grants::granted(&layers).map_err(|error| Failure::BadInput(error.to_string()))?;
-    Ok(json!({ "granted": granted }))
+    Ok(json!({ "granted": grants::granted(&layers) }))
 }
 
 /// `{granted, cap?}` → `{effective}`.
