@@ -10,7 +10,8 @@
 //! Pure: no clock, environment, file, network or model call. The client
 //! captures the screen, asks its on-device model and shows the owner what
 //! she cannot see; these rules decide. The output never carries a wiped or
-//! matched value, nor where in the text it was.
+//! matched value, nor where in the text it was, except [`secrets::values`],
+//! which exists to return them for masking and must stay in memory.
 //!
 //! The pipeline, in order (`decide` combines the steps' results):
 //!

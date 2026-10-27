@@ -9,7 +9,10 @@
 //! is the accepted cost.
 //!
 //! Supersedes the native client's `SecretScrub`: same patterns, same order,
-//! same mark, plus the kind of each wipe. The assignment rule already covers
+//! same mark, plus the kind of each wipe. [`values`] stands in for its
+//! `values`: what [`scan`] wipes, read off the same pass, so a client can mask
+//! the same strings elsewhere. It is the one answer here that carries
+//! secrets; it stays in memory. The assignment rule already covers
 //! every key name `myriad-error`'s redaction blanks (`access_token`,
 //! `client_secret`, `app_secret`…); that redaction's other half reads the
 //! process environment and stays in the backend.
@@ -166,30 +169,156 @@ static UUID: LazyLock<Regex> = LazyLock::new(|| {
 
 /// Wipes every known key shape, then every high-entropy string.
 pub fn scan(text: &str) -> Wiped<SecretKind> {
-    let mut out = text.to_string();
-    let mut wiped = Vec::new();
-    for pattern in PATTERNS.iter() {
-        let found = matches(pattern, &out);
-        for (start, end, label) in found.iter().rev() {
-            out.replace_range(*start..*end, &format!("{}{MARK}{}", label.0, label.1));
-        }
-        wiped.extend(std::iter::repeat_n(pattern.kind, found.len()));
+    let pass = Pass::run(text);
+    Wiped {
+        text: pass.text,
+        wiped: pass.wiped,
     }
-    let found: Vec<(usize, usize)> = TOKEN
-        .find_iter(&out)
-        .filter(|token| looks_random(token.as_str()))
-        .map(|token| (token.start(), token.end()))
-        .collect();
-    for (start, end) in found.iter().rev() {
-        out.replace_range(*start..*end, MARK);
-    }
-    wiped.extend(std::iter::repeat_n(SecretKind::HighEntropy, found.len()));
-    Wiped { text: out, wiped }
 }
 
-/// `(start, end, (kept label, kept tail))` of every match, leftmost first,
-/// not overlapping.
-fn matches(pattern: &Pattern, text: &str) -> Vec<(usize, usize, (String, String))> {
+/// One stretch of the original text that [`scan`] replaces with one mark.
+///
+/// Holds a secret by design: keep it in memory only, never in a log, a file,
+/// a model's input or anything sent off the device.
+#[derive(Clone, PartialEq, Eq)]
+pub struct Found {
+    /// The rule whose mark stands there in the end: when a later rule's wipe
+    /// swallows an earlier one's mark (`Cookie: a=<key>`), the later one.
+    pub kind: SecretKind,
+    /// Exactly `text[start..end]`.
+    pub value: String,
+    /// UTF-8 byte offsets into the original text.
+    pub start: usize,
+    pub end: usize,
+}
+
+/// Never prints the value.
+impl std::fmt::Debug for Found {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Found")
+            .field("kind", &self.kind)
+            .field("start", &self.start)
+            .field("end", &self.end)
+            .finish_non_exhaustive()
+    }
+}
+
+/// What [`scan`] wipes, on the original text: one entry per mark left in
+/// its output, in the order they stand. Overlapping or nested wipes come
+/// back as the one outermost stretch, so replacing each `start..end` with
+/// [`MARK`] gives exactly `scan(text).text`. The same pass as [`scan`]: no
+/// second set of patterns.
+pub fn values(text: &str) -> Vec<Found> {
+    Pass::run(text)
+        .marks
+        .into_iter()
+        .map(|mark| Found {
+            kind: mark.kind,
+            value: text[mark.from..mark.to].to_string(),
+            start: mark.from,
+            end: mark.to,
+        })
+        .collect()
+}
+
+/// A mark in the text being wiped: `at..at + len` there stands for
+/// `from..to` of the original. Longer than [`MARK`] only if a later wipe cut
+/// into an earlier mark and left a piece of it.
+struct Mark {
+    at: usize,
+    len: usize,
+    from: usize,
+    to: usize,
+    kind: SecretKind,
+}
+
+/// The text being wiped, the kind of each wipe in the order [`scan`] reports
+/// them, and where every mark stands, leftmost first.
+struct Pass {
+    text: String,
+    wiped: Vec<SecretKind>,
+    marks: Vec<Mark>,
+}
+
+impl Pass {
+    fn run(text: &str) -> Self {
+        let mut pass = Self {
+            text: text.to_string(),
+            wiped: Vec::new(),
+            marks: Vec::new(),
+        };
+        for pattern in PATTERNS.iter() {
+            let found = matches(pattern, &pass.text);
+            for &(start, end) in found.iter().rev() {
+                pass.wipe(start, end, pattern.kind);
+            }
+        }
+        let found: Vec<(usize, usize)> = TOKEN
+            .find_iter(&pass.text)
+            .filter(|token| looks_random(token.as_str()))
+            .map(|token| (token.start(), token.end()))
+            .collect();
+        for &(start, end) in found.iter().rev() {
+            pass.wipe(start, end, SecretKind::HighEntropy);
+        }
+        pass
+    }
+
+    /// Replaces `start..end` of the text being wiped with the mark. Marks it
+    /// touches become part of the new one.
+    fn wipe(&mut self, start: usize, end: usize, kind: SecretKind) {
+        let first = self
+            .marks
+            .partition_point(|mark| mark.at + mark.len <= start);
+        let last = self.marks.partition_point(|mark| mark.at < end);
+        let (from, to) = (self.original(start, false), self.original(end, true));
+        let (mut at, mut until) = (start, end);
+        if first < last {
+            at = at.min(self.marks[first].at);
+            until = until.max(self.marks[last - 1].at + self.marks[last - 1].len);
+        }
+        let removed = end - start;
+        self.text.replace_range(start..end, MARK);
+        for mark in &mut self.marks[last..] {
+            mark.at = mark.at - removed + MARK.len();
+        }
+        let len = until - at - removed + MARK.len();
+        self.marks.splice(
+            first..last,
+            [Mark {
+                at,
+                len,
+                from,
+                to,
+                kind,
+            }],
+        );
+        self.wiped.push(kind);
+    }
+
+    /// Where `at` in the text being wiped falls in the original. Inside a
+    /// mark it is the mark's start, or its end when `end` is set, so a wipe
+    /// that cuts into a mark covers all of what that mark stood for.
+    fn original(&self, at: usize, end: bool) -> usize {
+        let (mut before, mut stood_for) = (0, 0);
+        for mark in &self.marks {
+            if mark.at + mark.len <= at {
+                before += mark.len;
+                stood_for += mark.to - mark.from;
+            } else if mark.at < at {
+                return if end { mark.to } else { mark.from };
+            } else {
+                break;
+            }
+        }
+        at - before + stood_for
+    }
+}
+
+/// The `start..end` of the value in every match, leftmost first, not
+/// overlapping. The label in front (group 1) and what follows (group 3)
+/// stay when the pattern keeps them.
+fn matches(pattern: &Pattern, text: &str) -> Vec<(usize, usize)> {
     let mut found = Vec::new();
     let mut at = 0;
     while at <= text.len() {
@@ -214,18 +343,15 @@ fn matches(pattern: &Pattern, text: &str) -> Vec<(usize, usize, (String, String)
                     .map_or(1, char::len_utf8);
             continue;
         }
-        let kept = |group| {
-            if pattern.keeps_label {
-                captures.get(group).map_or("", |kept| kept.as_str())
-            } else {
-                ""
-            }
+        let (start, end) = if pattern.keeps_label {
+            (
+                captures.get(1).map_or(whole.start(), |label| label.end()),
+                captures.get(3).map_or(whole.end(), |tail| tail.start()),
+            )
+        } else {
+            (whole.start(), whole.end())
         };
-        found.push((
-            whole.start(),
-            whole.end(),
-            (kept(1).to_string(), kept(3).to_string()),
-        ));
+        found.push((start, end));
         at = if whole.end() > whole.start() {
             whole.end()
         } else {

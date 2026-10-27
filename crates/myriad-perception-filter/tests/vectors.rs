@@ -1,5 +1,5 @@
 //! The consistency vectors every client runs (fixtures/host-filter
-//! `pages.json`, `terminal.json`): here straight from the crate, in
+//! `pages.json`, `terminal.json`, `secret-values.json`): here straight from the crate, in
 //! `myriad-core-ffi` through the C entry point.
 
 use myriad_perception_filter::{
@@ -118,5 +118,27 @@ fn terminal_credentials_are_wiped_as_the_vectors_say() {
         if case["wiped"].as_array().unwrap().is_empty() {
             assert_eq!(scan.text, text, "{id}");
         }
+    }
+}
+
+#[test]
+fn secret_values_are_where_the_vectors_say() {
+    let doc = fixture("secret-values");
+    for case in doc["cases"].as_array().unwrap() {
+        let id = case["id"].as_str().unwrap();
+        let text = case["text"].as_str().unwrap();
+        let found: Vec<Value> = secrets::values(text)
+            .into_iter()
+            .map(|found| {
+                json!({
+                    "kind": found.kind,
+                    "value": found.value,
+                    "start": found.start,
+                    "end": found.end,
+                })
+            })
+            .collect();
+        assert_eq!(json!(found), case["found"], "{id}");
+        assert_eq!(secrets::scan(text).text, case["scanned"], "{id}");
     }
 }

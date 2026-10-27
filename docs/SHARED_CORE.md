@@ -189,6 +189,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | --- | --- |
 | `filter.window` | `{bundleId?, title}` → `{seen}`（抹过密钥、压成一行、最多 160 个字符的标题）或 `{withheld: "password_app" \| "key_file"}`：整个窗口都不读 |
 | `filter.scan_secrets` | `{text}` → `{text, wiped: [{kind}]}`，`kind` 是 `private_key`、`vendor_prefix`、`bearer`、`assignment`、`flag`（`-u 用户:…`、`mysql -p…`、`--password …`、`sshpass -p`、`docker login -p`）、`url_credentials`（网址里的 `用户:…@`）、`netrc`、`cookie`、`high_entropy` |
+| `filter.secret_values` | `{text}` → `{found: [{kind, value, start, end}]}`：`filter.scan_secrets` 会抹掉什么、在哪，和它是同一遍扫描（`secrets::values`），没有第二套规则。每一项是扫描结果里的一个记号，按位置先后；后一条规则吞掉前一条的记号时（`Cookie: a=<密钥>`）只给最外面那一段和它的 `kind`。`start`、`end` 是原文的 UTF-8 字节偏移（不是字符数，也不是 UTF-16 单位），`value` 恰好是原文的 `start..end`；把每段换成记号就是 `scan_secrets` 的 `text`。输出就是密钥本身：只留在内存里，不进日志、文件、模型输入，也不离开设备 |
 | `filter.scan_identifiers` | `{text}`（密钥扫描之后）→ `{text, wiped: [{kind}]}`，`kind` 是 `card`、`sg_nric`、`jp_my_number`；命中说明是主人自己的身份信息 |
 | `filter.source` | `{bundleId?, urlHost?, market?}` → `{kind}`：`finance`、`health`、`dating`、`job`、`legal`、`adult`、`account`、`government_id`、`messaging` 或 `null`；没给市场或市场不认识时所有市场的网站都算；`table` 只给回归样本用 |
 | `filter.page` | `{urlHost, path?, title?, passwordField?, market?}` → `{read, page, basis, kind, category, othersWords}`：网页的正文读不读。`page` 是 `ordinary`、`messaging`（读，`othersWords` 为真）、`unknown`（表里没有的网站，读）或 `sign_in`、`sensitive`、`account`（不读）；`basis` 说是哪条规则：`ordinary_site`（表里的普通网站，`category` 是 `video`、`news`、`reference`、`dev`、`shopping`……）、`docs_host`（`docs.`、`developer.` 这类文档主机）、`messaging_site`、`sensitive_site`、`sensitive_host`（表里没有、域名说明了用途）、`account_path`、`account_title`、`password_field`、`unknown_site`。路径和标题只在本机读，主机名、路径、标题都不进输出 |
@@ -201,8 +202,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **新值按更严的读。** `filter.decide` 的枚举都按字符串收：新客户端发来旧核心不认识的值（新的来源类别、新的模型状态），按更严的那一个处理，不拒绝。缺了某步需要的输入是 `blind`（`reason: "missing"`，`missing` 说缺了哪项），也不拒绝。
 - **网页按黑名单读。**（2026-10-25 起，原来是「认不出就不读」）看得见密码框的页面、敏感网站（表里的，以及表里没有、但域名本身说明了用途的：域名里有 tax、law、gov 这类词（整段才算），或含 bank、insur、health、clinic、hospital、dating 这类词根（长名字里也算，`mybank`、`healthline`），或以 `.gov`、`.go.jp`、`.bank` 这类结尾，`page::sensitive_host`）、任何网站上的账号页（路径里有 `settings`、`account`、`password`、`billing`、`payment`、`checkout`、`orders`、`login`……，或标题是账号设置、支付方式这类）都不读；其余都读正文，包括表里没有的网站（`unknown`）。读出的正文照样经过文字规则、号码扫描和本机模型的分类再决定去向（`filter.decide`），认不出的网站不再单凭这一点什么都不交出。敏感的那几类永远压过普通（`pay.普通网站` 列在敏感里就是敏感）。
 - **敏感的什么都不交。** 来源是敏感类别、网页是账号页或认不出时，`decide` 给 `present_only`，但 `leaves` 是 `nothing`：连「主人在忙私事」的标记也不带，不论 `PRESENT_ONLY_LEAVES_KIND`。看得见密码框是 `exclude`。私密窗口、证件号、文字规则命中仍只交那个不带类别的标记。
-- **一致性对照**：`fixtures/host-filter/pages.json`（`filter.page` 加 `filter.decide`，自带 `.example` 来源表）和 `terminal.json`（终端里的密钥写法），crate 直接跑一遍、经 C 入口再跑一遍；别的客户端按钉住的提交复制这两份，经 C 入口逐条比对。
-- **拒绝不带原文。** 这些调用读的文字里可能有密钥，所以 `bad_input` 的消息只说缺了或多了哪个字段，或者输入不合形状，从不引用输入里的值。输出也不带被抹掉、被命中的原文和它的位置。
+- **一致性对照**：`fixtures/host-filter/pages.json`（`filter.page` 加 `filter.decide`，自带 `.example` 来源表）、`terminal.json`（终端里的密钥写法）和 `secret-values.json`（`filter.secret_values` 的位置和原文，含多字节文字、跨行私钥、被吞掉的记号），crate 直接跑一遍、经 C 入口再跑一遍；别的客户端按钉住的提交复制这三份，经 C 入口逐条比对。
+- **拒绝不带原文。** 这些调用读的文字里可能有密钥，所以 `bad_input` 的消息只说缺了或多了哪个字段，或者输入不合形状，从不引用输入里的值（`filter.secret_values` 也一样）。输出也不带被抹掉、被命中的原文和它的位置；唯一的例外是 `filter.secret_values`，它的用处就是把这些值交给客户端在别处遮掉。
 - **还没定的两件事各是一个常量。** 敏感分类问几次（`CLASSIFY_ASKS`，现在问两次（通用、内容标注），两次都明确不敏感才 `carry`）、`present_only` 离开设备的标记带不带类别（`PRESENT_ONLY_LEAVES_KIND`，现在不带）。现在取的都是更严的那一边；客户端按 `filter.lists` 的 `classifyAsks` 决定问几次。
 - **回归样本**在 `crates/myriad-perception-filter/fixtures/host-filter/`：原生仓库合成样本的副本（密钥和号码是占位符，测试在运行时用固定种子展开），加上本机模型在这批样本上录下的回答（`model-replay.json`）。`cargo test -p myriad-perception-filter --test corpus -- --nocapture` 打印真规则＋录下的模型回答按 `decide` 合成后，每类放过和收紧了多少。
 
