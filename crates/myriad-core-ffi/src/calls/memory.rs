@@ -16,7 +16,7 @@ use myriad_merope::diary;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{at, input, opt_at, text};
+use super::{at, input, opt_at, quiet_input, text};
 use crate::Failure;
 
 /// A memory as recall reads it: its text and what it is about.
@@ -50,7 +50,7 @@ pub(super) fn admits(raw: &[u8]) -> Result<Value, Failure> {
         learned: Audience<String>,
         present: Audience<String>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!({ "admits": audience::admits(&req.learned, &req.present) }))
 }
 

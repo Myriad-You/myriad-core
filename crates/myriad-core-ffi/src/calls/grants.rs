@@ -12,7 +12,7 @@ use myriad_agent_rules::grants::{self, Actor, AutonomyGrant, Layers, Source};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::input;
+use super::quiet_input;
 use crate::Failure;
 
 type Grant = AutonomyGrant<String>;
@@ -21,7 +21,7 @@ type Grant = AutonomyGrant<String>;
 /// at run time and declared, in the approved order. An approval of
 /// something not declared is bad input: the hosts do not agree on it.
 pub(super) fn granted(raw: &[u8]) -> Result<Value, Failure> {
-    let layers: Layers = input(raw)?;
+    let layers: Layers = quiet_input(raw)?;
     let granted = grants::granted(&layers).map_err(|error| Failure::BadInput(error.to_string()))?;
     Ok(json!({ "granted": granted }))
 }
@@ -35,7 +35,7 @@ pub(super) fn effective(raw: &[u8]) -> Result<Value, Failure> {
         #[serde(default)]
         cap: Option<Vec<String>>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!({ "effective": grants::effective(&req.granted, req.cap.as_deref()) }))
 }
 
@@ -53,7 +53,7 @@ pub(super) fn check(raw: &[u8]) -> Result<Value, Failure> {
         cap: Option<Vec<String>>,
         required: Vec<String>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let check = grants::check(
         &req.actor,
         req.grant.as_ref(),
@@ -75,7 +75,7 @@ pub(super) fn autonomy(raw: &[u8]) -> Result<Value, Failure> {
         grant: Option<Grant>,
         granted: Vec<String>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!(grants::evaluate(
         &req.actor,
         req.grant.as_ref(),
@@ -95,7 +95,7 @@ pub(super) fn may_enter_work(raw: &[u8]) -> Result<Value, Failure> {
         granted: Vec<String>,
         source: Source,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let may = grants::may_enter_work(&req.actor, req.grant.as_ref(), &req.granted, req.source);
     Ok(json!({ "mayEnter": may }))
 }
@@ -112,7 +112,7 @@ pub(super) fn cap_still_allows(raw: &[u8]) -> Result<Value, Failure> {
         #[serde(default)]
         cap: Option<Vec<String>>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let allows = grants::cap_still_allows(
         &req.actor,
         req.grant.as_ref(),
@@ -134,7 +134,7 @@ pub(super) fn claim(raw: &[u8]) -> Result<Value, Failure> {
         grant: Option<Grant>,
         granted: Vec<String>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let cap = grants::claim(&req.actor, req.source, req.grant.as_ref(), &req.granted);
     Ok(json!({ "cap": cap }))
 }
@@ -150,7 +150,7 @@ pub(super) fn prepare(raw: &[u8]) -> Result<Value, Failure> {
         granted: Vec<String>,
         candidates: Vec<String>,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(written(grants::prepare(
         &req.actor,
         &req.requested,
@@ -168,7 +168,7 @@ pub(super) fn revoke(raw: &[u8]) -> Result<Value, Failure> {
         grant: Grant,
         personal: bool,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(written(grants::revoke(&req.grant, req.personal)))
 }
 

@@ -211,3 +211,57 @@ fn refusals_quote_nothing_from_the_input() {
     assert_eq!(status, STATUS_BAD_INPUT);
     assert!(!out.to_string().contains("secret:name"), "{out}");
 }
+
+/// Malformed input is refused the same way: a field name may come back, a
+/// value never does.
+#[test]
+fn malformed_input_quotes_nothing_from_the_input() {
+    let actor = json!({ "id": "secret:person", "personal": true });
+    for (name, input) in [
+        (
+            "grants.may_enter_work",
+            json!({ "actor": actor, "granted": [], "source": "secret:source" }),
+        ),
+        (
+            "grants.claim",
+            json!({ "actor": actor, "granted": [], "source": "secret:source" }),
+        ),
+        (
+            "grants.check",
+            json!({ "actor": { "id": "secret:person", "personal": "secret:flag" }, "granted": [], "required": [] }),
+        ),
+        (
+            "grants.granted",
+            json!({ "declared": "secret:name", "approved": [], "runtimeAllowed": [] }),
+        ),
+        (
+            "grants.revoke",
+            json!({ "grant": { "actor": actor, "allowed": ["secret:name"] }, "personal": "secret:flag" }),
+        ),
+        (
+            "audience.admits",
+            json!({
+                "learned": { "venue": "secret:venue", "members": ["secret:person"] },
+                "present": { "venue": "private", "members": [] }
+            }),
+        ),
+        (
+            "audience.admits",
+            json!({
+                "learned": { "venue": "private", "members": [7] },
+                "present": { "venue": "private", "members": ["secret:person"] }
+            }),
+        ),
+    ] {
+        let (status, out) = ffi(name, &input);
+        assert_eq!(status, STATUS_BAD_INPUT, "{name}: {out}");
+        assert!(!out.to_string().contains("secret:"), "{name}: {out}");
+    }
+    let (status, out) = ffi(
+        "grants.effective",
+        &json!({ "granted": [], "secret:extra": ["secret:name"] }),
+    );
+    assert_eq!(status, STATUS_BAD_INPUT);
+    assert!(out.to_string().contains("unknown field"), "{out}");
+    assert!(!out.to_string().contains("secret:name"), "{out}");
+}
