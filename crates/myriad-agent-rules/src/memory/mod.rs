@@ -3,8 +3,10 @@
 //! readily a memory comes to mind, `association` spreads activation from
 //! what was named to what it brings to mind, and `recall` finds what she
 //! knows only a little about. The backend reads the rows and calls these.
+//! `audience` says who may hear a memory at all.
 
 pub mod association;
+pub mod audience;
 pub mod lexical;
 pub mod rank;
 pub mod recall;

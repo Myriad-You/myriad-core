@@ -1,0 +1,330 @@
+{
+  "call": "audience.admits",
+  "cases": [
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "private: the same person",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": [
+            "8"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "private: someone else",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7",
+            "8",
+            "9"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": [
+            "8",
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "private: everyone present was there",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": [
+            "7",
+            "8"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "private: not everyone present was there",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": [],
+          "venue": "private"
+        }
+      },
+      "name": "private: nobody present",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [],
+          "venue": "private"
+        },
+        "present": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "private: nobody recorded when it was learned",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "group": "telegram:-100123",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "a private fact stays out of a group",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "telegram:-100123",
+          "members": [
+            "8"
+          ],
+          "venue": "group"
+        },
+        "present": {
+          "group": "telegram:-100123",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "whoever said it, the group heard it",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "telegram:-100123",
+          "members": [],
+          "venue": "group"
+        },
+        "present": {
+          "group": "telegram:-100123",
+          "members": [],
+          "venue": "group"
+        }
+      },
+      "name": "a group with nobody recorded still heard it",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "telegram:-100999",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        },
+        "present": {
+          "group": "telegram:-100123",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "another group is other people",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "telegram:-100123",
+          "members": [
+            "8"
+          ],
+          "venue": "group"
+        },
+        "present": {
+          "members": [
+            "8"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "what a group heard stays in the group",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "onebot:1",
+          "members": [],
+          "venue": "group"
+        },
+        "present": {
+          "group": "onebot:10",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "group ids are compared whole",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [],
+          "venue": "own"
+        },
+        "present": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "refused: her own memories are not an audience here",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        },
+        "present": {
+          "group": "onebot:1",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "refused: a group without its id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "group": "onebot:1",
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "refused: a private audience naming a group",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            7
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "refused: members as numbers",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

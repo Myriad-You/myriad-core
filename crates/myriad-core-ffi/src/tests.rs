@@ -9,6 +9,7 @@ mod archive;
 mod books;
 mod filter;
 mod games;
+mod grants;
 mod group;
 mod habits;
 mod link;
@@ -107,6 +108,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(books::TESTED.iter().copied())
     .chain(filter::TESTED.iter().copied())
     .chain(games::TESTED.iter().copied())
+    .chain(grants::TESTED.iter().copied())
     .chain(group::TESTED.iter().copied())
     .chain(habits::TESTED.iter().copied())
     .chain(link::TESTED.iter().copied())

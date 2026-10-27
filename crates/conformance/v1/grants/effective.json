@@ -1,0 +1,98 @@
+{
+  "call": "grants.effective",
+  "cases": [
+    {
+      "input": {
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ]
+      },
+      "name": "no cap is no narrowing",
+      "output": {
+        "effective": [
+          "calendar:read",
+          "mail:send"
+        ]
+      }
+    },
+    {
+      "input": {
+        "cap": null,
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "a null cap is no cap",
+      "output": {
+        "effective": [
+          "calendar:read"
+        ]
+      }
+    },
+    {
+      "input": {
+        "cap": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "granted": [
+          "mail:send",
+          "calendar:read",
+          "notes:write"
+        ]
+      },
+      "name": "granted within the cap, in the granted order",
+      "output": {
+        "effective": [
+          "mail:send",
+          "calendar:read"
+        ]
+      }
+    },
+    {
+      "input": {
+        "cap": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "a cap never widens",
+      "output": {
+        "effective": [
+          "calendar:read"
+        ]
+      }
+    },
+    {
+      "input": {
+        "cap": [
+          "mail:send"
+        ],
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "a cap narrowing to nothing",
+      "output": {
+        "effective": []
+      }
+    },
+    {
+      "input": {
+        "cap": [],
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "an empty cap grants nothing",
+      "output": {
+        "effective": []
+      }
+    }
+  ],
+  "version": 1
+}

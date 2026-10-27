@@ -149,14 +149,36 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `link.check` | `{frame, roles?}` → `{accepted: {t, family, delivery, canonical}}` 或 `{refused: {code, detail}}`；`code` 是契约 `next.errorCodes` 里的一个；`roles` 是发送方的角色（`device`、`host`、`mind`、`server`），不给就不查 |
 | `link.encode` | `{frame}` → `{text}`：要发的帧检查过后的规范文本；不通过是 `bad_input` |
 
+## 授予和听众（`grants.*`、`audience.*`）
+
+权限分三层：能力声明的、用户批准的、宿主在运行时授予的；只有授予决定行为，声明、批准、提议和计划都不算。她自己发起的 Work 另有个人自治授权，每次检查都按「现在授予的」重新过滤，并受认领时的上限（cap）约束。规则在 `myriad_agent_rules::grants`，从站点后端的 `consciousness/grant.rs`、`consciousness/dispatch.rs` 搬来；一条记忆能在谁面前说（听众）在 `myriad_agent_rules::memory::audience`，从后端 `memory/unified.rs` 的 `admits`、`audience_admits` 搬来。
+
+`actor` 是 `{id, personal}`：宿主对行动者的 id，和宿主认不认这是一个人（心跳、system 身份不是）。授权是 `{actor, allowed, revoked}`；`grant` 不给或 `null` 是没有。`cap` 不给或 `null` 是没有上限。列表保持被缩小的那个列表的顺序和重复（授权的 `allowed`、`granted`、`required`），按集合读就是原生的 `Set`。输出是值不是句子，提示文字各端自己写。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `grants.granted` | `{declared, approved, runtimeAllowed}` → `{granted}`：三层的交，按 `approved` 的顺序；批准了没声明的名字是 `bad_input`（两端处理不同，核心不答） |
+| `grants.effective` | `{granted, cap?}` → `{effective}`：上限之内的授予；上限只缩不扩 |
+| `grants.check` | `{actor, grant?, granted, cap?, required}` → `{outcome: "allowed"}`、`{outcome: "autonomy_withdrawn"}`（有上限而授权已撤回、或上限内什么都没授予）或 `{outcome: "missing", missing}`（按 `required` 的顺序列出全部缺的；站点只报第一个） |
+| `grants.autonomy` | `{actor, grant?, granted}` → `{verdict: "require_user_review"}` 或 `{verdict: "allow_personal_work", granted}` |
+| `grants.may_enter_work` | `{actor, grant?, granted, source}` → `{mayEnter}`；`source` 是 `user` 或 `autonomy` |
+| `grants.cap_still_allows` | `{actor, grant?, granted, cap?}` → `{allows}` |
+| `grants.claim` | `{actor, source, grant?, granted}` → `{cap}`：认领用的上限，`null` 是留给用户 |
+| `grants.prepare` | `{actor, requested, granted, candidates}` → `{grant}` 或 `{refused: "heartbeat_identity" \| "empty_after_filter"}`；空请求取 `granted` 里在 `candidates`（宿主自己的候选表）中的 |
+| `grants.revoke` | `{grant, personal}` → `{grant}`（`revoked: true`，名字保留）或 `{refused: "heartbeat_identity"}` |
+| `audience.admits` | `{learned, present}` → `{admits}`；听众是 `{venue: "private", members}` 或 `{venue: "group", group, members}`，`members` 是宿主的 id（字符串） |
+
+- **谁算一个人、空请求取哪些候选，由调用方给。** 站点是 id 大于 0（心跳是 0），原生是不空且不是 `system`；候选表站点是 `max_user_agent_permissions`，原生另把 `mcp.` 开头的都算进去。规则只用调用方给的 `personal` 和 `candidates`。
+- **两端不一致的，核心不答。** 她自己的记忆（`own`）不是这里的听众（`bad_input`）：站点的 `admits` 不收它、另走自己的查询，原生的 `Audience.admits` 处处都收。存储里没记成员的旧记忆怎么读（站点当作它那个人的）、群 id 截多长，也留在各端。`grants.granted` 遇到批准超出声明时拒绝：站点在安装、更新时从声明里选出批准，运行时不再与声明求交；原生每次都三层求交。
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，现在是 `v1/`，原生按 `CORE_PIN` 复制进它自己的测试。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：授予的检查，规则还不在核心里，现在是 `status: "pending"`、没有用例的占位。
-- `myriad-persona-log` 的测试经 crate 跑，`myriad-core-ffi` 的测试经 C 入口跑。别的平台照样把每个用例交给 `myriad_core_call`。
-- 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写所有 `output`。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说。
+- `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
+- 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `log/`、`lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写，没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
 
 ## 宿主过滤（`filter.*`）
 

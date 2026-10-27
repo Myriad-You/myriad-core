@@ -1,6 +1,374 @@
 {
-  "call": null,
-  "cases": [],
-  "status": "pending",
+  "call": "grants.check",
+  "cases": [
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "calendar:read"
+        ]
+      },
+      "name": "capped: granted within the cap",
+      "output": {
+        "outcome": "allowed"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "calendar:read"
+        ]
+      },
+      "name": "capped: the grant was revoked",
+      "output": {
+        "outcome": "autonomy_withdrawn"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "calendar:read"
+        ]
+      },
+      "name": "capped: no grant at all",
+      "output": {
+        "outcome": "autonomy_withdrawn"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "mail:send"
+        ],
+        "required": [
+          "calendar:read"
+        ]
+      },
+      "name": "capped: the grant's names are no longer granted",
+      "output": {
+        "outcome": "autonomy_withdrawn"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "mail:send"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read",
+            "mail:send"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "required": []
+      },
+      "name": "capped: the cap narrows what is granted to nothing",
+      "output": {
+        "outcome": "autonomy_withdrawn"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "mail:send"
+        ]
+      },
+      "name": "capped: granted, but outside the cap",
+      "output": {
+        "missing": [
+          "mail:send"
+        ],
+        "outcome": "missing"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "0",
+          "personal": false
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "0",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "calendar:read"
+        ]
+      },
+      "name": "capped: the heartbeat never runs on a grant",
+      "output": {
+        "outcome": "autonomy_withdrawn"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "8",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "calendar:read"
+        ]
+      },
+      "name": "capped: someone else's grant",
+      "output": {
+        "outcome": "autonomy_withdrawn"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": [
+          "calendar:read"
+        ],
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": []
+      },
+      "name": "capped: nothing required leaves only the autonomy question",
+      "output": {
+        "outcome": "allowed"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "mail:send"
+        ]
+      },
+      "name": "uncapped: what is granted now covers it",
+      "output": {
+        "outcome": "allowed"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "cap": null,
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": [
+          "mail:send"
+        ]
+      },
+      "name": "uncapped: a revoked grant does not matter to user-accepted Work",
+      "output": {
+        "outcome": "allowed"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "required": [
+          "mail:send",
+          "calendar:read",
+          "files:write"
+        ]
+      },
+      "name": "uncapped: every missing name, in the required order",
+      "output": {
+        "missing": [
+          "mail:send",
+          "files:write"
+        ],
+        "outcome": "missing"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [],
+        "required": []
+      },
+      "name": "uncapped: nothing granted, nothing required",
+      "output": {
+        "outcome": "allowed"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ]
+      },
+      "name": "refused: required missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7"
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "required": []
+      },
+      "name": "refused: an actor without personal",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
   "version": 1
 }

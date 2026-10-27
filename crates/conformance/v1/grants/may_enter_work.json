@@ -1,0 +1,153 @@
+{
+  "call": "grants.may_enter_work",
+  "cases": [
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "user"
+      },
+      "name": "the user's click needs no grant",
+      "output": {
+        "mayEnter": true
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "user"
+      },
+      "name": "the user's click after a revoke",
+      "output": {
+        "mayEnter": true
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read",
+            "mcp:execute"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "autonomy"
+      },
+      "name": "on her own with a live grant",
+      "output": {
+        "mayEnter": true
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "autonomy"
+      },
+      "name": "on her own after a revoke",
+      "output": {
+        "mayEnter": false
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read",
+            "mcp:execute"
+          ],
+          "revoked": false
+        },
+        "granted": [],
+        "source": "autonomy"
+      },
+      "name": "on her own once the grant's names are dropped",
+      "output": {
+        "mayEnter": false
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "0",
+          "personal": false
+        },
+        "grant": {
+          "actor": "0",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "user"
+      },
+      "name": "the heartbeat never enters, even on a click",
+      "output": {
+        "mayEnter": false
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "planner"
+      },
+      "name": "refused: a source the rule does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

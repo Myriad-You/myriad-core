@@ -1,0 +1,138 @@
+{
+  "call": "grants.claim",
+  "cases": [
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read",
+            "mail:send"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "autonomy"
+      },
+      "name": "autonomy-accepted with a live grant: claimed with what is granted now",
+      "output": {
+        "cap": [
+          "calendar:read"
+        ]
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "user"
+      },
+      "name": "user-accepted rows are left for the user",
+      "output": {
+        "cap": null
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "autonomy"
+      },
+      "name": "no grant",
+      "output": {
+        "cap": null
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "autonomy"
+      },
+      "name": "revoked",
+      "output": {
+        "cap": null
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [],
+        "source": "autonomy"
+      },
+      "name": "nothing granted now",
+      "output": {
+        "cap": null
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "0",
+          "personal": false
+        },
+        "grant": {
+          "actor": "0",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ],
+        "source": "autonomy"
+      },
+      "name": "the heartbeat",
+      "output": {
+        "cap": null
+      }
+    }
+  ],
+  "version": 1
+}
