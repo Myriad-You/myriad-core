@@ -249,69 +249,95 @@ impl Pass {
         };
         for pattern in PATTERNS.iter() {
             let found = matches(pattern, &pass.text);
-            for &(start, end) in found.iter().rev() {
-                pass.wipe(start, end, pattern.kind);
-            }
+            pass.wipe(&found, pattern.kind);
         }
         let found: Vec<(usize, usize)> = TOKEN
             .find_iter(&pass.text)
             .filter(|token| looks_random(token.as_str()))
             .map(|token| (token.start(), token.end()))
             .collect();
-        for &(start, end) in found.iter().rev() {
-            pass.wipe(start, end, SecretKind::HighEntropy);
-        }
+        pass.wipe(&found, SecretKind::HighEntropy);
         pass
     }
 
-    /// Replaces `start..end` of the text being wiped with the mark. Marks it
-    /// touches become part of the new one.
-    fn wipe(&mut self, start: usize, end: usize, kind: SecretKind) {
-        let first = self
-            .marks
-            .partition_point(|mark| mark.at + mark.len <= start);
-        let last = self.marks.partition_point(|mark| mark.at < end);
-        let (from, to) = (self.original(start, false), self.original(end, true));
-        let (mut at, mut until) = (start, end);
-        if first < last {
-            at = at.min(self.marks[first].at);
-            until = until.max(self.marks[last - 1].at + self.marks[last - 1].len);
+    /// Replaces every `start..end` of the text being wiped (one rule's
+    /// matches: leftmost first, not overlapping) with the mark, in one
+    /// sweep. Marks a match overlaps become part of its new mark, and so
+    /// does every other match that overlaps one of those; a mark right next
+    /// to a match stays its own.
+    fn wipe(&mut self, found: &[(usize, usize)], kind: SecretKind) {
+        if found.is_empty() {
+            return;
         }
-        let removed = end - start;
-        self.text.replace_range(start..end, MARK);
-        for mark in &mut self.marks[last..] {
-            mark.at = mark.at - removed + MARK.len();
-        }
-        let len = until - at - removed + MARK.len();
-        self.marks.splice(
-            first..last,
-            [Mark {
-                at,
-                len,
-                from,
-                to,
-                kind,
-            }],
-        );
-        self.wiped.push(kind);
-    }
-
-    /// Where `at` in the text being wiped falls in the original. Inside a
-    /// mark it is the mark's start, or its end when `end` is set, so a wipe
-    /// that cuts into a mark covers all of what that mark stood for.
-    fn original(&self, at: usize, end: bool) -> usize {
-        let (mut before, mut stood_for) = (0, 0);
-        for mark in &self.marks {
-            if mark.at + mark.len <= at {
-                before += mark.len;
-                stood_for += mark.to - mark.from;
-            } else if mark.at < at {
-                return if end { mark.to } else { mark.from };
+        self.wiped.extend(std::iter::repeat_n(kind, found.len()));
+        let old = std::mem::take(&mut self.marks);
+        let mut text = String::with_capacity(self.text.len());
+        let mut marks = Vec::with_capacity(old.len() + found.len());
+        let (mut old, mut found) = (old.into_iter().peekable(), found.iter().peekable());
+        // How far the text is copied, and the length of the old marks before
+        // there: in the text being wiped and in the original.
+        let (mut copied, mut before, mut stood_for) = (0, 0, 0);
+        loop {
+            // A group starts at whichever comes first and takes in all that
+            // overlaps it.
+            let mark_first = match (old.peek(), found.peek()) {
+                (None, None) => break,
+                (Some(mark), Some(&&(start, _))) => mark.at <= start,
+                (Some(_), None) => true,
+                (None, Some(_)) => false,
+            };
+            let at = if mark_first {
+                old.peek().map_or(0, |mark| mark.at)
             } else {
-                break;
+                found.peek().map_or(0, |range| range.0)
+            };
+            let (mut until, mut inside, mut inside_stood) = (at, 0, 0);
+            let mut alone = None;
+            let mut ranges = Vec::new();
+            loop {
+                if let Some(mark) = old.next_if(|mark| mark.at < until || mark.at == at) {
+                    until = until.max(mark.at + mark.len);
+                    inside += mark.len;
+                    inside_stood += mark.to - mark.from;
+                    alone = Some(mark.kind);
+                } else if let Some(&(start, end)) =
+                    found.next_if(|range| range.0 < until || range.0 == at)
+                {
+                    until = until.max(end);
+                    ranges.push((start, end));
+                } else {
+                    break;
+                }
             }
+            text.push_str(&self.text[copied..at]);
+            let new_at = text.len();
+            let mut piece = at;
+            for &(start, end) in &ranges {
+                text.push_str(&self.text[piece..start]);
+                text.push_str(MARK);
+                piece = end;
+            }
+            text.push_str(&self.text[piece..until]);
+            copied = until;
+            marks.push(Mark {
+                at: new_at,
+                len: text.len() - new_at,
+                // Neither edge of a group falls inside a mark.
+                from: at - before + stood_for,
+                to: until - before - inside + stood_for + inside_stood,
+                // An old mark no match touched keeps its kind.
+                kind: if ranges.is_empty() {
+                    alone.unwrap_or(kind)
+                } else {
+                    kind
+                },
+            });
+            before += inside;
+            stood_for += inside_stood;
         }
-        at - before + stood_for
+        text.push_str(&self.text[copied..]);
+        self.text = text;
+        self.marks = marks;
     }
 }
 
@@ -418,4 +444,49 @@ pub fn looks_random(token: &str) -> bool {
     let mixed_case = token.chars().any(|c| c.is_ascii_uppercase())
         && token.chars().any(|c| c.is_ascii_lowercase());
     entropy >= if mixed_case { 3.6 } else { 3.9 }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// No rule today starts or ends a match inside an earlier mark, but the
+    /// sweep must still map such a wipe onto the original: the marks it cuts
+    /// into, and every match that cuts into them, become one.
+    #[test]
+    fn a_wipe_that_cuts_into_a_mark_takes_all_it_stood_for() {
+        let original = "ab 0123456789 cd ef";
+        let mut pass = Pass {
+            text: original.to_string(),
+            wiped: Vec::new(),
+            marks: Vec::new(),
+        };
+        pass.wipe(&[(3, 13)], SecretKind::Flag);
+        let mark = pass.text.find(MARK).unwrap();
+        assert_eq!(mark, 3);
+        // Two matches, each cutting into the same mark, and one apart.
+        let inside = 3 + MARK.chars().next().unwrap().len_utf8();
+        let tail = 3 + MARK.len() - MARK.chars().last().unwrap().len_utf8();
+        let ef = pass.text.find("ef").unwrap();
+        pass.wipe(
+            &[(1, inside), (tail, tail + 4), (ef, ef + 2)],
+            SecretKind::Cookie,
+        );
+        let spans: Vec<_> = pass
+            .marks
+            .iter()
+            .map(|mark| (mark.from, mark.to, mark.kind))
+            .collect();
+        // `b 0123456789 cd` (the first match, the mark, the second match up
+        // to `d`), then `ef`.
+        assert_eq!(
+            spans,
+            [(1, 16, SecretKind::Cookie), (17, 19, SecretKind::Cookie)]
+        );
+        assert_eq!(&original[1..16], "b 0123456789 cd");
+        let last = pass.marks.last().unwrap();
+        assert_eq!(&pass.text[last.at..last.at + last.len], MARK);
+        assert_eq!(pass.text.len(), last.at + last.len);
+        assert_eq!(pass.wiped.len(), 4);
+    }
 }
