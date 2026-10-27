@@ -224,7 +224,21 @@ mod tests {
             serde_json::to_string(&parsed).unwrap(),
             r#"{"venue":"own"}"#
         );
+        // A field given as null reads as not given.
+        for (null, venue) in [
+            (r#"{"venue":"own","members":null}"#, Venue::Own),
+            (r#"{"venue":"own","group":null}"#, Venue::Own),
+            (
+                r#"{"venue":"private","group":null,"members":["7"]}"#,
+                Venue::Private,
+            ),
+        ] {
+            let parsed: Audience<String> = serde_json::from_str(null).unwrap();
+            assert_eq!(parsed.venue, venue, "{null}");
+        }
         for bad in [
+            r#"{"venue":"private","members":null}"#,
+            r#"{"venue":"group","group":null,"members":["7"]}"#,
             r#"{"venue":"group","members":["7"]}"#,
             r#"{"venue":"private","group":"onebot:1","members":["7"]}"#,
             r#"{"venue":"private"}"#,

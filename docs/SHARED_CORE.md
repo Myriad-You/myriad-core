@@ -166,7 +166,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `grants.claim` | `{actor, source, grant?, granted}` → `{cap}`：认领用的上限，`null` 是留给用户 |
 | `grants.prepare` | `{actor, requested, granted, candidates}` → `{grant}` 或 `{refused: "heartbeat_identity" \| "empty_after_filter"}`；空请求取 `granted` 里在 `candidates`（宿主自己的候选表）中的 |
 | `grants.revoke` | `{grant, personal}` → `{grant}`（`revoked: true`，名字保留）或 `{refused: "heartbeat_identity"}` |
-| `audience.admits` | `{learned, present}` → `{admits}`；听众是 `{venue: "private", members}`、`{venue: "group", group, members}` 或 `{venue: "own"}`（她自己的，不带 `members` 和 `group`），`members` 是宿主的 id（字符串）。学到时是 `own` → 任何现场都收；现场是 `own` → 只收学到时也是 `own` 的 |
+| `audience.admits` | `{learned, present}` → `{admits}`；听众是 `{venue: "private", members}`、`{venue: "group", group, members}` 或 `{venue: "own"}`（她自己的，不带 `members` 和 `group`），`members` 是宿主的 id（字符串）。学到时是 `own` → 任何现场都收；现场是 `own` → 只收学到时也是 `own` 的。字段值为 `null` 与不写相同：`own` 带 `members: null` 或 `group: null` 照收，带非空的 `members`、`members: []` 或任何 `group` 仍是 `bad_input`；私聊和群的 `members: null` 当作没写 `members`，是 `bad_input`，私聊的 `group: null` 当作没写、照收，群的 `group: null` 当作没写 `group`、是 `bad_input` |
 
 - **谁算一个人、空请求取哪些候选，由调用方给。** 站点是 id 大于 0（心跳是 0），原生是不空且不是 `system`；候选表站点是 `max_user_agent_permissions`，原生另把 `mcp.` 开头的都算进去。规则只用调用方给的 `personal` 和 `candidates`。
 - **她自己的记忆哪里都能说，授予永远三层求交。**（主人 2026-10-27 定，都照原生现状）她自己的记忆（`own`）任何现场都收，原生 `Audience.admits` 一直如此；站点原来在 `admits` 之外另走自己的查询，以后 `own` 行也交给 `audience.admits`。`grants.granted` 每次都是 `declared ∩ approved ∩ runtimeAllowed`，批准超出声明的丢掉，照原生 `PermissionState.granted`；站点 Tapp 原来在安装、更新时从声明里选出批准、运行时不再与声明求交。

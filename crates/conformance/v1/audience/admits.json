@@ -409,6 +409,39 @@
     {
       "input": {
         "learned": {
+          "members": null,
+          "venue": "own"
+        },
+        "present": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "her own: members null is the same as none",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": null,
+          "venue": "own"
+        },
+        "present": {
+          "venue": "own"
+        }
+      },
+      "name": "her own: group null is the same as none",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
           "members": [],
           "venue": "own"
         },
@@ -469,6 +502,24 @@
         }
       },
       "name": "refused: a private audience without members",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "members": null,
+          "venue": "private"
+        }
+      },
+      "name": "refused: a private audience with members null",
       "output": {
         "error": "bad_input"
       }

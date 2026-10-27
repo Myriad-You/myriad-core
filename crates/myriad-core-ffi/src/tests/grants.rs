@@ -205,6 +205,36 @@ fn audience_admits_answers_as_the_crate_does() {
     }
 }
 
+/// A field given as `null` reads as not given: her own with `members: null`
+/// or `group: null` is her own; a private audience with `members: null` has
+/// no members and is refused.
+#[test]
+fn null_is_the_same_as_not_given() {
+    let own = json!({ "venue": "own" });
+    let present = json!({ "venue": "private", "members": ["7"] });
+    for learned in [
+        json!({ "venue": "own", "members": null }),
+        json!({ "venue": "own", "group": null }),
+    ] {
+        assert_eq!(
+            ok(
+                "audience.admits",
+                json!({ "learned": learned, "present": present })
+            ),
+            ok(
+                "audience.admits",
+                json!({ "learned": own, "present": present })
+            ),
+            "{learned}"
+        );
+    }
+    let (status, _) = ffi(
+        "audience.admits",
+        &json!({ "learned": present, "present": { "venue": "private", "members": null } }),
+    );
+    assert_eq!(status, STATUS_BAD_INPUT);
+}
+
 /// An approval past the declaration is dropped, not refused, and the
 /// answer carries nothing it dropped.
 #[test]
