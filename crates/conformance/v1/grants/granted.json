@@ -104,9 +104,66 @@
           "b"
         ]
       },
-      "name": "refused: an approval of something not declared",
+      "name": "an approval of something not declared is dropped",
       "output": {
-        "error": "bad_input"
+        "granted": [
+          "a"
+        ]
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "x",
+          "c",
+          "a"
+        ],
+        "declared": [
+          "a",
+          "c"
+        ],
+        "runtimeAllowed": [
+          "a",
+          "c",
+          "x"
+        ]
+      },
+      "name": "the undeclared is dropped, the rest keep the approved order",
+      "output": {
+        "granted": [
+          "c",
+          "a"
+        ]
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "a"
+        ],
+        "declared": [],
+        "runtimeAllowed": [
+          "a"
+        ]
+      },
+      "name": "approved and allowed but declared nowhere grants nothing",
+      "output": {
+        "granted": []
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "b"
+        ],
+        "declared": [
+          "a"
+        ],
+        "runtimeAllowed": []
+      },
+      "name": "undeclared and not allowed at run time grants nothing",
+      "output": {
+        "granted": []
       }
     },
     {

@@ -64,40 +64,22 @@ pub struct Layers {
     pub runtime_allowed: Vec<String>,
 }
 
-/// An approval reaches past what is declared. The hosts handle that
-/// differently (see [`granted`]), so the rule does not answer for it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct UndeclaredApproval;
-
-impl std::fmt::Display for UndeclaredApproval {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("an approved permission is not declared")
-    }
-}
-
-impl std::error::Error for UndeclaredApproval {}
-
 /// What is granted now: approved, allowed at run time, and declared; in the
 /// approved order.
 ///
-/// An approval of something not declared is refused rather than answered:
-/// the site selects approvals out of the declaration when installing or
-/// updating and does not intersect the declaration again at run time, the
-/// Mac intersects all three every time. Inside that, the two agree.
-pub fn granted(layers: &Layers) -> Result<Vec<String>, UndeclaredApproval> {
-    if !layers
+/// Always all three, every time: an approval of something not declared is
+/// dropped, never granted. This is the Mac's `PermissionState.granted`
+/// (`Domain.swift`), as the owner decided on 2026-10-27 (G3 in the PR that
+/// brought this in); the site used to select approvals out of the
+/// declaration when installing or updating and not intersect the
+/// declaration again at run time.
+pub fn granted(layers: &Layers) -> Vec<String> {
+    layers
         .approved
         .iter()
-        .all(|name| layers.declared.contains(name))
-    {
-        return Err(UndeclaredApproval);
-    }
-    Ok(layers
-        .approved
-        .iter()
-        .filter(|name| layers.runtime_allowed.contains(name))
+        .filter(|name| layers.declared.contains(name) && layers.runtime_allowed.contains(name))
         .cloned()
-        .collect())
+        .collect()
 }
 
 /// Outcome of a personal autonomy check. Allowing personal Work never means

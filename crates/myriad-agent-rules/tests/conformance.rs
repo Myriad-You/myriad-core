@@ -2,7 +2,8 @@
 //! (`crates/conformance/v1/grants/`, `…/audience/`) through the crate, as
 //! the site backend calls it. `myriad-core-ffi` runs the same files through
 //! the C entry point. The outputs are written by hand from the backend's
-//! rules; nothing here rewrites them.
+//! rules, and from the Mac's for her own memories and approvals past the
+//! declaration (the owner's choice, 2026-10-27); nothing here rewrites them.
 
 use std::path::PathBuf;
 
@@ -45,7 +46,7 @@ fn run(call: &str, raw: Value) -> Result<Value, ()> {
         }
         "grants.granted" => {
             let layers: Layers = input(raw)?;
-            json!({ "granted": grants::granted(&layers).map_err(|_| ())? })
+            json!({ "granted": grants::granted(&layers) })
         }
         "grants.effective" => {
             #[derive(Deserialize)]

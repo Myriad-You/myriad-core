@@ -1,7 +1,8 @@
 //! Who may hear a memory: what was learned in front of one audience may be
-//! said again only in front of an audience it admits. In a group, only what
-//! was learned in that same group; in private, never what a group heard,
-//! and only if everyone present was there when it was learned.
+//! said again only in front of an audience it admits. A memory of her own
+//! may be said anywhere; in a group, only what was learned in that same
+//! group; in private, never what a group heard, and only if everyone
+//! present was there when it was learned.
 //!
 //! Moved from the site backend (`backend/src/services/agent/memory/unified.rs`,
 //! `admits` and `audience_admits`) with the stored row replaced by the
@@ -9,11 +10,15 @@
 //! people by (the site's account ids, the Mac's subject strings); the rule
 //! only compares them.
 //!
-//! What is not here, because the two hosts do not agree on it (see the PR
-//! that brought it in): a memory of her own (`own`), which the site keeps
-//! out of `admits` and reads by its own queries while the Mac admits it
-//! everywhere; reading a stored row's members, where the site takes a row
-//! with none recorded as its person's; and how long a group's id may be.
+//! Her own memories (`own`) follow the Mac (`Domain.swift`,
+//! `Audience.admits`), as the owner decided on 2026-10-27 (A1 in the PR that
+//! brought this in): learned as her own, any audience hears it; an audience
+//! of her own hears only what was her own. The site used to keep them out of
+//! `admits` and read them by its own queries.
+//!
+//! What is not here, because the two hosts do not agree on it: reading a
+//! stored row's members, where the site takes a row with none recorded as
+//! its person's; and how long a group's id may be.
 
 use serde::{Deserialize, Serialize};
 
@@ -25,10 +30,14 @@ pub enum Venue {
     /// A group chat, by the host's id for it (`telegram:-100123`). Open:
     /// people outside the community may be listening.
     Group(String),
+    /// Her own: what she thought, did or went through herself, not what
+    /// anyone told her. Nobody is recorded; `members` is not read.
+    Own,
 }
 
 /// Who was present when something was said, and where. In JSON:
-/// `{venue: "private", members}` or `{venue: "group", group, members}`.
+/// `{venue: "private", members}`, `{venue: "group", group, members}` or
+/// `{venue: "own"}` (no members, no group).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(
     try_from = "Wire<M>",
@@ -44,11 +53,14 @@ pub struct Audience<M> {
 }
 
 /// Whether a memory learned in front of `learned` may be said in front of
-/// `present`. In a group: only what was learned in that same group,
-/// whoever said it. In private: never what a group heard, and only if
-/// everyone present was there.
+/// `present`. Her own: anywhere; and where she is on her own, only what was
+/// her own. In a group: only what was learned in that same group, whoever
+/// said it. In private: never what a group heard, and only if everyone
+/// present was there.
 pub fn admits<M: PartialEq>(learned: &Audience<M>, present: &Audience<M>) -> bool {
     match (&present.venue, &learned.venue) {
+        (_, Venue::Own) => true,
+        (Venue::Own, _) => false,
         (Venue::Group(here), Venue::Group(there)) => here == there,
         (Venue::Group(_), Venue::Private) | (Venue::Private, Venue::Group(_)) => false,
         (Venue::Private, Venue::Private) => members_admit(&learned.members, &present.members),
@@ -66,6 +78,7 @@ pub fn members_admit<M: PartialEq>(original: &[M], present: &[M]) -> bool {
 enum Kind {
     Private,
     Group,
+    Own,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -74,7 +87,13 @@ struct Wire<M> {
     venue: Kind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     group: Option<String>,
-    members: Vec<M>,
+    #[serde(default = "none", skip_serializing_if = "Option::is_none")]
+    members: Option<Vec<M>>,
+}
+
+// Not `Default`, so `M` needs no `Default` bound.
+fn none<M>() -> Option<Vec<M>> {
+    None
 }
 
 impl<M> TryFrom<Wire<M>> for Audience<M> {
@@ -84,26 +103,32 @@ impl<M> TryFrom<Wire<M>> for Audience<M> {
         let venue = match (wire.venue, wire.group) {
             (Kind::Private, None) => Venue::Private,
             (Kind::Group, Some(id)) => Venue::Group(id),
+            (Kind::Own, None) => Venue::Own,
             (Kind::Private, Some(_)) => return Err("a private audience names no group"),
             (Kind::Group, None) => return Err("a group audience names its group"),
+            (Kind::Own, Some(_)) => return Err("her own audience names no group"),
         };
-        Ok(Self {
-            members: wire.members,
-            venue,
-        })
+        let members = match (&venue, wire.members) {
+            (Venue::Own, None) => Vec::new(),
+            (Venue::Own, Some(_)) => return Err("her own audience names nobody"),
+            (_, Some(members)) => members,
+            (_, None) => return Err("a private or group audience names its members"),
+        };
+        Ok(Self { members, venue })
     }
 }
 
 impl<M> From<Audience<M>> for Wire<M> {
     fn from(audience: Audience<M>) -> Self {
-        let (venue, group) = match audience.venue {
-            Venue::Private => (Kind::Private, None),
-            Venue::Group(id) => (Kind::Group, Some(id)),
+        let (venue, group, members) = match audience.venue {
+            Venue::Private => (Kind::Private, None, Some(audience.members)),
+            Venue::Group(id) => (Kind::Group, Some(id), Some(audience.members)),
+            Venue::Own => (Kind::Own, None, None),
         };
         Self {
             venue,
             group,
-            members: audience.members,
+            members,
         }
     }
 }
@@ -158,6 +183,24 @@ mod tests {
         assert!(admits(&learned_private, &private(&[7])));
     }
 
+    fn own() -> Audience<i32> {
+        Audience {
+            members: vec![],
+            venue: Venue::Own,
+        }
+    }
+
+    // The Mac's `Audience.admits` for `.own`, as the owner decided (A1).
+    #[test]
+    fn her_own_is_said_anywhere_and_her_own_hears_only_her_own() {
+        let elsewhere = [private(&[7]), private(&[]), group("onebot:1", &[7])];
+        for present in &elsewhere {
+            assert!(admits(&own(), present), "her own, said to {present:?}");
+            assert!(!admits(present, &own()), "{present:?} stays out of her own");
+        }
+        assert!(admits(&own(), &own()));
+    }
+
     #[test]
     fn nobody_recorded_admits_nobody() {
         assert!(!admits(&private(&[]), &private(&[7])));
@@ -174,10 +217,21 @@ mod tests {
             serde_json::to_string(&parsed).unwrap(),
             r#"{"venue":"group","group":"onebot:1","members":["7"]}"#
         );
+        let parsed: Audience<String> = serde_json::from_str(r#"{"venue":"own"}"#).unwrap();
+        assert_eq!(parsed.venue, Venue::Own);
+        assert!(parsed.members.is_empty());
+        assert_eq!(
+            serde_json::to_string(&parsed).unwrap(),
+            r#"{"venue":"own"}"#
+        );
         for bad in [
             r#"{"venue":"group","members":["7"]}"#,
             r#"{"venue":"private","group":"onebot:1","members":["7"]}"#,
+            r#"{"venue":"private"}"#,
+            r#"{"venue":"group","group":"onebot:1"}"#,
             r#"{"venue":"own","members":[]}"#,
+            r#"{"venue":"own","members":["7"]}"#,
+            r#"{"venue":"own","group":"onebot:1"}"#,
             r#"{"venue":"private","members":["7"],"extra":1}"#,
         ] {
             assert!(

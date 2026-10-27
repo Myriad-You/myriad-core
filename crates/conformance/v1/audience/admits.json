@@ -248,7 +248,6 @@
     {
       "input": {
         "learned": {
-          "members": [],
           "venue": "own"
         },
         "present": {
@@ -258,9 +257,91 @@
           "venue": "private"
         }
       },
-      "name": "refused: her own memories are not an audience here",
+      "name": "her own: said in private",
       "output": {
-        "error": "bad_input"
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "venue": "own"
+        },
+        "present": {
+          "members": [],
+          "venue": "private"
+        }
+      },
+      "name": "her own: said in private with nobody recorded present",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "venue": "own"
+        },
+        "present": {
+          "group": "telegram:-100123",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "her own: said in a group",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "venue": "own"
+        },
+        "present": {
+          "venue": "own"
+        }
+      },
+      "name": "her own: said on her own",
+      "output": {
+        "admits": true
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "venue": "own"
+        }
+      },
+      "name": "on her own: a private fact stays out",
+      "output": {
+        "admits": false
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "telegram:-100123",
+          "members": [
+            "7"
+          ],
+          "venue": "group"
+        },
+        "present": {
+          "venue": "own"
+        }
+      },
+      "name": "on her own: what a group heard stays out",
+      "output": {
+        "admits": false
       }
     },
     {
@@ -321,6 +402,73 @@
         }
       },
       "name": "refused: members as numbers",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [],
+          "venue": "own"
+        },
+        "present": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "refused: her own naming members",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "own"
+        },
+        "present": {
+          "venue": "own"
+        }
+      },
+      "name": "refused: her own naming someone",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "group": "onebot:1",
+          "venue": "own"
+        },
+        "present": {
+          "venue": "own"
+        }
+      },
+      "name": "refused: her own naming a group",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "learned": {
+          "members": [
+            "7"
+          ],
+          "venue": "private"
+        },
+        "present": {
+          "venue": "private"
+        }
+      },
+      "name": "refused: a private audience without members",
       "output": {
         "error": "bad_input"
       }

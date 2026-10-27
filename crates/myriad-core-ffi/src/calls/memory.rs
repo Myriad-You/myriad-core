@@ -40,9 +40,10 @@ fn documents(memories: &[Memory]) -> Vec<lexical::Document<'_>> {
 
 /// `{learned, present}` → `{admits}`: whether a memory learned in front of
 /// one audience may be said in front of another. An audience is
-/// `{venue: "private", members}` or `{venue: "group", group, members}`;
-/// members are the host's ids as strings. A memory of her own is not an
-/// audience here: the hosts do not agree on it.
+/// `{venue: "private", members}`, `{venue: "group", group, members}` or
+/// `{venue: "own"}` (her own: no members, no group); members are the host's
+/// ids as strings. Learned as her own, any audience admits it; an audience
+/// of her own admits only what was her own.
 pub(super) fn admits(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
