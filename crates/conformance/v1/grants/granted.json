@@ -1,0 +1,148 @@
+{
+  "call": "grants.granted",
+  "cases": [
+    {
+      "input": {
+        "approved": [
+          "c",
+          "a",
+          "b"
+        ],
+        "declared": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ],
+        "runtimeAllowed": [
+          "b",
+          "c",
+          "x"
+        ]
+      },
+      "name": "approved, allowed and declared, in the approved order",
+      "output": {
+        "granted": [
+          "c",
+          "b"
+        ]
+      }
+    },
+    {
+      "input": {
+        "approved": [],
+        "declared": [],
+        "runtimeAllowed": [
+          "a"
+        ]
+      },
+      "name": "nothing declared grants nothing",
+      "output": {
+        "granted": []
+      }
+    },
+    {
+      "input": {
+        "approved": [],
+        "declared": [
+          "a",
+          "b"
+        ],
+        "runtimeAllowed": [
+          "a",
+          "b"
+        ]
+      },
+      "name": "declared but not approved grants nothing",
+      "output": {
+        "granted": []
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "a"
+        ],
+        "declared": [
+          "a"
+        ],
+        "runtimeAllowed": []
+      },
+      "name": "approved but not allowed at run time grants nothing",
+      "output": {
+        "granted": []
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "a"
+        ],
+        "declared": [
+          "a"
+        ],
+        "runtimeAllowed": [
+          "b"
+        ]
+      },
+      "name": "allowed at run time alone grants nothing",
+      "output": {
+        "granted": []
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "a",
+          "b"
+        ],
+        "declared": [
+          "a"
+        ],
+        "runtimeAllowed": [
+          "a",
+          "b"
+        ]
+      },
+      "name": "refused: an approval of something not declared",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "a"
+        ],
+        "declared": [
+          "a"
+        ]
+      },
+      "name": "refused: a layer missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "approved": [
+          "a"
+        ],
+        "declared": [
+          "a"
+        ],
+        "proposed": [
+          "a"
+        ],
+        "runtimeAllowed": [
+          "a"
+        ]
+      },
+      "name": "refused: an unknown field",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

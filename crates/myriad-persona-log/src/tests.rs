@@ -167,7 +167,7 @@ fn same(one: &Value, other: &Value) -> bool {
     canonical_bytes(one) == canonical_bytes(other)
 }
 
-/// Every case file under the conformance directory but `grants/`.
+/// Every case file under the log and lease conformance directories.
 pub(crate) fn case_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
     for area in ["log", "lease"] {
@@ -253,16 +253,6 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         seen += 1;
     }
     assert_eq!(seen, reasons.len());
-}
-
-#[test]
-fn the_grant_cases_are_a_stub_until_the_rules_are_in_core() {
-    let file: Value =
-        serde_json::from_slice(&std::fs::read(conformance().join("grants/check.json")).unwrap())
-            .unwrap();
-    assert_eq!(file["version"], 1);
-    assert_eq!(file["status"], "pending");
-    assert_eq!(file["cases"], json!([]));
 }
 
 // --- properties -----------------------------------------------------------

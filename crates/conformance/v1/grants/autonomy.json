@@ -1,0 +1,174 @@
+{
+  "call": "grants.autonomy",
+  "cases": [
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "mail:send",
+            "mcp:execute",
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ]
+      },
+      "name": "a live grant, re-filtered by what is granted now, in the grant's order",
+      "output": {
+        "granted": [
+          "mail:send",
+          "calendar:read"
+        ],
+        "verdict": "allow_personal_work"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "no grant",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": null,
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "a null grant is no grant",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "a revoked grant",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": []
+      },
+      "name": "nothing left once re-filtered",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "0",
+          "personal": false
+        },
+        "grant": {
+          "actor": "0",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "the heartbeat holds no personal grant",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "8",
+          "personal": true
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "a grant belongs to its own actor",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": false
+        },
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "granted": [
+          "calendar:read"
+        ]
+      },
+      "name": "an actor the host does not count as a person, even holding the grant",
+      "output": {
+        "verdict": "require_user_review"
+      }
+    }
+  ],
+  "version": 1
+}

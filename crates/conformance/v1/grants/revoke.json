@@ -1,0 +1,68 @@
+{
+  "call": "grants.revoke",
+  "cases": [
+    {
+      "input": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read",
+            "mail:send"
+          ],
+          "revoked": false
+        },
+        "personal": true
+      },
+      "name": "revoked, its names kept",
+      "output": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read",
+            "mail:send"
+          ],
+          "revoked": true
+        }
+      }
+    },
+    {
+      "input": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        },
+        "personal": true
+      },
+      "name": "revoking twice stays revoked",
+      "output": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": true
+        }
+      }
+    },
+    {
+      "input": {
+        "grant": {
+          "actor": "0",
+          "allowed": [
+            "calendar:read"
+          ],
+          "revoked": false
+        },
+        "personal": false
+      },
+      "name": "the heartbeat's grant",
+      "output": {
+        "refused": "heartbeat_identity"
+      }
+    }
+  ],
+  "version": 1
+}

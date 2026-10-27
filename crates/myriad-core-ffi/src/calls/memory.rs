@@ -1,17 +1,22 @@
 //! Recall's arithmetic (`myriad_agent_rules::memory`): BM25 over words and
 //! concepts, a memory's strength, spreading activation, and the gap she
-//! knows little about; and what a chat line keeps (`myriad_merope::diary`).
+//! knows little about; who may hear a memory at all (`memory::audience`);
+//! and what a chat line keeps (`myriad_merope::diary`).
 
 use chrono::{DateTime, FixedOffset};
 use myriad_agent_rules::{
     Concept,
-    memory::{association, lexical, rank, recall, strength},
+    memory::{
+        association,
+        audience::{self, Audience},
+        lexical, rank, recall, strength,
+    },
 };
 use myriad_merope::diary;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{at, input, opt_at, text};
+use super::{at, input, opt_at, quiet_input, text};
 use crate::Failure;
 
 /// A memory as recall reads it: its text and what it is about.
@@ -31,6 +36,22 @@ fn documents(memories: &[Memory]) -> Vec<lexical::Document<'_>> {
             concepts: &memory.concepts,
         })
         .collect()
+}
+
+/// `{learned, present}` → `{admits}`: whether a memory learned in front of
+/// one audience may be said in front of another. An audience is
+/// `{venue: "private", members}` or `{venue: "group", group, members}`;
+/// members are the host's ids as strings. A memory of her own is not an
+/// audience here: the hosts do not agree on it.
+pub(super) fn admits(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        learned: Audience<String>,
+        present: Audience<String>,
+    }
+    let req: In = quiet_input(raw)?;
+    Ok(json!({ "admits": audience::admits(&req.learned, &req.present) }))
 }
 
 pub(super) fn score_all(raw: &[u8]) -> Result<Value, Failure> {

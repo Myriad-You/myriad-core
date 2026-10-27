@@ -21,6 +21,7 @@ mod affect;
 mod archive;
 mod chat;
 mod filter;
+mod grants;
 mod group;
 mod link;
 mod log;
@@ -52,6 +53,7 @@ const CALLS: &[(&str, Call)] = &[
     ("affect.settle", affect::settle),
     ("affect.transition", affect::transition),
     ("affect.user_utterance", affect::user_utterance),
+    ("audience.admits", memory::admits),
     ("chat.history_lines", chat::history_lines),
     ("chat.history_text", chat::history_text),
     ("chat.pause_text", chat::pause_text),
@@ -71,6 +73,15 @@ const CALLS: &[(&str, Call)] = &[
     ("filter.source", filter::source),
     ("filter.text_hits", filter::text_hits),
     ("filter.window", filter::window_title),
+    ("grants.autonomy", grants::autonomy),
+    ("grants.cap_still_allows", grants::cap_still_allows),
+    ("grants.check", grants::check),
+    ("grants.claim", grants::claim),
+    ("grants.effective", grants::effective),
+    ("grants.granted", grants::granted),
+    ("grants.may_enter_work", grants::may_enter_work),
+    ("grants.prepare", grants::prepare),
+    ("grants.revoke", grants::revoke),
     ("group.kept_as_heard", group::kept_as_heard),
     ("group.ledger_who", group::ledger_who),
     ("group.merge_ledger", group::merge_ledger),
@@ -243,6 +254,20 @@ pub(crate) fn dispatch(name: &str, input: &[u8]) -> Result<Value, Failure> {
 
 fn input<T: DeserializeOwned>(raw: &[u8]) -> Result<T, Failure> {
     serde_json::from_slice(raw).map_err(|error| Failure::BadInput(error.to_string()))
+}
+
+/// [`input`] for calls whose values name people or permissions: a failure
+/// keeps a field name, the client's own word, and never a value.
+fn quiet_input<T: DeserializeOwned>(raw: &[u8]) -> Result<T, Failure> {
+    serde_json::from_slice(raw).map_err(|error| {
+        let message = error.to_string();
+        if message.starts_with("unknown field") || message.starts_with("missing field") {
+            let named = message.split(", expected").next().unwrap_or("");
+            Failure::BadInput(named.split(" at line").next().unwrap_or("").to_string())
+        } else {
+            Failure::BadInput("input does not fit the call".into())
+        }
+    })
 }
 
 fn text(text: Option<String>) -> Value {

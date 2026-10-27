@@ -1,0 +1,167 @@
+{
+  "call": "grants.prepare",
+  "cases": [
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "candidates": [
+          "http:fetch",
+          "scheduler:write",
+          "calendar:read"
+        ],
+        "granted": [
+          "system:admin",
+          "phantasi:admin",
+          "http:fetch",
+          "scheduler:write"
+        ],
+        "requested": []
+      },
+      "name": "an empty request: what is granted now among the candidates",
+      "output": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "http:fetch",
+            "scheduler:write"
+          ],
+          "revoked": false
+        }
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "candidates": [
+          "http:fetch",
+          "scheduler:write",
+          "calendar:read"
+        ],
+        "granted": [
+          "system:admin",
+          "phantasi:admin",
+          "http:fetch",
+          "scheduler:write"
+        ],
+        "requested": [
+          "system:admin"
+        ]
+      },
+      "name": "an admin-only name listed explicitly",
+      "output": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "system:admin"
+          ],
+          "revoked": false
+        }
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "candidates": [],
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "requested": [
+          "mail:send",
+          "mcp:execute",
+          "calendar:read"
+        ]
+      },
+      "name": "a request narrowed to what is granted now, in the requested order",
+      "output": {
+        "grant": {
+          "actor": "7",
+          "allowed": [
+            "mail:send",
+            "calendar:read"
+          ],
+          "revoked": false
+        }
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "candidates": [
+          "http:fetch",
+          "scheduler:write",
+          "calendar:read"
+        ],
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "requested": [
+          "mcp:execute"
+        ]
+      },
+      "name": "nothing requested is granted",
+      "output": {
+        "refused": "empty_after_filter"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "7",
+          "personal": true
+        },
+        "candidates": [
+          "http:fetch",
+          "scheduler:write",
+          "calendar:read"
+        ],
+        "granted": [
+          "system:admin"
+        ],
+        "requested": []
+      },
+      "name": "an empty request with no candidate granted",
+      "output": {
+        "refused": "empty_after_filter"
+      }
+    },
+    {
+      "input": {
+        "actor": {
+          "id": "0",
+          "personal": false
+        },
+        "candidates": [
+          "http:fetch",
+          "scheduler:write",
+          "calendar:read"
+        ],
+        "granted": [
+          "calendar:read",
+          "mail:send"
+        ],
+        "requested": [
+          "calendar:read"
+        ]
+      },
+      "name": "the heartbeat cannot hold one",
+      "output": {
+        "refused": "heartbeat_identity"
+      }
+    }
+  ],
+  "version": 1
+}
