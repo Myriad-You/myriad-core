@@ -139,6 +139,20 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `log.merge` | `{log, incoming}` → `{log, added?, stubbed?, duplicates, conflicts?}`；`log` 可以只给和这批有关的行 |
 | `log.missing` | `{mine, theirs}` → `{missing: [{origin, from, through}]}` |
 
+载荷不在行里，另存、封好，按行的 `payload.ref` 取。对话、记忆和心情这几种行的载荷，每一端都按同一种形状写（`myriad_persona_log::payloads`，规范 JSON，时间是 Unix 毫秒；读的一端不认识的字段照样收、忽略）。谁说的、谁写的看行的 `author`，关于谁看 `subject`：
+
+| kind | 对象 | 载荷 |
+| --- | --- | --- |
+| `segment.open` | `segment:<id>` | `{at, place}`：`place` 是 `web`、`app`、`group` 或别的界面 |
+| `segment.line` | `segment:<id>` | `{at, text, line?, replyTo?}`：`line` 是写它的那一端自己的消息 id |
+| `segment.close` | `segment:<id>` | `{at}` |
+| `memory.write` | `memory:<id>` | `{at, text, kind, replaces?}`：`replaces` 是它取代的 `memory:<id>` |
+| `memory.retire` | `memory:<id>` | `{at, why, by?}`：`by` 是现在说着这件事的那条 |
+| `memory.restore` | `memory:<id>` | `{at}` |
+| `affect.change` | `affect:<subject>` | `{at, valence, arousal, band, cause}`：变化之后的心情，0 到 100；`cause` 是类别，不是原话 |
+
+节点（`node.*`）和判过的事（`case.*`）的载荷随节点的规则一起进来，不在这张表里。
+
 ## 她的连接的帧（`link.*`）
 
 「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer`、`group` 七个帧族（`group` 是心智在电脑上时，服务端把群里的新消息借给它想、再替它把话发到群里；群的日志仍只在服务端），信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。

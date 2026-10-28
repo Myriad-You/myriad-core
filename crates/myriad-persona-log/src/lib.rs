@@ -15,6 +15,9 @@
 //! holder stops by itself, and which rows overlap because the owner forced
 //! a move or a side was used alone are in [`lease`].
 //!
+//! What the payloads of her talk, her memories and her mood say is one shape
+//! on every side ([`payloads`]).
+//!
 //! Its clock is the shared one (`hlc`), fed corrected time and kept from
 //! running ahead of the server ([`clock`]).
 //!
@@ -31,6 +34,7 @@ pub mod forget;
 pub mod kinds;
 pub mod lease;
 pub mod merge;
+pub mod payloads;
 pub mod row;
 pub mod vector;
 
