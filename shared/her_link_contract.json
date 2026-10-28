@@ -544,7 +544,8 @@
       "say": "Her words down to the front device, and what of them was delivered.",
       "lease": "Where her mind is: asking, yielding, granting, every device told of the epoch, a self-stop reported, a takeover told.",
       "log": "Her log between host cores: version vectors, batched rows, the first full sync.",
-      "peer": "Device identities: published, confirmed by the owner, and proven on the LAN."
+      "peer": "Device identities: published, confirmed by the owner, and proven on the LAN.",
+      "group": "A group's new messages lent to her mind on a PC to think with (the group's log stays on the server), and what she says there, sent out by the server."
     },
     "frames": {
       "fact.up": {
@@ -635,6 +636,13 @@
         "idempotency": "id is made by the holder once per stop.",
         "description": "Sent on reconnect by a holder that stopped by itself (cut off, and the owner gone from its 现场 for the self-stop time): when it stopped, so the server knows where the gap in her memory begins and ends."
       },
+      "lease.place": {
+        "from": "device",
+        "delivery": "latest",
+        "required": ["ownerHere"],
+        "optional": ["place"],
+        "description": "Where this device is and whether the owner is with it: place is the device's own opaque token for the 现场 it is in (never a name, an address or a network's name; the same 现场 gives the same token on every device of the owner's, how is the devices' business), absent when it does not know; ownerHere is whether the owner is using this device now. Sent when either changes, and after welcome. The holder of the lease sends it too. The server keeps the latest of each device: a takeover needs the holder's place and a fresher sighting of the owner in another one (lease.takeover)."
+      },
       "lease.takeover": {
         "from": "server",
         "delivery": "request",
@@ -700,6 +708,30 @@
         "delivery": "handshake",
         "required": ["proof"],
         "description": "LAN only, the dialer's proof: its signature over the same object with purpose 'myriad-link-lan/2 dialer'. Only then do other frames flow; anything else first closes with peer_proof_failed."
+      },
+      "group.lend": {
+        "from": "server",
+        "delivery": "reliable",
+        "required": ["group", "messages"],
+        "optional": ["name", "recent"],
+        "maxItems": {"messages": 64, "recent": 64},
+        "idempotency": "id is made by the server once per lend, the same on every resend.",
+        "description": "To the core her mind is on, when that is a PC: new messages in a group she is in, lent for her to think with. group is the group's audience (group:<id>), name what the group is called there. messages are the new ones and recent the ones just before them, oldest first, each {id, from, name, text, at, toHer?}: id the platform's message id as text, from the member's id in the group's audience (the subject its rows use), name what the member is called there, at milliseconds since the epoch, toHer whether it was addressed to her (a mention or a reply to her). What she knows of the group (her own lines there, what she noted of its members) is the group's log, which the mind reads with log.vector as the holder. The PC keeps none of it on disk and lets it go when she is done or the lease moves; only the server keeps a group. Sent only while that PC holds the lease; a lend not acked when the lease moves is the server's again."
+      },
+      "group.say": {
+        "from": "mind",
+        "delivery": "reliable",
+        "required": ["group", "text"],
+        "optional": ["replyTo", "lend"],
+        "idempotency": "id is made by the mind once per line, the same on every resend.",
+        "description": "Her mind on a PC says text in a group: the server sends it there as her, the way it sends her own lines, and writes it to the group's log as her line at the mind's epoch. replyTo is the message id she answers, lend the group.lend it comes from. What she noted goes back as the group's log.rows, from the mind; neither is kept on the PC. Taken only from the holder (not_holder otherwise); answered with group.said."
+      },
+      "group.said": {
+        "from": "server",
+        "delivery": "answer",
+        "required": ["sayId", "sent"],
+        "optional": ["code"],
+        "description": "The answer to group.say: sayId is its id, sent whether the line went out. code, when it did not, is why, from errorCodes (not_holder, group_unknown) or unavailable when the platform would not take it; the mind does not say it again on its own."
       }
     },
     "errorCodes": {
@@ -713,6 +745,7 @@
       "not_for_me": "Sealed to another device: relay it, do not open it.",
       "not_holder": "A lease frame from a core that does not hold the epoch it names.",
       "stale_epoch": "A lease frame for an epoch that no longer stands.",
+      "group_unknown": "A group frame naming a group the server does not keep, or one she is not in.",
       "clock_ahead": "log.rows refused whole: a row's clock more than five minutes ahead. Carries serverTime; the sender measures its offset, repairs its unsynced rows and sends again."
     },
     "closeCodes": {

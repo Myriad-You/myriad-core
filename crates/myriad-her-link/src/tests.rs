@@ -181,6 +181,7 @@ fn every_link_case_answers_as_recorded() {
                 "not_holder",
                 "stale_epoch",
                 "clock_ahead",
+                "group_unknown",
             ]
             .contains(&code.as_str())
         })
