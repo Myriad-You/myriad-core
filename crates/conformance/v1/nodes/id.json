@@ -1,0 +1,106 @@
+{
+  "call": "nodes.id",
+  "cases": [
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "repo:github.com/demo/sample-repo"
+      },
+      "name": "a repo in the partner's private audience",
+      "output": {
+        "id": "98ef5969e985afd6bc0eb702cd1ffe5c"
+      }
+    },
+    {
+      "input": {
+        "audience": "group:g1",
+        "key": "repo:github.com/demo/sample-repo"
+      },
+      "name": "the same repo in a group",
+      "output": {
+        "id": "956f43c427792db3d8ebe0432ad90ba4"
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "key": "her"
+      },
+      "name": "her in her own audience",
+      "output": {
+        "id": "20fd261473263a35859f3c42f034d3a0"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "minted:release-week"
+      },
+      "name": "a minted key",
+      "output": {
+        "id": "25ae623559006437c416adbde717a853"
+      }
+    },
+    {
+      "input": {
+        "audience": "group:g1",
+        "key": "group:g1"
+      },
+      "name": "a group",
+      "output": {
+        "id": "af81aa1f31834bd45cd61bb816eb2648"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "repo:github.com/Demo/sample-repo"
+      },
+      "name": "a repo key not normalized",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "chat:7",
+        "key": "minted:release-week"
+      },
+      "name": "an audience that is not one",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "minted:a b"
+      },
+      "name": "a minted token with a space",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "person:7,9"
+      },
+      "name": "a person with a comma",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "sample-repo"
+      },
+      "name": "a key in no space",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

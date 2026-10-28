@@ -1,0 +1,114 @@
+{
+  "call": "nodes.repo_key",
+  "cases": [
+    {
+      "input": {
+        "remote": "git@github.com:Demo/Sample-Repo.git"
+      },
+      "name": "an scp-like remote",
+      "output": {
+        "key": "repo:github.com/demo/sample-repo"
+      }
+    },
+    {
+      "input": {
+        "remote": "https://x-access-token:abc123@github.com/demo/sample-repo.git"
+      },
+      "name": "an https remote with a token",
+      "output": {
+        "key": "repo:github.com/demo/sample-repo"
+      }
+    },
+    {
+      "input": {
+        "remote": "ssh://git@gitlab.example.com:2222/team/sub/sample-repo/"
+      },
+      "name": "an ssh remote with a port",
+      "output": {
+        "key": "repo:gitlab.example.com/team/sub/sample-repo"
+      }
+    },
+    {
+      "input": {
+        "remote": "github.com/demo/sample-repo"
+      },
+      "name": "already a key's form",
+      "output": {
+        "key": "repo:github.com/demo/sample-repo"
+      }
+    },
+    {
+      "input": {
+        "remote": "https://github.com/demo/sample-repo?tab=readme#top"
+      },
+      "name": "a remote with a query",
+      "output": {
+        "key": "repo:github.com/demo/sample-repo"
+      }
+    },
+    {
+      "input": {
+        "remote": "/Users/demo/sample-repo"
+      },
+      "name": "a local path",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "remote": "~/sample-repo"
+      },
+      "name": "a home path",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "remote": "file:///Users/demo/sample-repo"
+      },
+      "name": "a file remote",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "remote": "C:\\Users\\demo\\sample-repo"
+      },
+      "name": "a windows path",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "remote": "https://github.com"
+      },
+      "name": "a remote without a path",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "remote": "https://github.com/demo/../x"
+      },
+      "name": "a remote that climbs",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "remote": "ftp://example.com/x"
+      },
+      "name": "an unknown scheme",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

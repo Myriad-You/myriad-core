@@ -8,6 +8,7 @@ members = [
     "crates/myriad-core-ffi",
     "crates/myriad-her-link",
     "crates/myriad-merope",
+    "crates/myriad-nodes",
     "crates/myriad-perception-filter",
     "crates/myriad-persona-log",
     "crates/myriad-persona-sync",

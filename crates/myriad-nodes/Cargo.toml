@@ -1,0 +1,22 @@
+[package]
+name = "myriad-nodes"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Her nodes from her log: the three kinds, a node's head and body, the tags on what she keeps, the five relations, the row bodies and their fold, and the pure half of placing a talk."
+authors = ["Myriad Contributors"]
+license = "AGPL-3.0-only"
+
+# Pure: no I/O, no clock, no randomness. Row ids, times and minted keys come
+# from the caller. The site links it directly and the shared core
+# (`myriad-core-ffi`) links it for every other platform, so the server and
+# every computer fold the same node rows into the same nodes.
+#
+# The first batch of node rules (docs/SHARED_CORE.md「她的节点」): what a
+# node is and holds, how its rows fold, and the shape placement returns.
+# Her upkeep, wakes, the rules for views and objections come later.
+[dependencies]
+myriad-persona-log = { path = "../myriad-persona-log" }
+myriad-persona-sync = { path = "../myriad-persona-sync" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
