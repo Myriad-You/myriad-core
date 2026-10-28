@@ -126,6 +126,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `lease.here` | `{me, lease?, now, disconnectedSince?, ownerHereAt?, stopAfter?}` → `{state: "thinking"}`、`{state: "stopped", stoppedAt}` 或 `{state: "child"}`。还没见过任何执笔权的那一端不传 `lease`：单机，`thinking`，她的行写 `epoch: 0` |
 | `lease.move` | `{lease, request, now, issued, holderLastSeen?, holderPlace?, ownerPlace?, stopAfter?}` → `{granted: Grant}` 或 `{refused: 理由}`；`request` 是 `{handover: {from, epoch, to, through?}}`、`{takeover: {server}}` 或 `{force: {to}}`；`issued` 是服务端给新一份的 rev，必须晚于现在这份 |
 | `lease.newer` | `{a, b}` → `{newer: "a" \| "b"}` |
+| `lease.behind` | `{through?, from, held}` → `{behind}`：新执笔的那一端开始想之前还在等什么。`through` 是交出那份的 `{受众: dseq}`，`from` 是交出的那一端，`held` 是这一端每个受众的版本向量 `{受众: {端: dseq}}`；`behind` 是还没补到的受众和要补到的数，空的就是补齐了、可以想。接管和「让她来这里」没有 `through`，不用等 |
 | `log.admit` | `{rows, now, known?, members?, ledger?, epochs?}` → `{accepted, refused?, clockAhead?, ledger, epochs}` |
 | `log.answer` | `{rows, theirs}` → `{rows}`：一个受众里对方（持有这个受众的 `theirs`）缺的行，`forget` 在前；行跨了受众是 `bad_input` |
 | `log.canonical` | `{row}` → `{row, canonical, digest}`；信封不对就是 `bad_input` |
@@ -138,9 +139,23 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `log.merge` | `{log, incoming}` → `{log, added?, stubbed?, duplicates, conflicts?}`；`log` 可以只给和这批有关的行 |
 | `log.missing` | `{mine, theirs}` → `{missing: [{origin, from, through}]}` |
 
+载荷不在行里，另存、封好，按行的 `payload.ref` 取。对话、记忆和心情这几种行的载荷，每一端都按同一种形状写（`myriad_persona_log::payloads`，规范 JSON，时间是 Unix 毫秒；读的一端不认识的字段照样收、忽略）。谁说的、谁写的看行的 `author`，关于谁看 `subject`：
+
+| kind | 对象 | 载荷 |
+| --- | --- | --- |
+| `segment.open` | `segment:<id>` | `{at, place}`：`place` 是 `web`、`app`、`group` 或别的界面 |
+| `segment.line` | `segment:<id>` | `{at, text, line?, replyTo?}`：`line` 是写它的那一端自己的消息 id |
+| `segment.close` | `segment:<id>` | `{at}` |
+| `memory.write` | `memory:<id>` | `{at, text, kind, replaces?}`：`replaces` 是它取代的 `memory:<id>` |
+| `memory.retire` | `memory:<id>` | `{at, why, by?}`：`by` 是现在说着这件事的那条 |
+| `memory.restore` | `memory:<id>` | `{at}` |
+| `affect.change` | `affect:<subject>` | `{at, valence, arousal, band, cause}`：变化之后的心情，0 到 100；`cause` 是类别，不是原话 |
+
+节点（`node.*`）和判过的事（`case.*`）的载荷随节点的规则一起进来，不在这张表里。
+
 ## 她的连接的帧（`link.*`）
 
-「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer` 六个帧族，信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
+「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer`、`group` 七个帧族（`group` 是心智在电脑上时，服务端把群里的新消息借给它想、再替它把话发到群里；群的日志仍只在服务端），信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
 
 `crates/myriad-her-link` 编译时读这份契约，按它判断一帧能不能发、能不能收，规则不会和契约漂移：信封字段、`v`、类型、`seq`／`ack`／`at`、可靠帧必须有 `id` 且符合 `idPattern`、其余帧不能有 `id`、正文的必填和可选字段、`oneOf`（例如 `facts` 和 `sealed` 恰好一个）、`maxItems`、发送方的角色、帧大小，以及密封字段的形状（`{suite, to, keyId, enc, ct}`，套件是契约里的那一个，`enc` 32 字节，`ct` 至少一个标签长）。协议 1 的帧在协议 2 的信封里照旧按它们自己的正文检查。HPKE 的封和开是各端自己的（用各自的钥匙），核心只给 `info`（`myriad-link/2 <t>`）和附加数据（规范 JSON `{from, t, to}`）的写法。
 

@@ -12,6 +12,7 @@ use super::ffi;
 use crate::{STATUS_BAD_INPUT, STATUS_OK};
 
 pub(super) const TESTED: &[&str] = &[
+    "lease.behind",
     "lease.here",
     "lease.move",
     "lease.newer",

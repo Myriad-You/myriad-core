@@ -396,6 +396,33 @@ pub fn here(input: HereInput) -> Result<Here, LogError> {
     })
 }
 
+/// What a new holder still lacks before it may think: of each audience in
+/// `through` (the previous holder `from`'s counts when it gave the lease
+/// up), the count it waits for, when what it holds of `from` there
+/// (`held`, one vector per audience) does not reach it yet. Empty: caught
+/// up, she thinks. A takeover or a force has no `through`: nothing to wait
+/// for (what the old holder did not send in time is her own memory
+/// catching up later, not a reason to wait).
+pub fn behind(
+    through: Option<&Through>,
+    from: &str,
+    held: &BTreeMap<String, crate::Vector>,
+) -> Through {
+    through
+        .into_iter()
+        .flatten()
+        .filter(|(audience, count)| {
+            let have = held
+                .get(*audience)
+                .and_then(|vector| vector.get(from))
+                .copied()
+                .unwrap_or(0);
+            have < **count
+        })
+        .map(|(audience, count)| (audience.clone(), *count))
+        .collect()
+}
+
 /// Where one of her rows stands against the lease.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]

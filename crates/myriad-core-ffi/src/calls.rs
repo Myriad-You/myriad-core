@@ -88,6 +88,7 @@ const CALLS: &[(&str, Call)] = &[
     ("group.merge_ledger", group::merge_ledger),
     ("group.offer", group::offer),
     ("group.step", group::step),
+    ("lease.behind", log::lease_behind),
     ("lease.here", log::lease_here),
     ("lease.move", log::lease_move),
     ("lease.newer", log::lease_newer),

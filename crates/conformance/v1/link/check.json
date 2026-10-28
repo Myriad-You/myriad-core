@@ -38,6 +38,37 @@
       "input": {
         "frame": {
           "ack": 0,
+          "at": 1760140800240,
+          "body": {
+            "group": "group:g42",
+            "replyTo": "m_903",
+            "text": "嗯"
+          },
+          "id": "gsay_02",
+          "seq": 4,
+          "t": "group.say",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host",
+          "mind"
+        ]
+      },
+      "name": "her mind on a PC says a line in a group",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800240,\"body\":{\"group\":\"group:g42\",\"replyTo\":\"m_903\",\"text\":\"嗯\"},\"id\":\"gsay_02\",\"seq\":4,\"t\":\"group.say\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "group",
+          "t": "group.say"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
           "at": 1760140800010,
           "body": {
             "sealed": {
@@ -264,6 +295,32 @@
         ]
       },
       "name": "bad_frame: a phone cannot yield her mind",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800240,
+          "body": {
+            "group": "group:g42",
+            "text": "嗯"
+          },
+          "id": "gsay_02",
+          "seq": 4,
+          "t": "group.say",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host"
+        ]
+      },
+      "name": "bad_frame: only her mind says in a group",
       "output": {
         "refused": {
           "code": "bad_frame"

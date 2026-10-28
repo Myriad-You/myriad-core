@@ -766,6 +766,73 @@
         "body": {
           "proof": "kGm/uA8fXE6hhv3WQ78HKlc+UMDYXvHzKwSJf1HQQNiQab+4Dx9cTqGG/dZDvwcqVz5QwNhe8fMrBIl/UdBA2A=="
         }
+      },
+      {
+        "v": 1,
+        "t": "lease.place",
+        "seq": 23,
+        "ack": 0,
+        "at": 1760140800220,
+        "body": {
+          "ownerHere": true,
+          "place": "pl_7f3a9c"
+        }
+      },
+      {
+        "v": 1,
+        "t": "group.lend",
+        "seq": 24,
+        "ack": 0,
+        "at": 1760140800230,
+        "id": "lend_01",
+        "body": {
+          "group": "group:g42",
+          "name": "读书会",
+          "messages": [
+            {
+              "id": "m_903",
+              "from": "m7",
+              "name": "小林",
+              "text": "这周读到哪了？",
+              "at": 1760140800000,
+              "toHer": true
+            }
+          ],
+          "recent": [
+            {
+              "id": "m_902",
+              "from": "m3",
+              "name": "阿森",
+              "text": "我还在第三章",
+              "at": 1760140790000
+            }
+          ]
+        }
+      },
+      {
+        "v": 1,
+        "t": "group.say",
+        "seq": 25,
+        "ack": 0,
+        "at": 1760140800240,
+        "id": "gsay_01",
+        "body": {
+          "group": "group:g42",
+          "text": "第四章刚开头。",
+          "replyTo": "m_903",
+          "lend": "lend_01"
+        }
+      },
+      {
+        "v": 1,
+        "t": "group.said",
+        "seq": 26,
+        "ack": 25,
+        "at": 1760140800250,
+        "body": {
+          "sayId": "gsay_01",
+          "sent": true
+        }
       }
     ]
   }

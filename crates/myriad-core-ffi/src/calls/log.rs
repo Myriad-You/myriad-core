@@ -160,6 +160,28 @@ pub(super) fn lease_here(raw: &[u8]) -> Result<Value, Failure> {
     answer(&lease::here(input(raw)?).map_err(refused)?)
 }
 
+/// `{through?, from, held}` → `{behind}`: what a new holder still waits
+/// for before it thinks.
+pub(super) fn lease_behind(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        #[serde(default)]
+        through: Option<lease::Through>,
+        from: String,
+        held: std::collections::BTreeMap<String, myriad_persona_log::Vector>,
+    }
+    let In {
+        through,
+        from,
+        held,
+    } = input(raw)?;
+    if let Some(through) = &through {
+        lease::check_through(through).map_err(refused)?;
+    }
+    Ok(serde_json::json!({ "behind": lease::behind(through.as_ref(), &from, &held) }))
+}
+
 /// `{a, b}` → `{newer: "a" | "b"}`.
 pub(super) fn lease_newer(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
