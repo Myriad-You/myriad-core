@@ -148,6 +148,25 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
         "log.clock_repair" => json_of(&clock::repair(input(raw)?)?),
         "lease.move" => json_of(&lease::decide(input(raw)?)?),
         "lease.here" => json_of(&lease::here(input(raw)?)?),
+        "lease.behind" => {
+            #[derive(serde::Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct Behind {
+                #[serde(default)]
+                through: Option<lease::Through>,
+                from: String,
+                held: std::collections::BTreeMap<String, crate::Vector>,
+            }
+            let Behind {
+                through,
+                from,
+                held,
+            } = input(raw)?;
+            if let Some(through) = &through {
+                lease::check_through(through)?;
+            }
+            json!({ "behind": lease::behind(through.as_ref(), &from, &held) })
+        }
         "lease.newer" => {
             let Two { a, b } = input(raw)?;
             a.check()?;

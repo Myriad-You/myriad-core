@@ -126,6 +126,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `lease.here` | `{me, lease?, now, disconnectedSince?, ownerHereAt?, stopAfter?}` → `{state: "thinking"}`、`{state: "stopped", stoppedAt}` 或 `{state: "child"}`。还没见过任何执笔权的那一端不传 `lease`：单机，`thinking`，她的行写 `epoch: 0` |
 | `lease.move` | `{lease, request, now, issued, holderLastSeen?, holderPlace?, ownerPlace?, stopAfter?}` → `{granted: Grant}` 或 `{refused: 理由}`；`request` 是 `{handover: {from, epoch, to, through?}}`、`{takeover: {server}}` 或 `{force: {to}}`；`issued` 是服务端给新一份的 rev，必须晚于现在这份 |
 | `lease.newer` | `{a, b}` → `{newer: "a" \| "b"}` |
+| `lease.behind` | `{through?, from, held}` → `{behind}`：新执笔的那一端开始想之前还在等什么。`through` 是交出那份的 `{受众: dseq}`，`from` 是交出的那一端，`held` 是这一端每个受众的版本向量 `{受众: {端: dseq}}`；`behind` 是还没补到的受众和要补到的数，空的就是补齐了、可以想。接管和「让她来这里」没有 `through`，不用等 |
 | `log.admit` | `{rows, now, known?, members?, ledger?, epochs?}` → `{accepted, refused?, clockAhead?, ledger, epochs}` |
 | `log.answer` | `{rows, theirs}` → `{rows}`：一个受众里对方（持有这个受众的 `theirs`）缺的行，`forget` 在前；行跨了受众是 `bad_input` |
 | `log.canonical` | `{row}` → `{row, canonical, digest}`；信封不对就是 `bad_input` |
