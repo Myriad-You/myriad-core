@@ -14,6 +14,7 @@ pub(super) const TESTED: &[&str] = &[
     "filter.page",
     "filter.scan_identifiers",
     "filter.scan_secrets",
+    "filter.secret_values",
     "filter.source",
     "filter.text_hits",
     "filter.window",
@@ -43,6 +44,48 @@ fn scans_match_the_crate() {
     assert_eq!(ids["text"], identifiers::scan(after).text);
     assert_eq!(ids["wiped"], json!([{ "kind": "card" }]));
     assert!(!ids.to_string().contains("4111"));
+}
+
+/// What the scan wipes, on the original text: the crate's answer, and the
+/// one stretch the cookie rule leaves when it swallows the prefix rule's mark.
+#[test]
+fn secret_values_match_the_crate() {
+    let key = ["s", "k-", "proj-", "Zq8RkT3vNw7YbXc2Lm5Pd9Hs"].concat();
+    let text = format!(
+        "密钥 Cookie: a={key}; b=2\nexport GITHUB_TOKEN={}",
+        self::key()
+    );
+    let out = ok("filter.secret_values", json!({ "text": text, "shape": 1 }));
+    assert_eq!(out["shape"], SHAPE);
+    let found = secrets::values(&text);
+    assert_eq!(found.len(), 2);
+    let expected: Vec<Value> = found
+        .iter()
+        .map(|found| {
+            json!({
+                "kind": found.kind,
+                "value": found.value,
+                "start": found.start,
+                "end": found.end,
+            })
+        })
+        .collect();
+    assert_eq!(out["found"], json!(expected));
+    let cookie = &out["found"][0];
+    assert_eq!(cookie["kind"], "cookie");
+    assert_eq!(cookie["value"], format!("a={key}; b=2"));
+    // UTF-8 bytes: `密钥 ` is 7 bytes, 3 characters.
+    assert_eq!(cookie["start"], "密钥 Cookie: ".len());
+    assert_eq!(cookie["start"], 15);
+    assert_eq!(out["found"][1]["value"], self::key());
+
+    // Every stretch under the mark is the scan's text.
+    let scanned = ok("filter.scan_secrets", json!({ "text": text }));
+    let mut rebuilt = text.clone();
+    for stretch in found.iter().rev() {
+        rebuilt.replace_range(stretch.start..stretch.end, secrets::MARK);
+    }
+    assert_eq!(scanned["text"], rebuilt);
 }
 
 #[test]
@@ -170,7 +213,12 @@ fn refusals_never_quote_the_input() {
         json!({ "capture": secret, "private": [secret] }),
         json!({ "shape": 2, "text": secret }),
     ] {
-        for call in ["filter.scan_secrets", "filter.window", "filter.decide"] {
+        for call in [
+            "filter.scan_secrets",
+            "filter.secret_values",
+            "filter.window",
+            "filter.decide",
+        ] {
             let (status, out) = ffi(call, &input);
             assert_eq!(status, STATUS_BAD_INPUT, "{call} {out}");
             assert!(!out.to_string().contains(&secret), "{call}: {out}");
@@ -266,5 +314,16 @@ fn terminal_vectors_hold_through_the_core() {
         for kept in case["kept"].as_array().unwrap() {
             assert!(text.contains(kept.as_str().unwrap()), "{}", case["id"]);
         }
+    }
+}
+
+#[test]
+fn secret_value_vectors_hold_through_the_core() {
+    let doc = vectors("secret-values");
+    for case in doc["cases"].as_array().unwrap() {
+        let out = ok("filter.secret_values", json!({ "text": case["text"] }));
+        assert_eq!(out["found"], case["found"], "{}", case["id"]);
+        let scanned = ok("filter.scan_secrets", json!({ "text": case["text"] }));
+        assert_eq!(scanned["text"], case["scanned"], "{}", case["id"]);
     }
 }

@@ -5,7 +5,8 @@
 //! Every input may name the `shape` it speaks (default 1) and every output
 //! names the shape it answers in. The text these calls read can hold keys,
 //! so a refusal never quotes the input: it names only a missing or unknown
-//! field, or says the input does not fit.
+//! field, or says the input does not fit. Only `filter.secret_values`
+//! answers with what it found, because that is its job.
 
 use myriad_perception_filter::{
     self as filter, CLASSIFY_ASKS, Decision, PRESENT_ONLY_LEAVES_KIND, RULES, RelayCheck, SHAPE,
@@ -78,11 +79,39 @@ pub(super) fn window_title(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{text}` → `{text, wiped: [{kind}]}`, kinds `private_key`,
-/// `vendor_prefix`, `bearer`, `assignment`, `high_entropy`.
+/// `vendor_prefix`, `bearer`, `assignment`, `flag`, `url_credentials`,
+/// `netrc`, `cookie`, `high_entropy`.
 pub(super) fn scan_secrets(raw: &[u8]) -> Result<Value, Failure> {
     let req: Text = shaped(raw)?;
     let scan = secrets::scan(&req.text);
     answer(json!({ "text": scan.text, "wiped": kinds(&scan.wiped) }))
+}
+
+/// `{text}` → `{found: [{kind, value, start, end}]}`: what
+/// `filter.scan_secrets` would wipe, by the same pass. Each entry is one
+/// mark in the scan's text, leftmost first; a wipe that swallowed an earlier
+/// one's mark comes back once, as the outer stretch and its kind. `value` is
+/// exactly the original's `start..end`, offsets in UTF-8 bytes of `text`;
+/// putting the mark over every stretch gives the scan's text.
+///
+/// The one filter call whose output carries secrets, so a client can mask
+/// the same values elsewhere. Keep the answer in memory only: never log it,
+/// write it to disk, hand it to a model or send it off the device. A
+/// refusal still never quotes the input.
+pub(super) fn secret_values(raw: &[u8]) -> Result<Value, Failure> {
+    let req: Text = shaped(raw)?;
+    let found: Vec<Value> = secrets::values(&req.text)
+        .into_iter()
+        .map(|found| {
+            json!({
+                "kind": found.kind,
+                "value": found.value,
+                "start": found.start,
+                "end": found.end,
+            })
+        })
+        .collect();
+    answer(json!({ "found": found }))
 }
 
 /// `{text}` → `{text, wiped: [{kind}]}`, kinds `card`, `sg_nric`,

@@ -70,6 +70,7 @@ const CALLS: &[(&str, Call)] = &[
     ("filter.page", filter::page),
     ("filter.scan_identifiers", filter::scan_identifiers),
     ("filter.scan_secrets", filter::scan_secrets),
+    ("filter.secret_values", filter::secret_values),
     ("filter.source", filter::source),
     ("filter.text_hits", filter::text_hits),
     ("filter.window", filter::window_title),
