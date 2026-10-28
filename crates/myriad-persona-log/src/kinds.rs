@@ -2,7 +2,8 @@
 //!
 //! An allow-list: a kind missing here is refused, so a new kind of row
 //! never leaves a device until it is added here on purpose. The node kinds
-//! are the native app's node log changes; the case kinds its judged cases.
+//! are the native app's node log changes and the site's `node.said`; the
+//! case kinds its judged cases.
 
 use serde::Serialize;
 
@@ -66,6 +67,9 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("node.retagged", Some("node"), Rule::Event),
     ("node.revised", Some("node"), Rule::Event),
     ("node.revived", Some("node"), Rule::Event),
+    // Her line was said in the end (the site, once it reached the owner);
+    // `node.opened` is the owner opening it beside them.
+    ("node.said", Some("node"), Rule::Event),
     ("node.shown", Some("node"), Rule::Event),
     ("node.split", Some("node"), Rule::Event),
     ("node.talked", Some("node"), Rule::Event),
