@@ -26,6 +26,7 @@ mod group;
 mod link;
 mod log;
 mod memory;
+mod nodes;
 mod outfit;
 mod own;
 mod reach;
@@ -127,6 +128,13 @@ const CALLS: &[(&str, Call)] = &[
     ("memory.score_all", memory::score_all),
     ("memory.spread", memory::spread),
     ("meta.version", version),
+    ("nodes.body", nodes::body),
+    ("nodes.fold", nodes::fold),
+    ("nodes.id", nodes::node_id),
+    ("nodes.limits", nodes::limits),
+    ("nodes.place_input", nodes::place_input),
+    ("nodes.place_read", nodes::place_read),
+    ("nodes.repo_key", nodes::repo_key),
     ("others.first_words_view", reach::first_words_view),
     ("outfit.after_reply", outfit::after_reply),
     ("outfit.hold_wear", outfit::hold_wear),
