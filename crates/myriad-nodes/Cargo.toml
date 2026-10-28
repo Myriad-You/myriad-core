@@ -1,0 +1,22 @@
+[package]
+name = "myriad-nodes"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Her nodes from her log: what each node row's payload holds and its canonical bytes, which node a thing files under and what is written, and the fold every host core makes of them."
+authors = ["Myriad Contributors"]
+license = "AGPL-3.0-only"
+
+# Pure: no I/O, no clock, no randomness. Row ids and times come from the
+# caller. The site links it directly and the shared core (`myriad-core-ffi`)
+# links it for every other platform, so the server and every computer fold
+# the same node rows into the same nodes.
+#
+# The first batch of node rules (docs/SHARED_CORE.md「她的节点」): the payload
+# format, the fold, where a thing files and what is kept. Her upkeep, wakes,
+# views and objections come in a later batch.
+[dependencies]
+myriad-persona-log = { path = "../myriad-persona-log" }
+myriad-persona-sync = { path = "../myriad-persona-sync" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }

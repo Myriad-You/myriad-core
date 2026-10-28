@@ -1,0 +1,880 @@
+{
+  "call": "nodes.file",
+  "cases": [
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "cannotWait": true,
+          "event": "evt_a",
+          "fact": "fact_1",
+          "happened": "waiting",
+          "line": " 它在等你回答。 ",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "a first line makes the node",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "form": "repo",
+              "key": "sample-repo",
+              "owner": "7",
+              "title": "sample-repo",
+              "version": 1
+            },
+            "canonical": "{\"form\":\"repo\",\"key\":\"sample-repo\",\"owner\":\"7\",\"title\":\"sample-repo\",\"version\":1}",
+            "digest": "55783e9527165fc04e25b69bc1333d50",
+            "id": "r1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "speak",
+              "event": "evt_a",
+              "fact": "fact_1",
+              "happened": "waiting",
+              "reason": "asked_before",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"speak\",\"event\":\"evt_a\",\"fact\":\"fact_1\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+            "digest": "0720979591a88cc031a6c05379c85c09",
+            "id": "r2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "speak",
+              "cannotWait": true,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"speak\",\"cannotWait\":true,\"event\":\"evt_a\",\"happened\":\"waiting\",\"line\":\"它在等你回答。\",\"version\":1}",
+            "digest": "60e74f19cda709e747643b0abcd625fd",
+            "id": "r3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "remember",
+          "event": "evt_b",
+          "happened": "waiting",
+          "line": "他喜欢先跑测试。",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "a note on a node that is there",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "remember",
+              "event": "evt_b",
+              "happened": "waiting",
+              "reason": "asked_before",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"remember\",\"event\":\"evt_b\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+            "digest": "47ba916066c090f57d8e9dc9944c780d",
+            "id": "r1",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "event": "evt_b",
+              "happened": "waiting",
+              "line": "他喜欢先跑测试。",
+              "version": 1
+            },
+            "canonical": "{\"event\":\"evt_b\",\"happened\":\"waiting\",\"line\":\"他喜欢先跑测试。\",\"version\":1}",
+            "digest": "2223ed07699a3d281b97c2070894555d",
+            "id": "r2",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "ignore",
+          "event": "evt_c",
+          "happened": "waiting",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "a decision with nothing to say",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "ignore",
+              "event": "evt_c",
+              "happened": "waiting",
+              "reason": "asked_before",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"ignore\",\"event\":\"evt_c\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+            "digest": "fbf9ffa4c7bc5637af9f5526ccce5d55",
+            "id": "r1",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_d",
+          "happened": "waiting",
+          "line": "   ",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "an empty line is no line",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "speak",
+              "event": "evt_d",
+              "happened": "waiting",
+              "reason": "asked_before",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"speak\",\"event\":\"evt_d\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+            "digest": "c267b6afecfd84d815f61eda90303287",
+            "id": "r1",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_a",
+          "happened": "waiting",
+          "line": "again",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "the same event again writes nothing",
+      "output": {
+        "already": true,
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        }
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_e",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "node": {
+          "audience": "personal:7",
+          "forgotten": true,
+          "id": "a488bad53e52ab7e51cb8903dd7a8046"
+        },
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "a forgotten node takes nothing",
+      "output": {
+        "forgotten": true,
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        }
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_f",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.situation",
+        "owner": "7",
+        "safeFacts": {
+          "situation": "coding"
+        }
+      },
+      "name": "a situation files nowhere",
+      "output": {}
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "ask",
+          "event": "evt_g",
+          "happened": "waiting",
+          "line": "你们聊到哪了？",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.ai_chat",
+        "owner": "7",
+        "safeFacts": {
+          "service": "Chat"
+        }
+      },
+      "name": "a talk with another AI",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "together",
+          "id": "185ae182feb17b6cd8b3f4ad28cfd19f",
+          "key": "together:chats"
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "form": "together",
+              "key": "together:chats",
+              "owner": "7",
+              "title": "",
+              "version": 1
+            },
+            "canonical": "{\"form\":\"together\",\"key\":\"together:chats\",\"owner\":\"7\",\"title\":\"\",\"version\":1}",
+            "digest": "755f176c841713b3c47798eb8cdef54b",
+            "id": "r1",
+            "kind": "node.created",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "ask",
+              "event": "evt_g",
+              "happened": "waiting",
+              "reason": "asked_before",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"ask\",\"event\":\"evt_g\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+            "digest": "6775b57299b7dd2119c5baa27c1d6175",
+            "id": "r2",
+            "kind": "node.decided",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "ask",
+              "event": "evt_g",
+              "happened": "waiting",
+              "line": "你们聊到哪了？",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"ask\",\"event\":\"evt_g\",\"happened\":\"waiting\",\"line\":\"你们聊到哪了？\",\"version\":1}",
+            "digest": "dc6515a253dbd2f49249067d2da20180",
+            "id": "r3",
+            "kind": "node.raised",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_h",
+          "happened": "waiting",
+          "line": "测试过了。",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "owner": "7",
+        "place": {
+          "form": "repo",
+          "key": "/Users/demo/code/sample-repo",
+          "title": "sample-repo"
+        }
+      },
+      "name": "a place the Mac knows itself",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "f7e9eaf142ebe4c537849910f5644ca7",
+          "key": "/Users/demo/code/sample-repo",
+          "title": "sample-repo"
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "form": "repo",
+              "key": "/Users/demo/code/sample-repo",
+              "owner": "7",
+              "title": "sample-repo",
+              "version": 1
+            },
+            "canonical": "{\"form\":\"repo\",\"key\":\"/Users/demo/code/sample-repo\",\"owner\":\"7\",\"title\":\"sample-repo\",\"version\":1}",
+            "digest": "da5f5f3d49099b72c2cb721e86645d23",
+            "id": "r1",
+            "kind": "node.created",
+            "object": "node:f7e9eaf142ebe4c537849910f5644ca7",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "speak",
+              "event": "evt_h",
+              "happened": "waiting",
+              "reason": "asked_before",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"speak\",\"event\":\"evt_h\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+            "digest": "a88b42ebf78662a4cbea1a98367f8a5a",
+            "id": "r2",
+            "kind": "node.decided",
+            "object": "node:f7e9eaf142ebe4c537849910f5644ca7",
+            "replicate": "local",
+            "subject": "7"
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "action": "speak",
+              "event": "evt_h",
+              "happened": "waiting",
+              "line": "测试过了。",
+              "version": 1
+            },
+            "canonical": "{\"action\":\"speak\",\"event\":\"evt_h\",\"happened\":\"waiting\",\"line\":\"测试过了。\",\"version\":1}",
+            "digest": "1a5c842e14997f7563daef7e59eef6d6",
+            "id": "r3",
+            "kind": "node.raised",
+            "object": "node:f7e9eaf142ebe4c537849910f5644ca7",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_a",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "too few ids",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_a",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r1",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "ids that repeat",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_b",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "185ae182feb17b6cd8b3f4ad28cfd19f",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "the node given is another",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_b",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "kind": "agent.merope.peer_agent",
+        "owner": "7",
+        "place": {
+          "form": "repo",
+          "key": "sample-repo"
+        },
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "sample-repo"
+        }
+      },
+      "name": "both a place and a kind",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "decision": {
+          "action": "speak",
+          "event": "evt_b",
+          "happened": "waiting",
+          "line": "x",
+          "reason": "asked_before"
+        },
+        "ids": [
+          "r1",
+          "r2",
+          "r3"
+        ],
+        "owner": "7",
+        "place": {
+          "form": "repo",
+          "key": "together:watched"
+        }
+      },
+      "name": "a together key as a repository",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -614,6 +614,7 @@ dependencies = [
  "myriad-agent-rules",
  "myriad-her-link",
  "myriad-merope",
+ "myriad-nodes",
  "myriad-perception-filter",
  "myriad-persona-log",
  "myriad-persona-sync",
@@ -644,6 +645,16 @@ dependencies = [
  "sha2",
  "thiserror",
  "url",
+]
+
+[[package]]
+name = "myriad-nodes"
+version = "0.1.0"
+dependencies = [
+ "myriad-persona-log",
+ "myriad-persona-sync",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

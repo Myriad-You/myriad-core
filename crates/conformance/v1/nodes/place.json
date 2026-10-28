@@ -1,0 +1,77 @@
+{
+  "call": "nodes.place",
+  "cases": [
+    {
+      "input": {
+        "kind": "agent.merope.peer_agent",
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting",
+          "repo": "  sample-repo "
+        }
+      },
+      "name": "another agent's session files under its repository",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "title": "sample-repo"
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.peer_agent",
+        "owner": "7",
+        "safeFacts": {
+          "happened": "waiting"
+        }
+      },
+      "name": "a session with no repository files nowhere",
+      "output": {}
+    },
+    {
+      "input": {
+        "kind": "agent.merope.ai_chat",
+        "owner": "7",
+        "safeFacts": {
+          "service": "Chat"
+        }
+      },
+      "name": "a talk with another AI",
+      "output": {
+        "place": {
+          "audience": "personal:7",
+          "form": "together",
+          "id": "185ae182feb17b6cd8b3f4ad28cfd19f",
+          "key": "together:chats"
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.situation",
+        "owner": "7",
+        "safeFacts": {
+          "situation": "coding"
+        }
+      },
+      "name": "a situation has no node",
+      "output": {}
+    },
+    {
+      "input": {
+        "kind": "agent.merope.dream",
+        "owner": "7",
+        "safeFacts": {}
+      },
+      "name": "a kind her link does not carry",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

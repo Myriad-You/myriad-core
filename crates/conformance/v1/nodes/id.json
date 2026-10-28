@@ -1,0 +1,58 @@
+{
+  "call": "nodes.id",
+  "cases": [
+    {
+      "input": {
+        "key": "sample-repo",
+        "owner": "7"
+      },
+      "name": "a repository in the owner's own audience",
+      "output": {
+        "id": "a488bad53e52ab7e51cb8903dd7a8046"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "sample-repo",
+        "owner": "7"
+      },
+      "name": "the same, the audience written out",
+      "output": {
+        "id": "a488bad53e52ab7e51cb8903dd7a8046"
+      }
+    },
+    {
+      "input": {
+        "key": "together:chats",
+        "owner": "7"
+      },
+      "name": "the talks with other AIs keep the together id",
+      "output": {
+        "id": "185ae182feb17b6cd8b3f4ad28cfd19f"
+      }
+    },
+    {
+      "input": {
+        "audience": "group:g1",
+        "key": "sample-repo",
+        "owner": "7"
+      },
+      "name": "a key in a group",
+      "output": {
+        "id": "8996fd7e3cb2326460c7a20456fcd015"
+      }
+    },
+    {
+      "input": {
+        "key": "sample-repo",
+        "owner": "o,1"
+      },
+      "name": "an owner with a comma",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

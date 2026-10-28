@@ -8,7 +8,7 @@
 
 ## 边界
 
-- **只收纯 crate。** 现在是 `myriad-merope` 和它依赖的 `myriad-agent-rules`，以及同步她的数据用的 `myriad-persona-sync`（格式、规范字节、时钟、比对）和多端的日志规则 `myriad-persona-log`（信封、版本向量、合并、遗忘、折叠、执笔权、时钟），「她的连接」帧的规则 `myriad-her-link`，以及客户端看屏幕时的宿主过滤 `myriad-perception-filter`。不引入 tokio、reqwest、sea-orm，也不读写文件或网络。
+- **只收纯 crate。** 现在是 `myriad-merope` 和它依赖的 `myriad-agent-rules`，以及同步她的数据用的 `myriad-persona-sync`（格式、规范字节、时钟、比对）和多端的日志规则 `myriad-persona-log`（信封、版本向量、合并、遗忘、折叠、执笔权、时钟），她的节点 `myriad-nodes`（节点行的载荷、挂哪个节点、节点的折叠），「她的连接」帧的规则 `myriad-her-link`，以及客户端看屏幕时的宿主过滤 `myriad-perception-filter`。不引入 tokio、reqwest、sea-orm，也不读写文件或网络。
 - **每个调用都是输入的纯函数。** 现在几点、她的时区、心情这些状态都在输入里；库不读进程的时钟、时区和环境。crate 里的规则因此不用 `chrono::Local`：她的时区由调用方传入，后端传 `merope::clock::zone()`，现在就是进程时区（容器里 `TZ=Asia/Shanghai`）。
 - **一个二进制里只能有一个 Rust 静态库。** 两个 Rust staticlib 会在 std 符号上冲突。别的平台将来要用的纯 crate，都并进这一个库，不另建。
 - **密钥不进来。** 规则拿不到任何宿主密钥或凭据，错误信息里也没有。
@@ -138,6 +138,49 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `log.merge` | `{log, incoming}` → `{log, added?, stubbed?, duplicates, conflicts?}`；`log` 可以只给和这批有关的行 |
 | `log.missing` | `{mine, theirs}` → `{missing: [{origin, from, through}]}` |
 
+## 她的节点（`nodes.*`）
+
+节点是她对主人做的一件事记下的东西：另一个编程代理在做的仓库、主人和其他 AI 的对话，以后还有她整理出的话题和每天的零散。节点里只有她自己的话（她想说的那句、她记下的）和指向来处的引用，没有原文。主人 2026-10-28 定节点规则分批进核心，`myriad-nodes` 是第一批：节点行的载荷格式、「一件事挂哪个节点、记什么」、节点的折叠，让服务端和电脑执笔时记出同一份节点。整理、唤醒、夜里维护、看法、反对是第二批，那些种类的行照收、不读（`Body::Later`）。
+
+- **行和载荷。** 节点的每次变化是日志里关于 `node:<id>` 的一行（`myriad-persona-log`）。行不带内容，载荷是另放的一份 body，`nodes.body` 给它检查过的样子、规范字节和摘要。body 自己带 `version`（现在 1，读得懂 1 到 `BODY_VERSION`），拒绝不认识的字段。时间不进 body：几点由行的时钟说。一个 moment 的话完整地在 raised／noted 那一行里，所以节点只从行就能折回来。
+- **各种行的 body**（第一批读的）：
+
+| kind | 谁写 | body（除 `version`） | 来源 |
+| --- | --- | --- | --- |
+| `node.created` | 她（跟着同一次写的那一行） | `owner`、`key`、`form`（`repo`／`topic`／`loose`／`together`）、`title`（可以为空） | 原生只记 `repo: <标题>`、站点记 `form`、`origin`；核心要能核对 id，所以带全 |
+| `node.decided` | 她 | `event`、`fact?`、`happened`、`action`、`reason` | 原生 `fact`／`action`／`reason`，站点 `event`／`happened`／`action`／`reason`，并起来 |
+| `node.raised` | 她 | `event`、`happened`、`action`、`line`、`cannotWait?` | 原生只记 `event`、`cannot_wait`，话在节点文档里；这里把 moment 放进行 |
+| `node.noted` | 她 | `event`、`happened`、`line` | 同上；算作说了 |
+| `node.said` | 她 | `event`、`line?` | 站点的（她的话送达后），新加进 `kinds.rs`；`line` 是她最后说出口的话 |
+| `node.opened` | 主人 | `event` | 原生（主人点开） |
+| `node.shown`、`node.faded`、`node.notified`、`node.observed` | 她 | `event` 加 `pause?`／`why`／无；`observed` 是 `fact`、`happened`、`agent?`、`scene?` | 原生；第一批只收、不改节点 |
+
+- **节点 id**（`nodes.id`）：原生的公式。`sha256("agent_node␟<owner>␟<key>")` 去掉首尾空白后前 16 字节的十六进制；主人私聊以外的受众在 owner 和 key 之间加受众；together 键（`together:watched`、`together:reading`、`together:chats`）沿用 `together_node␟<owner>␟<topic>`，只在主人私聊里、只能是 together 形状。key 首尾不能有空白（摘要会削掉，两个 key 会撞成一个 id）。
+- **挂哪个节点**（`nodes.place`）：`agent.merope.peer_agent` 挂在 `safeFacts.repo`（去掉首尾空白）那个仓库的节点上，没有仓库就不挂；`agent.merope.ai_chat` 挂在 `together:chats`，标题留空由显示的一端用主人的语言起名；`agent.merope.situation` 不挂；别的 kind 拒收。
+- **记什么**（`nodes.file`）：一次决定写节点第一次出现时的 `created`、`decided`，有话时 `raised`（`action` 是 `remember` 时 `noted`）；话去掉首尾空白，空的当没有。节点已经有这个事件（引用或 moment）就什么都不写（`already`）；节点被忘掉了也什么都不写（`forgotten`）。回的是草稿：受众、主体（主人私聊里是主人）、对象、kind、author、`replicate`（照原生的默认：群和仓库、together 节点留在本端，话题和零散可以同步）、body 和它的规范字节；`version`、`origin`、`epoch`、`dseq`、`hlc`、`payload` 由调用方照日志的规则补上，按顺序在一个事务里写。行 id 由调用方给。
+- **说了**（`nodes.said`）：`how: said` 只对她 raised、还没说的那句写一行 `node.said`（记下的笔记本来就算说了）；`how: opened` 每次点开都写一行 `node.opened`（主人写的），和原生一样。
+- **折叠**（`nodes.fold`）：输入任何顺序、可以重复、可以有桩，带着够到它们的 `forget` 行；先按 `log.fold` 的规矩查信封、按 id 去重、排成日志顺序。然后每个节点：
+  - owner、key、form 来自 `created`；`created` 的 owner、受众、key 算出来不是这个 id 的不收（`other_node`）；标题取日志顺序里最后一个不空的；
+  - 每个决定过的事件一条引用 `event:<id>`，按第一次出现的顺序，留最新的 200 条；
+  - raised／noted 的每句话一个 moment，同一事件以最后一行为准；`opened`、`said` 把它标成说了（`said` 还可以换成她最后说的话），并把它挪到最新（原生 `keep` 的做法）；按最后一次被碰到的顺序留最新的 64 条；
+  - `createdAt` 是最早的 `created` 行（没有就是最早的一行），`updatedAt` 是最晚的一行（桩也算），都是行时钟的毫秒换成微秒；
+  - 不是桩却没给 body 的（`no_body`）、body 不合格的（`bad_body`）记进 `skipped`，行的位置照算；第二批的种类不读。结果和输入顺序无关。
+- **遗忘**：
+  - 忘掉节点（`forget` 行的对象是 `node:<id>`，或这个受众里的 `subject:<主人>`）：节点只剩 `{id, audience, forgotten: true}`，它的行都进 `stubbed`。不管 `forget` 排在前还是后、从哪一端来。因为 id 由 key 算出、遗忘吸收后来的行，同一个仓库以后不会再长出节点；原生现在让比遗忘新的行留下（一起看的节点会正当地回来），哪一种对还要主人定，定之前按吸收做。
+  - 删一条依据（`forget` 行的对象是 `event:<id>`，同一受众）：去掉那条引用、那个 moment 和点名这个事件的每一行（进 `stubbed`），节点其余的留着。行在写的那一端已经是桩时结果一样。只有桩不会让节点被忘掉（`log.fold` 会把有桩的对象读成忘掉的；节点上的桩是「这里删过东西」）。
+  - `stubbed` 是这次折叠里刚变成桩、还带着 body 的行，调用方删掉它们的 body。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `nodes.body` | `{kind, body}` → `{body, canonical, digest}`：不合格是 `bad_input` |
+| `nodes.file` | `{owner, audience?, kind, safeFacts?}` 或 `{owner, audience?, place: {form, key, title?}}`，加 `{node?, decision: {event, fact?, happened?, action, reason?, line?, cannotWait?}, ids}` → `{place?, rows?, already?, forgotten?}`；`node` 是 `nodes.fold` 给的这个节点 |
+| `nodes.fold` | `{rows, bodies?: {行 id: body}}` → `{nodes, stubbed?, skipped?: [{id, why}]}`；给了 body 却没有那一行是 `bad_input` |
+| `nodes.id` | `{owner, audience?, key}` → `{id}`；`audience` 不给就是 `personal:<owner>` |
+| `nodes.place` | `{owner, audience?, kind, safeFacts?}` → `{place?: {id, audience, form, key, title?}}` |
+| `nodes.said` | `{owner, node, event, how, line?, id}` → `{rows}`；`how` 是 `said` 或 `opened` |
+
+拒收的消息只说哪个字段、哪条规矩，不引用输入里的值（里面是她的话）。
+
 ## 她的连接的帧（`link.*`）
 
 「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer` 六个帧族，信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
@@ -177,9 +220,9 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，现在是 `v1/`，原生按 `CORE_PIN` 复制进它自己的测试。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说。
-- `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
-- 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `log/`、`lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`nodes/`：节点行的 body、id、挂哪个节点、记什么、说了、折叠；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说。
+- `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
+- 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `log/`、`lease/` 的 `output`，`-p myriad-nodes` 重写 `nodes/` 的；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
 
 ## 宿主过滤（`filter.*`）
 

@@ -1,0 +1,335 @@
+{
+  "call": "nodes.body",
+  "cases": [
+    {
+      "input": {
+        "body": {
+          "form": "repo",
+          "key": "sample-repo",
+          "owner": "7",
+          "title": "sample-repo",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a node made",
+      "output": {
+        "body": {
+          "form": "repo",
+          "key": "sample-repo",
+          "owner": "7",
+          "title": "sample-repo",
+          "version": 1
+        },
+        "canonical": "{\"form\":\"repo\",\"key\":\"sample-repo\",\"owner\":\"7\",\"title\":\"sample-repo\",\"version\":1}",
+        "digest": "55783e9527165fc04e25b69bc1333d50"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "form": "together",
+          "key": "together:chats",
+          "owner": "7",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a together node with no name yet",
+      "output": {
+        "body": {
+          "form": "together",
+          "key": "together:chats",
+          "owner": "7",
+          "title": "",
+          "version": 1
+        },
+        "canonical": "{\"form\":\"together\",\"key\":\"together:chats\",\"owner\":\"7\",\"title\":\"\",\"version\":1}",
+        "digest": "755f176c841713b3c47798eb8cdef54b"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "speak",
+          "event": "evt_a",
+          "fact": "fact_1",
+          "happened": "waiting",
+          "reason": "asked_before",
+          "version": 1
+        },
+        "kind": "node.decided"
+      },
+      "name": "a decision with its fact",
+      "output": {
+        "body": {
+          "action": "speak",
+          "event": "evt_a",
+          "fact": "fact_1",
+          "happened": "waiting",
+          "reason": "asked_before",
+          "version": 1
+        },
+        "canonical": "{\"action\":\"speak\",\"event\":\"evt_a\",\"fact\":\"fact_1\",\"happened\":\"waiting\",\"reason\":\"asked_before\",\"version\":1}",
+        "digest": "0720979591a88cc031a6c05379c85c09"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "speak",
+          "cannotWait": false,
+          "event": "evt_a",
+          "happened": "waiting",
+          "line": "它在等你回答。",
+          "version": 1
+        },
+        "kind": "node.raised"
+      },
+      "name": "a line raised, cannot wait written out as false",
+      "output": {
+        "body": {
+          "action": "speak",
+          "event": "evt_a",
+          "happened": "waiting",
+          "line": "它在等你回答。",
+          "version": 1
+        },
+        "canonical": "{\"action\":\"speak\",\"event\":\"evt_a\",\"happened\":\"waiting\",\"line\":\"它在等你回答。\",\"version\":1}",
+        "digest": "1430c20cdd8fe87cffcb06219b1846b8"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "event": "evt_b",
+          "happened": "finished",
+          "line": "他喜欢先跑测试。",
+          "version": 1
+        },
+        "kind": "node.noted"
+      },
+      "name": "a note",
+      "output": {
+        "body": {
+          "event": "evt_b",
+          "happened": "finished",
+          "line": "他喜欢先跑测试。",
+          "version": 1
+        },
+        "canonical": "{\"event\":\"evt_b\",\"happened\":\"finished\",\"line\":\"他喜欢先跑测试。\",\"version\":1}",
+        "digest": "59f478ebe29a519e569a65c0d54e7fca"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "event": "evt_a",
+          "line": "它还在等你。",
+          "version": 1
+        },
+        "kind": "node.said"
+      },
+      "name": "said in other words",
+      "output": {
+        "body": {
+          "event": "evt_a",
+          "line": "它还在等你。",
+          "version": 1
+        },
+        "canonical": "{\"event\":\"evt_a\",\"line\":\"它还在等你。\",\"version\":1}",
+        "digest": "56e6bf8321d82fbfd449de43b3192cba"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "event": "evt_a",
+          "version": 1
+        },
+        "kind": "node.opened"
+      },
+      "name": "opened",
+      "output": {
+        "body": {
+          "event": "evt_a",
+          "version": 1
+        },
+        "canonical": "{\"event\":\"evt_a\",\"version\":1}",
+        "digest": "050e13dc6f009d6b97977a7404ef8c0f"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "event": "evt_a",
+          "pause": "committed",
+          "version": 1
+        },
+        "kind": "node.shown"
+      },
+      "name": "shown at a pause",
+      "output": {
+        "body": {
+          "event": "evt_a",
+          "pause": "committed",
+          "version": 1
+        },
+        "canonical": "{\"event\":\"evt_a\",\"pause\":\"committed\",\"version\":1}",
+        "digest": "206a0b73b81b63095a173de88a921cc3"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "event": "evt_a",
+          "version": 1,
+          "why": "ignored"
+        },
+        "kind": "node.faded"
+      },
+      "name": "faded",
+      "output": {
+        "body": {
+          "event": "evt_a",
+          "version": 1,
+          "why": "ignored"
+        },
+        "canonical": "{\"event\":\"evt_a\",\"version\":1,\"why\":\"ignored\"}",
+        "digest": "fef93b1f72900d0d91b1cf02c60ec203"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "agent": "claude",
+          "fact": "fact_1",
+          "happened": "waiting",
+          "version": 1
+        },
+        "kind": "node.observed"
+      },
+      "name": "observed",
+      "output": {
+        "body": {
+          "agent": "claude",
+          "fact": "fact_1",
+          "happened": "waiting",
+          "version": 1
+        },
+        "canonical": "{\"agent\":\"claude\",\"fact\":\"fact_1\",\"happened\":\"waiting\",\"version\":1}",
+        "digest": "a83aa8e038237ad7aa76c8e805b06633"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "because": [
+            "event:evt_a"
+          ],
+          "text": "x",
+          "version": 3
+        },
+        "kind": "node.view_changed"
+      },
+      "name": "a later kind is kept whole",
+      "output": {
+        "body": {
+          "because": [
+            "event:evt_a"
+          ],
+          "text": "x",
+          "version": 3
+        },
+        "canonical": "{\"because\":[\"event:evt_a\"],\"text\":\"x\",\"version\":3}",
+        "digest": "4786517fe63ca0059c27665461165e86"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "speak",
+          "event": "evt_a",
+          "mood": "good",
+          "version": 1
+        },
+        "kind": "node.decided"
+      },
+      "name": "a field the body does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "speak",
+          "event": "evt_a",
+          "line": "  ",
+          "version": 1
+        },
+        "kind": "node.raised"
+      },
+      "name": "an empty line",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "event": "evt_a",
+          "line": "x",
+          "version": 2
+        },
+        "kind": "node.noted"
+      },
+      "name": "a newer body version",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "Shout",
+          "event": "evt_a",
+          "version": 1
+        },
+        "kind": "node.decided"
+      },
+      "name": "an action in capitals",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "version": 1
+        },
+        "kind": "memory.write"
+      },
+      "name": "a kind that is not a node's",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "form": "repo",
+          "key": "sample-repo ",
+          "owner": "7",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a key with a space at its end",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

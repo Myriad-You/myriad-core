@@ -1,0 +1,380 @@
+{
+  "call": "nodes.said",
+  "cases": [
+    {
+      "input": {
+        "event": "evt_a",
+        "how": "said",
+        "id": "r9",
+        "line": " 它还在等你。 ",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7"
+      },
+      "name": "her line said in other words",
+      "output": {
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "event": "evt_a",
+              "line": "它还在等你。",
+              "version": 1
+            },
+            "canonical": "{\"event\":\"evt_a\",\"line\":\"它还在等你。\",\"version\":1}",
+            "digest": "56e6bf8321d82fbfd449de43b3192cba",
+            "id": "r9",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "event": "evt_a",
+        "how": "said",
+        "id": "r9",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7"
+      },
+      "name": "her line said as raised",
+      "output": {
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "body": {
+              "event": "evt_a",
+              "version": 1
+            },
+            "canonical": "{\"event\":\"evt_a\",\"version\":1}",
+            "digest": "050e13dc6f009d6b97977a7404ef8c0f",
+            "id": "r9",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "event": "evt_n",
+        "how": "said",
+        "id": "r9",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7"
+      },
+      "name": "a note is said already",
+      "output": {
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "event": "evt_s",
+        "how": "said",
+        "id": "r9",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7"
+      },
+      "name": "a line said already",
+      "output": {
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "event": "evt_z",
+        "how": "said",
+        "id": "r9",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7"
+      },
+      "name": "no such line",
+      "output": {
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "event": "evt_a",
+        "how": "opened",
+        "id": "r9",
+        "node": {
+          "audience": "personal:7",
+          "createdAt": 1760000000000000,
+          "form": "repo",
+          "id": "a488bad53e52ab7e51cb8903dd7a8046",
+          "key": "sample-repo",
+          "moments": [
+            {
+              "action": "speak",
+              "at": 1760000000000000,
+              "event": "evt_a",
+              "happened": "waiting",
+              "line": "它在等你回答。",
+              "said": false
+            },
+            {
+              "action": "remember",
+              "at": 1760000001000000,
+              "event": "evt_n",
+              "happened": "finished",
+              "line": "他喜欢先跑测试。",
+              "said": true
+            },
+            {
+              "action": "ask",
+              "at": 1760000002000000,
+              "event": "evt_s",
+              "happened": "failed",
+              "line": "要我看看吗？",
+              "said": true
+            }
+          ],
+          "owner": "7",
+          "refs": [
+            {
+              "at": 1760000000000000,
+              "id": "event:evt_a"
+            }
+          ],
+          "title": "sample-repo",
+          "updatedAt": 1760000002000000
+        },
+        "owner": "7"
+      },
+      "name": "the owner opened it",
+      "output": {
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "body": {
+              "event": "evt_a",
+              "version": 1
+            },
+            "canonical": "{\"event\":\"evt_a\",\"version\":1}",
+            "digest": "050e13dc6f009d6b97977a7404ef8c0f",
+            "id": "r9",
+            "kind": "node.opened",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "replicate": "local",
+            "subject": "7"
+          }
+        ]
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,4163 @@
+{
+  "call": "nodes.fold",
+  "cases": [
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s2": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "reason": "asked_before",
+            "version": 1
+          },
+          "s3": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "line": "它在等你回答。",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          },
+          "s7": {
+            "event": "evt_a",
+            "line": "它还在等你回答。",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "what the server wrote",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "form": "repo",
+            "id": "a488bad53e52ab7e51cb8903dd7a8046",
+            "key": "sample-repo",
+            "moments": [
+              {
+                "action": "remember",
+                "at": 1760000120000000,
+                "event": "evt_c",
+                "happened": "finished",
+                "line": "他喜欢先跑测试。",
+                "said": true
+              },
+              {
+                "action": "speak",
+                "at": 1760000000000000,
+                "event": "evt_a",
+                "happened": "waiting",
+                "line": "它还在等你回答。",
+                "said": true
+              }
+            ],
+            "owner": "7",
+            "refs": [
+              {
+                "at": 1760000000000000,
+                "id": "event:evt_a"
+              },
+              {
+                "at": 1760000060000000,
+                "id": "event:evt_b"
+              },
+              {
+                "at": 1760000120000000,
+                "id": "event:evt_c"
+              }
+            ],
+            "title": "sample-repo",
+            "updatedAt": 1760000180000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s2": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "reason": "asked_before",
+            "version": 1
+          },
+          "s3": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "line": "它在等你回答。",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          },
+          "s7": {
+            "event": "evt_a",
+            "line": "它还在等你回答。",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "the same rows in another order, some twice",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "form": "repo",
+            "id": "a488bad53e52ab7e51cb8903dd7a8046",
+            "key": "sample-repo",
+            "moments": [
+              {
+                "action": "remember",
+                "at": 1760000120000000,
+                "event": "evt_c",
+                "happened": "finished",
+                "line": "他喜欢先跑测试。",
+                "said": true
+              },
+              {
+                "action": "speak",
+                "at": 1760000000000000,
+                "event": "evt_a",
+                "happened": "waiting",
+                "line": "它还在等你回答。",
+                "said": true
+              }
+            ],
+            "owner": "7",
+            "refs": [
+              {
+                "at": 1760000000000000,
+                "id": "event:evt_a"
+              },
+              {
+                "at": 1760000060000000,
+                "id": "event:evt_b"
+              },
+              {
+                "at": 1760000120000000,
+                "id": "event:evt_c"
+              }
+            ],
+            "title": "sample-repo",
+            "updatedAt": 1760000180000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "m1": {
+            "form": "together",
+            "key": "together:chats",
+            "owner": "7",
+            "title": "和其他 AI 聊过的",
+            "version": 1
+          },
+          "m2": {
+            "action": "ask",
+            "event": "evt_x",
+            "fact": "chat_1",
+            "reason": "curious",
+            "version": 1
+          },
+          "m3": {
+            "action": "ask",
+            "cannotWait": true,
+            "event": "evt_x",
+            "line": "你们聊到哪了？",
+            "version": 1
+          },
+          "m4": {
+            "event": "evt_x",
+            "version": 1
+          },
+          "s10": {
+            "action": "speak",
+            "event": "evt_y",
+            "line": "它答得不太对。",
+            "version": 1
+          },
+          "s8": {
+            "form": "together",
+            "key": "together:chats",
+            "owner": "7",
+            "version": 1
+          },
+          "s9": {
+            "action": "speak",
+            "event": "evt_y",
+            "reason": "new_answer",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001759999995000-000000-dev_mac",
+            "id": "m1",
+            "kind": "node.created",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001759999995000-000001-dev_mac",
+            "id": "m2",
+            "kind": "node.decided",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001759999995000-000002-dev_mac",
+            "id": "m3",
+            "kind": "node.raised",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000001000-000000-dev_mac",
+            "id": "m4",
+            "kind": "node.opened",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 8,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "s8",
+            "kind": "node.created",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s8"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 9,
+            "epoch": 1,
+            "hlc": "001760000002000-000001-site",
+            "id": "s9",
+            "kind": "node.decided",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s9"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 10,
+            "epoch": 1,
+            "hlc": "001760000002000-000002-site",
+            "id": "s10",
+            "kind": "node.raised",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s10"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "the Mac and the server on one node",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1759999995000000,
+            "form": "together",
+            "id": "185ae182feb17b6cd8b3f4ad28cfd19f",
+            "key": "together:chats",
+            "moments": [
+              {
+                "action": "ask",
+                "at": 1759999995000000,
+                "event": "evt_x",
+                "happened": "",
+                "line": "你们聊到哪了？",
+                "said": true
+              },
+              {
+                "action": "speak",
+                "at": 1760000002000000,
+                "event": "evt_y",
+                "happened": "",
+                "line": "它答得不太对。",
+                "said": false
+              }
+            ],
+            "owner": "7",
+            "refs": [
+              {
+                "at": 1759999995000000,
+                "id": "event:evt_x"
+              },
+              {
+                "at": 1760000002000000,
+                "id": "event:evt_y"
+              }
+            ],
+            "title": "和其他 AI 聊过的",
+            "updatedAt": 1760000002000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s2": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "reason": "asked_before",
+            "version": 1
+          },
+          "s3": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "line": "它在等你回答。",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          },
+          "s7": {
+            "event": "evt_a",
+            "line": "它还在等你回答。",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001759999901000-000000-dev_mac",
+            "id": "f1",
+            "kind": "forget",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a node forgotten before its rows",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "forgotten": true,
+            "id": "a488bad53e52ab7e51cb8903dd7a8046"
+          }
+        ],
+        "stubbed": [
+          "s1",
+          "s2",
+          "s3",
+          "s4",
+          "s5",
+          "s6",
+          "s7"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "m1": {
+            "form": "together",
+            "key": "together:chats",
+            "owner": "7",
+            "title": "和其他 AI 聊过的",
+            "version": 1
+          },
+          "m2": {
+            "action": "ask",
+            "event": "evt_x",
+            "fact": "chat_1",
+            "reason": "curious",
+            "version": 1
+          },
+          "m3": {
+            "action": "ask",
+            "cannotWait": true,
+            "event": "evt_x",
+            "line": "你们聊到哪了？",
+            "version": 1
+          },
+          "m4": {
+            "event": "evt_x",
+            "version": 1
+          },
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s10": {
+            "action": "speak",
+            "event": "evt_y",
+            "line": "它答得不太对。",
+            "version": 1
+          },
+          "s2": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "reason": "asked_before",
+            "version": 1
+          },
+          "s3": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "line": "它在等你回答。",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          },
+          "s7": {
+            "event": "evt_a",
+            "line": "它还在等你回答。",
+            "version": 1
+          },
+          "s8": {
+            "form": "together",
+            "key": "together:chats",
+            "owner": "7",
+            "version": 1
+          },
+          "s9": {
+            "action": "speak",
+            "event": "evt_y",
+            "reason": "new_answer",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001759999995000-000000-dev_mac",
+            "id": "m1",
+            "kind": "node.created",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001759999995000-000001-dev_mac",
+            "id": "m2",
+            "kind": "node.decided",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001759999995000-000002-dev_mac",
+            "id": "m3",
+            "kind": "node.raised",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000001000-000000-dev_mac",
+            "id": "m4",
+            "kind": "node.opened",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:m4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 8,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "s8",
+            "kind": "node.created",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s8"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 9,
+            "epoch": 1,
+            "hlc": "001760000002000-000001-site",
+            "id": "s9",
+            "kind": "node.decided",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s9"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 10,
+            "epoch": 1,
+            "hlc": "001760000002000-000002-site",
+            "id": "s10",
+            "kind": "node.raised",
+            "object": "node:185ae182feb17b6cd8b3f4ad28cfd19f",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s10"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 20,
+            "hlc": "001760000500000-000000-site",
+            "id": "f2",
+            "kind": "forget",
+            "object": "subject:7",
+            "origin": "site",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "everything about the owner forgotten",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "forgotten": true,
+            "id": "185ae182feb17b6cd8b3f4ad28cfd19f"
+          },
+          {
+            "audience": "personal:7",
+            "forgotten": true,
+            "id": "a488bad53e52ab7e51cb8903dd7a8046"
+          }
+        ],
+        "stubbed": [
+          "m1",
+          "m2",
+          "m3",
+          "m4",
+          "s1",
+          "s10",
+          "s2",
+          "s3",
+          "s4",
+          "s5",
+          "s6",
+          "s7",
+          "s8",
+          "s9"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s2": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "reason": "asked_before",
+            "version": 1
+          },
+          "s3": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "line": "它在等你回答。",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          },
+          "s7": {
+            "event": "evt_a",
+            "line": "它还在等你回答。",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 10,
+            "hlc": "001760000240000-000000-dev_mac",
+            "id": "f3",
+            "kind": "forget",
+            "object": "event:evt_a",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "one piece of evidence forgotten",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "form": "repo",
+            "id": "a488bad53e52ab7e51cb8903dd7a8046",
+            "key": "sample-repo",
+            "moments": [
+              {
+                "action": "remember",
+                "at": 1760000120000000,
+                "event": "evt_c",
+                "happened": "finished",
+                "line": "他喜欢先跑测试。",
+                "said": true
+              }
+            ],
+            "owner": "7",
+            "refs": [
+              {
+                "at": 1760000060000000,
+                "id": "event:evt_b"
+              },
+              {
+                "at": 1760000120000000,
+                "id": "event:evt_c"
+              }
+            ],
+            "title": "sample-repo",
+            "updatedAt": 1760000180000000
+          }
+        ],
+        "stubbed": [
+          "s2",
+          "s3",
+          "s7"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 10,
+            "hlc": "001760000240000-000000-dev_mac",
+            "id": "f3",
+            "kind": "forget",
+            "object": "event:evt_a",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "the evidence already stubbed where it was written",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "form": "repo",
+            "id": "a488bad53e52ab7e51cb8903dd7a8046",
+            "key": "sample-repo",
+            "moments": [
+              {
+                "action": "remember",
+                "at": 1760000120000000,
+                "event": "evt_c",
+                "happened": "finished",
+                "line": "他喜欢先跑测试。",
+                "said": true
+              }
+            ],
+            "owner": "7",
+            "refs": [
+              {
+                "at": 1760000060000000,
+                "id": "event:evt_b"
+              },
+              {
+                "at": 1760000120000000,
+                "id": "event:evt_c"
+              }
+            ],
+            "title": "sample-repo",
+            "updatedAt": 1760000180000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "c0": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "c1": {
+            "action": "speak",
+            "event": "evt_00",
+            "line": "第 0 句",
+            "version": 1
+          },
+          "c10": {
+            "action": "speak",
+            "event": "evt_09",
+            "line": "第 9 句",
+            "version": 1
+          },
+          "c11": {
+            "action": "speak",
+            "event": "evt_10",
+            "line": "第 10 句",
+            "version": 1
+          },
+          "c12": {
+            "action": "speak",
+            "event": "evt_11",
+            "line": "第 11 句",
+            "version": 1
+          },
+          "c13": {
+            "action": "speak",
+            "event": "evt_12",
+            "line": "第 12 句",
+            "version": 1
+          },
+          "c14": {
+            "action": "speak",
+            "event": "evt_13",
+            "line": "第 13 句",
+            "version": 1
+          },
+          "c15": {
+            "action": "speak",
+            "event": "evt_14",
+            "line": "第 14 句",
+            "version": 1
+          },
+          "c16": {
+            "action": "speak",
+            "event": "evt_15",
+            "line": "第 15 句",
+            "version": 1
+          },
+          "c17": {
+            "action": "speak",
+            "event": "evt_16",
+            "line": "第 16 句",
+            "version": 1
+          },
+          "c18": {
+            "action": "speak",
+            "event": "evt_17",
+            "line": "第 17 句",
+            "version": 1
+          },
+          "c19": {
+            "action": "speak",
+            "event": "evt_18",
+            "line": "第 18 句",
+            "version": 1
+          },
+          "c2": {
+            "action": "speak",
+            "event": "evt_01",
+            "line": "第 1 句",
+            "version": 1
+          },
+          "c20": {
+            "action": "speak",
+            "event": "evt_19",
+            "line": "第 19 句",
+            "version": 1
+          },
+          "c21": {
+            "action": "speak",
+            "event": "evt_20",
+            "line": "第 20 句",
+            "version": 1
+          },
+          "c22": {
+            "action": "speak",
+            "event": "evt_21",
+            "line": "第 21 句",
+            "version": 1
+          },
+          "c23": {
+            "action": "speak",
+            "event": "evt_22",
+            "line": "第 22 句",
+            "version": 1
+          },
+          "c24": {
+            "action": "speak",
+            "event": "evt_23",
+            "line": "第 23 句",
+            "version": 1
+          },
+          "c25": {
+            "action": "speak",
+            "event": "evt_24",
+            "line": "第 24 句",
+            "version": 1
+          },
+          "c26": {
+            "action": "speak",
+            "event": "evt_25",
+            "line": "第 25 句",
+            "version": 1
+          },
+          "c27": {
+            "action": "speak",
+            "event": "evt_26",
+            "line": "第 26 句",
+            "version": 1
+          },
+          "c28": {
+            "action": "speak",
+            "event": "evt_27",
+            "line": "第 27 句",
+            "version": 1
+          },
+          "c29": {
+            "action": "speak",
+            "event": "evt_28",
+            "line": "第 28 句",
+            "version": 1
+          },
+          "c3": {
+            "action": "speak",
+            "event": "evt_02",
+            "line": "第 2 句",
+            "version": 1
+          },
+          "c30": {
+            "action": "speak",
+            "event": "evt_29",
+            "line": "第 29 句",
+            "version": 1
+          },
+          "c31": {
+            "action": "speak",
+            "event": "evt_30",
+            "line": "第 30 句",
+            "version": 1
+          },
+          "c32": {
+            "action": "speak",
+            "event": "evt_31",
+            "line": "第 31 句",
+            "version": 1
+          },
+          "c33": {
+            "action": "speak",
+            "event": "evt_32",
+            "line": "第 32 句",
+            "version": 1
+          },
+          "c34": {
+            "action": "speak",
+            "event": "evt_33",
+            "line": "第 33 句",
+            "version": 1
+          },
+          "c35": {
+            "action": "speak",
+            "event": "evt_34",
+            "line": "第 34 句",
+            "version": 1
+          },
+          "c36": {
+            "action": "speak",
+            "event": "evt_35",
+            "line": "第 35 句",
+            "version": 1
+          },
+          "c37": {
+            "action": "speak",
+            "event": "evt_36",
+            "line": "第 36 句",
+            "version": 1
+          },
+          "c38": {
+            "action": "speak",
+            "event": "evt_37",
+            "line": "第 37 句",
+            "version": 1
+          },
+          "c39": {
+            "action": "speak",
+            "event": "evt_38",
+            "line": "第 38 句",
+            "version": 1
+          },
+          "c4": {
+            "action": "speak",
+            "event": "evt_03",
+            "line": "第 3 句",
+            "version": 1
+          },
+          "c40": {
+            "action": "speak",
+            "event": "evt_39",
+            "line": "第 39 句",
+            "version": 1
+          },
+          "c41": {
+            "action": "speak",
+            "event": "evt_40",
+            "line": "第 40 句",
+            "version": 1
+          },
+          "c42": {
+            "action": "speak",
+            "event": "evt_41",
+            "line": "第 41 句",
+            "version": 1
+          },
+          "c43": {
+            "action": "speak",
+            "event": "evt_42",
+            "line": "第 42 句",
+            "version": 1
+          },
+          "c44": {
+            "action": "speak",
+            "event": "evt_43",
+            "line": "第 43 句",
+            "version": 1
+          },
+          "c45": {
+            "action": "speak",
+            "event": "evt_44",
+            "line": "第 44 句",
+            "version": 1
+          },
+          "c46": {
+            "action": "speak",
+            "event": "evt_45",
+            "line": "第 45 句",
+            "version": 1
+          },
+          "c47": {
+            "action": "speak",
+            "event": "evt_46",
+            "line": "第 46 句",
+            "version": 1
+          },
+          "c48": {
+            "action": "speak",
+            "event": "evt_47",
+            "line": "第 47 句",
+            "version": 1
+          },
+          "c49": {
+            "action": "speak",
+            "event": "evt_48",
+            "line": "第 48 句",
+            "version": 1
+          },
+          "c5": {
+            "action": "speak",
+            "event": "evt_04",
+            "line": "第 4 句",
+            "version": 1
+          },
+          "c50": {
+            "action": "speak",
+            "event": "evt_49",
+            "line": "第 49 句",
+            "version": 1
+          },
+          "c51": {
+            "action": "speak",
+            "event": "evt_50",
+            "line": "第 50 句",
+            "version": 1
+          },
+          "c52": {
+            "action": "speak",
+            "event": "evt_51",
+            "line": "第 51 句",
+            "version": 1
+          },
+          "c53": {
+            "action": "speak",
+            "event": "evt_52",
+            "line": "第 52 句",
+            "version": 1
+          },
+          "c54": {
+            "action": "speak",
+            "event": "evt_53",
+            "line": "第 53 句",
+            "version": 1
+          },
+          "c55": {
+            "action": "speak",
+            "event": "evt_54",
+            "line": "第 54 句",
+            "version": 1
+          },
+          "c56": {
+            "action": "speak",
+            "event": "evt_55",
+            "line": "第 55 句",
+            "version": 1
+          },
+          "c57": {
+            "action": "speak",
+            "event": "evt_56",
+            "line": "第 56 句",
+            "version": 1
+          },
+          "c58": {
+            "action": "speak",
+            "event": "evt_57",
+            "line": "第 57 句",
+            "version": 1
+          },
+          "c59": {
+            "action": "speak",
+            "event": "evt_58",
+            "line": "第 58 句",
+            "version": 1
+          },
+          "c6": {
+            "action": "speak",
+            "event": "evt_05",
+            "line": "第 5 句",
+            "version": 1
+          },
+          "c60": {
+            "action": "speak",
+            "event": "evt_59",
+            "line": "第 59 句",
+            "version": 1
+          },
+          "c61": {
+            "action": "speak",
+            "event": "evt_60",
+            "line": "第 60 句",
+            "version": 1
+          },
+          "c62": {
+            "action": "speak",
+            "event": "evt_61",
+            "line": "第 61 句",
+            "version": 1
+          },
+          "c63": {
+            "action": "speak",
+            "event": "evt_62",
+            "line": "第 62 句",
+            "version": 1
+          },
+          "c64": {
+            "action": "speak",
+            "event": "evt_63",
+            "line": "第 63 句",
+            "version": 1
+          },
+          "c65": {
+            "action": "speak",
+            "event": "evt_64",
+            "line": "第 64 句",
+            "version": 1
+          },
+          "c66": {
+            "action": "speak",
+            "event": "evt_65",
+            "line": "第 65 句",
+            "version": 1
+          },
+          "c7": {
+            "action": "speak",
+            "event": "evt_06",
+            "line": "第 6 句",
+            "version": 1
+          },
+          "c8": {
+            "action": "speak",
+            "event": "evt_07",
+            "line": "第 7 句",
+            "version": 1
+          },
+          "c9": {
+            "action": "speak",
+            "event": "evt_08",
+            "line": "第 8 句",
+            "version": 1
+          },
+          "c99": {
+            "event": "evt_00",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "c0",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c0"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "c1",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-site",
+            "id": "c2",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "c3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000003000-000000-site",
+            "id": "c4",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000004000-000000-site",
+            "id": "c5",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000005000-000000-site",
+            "id": "c6",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 8,
+            "epoch": 1,
+            "hlc": "001760000006000-000000-site",
+            "id": "c7",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 9,
+            "epoch": 1,
+            "hlc": "001760000007000-000000-site",
+            "id": "c8",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c8"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 10,
+            "epoch": 1,
+            "hlc": "001760000008000-000000-site",
+            "id": "c9",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c9"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 11,
+            "epoch": 1,
+            "hlc": "001760000009000-000000-site",
+            "id": "c10",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c10"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 12,
+            "epoch": 1,
+            "hlc": "001760000010000-000000-site",
+            "id": "c11",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c11"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 13,
+            "epoch": 1,
+            "hlc": "001760000011000-000000-site",
+            "id": "c12",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c12"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 14,
+            "epoch": 1,
+            "hlc": "001760000012000-000000-site",
+            "id": "c13",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c13"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 15,
+            "epoch": 1,
+            "hlc": "001760000013000-000000-site",
+            "id": "c14",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c14"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 16,
+            "epoch": 1,
+            "hlc": "001760000014000-000000-site",
+            "id": "c15",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c15"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 17,
+            "epoch": 1,
+            "hlc": "001760000015000-000000-site",
+            "id": "c16",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c16"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 18,
+            "epoch": 1,
+            "hlc": "001760000016000-000000-site",
+            "id": "c17",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c17"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 19,
+            "epoch": 1,
+            "hlc": "001760000017000-000000-site",
+            "id": "c18",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c18"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 20,
+            "epoch": 1,
+            "hlc": "001760000018000-000000-site",
+            "id": "c19",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c19"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 21,
+            "epoch": 1,
+            "hlc": "001760000019000-000000-site",
+            "id": "c20",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c20"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 22,
+            "epoch": 1,
+            "hlc": "001760000020000-000000-site",
+            "id": "c21",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c21"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 23,
+            "epoch": 1,
+            "hlc": "001760000021000-000000-site",
+            "id": "c22",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c22"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 24,
+            "epoch": 1,
+            "hlc": "001760000022000-000000-site",
+            "id": "c23",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c23"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 25,
+            "epoch": 1,
+            "hlc": "001760000023000-000000-site",
+            "id": "c24",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c24"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 26,
+            "epoch": 1,
+            "hlc": "001760000024000-000000-site",
+            "id": "c25",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c25"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 27,
+            "epoch": 1,
+            "hlc": "001760000025000-000000-site",
+            "id": "c26",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c26"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 28,
+            "epoch": 1,
+            "hlc": "001760000026000-000000-site",
+            "id": "c27",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c27"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 29,
+            "epoch": 1,
+            "hlc": "001760000027000-000000-site",
+            "id": "c28",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c28"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 30,
+            "epoch": 1,
+            "hlc": "001760000028000-000000-site",
+            "id": "c29",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c29"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 31,
+            "epoch": 1,
+            "hlc": "001760000029000-000000-site",
+            "id": "c30",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c30"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 32,
+            "epoch": 1,
+            "hlc": "001760000030000-000000-site",
+            "id": "c31",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c31"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 33,
+            "epoch": 1,
+            "hlc": "001760000031000-000000-site",
+            "id": "c32",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c32"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 34,
+            "epoch": 1,
+            "hlc": "001760000032000-000000-site",
+            "id": "c33",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c33"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 35,
+            "epoch": 1,
+            "hlc": "001760000033000-000000-site",
+            "id": "c34",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c34"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 36,
+            "epoch": 1,
+            "hlc": "001760000034000-000000-site",
+            "id": "c35",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c35"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 37,
+            "epoch": 1,
+            "hlc": "001760000035000-000000-site",
+            "id": "c36",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c36"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 38,
+            "epoch": 1,
+            "hlc": "001760000036000-000000-site",
+            "id": "c37",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c37"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 39,
+            "epoch": 1,
+            "hlc": "001760000037000-000000-site",
+            "id": "c38",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c38"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 40,
+            "epoch": 1,
+            "hlc": "001760000038000-000000-site",
+            "id": "c39",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c39"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 41,
+            "epoch": 1,
+            "hlc": "001760000039000-000000-site",
+            "id": "c40",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c40"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 42,
+            "epoch": 1,
+            "hlc": "001760000040000-000000-site",
+            "id": "c41",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c41"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 43,
+            "epoch": 1,
+            "hlc": "001760000041000-000000-site",
+            "id": "c42",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c42"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 44,
+            "epoch": 1,
+            "hlc": "001760000042000-000000-site",
+            "id": "c43",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c43"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 45,
+            "epoch": 1,
+            "hlc": "001760000043000-000000-site",
+            "id": "c44",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c44"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 46,
+            "epoch": 1,
+            "hlc": "001760000044000-000000-site",
+            "id": "c45",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c45"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 47,
+            "epoch": 1,
+            "hlc": "001760000045000-000000-site",
+            "id": "c46",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c46"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 48,
+            "epoch": 1,
+            "hlc": "001760000046000-000000-site",
+            "id": "c47",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c47"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 49,
+            "epoch": 1,
+            "hlc": "001760000047000-000000-site",
+            "id": "c48",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c48"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 50,
+            "epoch": 1,
+            "hlc": "001760000048000-000000-site",
+            "id": "c49",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c49"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 51,
+            "epoch": 1,
+            "hlc": "001760000049000-000000-site",
+            "id": "c50",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c50"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 52,
+            "epoch": 1,
+            "hlc": "001760000050000-000000-site",
+            "id": "c51",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c51"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 53,
+            "epoch": 1,
+            "hlc": "001760000051000-000000-site",
+            "id": "c52",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c52"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 54,
+            "epoch": 1,
+            "hlc": "001760000052000-000000-site",
+            "id": "c53",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c53"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 55,
+            "epoch": 1,
+            "hlc": "001760000053000-000000-site",
+            "id": "c54",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c54"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 56,
+            "epoch": 1,
+            "hlc": "001760000054000-000000-site",
+            "id": "c55",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c55"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 57,
+            "epoch": 1,
+            "hlc": "001760000055000-000000-site",
+            "id": "c56",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c56"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 58,
+            "epoch": 1,
+            "hlc": "001760000056000-000000-site",
+            "id": "c57",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c57"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 59,
+            "epoch": 1,
+            "hlc": "001760000057000-000000-site",
+            "id": "c58",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c58"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 60,
+            "epoch": 1,
+            "hlc": "001760000058000-000000-site",
+            "id": "c59",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c59"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 61,
+            "epoch": 1,
+            "hlc": "001760000059000-000000-site",
+            "id": "c60",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c60"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 62,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "c61",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c61"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 63,
+            "epoch": 1,
+            "hlc": "001760000061000-000000-site",
+            "id": "c62",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c62"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 64,
+            "epoch": 1,
+            "hlc": "001760000062000-000000-site",
+            "id": "c63",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c63"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 65,
+            "epoch": 1,
+            "hlc": "001760000063000-000000-site",
+            "id": "c64",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c64"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 66,
+            "epoch": 1,
+            "hlc": "001760000064000-000000-site",
+            "id": "c65",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c65"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 67,
+            "epoch": 1,
+            "hlc": "001760000065000-000000-site",
+            "id": "c66",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:c66"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000090000-000000-dev_mac",
+            "id": "c99",
+            "kind": "node.opened",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c99"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "at most 64 moments, an opened one moves up and stays",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "form": "repo",
+            "id": "a488bad53e52ab7e51cb8903dd7a8046",
+            "key": "sample-repo",
+            "moments": [
+              {
+                "action": "speak",
+                "at": 1760000003000000,
+                "event": "evt_03",
+                "happened": "",
+                "line": "第 3 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000004000000,
+                "event": "evt_04",
+                "happened": "",
+                "line": "第 4 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000005000000,
+                "event": "evt_05",
+                "happened": "",
+                "line": "第 5 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000006000000,
+                "event": "evt_06",
+                "happened": "",
+                "line": "第 6 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000007000000,
+                "event": "evt_07",
+                "happened": "",
+                "line": "第 7 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000008000000,
+                "event": "evt_08",
+                "happened": "",
+                "line": "第 8 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000009000000,
+                "event": "evt_09",
+                "happened": "",
+                "line": "第 9 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000010000000,
+                "event": "evt_10",
+                "happened": "",
+                "line": "第 10 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000011000000,
+                "event": "evt_11",
+                "happened": "",
+                "line": "第 11 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000012000000,
+                "event": "evt_12",
+                "happened": "",
+                "line": "第 12 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000013000000,
+                "event": "evt_13",
+                "happened": "",
+                "line": "第 13 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000014000000,
+                "event": "evt_14",
+                "happened": "",
+                "line": "第 14 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000015000000,
+                "event": "evt_15",
+                "happened": "",
+                "line": "第 15 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000016000000,
+                "event": "evt_16",
+                "happened": "",
+                "line": "第 16 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000017000000,
+                "event": "evt_17",
+                "happened": "",
+                "line": "第 17 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000018000000,
+                "event": "evt_18",
+                "happened": "",
+                "line": "第 18 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000019000000,
+                "event": "evt_19",
+                "happened": "",
+                "line": "第 19 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000020000000,
+                "event": "evt_20",
+                "happened": "",
+                "line": "第 20 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000021000000,
+                "event": "evt_21",
+                "happened": "",
+                "line": "第 21 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000022000000,
+                "event": "evt_22",
+                "happened": "",
+                "line": "第 22 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000023000000,
+                "event": "evt_23",
+                "happened": "",
+                "line": "第 23 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000024000000,
+                "event": "evt_24",
+                "happened": "",
+                "line": "第 24 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000025000000,
+                "event": "evt_25",
+                "happened": "",
+                "line": "第 25 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000026000000,
+                "event": "evt_26",
+                "happened": "",
+                "line": "第 26 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000027000000,
+                "event": "evt_27",
+                "happened": "",
+                "line": "第 27 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000028000000,
+                "event": "evt_28",
+                "happened": "",
+                "line": "第 28 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000029000000,
+                "event": "evt_29",
+                "happened": "",
+                "line": "第 29 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000030000000,
+                "event": "evt_30",
+                "happened": "",
+                "line": "第 30 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000031000000,
+                "event": "evt_31",
+                "happened": "",
+                "line": "第 31 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000032000000,
+                "event": "evt_32",
+                "happened": "",
+                "line": "第 32 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000033000000,
+                "event": "evt_33",
+                "happened": "",
+                "line": "第 33 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000034000000,
+                "event": "evt_34",
+                "happened": "",
+                "line": "第 34 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000035000000,
+                "event": "evt_35",
+                "happened": "",
+                "line": "第 35 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000036000000,
+                "event": "evt_36",
+                "happened": "",
+                "line": "第 36 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000037000000,
+                "event": "evt_37",
+                "happened": "",
+                "line": "第 37 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000038000000,
+                "event": "evt_38",
+                "happened": "",
+                "line": "第 38 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000039000000,
+                "event": "evt_39",
+                "happened": "",
+                "line": "第 39 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000040000000,
+                "event": "evt_40",
+                "happened": "",
+                "line": "第 40 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000041000000,
+                "event": "evt_41",
+                "happened": "",
+                "line": "第 41 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000042000000,
+                "event": "evt_42",
+                "happened": "",
+                "line": "第 42 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000043000000,
+                "event": "evt_43",
+                "happened": "",
+                "line": "第 43 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000044000000,
+                "event": "evt_44",
+                "happened": "",
+                "line": "第 44 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000045000000,
+                "event": "evt_45",
+                "happened": "",
+                "line": "第 45 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000046000000,
+                "event": "evt_46",
+                "happened": "",
+                "line": "第 46 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000047000000,
+                "event": "evt_47",
+                "happened": "",
+                "line": "第 47 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000048000000,
+                "event": "evt_48",
+                "happened": "",
+                "line": "第 48 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000049000000,
+                "event": "evt_49",
+                "happened": "",
+                "line": "第 49 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000050000000,
+                "event": "evt_50",
+                "happened": "",
+                "line": "第 50 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000051000000,
+                "event": "evt_51",
+                "happened": "",
+                "line": "第 51 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000052000000,
+                "event": "evt_52",
+                "happened": "",
+                "line": "第 52 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000053000000,
+                "event": "evt_53",
+                "happened": "",
+                "line": "第 53 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000054000000,
+                "event": "evt_54",
+                "happened": "",
+                "line": "第 54 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000055000000,
+                "event": "evt_55",
+                "happened": "",
+                "line": "第 55 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000056000000,
+                "event": "evt_56",
+                "happened": "",
+                "line": "第 56 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000057000000,
+                "event": "evt_57",
+                "happened": "",
+                "line": "第 57 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000058000000,
+                "event": "evt_58",
+                "happened": "",
+                "line": "第 58 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000059000000,
+                "event": "evt_59",
+                "happened": "",
+                "line": "第 59 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000060000000,
+                "event": "evt_60",
+                "happened": "",
+                "line": "第 60 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000061000000,
+                "event": "evt_61",
+                "happened": "",
+                "line": "第 61 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000062000000,
+                "event": "evt_62",
+                "happened": "",
+                "line": "第 62 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000063000000,
+                "event": "evt_63",
+                "happened": "",
+                "line": "第 63 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000064000000,
+                "event": "evt_64",
+                "happened": "",
+                "line": "第 64 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000065000000,
+                "event": "evt_65",
+                "happened": "",
+                "line": "第 65 句",
+                "said": false
+              },
+              {
+                "action": "speak",
+                "at": 1760000000000000,
+                "event": "evt_00",
+                "happened": "",
+                "line": "第 0 句",
+                "said": true
+              }
+            ],
+            "owner": "7",
+            "title": "sample-repo",
+            "updatedAt": 1760000090000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "o1": {
+            "form": "repo",
+            "key": "other-repo",
+            "owner": "7",
+            "title": "other-repo",
+            "version": 1
+          },
+          "o3": {
+            "action": "speak",
+            "event": "evt_a",
+            "line": "",
+            "version": 1
+          },
+          "o4": {
+            "text": "opaque here",
+            "version": 1
+          },
+          "o7": {
+            "anything": true
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "o1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:o1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-site",
+            "id": "o2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:o2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "o3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:o3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000003000-000000-site",
+            "id": "o4",
+            "kind": "node.view_changed",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:o4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000004000-000000-site",
+            "id": "o5",
+            "kind": "node.consolidated",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:o5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000005000-000000-site",
+            "id": "o6",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000006000-000000-site",
+            "id": "o7",
+            "kind": "memory.write",
+            "object": "memory:m1",
+            "origin": "site",
+            "payload": {
+              "ref": "body:o7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "rows passed by",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "id": "a488bad53e52ab7e51cb8903dd7a8046",
+            "updatedAt": 1760000005000000
+          }
+        ],
+        "skipped": [
+          {
+            "id": "o1",
+            "why": "other_node"
+          },
+          {
+            "id": "o2",
+            "why": "no_body"
+          },
+          {
+            "id": "o3",
+            "why": "bad_body"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "form": "repo",
+            "key": "sample-repo",
+            "owner": "7",
+            "title": "sample-repo",
+            "version": 1
+          },
+          "s2": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "reason": "asked_before",
+            "version": 1
+          },
+          "s3": {
+            "action": "speak",
+            "event": "evt_a",
+            "happened": "waiting",
+            "line": "它在等你回答。",
+            "version": 1
+          },
+          "s4": {
+            "action": "ignore",
+            "event": "evt_b",
+            "happened": "finished",
+            "reason": "nothing_new",
+            "version": 1
+          },
+          "s5": {
+            "action": "remember",
+            "event": "evt_c",
+            "happened": "finished",
+            "reason": "habit",
+            "version": 1
+          },
+          "s6": {
+            "event": "evt_c",
+            "happened": "finished",
+            "line": "他喜欢先跑测试。",
+            "version": 1
+          },
+          "s7": {
+            "event": "evt_a",
+            "line": "它还在等你回答。",
+            "version": 1
+          },
+          "zz": {
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000001-site",
+            "id": "s2",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000002-site",
+            "id": "s3",
+            "kind": "node.raised",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000060000-000000-site",
+            "id": "s4",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000120000-000000-site",
+            "id": "s5",
+            "kind": "node.decided",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s5"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000120000-000001-site",
+            "id": "s6",
+            "kind": "node.noted",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s6"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000180000-000000-site",
+            "id": "s7",
+            "kind": "node.said",
+            "object": "node:a488bad53e52ab7e51cb8903dd7a8046",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s7"
+            },
+            "replicate": "shared",
+            "subject": "7",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a body for no row",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
