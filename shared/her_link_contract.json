@@ -724,7 +724,7 @@
         "required": ["group", "text"],
         "optional": ["replyTo", "lend"],
         "idempotency": "id is made by the mind once per line, the same on every resend.",
-        "description": "Her mind on a PC says text in a group: the server sends it there as her, the way it sends her own lines, and writes it to the group's log as her line at the mind's epoch. replyTo is the message id she answers, lend the group.lend it comes from. What she noted goes back as the group's log.rows, from the mind; neither is kept on the PC. Taken only from the holder (not_holder otherwise); answered with group.said."
+        "description": "Her mind on a PC says text in a group: the server sends it there as her, the way it sends her own lines. replyTo is the message id she answers, lend the group.lend it comes from. Her line and what she noted are hers to write: the mind writes them as rows of the group's audience at its epoch and sends them with log.rows, and the server keeps them; the PC keeps neither on disk (it writes them for the server, then lets them go). Taken only from the holder (not_holder otherwise); answered with group.said."
       },
       "group.said": {
         "from": "server",
