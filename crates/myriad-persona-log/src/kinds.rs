@@ -2,7 +2,8 @@
 //!
 //! An allow-list: a kind missing here is refused, so a new kind of row
 //! never leaves a device until it is added here on purpose. The node kinds
-//! are the native app's node log changes; the case kinds its judged cases.
+//! are the native app's node log changes and the shared core's node rows
+//! (`myriad-nodes`); the case kinds its judged cases.
 
 use serde::Serialize;
 
@@ -52,23 +53,36 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("node.created", Some("node"), Rule::Event),
     ("node.decided", Some("node"), Rule::Event),
     ("node.drafted", Some("node"), Rule::Event),
+    // A fact or preference on a node, with its three tags.
+    ("node.entry", Some("node"), Rule::Event),
     ("node.faded", Some("node"), Rule::Event),
     ("node.filed", Some("node"), Rule::Event),
     ("node.grown", Some("node"), Rule::Event),
+    // Something she means to say, revised against the version it saw.
+    ("node.intent", Some("node"), Rule::Event),
+    // What a node is changed (in progress ↔ topic): history, not a relation.
+    ("node.kind_changed", Some("node"), Rule::Event),
     ("node.loosened", Some("node"), Rule::Event),
     ("node.merged", Some("node"), Rule::Event),
     ("node.noted", Some("node"), Rule::Event),
     ("node.notified", Some("node"), Rule::Event),
     ("node.observed", Some("node"), Rule::Event),
+    ("node.open_item", Some("node"), Rule::Event),
     ("node.opened", Some("node"), Rule::Event),
     ("node.raised", Some("node"), Rule::Event),
+    // One of the five relations, from this node to another in its audience;
+    // `node.unrelated` takes one back.
+    ("node.related", Some("node"), Rule::Event),
     ("node.rested", Some("node"), Rule::Event),
     ("node.retagged", Some("node"), Rule::Event),
     ("node.revised", Some("node"), Rule::Event),
     ("node.revived", Some("node"), Rule::Event),
     ("node.shown", Some("node"), Rule::Event),
+    // One span of experience, one thing, with its three tags.
+    ("node.span", Some("node"), Rule::Event),
     ("node.split", Some("node"), Rule::Event),
     ("node.talked", Some("node"), Rule::Event),
+    ("node.unrelated", Some("node"), Rule::Event),
     ("node.view_changed", Some("node"), Rule::Latest),
     ("outfit.write", Some("outfit"), Rule::Latest),
     // One field of her persona per object: `persona:<field>`.
