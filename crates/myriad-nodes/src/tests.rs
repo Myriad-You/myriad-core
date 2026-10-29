@@ -80,6 +80,9 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.fold" => json_of(&fold(input(raw)?)?),
         "nodes.place_input" => json_of(&prepare(input(raw)?)?),
         "nodes.place_read" => json_of(&read(input(raw)?)?),
+        "nodes.queue" => json_of(&queue::queue(input(raw)?)?),
+        "nodes.upkeep_input" => json_of(&upkeep::prepare(input(raw)?)?),
+        "nodes.upkeep_read" => json_of(&upkeep::read(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -106,7 +109,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 7, "{files:?}");
+    assert_eq!(files.len(), 10, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -145,7 +148,7 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a field the body does not know", "unknown field"),
         ("a newer body version", "body version"),
         ("a kind that is not a node's", "not a node kind"),
-        ("a kind this batch does not read", "this batch reads"),
+        ("a kind this batch does not read", "the core reads"),
         ("a repo key as a task", "kind does not fit the key"),
         (
             "a repo key without its object",
@@ -206,6 +209,21 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("item ids that repeat", "item ids repeat"),
         ("no items to place", "no items"),
         ("labels that repeat", "labels repeat"),
+        // batch 2: nodes.body
+        ("a done-when without evidence", "because is empty"),
+        ("a part split off onto a person", "minted key"),
+        ("a part split off with no spans", "spans is empty"),
+        ("an unknown way to go into another", "does not fit its kind"),
+        (
+            "an upkeep mark naming a clock by another device",
+            "its own device",
+        ),
+        // nodes.queue, nodes.upkeep_input, nodes.upkeep_read
+        ("max outside 1 to 200", "max is 1 to"),
+        ("a node not in the rows", "not in the rows"),
+        ("a node gone into another", "gone into another"),
+        ("an inbox id that is not <type>:<id>", "<type>:<id>"),
+        ("a run token that is empty", "run must be"),
     ];
     let mut seen = 0;
     for path in case_files() {
@@ -385,4 +403,90 @@ fn the_limits_cut_by_scalars() {
     assert_eq!(limits::cut("一二三四", 3), "一二…");
     // A combining accent is a scalar of its own.
     assert_eq!(limits::cut("e\u{301}e\u{301}", 3), "e\u{301}…");
+}
+
+fn cases_of(file: &str) -> Vec<Value> {
+    let path = conformance().join(file);
+    let file: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    file["cases"].as_array().unwrap().clone()
+}
+
+#[test]
+fn every_fold_and_queue_case_is_the_same_in_any_order() {
+    for (file, call) in [("fold.json", "nodes.fold"), ("queue.json", "nodes.queue")] {
+        for case in cases_of(file) {
+            if case["output"] == refused() {
+                continue;
+            }
+            let rows = case["input"]["rows"].as_array().unwrap().clone();
+            for turn in 0..rows.len() {
+                let mut turned = rows.clone();
+                turned.rotate_left(turn);
+                turned.extend(rows.iter().rev().cloned());
+                let mut input = case["input"].clone();
+                input["rows"] = json!(turned);
+                let got = run(call, input).unwrap();
+                assert!(
+                    same(&got, &case["output"]),
+                    "{call} › {} › turn {turn}",
+                    case["name"]
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn what_a_run_writes_folds_clean_and_does_not_make_its_node_due_again() {
+    let mut checked = 0;
+    for case in cases_of("upkeep_read.json") {
+        let Some(writes) = case["output"]["writes"].as_array() else {
+            continue;
+        };
+        let given = &case["input"]["input"];
+        let mut rows = given["rows"].as_array().unwrap().clone();
+        let mut bodies = given["bodies"].clone();
+        let local = case["input"]["sync"].is_object();
+        for (n, write) in writes.iter().enumerate() {
+            let id = format!("up{n}");
+            let mut row = json!({
+                "version": 1, "id": id, "origin": "dev_mac", "author": "her", "epoch": 1,
+                "hlc": format!("{:015}-000000-dev_mac", 1_770_000_000_000_u64 + n as u64),
+                "audience": given["audience"], "object": format!("node:{}", write["node"].as_str().unwrap()),
+                "kind": write["kind"], "payload": { "ref": format!("body:{id}") },
+                "replicate": if local { "local" } else { "shared" },
+            });
+            if !local {
+                row["dseq"] = json!(1000 + n);
+            }
+            rows.push(row);
+            bodies[&id] = write["body"].clone();
+        }
+        let after = json!({ "rows": rows.clone(), "bodies": bodies.clone() });
+        let folded = run("nodes.fold", after).unwrap();
+        assert!(
+            folded.get("skipped").is_none(),
+            "{} › {}",
+            case["name"],
+            folded["skipped"]
+        );
+        let queued = run(
+            "nodes.queue",
+            json!({ "rows": rows, "bodies": bodies, "max": 200 }),
+        )
+        .unwrap();
+        let node = given["node"].as_str().unwrap();
+        assert!(
+            queued["due"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|due| due["node"] != node),
+            "{} › {}",
+            case["name"],
+            queued
+        );
+        checked += 1;
+    }
+    assert!(checked >= 20, "{checked}");
 }

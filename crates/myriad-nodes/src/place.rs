@@ -95,7 +95,7 @@ pub struct Prepared {
 }
 
 /// Control characters (and, `flat`, line breaks) to spaces, trimmed.
-fn clean(text: &str, flat: bool) -> String {
+pub(crate) fn clean(text: &str, flat: bool) -> String {
     text.chars()
         .map(|ch| {
             if ch.is_control() && (flat || ch != '\n') {
@@ -261,7 +261,7 @@ pub fn read(input: ReadInput) -> Result<Read, NodeError> {
 
 /// The JSON object in an answer: inside a fence, or from its first `{` to
 /// its last `}`.
-fn object_in(output: &str) -> Option<Value> {
+pub(crate) fn object_in(output: &str) -> Option<Value> {
     let text = output.trim();
     let text = match text.strip_prefix("```") {
         Some(fenced) => {

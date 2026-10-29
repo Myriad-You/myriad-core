@@ -19,13 +19,23 @@
 //! | `node.entry` | `audience`, `text`, `refs?`, `quoteOnly?` |
 //! | `node.related` | `relation`, `to` (the other node's key), `reason`, `because` |
 //! | `node.unrelated` | `base` (the related rows it takes back), `reason` |
+//! | `node.done_when` | `base`, `text` (what "done" is, or null for none), `because` |
+//! | `node.split_off` | `to` (the new node's key), `spans` (the rows of this node it takes), `reason`, `because` |
+//! | `node.absorbed` | `into` (the key it goes into), `how` (`merged`, `folded_back`), `reason`, `because` |
+//! | `node.used` | `via` (the related rows recall came along; empty: the node itself) |
+//! | `node.upkept` | `run`, `seen` (per device, the newest row clock she had in view), `fallback?` |
 //!
 //! Every body refuses fields it does not know, and lists must be sorted
-//! with no repeats, so each body has exactly one byte form. Node kinds this
-//! batch does not read (the native app's older rows, her upkeep's) are not
-//! bodies here; the fold passes their rows by.
+//! with no repeats, so each body has exactly one byte form. Node kinds the
+//! core does not read (the native app's older rows) are not bodies here; the
+//! fold passes their rows by.
 
-use myriad_persona_sync::canonical::{canonical_bytes, digest};
+use std::collections::BTreeMap;
+
+use myriad_persona_sync::{
+    Rev,
+    canonical::{canonical_bytes, digest},
+};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::Value;
 
@@ -429,6 +439,91 @@ pub struct Unrelated {
     pub reason: String,
 }
 
+/// `node.done_when`: what "done" is for it, in her words, or none. With
+/// one it is something in progress; with none it is a topic, or, still
+/// always being done, something ongoing.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DoneWhen {
+    pub version: u32,
+    pub sync: Sync,
+    pub said_by: Vec<SaidBy>,
+    pub base: Vec<String>,
+    pub text: Option<String>,
+    pub because: Vec<String>,
+}
+
+/// `node.split_off`: written on the node a part was split from; the spans
+/// it names (rows of this node) are on the new node of `to` now. It stays
+/// on this node so that forgetting the new node still knows which spans
+/// went with it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SplitOff {
+    pub version: u32,
+    pub sync: Sync,
+    pub said_by: Vec<SaidBy>,
+    pub to: String,
+    pub spans: Vec<String>,
+    pub reason: String,
+    pub because: Vec<String>,
+}
+
+/// How a node went into another.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum How {
+    /// The two were one thing (并入).
+    Merged,
+    /// A part with no state of its own any more, back into its whole as
+    /// experience (收回).
+    FoldedBack,
+}
+
+/// `node.absorbed`: this node went into the node of `into`; its spans and
+/// entries are on that one now, and it reads as gone.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Absorbed {
+    pub version: u32,
+    pub sync: Sync,
+    pub said_by: Vec<SaidBy>,
+    pub into: String,
+    pub how: How,
+    pub reason: String,
+    pub because: Vec<String>,
+}
+
+/// `node.used`: recall brought this node in, along the related rows in
+/// `via` (none: by itself). What fades is what is not used, not what is
+/// old.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Used {
+    pub version: u32,
+    pub sync: Sync,
+    pub said_by: Vec<SaidBy>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub via: Vec<String>,
+}
+
+/// `node.upkept`: her upkeep looked at this node. `seen` holds, per
+/// device, the newest clock of the rows she had in view; this row's own
+/// device counts as seen up to this row, so what the run itself wrote does
+/// not make the node due again. A `fallback` run changed nothing.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Upkept {
+    pub version: u32,
+    pub sync: Sync,
+    pub said_by: Vec<SaidBy>,
+    pub run: String,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub seen: BTreeMap<String, Rev>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fallback: Option<String>,
+}
+
 fn is_false(value: &bool) -> bool {
     !*value
 }
@@ -446,11 +541,18 @@ pub enum Body {
     Entry(Entry),
     Related(Related),
     Unrelated(Unrelated),
+    DoneWhen(DoneWhen),
+    SplitOff(SplitOff),
+    Absorbed(Absorbed),
+    Used(Used),
+    Upkept(Upkept),
 }
 
-/// The kinds whose bodies this batch reads, sorted.
+/// The kinds whose bodies the core reads, sorted.
 pub const READ: &[&str] = &[
+    "node.absorbed",
     "node.created",
+    "node.done_when",
     "node.entry",
     "node.intent",
     "node.kind_changed",
@@ -458,7 +560,10 @@ pub const READ: &[&str] = &[
     "node.related",
     "node.revised",
     "node.span",
+    "node.split_off",
     "node.unrelated",
+    "node.upkept",
+    "node.used",
     "node.view_changed",
 ];
 
@@ -518,11 +623,13 @@ impl Body {
             return Err(NodeError::new("kind is not a node kind the log holds"));
         }
         if !READ.contains(&kind) {
-            return Err(NodeError::new("kind is not one this batch reads"));
+            return Err(NodeError::new("kind is not one the core reads"));
         }
         version_of(value)?;
         let body = match kind {
+            "node.absorbed" => Self::Absorbed(typed(value)?),
             "node.created" => Self::Created(typed(value)?),
+            "node.done_when" => Self::DoneWhen(typed(value)?),
             "node.entry" => Self::Entry(typed(value)?),
             "node.intent" => Self::Intent(typed(value)?),
             "node.kind_changed" => Self::KindChanged(typed(value)?),
@@ -536,7 +643,10 @@ impl Body {
                 Self::Revised(revised)
             }
             "node.span" => Self::Span(typed(value)?),
+            "node.split_off" => Self::SplitOff(typed(value)?),
             "node.unrelated" => Self::Unrelated(typed(value)?),
+            "node.upkept" => Self::Upkept(typed(value)?),
+            "node.used" => Self::Used(typed(value)?),
             "node.view_changed" => Self::ViewChanged(typed(value)?),
             _ => unreachable!("READ lists every kind read here"),
         };
@@ -628,6 +738,43 @@ impl Body {
                 }
                 check_text("reason", &body.reason, limits::REASON_CHARS)?;
             }
+            Self::DoneWhen(body) => {
+                if let Some(text) = &body.text {
+                    check_text("text", text, limits::TEXT_CHARS)?;
+                }
+                check_because(&body.because)?;
+            }
+            Self::SplitOff(body) => {
+                if !matches!(Key::parse(&body.to)?, Key::Minted(_)) {
+                    return Err(NodeError::new("a part split off has a minted key"));
+                }
+                check_ids("spans", &body.spans, true, false, limits::REFS)?;
+                check_text("reason", &body.reason, limits::REASON_CHARS)?;
+                check_because(&body.because)?;
+            }
+            Self::Absorbed(body) => {
+                Key::parse(&body.into)?;
+                check_text("reason", &body.reason, limits::REASON_CHARS)?;
+                check_because(&body.because)?;
+            }
+            Self::Used(body) => {
+                check_ids("via", &body.via, false, false, limits::BASES)?;
+            }
+            Self::Upkept(body) => {
+                check_token("run", &body.run)?;
+                if body.seen.len() > limits::SEEN_DEVICES {
+                    return Err(NodeError::new(format!(
+                        "seen holds more than {} devices",
+                        limits::SEEN_DEVICES
+                    )));
+                }
+                if body.seen.iter().any(|(device, rev)| *device != rev.node) {
+                    return Err(NodeError::new("seen names each clock by its own device"));
+                }
+                if let Some(fallback) = &body.fallback {
+                    check_item_id("fallback", fallback)?;
+                }
+            }
         }
         Ok(())
     }
@@ -644,7 +791,12 @@ impl Body {
             | Self::Span(Span { sync, said_by, .. })
             | Self::Entry(Entry { sync, said_by, .. })
             | Self::Related(Related { sync, said_by, .. })
-            | Self::Unrelated(Unrelated { sync, said_by, .. }) => (sync, said_by),
+            | Self::Unrelated(Unrelated { sync, said_by, .. })
+            | Self::DoneWhen(DoneWhen { sync, said_by, .. })
+            | Self::SplitOff(SplitOff { sync, said_by, .. })
+            | Self::Absorbed(Absorbed { sync, said_by, .. })
+            | Self::Used(Used { sync, said_by, .. })
+            | Self::Upkept(Upkept { sync, said_by, .. }) => (sync, said_by),
         }
     }
 
@@ -656,8 +808,16 @@ impl Body {
             | Self::ViewChanged(ViewChanged { base, .. })
             | Self::OpenItem(OpenItem { base, .. })
             | Self::Intent(Intent { base, .. })
-            | Self::Unrelated(Unrelated { base, .. }) => base,
-            Self::Created(_) | Self::Span(_) | Self::Entry(_) | Self::Related(_) => &[],
+            | Self::Unrelated(Unrelated { base, .. })
+            | Self::DoneWhen(DoneWhen { base, .. }) => base,
+            Self::Created(_)
+            | Self::Span(_)
+            | Self::Entry(_)
+            | Self::Related(_)
+            | Self::SplitOff(_)
+            | Self::Absorbed(_)
+            | Self::Used(_)
+            | Self::Upkept(_) => &[],
         }
     }
 
@@ -674,6 +834,11 @@ impl Body {
             Self::Entry(body) => serde_json::to_value(body),
             Self::Related(body) => serde_json::to_value(body),
             Self::Unrelated(body) => serde_json::to_value(body),
+            Self::DoneWhen(body) => serde_json::to_value(body),
+            Self::SplitOff(body) => serde_json::to_value(body),
+            Self::Absorbed(body) => serde_json::to_value(body),
+            Self::Used(body) => serde_json::to_value(body),
+            Self::Upkept(body) => serde_json::to_value(body),
         };
         // Strings, numbers, booleans, enums and JSON: always serializes.
         value.expect("a body serializes")

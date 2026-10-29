@@ -21,11 +21,22 @@
         "placeSummaryChars": 160,
         "placeTotalChars": 12000,
         "progressChars": 200,
+        "queueMax": 200,
         "reasonChars": 300,
         "refs": 64,
+        "seenDevices": 64,
         "sentenceChars": 300,
         "summarySentences": 12,
         "textChars": 1000,
+        "upkeepActions": 24,
+        "upkeepHeadItems": 12,
+        "upkeepInbox": 20,
+        "upkeepInboxTotalChars": 6000,
+        "upkeepNeighbours": 16,
+        "upkeepOutputBytes": 32768,
+        "upkeepSpanChars": 400,
+        "upkeepSpans": 24,
+        "upkeepTotalChars": 12000,
         "whoKnows": 64
       }
     }
