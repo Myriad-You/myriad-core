@@ -19,7 +19,10 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.limits",
     "nodes.place_input",
     "nodes.place_read",
+    "nodes.queue",
     "nodes.repo_key",
+    "nodes.upkeep_input",
+    "nodes.upkeep_read",
 ];
 
 #[test]

@@ -1,10 +1,12 @@
 //! Her nodes (`myriad_nodes`): a node's id and key, a row's body and its
-//! one byte form, the fold, the limits both hosts cut to, and the pure half
-//! of placing a talk. The rules are the crate's; these calls only carry
-//! them across. Inputs hold her words, so a refusal names a field, never a
-//! value.
+//! one byte form, the fold, the limits both hosts cut to, the pure half of
+//! placing a talk and of her upkeep, and the upkeep queue. The rules are
+//! the crate's; these calls only carry them across. Inputs hold her words,
+//! so a refusal names a field, never a value.
 
-use myriad_nodes::{Body, NodeError, fold as fold_rows, limits as node_limits, place};
+use myriad_nodes::{
+    Body, NodeError, fold as fold_rows, limits as node_limits, place, queue as due, upkeep,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -76,4 +78,18 @@ pub(super) fn place_input(raw: &[u8]) -> Result<Value, Failure> {
 
 pub(super) fn place_read(raw: &[u8]) -> Result<Value, Failure> {
     answer(&place::read(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{rows, bodies?, max}` → `{due, more?}`: which nodes her upkeep takes
+/// next, and why.
+pub(super) fn queue(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&due::queue(quiet_input(raw)?).map_err(refused)?)
+}
+
+pub(super) fn upkeep_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&upkeep::prepare(quiet_input(raw)?).map_err(refused)?)
+}
+
+pub(super) fn upkeep_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&upkeep::read(quiet_input(raw)?).map_err(refused)?)
 }
