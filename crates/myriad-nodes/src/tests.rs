@@ -448,7 +448,7 @@ fn what_a_run_writes_folds_clean_and_does_not_make_its_node_due_again() {
         let mut bodies = given["bodies"].clone();
         let local = case["input"]["sync"].is_object();
         for (n, write) in writes.iter().enumerate() {
-            let id = format!("up{n}");
+            let id = write["id"].as_str().unwrap().to_string();
             let mut row = json!({
                 "version": 1, "id": id, "origin": "dev_mac", "author": "her", "epoch": 1,
                 "hlc": format!("{:015}-000000-dev_mac", 1_770_000_000_000_u64 + n as u64),
@@ -464,8 +464,14 @@ fn what_a_run_writes_folds_clean_and_does_not_make_its_node_due_again() {
         }
         let after = json!({ "rows": rows.clone(), "bodies": bodies.clone() });
         let folded = run("nodes.fold", after).unwrap();
+        let wrote: Vec<&str> = writes
+            .iter()
+            .map(|write| write["id"].as_str().unwrap())
+            .collect();
         assert!(
-            folded.get("skipped").is_none(),
+            folded["skipped"].as_array().is_none_or(|skipped| skipped
+                .iter()
+                .all(|one| !wrote.contains(&one["id"].as_str().unwrap()))),
             "{} › {}",
             case["name"],
             folded["skipped"]

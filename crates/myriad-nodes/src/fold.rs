@@ -49,13 +49,15 @@
 //! What upkeep leaves:
 //!
 //! - **A split** (`node.split_off`, on the node split): the spans it names
-//!   are on the new part, marked `movedFrom`; a span goes with the first
-//!   split that names it. Both nodes get a lineage line.
+//!   that are on that node at that point in the log (written there, or
+//!   brought there by a merge or an earlier split) are on the new part,
+//!   marked `movedFrom`. Both nodes get a lineage line.
 //! - **A merge or folding back** (`node.absorbed`, on the node that goes):
 //!   it reads as gone (`absorbedInto`), its spans and entries are on the
 //!   node it went into (the last one, along a chain), and its relations go
 //!   with it. Only a minted node goes into another, once (`absorbed_twice`),
-//!   never into itself or round a loop (`cycle`).
+//!   never into itself or round a loop (`cycle`), never into 「关于你」
+//!   (`no_spans_here`).
 //! - **Leaving a whole** (a `part_of` taken back): a lineage line, 原来属于.
 //! - **What "done" is** (`node.done_when`): a head field like the others.
 //! - **Parts rolled up**: a whole counts its standing parts, done, dropped.
@@ -716,21 +718,6 @@ struct Absorbing {
 }
 
 impl Absorbing {
-    /// Where a node's things end up: along what it went into, while that
-    /// node is folded here.
-    fn end(&self, audience: &str, id: &str, here: &BTreeMap<(String, String), usize>) -> String {
-        let mut at = id.to_string();
-        let mut seen = BTreeSet::new();
-        while let Some((next, _)) = self.into.get(&(audience.to_string(), at.clone())) {
-            if !seen.insert(at.clone()) || !here.contains_key(&(audience.to_string(), next.clone()))
-            {
-                break;
-            }
-            at = next.clone();
-        }
-        at
-    }
-
     /// Whether going on from `start` reaches `target`.
     fn reaches(&self, audience: &str, start: &str, target: &str) -> bool {
         let mut at = start.to_string();
@@ -782,6 +769,7 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
             continue;
         };
         let (audience, from) = (row.audience.clone(), node_of(row).to_string());
+        let about_you = Key::parse(&into).is_ok_and(|key| key.is_about_you(&audience));
         // The key was checked as the body was read.
         let Ok(into) = node_id(&audience, &into) else {
             continue;
@@ -789,6 +777,8 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
         let place = (audience.clone(), from.clone());
         let why = if into == from {
             Some(Why::SelfRelation)
+        } else if about_you {
+            Some(Why::NoSpansHere)
         } else if keys
             .get(&place)
             .is_some_and(|key| !key.starts_with("minted:"))
@@ -813,13 +803,40 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
     out
 }
 
+/// What her upkeep marks say she saw of one node.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Seen {
+    /// Per device, the newest clock.
+    pub clocks: BTreeMap<String, Rev>,
+    /// For a device not in `clocks`: seen up to this wall time (Unix ms).
+    pub floor: Option<u64>,
+    /// Rows her runs wrote.
+    pub wrote: BTreeSet<String>,
+}
+
+impl Seen {
+    pub fn saw(&self, row: &Row) -> bool {
+        if self.wrote.contains(&row.id) {
+            return true;
+        }
+        match self.clocks.get(&row.origin) {
+            Some(rev) => row.hlc <= *rev,
+            None => self.floor.is_some_and(|floor| row.hlc.wall_ms <= floor),
+        }
+    }
+}
+
 /// The fold, with what the upkeep queue reads beside it.
 pub(crate) struct Full {
     pub folded: Folded,
     /// The rows in log order, forgotten ones as stubs.
     pub rows: Vec<Row>,
-    /// (audience, node) → per device, the newest clock her upkeep saw.
-    pub seen: BTreeMap<(String, String), BTreeMap<String, Rev>>,
+    /// (audience, node) → what her upkeep saw of it.
+    pub seen: BTreeMap<(String, String), Seen>,
+    /// (audience, from, to, row) of every `part_of` row the fold weighs, in
+    /// log order: those taken back, to a forgotten node, or of a node gone
+    /// into another left out; those it passes by as a loop kept in.
+    pub part_of: Vec<(String, String, String, String)>,
     /// (audience, node) of the nodes that went into another.
     pub away: BTreeSet<(String, String)>,
     /// A related or unrelated row → the (audience, node) it points at.
@@ -942,7 +959,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
     let mut lines_for: Vec<((String, String), Line)> = Vec::new();
     // (audience, related row) → how often recall came along it, and when last.
     let mut used_via: BTreeMap<(String, String), (usize, i64)> = BTreeMap::new();
-    let mut seen_by: BTreeMap<(String, String), BTreeMap<String, Rev>> = BTreeMap::new();
+    let mut seen_by: BTreeMap<(String, String), Seen> = BTreeMap::new();
     let mut unrelating: Vec<(String, String, Vec<String>)> = Vec::new();
     for ((audience, object), rows) in by_node {
         let id = object.strip_prefix("node:").unwrap_or(object);
@@ -1322,13 +1339,16 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                     let seen = seen_by
                         .entry((audience.to_string(), id.to_string()))
                         .or_default();
-                    let own = (row.origin.clone(), row.hlc.clone());
-                    for (device, rev) in body.seen.into_iter().chain([own]) {
-                        let newest = seen.entry(device).or_insert_with(|| rev.clone());
+                    for (device, rev) in body.seen {
+                        let newest = seen.clocks.entry(device).or_insert_with(|| rev.clone());
                         if rev > *newest {
                             *newest = rev;
                         }
                     }
+                    if let Some(floor) = body.floor {
+                        seen.floor = Some(seen.floor.map_or(floor, |known| known.max(floor)));
+                    }
+                    seen.wrote.extend(body.wrote);
                 }
             }
         }
@@ -1356,39 +1376,77 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
     let is_gone =
         |audience: &str, id: &str| gone.contains(&(audience.to_string(), format!("node:{id}")));
 
-    // Splits, in log order: a span goes with the first split that names it,
-    // when it is a span of the node split.
-    splits.sort_by_key(|split| split.at);
-    let mut claimed: BTreeMap<(String, String), String> = BTreeMap::new();
-    for split in splits {
-        let Some(&from) = here.get(&(split.audience.clone(), split.from.clone())) else {
-            continue;
-        };
-        let mine: BTreeSet<&str> = nodes[from]
-            .spans
-            .iter()
-            .map(|span| span.row.as_str())
-            .collect();
-        for span in &split.spans {
-            if mine.contains(span.as_str()) {
-                claimed
-                    .entry((split.audience.clone(), span.clone()))
-                    .or_insert_with(|| split.to.clone());
+    // Splits and merges, in log order, move each span from where it is at
+    // that point: a split takes the spans it names that are on the node
+    // split (whether written there or brought there), a merge everything
+    // on the node that goes. A span whose place ends on a forgotten node is
+    // forgotten with it.
+    enum Move {
+        Split(Splitting),
+        Absorb(String, String, String),
+    }
+    let mut moves: Vec<(usize, Move)> = splits
+        .into_iter()
+        .map(|split| (split.at, Move::Split(split)))
+        .collect();
+    for ((audience, from), (into, at)) in &absorbing.into {
+        moves.push((
+            *at,
+            Move::Absorb(audience.clone(), from.clone(), into.clone()),
+        ));
+    }
+    moves.sort_by_key(|(at, _)| *at);
+    let mut location: BTreeMap<(String, String), String> = BTreeMap::new();
+    for node in nodes.iter().filter(|node| !node.forgotten) {
+        for span in &node.spans {
+            location.insert((node.audience.clone(), span.row.clone()), node.id.clone());
+        }
+    }
+    // Merges so far, into nodes folded here.
+    let mut went: BTreeMap<(String, String), String> = BTreeMap::new();
+    let end = |went: &BTreeMap<(String, String), String>, audience: &str, id: &str| {
+        let mut at = id.to_string();
+        let mut seen = BTreeSet::new();
+        while let Some(next) = went.get(&(audience.to_string(), at.clone())) {
+            if !seen.insert(at.clone()) {
+                break;
+            }
+            at = next.clone();
+        }
+        at
+    };
+    for (_, step) in moves {
+        match step {
+            Move::Absorb(audience, from, into) => {
+                if here.contains_key(&(audience.clone(), into.clone())) {
+                    went.insert((audience, from), into);
+                }
+            }
+            Move::Split(split) => {
+                let Some(&from) = here.get(&(split.audience.clone(), split.from.clone())) else {
+                    continue;
+                };
+                for span in &split.spans {
+                    let place = (split.audience.clone(), span.clone());
+                    if let Some(now) = location.get(&place)
+                        && end(&went, &split.audience, now) == split.from
+                    {
+                        location.insert(place, split.to.clone());
+                    }
+                }
+                if is_gone(&split.audience, &split.to) {
+                    // The part was forgotten: what she said of it goes too.
+                    stubbed.push(split.line.row);
+                    continue;
+                }
+                let mut line = split.line.clone();
+                line.event = LineEvent::SplitFrom;
+                line.other = split.from.clone();
+                lines_for.push(((split.audience.clone(), split.to.clone()), line));
+                nodes[from].lineage.push(split.line);
             }
         }
-        if is_gone(&split.audience, &split.to) {
-            // The part was forgotten: what she said of it goes too.
-            stubbed.push(split.line.row);
-            continue;
-        }
-        let mut line = split.line.clone();
-        line.event = LineEvent::SplitFrom;
-        line.other = split.from.clone();
-        lines_for.push(((split.audience.clone(), split.to.clone()), line));
-        nodes[from].lineage.push(split.line);
     }
-    // Then every span and entry goes on to where its node went. One whose
-    // place is a forgotten node is forgotten with it.
     let mut moving: Vec<(usize, Option<SpanOut>, Option<EntryOut>)> = Vec::new();
     for (at, node) in nodes.iter_mut().enumerate() {
         if node.forgotten {
@@ -1396,16 +1454,16 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         }
         let (audience, id) = (node.audience.clone(), node.id.clone());
         for mut span in std::mem::take(&mut node.spans) {
-            let first = claimed
+            let now = location
                 .get(&(audience.clone(), span.row.clone()))
                 .cloned()
                 .unwrap_or_else(|| id.clone());
-            if is_gone(&audience, &first) {
+            let last = end(&went, &audience, &now);
+            if is_gone(&audience, &now) || is_gone(&audience, &last) {
                 stubbed.push(span.row);
                 continue;
             }
-            let end = absorbing.end(&audience, &first, &here);
-            match here.get(&(audience.clone(), end)) {
+            match here.get(&(audience.clone(), last)) {
                 Some(&to) if to != at => {
                     span.moved_from = Some(id.clone());
                     moving.push((to, Some(span), None));
@@ -1413,8 +1471,8 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                 _ => node.spans.push(span),
             }
         }
-        let end = absorbing.end(&audience, &id, &here);
-        if let Some(&to) = here.get(&(audience.clone(), end))
+        let last = end(&went, &audience, &id);
+        if let Some(&to) = here.get(&(audience.clone(), last))
             && to != at
         {
             for mut entry in std::mem::take(&mut node.entries) {
@@ -1454,6 +1512,32 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
             points_at.insert(row, (audience, target.1));
         }
     }
+    let mut weighed: Vec<&Edge> = edges
+        .iter()
+        .filter(|edge| {
+            edge.relation == Relation::PartOf
+                && !gone.contains(&(edge.audience.clone(), format!("node:{}", edge.to)))
+                && !away.contains(&(edge.audience.clone(), edge.from.clone()))
+                && !away.contains(&(edge.audience.clone(), edge.to.clone()))
+                && !taken_back.contains_key(&(
+                    edge.audience.clone(),
+                    edge.from.clone(),
+                    edge.row.clone(),
+                ))
+        })
+        .collect();
+    weighed.sort_by_key(|edge| edge.at);
+    let part_of: Vec<(String, String, String, String)> = weighed
+        .into_iter()
+        .map(|edge| {
+            (
+                edge.audience.clone(),
+                edge.from.clone(),
+                edge.to.clone(),
+                edge.row.clone(),
+            )
+        })
+        .collect();
     let (mut relations, left) = relate(edges, &taken_back, &gone, &away, &mut skipped);
     for (place, line) in left {
         if let Some(&at) = here.get(&place) {
@@ -1500,6 +1584,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         },
         rows,
         seen: seen_by,
+        part_of,
         away,
         points_at,
     })

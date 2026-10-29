@@ -33,8 +33,17 @@
 //!
 //! What the partner set stands: an action that would change a head field
 //! whose current version is the partner's, take back a relation the
-//! partner made, or merge away a node the partner made is held (`held`),
-//! and she may only raise a hand. Every other action of the answer stands.
+//! partner made, or merge away a node whose own row, relation, open item or
+//! waiting intent is the partner's (a merge writes those again, as hers) is
+//! held (`held`), and she may only raise a hand. Every other action of the
+//! answer stands.
+//!
+//! A `part_of` she writes is checked as the fold will check it: the fold's
+//! rule (in log order, one that would close a loop is passed by) replayed
+//! over every `part_of` row it weighs, with what the answer takes back and
+//! adds. Each row to write comes with its id, from the run's token; the
+//! mark lists them, so the queue knows what the run wrote and nothing else
+//! written meanwhile is taken as seen.
 //!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) so the queue moves
@@ -43,7 +52,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use myriad_persona_log::row::Author;
-use myriad_persona_sync::canonical::sha256_hex;
+use myriad_persona_sync::{Rev, canonical::sha256_hex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -57,10 +66,10 @@ use crate::{
     fold::{FoldInput, Full, Item, Node, Parts, fold_full},
     key::{Key, Kind, node_id},
     limits::{
-        BECAUSE_IDS, NAME_CHARS, PLACE_SUMMARY_CHARS, REASON_CHARS, REFS, TEXT_CHARS,
+        BECAUSE_IDS, NAME_CHARS, PLACE_SUMMARY_CHARS, REASON_CHARS, REFS, SEEN_DEVICES, TEXT_CHARS,
         UPKEEP_ACTIONS, UPKEEP_HEAD_ITEMS, UPKEEP_INBOX, UPKEEP_INBOX_TOTAL_CHARS,
         UPKEEP_NEIGHBOURS, UPKEEP_OUTPUT_BYTES, UPKEEP_SPAN_CHARS, UPKEEP_SPANS,
-        UPKEEP_TOTAL_CHARS, cut,
+        UPKEEP_TOTAL_CHARS, UPKEEP_WRITES, cut,
     },
     place::{clean, object_in},
     queue::{Reason, Watch},
@@ -573,11 +582,14 @@ pub struct ReadInput {
     pub output: String,
 }
 
-/// One row to write: its node, its kind, its body. The caller adds the
-/// envelope (id, clock, device) and keeps the order.
+/// One row to write: its id, its node, its kind, its body. The caller
+/// writes it under this id (the mark lists the ids, so the queue knows what
+/// the run wrote), adds the rest of the envelope (clock, device), and keeps
+/// the order.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Write {
+    pub id: String,
     pub node: String,
     pub kind: String,
     pub body: Value,
@@ -680,8 +692,10 @@ struct Reader<'a> {
     news: BTreeMap<String, Named>,
     used: BTreeSet<String>,
     written: BTreeSet<(String, &'static str)>,
-    /// `part_of` edges as they stand, with what the answer adds and takes.
-    part_of: BTreeSet<(String, String)>,
+    /// Every `part_of` row the fold weighs, in log order, as (from, to,
+    /// row), with what the answer adds and takes back: the fold's rule is
+    /// replayed over it, so what stands here is what will stand there.
+    part_of: Vec<(String, String, String)>,
 }
 
 fn field<'v>(action: &'v Value, name: &str) -> Option<&'v Value> {
@@ -748,13 +762,10 @@ impl<'a> Reader<'a> {
     fn new(context: &'a Context, run: &'a str, sync: Sync) -> Self {
         let part_of = context
             .full
-            .folded
-            .relations
+            .part_of
             .iter()
-            .filter(|relation| {
-                relation.audience == context.audience && relation.relation == Relation::PartOf
-            })
-            .map(|relation| (relation.from.clone(), relation.to.clone()))
+            .filter(|(audience, ..)| *audience == context.audience)
+            .map(|(_, from, to, row)| (from.clone(), to.clone(), row.clone()))
             .collect();
         Self {
             context,
@@ -855,6 +866,7 @@ impl<'a> Reader<'a> {
         // What it writes reads back as it was written, or nothing is written.
         let body = Body::read(kind, &body.to_value()).map_err(|_| Fallback::BadField)?;
         self.writes.push(Write {
+            id: row_id(self.run, self.writes.len()),
             node: node.to_string(),
             kind: kind.to_string(),
             body: body.to_value(),
@@ -876,24 +888,31 @@ impl<'a> Reader<'a> {
         vec![SaidBy::Her]
     }
 
-    fn reaches(&self, from: &str, to: &str) -> bool {
-        let mut seen = BTreeSet::new();
-        let mut next = vec![from.to_string()];
-        while let Some(at) = next.pop() {
-            if at == to {
-                return true;
+    /// The `part_of` rows that stand, by the fold's rule: in log order, one
+    /// that would close a loop with those taken so far is passed by.
+    fn standing(&self) -> (BTreeSet<(String, String)>, BTreeSet<String>) {
+        let mut edges: BTreeSet<(String, String)> = BTreeSet::new();
+        let mut rows = BTreeSet::new();
+        for (from, to, row) in &self.part_of {
+            if !reaches(&edges, to, from) {
+                edges.insert((from.clone(), to.clone()));
+                rows.insert(row.clone());
             }
-            if !seen.insert(at.clone()) {
-                continue;
-            }
-            next.extend(
-                self.part_of
-                    .iter()
-                    .filter(|(one, _)| *one == at)
-                    .map(|(_, whole)| whole.clone()),
-            );
         }
-        false
+        (edges, rows)
+    }
+
+    /// Adds a `part_of` the answer writes, if it will stand once folded.
+    fn add_part_of(&mut self, from: &str, to: &str) -> bool {
+        let row = format!("new:{}", self.part_of.len());
+        self.part_of
+            .push((from.to_string(), to.to_string(), row.clone()));
+        if self.standing().1.contains(&row) {
+            true
+        } else {
+            self.part_of.pop();
+            false
+        }
     }
 
     fn relate(
@@ -907,11 +926,8 @@ impl<'a> Reader<'a> {
         if from.id == to.id {
             return Err(Fallback::NotAllowed);
         }
-        if relation == Relation::PartOf {
-            if self.reaches(&to.id, &from.id) {
-                return Err(Fallback::Cycle);
-            }
-            self.part_of.insert((from.id.clone(), to.id.clone()));
+        if relation == Relation::PartOf && !self.add_part_of(&from.id, &to.id) {
+            return Err(Fallback::Cycle);
         }
         self.write(
             &from.id,
@@ -1166,18 +1182,51 @@ impl<'a> Reader<'a> {
         let how: How = enum_of(action, "how")?;
         let reason = text(action, "reason", REASON_CHARS, true)?;
         let because = self.evidence(action)?;
+        let about_you =
+            Key::parse(&into.key).is_ok_and(|key| key.is_about_you(&self.context.audience));
         if !me
             .key
             .as_deref()
             .is_some_and(|key| key.starts_with("minted:"))
             || into_at == self.context.at
+            || about_you
         {
             return Err(Fallback::NotAllowed);
         }
-        if how == How::FoldedBack && !self.part_of.contains(&(me.id.clone(), into.id.clone())) {
+        if how == How::FoldedBack
+            && !self
+                .standing()
+                .0
+                .contains(&(me.id.clone(), into.id.clone()))
+        {
             return Err(Fallback::NotAllowed);
         }
-        if me.created_by == Some(Author::Owner) {
+        // What the merge would write again as hers: a node, a relation, an
+        // open item or an intent the partner wrote stays theirs.
+        let partner_rows = self
+            .context
+            .full
+            .folded
+            .relations
+            .iter()
+            .filter(|relation| {
+                relation.audience == self.context.audience
+                    && (relation.from == me.id || relation.to == me.id)
+            })
+            .flat_map(|relation| relation.rows.iter())
+            .filter_map(|row| self.context.full.rows.iter().find(|known| known.id == *row))
+            .any(|row| row.author == Author::Owner);
+        let partner_items = me
+            .open
+            .values()
+            .filter(|open| !open.current.value.closed)
+            .any(|open| open.current.author == Author::Owner)
+            || me
+                .intents
+                .values()
+                .filter(|said| said.current.value.status == IntentStatus::Waiting)
+                .any(|said| said.current.author == Author::Owner);
+        if me.created_by == Some(Author::Owner) || partner_rows || partner_items {
             self.hold(n);
             return Ok(());
         }
@@ -1300,8 +1349,15 @@ impl<'a> Reader<'a> {
             let known = standing.contains(&(from.id.clone(), relation.relation, to.id.clone()))
                 || (relation.relation.symmetric()
                     && standing.contains(&(to.id.clone(), relation.relation, from.id.clone())));
-            if known || (relation.relation == Relation::PartOf && self.reaches(&to.id, &from.id)) {
+            if known {
                 continue;
+            }
+            if relation.relation == Relation::PartOf {
+                // One that would not stand is left out, not written.
+                if !self.add_part_of(&from.id, &to.id) {
+                    continue;
+                }
+                self.part_of.pop();
             }
             self.relate(from, to, relation.relation, &reason, &because)?;
         }
@@ -1343,7 +1399,7 @@ impl<'a> Reader<'a> {
             return Ok(());
         }
         if relation == Relation::PartOf {
-            self.part_of.remove(&(found.from.clone(), found.to.clone()));
+            self.part_of.retain(|(_, _, row)| !found.rows.contains(row));
         }
         for (node, rows) in on {
             self.write(
@@ -1441,6 +1497,32 @@ impl<'a> Reader<'a> {
     }
 }
 
+/// Whether `from` reaches `to` along `edges`.
+fn reaches(edges: &BTreeSet<(String, String)>, from: &str, to: &str) -> bool {
+    let mut seen = BTreeSet::new();
+    let mut next = vec![from.to_string()];
+    while let Some(at) = next.pop() {
+        if at == to {
+            return true;
+        }
+        if !seen.insert(at.clone()) {
+            continue;
+        }
+        next.extend(
+            edges
+                .iter()
+                .filter(|(one, _)| *one == at)
+                .map(|(_, whole)| whole.clone()),
+        );
+    }
+    false
+}
+
+/// The id of a run's `n`th row.
+fn row_id(run: &str, n: usize) -> String {
+    format!("u{}", minted(&format!("row\u{1f}{run}\u{1f}{n}")))
+}
+
 fn actions(output: &str) -> Result<Vec<Value>, Fallback> {
     if output.len() > UPKEEP_OUTPUT_BYTES {
         return Err(Fallback::TooLong);
@@ -1470,10 +1552,25 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         if reader.news.keys().any(|label| !reader.used.contains(label)) {
             return Err(Fallback::NotAllowed);
         }
+        if reader.writes.len() > UPKEEP_WRITES {
+            return Err(Fallback::TooManyActions);
+        }
         Ok(())
     });
     let me = &context.full.folded.nodes[context.at];
-    let seen = Watch::new(&context.full).newest(&context.audience, &me.id);
+    // What she saw: the newest clock per device of what the node watches,
+    // the newest devices kept, the rest under one floor.
+    let mut seen: Vec<(String, Rev)> = Watch::new(&context.full)
+        .newest(&context.audience, &me.id)
+        .into_iter()
+        .collect();
+    seen.sort_by(|a, b| b.1.cmp(&a.1));
+    let floor = seen
+        .iter()
+        .skip(SEEN_DEVICES)
+        .map(|(_, rev)| rev.wall_ms)
+        .max();
+    seen.truncate(SEEN_DEVICES);
     let (mut writes, placed, held, fallback) = match read {
         Ok(()) => (
             reader.writes,
@@ -1483,15 +1580,22 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         ),
         Err(why) => (Vec::new(), Vec::new(), Vec::new(), Some(why)),
     };
+    let mut wrote: Vec<String> = writes.iter().map(|write| write.id.clone()).collect();
+    wrote.sort();
     let upkept = Body::Upkept(Upkept {
         version: 1,
         sync: input.sync,
         said_by: vec![SaidBy::Her],
-        run: input.run,
-        seen,
+        run: input.run.clone(),
+        seen: seen.into_iter().collect(),
+        floor,
+        wrote,
         fallback: fallback.map(|why| why.name().to_string()),
     });
+    // The mark reads back as it was written, or the queue would never move.
+    let upkept = Body::read("node.upkept", &upkept.to_value())?;
     writes.push(Write {
+        id: row_id(&input.run, writes.len()),
         node: me.id.clone(),
         kind: "node.upkept".to_string(),
         body: upkept.to_value(),

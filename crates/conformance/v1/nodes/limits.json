@@ -37,6 +37,7 @@
         "upkeepSpanChars": 400,
         "upkeepSpans": 24,
         "upkeepTotalChars": 12000,
+        "upkeepWrites": 256,
         "whoKnows": 64
       }
     }

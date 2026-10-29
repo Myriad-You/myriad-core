@@ -71,6 +71,9 @@ pub const UPKEEP_INBOX: usize = 20;
 pub const UPKEEP_INBOX_TOTAL_CHARS: usize = 6_000;
 /// Actions in one answer; an answer with more is not read.
 pub const UPKEEP_ACTIONS: usize = 24;
+/// Rows one answer writes, besides its mark; an answer writing more is not
+/// read.
+pub const UPKEEP_WRITES: usize = 256;
 /// The model's upkeep answer, in bytes; a longer one is not read.
 pub const UPKEEP_OUTPUT_BYTES: usize = 32_768;
 /// Nodes one queue call may hand out.
@@ -114,6 +117,7 @@ pub struct Limits {
     pub upkeep_inbox: usize,
     pub upkeep_inbox_total_chars: usize,
     pub upkeep_actions: usize,
+    pub upkeep_writes: usize,
     pub upkeep_output_bytes: usize,
     pub queue_max: usize,
 }
@@ -151,6 +155,7 @@ pub fn limits() -> Limits {
         upkeep_inbox: UPKEEP_INBOX,
         upkeep_inbox_total_chars: UPKEEP_INBOX_TOTAL_CHARS,
         upkeep_actions: UPKEEP_ACTIONS,
+        upkeep_writes: UPKEEP_WRITES,
         upkeep_output_bytes: UPKEEP_OUTPUT_BYTES,
         queue_max: QUEUE_MAX,
     }

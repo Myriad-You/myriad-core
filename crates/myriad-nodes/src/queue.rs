@@ -21,9 +21,11 @@
 //! created row has not arrived are never due.
 //!
 //! Her upkeep saw a row when its device's clock in `seen` is at least the
-//! row's, or the row is from the upkeep row's own device and not after it
-//! (so what a run writes before its mark does not make the node due again).
-//! A device's rows arrive in its order, so one clock per device is enough.
+//! row's (or, for a device past the ones `seen` holds, its wall time is not
+//! after `floor`), or the run wrote it (`wrote`): what she wrote does not
+//! make the node due again, and what anything else wrote meanwhile, even on
+//! the same device, does. A device's rows arrive in its order, so one clock
+//! per device is enough.
 //!
 //! Order: the node whose oldest unseen change is oldest goes first (the
 //! backlog is worked from old to new, so nothing waits forever); ties by
@@ -240,10 +242,7 @@ impl<'a> Watch<'a> {
             return None;
         }
         let seen = self.full.seen.get(&(audience.to_string(), id.to_string()));
-        let unseen = |row: &Row| {
-            seen.and_then(|seen| seen.get(&row.origin))
-                .is_none_or(|rev| row.hlc > *rev)
-        };
+        let unseen = |row: &Row| !seen.is_some_and(|seen| seen.saw(row));
         let mut why: BTreeSet<Reason> = BTreeSet::new();
         let mut first: Option<&Rev> = None;
         let watched = self.watched(audience, id);

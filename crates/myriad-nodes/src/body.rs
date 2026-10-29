@@ -23,7 +23,7 @@
 //! | `node.split_off` | `to` (the new node's key), `spans` (the rows of this node it takes), `reason`, `because` |
 //! | `node.absorbed` | `into` (the key it goes into), `how` (`merged`, `folded_back`), `reason`, `because` |
 //! | `node.used` | `via` (the related rows recall came along; empty: the node itself) |
-//! | `node.upkept` | `run`, `seen` (per device, the newest row clock she had in view), `fallback?` |
+//! | `node.upkept` | `run`, `seen` (per device, the newest row clock she had in view), `floor?`, `wrote?` (the rows the run wrote), `fallback?` |
 //!
 //! Every body refuses fields it does not know, and lists must be sorted
 //! with no repeats, so each body has exactly one byte form. Node kinds the
@@ -508,9 +508,12 @@ pub struct Used {
 }
 
 /// `node.upkept`: her upkeep looked at this node. `seen` holds, per
-/// device, the newest clock of the rows she had in view; this row's own
-/// device counts as seen up to this row, so what the run itself wrote does
-/// not make the node due again. A `fallback` run changed nothing.
+/// device, the newest clock of the rows she had in view; past
+/// [`limits::SEEN_DEVICES`] devices the oldest go, and `floor` (Unix ms)
+/// stands for them: a row of a device not in `seen` counts as seen up to
+/// it. `wrote` lists the rows the run itself wrote, which count as seen, so
+/// what she wrote does not make the node due again (and nothing else
+/// written meanwhile hides behind it). A `fallback` run changed nothing.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Upkept {
@@ -520,6 +523,10 @@ pub struct Upkept {
     pub run: String,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub seen: BTreeMap<String, Rev>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor: Option<u64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub wrote: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fallback: Option<String>,
 }
@@ -771,6 +778,7 @@ impl Body {
                 if body.seen.iter().any(|(device, rev)| *device != rev.node) {
                     return Err(NodeError::new("seen names each clock by its own device"));
                 }
+                check_ids("wrote", &body.wrote, false, false, limits::UPKEEP_WRITES)?;
                 if let Some(fallback) = &body.fallback {
                     check_item_id("fallback", fallback)?;
                 }

@@ -2910,7 +2910,7 @@
       }
     },
     {
-      "name": "what a run writes before its mark does not make the node due again",
+      "name": "what a run writes does not make the node due again",
       "input": {
         "rows": [
           {
@@ -3298,7 +3298,13 @@
             "saidBy": [
               "her"
             ],
-            "run": "run-1"
+            "run": "run-1",
+            "seen": {
+              "dev_mac": "001760000000310-000000-dev_mac"
+            },
+            "wrote": [
+              "w4"
+            ]
           }
         },
         "max": 10
@@ -3328,6 +3334,599 @@
             "audience": "personal:7",
             "node": "87b8ab182e7db8215da0180e813b98dd",
             "since": 1760000000300000,
+            "why": [
+              "own"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "a span written on the same device while she answered is still due",
+      "input": {
+        "rows": [
+          {
+            "version": 1,
+            "id": "w1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000000-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "kind": "node.created",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 1,
+            "payload": {
+              "ref": "body:w1"
+            }
+          },
+          {
+            "version": 1,
+            "id": "w2",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000010-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "kind": "node.done_when",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 2,
+            "payload": {
+              "ref": "body:w2"
+            }
+          },
+          {
+            "version": 1,
+            "id": "w3",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000020-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "kind": "node.span",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 3,
+            "payload": {
+              "ref": "body:w3"
+            }
+          },
+          {
+            "version": 1,
+            "id": "c1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000100-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "kind": "node.created",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 4,
+            "payload": {
+              "ref": "body:c1"
+            }
+          },
+          {
+            "version": 1,
+            "id": "c2",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000110-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "kind": "node.related",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 5,
+            "payload": {
+              "ref": "body:c2"
+            }
+          },
+          {
+            "version": 1,
+            "id": "c3",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000120-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "kind": "node.span",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 6,
+            "payload": {
+              "ref": "body:c3"
+            }
+          },
+          {
+            "version": 1,
+            "id": "c4",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000130-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "kind": "node.span",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 7,
+            "payload": {
+              "ref": "body:c4"
+            }
+          },
+          {
+            "version": 1,
+            "id": "c5",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000140-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "kind": "node.open_item",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 8,
+            "payload": {
+              "ref": "body:c5"
+            }
+          },
+          {
+            "version": 1,
+            "id": "r1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000200-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:1ec3c21870995e9dcd73c503df438f45",
+            "kind": "node.created",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 9,
+            "payload": {
+              "ref": "body:r1"
+            }
+          },
+          {
+            "version": 1,
+            "id": "r2",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000210-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:1ec3c21870995e9dcd73c503df438f45",
+            "kind": "node.related",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 10,
+            "payload": {
+              "ref": "body:r2"
+            }
+          },
+          {
+            "version": 1,
+            "id": "k1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000300-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:87b8ab182e7db8215da0180e813b98dd",
+            "kind": "node.created",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 11,
+            "payload": {
+              "ref": "body:k1"
+            }
+          },
+          {
+            "version": 1,
+            "id": "k2",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000310-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:87b8ab182e7db8215da0180e813b98dd",
+            "kind": "node.related",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 12,
+            "payload": {
+              "ref": "body:k2"
+            }
+          },
+          {
+            "version": 1,
+            "id": "w4",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000004990-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "kind": "node.revised",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 13,
+            "payload": {
+              "ref": "body:w4"
+            }
+          },
+          {
+            "version": 1,
+            "id": "w5",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000004995-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "kind": "node.span",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 14,
+            "payload": {
+              "ref": "body:w5"
+            }
+          },
+          {
+            "version": 1,
+            "id": "z1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000005000-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "kind": "node.upkept",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 15,
+            "payload": {
+              "ref": "body:z1"
+            }
+          }
+        ],
+        "bodies": {
+          "w1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "kind": "task",
+            "key": "minted:release-week",
+            "name": "这周发版"
+          },
+          "w2": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "base": [],
+            "text": "装进商店",
+            "because": [
+              "span:w3"
+            ]
+          },
+          "w3": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "audience": "personal:7",
+            "text": "伙伴说这周要发版。",
+            "refs": [
+              "message:a1"
+            ]
+          },
+          "c1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "kind": "task",
+            "key": "minted:changelog",
+            "name": "写更新说明"
+          },
+          "c2": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "relation": "part_of",
+            "to": "minted:release-week",
+            "reason": "说明写完之前不能发版",
+            "because": [
+              "span:c3"
+            ]
+          },
+          "c3": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "audience": "personal:7",
+            "text": "更新说明还差截图。",
+            "refs": [
+              "message:a2"
+            ]
+          },
+          "c4": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "audience": "personal:7",
+            "text": "截图要等新图标。",
+            "refs": [
+              "message:a3"
+            ]
+          },
+          "c5": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "base": [],
+            "item": "shots",
+            "text": "截图还没换",
+            "because": [
+              "span:c3"
+            ]
+          },
+          "r1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "kind": "task",
+            "key": "minted:review-wait",
+            "name": "等审核"
+          },
+          "r2": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "relation": "blocks",
+            "to": "minted:changelog",
+            "reason": "审核不过说明写了也白写",
+            "because": [
+              "span:c4"
+            ]
+          },
+          "k1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "kind": "topic",
+            "key": "minted:release-talk",
+            "name": "发版这件事"
+          },
+          "k2": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "relation": "related",
+            "to": "minted:release-week",
+            "reason": "聊发版时总会说到这周的发版",
+            "because": [
+              "span:w3"
+            ]
+          },
+          "w4": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "base": [],
+            "field": "status",
+            "value": "active"
+          },
+          "w5": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "partner"
+            ],
+            "audience": "personal:7",
+            "text": "伙伴又说了一句。"
+          },
+          "z1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "run": "run-1",
+            "seen": {
+              "dev_mac": "001760000000310-000000-dev_mac"
+            },
+            "wrote": [
+              "w4"
+            ]
+          }
+        },
+        "max": 10
+      },
+      "output": {
+        "due": [
+          {
+            "audience": "personal:7",
+            "node": "69192ad55e973984fc259bc057995248",
+            "since": 1760000000000000,
+            "why": [
+              "own",
+              "relation",
+              "whole",
+              "blocker"
+            ]
+          },
+          {
+            "audience": "personal:7",
+            "node": "1ec3c21870995e9dcd73c503df438f45",
+            "since": 1760000000200000,
+            "why": [
+              "own"
+            ]
+          },
+          {
+            "audience": "personal:7",
+            "node": "87b8ab182e7db8215da0180e813b98dd",
+            "since": 1760000000300000,
+            "why": [
+              "own"
+            ]
+          },
+          {
+            "audience": "personal:7",
+            "node": "25ae623559006437c416adbde717a853",
+            "since": 1760000004995000,
+            "why": [
+              "own"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "past the devices a mark holds, a floor stands for the rest",
+      "input": {
+        "rows": [
+          {
+            "version": 1,
+            "id": "a1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000000-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:e887fe72a53a1382dd5a68b14cb86fa7",
+            "kind": "node.created",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 1,
+            "payload": {
+              "ref": "body:a1"
+            }
+          },
+          {
+            "version": 1,
+            "id": "a2",
+            "origin": "loc_old",
+            "author": "her",
+            "hlc": "001760000000010-000000-loc_old",
+            "audience": "personal:7",
+            "object": "node:e887fe72a53a1382dd5a68b14cb86fa7",
+            "kind": "node.span",
+            "replicate": "local",
+            "epoch": 1,
+            "payload": {
+              "ref": "body:a2"
+            }
+          },
+          {
+            "version": 1,
+            "id": "a3",
+            "origin": "loc_new",
+            "author": "her",
+            "hlc": "001760000000020-000000-loc_new",
+            "audience": "personal:7",
+            "object": "node:e887fe72a53a1382dd5a68b14cb86fa7",
+            "kind": "node.span",
+            "replicate": "local",
+            "epoch": 1,
+            "payload": {
+              "ref": "body:a3"
+            }
+          },
+          {
+            "version": 1,
+            "id": "z1",
+            "origin": "dev_mac",
+            "author": "her",
+            "hlc": "001760000000030-000000-dev_mac",
+            "audience": "personal:7",
+            "object": "node:e887fe72a53a1382dd5a68b14cb86fa7",
+            "kind": "node.upkept",
+            "replicate": "shared",
+            "epoch": 1,
+            "dseq": 2,
+            "payload": {
+              "ref": "body:z1"
+            }
+          }
+        ],
+        "bodies": {
+          "a1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "kind": "topic",
+            "key": "minted:aa",
+            "name": "甲"
+          },
+          "a2": {
+            "version": 1,
+            "sync": {
+              "local": "loc_old"
+            },
+            "saidBy": [
+              "her"
+            ],
+            "audience": "personal:7",
+            "text": "旧设备上的一段。"
+          },
+          "a3": {
+            "version": 1,
+            "sync": {
+              "local": "loc_new"
+            },
+            "saidBy": [
+              "her"
+            ],
+            "audience": "personal:7",
+            "text": "新设备上的一段。"
+          },
+          "z1": {
+            "version": 1,
+            "sync": "shared",
+            "saidBy": [
+              "her"
+            ],
+            "run": "run-1",
+            "seen": {
+              "dev_mac": "001760000000000-000000-dev_mac"
+            },
+            "floor": 1760000000015
+          }
+        },
+        "max": 10
+      },
+      "output": {
+        "due": [
+          {
+            "audience": "personal:7",
+            "node": "e887fe72a53a1382dd5a68b14cb86fa7",
+            "since": 1760000000020000,
             "why": [
               "own"
             ]

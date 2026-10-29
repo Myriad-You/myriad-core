@@ -235,7 +235,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `node.split_off` | `to`（拆出来的新节点的键，必须是 `minted:`）、`spans`（这个节点上被拆走的经历行）、`reason`、`because`：写在被拆的那个节点上 |
 | `node.absorbed` | `into`（并进哪个节点的键）、`how`（`merged` 并入：本来是一件事；`folded_back` 收回：下属没有自己的状态了，回到上级成为经历）、`reason`、`because`：写在并走的那个节点上 |
 | `node.used` | `via?`（回想顺着哪几条 `node.related` 带出了它；不写是直接想起它） |
-| `node.upkept` | `run`、`seen`（每台设备她看到的最新一行的时钟）、`fallback?`（这次回答读不了、什么都没改时写原因） |
+| `node.upkept` | `run`、`seen`（每台设备她看到的最新一行的时钟，最多 64 台）、`floor?`（其余设备的界线）、`wrote?`（这次整理写的行）、`fallback?`（这次回答读不了、什么都没改时写原因） |
 
 - `because` 是依据的 id（`span:<行>`、`entry:<行>`、`message:<id>`……），至少一个：概括的每一句、看法、没收尾的事、想说的话、改种类和关系都要有。
 - `base` 是写的时候看到的那一版（行 id）；第一次写是空的；两边都改过、她合起来时列出两版。
@@ -245,7 +245,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - 头里每一项（种类、名字、概括、状态、谁知道、对象、每人的进度、每条看法、每件没收尾的事、每句想说的话）分开算：被别的行写进 `base` 的版本是旧的，进 `history`（留最新 20 个）；剩下的是当前的。
 - **两边都改过**：当前的不止一个、而且说的不一样，就是两台设备从同一版各改了一次、互相没看见。这一项标 `bothChanged`，显示日志顺序里先写的那一个，其余的列在 `rivals` 里。后写的不会自动盖掉先写的；下一次有一行把所有当前版本都列进 `base`，才算合好。每一项都带 `base`：当前所有版本的行 id（排好序），就是下一次写这一项时该填的 `base`。两边从同一版改成一样的不算冲突，`base` 里两行都列着；之后哪一行只列了其中一个，也算两个都看见了。
 - 经历和条目按日志顺序都留着，各带三个标签。`history` 列出每次改种类：从什么、到什么、为什么。
-- 不合规矩的行跳过，并在 `skipped` 里写明原因：`no_body`、`bad_body`、`other_node`（created 的受众和键算出别的 id）、`sync_mismatch`、`author_mismatch`、`audience_tag`、`not_in_audience`（谁知道和进度只能填这个受众里的人）、`untrusted_intent`（想说的话只能来自伙伴的话或她自己）、`no_spans_here`（「关于你」只放条目、不挂经历）、`kind_fixed`、`status_for_kind`（人没有做完）、`object_for_key`（仓库对象只在仓库键上，仓库节点的对象拿不掉）、`self_relation`、`cycle`、`not_minted`（仓库和人的节点各只有一个，不能拆出来也不能并走）、`absorbed_twice`（并走第二次，第一次为准）。核心不读的 node 种类（原生旧的行）只算一次变化，不读内容。
+- 不合规矩的行跳过，并在 `skipped` 里写明原因：`no_body`、`bad_body`、`other_node`（created 的受众和键算出别的 id）、`sync_mismatch`、`author_mismatch`、`audience_tag`、`not_in_audience`（谁知道和进度只能填这个受众里的人）、`untrusted_intent`（想说的话只能来自伙伴的话或她自己）、`no_spans_here`（「关于你」只放条目、不挂经历）、`kind_fixed`、`status_for_kind`（人没有做完）、`object_for_key`（仓库对象只在仓库键上，仓库节点的对象拿不掉）、`self_relation`、`cycle`、`not_minted`（仓库和人的节点各只有一个，不能拆出来也不能并走；并进「关于你」的也是 `no_spans_here`）、`absorbed_twice`（并走第二次，第一次为准）。核心不读的 node 种类（原生旧的行）只算一次变化，不读内容。
 - `createdBy` 写着 created 行是谁写的；头里每个版本都写着是谁写的，所以整理知道哪些是伙伴定的。
 - 忘掉一个节点（或这个受众里关于某人的全部）：节点只剩 `{id, audience, forgotten}`，它的行进 `stubbed`，`forget` 排在前或后都一样。只忘一段经历是 M2 的事，这一批没有。
 
@@ -271,20 +271,21 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 **整理留下什么**（折叠里）：
 
-- 拆分：`node.split_off` 列的经历挂到新节点上，标着 `movedFrom`；同一段被两次拆分点到，以先写的那次为准。两个节点都多一行 `lineage`（`split_off`、`split_from`）。
+- 拆分：拆分和并入按日志顺序一件件算，每次看那段经历这时在哪。`node.split_off` 列的经历只要这时在被拆的节点上（本来写在这里的，或者并入、上一次拆分带过来的），就挂到新节点上，标着 `movedFrom`。两个节点都多一行 `lineage`（`split_off`、`split_from`）。
 - 并入和收回：并走的节点标 `absorbedInto`，读作没了；它的经历和条目挂到并进的那个节点上（一路并下去就挂到最后那个），它的关系跟着它没了。两边各多一行 `lineage`（`absorbed_into`、`absorbed`）。
 - 独立：一条 `part_of` 被收回时，下属多一行 `lineage`（`left`，原来属于）。
 - 忘掉也跟着走：并进被忘掉节点的节点一起忘掉（它的 `forget` 列在 `forgets` 里，调用方写下来，body 删掉以后也一直算数）；被忘掉的拆分部分带走的经历一起忘掉，那行拆分也一起忘掉。
 
 **整理队列**（`nodes.queue`）：只有状态变了才排进来，不看日历、不数次数。一个节点「看着」这些行：自己的行（`own`）、别的节点建给它或收回的关系（`relation`）、它下属的行（`part`）、它上级的行（`whole`）、挡着它的那件的行（`blocker`）；另外互相挡着（`mutual_block`）和撞上（`clash`）是新的时也排进来，好让她举手。回想（`node.used`）和整理标记（`node.upkept`）不算变化，跳过的行不算，相关不算。忘掉的、并走的、created 还没到的节点不排。
 
-- 看过没有：节点上 `node.upkept` 的 `seen` 记着每台设备看到的最新时钟；整理标记自己那台设备，标记之前写的行都算看过（所以一次整理自己写的行不会让它马上又排进来）。一台设备的行按它自己的顺序到，所以每台设备记一个时钟就够。
+- 看过没有：节点上 `node.upkept` 的 `seen` 记着每台设备她看到的最新时钟，`wrote` 列出这次整理自己写的行，这些算看过（所以自己写的行不会让它马上又排进来）；她回答的时候同一台设备上别的东西写的行不算看过。一台设备的行按它自己的顺序到，所以每台设备记一个时钟就够。设备超过 64 台时留最新的 64 台，其余的合成一个 `floor`（毫秒）：不在 `seen` 里的设备，时钟不晚于它的算看过。
 - 顺序：最早一行没看过的变化越早，越先整理（从旧到新消化积压，谁都不会一直等）；一样早的按那行的时钟（毫秒、计数、设备），再按受众、id。`max`（1 到 200）是这次给几个，`more` 是还有几个在等。
 
 **整理一个节点**（`nodes.upkeep_input`、`nodes.upkeep_read`）：判断由她做（模型），用她自己的话；这里只定她看到什么、她的回答怎么变成行，两边主机才会写出同样的行。提示词以后再定。
 
 - `upkeep_input` 给她看：这个节点（`n1`）的头（种类、名字、状态、「做完」是什么、概括、没收尾的事、想说的话、看法、下属的汇总、伙伴定过哪些（`partnerSet`）、哪些两边都改过（`bothChanged`）、是不是伙伴建的）；它最新的经历（最多 24 段，每段截到 400 字，合计 12000 字，从旧到新编号 `s1`……）；隔一条关系的邻居（最多 16 个，编号 `n2`……，带种类、名字、状态、概括第一句和关系的方向）；收件箱（最多 20 条，每条 400 字、合计 6000 字，编号 `i1`……）；为什么现在整理它（`due`）。id 不给模型。
-- `upkeep_read` 读 `{"actions":[{"do":…}]}`，按顺序变成要写的行（调用方加信封、按顺序写），最后一行总是 `node.upkept`。`run` 是调用方这次整理生成一次的记号，新节点的键、新的想说的话的 id 都由它算出来，所以同一个回答在哪一端都写出同样的行。
+- `upkeep_read` 读 `{"actions":[{"do":…}]}`，按顺序变成要写的行，最后一行总是 `node.upkept`。每一行带着它的 `id`，调用方就用这个 id 写（再加时钟和设备、按顺序写）。`run` 是调用方这次整理生成一次的记号，行 id、新节点的键、新的想说的话的 id 都由它算出来，所以同一个回答在哪一端都写出同样的行。一次回答最多写 256 行（不算标记）。
+- 她写的 `part_of` 照折叠的规矩先算一遍：日志里所有会被折叠考虑的 `part_of`（包括之前因为成环被跳过的），按日志顺序，加上这次收回的和新写的，会成环的那条不算。所以收回一条以后复活的旧关系也算在里面，她写的那条在折叠里不会被跳过。
 
 | `do` | 她说的 | 写的行 |
 | --- | --- | --- |
@@ -299,8 +300,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `hand` | `text`、`because`：向伙伴举手 | `node.intent`，等着说 |
 
 - **种类只由「做完」的标准决定**：有做完的标准是进行中的事；没有、会反复聊是话题；没有、但一直要做（`ongoing`）是进行中的事，状态 `ongoing`。仓库和人的种类不能改。
-- **伙伴定的为准**：要改的头一项当前版本是伙伴写的、要收回的关系是伙伴建的、要并走的节点是伙伴建的，这一条动作就不做，列在 `held`（`partner_set`），她只能举手；同一个回答里别的动作照做。
-- **读不了就什么都不改**：超过 32768 字节、不是 JSON、没有 `actions`、超过 24 条、不认识的动作、她没看到的编号、字段不对、没有依据或依据不是她看到的、`part_of` 成环、规则不允许的（人被拆或并走、种类和键不合、经历挂到「关于你」、一条收件箱放两次、同一项写两次、收回到不是上级的节点、收回不存在的关系、新节点上什么都没有），这些都只写 `node.upkept`，`fallback` 写明原因，队列照样往下走；这个节点下次有变化时再排进来。
+- **伙伴定的为准**：要改的头一项当前版本是伙伴写的、要收回的关系是伙伴建的，或者要并走的节点本身、它的某条关系、它没收尾的某件事、它还等着说的某句话是伙伴写的（并入会把这些以她的名义再写一遍），这一条动作就不做，列在 `held`（`partner_set`），她只能举手；同一个回答里别的动作照做。
+- **读不了就什么都不改**：超过 32768 字节、不是 JSON、没有 `actions`、超过 24 条、不认识的动作、她没看到的编号、字段不对、没有依据或依据不是她看到的、`part_of` 成环、规则不允许的（人被拆或并走、种类和键不合、经历挂到「关于你」或并进「关于你」、一条收件箱放两次、同一项写两次、收回到不是上级的节点、收回不存在的关系、新节点上什么都没有），这些都只写 `node.upkept`，`fallback` 写明原因，队列照样往下走；这个节点下次有变化时再排进来。
 - 写出来的每一行都先经 `nodes.body` 同样的检查，不合格的不写。
 
 **放置**（`nodes.place_input`、`nodes.place_read`）：一段对话告一段落时，她把它切成一段一段，每段只讲一件事，挂到一个节点上或进收件箱。挂哪里由她判断（模型）；这里只定发给模型的东西怎么截、模型的回答怎么读，两边主机才会一样。提示词是 M2 的事。
@@ -321,7 +322,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.queue` | `{rows, bodies?, max}` → `{due: [{audience, node, since, why}], more?}` |
 | `nodes.repo_key` | `{remote}` → `{key}` |
 | `nodes.upkeep_input` | `{rows, bodies?, audience, node, inbox?: [{id, saidBy, text}]}` → `{node, spans?, neighbours?, inbox?, due?, taken}` |
-| `nodes.upkeep_read` | `{input: <upkeep_input 的输入>, run, sync, output}` → `{writes: [{node, kind, body}], placed?, held?, fallback?}` |
+| `nodes.upkeep_read` | `{input: <upkeep_input 的输入>, run, sync, output}` → `{writes: [{id, node, kind, body}], placed?, held?, fallback?}` |
 
 ## 一致性对照（`crates/conformance/`）
 
