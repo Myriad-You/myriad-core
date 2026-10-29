@@ -108,6 +108,24 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "remote": "https://github.com/demo/Example.GIT"
+      },
+      "name": "an upper-case .GIT is stripped too, so the key is a key",
+      "output": {
+        "key": "repo:github.com/demo/example"
+      }
+    },
+    {
+      "input": {
+        "remote": "https://.hidden/demo/x"
+      },
+      "name": "a host that starts with a dot is refused",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

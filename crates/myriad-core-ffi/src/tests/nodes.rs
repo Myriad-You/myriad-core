@@ -64,3 +64,78 @@ fn every_node_case_answers_through_the_c_entry_point() {
     assert_eq!(calls.into_iter().collect::<Vec<_>>(), TESTED);
     assert!(cases >= 100, "{cases}");
 }
+
+#[test]
+fn a_refused_row_is_named_by_its_field_never_by_its_value() {
+    let row = json!({
+        "audience": "personal:7", "author": "her", "dseq": 1, "epoch": 1,
+        "hlc": "001760000000000-000000-dev_mac", "id": "n1", "kind": "node.created",
+        "object": "node:25ae623559006437c416adbde717a853", "origin": "dev_mac",
+        "payload": {"ref": "body:n1"}, "replicate": "shared", "version": 1,
+    });
+    let secret = "sensitive-synthetic-value";
+    let mut origin = row.clone();
+    origin["origin"] = json!(format!("{secret} x"));
+    origin["hlc"] = json!(format!("001760000000000-000000-{secret} x"));
+    let mut hlc_node = row.clone();
+    hlc_node["hlc"] = json!(format!("001760000000000-000000-{secret}"));
+    let mut subject = row.clone();
+    subject["subject"] = json!(secret);
+    let mut wrong_type = row.clone();
+    wrong_type["object"] = json!(format!("mood:{secret}"));
+    let mut cases = Vec::new();
+    for (field, value) in [
+        ("audience", json!(secret)),
+        ("audience", json!(format!("personal:{secret}\u{7}"))),
+        ("object", json!(secret)),
+        ("kind", json!(secret)),
+        ("id", json!(format!("{secret}\u{7}"))),
+    ] {
+        let mut bad = row.clone();
+        bad[field] = value;
+        cases.push(bad);
+    }
+    cases.extend([origin, hlc_node, subject, wrong_type]);
+    let mut messages = Vec::new();
+    for bad in cases {
+        let (status, out) = ffi("nodes.fold", &json!({ "rows": [bad] }));
+        let message = out["error"]["message"].as_str().unwrap_or("").to_string();
+        assert_eq!(status, STATUS_BAD_INPUT, "{bad}: {out}");
+        assert!(!message.contains("sensitive"), "{message}");
+        messages.push(message);
+    }
+    assert_eq!(
+        messages,
+        [
+            "a row: its audience is not personal:, own: or group:",
+            "a row: its audience is not personal:, own: or group:",
+            "a row: its object is not <type>:<id>",
+            "a row: its kind is not one the log holds",
+            "a row: its id is not a token",
+            "input does not fit the call",
+            "a row: its clock's node is not its origin",
+            "a row: its subject is not of its audience",
+            "a row: its kind is about another type of object",
+        ]
+    );
+}
+
+#[test]
+fn every_repo_key_made_is_a_key_nodes_id_takes() {
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/nodes/repo_key.json");
+    let file: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let mut made = 0;
+    for case in file["cases"].as_array().unwrap() {
+        let Some(key) = case["output"]["key"].as_str() else {
+            continue;
+        };
+        let (status, out) = ffi("nodes.id", &json!({ "audience": "personal:7", "key": key }));
+        assert_eq!(status, STATUS_OK, "{key}: {out}");
+        let rest = key.strip_prefix("repo:").unwrap();
+        let (status, out) = ffi("nodes.repo_key", &json!({ "remote": rest }));
+        assert_eq!((status, out["key"].as_str()), (STATUS_OK, Some(key)));
+        made += 1;
+    }
+    assert!(made >= 5, "{made}");
+}

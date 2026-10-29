@@ -161,6 +161,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "m1"
+              ],
               "epoch": 1,
               "row": "m1",
               "saidBy": [
@@ -174,6 +177,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "m1"
+              ],
               "epoch": 1,
               "row": "m1",
               "saidBy": [
@@ -185,6 +191,9 @@
             "object": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "m1"
+              ],
               "epoch": 1,
               "row": "m1",
               "saidBy": [
@@ -222,6 +231,9 @@
             "summary": {
               "at": 1760000060000000,
               "author": "her",
+              "base": [
+                "s1"
+              ],
               "epoch": 1,
               "row": "s1",
               "saidBy": [
@@ -404,6 +416,9 @@
             "kind": {
               "at": 1760000003000000,
               "author": "her",
+              "base": [
+                "k4"
+              ],
               "epoch": 1,
               "history": [
                 {
@@ -453,6 +468,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "k1"
+              ],
               "epoch": 1,
               "row": "k1",
               "saidBy": [
@@ -464,6 +482,9 @@
             "status": {
               "at": 1760000001000000,
               "author": "her",
+              "base": [
+                "k2"
+              ],
               "epoch": 1,
               "row": "k2",
               "saidBy": [
@@ -616,6 +637,9 @@
             "kind": {
               "at": 1760000002000000,
               "author": "her",
+              "base": [
+                "f3"
+              ],
               "epoch": 1,
               "row": "f3",
               "saidBy": [
@@ -629,6 +653,9 @@
             "name": {
               "at": 1760000002000000,
               "author": "her",
+              "base": [
+                "f3"
+              ],
               "epoch": 1,
               "row": "f3",
               "saidBy": [
@@ -647,6 +674,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "f1"
+              ],
               "epoch": 1,
               "row": "f1",
               "saidBy": [
@@ -660,6 +690,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "f1"
+              ],
               "epoch": 1,
               "row": "f1",
               "saidBy": [
@@ -671,6 +704,9 @@
             "object": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "f1"
+              ],
               "epoch": 1,
               "row": "f1",
               "saidBy": [
@@ -800,6 +836,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "n1"
+              ],
               "epoch": 1,
               "row": "n1",
               "saidBy": [
@@ -813,6 +852,10 @@
             "name": {
               "at": 1760000001000000,
               "author": "her",
+              "base": [
+                "n2",
+                "n3"
+              ],
               "bothChanged": true,
               "epoch": 1,
               "history": [
@@ -982,6 +1025,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "n1"
+              ],
               "epoch": 1,
               "row": "n1",
               "saidBy": [
@@ -995,6 +1041,9 @@
             "name": {
               "at": 1760000003000000,
               "author": "her",
+              "base": [
+                "n4"
+              ],
               "epoch": 1,
               "history": [
                 {
@@ -1143,6 +1192,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "n1"
+              ],
               "epoch": 1,
               "row": "n1",
               "saidBy": [
@@ -1156,6 +1208,10 @@
             "name": {
               "at": 1760000001000000,
               "author": "her",
+              "base": [
+                "n2",
+                "n3"
+              ],
               "epoch": 1,
               "history": [
                 {
@@ -1178,6 +1234,201 @@
               "value": "这周发版"
             },
             "updatedAt": 1760000002000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "n1": {
+            "key": "minted:release-week",
+            "kind": "task",
+            "name": "发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "n2": {
+            "base": [
+              "n1"
+            ],
+            "field": "name",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": "这周发版",
+            "version": 1
+          },
+          "n3": {
+            "base": [
+              "n1"
+            ],
+            "field": "name",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": "这周发版",
+            "version": 1
+          },
+          "n4": {
+            "base": [
+              "n2"
+            ],
+            "field": "name",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": "下周发版",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "n1",
+            "kind": "node.created",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:n1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-dev_mac",
+            "id": "n2",
+            "kind": "node.revised",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:n2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "n3",
+            "kind": "node.revised",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:n3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000003000-000000-dev_mac",
+            "id": "n4",
+            "kind": "node.revised",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:n4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "after the same revision on both sides, an edit that saw one of them stands",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "id": "25ae623559006437c416adbde717a853",
+            "key": "minted:release-week",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "n1"
+              ],
+              "epoch": 1,
+              "row": "n1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "task"
+              }
+            },
+            "name": {
+              "at": 1760000003000000,
+              "author": "her",
+              "base": [
+                "n4"
+              ],
+              "epoch": 1,
+              "history": [
+                {
+                  "at": 1760000000000000,
+                  "author": "her",
+                  "epoch": 1,
+                  "row": "n1",
+                  "saidBy": [
+                    "her"
+                  ],
+                  "sync": "shared",
+                  "value": "发版"
+                },
+                {
+                  "at": 1760000001000000,
+                  "author": "her",
+                  "epoch": 1,
+                  "row": "n2",
+                  "saidBy": [
+                    "her"
+                  ],
+                  "sync": "shared",
+                  "value": "这周发版"
+                },
+                {
+                  "at": 1760000002000000,
+                  "author": "her",
+                  "epoch": 1,
+                  "row": "n3",
+                  "saidBy": [
+                    "her"
+                  ],
+                  "sync": "shared",
+                  "value": "这周发版"
+                }
+              ],
+              "row": "n4",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "下周发版"
+            },
+            "updatedAt": 1760000003000000
           }
         ]
       }
@@ -1310,6 +1561,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "n1"
+              ],
               "epoch": 1,
               "row": "n1",
               "saidBy": [
@@ -1323,6 +1577,10 @@
             "name": {
               "at": 1760000002000000,
               "author": "her",
+              "base": [
+                "n3",
+                "n4"
+              ],
               "bothChanged": true,
               "epoch": 1,
               "history": [
@@ -1487,6 +1745,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "n1"
+              ],
               "epoch": 1,
               "row": "n1",
               "saidBy": [
@@ -1500,6 +1761,9 @@
             "name": {
               "at": 1760000001000000,
               "author": "her",
+              "base": [
+                "n2"
+              ],
               "epoch": 1,
               "history": [
                 {
@@ -1736,6 +2000,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "v1"
+              ],
               "epoch": 1,
               "row": "v1",
               "saidBy": [
@@ -1749,6 +2016,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "v1"
+              ],
               "epoch": 1,
               "row": "v1",
               "saidBy": [
@@ -1761,6 +2031,9 @@
               "ask": {
                 "at": 1760000005000000,
                 "author": "her",
+                "base": [
+                  "v6"
+                ],
                 "epoch": 1,
                 "history": [
                   {
@@ -1799,6 +2072,9 @@
               "late": {
                 "at": 1760000003000000,
                 "author": "her",
+                "base": [
+                  "v4"
+                ],
                 "epoch": 1,
                 "history": [
                   {
@@ -1999,6 +2275,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "y1"
+              ],
               "epoch": 1,
               "row": "y1",
               "saidBy": [
@@ -2012,6 +2291,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "y1"
+              ],
               "epoch": 1,
               "row": "y1",
               "saidBy": [
@@ -2152,6 +2434,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "o1"
+              ],
               "epoch": 1,
               "row": "o1",
               "saidBy": [
@@ -2165,6 +2450,9 @@
             "name": {
               "at": 1760000001000000,
               "author": "owner",
+              "base": [
+                "o2"
+              ],
               "history": [
                 {
                   "at": 1760000000000000,
@@ -2360,6 +2648,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "a1"
+              ],
               "epoch": 1,
               "row": "a1",
               "saidBy": [
@@ -2373,6 +2664,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "a1"
+              ],
               "epoch": 1,
               "row": "a1",
               "saidBy": [
@@ -2621,6 +2915,9 @@
             "kind": {
               "at": 1760000003000000,
               "author": "her",
+              "base": [
+                "w4"
+              ],
               "epoch": 1,
               "row": "w4",
               "saidBy": [
@@ -2634,6 +2931,9 @@
             "name": {
               "at": 1760000003000000,
               "author": "her",
+              "base": [
+                "w4"
+              ],
               "epoch": 1,
               "row": "w4",
               "saidBy": [
@@ -2646,6 +2946,9 @@
             "whoKnows": {
               "at": 1760000004000000,
               "author": "her",
+              "base": [
+                "w5"
+              ],
               "epoch": 1,
               "row": "w5",
               "saidBy": [
@@ -2666,6 +2969,9 @@
             "kind": {
               "at": 1760000005000000,
               "author": "her",
+              "base": [
+                "w6"
+              ],
               "epoch": 1,
               "row": "w6",
               "saidBy": [
@@ -2679,6 +2985,9 @@
             "name": {
               "at": 1760000005000000,
               "author": "her",
+              "base": [
+                "w6"
+              ],
               "epoch": 1,
               "row": "w6",
               "saidBy": [
@@ -2697,6 +3006,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "w1"
+              ],
               "epoch": 1,
               "row": "w1",
               "saidBy": [
@@ -2710,6 +3022,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "w1"
+              ],
               "epoch": 1,
               "row": "w1",
               "saidBy": [
@@ -2722,6 +3037,9 @@
             "whoKnows": {
               "at": 1760000001000000,
               "author": "her",
+              "base": [
+                "w2"
+              ],
               "epoch": 1,
               "row": "w2",
               "saidBy": [
@@ -2886,6 +3204,9 @@
               "tests": {
                 "at": 1760000003000000,
                 "author": "her",
+                "base": [
+                  "i4"
+                ],
                 "epoch": 4,
                 "history": [
                   {
@@ -2928,6 +3249,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "i1"
+              ],
               "epoch": 1,
               "row": "i1",
               "saidBy": [
@@ -2941,6 +3265,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "i1"
+              ],
               "epoch": 1,
               "row": "i1",
               "saidBy": [
@@ -3121,6 +3448,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "u1"
+              ],
               "epoch": 1,
               "row": "u1",
               "saidBy": [
@@ -3134,6 +3464,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "u1"
+              ],
               "epoch": 1,
               "row": "u1",
               "saidBy": [
@@ -3145,6 +3478,9 @@
             "status": {
               "at": 1760000004000000,
               "author": "her",
+              "base": [
+                "u5"
+              ],
               "epoch": 1,
               "row": "u5",
               "saidBy": [
@@ -3365,6 +3701,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "b1"
+              ],
               "epoch": 1,
               "row": "b1",
               "saidBy": [
@@ -3378,6 +3717,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "b1"
+              ],
               "epoch": 1,
               "row": "b1",
               "saidBy": [
@@ -3389,6 +3731,9 @@
             "object": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "b1"
+              ],
               "epoch": 1,
               "row": "b1",
               "saidBy": [
@@ -3407,6 +3752,9 @@
               "7": {
                 "at": 1760000001000000,
                 "author": "her",
+                "base": [
+                  "b2"
+                ],
                 "epoch": 1,
                 "row": "b2",
                 "saidBy": [
@@ -3426,6 +3774,9 @@
             "kind": {
               "at": 1760000004000000,
               "author": "her",
+              "base": [
+                "b5"
+              ],
               "epoch": 1,
               "row": "b5",
               "saidBy": [
@@ -3439,6 +3790,9 @@
             "name": {
               "at": 1760000004000000,
               "author": "her",
+              "base": [
+                "b5"
+              ],
               "epoch": 1,
               "row": "b5",
               "saidBy": [
@@ -3450,6 +3804,9 @@
             "object": {
               "at": 1760000004000000,
               "author": "her",
+              "base": [
+                "b5"
+              ],
               "epoch": 1,
               "row": "b5",
               "saidBy": [
@@ -3752,6 +4109,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "r1"
+              ],
               "epoch": 1,
               "row": "r1",
               "saidBy": [
@@ -3765,6 +4125,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "r1"
+              ],
               "epoch": 1,
               "row": "r1",
               "saidBy": [
@@ -3783,6 +4146,9 @@
             "kind": {
               "at": 1760000000002000,
               "author": "her",
+              "base": [
+                "r3"
+              ],
               "epoch": 1,
               "row": "r3",
               "saidBy": [
@@ -3796,6 +4162,9 @@
             "name": {
               "at": 1760000000002000,
               "author": "her",
+              "base": [
+                "r3"
+              ],
               "epoch": 1,
               "row": "r3",
               "saidBy": [
@@ -3814,6 +4183,9 @@
             "kind": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "r2"
+              ],
               "epoch": 1,
               "row": "r2",
               "saidBy": [
@@ -3827,6 +4199,9 @@
             "name": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "r2"
+              ],
               "epoch": 1,
               "row": "r2",
               "saidBy": [
@@ -4155,6 +4530,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "c1"
+              ],
               "epoch": 1,
               "row": "c1",
               "saidBy": [
@@ -4168,6 +4546,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "c1"
+              ],
               "epoch": 1,
               "row": "c1",
               "saidBy": [
@@ -4186,6 +4567,9 @@
             "kind": {
               "at": 1760000000002000,
               "author": "her",
+              "base": [
+                "c3"
+              ],
               "epoch": 1,
               "row": "c3",
               "saidBy": [
@@ -4199,6 +4583,9 @@
             "name": {
               "at": 1760000000002000,
               "author": "her",
+              "base": [
+                "c3"
+              ],
               "epoch": 1,
               "row": "c3",
               "saidBy": [
@@ -4217,6 +4604,9 @@
             "kind": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "c2"
+              ],
               "epoch": 1,
               "row": "c2",
               "saidBy": [
@@ -4230,6 +4620,9 @@
             "name": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "c2"
+              ],
               "epoch": 1,
               "row": "c2",
               "saidBy": [
@@ -4420,6 +4813,9 @@
             "kind": {
               "at": 1760000000002000,
               "author": "her",
+              "base": [
+                "x3"
+              ],
               "epoch": 1,
               "row": "x3",
               "saidBy": [
@@ -4433,6 +4829,9 @@
             "name": {
               "at": 1760000000002000,
               "author": "her",
+              "base": [
+                "x3"
+              ],
               "epoch": 1,
               "row": "x3",
               "saidBy": [
@@ -4451,6 +4850,9 @@
             "kind": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "x2"
+              ],
               "epoch": 1,
               "row": "x2",
               "saidBy": [
@@ -4464,6 +4866,9 @@
             "name": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "x2"
+              ],
               "epoch": 1,
               "row": "x2",
               "saidBy": [
@@ -4482,6 +4887,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "x1"
+              ],
               "epoch": 1,
               "row": "x1",
               "saidBy": [
@@ -4495,6 +4903,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "x1"
+              ],
               "epoch": 1,
               "row": "x1",
               "saidBy": [
@@ -4723,6 +5134,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "t1"
+              ],
               "epoch": 1,
               "row": "t1",
               "saidBy": [
@@ -4736,6 +5150,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "t1"
+              ],
               "epoch": 1,
               "row": "t1",
               "saidBy": [
@@ -4759,6 +5176,9 @@
             "kind": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "t2"
+              ],
               "epoch": 1,
               "row": "t2",
               "saidBy": [
@@ -4772,6 +5192,9 @@
             "name": {
               "at": 1760000000001000,
               "author": "her",
+              "base": [
+                "t2"
+              ],
               "epoch": 1,
               "row": "t2",
               "saidBy": [
@@ -4785,6 +5208,242 @@
         ],
         "stubbed": [
           "t3"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "t1": {
+            "key": "minted:task-a",
+            "kind": "task",
+            "name": "A",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "t2": {
+            "key": "minted:task-b",
+            "kind": "task",
+            "name": "B",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "t4": {
+            "because": [
+              "span:s1"
+            ],
+            "reason": "A 挡着 B",
+            "relation": "blocks",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "to": "minted:task-b",
+            "version": 1
+          },
+          "t5": {
+            "base": [
+              "t4"
+            ],
+            "reason": "已经不挡了",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "t6": {
+            "because": [
+              "span:s2"
+            ],
+            "reason": "A 牵涉 C",
+            "relation": "involves",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "to": "minted:topic-c",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "t1",
+            "kind": "node.created",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:t1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "t2",
+            "kind": "node.created",
+            "object": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:t2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-dev_mac",
+            "id": "t4",
+            "kind": "node.related",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:t4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-dev_mac",
+            "id": "t5",
+            "kind": "node.unrelated",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:t5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000003000-000000-dev_mac",
+            "id": "t6",
+            "kind": "node.related",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:t6"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 7,
+            "hlc": "001760000004000-000000-dev_mac",
+            "id": "t7",
+            "kind": "forget",
+            "object": "node:4e12e7a3d4a485ba8203a643e9b71878",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a relation goes with a forgotten node whose rows are not here",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "id": "02f468a7a632e9b482e97df534bd9690",
+            "key": "minted:task-a",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "task"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "A"
+            },
+            "updatedAt": 1760000003000000
+          },
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000001000,
+            "id": "87d9a364cb057cb2b7c35fa57c6b6a60",
+            "key": "minted:task-b",
+            "kind": {
+              "at": 1760000000001000,
+              "author": "her",
+              "base": [
+                "t2"
+              ],
+              "epoch": 1,
+              "row": "t2",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "task"
+              }
+            },
+            "name": {
+              "at": 1760000000001000,
+              "author": "her",
+              "base": [
+                "t2"
+              ],
+              "epoch": 1,
+              "row": "t2",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "B"
+            },
+            "updatedAt": 1760000000001000
+          }
         ]
       }
     },
@@ -5019,6 +5678,9 @@
             "kind": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "p1"
+              ],
               "epoch": 1,
               "row": "p1",
               "saidBy": [
@@ -5032,6 +5694,9 @@
             "name": {
               "at": 1760000000000000,
               "author": "her",
+              "base": [
+                "p1"
+              ],
               "epoch": 1,
               "row": "p1",
               "saidBy": [
@@ -5145,6 +5810,9 @@
             "kind": {
               "at": 1760000001000000,
               "author": "her",
+              "base": [
+                "e2"
+              ],
               "epoch": 1,
               "row": "e2",
               "saidBy": [

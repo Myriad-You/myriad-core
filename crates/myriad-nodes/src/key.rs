@@ -175,27 +175,28 @@ pub fn repo_key(remote: &str) -> Result<String, NodeError> {
     let host = host.split_once(':').map_or(host, |(host, _)| host);
     let host = host.to_ascii_lowercase();
     if host.is_empty()
+        || host.starts_with(['.', '-'])
         || !host
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_'))
     {
         return Err(NodeError::new("remote host is not a host name"));
     }
-    let path = path.split(['?', '#']).next().unwrap_or("");
-    let path = path.trim_matches('/');
-    let path = path
-        .strip_suffix(".git")
-        .unwrap_or(path)
-        .trim_end_matches('/');
-    let segments: Vec<String> = path
+    // Lowercase first, then strip to a fixed point, so a key made from a
+    // key is the same key (`Repo.GIT`, `repo.git.git/`: `repo`).
+    let path = path.split(['?', '#']).next().unwrap_or("").to_lowercase();
+    let mut path = path.trim_matches('/');
+    while let Some(bare) = path.strip_suffix(".git") {
+        path = bare.trim_end_matches('/');
+    }
+    let segments: Vec<&str> = path
         .split('/')
         .filter(|segment| !segment.is_empty())
-        .map(str::to_lowercase)
         .collect();
     if segments.is_empty()
         || segments
             .iter()
-            .any(|segment| segment == "." || segment == "..")
+            .any(|segment| *segment == "." || *segment == "..")
     {
         return Err(NodeError::new("remote path is empty or climbs"));
     }
@@ -234,6 +235,36 @@ mod tests {
         ] {
             assert!(repo_key(local).is_err(), "{local}");
         }
+    }
+
+    #[test]
+    fn a_key_made_from_a_key_is_the_same_key() {
+        for remote in [
+            "https://github.com/demo/Example.GIT",
+            "https://github.com/demo/repo.git.git/",
+            "https://github.com/demo/repo.git/.git",
+            "git@GitHub.com:Me/Ünïcode-Repo.Git",
+            "ssh://git@host.example:2222/a//b/c/",
+            "https://host/a@b/c:d",
+            "repo:github.com/x",
+            "https://github.com/demo/repo?x=1#.git",
+            "http://h/a\\b",
+            "https://.hidden/x",
+            "https://-host/x",
+            "https://github.com/.git",
+        ] {
+            let Ok(key) = repo_key(remote) else {
+                continue;
+            };
+            let rest = key.strip_prefix("repo:").unwrap();
+            assert_eq!(repo_key(rest).unwrap(), key, "{remote}");
+            assert!(node_id("personal:7", &key).is_ok(), "{remote}: {key}");
+        }
+        assert_eq!(
+            repo_key("https://github.com/demo/Example.GIT").unwrap(),
+            "repo:github.com/demo/example"
+        );
+        assert!(repo_key("https://.hidden/x").is_err());
     }
 
     #[test]

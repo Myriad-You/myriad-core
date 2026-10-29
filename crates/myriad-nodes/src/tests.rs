@@ -200,6 +200,7 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a remote without a path", "no path"),
         ("a remote that climbs", "climbs"),
         ("an unknown scheme", "scheme"),
+        ("a host that starts with a dot is refused", "host name"),
         // nodes.place_input, nodes.place_read
         ("no items", "no items"),
         ("item ids that repeat", "item ids repeat"),

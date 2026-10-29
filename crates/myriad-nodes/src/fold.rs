@@ -15,8 +15,11 @@
 //!   say different things mean two sides revised from the same version
 //!   without seeing each other: the field is marked `bothChanged`, shows the
 //!   one first in log order and lists the others as `rivals`, and no later
-//!   write wins on its own. A row naming every current version settles it.
-//!   Older versions are its `history` (the newest [`HISTORY`] kept).
+//!   write wins on its own. A row naming every current version settles it;
+//!   `base` lists them, for the next write. The same write made on two sides
+//!   (the same base, the same value) is no conflict, and a row that names
+//!   one of the two has seen both. Older versions are its `history` (the
+//!   newest [`HISTORY`] kept).
 //! - **Spans and entries** stay, in log order, each with its three tags.
 //! - **History** lists each kind change (from what, to what, why). It is
 //!   not a relation.
@@ -26,7 +29,8 @@
 //! itself is passed by; so is a `part_of` that would close a loop (taken in
 //! log order: the one that closes it is passed by). A relation's other end
 //! is a key made into an id in the row's own audience, so it never crosses
-//! audiences; a relation to a forgotten node is gone with it.
+//! audiences; a relation to a forgotten node is gone with it, whether or
+//! not that node's rows are here.
 //!
 //! A row that breaks a rule is passed by and listed in `skipped` with why:
 //! a tag that does not fit its row, the partner's row not said by the
@@ -90,6 +94,10 @@ pub struct Version<T> {
 pub struct Item<T> {
     #[serde(flatten)]
     pub current: Version<T>,
+    /// Every current version's row, sorted: the `base` of the next write
+    /// to this field. More than one when two sides wrote it from the same
+    /// version, even when they wrote the same.
+    pub base: Vec<String>,
     /// 两边都改过: two sides revised it from the same version.
     #[serde(skip_serializing_if = "is_false")]
     pub both_changed: bool,
@@ -348,6 +356,53 @@ pub struct Folded {
     pub skipped: Vec<Skipped>,
 }
 
+/// What is wrong with a row, by field or rule: the log's own message may
+/// quote the row's values, and a refusal never does.
+fn row_refusal(message: &str) -> &'static str {
+    const BY_START: &[(&str, &str)] = &[
+        (
+            "row version",
+            "a row: its version is not one this core reads",
+        ),
+        ("id ", "a row: its id is not a token"),
+        ("node ", "a row: its origin is not a clock node name"),
+        ("hlc node", "a row: its clock's node is not its origin"),
+        ("her row", "a row: her row carries no lease epoch"),
+        (
+            "the owner's row",
+            "a row: the owner's row carries a lease epoch",
+        ),
+        ("a shared row", "a row: a shared row needs a dseq from 1"),
+        ("a local row", "a row: a local row takes no dseq"),
+        (
+            "audience",
+            "a row: its audience is not personal:, own: or group:",
+        ),
+        (
+            "subject is not",
+            "a row: its subject is not of its audience",
+        ),
+        ("subject", "a row: its subject is not a token"),
+        ("object", "a row: its object is not <type>:<id>"),
+        ("kind", "a row: its kind is not one the log holds"),
+        (
+            "only a forget",
+            "a row: only a forget is about a whole subject",
+        ),
+        ("payload", "a row: its payload ref or key is not a token"),
+        ("a forget holds", "a row: a forget holds no payload"),
+        ("a forget is never", "a row: a forget is never forgotten"),
+        ("a stub", "a row: a stub keeps no payload"),
+    ];
+    if message.contains(" row is about a ") {
+        return "a row: its kind is about another type of object";
+    }
+    BY_START
+        .iter()
+        .find(|(start, _)| message.starts_with(start))
+        .map_or("a row is not a whole log row", |(_, refusal)| refusal)
+}
+
 /// A row's clock as Unix microseconds.
 fn micros(row: &Row) -> i64 {
     // The clock's wall is at most 10^15 ms, well inside i64 microseconds.
@@ -393,11 +448,27 @@ impl<T: Clone + PartialEq> Register<T> {
     }
 
     fn resolve(self) -> Option<Item<T>> {
-        let named: BTreeSet<&str> = self
+        let mut named: BTreeSet<&str> = self
             .writes
             .iter()
             .flat_map(|(base, _)| base.iter().map(String::as_str))
             .collect();
+        // The same write made on two sides (the same base, the same value)
+        // is one version: a write that saw one of them saw both.
+        let twins: Vec<&str> = self
+            .writes
+            .iter()
+            .filter(|(base, version)| {
+                !named.contains(version.row.as_str())
+                    && self.writes.iter().any(|(seen_base, seen)| {
+                        named.contains(seen.row.as_str())
+                            && seen_base == base
+                            && seen.value == version.value
+                    })
+            })
+            .map(|(_, version)| version.row.as_str())
+            .collect();
+        named.extend(twins);
         let (mut heads, mut older): (Vec<&Version<T>>, Vec<&Version<T>>) = self
             .writes
             .iter()
@@ -408,6 +479,8 @@ impl<T: Clone + PartialEq> Register<T> {
             heads.push(older.pop()?);
         }
         let current = heads[0].clone();
+        let mut base: Vec<String> = heads.iter().map(|head| head.row.clone()).collect();
+        base.sort();
         let mut rivals: Vec<Version<T>> = Vec::new();
         for head in &heads[1..] {
             if head.value != current.value && rivals.iter().all(|seen| seen.value != head.value) {
@@ -417,6 +490,7 @@ impl<T: Clone + PartialEq> Register<T> {
         let over = older.len().saturating_sub(HISTORY);
         Some(Item {
             current,
+            base,
             both_changed: !rivals.is_empty(),
             rivals,
             history: older.into_iter().skip(over).cloned().collect(),
@@ -453,7 +527,7 @@ struct Edge {
 pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
     for row in &input.rows {
         row.check()
-            .map_err(|error| NodeError::new(format!("a row: {error}")))?;
+            .map_err(|error| NodeError::new(row_refusal(&error.to_string())))?;
     }
     let ids: BTreeSet<&str> = input.rows.iter().map(|row| row.id.as_str()).collect();
     if input.bodies.keys().any(|id| !ids.contains(id.as_str())) {
@@ -467,11 +541,18 @@ pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
     let rows = myriad_persona_log::fold::dedupe(rows)
         .map_err(|_| NodeError::new("two different rows share an id"))?;
     let ledger = forget::ledger(&rows);
-    // Whole nodes (or subjects) forgotten, before their rows turn to stubs.
-    let gone: BTreeSet<(String, String)> = rows
+    // Whole nodes forgotten: every node the ledger names, whether or not
+    // its rows are here, and every node whose rows a subject forget reaches
+    // (found before they turn to stubs).
+    let gone: BTreeSet<(String, String)> = ledger
         .iter()
-        .filter(|row| row.rule() != Rule::Forget && forget::forgets(&ledger, row))
-        .map(|row| (row.audience.clone(), row.object.clone()))
+        .filter(|entry| object_type(&entry.target) == Some("node"))
+        .map(|entry| (entry.audience.clone(), entry.target.clone()))
+        .chain(
+            rows.iter()
+                .filter(|row| row.rule() != Rule::Forget && forget::forgets(&ledger, row))
+                .map(|row| (row.audience.clone(), row.object.clone())),
+        )
         .collect();
     let (rows, stubbed) = forget::absorb(rows, &ledger);
 
