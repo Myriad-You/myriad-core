@@ -48,10 +48,12 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("memory.restore", Some("memory"), Rule::Restore),
     ("memory.retire", Some("memory"), Rule::Retire),
     ("memory.write", Some("memory"), Rule::Event),
+    ("node.absorbed", Some("node"), Rule::Event),
     ("node.acted", Some("node"), Rule::Event),
     ("node.consolidated", Some("node"), Rule::Event),
     ("node.created", Some("node"), Rule::Event),
     ("node.decided", Some("node"), Rule::Event),
+    ("node.done_when", Some("node"), Rule::Event),
     ("node.drafted", Some("node"), Rule::Event),
     // A fact or preference on a node, with its three tags.
     ("node.entry", Some("node"), Rule::Event),
@@ -81,8 +83,11 @@ const KINDS: &[(&str, Object, Rule)] = &[
     // One span of experience, one thing, with its three tags.
     ("node.span", Some("node"), Rule::Event),
     ("node.split", Some("node"), Rule::Event),
+    ("node.split_off", Some("node"), Rule::Event),
     ("node.talked", Some("node"), Rule::Event),
     ("node.unrelated", Some("node"), Rule::Event),
+    ("node.upkept", Some("node"), Rule::Event),
+    ("node.used", Some("node"), Rule::Event),
     ("node.view_changed", Some("node"), Rule::Latest),
     ("outfit.write", Some("outfit"), Rule::Latest),
     // One field of her persona per object: `persona:<field>`.

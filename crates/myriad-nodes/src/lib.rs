@@ -28,9 +28,22 @@
 //! goes to the model, cut to limits both hosts share ([`limits`]), and
 //! reading what comes back. The prompt comes later.
 //!
-//! Not here yet: her upkeep (merging, splitting, filing the inbox, resting),
-//! wakes, the rules for when views change, objections, forgetting a single
-//! span, and sync transport.
+//! Her upkeep works a queue ([`queue`]): a node is due only when something
+//! it watches changed since she last looked (its parts, its whole, what
+//! blocks it, a clash or a mutual block that raises a hand), oldest change
+//! first. For each node she judges the two judgments, in her words; the
+//! pure half of that ([`upkeep`]) shows her the node and what is one
+//! relation away, and turns her answer into rows: a new node, a part split
+//! off, the inbox filed, a merge or folding back, a relation made or taken
+//! back, a kind that follows from what "done" is, a status, a hand raised.
+//! What the partner set stands; against it she can only raise a hand. The
+//! fold carries what follows: spans that move with a split or a merge, the
+//! lineage they leave, a whole's parts rolled up, how often recall used a
+//! node or a relation (what fades is what is unused, not what is old).
+//!
+//! Not here yet: wakes beyond what a blocker's change brings, the rules for
+//! when views change, objections, forgetting a single span, and sync
+//! transport.
 //!
 //! Pure: nothing here reads a clock, a file, the network, a key or a random
 //! source. Row ids and minted keys come from the caller; times are the rows'
@@ -43,7 +56,9 @@ pub mod fold;
 pub mod key;
 pub mod limits;
 pub mod place;
+pub mod queue;
 pub mod tags;
+pub mod upkeep;
 
 pub use body::{BODY_VERSION, Body};
 pub use fold::{FoldInput, Folded, Node, fold};

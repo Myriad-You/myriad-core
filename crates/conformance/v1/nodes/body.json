@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "call": "nodes.body",
   "cases": [
     {
@@ -1130,7 +1131,415 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "name": "a done-when",
+      "input": {
+        "kind": "node.done_when",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "text": "装进商店、伙伴说可以了",
+          "because": [
+            "span:m2"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:m2"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "装进商店、伙伴说可以了",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"span:m2\"],\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":\"装进商店、伙伴说可以了\",\"version\":1}",
+        "digest": "605edc654746aeb163cd24d82bf5bdcf"
+      }
+    },
+    {
+      "name": "a done-when taken off",
+      "input": {
+        "kind": "node.done_when",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [
+            "m9"
+          ],
+          "text": null,
+          "because": [
+            "span:m2"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "base": [
+            "m9"
+          ],
+          "because": [
+            "span:m2"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": null,
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"m9\"],\"because\":[\"span:m2\"],\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":null,\"version\":1}",
+        "digest": "6d36d46b7d08f9cbdd1eb1e7aeb5c62b"
+      }
+    },
+    {
+      "name": "a done-when without evidence",
+      "input": {
+        "kind": "node.done_when",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "text": "装进商店",
+          "because": []
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a part split off",
+      "input": {
+        "kind": "node.split_off",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "to": "minted:changelog",
+          "spans": [
+            "c3",
+            "c4"
+          ],
+          "reason": "更新说明自己有没收尾的事",
+          "because": [
+            "span:c3"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "because": [
+            "span:c3"
+          ],
+          "reason": "更新说明自己有没收尾的事",
+          "saidBy": [
+            "her"
+          ],
+          "spans": [
+            "c3",
+            "c4"
+          ],
+          "sync": "shared",
+          "to": "minted:changelog",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:c3\"],\"reason\":\"更新说明自己有没收尾的事\",\"saidBy\":[\"her\"],\"spans\":[\"c3\",\"c4\"],\"sync\":\"shared\",\"to\":\"minted:changelog\",\"version\":1}",
+        "digest": "6af7e5b17b738a286fe0138f4c4396dc"
+      }
+    },
+    {
+      "name": "a part split off onto a person",
+      "input": {
+        "kind": "node.split_off",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "to": "person:7",
+          "spans": [
+            "c3"
+          ],
+          "reason": "x",
+          "because": [
+            "span:c3"
+          ]
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a part split off with no spans",
+      "input": {
+        "kind": "node.split_off",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "to": "minted:changelog",
+          "spans": [],
+          "reason": "x",
+          "because": [
+            "span:c3"
+          ]
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a merge",
+      "input": {
+        "kind": "node.absorbed",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "into": "minted:changelog",
+          "how": "merged",
+          "reason": "两个说的是同一份说明",
+          "because": [
+            "span:d1"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "because": [
+            "span:d1"
+          ],
+          "how": "merged",
+          "into": "minted:changelog",
+          "reason": "两个说的是同一份说明",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:d1\"],\"how\":\"merged\",\"into\":\"minted:changelog\",\"reason\":\"两个说的是同一份说明\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "abf1a7205b21d09d02716f18165fad42"
+      }
+    },
+    {
+      "name": "a fold back",
+      "input": {
+        "kind": "node.absorbed",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "into": "minted:release-week",
+          "how": "folded_back",
+          "reason": "说明写完了，没有自己的事了",
+          "because": [
+            "span:c4"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "because": [
+            "span:c4"
+          ],
+          "how": "folded_back",
+          "into": "minted:release-week",
+          "reason": "说明写完了，没有自己的事了",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:c4\"],\"how\":\"folded_back\",\"into\":\"minted:release-week\",\"reason\":\"说明写完了，没有自己的事了\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "d76f688bc25a6bcff33fea80a06043e1"
+      }
+    },
+    {
+      "name": "an unknown way to go into another",
+      "input": {
+        "kind": "node.absorbed",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "into": "minted:changelog",
+          "how": "glued",
+          "reason": "x",
+          "because": [
+            "span:d1"
+          ]
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a recall use",
+      "input": {
+        "kind": "node.used",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "via": [
+            "k2"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1,
+          "via": [
+            "k2"
+          ]
+        },
+        "canonical": "{\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1,\"via\":[\"k2\"]}",
+        "digest": "59d1610c89cbe003a3513df64aeb9227"
+      }
+    },
+    {
+      "name": "a recall use by itself",
+      "input": {
+        "kind": "node.used",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "e6c3b0dbe16a602306fdf37d0600c23a"
+      }
+    },
+    {
+      "name": "an upkeep mark",
+      "input": {
+        "kind": "node.upkept",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "run": "run-1",
+          "seen": {
+            "dev_mac": "001760000005000-000000-dev_mac",
+            "site": "001760000007000-000000-site"
+          }
+        }
+      },
+      "output": {
+        "body": {
+          "run": "run-1",
+          "saidBy": [
+            "her"
+          ],
+          "seen": {
+            "dev_mac": "001760000005000-000000-dev_mac",
+            "site": "001760000007000-000000-site"
+          },
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"run\":\"run-1\",\"saidBy\":[\"her\"],\"seen\":{\"dev_mac\":\"001760000005000-000000-dev_mac\",\"site\":\"001760000007000-000000-site\"},\"sync\":\"shared\",\"version\":1}",
+        "digest": "197c5e9ed823600ccc81e8ce0f82f528"
+      }
+    },
+    {
+      "name": "an upkeep mark that changed nothing",
+      "input": {
+        "kind": "node.upkept",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "run": "run-2",
+          "fallback": "not_json"
+        }
+      },
+      "output": {
+        "body": {
+          "fallback": "not_json",
+          "run": "run-2",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"fallback\":\"not_json\",\"run\":\"run-2\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "24b0caa239c190f88bc77a22d937abd3"
+      }
+    },
+    {
+      "name": "an upkeep mark naming a clock by another device",
+      "input": {
+        "kind": "node.upkept",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "run": "run-1",
+          "seen": {
+            "dev_mac": "001760000000000-000000-site"
+          }
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
     }
-  ],
-  "version": 1
+  ]
 }

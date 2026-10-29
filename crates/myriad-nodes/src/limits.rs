@@ -53,6 +53,32 @@ pub const PLACE_GIST_CHARS: usize = 120;
 /// The model's answer, in bytes; a longer one is not read.
 pub const PLACE_OUTPUT_BYTES: usize = 16_384;
 
+/// Devices one upkeep row names in `seen`.
+pub const SEEN_DEVICES: usize = 64;
+/// Spans of the node she is keeping, newest kept, as the model sees them.
+pub const UPKEEP_SPANS: usize = 24;
+/// One span's (or inbox item's) text as the model sees it.
+pub const UPKEEP_SPAN_CHARS: usize = 400;
+/// All spans' text together, as the model sees it.
+pub const UPKEEP_TOTAL_CHARS: usize = 12_000;
+/// Open items, intents and views of the node, each, as the model sees them.
+pub const UPKEEP_HEAD_ITEMS: usize = 12;
+/// Nodes one relation away, as the model sees them.
+pub const UPKEEP_NEIGHBOURS: usize = 16;
+/// Inbox items offered to file, oldest first.
+pub const UPKEEP_INBOX: usize = 20;
+/// All inbox items' text together, as the model sees it.
+pub const UPKEEP_INBOX_TOTAL_CHARS: usize = 6_000;
+/// Actions in one answer; an answer with more is not read.
+pub const UPKEEP_ACTIONS: usize = 24;
+/// Rows one answer writes, besides its mark; an answer writing more is not
+/// read.
+pub const UPKEEP_WRITES: usize = 256;
+/// The model's upkeep answer, in bytes; a longer one is not read.
+pub const UPKEEP_OUTPUT_BYTES: usize = 32_768;
+/// Nodes one queue call may hand out.
+pub const QUEUE_MAX: usize = 200;
+
 /// The marker a cut text ends with.
 pub const ELLIPSIS: char = '…';
 
@@ -82,6 +108,18 @@ pub struct Limits {
     pub place_summary_chars: usize,
     pub place_gist_chars: usize,
     pub place_output_bytes: usize,
+    pub seen_devices: usize,
+    pub upkeep_spans: usize,
+    pub upkeep_span_chars: usize,
+    pub upkeep_total_chars: usize,
+    pub upkeep_head_items: usize,
+    pub upkeep_neighbours: usize,
+    pub upkeep_inbox: usize,
+    pub upkeep_inbox_total_chars: usize,
+    pub upkeep_actions: usize,
+    pub upkeep_writes: usize,
+    pub upkeep_output_bytes: usize,
+    pub queue_max: usize,
 }
 
 pub fn limits() -> Limits {
@@ -108,6 +146,18 @@ pub fn limits() -> Limits {
         place_summary_chars: PLACE_SUMMARY_CHARS,
         place_gist_chars: PLACE_GIST_CHARS,
         place_output_bytes: PLACE_OUTPUT_BYTES,
+        seen_devices: SEEN_DEVICES,
+        upkeep_spans: UPKEEP_SPANS,
+        upkeep_span_chars: UPKEEP_SPAN_CHARS,
+        upkeep_total_chars: UPKEEP_TOTAL_CHARS,
+        upkeep_head_items: UPKEEP_HEAD_ITEMS,
+        upkeep_neighbours: UPKEEP_NEIGHBOURS,
+        upkeep_inbox: UPKEEP_INBOX,
+        upkeep_inbox_total_chars: UPKEEP_INBOX_TOTAL_CHARS,
+        upkeep_actions: UPKEEP_ACTIONS,
+        upkeep_writes: UPKEEP_WRITES,
+        upkeep_output_bytes: UPKEEP_OUTPUT_BYTES,
+        queue_max: QUEUE_MAX,
     }
 }
 
