@@ -8,7 +8,7 @@
 
 ## 边界
 
-- **只收纯 crate。** 现在是 `myriad-merope` 和它依赖的 `myriad-agent-rules`，以及同步她的数据用的 `myriad-persona-sync`（格式、规范字节、时钟、比对）和多端的日志规则 `myriad-persona-log`（信封、版本向量、合并、遗忘、折叠、执笔权、时钟），「她的连接」帧的规则 `myriad-her-link`，以及客户端看屏幕时的宿主过滤 `myriad-perception-filter`。不引入 tokio、reqwest、sea-orm，也不读写文件或网络。
+- **只收纯 crate。** 现在是 `myriad-merope` 和它依赖的 `myriad-agent-rules`，以及同步她的数据用的 `myriad-persona-sync`（格式、规范字节、时钟、比对）和多端的日志规则 `myriad-persona-log`（信封、版本向量、合并、遗忘、折叠、执笔权、时钟），「她的连接」帧的规则 `myriad-her-link`，以及客户端看屏幕时的宿主过滤 `myriad-perception-filter`，她的节点 `myriad-nodes`。不引入 tokio、reqwest、sea-orm，也不读写文件或网络。
 - **每个调用都是输入的纯函数。** 现在几点、她的时区、心情这些状态都在输入里；库不读进程的时钟、时区和环境。crate 里的规则因此不用 `chrono::Local`：她的时区由调用方传入，后端传 `merope::clock::zone()`，现在就是进程时区（容器里 `TZ=Asia/Shanghai`）。
 - **一个二进制里只能有一个 Rust 静态库。** 两个 Rust staticlib 会在 std 符号上冲突。别的平台将来要用的纯 crate，都并进这一个库，不另建。
 - **密钥不进来。** 规则拿不到任何宿主密钥或凭据，错误信息里也没有。
@@ -187,12 +187,98 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **她自己的记忆哪里都能说，授予永远三层求交。**（主人 2026-10-27 定，都照原生现状）她自己的记忆（`own`）任何现场都收，原生 `Audience.admits` 一直如此；站点原来在 `admits` 之外另走自己的查询，以后 `own` 行也交给 `audience.admits`。`grants.granted` 每次都是 `declared ∩ approved ∩ runtimeAllowed`，批准超出声明的丢掉，照原生 `PermissionState.granted`；站点 Tapp 原来在安装、更新时从声明里选出批准、运行时不再与声明求交。
 - **两端不一致的，核心不答。** 存储里没记成员的旧记忆怎么读（站点当作它那个人的）、群 id 截多长，留在各端。
 
+## 她的节点（`nodes.*`）
+
+节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。这是第一批：节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样。整理（合并、拆分、收件箱归位、歇着）、唤醒、看法什么时候变、反对、只忘掉一段，以及同步的传输都不在这一批。
+
+**三种节点**（`kind`）。种类只在规则不同时才成立：
+
+| `kind` | 是什么 |
+| --- | --- |
+| `task` 进行中的事 | 有「做完」的标准；一直要做、没有尽头的（每周发版）状态是 `ongoing` |
+| `topic` 话题 | 没有做完的标准、会反复聊；可以带一个外面的对象（作品、仓库、地方），记它的各种叫法和每个人看到哪 |
+| `person` 人 | 会说话、有自己隐私的一方：伙伴（「关于你」）、她自己、别人、一个群 |
+
+**节点 id 只由受众和一个稳定键算出**：`sha256("node␟<受众>␟<键>")` 的前 16 字节十六进制。种类不进 id（种类能改），设备不进 id（两台电脑看到同一个仓库得到同一个节点），本机路径不进 id。键只有五种：
+
+| 键 | 什么节点 | 种类 |
+| --- | --- | --- |
+| `repo:<主机>/<路径>` | 一个仓库，按它的远端地址（`nodes.repo_key` 规范化：先全部小写，再去掉协议、用户名和口令、端口、`.git`（不管大小写、去到没有为止）、结尾斜杠；本机路径和 `file:` 拒收。规范化的结果再规范化一次还是它自己，能直接交给 `nodes.id`） | 永远是话题 |
+| `person:<id>` | 一个人；在这个人自己的私聊受众里就是「关于你」 | 永远是人 |
+| `group:<id>` | 一个群 | 永远是人 |
+| `her` | 这个受众里的「她自己」 | 永远是人 |
+| `minted:<记号>` | 她新立的一件事；写第一行的那一端生成一次记号，随 `created` 行走 | 进行中的事或话题，可以改 |
+
+**头和身子。** 头是她对这件事的整理：名字、概括（每句带依据）、看法（每条带依据，改了留历史）、没收尾的事、想说没说的话、谁知道、状态，还有对象和每人的进度。身子是它依据的东西：经历片段、条目（事实和偏好）、指向原文的引用。原文本身不在节点里。
+
+**每段经历、每条条目带三个标签**（每个 body 都带前两个）：
+
+- `sync`：`shared`（可以去她的每一台设备），或 `{"local": <设备>}`（只在那台设备上）。标签要和行一致：`shared` 只能在 `shared` 的行上；`local` 只能在那台设备自己写的 `local` 行上。
+- `saidBy`（是谁说的，按字母排、不重复）：`partner` 伙伴、`her` 她自己、`third_party` 第三方内容（网页、视频、字幕、别的 AI、编程 agent 的输出）、`other_person` 别人（群里的人，或别人私聊里的那个人）。一段对话的经历列出里面所有说话的人。伙伴写的行（`author: owner`）只能是 `["partner"]`。
+- `audience`（经历和条目才有）：在哪说的。和行的受众相同；唯一的例外是伙伴自己在群里说的话，可以记在伙伴的私聊里。群里别人的话不进私聊。
+
+**行和 body。** 节点的每次变化是日志里关于 `node:<id>` 的一行（信封不变），内容在另放的 body 里（`nodes.body` 检查它并给出规范字节）。每个 body 带 `version`（现在 1），拒收不认识的字段；列表要排好序、不重复，所以每个 body 只有一种字节。
+
+| kind | body（除 `version`、`sync`、`saidBy` 外） |
+| --- | --- |
+| `node.created` | `kind`、`key`、`name`、`object?`（仓库键必须带 `repo` 对象，别的键不能带） |
+| `node.kind_changed` | `base`、`kind`、`reason`、`because`：改种类是一行带理由的历史，不是关系 |
+| `node.revised` | `base`、`field`（`name`、`summary`、`status`、`who_knows`、`object`、`progress`）、`person?`（只给 `progress`）、`value` |
+| `node.view_changed` | `base`、`view`、`text`、`because` |
+| `node.open_item` | `base`、`item`、`text`、`because`、`closed?` |
+| `node.intent` | `base`、`intent`、`text`、`because`、`status`（`waiting` 等着、`said` 说了、`done` 完了、`dropped` 放下）、`trigger?`（`{at, zone}`：绝对时刻加当时的时区） |
+| `node.span` | `audience`、`text`（她的话）、`refs?`、`from?`、`to?` |
+| `node.entry` | `audience`、`text`、`refs?`、`quoteOnly?`（找不回原文的标「只有引文」，这时没有 `refs`；有 `refs` 就不能标） |
+| `node.related` | `relation`、`to`（另一个节点的键）、`reason`、`because` |
+| `node.unrelated` | `base`（收回这个节点上的哪几条 `node.related`）、`reason` |
+
+- `because` 是依据的 id（`span:<行>`、`entry:<行>`、`message:<id>`……），至少一个：概括的每一句、看法、没收尾的事、想说的话、改种类和关系都要有。
+- `base` 是写的时候看到的那一版（行 id）；第一次写是空的；两边都改过、她合起来时列出两版。
+
+**折叠**（`nodes.fold`）：输入任何顺序、可以重复、可以有桩，加上够到它们的 `forget` 行，结果和顺序无关。
+
+- 头里每一项（种类、名字、概括、状态、谁知道、对象、每人的进度、每条看法、每件没收尾的事、每句想说的话）分开算：被别的行写进 `base` 的版本是旧的，进 `history`（留最新 20 个）；剩下的是当前的。
+- **两边都改过**：当前的不止一个、而且说的不一样，就是两台设备从同一版各改了一次、互相没看见。这一项标 `bothChanged`，显示日志顺序里先写的那一个，其余的列在 `rivals` 里。后写的不会自动盖掉先写的；下一次有一行把所有当前版本都列进 `base`，才算合好。每一项都带 `base`：当前所有版本的行 id（排好序），就是下一次写这一项时该填的 `base`。两边从同一版改成一样的不算冲突，`base` 里两行都列着；之后哪一行只列了其中一个，也算两个都看见了。
+- 经历和条目按日志顺序都留着，各带三个标签。`history` 列出每次改种类：从什么、到什么、为什么。
+- 不合规矩的行跳过，并在 `skipped` 里写明原因：`no_body`、`bad_body`、`other_node`（created 的受众和键算出别的 id）、`sync_mismatch`、`author_mismatch`、`audience_tag`、`not_in_audience`（谁知道和进度只能填这个受众里的人）、`untrusted_intent`（想说的话只能来自伙伴的话或她自己）、`no_spans_here`（「关于你」只放条目、不挂经历）、`kind_fixed`、`status_for_kind`（人没有做完）、`object_for_key`（仓库对象只在仓库键上，仓库节点的对象拿不掉）、`self_relation`、`cycle`。这一批不读的 node 种类（原生旧的行、以后整理的行）只算一次变化，不读内容。
+- 忘掉一个节点（或这个受众里关于某人的全部）：节点只剩 `{id, audience, forgotten}`，它的行进 `stubbed`，`forget` 排在前或后都一样。只忘一段经历是 M2 的事，这一批没有。
+
+**五种关系**，都在同一个受众里（`to` 是键，按行自己的受众算 id，所以跨不出去），每条带她的一句理由、依据、谁建的、什么时候：
+
+| `relation` | 意思 |
+| --- | --- |
+| `part_of` 属于 | 那件做完之前，这件必须做完或放弃；不能成环（按日志顺序，会成环的那一条跳过） |
+| `blocks` 挡着 | 那件卡住的原因是这件 |
+| `clashes` 撞上 | 两件在做同一件事或方向相反；两头写的算同一条 |
+| `involves` 牵涉 | 那个人或对象出现在这件事的状态里 |
+| `related` 相关 | 她觉得有关、但不是上面四种；两头写的算同一条 |
+
+一条关系一直在，直到同一节点上有一行 `node.unrelated` 把它列进 `base`；`rows` 列出说它的每一行。指向被忘掉的节点的关系跟着消失，不管那个节点的行在不在这一批里（看遗忘账，不看行）。拆自、并入、改种类是历史，不是关系。
+
+**放置**（`nodes.place_input`、`nodes.place_read`）：一段对话告一段落时，她把它切成一段一段，每段只讲一件事，挂到一个节点上或进收件箱。挂哪里由她判断（模型）；这里只定发给模型的东西怎么截、模型的回答怎么读，两边主机才会一样。提示词是 M2 的事。
+
+- `place_input`：条目按顺序取，每条截到 600 字，最多 40 条、合计 12000 字（第一条一定要；`taken` 是取了几条，剩下的下一次再放）；候选节点按给的顺序最多 12 个，名字截到 40 字、概括 160 字，编号 `n1`、`n2`……，节点 id 不给模型。截断按 Unicode 标量计数，超出的以 `…` 结尾；控制字符换成空格。
+- `place_read`：读 `{"spans":[{"start":1,"node":"n2","gist":"…"}]}`。条目从 1 编号，每段从自己的 `start` 到下一段之前；第一段从 1 开始，`start` 只增；`node` 是编号，`null` 或不写就是收件箱；`gist` 是她给这段的几个字，截到 120 字。回答包在代码块里或前后有话都能读。别的地方不对（不是 JSON、没有段、段比条目多、`start` 不对、编号不认识、没有 `gist`、超过 16384 字节），整段作为一段进收件箱，`fallback` 写明原因：什么都不丢，也不猜。
+
+所有长度和条数都在 `myriad_nodes::limits`，`nodes.limits` 原样给出。它们是初值，改在这里就是改所有端。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `nodes.body` | `{kind, body}` → `{body, canonical, digest}` |
+| `nodes.fold` | `{rows, bodies}` → `{nodes, relations?, stubbed?, skipped?}` |
+| `nodes.id` | `{audience, key}` → `{id}` |
+| `nodes.limits` | `{}` → 每个上限 |
+| `nodes.place_input` | `{items: [{id, saidBy, text}], candidates?: [{id, kind, name, summary?}]}` → `{items: [{n, id, saidBy, text}], taken, candidates?: [{label, id, kind, name, summary?}]}` |
+| `nodes.place_read` | `{items: [id], candidates?: [{label, id}], output}` → `{spans: [{items, node?, gist}], fallback?}` |
+| `nodes.repo_key` | `{remote}` → `{key}` |
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，现在是 `v1/`，原生按 `CORE_PIN` 复制进它自己的测试。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限和放置，每个 `nodes.*` 调用一份。
+- `nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `log/`、`lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
 
