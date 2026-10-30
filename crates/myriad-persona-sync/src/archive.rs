@@ -25,8 +25,19 @@
 //! The stream is a run of [`Part`]s, each its head's length (`u32`
 //! big-endian), the head (canonical JSON), then `bytes` of payload:
 //! envelope pages (canonical [`Envelope`] JSON, vectors included), then
-//! the files they refer to, then one [`Part::End`] carrying the
-//! [`Manifest`] the header's `digest` names. Nothing follows the end.
+//! log pages (version 2 only, [`Part::Log`]), then the files they refer
+//! to, then one [`Part::End`] carrying the [`Manifest`] the header's
+//! `digest` names. Nothing follows the end.
+//!
+//! A log page is one audience's rows of her log and their payloads,
+//! `{audience, rows, payloads?}`: the same batch host cores send each
+//! other (`myriad_nodes::wire`), so her nodes and their logs travel in the
+//! file as they do on the wire. This crate checks a page's frame (canonical
+//! JSON, one audience, every row id once in the file); whoever imports the
+//! file takes each page in as a batch from the file's origin, with every
+//! check a batch gets (`nodes.wire_take`). A file with log pages is
+//! version [`ARCHIVE_LOG_VERSION`]; one without is written as version 1,
+//! so a side that reads only version 1 still opens it.
 //!
 //! Pure like the rest of the crate: the salt and the nonce prefix come in
 //! from the caller, which takes them from its system's random source.
@@ -62,6 +73,9 @@ pub const ARCHIVE_FORMAT: &str = "myriad.her-archive";
 /// The version of the file's own frame (header, chunks, parts). What the
 /// envelopes inside are is `formatVersion`.
 pub const ARCHIVE_VERSION: u32 = 1;
+/// The frame version of a file that holds log pages; a reader of it reads
+/// [`ARCHIVE_VERSION`] too.
+pub const ARCHIVE_LOG_VERSION: u32 = 2;
 pub const CIPHER: &str = "xchacha20poly1305";
 pub const KDF_ALG: &str = "argon2id";
 /// What a writer seals per chunk.
@@ -166,6 +180,10 @@ pub struct ArchiveHeader {
     pub digest: String,
 }
 
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 /// What a header is made from, besides the frame's constants.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -177,6 +195,10 @@ pub struct HeaderFields {
     pub origin: String,
     pub created_at: i64,
     pub digest: String,
+    /// The file holds log pages: it is written as version
+    /// [`ARCHIVE_LOG_VERSION`].
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub logs: bool,
 }
 
 impl ArchiveHeader {
@@ -189,7 +211,11 @@ impl ArchiveHeader {
     ) -> Result<Self, SyncError> {
         let header = Self {
             format: ARCHIVE_FORMAT.into(),
-            version: ARCHIVE_VERSION,
+            version: if fields.logs {
+                ARCHIVE_LOG_VERSION
+            } else {
+                ARCHIVE_VERSION
+            },
             format_version: FORMAT_VERSION,
             kdf: Kdf::new(salt),
             cipher: CIPHER.into(),
@@ -209,9 +235,10 @@ impl ArchiveHeader {
         if self.format != ARCHIVE_FORMAT {
             return Err(SyncError::new(format!("format is {ARCHIVE_FORMAT:?}")));
         }
-        if self.version != ARCHIVE_VERSION {
+        if self.version != ARCHIVE_VERSION && self.version != ARCHIVE_LOG_VERSION {
             return Err(SyncError::new(format!(
-                "archive version {} is not one this side reads ({ARCHIVE_VERSION})",
+                "archive version {} is not one this side reads \
+                 ({ARCHIVE_VERSION}, {ARCHIVE_LOG_VERSION})",
                 self.version
             )));
         }
@@ -448,6 +475,11 @@ impl Sealer {
         if part.payload_bytes() != payload.len() as u64 {
             return Err(SyncError::new("a part's bytes are its payload's length"));
         }
+        if matches!(part, Part::Log { .. }) && self.header.version < ARCHIVE_LOG_VERSION {
+            return Err(SyncError::new(format!(
+                "a log page is only in a version {ARCHIVE_LOG_VERSION} file"
+            )));
+        }
         if let Part::End { manifest } = part
             && manifest.digest != self.header.digest
         {
@@ -544,6 +576,9 @@ impl Opener {
 pub enum Part {
     /// A page of her: canonical [`Envelope`] JSON.
     Envelope { bytes: u64 },
+    /// A page of her log: one audience's rows and their payloads,
+    /// `{audience, rows, payloads?}`, canonical JSON. Version 2 files only.
+    Log { bytes: u64 },
     /// A file an entity refers to, by the id the envelopes name. A rig is
     /// two parts under one id: `manifest.json`, then `atlas.png`.
     #[serde(rename_all = "camelCase")]
@@ -563,7 +598,7 @@ pub enum Part {
 impl Part {
     pub fn payload_bytes(&self) -> u64 {
         match self {
-            Part::Envelope { bytes } | Part::Asset { bytes, .. } => *bytes,
+            Part::Envelope { bytes } | Part::Log { bytes } | Part::Asset { bytes, .. } => *bytes,
             Part::End { .. } => 0,
         }
     }
@@ -720,7 +755,11 @@ pub struct Manifest {
     pub kinds: BTreeMap<String, Tally>,
     pub embeddings: Tally,
     pub assets: Tally,
-    /// sha256 (hex) of the canonical JSON of the three above.
+    /// Her log's rows (by id), each with its payload's data when the page
+    /// carries it; only in a file with log pages.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub log: Option<Tally>,
+    /// sha256 (hex) of the canonical JSON of the others above.
     pub digest: String,
 }
 
@@ -776,8 +815,60 @@ impl Manifest {
             kinds,
             embeddings,
             assets,
+            log: None,
             digest,
         })
+    }
+
+    /// This manifest with log pages counted in: each row once, by id, with
+    /// the data of its payload when its page carries it. No pages, no
+    /// change: a version 1 file's manifest is what it always was.
+    ///
+    /// `may_hold` says whether the file's reader may hold an audience
+    /// (`myriad_persona_log::Holder::holds`): a page of any other is
+    /// refused, so a file written for the partner never carries a group's
+    /// log or someone else's private talk. A reader checking a file it
+    /// opened passes every audience; it takes the pages in through
+    /// `nodes.wire_take`, which holds them to its own.
+    pub fn with_logs(
+        mut self,
+        pages: &[serde_json::Value],
+        may_hold: impl Fn(&str) -> bool,
+    ) -> Result<Self, SyncError> {
+        if pages.is_empty() {
+            return Ok(self);
+        }
+        let mut items: BTreeMap<String, Vec<u8>> = BTreeMap::new();
+        for page in pages {
+            let page = LogPage::read(page)?;
+            if !may_hold(page.audience) {
+                return Err(SyncError::new(
+                    "a log page of an audience the file's reader may not hold",
+                ));
+            }
+            for row in page.rows {
+                let id = row["id"].as_str().unwrap_or_default().to_string();
+                let data = row
+                    .get("payload")
+                    .and_then(|payload| payload.get("ref"))
+                    .and_then(serde_json::Value::as_str)
+                    .and_then(|reference| page.payloads.get(reference));
+                let mut item = serde_json::json!({ "row": row });
+                if let Some(data) = data {
+                    item["data"] = serde_json::Value::String((*data).to_string());
+                }
+                if items.insert(id, canonical_bytes(&item)).is_some() {
+                    return Err(SyncError::new("a log row is in the file twice"));
+                }
+            }
+        }
+        let log = Tally::of(items.values().map(Vec::as_slice));
+        self.digest = hex(&Sha256::digest(canonical_bytes(&serde_json::json!({
+            "kinds": self.kinds, "embeddings": self.embeddings, "assets": self.assets,
+            "log": log,
+        }))));
+        self.log = Some(log);
+        Ok(self)
     }
 
     /// The manifest of every envelope's contents together.
@@ -798,6 +889,77 @@ impl Manifest {
     }
 }
 
+/// A log page's frame, read: its rows as JSON and its payloads by ref.
+/// What the rows and payloads say is checked where the page is taken in
+/// (`nodes.wire_take`), not here.
+struct LogPage<'a> {
+    audience: &'a str,
+    rows: Vec<&'a serde_json::Value>,
+    payloads: BTreeMap<&'a str, &'a str>,
+}
+
+impl<'a> LogPage<'a> {
+    fn read(page: &'a serde_json::Value) -> Result<Self, SyncError> {
+        let bad = || SyncError::new("a log page is {audience, rows, payloads?}");
+        let fields = page.as_object().ok_or_else(bad)?;
+        if fields
+            .keys()
+            .any(|key| !matches!(key.as_str(), "audience" | "rows" | "payloads"))
+        {
+            return Err(bad());
+        }
+        let audience = page["audience"].as_str().ok_or_else(bad)?;
+        let rows: Vec<&serde_json::Value> =
+            page["rows"].as_array().ok_or_else(bad)?.iter().collect();
+        for row in &rows {
+            let id = row
+                .get("id")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
+            if id.is_empty()
+                || row.get("audience").and_then(serde_json::Value::as_str) != Some(audience)
+            {
+                return Err(SyncError::new(
+                    "a log page's row has no id or is of another audience",
+                ));
+            }
+        }
+        let mut payloads = BTreeMap::new();
+        if let Some(carried) = page.get("payloads") {
+            for one in carried.as_array().ok_or_else(bad)? {
+                let (Some(reference), Some(data)) = (
+                    one.get("ref").and_then(serde_json::Value::as_str),
+                    one.get("data").and_then(serde_json::Value::as_str),
+                ) else {
+                    return Err(bad());
+                };
+                if payloads.insert(reference, data).is_some() {
+                    return Err(SyncError::new("a payload is in a log page twice"));
+                }
+            }
+        }
+        // Every payload is one a row of the page points at: the manifest
+        // counts payloads by their rows, so a stray one would go uncounted.
+        let pointed: Vec<&str> = rows
+            .iter()
+            .filter_map(|row| row.get("payload")?.get("ref")?.as_str())
+            .collect();
+        if payloads
+            .keys()
+            .any(|reference| !pointed.contains(reference))
+        {
+            return Err(SyncError::new(
+                "a log page carries a payload no row of it points at",
+            ));
+        }
+        Ok(Self {
+            audience,
+            rows,
+            payloads,
+        })
+    }
+}
+
 /// A file a reader opened and checked: every part read, every page in its
 /// canonical form, every picture its own sha256, every rig its package id,
 /// every referred file present and the manifest what the header named and
@@ -809,6 +971,9 @@ pub struct Opened {
     /// By asset id: one file for a picture, `manifest.json` and
     /// `atlas.png` for a rig.
     pub assets: BTreeMap<String, BTreeMap<String, Vec<u8>>>,
+    /// Her log's pages, `{audience, rows, payloads?}`, each to be taken in
+    /// as a batch from the file's origin (`nodes.wire_take`).
+    pub logs: Vec<serde_json::Value>,
     pub manifest: Manifest,
 }
 
@@ -854,6 +1019,7 @@ pub fn check_parts(
     parts: Vec<(Part, Vec<u8>)>,
 ) -> Result<Opened, SyncError> {
     let mut envelopes = Vec::new();
+    let mut logs = Vec::new();
     let mut assets: BTreeMap<String, BTreeMap<String, Vec<u8>>> = BTreeMap::new();
     let mut kinds: BTreeMap<String, AssetType> = BTreeMap::new();
     let mut end = None;
@@ -867,6 +1033,20 @@ pub fn check_parts(
                     return Err(SyncError::new("a page is of another lineage than the file"));
                 }
                 envelopes.push(envelope);
+            }
+            Part::Log { .. } => {
+                if header.version < ARCHIVE_LOG_VERSION {
+                    return Err(SyncError::new(format!(
+                        "a log page is only in a version {ARCHIVE_LOG_VERSION} file"
+                    )));
+                }
+                let page: serde_json::Value = serde_json::from_slice(&payload)
+                    .map_err(|_| SyncError::new("a log page is not JSON"))?;
+                if canonical_bytes(&page) != payload {
+                    return Err(SyncError::new("a log page is not canonical JSON"));
+                }
+                LogPage::read(&page)?;
+                logs.push(page);
             }
             Part::Asset { id, kind, file, .. } => {
                 if *kinds.entry(id.clone()).or_insert(kind) != kind {
@@ -915,7 +1095,7 @@ pub fn check_parts(
             }
         }
     }
-    let manifest = Manifest::of_envelopes(&envelopes)?;
+    let manifest = Manifest::of_envelopes(&envelopes)?.with_logs(&logs, |_| true)?;
     if stated != manifest || manifest.digest != header.digest {
         return Err(SyncError::new(
             "the archive does not hold what its manifest says",
@@ -925,6 +1105,7 @@ pub fn check_parts(
         header,
         envelopes,
         assets,
+        logs,
         manifest,
     })
 }

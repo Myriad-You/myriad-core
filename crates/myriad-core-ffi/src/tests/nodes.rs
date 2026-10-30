@@ -23,6 +23,8 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.repo_key",
     "nodes.upkeep_input",
     "nodes.upkeep_read",
+    "nodes.wire_send",
+    "nodes.wire_take",
 ];
 
 #[test]
@@ -141,4 +143,33 @@ fn every_repo_key_made_is_a_key_nodes_id_takes() {
         made += 1;
     }
     assert!(made >= 5, "{made}");
+}
+
+/// A batch `nodes.wire_send` makes is one `log.rows` frame: its limits are
+/// the link contract's.
+#[test]
+fn a_wire_batch_fits_one_log_rows_frame() {
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../shared/her_link_contract.json");
+    let contract: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let frame = &contract["next"]["frames"]["log.rows"];
+    assert_eq!(frame["maxItems"]["rows"], myriad_nodes::wire::BATCH_ROWS);
+    assert_eq!(
+        frame["maxItems"]["payloads"],
+        myriad_nodes::wire::BATCH_PAYLOADS
+    );
+    assert_eq!(
+        frame["maxItems"]["withheld"],
+        myriad_nodes::wire::BATCH_ROWS
+    );
+    let vector = &contract["next"]["frames"]["log.vector"];
+    assert_eq!(vector["maxItems"]["ask"], myriad_nodes::wire::ASK_ROWS);
+    let max = contract["next"]["limits"]["maxFrameBytes"]
+        .as_u64()
+        .unwrap() as usize;
+    assert!(myriad_nodes::wire::BATCH_BYTES + (32 << 10) <= max);
+    // The largest body that travels, in base64, fits one batch with room
+    // for its row.
+    let body = myriad_nodes::wire::MAX_BODY_BYTES.div_ceil(3) * 4;
+    assert!(body + (16 << 10) <= myriad_nodes::wire::BATCH_BYTES);
 }

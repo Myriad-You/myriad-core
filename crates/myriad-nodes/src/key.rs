@@ -16,6 +16,12 @@
 //! A minted token that starts `together-` is what she watched or read with
 //! the partner (一起看过的): it only ever takes others in, and never goes
 //! into another node itself ([`Key::is_together`]).
+//!
+//! A person or group lives in its own audience (the person's private talk,
+//! the group), never in hers (`own:`): what she keeps of someone else stays
+//! with them, so it never reaches the partner's computers, which hold her
+//! own audience ([`Key::fits`]). Hers holds `her`, repositories and minted
+//! things.
 
 use myriad_persona_log::row::Audience;
 use myriad_persona_sync::canonical::sha256_hex;
@@ -109,6 +115,13 @@ impl<'a> Key<'a> {
         matches!(self, Self::Minted(token) if token.starts_with("together-"))
     }
 
+    /// Whether a node of this key may be in `audience`: a person or a group
+    /// never in hers (`own:`).
+    pub fn fits(&self, audience: &str) -> bool {
+        !(matches!(self, Self::Person(_) | Self::Group(_))
+            && matches!(Audience::parse(audience), Ok(Audience::Own)))
+    }
+
     /// Whether this is the partner's own node in their private audience
     /// (「关于你」): what is only about them, with no experience hung on it.
     pub fn is_about_you(&self, audience: &str) -> bool {
@@ -124,7 +137,11 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
     check_token("audience", audience)?;
     Audience::parse(audience)
         .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
-    Key::parse(key)?;
+    if !Key::parse(key)?.fits(audience) {
+        return Err(NodeError::new(
+            "a person or group lives in its own audience, not hers",
+        ));
+    }
     Ok(sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string())
 }
 
@@ -289,6 +306,11 @@ mod tests {
         assert!(node_id("personal:7", "repo:github.com/Me/repo").is_err());
         assert!(node_id("personal:7", "minted:a b").is_err());
         assert!(node_id("nowhere", "her").is_err());
+        assert!(node_id("own:", "her").is_ok());
+        assert!(node_id("own:", "minted:a").is_ok());
+        assert!(node_id("own:", "person:7").is_err());
+        assert!(node_id("own:", "group:g1").is_err());
+        assert!(node_id("personal:7", "person:9").is_ok());
         assert!(Key::parse("person:7").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:9").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:7").unwrap().is_about_you("personal:7,9"));

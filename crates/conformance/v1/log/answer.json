@@ -208,6 +208,202 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "g-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:g-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000001-000000-site",
+            "id": "g-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:g-2"
+            },
+            "replicate": "shared",
+            "subject": "o2",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-site",
+            "id": "g-3",
+            "kind": "forget",
+            "object": "node:a",
+            "origin": "site",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a PC that asks for a group's rows gets none of them",
+      "output": {
+        "notHeld": true,
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "g-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:g-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000001-000000-site",
+            "id": "g-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:g-2"
+            },
+            "replicate": "shared",
+            "subject": "o2",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-site",
+            "id": "g-3",
+            "kind": "forget",
+            "object": "node:a",
+            "origin": "site",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {
+          "site": 1
+        }
+      },
+      "name": "the server holds every audience, so it gets them, forgets first",
+      "output": {
+        "rows": [
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-site",
+            "id": "g-3",
+            "kind": "forget",
+            "object": "node:a",
+            "origin": "site",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000001-000000-site",
+            "id": "g-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:g-2"
+            },
+            "replicate": "shared",
+            "subject": "o2",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "child",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "p-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a child core holds no log",
+      "output": {
+        "notHeld": true,
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "o1,o2"
+        },
+        "rows": [],
+        "theirs": {}
+      },
+      "name": "refused: a holder's owner is one id",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

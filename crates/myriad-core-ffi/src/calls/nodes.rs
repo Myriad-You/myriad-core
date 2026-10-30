@@ -5,7 +5,7 @@
 //! so a refusal names a field, never a value.
 
 use myriad_nodes::{
-    Body, NodeError, fold as fold_rows, limits as node_limits, place, queue as due, upkeep,
+    Body, NodeError, fold as fold_rows, limits as node_limits, place, queue as due, upkeep, wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -70,6 +70,18 @@ pub(super) fn limits(raw: &[u8]) -> Result<Value, Failure> {
 
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{audience, rows, bodies?, theirs?, holder}` → `{batches, withheld?,
+/// notHeld?}`: what to send another host core of one audience.
+pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&wire::send(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{batch, holder, now, known?, members?, ledger?, epochs?}` → what
+/// `log.admit` answers, with `bodies?` and `withheld?`.
+pub(super) fn wire_take(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&wire::take(quiet_input(raw)?).map_err(refused)?)
 }
 
 pub(super) fn place_input(raw: &[u8]) -> Result<Value, Failure> {

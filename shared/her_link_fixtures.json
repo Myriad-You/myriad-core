@@ -640,7 +640,8 @@
           "vector": {
             "dev_mac": 41,
             "site": 12
-          }
+          },
+          "ask": ["row_00"]
         }
       },
       {
@@ -668,12 +669,34 @@
                 "ref": "blob:row_01"
               },
               "replicate": "shared"
+            },
+            {
+              "version": 1,
+              "id": "row_02",
+              "origin": "dev_mac",
+              "author": "her",
+              "epoch": 5,
+              "dseq": 42,
+              "hlc": "001760140800001-000000-dev_mac",
+              "audience": "personal:o1",
+              "object": "node:lamp",
+              "kind": "node.span",
+              "payload": {
+                "ref": "blob:row_02"
+              },
+              "replicate": "shared"
             }
           ],
           "payloads": [
             {
               "ref": "blob:row_01",
               "data": "I59Z7VXnN8dxR89VrQwbAwttfudIp0JpUvm4UtWpNeUjn1ntVec3x3FHz1WtDBsD"
+            }
+          ],
+          "withheld": [
+            {
+              "id": "row_02",
+              "why": "secret"
             }
           ]
         }

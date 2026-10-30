@@ -188,3 +188,45 @@ fn a_wrong_passphrase_or_a_cut_file_does_not_open_and_says_nothing_of_either() {
     let (status, out) = ffi("sync.archive_open", &json!({ "start": b64(b"{}\n") }));
     assert_eq!(status, STATUS_BAD_INPUT, "{out}");
 }
+
+/// Log pages (her nodes and their logs, as `nodes.wire_send` batches them)
+/// have a part of their own and a tally of their own in the manifest; with
+/// none, the manifest is what it always was.
+#[test]
+fn log_pages_have_a_part_and_a_tally() {
+    let head = ok(
+        "sync.archive_part",
+        json!({ "part": { "part": "log", "bytes": 12 } }),
+    );
+    let read = ok("sync.archive_part", json!({ "bytes": head["head"] }));
+    assert_eq!(read["part"], json!({ "part": "log", "bytes": 12 }));
+    let row = json!({
+        "version": 1, "id": "r1", "origin": "dev_mac", "author": "her", "epoch": 1, "dseq": 1,
+        "hlc": "001760000000000-000000-dev_mac", "audience": "personal:7", "object": "node:a",
+        "kind": "node.span", "payload": { "ref": "doc:r1" }, "replicate": "shared",
+    });
+    let page = json!({ "audience": "personal:7", "rows": [row], "payloads": [{ "ref": "doc:r1", "data": "e30=" }] });
+    let plain = ok("sync.manifest", json!({ "envelopes": [] }));
+    let pc = json!({ "core": "pc", "owner": "7" });
+    let logged = ok(
+        "sync.manifest",
+        json!({ "envelopes": [], "logs": [page], "holder": pc }),
+    );
+    assert!(plain["manifest"].get("log").is_none());
+    assert_eq!(logged["manifest"]["log"]["count"], 1);
+    assert_ne!(plain["manifest"]["digest"], logged["manifest"]["digest"]);
+    for (input, why) in [
+        (
+            json!({ "envelopes": [], "logs": [page, page], "holder": pc }),
+            "a row twice",
+        ),
+        (json!({ "envelopes": [], "logs": [page] }), "no holder"),
+        (
+            json!({ "envelopes": [], "logs": [page], "holder": { "core": "pc", "owner": "9" } }),
+            "someone else's private talk, for the partner's file",
+        ),
+    ] {
+        let (status, _) = ffi("sync.manifest", &input);
+        assert_eq!(status, STATUS_BAD_INPUT, "{why}");
+    }
+}

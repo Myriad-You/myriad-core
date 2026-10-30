@@ -15,6 +15,14 @@
 //!   it (a hand to raise);
 //! - **clash**: a clash with it is new to it (撞上: a hand to raise).
 //!
+//! Its own rows are also unseen while a head item is 两边都改过 and no one
+//! run of hers saw every current version of it (why `own`). Two of her ran
+//! at once only when the partner forced the pen while the old holder kept
+//! going, or a side was used alone; each side's upkeep then marks its own
+//! change seen, and the marks together would cover both. She settles it by
+//! writing a version that names both, as the fold asks, or one run sees
+//! both and leaves it.
+//!
 //! A related node (相关) never makes it due. Recall use (`node.used`) and
 //! upkeep marks (`node.upkept`) are not changes; neither is a row the fold
 //! passed by. A forgotten node, one that went into another, and one whose
@@ -294,6 +302,27 @@ impl<'a> Watch<'a> {
                     }
                 }
                 _ => {}
+            }
+        }
+        for base in node.both_changed() {
+            let rows: Vec<&Row> = base
+                .iter()
+                .filter_map(|row| self.by_id.get(row.as_str()).copied())
+                .collect();
+            let weighed = seen.is_some_and(|seen| {
+                seen.each
+                    .iter()
+                    .any(|mark| rows.iter().all(|row| mark.saw(row)))
+            });
+            if weighed {
+                continue;
+            }
+            why.insert(Reason::Own);
+            // It became two when the later of them was written.
+            if let Some(newest) = rows.iter().map(|row| &row.hlc).max()
+                && first.is_none_or(|known| newest < known)
+            {
+                first = Some(newest);
             }
         }
         let first = first?.clone();

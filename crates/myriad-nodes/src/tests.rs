@@ -83,6 +83,8 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.queue" => json_of(&queue::queue(input(raw)?)?),
         "nodes.upkeep_input" => json_of(&upkeep::prepare(input(raw)?)?),
         "nodes.upkeep_read" => json_of(&upkeep::read(input(raw)?)?),
+        "nodes.wire_send" => json_of(&wire::send(input(raw)?)?),
+        "nodes.wire_take" => json_of(&wire::take(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -109,7 +111,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 10, "{files:?}");
+    assert_eq!(files.len(), 12, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -232,6 +234,25 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "an inbox item said elsewhere that is not the partner's own words",
             "the partner's own words from a group",
         ),
+        // nodes.wire_send, nodes.wire_take
+        (
+            "a row of another audience than the batch's",
+            "not of the audience",
+        ),
+        ("a holder whose owner is two ids", "one id"),
+        ("a payload listed twice", "in the batch twice"),
+        (
+            "asking again for more than 64 rows",
+            "asks again for more than 64",
+        ),
+        (
+            "a withheld body of no row in the batch",
+            "of no row in the batch",
+        ),
+        ("a body both carried and said to be withheld", "carried too"),
+        // a person or a group lives in its own audience
+        ("a person in her own audience", "lives in its own audience"),
+        ("a group in her own audience", "lives in its own audience"),
     ];
     let mut seen = 0;
     for path in case_files() {

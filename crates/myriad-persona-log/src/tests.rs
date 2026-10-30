@@ -59,6 +59,8 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
     struct Answer {
         rows: Vec<Row>,
         theirs: Vector,
+        #[serde(default)]
+        holder: Option<crate::Holder>,
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -85,8 +87,12 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
             json!({ "missing": missing(&mine, &theirs) })
         }
         "log.answer" => {
-            let Answer { rows, theirs } = input(raw)?;
-            json!({ "rows": answer(&rows, &theirs)? })
+            let Answer {
+                rows,
+                theirs,
+                holder,
+            } = input(raw)?;
+            json_of(&crate::vector::answer_to(&rows, &theirs, holder.as_ref())?)
         }
         "log.admit" => json_of(&admit(input(raw)?)),
         "log.merge" => json_of(&merge(input(raw)?)),
@@ -450,6 +456,7 @@ fn what_one_side_answers_fills_the_other() {
         members: Default::default(),
         ledger: Vec::new(),
         epochs: Default::default(),
+        holder: None,
     });
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {

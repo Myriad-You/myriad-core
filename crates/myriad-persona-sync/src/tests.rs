@@ -595,6 +595,7 @@ pub(crate) fn archive_sample() -> ArchiveSample {
             origin: "site".into(),
             created_at: 1_760_000_000_123_456,
             digest: manifest.digest.clone(),
+            logs: false,
         },
     )
     .unwrap();
@@ -640,13 +641,17 @@ pub(crate) fn archive_sample() -> ArchiveSample {
 
 impl ArchiveSample {
     pub(crate) fn seal(&self) -> Vec<u8> {
+        self.try_seal().unwrap()
+    }
+
+    pub(crate) fn try_seal(&self) -> Result<Vec<u8>, crate::SyncError> {
         let key = archive::derive_key(self.passphrase, &self.header.kdf).unwrap();
         let parts: Vec<(archive::Part, &[u8])> = self
             .parts
             .iter()
             .map(|(part, payload)| (part.clone(), payload.as_slice()))
             .collect();
-        archive::seal(key, self.header.clone(), &parts).unwrap()
+        archive::seal(key, self.header.clone(), &parts)
     }
 }
 

@@ -19,7 +19,7 @@ use myriad_persona_sync::hlc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Row,
+    Holder, Row,
     forget::{self, Entry},
     row::{Audience, Replicate, sort},
 };
@@ -47,6 +47,10 @@ pub struct AdmitInput {
     /// rows this side holds there.
     #[serde(default)]
     pub epochs: Epochs,
+    /// This side, when it says what it is: a row of an audience it may not
+    /// hold is refused ([`crate::holder`]).
+    #[serde(default)]
+    pub holder: Option<Holder>,
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -67,6 +71,8 @@ pub enum Reason {
     /// Her row with a lower epoch than one its side wrote before it in the
     /// same audience (an alone row after the side knew a lease, most often).
     EpochBack,
+    /// Its audience is not one this side may hold.
+    NotHeld,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -109,6 +115,7 @@ pub fn admit(input: AdmitInput) -> Admitted {
         members,
         ledger,
         mut epochs,
+        holder,
     } = input;
     let ahead = rows
         .iter()
@@ -142,6 +149,13 @@ pub fn admit(input: AdmitInput) -> Admitted {
         }
         if row.replicate == Replicate::Local {
             refused.push(refuse(&row, Reason::Local, None));
+            continue;
+        }
+        if holder
+            .as_ref()
+            .is_some_and(|holder| !holder.holds(&row.audience))
+        {
+            refused.push(refuse(&row, Reason::NotHeld, None));
             continue;
         }
         if let Some(epoch) = row.epoch
