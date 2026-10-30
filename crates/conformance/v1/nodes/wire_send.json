@@ -1387,6 +1387,262 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "bodies": {
+          "p1": {
+            "key": "person:alice",
+            "kind": "person",
+            "name": "Alice",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "p2": {
+            "audience": "own:",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "Alice 在群里说她下周搬家。",
+            "version": 1
+          },
+          "p3": {
+            "key": "group:g1",
+            "kind": "person",
+            "name": "读书群",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "p4": {
+            "key": "her",
+            "kind": "person",
+            "name": "她自己",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "p5": {
+            "audience": "own:",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "今天想了想自己的习惯。",
+            "version": 1
+          }
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "p1",
+            "kind": "node.created",
+            "object": "node:9ddc297b2aed54affc184c6b2070d5ce",
+            "origin": "site",
+            "payload": {
+              "ref": "doc:p1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-site",
+            "id": "p2",
+            "kind": "node.span",
+            "object": "node:9ddc297b2aed54affc184c6b2070d5ce",
+            "origin": "site",
+            "payload": {
+              "ref": "doc:p2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-site",
+            "id": "p3",
+            "kind": "node.created",
+            "object": "node:ed599c316f18e04d0c10e9a82fe9cc45",
+            "origin": "site",
+            "payload": {
+              "ref": "doc:p3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-site",
+            "id": "p4",
+            "kind": "node.created",
+            "object": "node:20fd261473263a35859f3c42f034d3a0",
+            "origin": "site",
+            "payload": {
+              "ref": "doc:p4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000004-000000-site",
+            "id": "p5",
+            "kind": "node.span",
+            "object": "node:20fd261473263a35859f3c42f034d3a0",
+            "origin": "site",
+            "payload": {
+              "ref": "doc:p5"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a person's or a group's node in her own audience goes to a PC as rows alone",
+      "output": {
+        "batches": [
+          {
+            "audience": "own:",
+            "payloads": [
+              {
+                "data": "eyJrZXkiOiJoZXIiLCJraW5kIjoicGVyc29uIiwibmFtZSI6IuWlueiHquW3sSIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+                "ref": "doc:p4"
+              },
+              {
+                "data": "eyJhdWRpZW5jZSI6Im93bjoiLCJzYWlkQnkiOlsiaGVyIl0sInN5bmMiOiJzaGFyZWQiLCJ0ZXh0Ijoi5LuK5aSp5oOz5LqG5oOz6Ieq5bex55qE5Lmg5oOv44CCIiwidmVyc2lvbiI6MX0=",
+                "ref": "doc:p5"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000000-000000-site",
+                "id": "p1",
+                "kind": "node.created",
+                "object": "node:9ddc297b2aed54affc184c6b2070d5ce",
+                "origin": "site",
+                "payload": {
+                  "ref": "doc:p1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-site",
+                "id": "p2",
+                "kind": "node.span",
+                "object": "node:9ddc297b2aed54affc184c6b2070d5ce",
+                "origin": "site",
+                "payload": {
+                  "ref": "doc:p2"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 3,
+                "epoch": 1,
+                "hlc": "001760000000002-000000-site",
+                "id": "p3",
+                "kind": "node.created",
+                "object": "node:ed599c316f18e04d0c10e9a82fe9cc45",
+                "origin": "site",
+                "payload": {
+                  "ref": "doc:p3"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 4,
+                "epoch": 1,
+                "hlc": "001760000000003-000000-site",
+                "id": "p4",
+                "kind": "node.created",
+                "object": "node:20fd261473263a35859f3c42f034d3a0",
+                "origin": "site",
+                "payload": {
+                  "ref": "doc:p4"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 5,
+                "epoch": 1,
+                "hlc": "001760000000004-000000-site",
+                "id": "p5",
+                "kind": "node.span",
+                "object": "node:20fd261473263a35859f3c42f034d3a0",
+                "origin": "site",
+                "payload": {
+                  "ref": "doc:p5"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ]
+          }
+        ],
+        "withheld": [
+          {
+            "id": "p1",
+            "why": "person_elsewhere"
+          },
+          {
+            "id": "p2",
+            "why": "person_elsewhere"
+          },
+          {
+            "id": "p3",
+            "why": "person_elsewhere"
+          }
+        ]
+      }
     }
   ],
   "version": 1

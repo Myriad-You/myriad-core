@@ -214,6 +214,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 记号以 `together-` 开头的（`minted:together-…`）是她和伙伴一起看过、读过的东西：只收别的节点进来，自己永远不并进别处（不并入、不收回）。
 
+**人和群住在他们自己的受众里**（伙伴 2026-10-30 按推荐默认定，可以再改）：`person:<id>` 和 `group:<id>` 的节点只在那个人的私聊或那个群里，永远不在她自己的受众（`own:`）里；她自己的受众里只有 `her`、仓库和她新立的事。每台电脑都存 `own:`，所以这样她记下的别人的事就永远到不了伙伴的电脑。`nodes.id` 拒绝算这样的 id；万一有人照样写了，折叠时这个节点读作什么都没有、它的每一行跳过（`person_elsewhere`），`nodes.wire_send`、`nodes.wire_take` 也不让它的 body 走。
+
 **头和身子。** 头是她对这件事的整理：名字、概括（每句带依据）、看法（每条带依据，改了留历史）、没收尾的事、想说没说的话、谁知道、状态，还有对象和每人的进度。身子是它依据的东西：经历片段、条目（事实和偏好）、指向原文的引用。原文本身不在节点里。
 
 **每段经历、每条条目带三个标签**（每个 body 都带前两个）：
@@ -250,7 +252,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - 头里每一项（种类、名字、概括、状态、谁知道、对象、每人的进度、每条看法、每件没收尾的事、每句想说的话）分开算：被别的行写进 `base` 的版本是旧的，进 `history`（留最新 20 个）；剩下的是当前的。
 - **两边都改过**：当前的不止一个、而且说的不一样，就是两台设备从同一版各改了一次、互相没看见。这一项标 `bothChanged`，显示日志顺序里先写的那一个，其余的列在 `rivals` 里。后写的不会自动盖掉先写的；下一次有一行把所有当前版本都列进 `base`，才算合好。每一项都带 `base`：当前所有版本的行 id（排好序），就是下一次写这一项时该填的 `base`。两边从同一版改成一样的不算冲突，`base` 里两行都列着；之后哪一行只列了其中一个，也算两个都看见了。
 - 经历和条目按日志顺序都留着，各带三个标签。`history` 列出每次改种类：从什么、到什么、为什么。
-- 不合规矩的行跳过，并在 `skipped` 里写明原因：`no_body`、`bad_body`、`other_node`（created 的受众和键算出别的 id）、`sync_mismatch`、`author_mismatch`、`audience_tag`、`not_in_audience`（谁知道和进度只能填这个受众里的人）、`untrusted_intent`（想说的话只能来自伙伴的话或她自己）、`no_spans_here`（「关于你」只放条目、不挂经历）、`kind_fixed`、`status_for_kind`（人没有做完）、`object_for_key`（仓库对象只在仓库键上，仓库节点的对象拿不掉）、`self_relation`、`cycle`、`not_minted`（仓库和人的节点各只有一个，不能拆出来也不能并走；并进「关于你」的也是 `no_spans_here`）、`together`（一起看过的节点并进别处）、`absorbed_twice`（并走第二次，第一次为准）。核心不读的 node 种类（原生旧的行）只算一次变化，不读内容。
+- 不合规矩的行跳过，并在 `skipped` 里写明原因：`no_body`、`bad_body`、`other_node`（created 的受众和键算出别的 id）、`sync_mismatch`、`author_mismatch`、`audience_tag`、`not_in_audience`（谁知道和进度只能填这个受众里的人）、`untrusted_intent`（想说的话只能来自伙伴的话或她自己）、`no_spans_here`（「关于你」只放条目、不挂经历）、`kind_fixed`、`status_for_kind`（人没有做完）、`object_for_key`（仓库对象只在仓库键上，仓库节点的对象拿不掉）、`self_relation`、`cycle`、`not_minted`（仓库和人的节点各只有一个，不能拆出来也不能并走；并进「关于你」的也是 `no_spans_here`）、`together`（一起看过的节点并进别处）、`absorbed_twice`（并走第二次，第一次为准）、`person_elsewhere`（人或群的节点写在了她自己的受众里，整个节点的每一行都跳过）。核心不读的 node 种类（原生旧的行）只算一次变化，不读内容。
 - `createdBy` 写着 created 行是谁写的；头里每个版本都写着是谁写的，所以整理知道哪些是伙伴定的。
 - 忘掉一个节点（或这个受众里关于某人的全部）：节点只剩 `{id, audience, forgotten}`，它的行进 `stubbed`，`forget` 排在前或后都一样。只忘一段经历是 M2 的事，这一批没有。
 
@@ -343,7 +345,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **一批**是一个受众的行和它们指向的载荷：`{audience, rows, payloads: [{ref, data}]}`，就是 `log.rows` 帧的正文，也是导出文件的一页日志。`ref` 是那一行自己的 `payload.ref`，`data` 是 body 的规范字节（base64）。行和 body 都按写它的那一端存的字节原样走，所以每一端折的是同样的字节；行上写着受众（`audience`）和写它的那一端（`origin`）。
 - **发**（`wire_send`）：对方缺的行（`log.answer` 的规矩：`forget` 在前，`local` 的行永远不发），对方不能存这个受众时什么都不发（`notHeld`）。每一行都发；body 只在通过下面的检查时跟着走，不通过的这一行单独走，列在 `withheld` 里：对方的版本向量要数到这一行，少一行它在这一端的计数就永远停在那里。每批不超过 256 行、64 个载荷、约 192 KiB（`wire::BATCH_*`，和契约 `log.rows` 的上限对照着测）。
 - **收**（`wire_take`）：先过 `log.admit` 的全部检查（时钟超前整批不收、信封、`local`、对象换了受众、主体不在群里、epoch 回落、忘掉的账、这一端不能存的受众），不是这一批受众的行拒收（`envelope`）；收下的每一行的 body 再过一遍同样的检查，而且必须恰好是它自己的规范字节。不通过的 body 不收（行照收，`withheld`），折叠时这一行跳过（`no_body`）。被忘掉的对象的行进来就是桩，body 丢掉。同一个 `ref` 出现两次是 `bad_input`。
-- **body 要能走**：核心读得懂（`node.*` 里 `nodes.body` 读的十五种，或 `myriad_persona_log::payloads` 里有形状的段、记忆、心情；原生旧的节点种类和判例的 body 还没有形状，只发行，`no_shape`）；`sync` 是 `shared`（`local` 的标签哪怕在 shared 的行上也不走，`not_shared`）；引用和依据里没有本机文件或路径（`file:`、`/…`、`~…`、`C:\…`，`local_ref`；会话记录的 id `record:<会话>#<行>` 作为 id 走，记录本身留在那台机器上）；她的文字里没有密钥扫描（`filter.scan_secrets`）会抹掉的东西（`secret`）。写的一端写之前就该抹掉密钥，这一道是兜底：漏进 body 的密钥不会跟着 body 离开这台设备。body 读不了或不合形状是 `bad_body`，指向的载荷没有是 `no_body`。
+- **body 要能走**：核心读得懂（`node.*` 里 `nodes.body` 读的十五种，或 `myriad_persona_log::payloads` 里有形状的段、记忆、心情；原生旧的节点种类和判例的 body 还没有形状，只发行，`no_shape`）；`sync` 是 `shared`（`local` 的标签哪怕在 shared 的行上也不走，`not_shared`）；引用和依据里没有本机文件或路径（`file:`、`/…`、`~…`、`C:\…`，`local_ref`；会话记录的 id `record:<会话>#<行>` 作为 id 走，记录本身留在那台机器上）；不是写在她自己受众里的人或群的节点（`person_elsewhere`，见上「人和群住在他们自己的受众里」）；她的文字里没有密钥扫描（`filter.scan_secrets`）会抹掉的东西（`secret`）。写的一端写之前就该抹掉密钥，这一道是兜底：漏进 body 的密钥不会跟着 body 离开这台设备。body 读不了或不合形状是 `bad_body`，指向的载荷没有是 `no_body`。
 - **合并**照 `log.merge`：并集，按 id 去重，桩赢；折叠按 `(hlc, origin, dseq, id)` 排，所以同样的行不管从哪一端、按什么顺序到，折出同样的节点（`sync_tests.rs` 把每一行单独、按全部 24 种顺序各送两遍对过）。同一项两边从同一版各改一次，折叠标「两边都改过」，两版都留着，后写的不会因为时钟晚就赢（上面「折叠」）。
 - **整理标记跟着走**：`node.upkept` 是普通的 shared 行，`seen` 按设备记时钟，合并后每一端读到的都是所有标记。一行算看过，只要有一次整理看过它。只有一点要补：执笔权被伙伴强行换走、两边同时整理时，每一边的标记只盖住自己那一边的改动，合起来却什么都盖住了，「两边都改过」的那一项就没人管。所以整理队列多看一件事：头里有一项两边都改过，而没有哪一次整理（一个 `node.upkept`）同时看过它的每个当前版本，这个节点就排进来（理由记 `own`：是它自己的行还没被一起看过），直到她写一版把两版都列进 `base`，或者有一次整理同时看过两版。输出的形状不变。
 - **忘掉跟着走**：忘掉是一行 `forget`，发的时候排在最前；收的一端先记进忘掉的账，同一批和以后再到的这个对象的行都只收成桩、body 丢掉，所以离线的一端回来也推不回去。`nodes.fold` 的 `forgets`（并进被忘掉节点的那些）由调用方写成 `forget` 行，照样同步。

@@ -100,6 +100,26 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "key": "person:alice"
+      },
+      "name": "a person in her own audience",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "key": "group:g1"
+      },
+      "name": "a group in her own audience",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

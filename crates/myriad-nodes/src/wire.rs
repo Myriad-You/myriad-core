@@ -35,6 +35,11 @@
 //! - **No local path**: no reference or evidence is a `file:` reference or
 //!   a path (`/…`, `~…`, `C:\…`). A raw record's id (`record:<session>#<n>`)
 //!   travels as an id; the record itself stays on its device (`local_ref`).
+//! - **Not someone else's node in hers**: no row of a node whose created
+//!   row puts a person or a group in her own audience (`own:`), which every
+//!   PC holds. Such a node is refused where it is made (`nodes.id`) and
+//!   passed by in the fold; this keeps what a side wrote anyway off the
+//!   wire (`person_elsewhere`).
 //! - **No secret**: none of her texts in it holds what the host filter's
 //!   secret scan would wipe (`secret`). Writers scrub before they write
 //!   (`filter.scan_secrets`); this is the backstop, so a key that slipped
@@ -44,7 +49,7 @@
 //! [`BATCH_PAYLOADS`] payloads and about [`BATCH_BYTES`] bytes each, in
 //! answer order.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use base64::Engine as _;
 use myriad_persona_log::{
@@ -60,6 +65,7 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{Body, Change, READ},
+    key::Key,
     tags::Sync,
 };
 
@@ -107,6 +113,8 @@ pub enum Why {
     LocalRef,
     /// One of her texts holds a secret.
     Secret,
+    /// A row of a person's or a group's node in her own audience.
+    PersonElsewhere,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -294,9 +302,27 @@ fn judge(texts: &[&str], ids: &[&str]) -> Result<(), Why> {
     Ok(())
 }
 
+/// The nodes whose created row (among `created`, row and body) puts a
+/// person or a group in her own audience.
+fn elsewhere<'a>(created: impl Iterator<Item = (&'a Row, &'a Value)>) -> BTreeSet<String> {
+    created
+        .filter(|(row, _)| row.kind == "node.created")
+        .filter(|(row, body)| {
+            body.get("key")
+                .and_then(Value::as_str)
+                .and_then(|key| Key::parse(key).ok())
+                .is_some_and(|key| !key.fits(&row.audience))
+        })
+        .map(|(row, _)| row.object.clone())
+        .collect()
+}
+
 /// The body of `row` checked for the wire: its canonical bytes, and the
 /// body as read; or why it does not travel.
 pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
+    if elsewhere(std::iter::once((row, body))).contains(&row.object) {
+        return Err(Why::PersonElsewhere);
+    }
     if row.kind.starts_with("node.") {
         if !READ.contains(&row.kind.as_str()) {
             return Err(Why::NoShape);
@@ -327,6 +353,9 @@ pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
     }
 }
 
+/// A payload as it arrived: its bytes and the JSON they read as.
+type Decoded = Result<(Vec<u8>, Value), Why>;
+
 /// What to send a side holding `theirs` of one audience, in batches.
 pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     let SendInput {
@@ -351,6 +380,10 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             not_held: true,
         });
     }
+    let away = elsewhere(
+        rows.iter()
+            .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
+    );
     let answered =
         vector::answer(&rows, &theirs).map_err(|error| NodeError::new(error.to_string()))?;
     let engine = base64::engine::general_purpose::STANDARD;
@@ -361,6 +394,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         row.check()
             .map_err(|_| NodeError::new("a row's envelope is not whole"))?;
         let carried = match (&row.payload, row.forgotten) {
+            (Some(_), false) if away.contains(&row.object) => Err(Why::PersonElsewhere),
             (Some(payload), false) => match bodies.get(&row.id) {
                 None => Err(Why::NoBody),
                 Some(body) => carry(&row, body).map(|(bytes, _)| Carried {
@@ -452,25 +486,42 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             detail: Some("not of the batch's audience".into()),
         }));
     let engine = base64::engine::general_purpose::STANDARD;
+    // Each accepted row's payload, decoded: its bytes and what they read as.
+    let decoded: Vec<(&Row, Decoded)> = admitted
+        .accepted
+        .iter()
+        .filter_map(|row| {
+            let payload = row.payload.as_ref().filter(|_| !row.forgotten)?;
+            let read = carried
+                .get(payload.reference.as_str())
+                .ok_or(Why::NoBody)
+                .and_then(|data| engine.decode(data).map_err(|_| Why::BadBody))
+                .and_then(|data| {
+                    let body = serde_json::from_slice(&data).map_err(|_| Why::BadBody)?;
+                    Ok((data, body))
+                });
+            Some((row, read))
+        })
+        .collect();
+    let away = elsewhere(
+        decoded
+            .iter()
+            .filter_map(|(row, read)| read.as_ref().ok().map(|(_, body)| (*row, body))),
+    );
     let mut bodies = BTreeMap::new();
     let mut withheld = Vec::new();
-    for row in &admitted.accepted {
-        let Some(payload) = row.payload.as_ref().filter(|_| !row.forgotten) else {
-            continue;
-        };
-        let read = carried
-            .get(payload.reference.as_str())
-            .ok_or(Why::NoBody)
-            .and_then(|data| engine.decode(data).map_err(|_| Why::BadBody))
-            .and_then(|data| {
-                let body: Value = serde_json::from_slice(&data).map_err(|_| Why::BadBody)?;
-                let (canonical, body) = carry(row, &body)?;
-                if canonical == data {
-                    Ok(body)
-                } else {
-                    Err(Why::BadBody)
-                }
-            });
+    for (row, read) in decoded {
+        let read = read.and_then(|(data, body)| {
+            if away.contains(&row.object) {
+                return Err(Why::PersonElsewhere);
+            }
+            let (canonical, body) = carry(row, &body)?;
+            if canonical == data {
+                Ok(body)
+            } else {
+                Err(Why::BadBody)
+            }
+        });
         match read {
             Ok(body) => {
                 bodies.insert(row.id.clone(), body);

@@ -241,6 +241,9 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         ("a holder whose owner is two ids", "one id"),
         ("a payload listed twice", "in the batch twice"),
+        // a person or a group lives in its own audience
+        ("a person in her own audience", "lives in its own audience"),
+        ("a group in her own audience", "lives in its own audience"),
     ];
     let mut seen = 0;
     for path in case_files() {

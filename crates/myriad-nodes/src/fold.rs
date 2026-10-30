@@ -6,7 +6,10 @@
 //! `log.fold` does. Then, node by node:
 //!
 //! - **The key** comes from `node.created`; a created row whose audience
-//!   and key make another id is passed by (`other_node`).
+//!   and key make another id is passed by (`other_node`). A node whose
+//!   created row puts a person or a group in her own audience reads as
+//!   nothing, every row of it passed by (`person_elsewhere`): they live in
+//!   their own audiences.
 //! - **Head fields** (its kind, name, summary, status, who-knows, object,
 //!   each person's progress, each view, open item and intent) are each
 //!   folded from the rows that write them. A row's `base` names the versions
@@ -476,6 +479,9 @@ pub enum Why {
     /// Something she watched or read with the partner going into another:
     /// it only ever takes others in.
     Together,
+    /// A person's or a group's node in her own audience: it lives in that
+    /// person's or group's own audience, never in hers.
+    PersonElsewhere,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -1029,6 +1035,19 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                 Ok(body) => read.push((at, row, body)),
                 Err(_) => skip(row, Why::BadBody),
             }
+        }
+        // A person or a group made in her own audience: it lives in its
+        // own, so nothing of it reads back here.
+        let misplaced = read.iter().any(|(_, _, body)| {
+            matches!(body, Body::Created(created)
+                if Key::parse(&created.key).is_ok_and(|parsed| !parsed.fits(audience)))
+        });
+        if misplaced {
+            for (_, row, _) in &read {
+                skip(row, Why::PersonElsewhere);
+            }
+            nodes.push(Node::empty(id, audience));
+            continue;
         }
         let key: Option<String> = read.iter().find_map(|(_, _, body)| match body {
             Body::Created(created)
