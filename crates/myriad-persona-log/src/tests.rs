@@ -97,6 +97,7 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
         "log.admit" => json_of(&admit(input::<AdmitInput>(raw)?)?),
         "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
         "log.fold" => json_of(&fold(input(raw)?)?),
+        "log.ledger" => json_of(&forget::record(input(raw)?)?),
         "log.clock_offset" => {
             #[derive(Deserialize)]
             #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -261,6 +262,12 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ("a retract of hers", "the owner's row"),
         ("a retract kept local", "is shared"),
         ("a retract about a memory", "is about a node"),
+        (
+            "to on a kind that names no other node",
+            "names no other node",
+        ),
+        ("takes out of order", "takes is sorted"),
+        ("a retract's home shared", "is local"),
     ];
     let file: Value =
         serde_json::from_slice(&std::fs::read(conformance().join("log/canonical.json")).unwrap())
@@ -310,6 +317,8 @@ fn row(id: &str, origin: &str, dseq: u64, at: u64, object: &str, kind: &str) -> 
         }),
         replicate: Replicate::Shared,
         forgotten: false,
+        to: None,
+        takes: Vec::new(),
     }
 }
 
@@ -338,8 +347,6 @@ fn permutations(rows: &[Row]) -> Vec<Vec<Row>> {
 fn folded(rows: Vec<Row>) -> Value {
     json_of(
         &fold(FoldInput {
-            names: Default::default(),
-            here: None,
             rows,
             leases: Vec::new(),
         })
@@ -379,9 +386,7 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
         let mut held: Vec<Row> = Vec::new();
         for one in order {
             held = merge(MergeInput {
-                names: Default::default(),
-                ledger: Vec::new(),
-                here: None,
+                ledger: None,
                 log: held,
                 incoming: vec![one],
             })
@@ -410,17 +415,13 @@ fn merging_is_a_union_in_any_order() {
         owner(row("b2", "site", 2, 250, "memory:x", "memory.write")),
     ];
     let ab = merge(MergeInput {
-        names: Default::default(),
-        ledger: Vec::new(),
-        here: None,
+        ledger: None,
         log: a.clone(),
         incoming: b.clone(),
     })
     .unwrap();
     let ba = merge(MergeInput {
-        names: Default::default(),
-        ledger: Vec::new(),
-        here: None,
+        ledger: None,
         log: b.clone(),
         incoming: a.clone(),
     })
@@ -429,9 +430,7 @@ fn merging_is_a_union_in_any_order() {
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
     let again = merge(MergeInput {
-        names: Default::default(),
-        ledger: Vec::new(),
-        here: None,
+        ledger: None,
         log: ab.log.clone(),
         incoming: b,
     })
@@ -471,22 +470,18 @@ fn what_one_side_answers_fills_the_other() {
     );
     let sent = answer(&mac, &theirs).unwrap();
     let admitted = admit(AdmitInput {
-        names: Default::default(),
-        here: None,
         rows: sent,
         now: 1_000_000,
         known: Default::default(),
         members: Default::default(),
-        ledger: Vec::new(),
+        ledger: None,
         epochs: Default::default(),
         holder: None,
     })
     .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
-        names: Default::default(),
-        ledger: Vec::new(),
-        here: None,
+        ledger: None,
         log: site,
         incoming: admitted.accepted,
     })

@@ -37,13 +37,6 @@ pub struct FoldInput {
     /// The lease history this side knows, for marking her rows.
     #[serde(default)]
     pub leases: Vec<Grant>,
-    /// Every origin this side writes or wrote as; needed once a retract is
-    /// in the rows, so the home keeps its node ([`crate::forget`]).
-    #[serde(default)]
-    pub here: Option<Vec<String>>,
-    /// The other names of objects this side keeps ([`forget::Names`]).
-    #[serde(default)]
-    pub names: forget::Names,
 }
 
 /// One object as its rows stand now.
@@ -72,8 +65,9 @@ pub struct ObjectFold {
     /// Some of its rows were written while she was in two places.
     #[serde(skip_serializing_if = "is_false")]
     pub concurrent: bool,
-    /// Taken back from sync: the sides that keep it. Anywhere else
-    /// nothing else about it reads back.
+    /// Taken back from sync: the sides that wrote its retract. On a side
+    /// that keeps it (its `retract.home` is here) it folds as ever besides;
+    /// anywhere else nothing else about it reads back.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub retracted: Vec<String>,
 }
@@ -143,18 +137,15 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
     for grant in &input.leases {
         grant.check()?;
     }
-    input.names.check()?;
-    let names = &input.names;
     let rows = dedupe(input.rows)?;
     let ledger = forget::ledger(&rows);
-    let here = forget::here(&ledger, input.here.as_deref())?;
-    let (rows, _) = forget::absorb(rows, &ledger, here, names);
-    // Retracted objects and their homes; away: not kept on this side.
-    let homes = |audience: &str, object: &str| forget::homes(&ledger, audience, object, names);
-    let kept = |homes: &[String]| homes.iter().any(|home| here.contains(home));
-    let away = |row: &Row| {
-        let homes = homes(&row.audience, &row.object);
-        !homes.is_empty() && !kept(&homes) && !forget::forgets(&ledger, row, names)
+    let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Here);
+    let view = forget::View::new(&ledger);
+    // Retracted objects, and the ones not kept on this side.
+    let away = |audience: &str, object: &str| {
+        !view.homes(audience, object).is_empty()
+            && !view.kept(audience, object)
+            && view.forgotten(audience, object).is_none()
     };
     let standing = lease::standings(&rows, &input.leases);
     let concurrent: Vec<&str> = standing
@@ -168,11 +159,21 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
         let object = objects
             .entry((row.audience.clone(), row.object.clone()))
             .or_insert_with(|| ObjectFold::empty(&row.audience, &row.object));
-        if row.rule() == Rule::Retract || away(row) {
+        if (forget::on_ledger(row) && row.rule() != Rule::Forget)
+            || away(&row.audience, &row.object)
+        {
             continue;
         }
-        if row.rule() == Rule::Forget || row.forgotten {
+        if row.rule() == Rule::Forget {
             object.forgotten = true;
+            continue;
+        }
+        if row.forgotten {
+            // A span a split moved to a part forgotten since is a stub of
+            // this object, which stays.
+            if view.forgets_object(row) || view.reaching(row).is_empty() {
+                object.forgotten = true;
+            }
             continue;
         }
         if object.subject.is_none() {
@@ -192,19 +193,19 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
             }
             Rule::Retire => object.retired = Some(true),
             Rule::Restore => object.retired = Some(false),
-            Rule::Event | Rule::Forget | Rule::Retract => {}
+            Rule::Event | Rule::Forget | Rule::Retract | Rule::Home => {}
         }
     }
     let objects = objects
         .into_values()
         .map(|object| {
-            let homes = homes(&object.audience, &object.object);
+            let homes = view.homes(&object.audience, &object.object);
             if object.forgotten {
                 ObjectFold {
                     forgotten: true,
                     ..ObjectFold::empty(&object.audience, &object.object)
                 }
-            } else if !homes.is_empty() && !kept(&homes) {
+            } else if away(&object.audience, &object.object) {
                 ObjectFold {
                     retracted: homes,
                     ..ObjectFold::empty(&object.audience, &object.object)

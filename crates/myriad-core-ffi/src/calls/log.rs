@@ -79,8 +79,8 @@ pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&vector::answer_to(&rows, &theirs, holder.as_ref()).map_err(refused)?)
 }
 
-/// A retract on the batch or the ledger needs `here`, so a home never
-/// loses its node to a call that did not say where it runs.
+/// A retract in the batch needs this side's ledger, so a home never loses
+/// its node to a call that did not say what it keeps.
 pub(super) fn admit(raw: &[u8]) -> Result<Value, Failure> {
     answer(&admit_rows(input(raw)?).map_err(refused)?)
 }
@@ -91,6 +91,12 @@ pub(super) fn merge(raw: &[u8]) -> Result<Value, Failure> {
 
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(input(raw)?).map_err(refused)?)
+}
+
+/// `{rows, ledger?}` → `{ledger}`: the ledger with the rows this side
+/// wrote.
+pub(super) fn ledger(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_persona_log::forget::record(input(raw)?).map_err(refused)?)
 }
 
 /// `{sent, serverTime, received}` (local, server, local; microseconds) →

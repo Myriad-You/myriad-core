@@ -545,9 +545,6 @@
     },
     {
       "input": {
-        "here": [
-          "site"
-        ],
         "incoming": [
           {
             "audience": "personal:o1",
@@ -562,6 +559,7 @@
             "version": 1
           }
         ],
+        "ledger": [],
         "log": [
           {
             "audience": "personal:o1",
@@ -653,9 +651,6 @@
     },
     {
       "input": {
-        "here": [
-          "dev_mac"
-        ],
         "incoming": [
           {
             "audience": "personal:o1",
@@ -670,6 +665,7 @@
             "version": 1
           }
         ],
+        "ledger": [],
         "log": [
           {
             "audience": "personal:o1",
@@ -701,6 +697,17 @@
               "ref": "doc:l2"
             },
             "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "l3h",
+            "kind": "retract.home",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "replicate": "local",
             "version": 1
           }
         ]
@@ -747,6 +754,17 @@
           {
             "audience": "personal:o1",
             "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "l3h",
+            "kind": "retract.home",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
             "dseq": 2,
             "hlc": "001760000000002-000000-dev_mac",
             "id": "l3",
@@ -761,9 +779,6 @@
     },
     {
       "input": {
-        "here": [
-          "dev_mac"
-        ],
         "incoming": [
           {
             "audience": "personal:o1",
@@ -796,6 +811,7 @@
             "version": 1
           }
         ],
+        "ledger": [],
         "log": [
           {
             "audience": "personal:o1",
@@ -837,6 +853,17 @@
               "ref": "doc:l1"
             },
             "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "l3h",
+            "kind": "retract.home",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "replicate": "local",
             "version": 1
           }
         ]
@@ -883,6 +910,17 @@
           {
             "audience": "personal:o1",
             "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "l3h",
+            "kind": "retract.home",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
             "dseq": 2,
             "hlc": "001760000000002-000000-dev_mac",
             "id": "l3",
@@ -897,9 +935,6 @@
     },
     {
       "input": {
-        "here": [
-          "site"
-        ],
         "incoming": [
           {
             "audience": "personal:o1",
@@ -916,6 +951,7 @@
             "version": 1
           }
         ],
+        "ledger": [],
         "log": [
           {
             "audience": "personal:o1",

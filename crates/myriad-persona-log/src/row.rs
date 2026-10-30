@@ -26,6 +26,9 @@ pub const LOG_VERSION: u32 = 1;
 /// Longest id, object, subject, audience or payload reference, in bytes.
 pub const MAX_TOKEN_BYTES: usize = 512;
 
+/// The most spans one split moves (`takes`): as many as its body names.
+pub const MAX_TAKES: usize = 64;
+
 /// Who wrote a row. Her rows come only from the holder of the lease; the
 /// owner's (what they said, set, approved, revoked, had her forget) from
 /// any side, offline too.
@@ -96,6 +99,16 @@ pub struct Row {
     /// A stub: what it said is gone, its place in the log stays.
     #[serde(default, skip_serializing_if = "is_false")]
     pub forgotten: bool,
+    /// The other node a row names its object as going to (`node:<id>`):
+    /// the node it went into (`node.absorbed`), or the part split off it
+    /// (`node.split_off`). In the envelope, so a stub keeps it and every
+    /// side reads the same names from its own log ([`crate::forget`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    /// A `node.split_off`'s spans: the ids of the rows it moves to `to`,
+    /// sorted.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub takes: Vec<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -260,8 +273,71 @@ impl Row {
                 ));
             }
         }
+        if rule == Rule::Home {
+            if self.author != Author::Owner {
+                return Err(LogError::new("a retract's home is the owner's row"));
+            }
+            if self.replicate != Replicate::Local {
+                return Err(LogError::new(
+                    "a retract's home is local: it never leaves the side that keeps the node",
+                ));
+            }
+            if self.payload.is_some() || self.forgotten {
+                return Err(LogError::new(
+                    "a retract's home holds no payload and is never forgotten",
+                ));
+            }
+        }
+        self.check_names()?;
         if self.forgotten && self.payload.is_some() {
             return Err(LogError::new("a stub keeps no payload"));
+        }
+        Ok(())
+    }
+
+    /// `to` and `takes`: only where a kind names another node, never the
+    /// row's own object, the spans sorted and each once.
+    fn check_names(&self) -> Result<(), LogError> {
+        let names = kinds::names(&self.kind);
+        match (&self.to, names) {
+            (None, _) => {
+                if !self.takes.is_empty() {
+                    return Err(LogError::new("takes goes with to"));
+                }
+                return Ok(());
+            }
+            (Some(_), kinds::Names::None) => {
+                return Err(LogError::new(format!(
+                    "a {} row names no other node (to)",
+                    self.kind
+                )));
+            }
+            (Some(to), _) => {
+                check_token("to", to)?;
+                if object_type(to) != Some("node") {
+                    return Err(LogError::new("to is a node:<id>"));
+                }
+                if *to == self.object {
+                    return Err(LogError::new("to is another node than the row's own"));
+                }
+            }
+        }
+        if names != kinds::Names::Split && !self.takes.is_empty() {
+            return Err(LogError::new(format!(
+                "a {} row moves no spans (takes)",
+                self.kind
+            )));
+        }
+        if self.takes.len() > MAX_TAKES {
+            return Err(LogError::new(format!(
+                "takes holds at most {MAX_TAKES} rows"
+            )));
+        }
+        for id in &self.takes {
+            check_token("takes", id)?;
+        }
+        if self.takes.windows(2).any(|pair| pair[0] >= pair[1]) {
+            return Err(LogError::new("takes is sorted, each row once"));
         }
         Ok(())
     }

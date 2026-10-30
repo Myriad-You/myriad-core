@@ -17,24 +17,18 @@ use crate::{
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MergeInput {
     /// This side's log, or the part of it that matters: the rows sharing an
-    /// id or a place (`audience`, `origin`, `dseq`) with `incoming`, and the rows any
-    /// forget in `incoming` reaches.
+    /// id or a place (`audience`, `origin`, `dseq`) with `incoming`, and the
+    /// rows any forget, retract or name in `incoming` reaches.
     pub log: Vec<Row>,
     /// Rows already through [`crate::admit`].
     pub incoming: Vec<Row>,
-    /// Every origin this side writes or wrote as: a node it is the home of
-    /// stays whole ([`crate::forget`]). Without it this side is no
-    /// retract's home, and once a retract is in the rows it must be given:
-    /// [`merge`] refuses the call without it.
+    /// This side's ledger ([`crate::forget`]): the forgets, retracts, homes
+    /// and names held here that the rows given may not show. Required
+    /// whenever `log` is not the whole log, and refused without when a
+    /// retract is in the rows: a home never loses its node to a call that
+    /// did not say what it keeps.
     #[serde(default)]
-    pub here: Option<Vec<String>>,
-    /// This side's ledger: the forgets and retracts held here that the
-    /// rows given may not show (a retract taken in an earlier batch).
-    #[serde(default)]
-    pub ledger: Vec<forget::Entry>,
-    /// The other names of objects this side keeps ([`forget::Names`]).
-    #[serde(default)]
-    pub names: forget::Names,
+    pub ledger: Option<Vec<forget::Entry>>,
 }
 
 /// Why an incoming row was not taken. Either means a side broke the format
@@ -83,16 +77,13 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     let MergeInput {
         log,
         mut incoming,
-        here,
         ledger,
-        names,
     } = input;
-    names.check()?;
-    let ledger = forget::joined(
-        &ledger,
-        &forget::ledger(&[log.as_slice(), incoming.as_slice()].concat()),
-    );
-    let here = forget::here(&ledger, here.as_deref())?.to_vec();
+    let ledger = forget::given(
+        ledger.as_deref(),
+        &[log.as_slice(), incoming.as_slice()].concat(),
+    )?;
+    let view = forget::View::new(&ledger);
     let mut by_id: BTreeMap<String, Row> = BTreeMap::new();
     let mut places: BTreeMap<(String, String, u64), String> = BTreeMap::new();
     let mut held_payload = Vec::new();
@@ -115,7 +106,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     let mut conflicts = Vec::new();
     for row in incoming {
         if let Some(held) = by_id.get(&row.id) {
-            let home = forget::kept_home(&ledger, &row, &here, &names);
+            let home = view.kept_home(&row);
             if *held == row {
                 duplicates += 1;
             } else if held.is_stub_of(&row) {
@@ -154,7 +145,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         by_id.insert(row.id.clone(), row);
     }
     let rows: Vec<Row> = by_id.into_values().collect();
-    let (mut log, _) = forget::absorb(rows, &ledger, &here, &names);
+    let (mut log, _) = forget::absorb(rows, &ledger, forget::Side::Here);
     sort(&mut log);
     let forgotten: BTreeMap<&str, bool> = log
         .iter()

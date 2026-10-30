@@ -17,7 +17,6 @@ mod log;
 mod mood;
 mod nodes;
 mod own;
-mod partner;
 mod recall;
 mod sync;
 
@@ -118,7 +117,6 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(mood::TESTED.iter().copied())
     .chain(nodes::TESTED.iter().copied())
     .chain(own::TESTED.iter().copied())
-    .chain(partner::TESTED.iter().copied())
     .chain(recall::TESTED.iter().copied())
     .chain(sync::TESTED.iter().copied())
     .collect();

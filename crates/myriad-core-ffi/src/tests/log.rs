@@ -25,6 +25,7 @@ pub(super) const TESTED: &[&str] = &[
     "log.clock_repair",
     "log.fold",
     "log.holdings",
+    "log.ledger",
     "log.merge",
     "log.missing",
 ];

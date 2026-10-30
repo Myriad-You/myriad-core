@@ -596,7 +596,6 @@ pub(crate) fn archive_sample() -> ArchiveSample {
             created_at: 1_760_000_000_123_456,
             digest: manifest.digest.clone(),
             logs: false,
-            partner: None,
         },
     )
     .unwrap();

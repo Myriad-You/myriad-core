@@ -138,13 +138,6 @@ pub struct UpkeepInput {
     /// Inbox items of this audience, oldest first.
     #[serde(default)]
     pub inbox: Vec<InboxItem>,
-    /// This side's origins, as for the fold: needed once a retract is in
-    /// the rows.
-    #[serde(default)]
-    pub here: Option<Vec<String>>,
-    /// The other names of nodes this side keeps, as for the fold.
-    #[serde(default)]
-    pub names: myriad_persona_log::forget::Names,
 }
 
 /// A head field, as the partner may have set it.
@@ -608,8 +601,6 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     let full = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
-        here: input.here,
-        names: input.names,
     })?;
     let place = |id: &str| {
         full.folded
@@ -850,7 +841,9 @@ pub struct ReadInput {
 /// One row to write: its id, its node, its kind, its body. The caller
 /// writes it under this id (the mark lists the ids, so the queue knows what
 /// the run wrote), adds the rest of the envelope (clock, device), and keeps
-/// the order.
+/// the order. A merge or a split also names the other node in the
+/// envelope: the caller writes `to` and `takes` into the row as they are
+/// (`myriad_persona_log::Row`), so a stub of it keeps them.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Write {
@@ -858,6 +851,10 @@ pub struct Write {
     pub node: String,
     pub kind: String,
     pub body: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub takes: Vec<String>,
 }
 
 /// Why an action was held.
@@ -1178,11 +1175,30 @@ impl<'a> Reader<'a> {
         };
         // What it writes reads back as it was written, or nothing is written.
         let body = Body::read(kind, &body.to_value()).map_err(|_| Fallback::BadField)?;
+        let audience = self.context.audience.as_str();
+        let other = |key: &str| {
+            node_id(audience, key)
+                .map(|id| format!("node:{id}"))
+                .map_err(|_| Fallback::BadField)
+        };
+        let (to, takes) = match &body {
+            Body::Absorbed(absorbed) => (Some(other(&absorbed.into)?), Vec::new()),
+            Body::SplitOff(split) => {
+                let takes: BTreeSet<&String> = split.spans.iter().collect();
+                (
+                    Some(other(&split.to)?),
+                    takes.into_iter().cloned().collect(),
+                )
+            }
+            _ => (None, Vec::new()),
+        };
         self.writes.push(Write {
             id: row_id(self.run, self.writes.len()),
             node: node.to_string(),
             kind: kind.to_string(),
             body: body.to_value(),
+            to,
+            takes,
         });
         Ok(())
     }
@@ -1287,7 +1303,6 @@ impl<'a> Reader<'a> {
                 key: key.clone(),
                 name,
                 object: None,
-                born: None,
             }),
         )?;
         if done.is_some() {
@@ -2075,6 +2090,8 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
             node: me.id.clone(),
             kind: "node.upkept".to_string(),
             body: upkept.to_value(),
+            to: None,
+            takes: Vec::new(),
         });
     }
     Ok(UpkeepRead {

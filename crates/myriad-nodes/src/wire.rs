@@ -39,20 +39,13 @@
 //! **Taken back from sync** (a `retract`, `myriad_persona_log::forget`):
 //! a retracted node's rows go only as stubs, from every side, its home too,
 //! so no body of it leaves the side that keeps it, in a batch or a file;
-//! the retract goes first with the forgets. Every id of the node counts:
-//! the ids it had before the partner's id moved, and nodes that went into
-//! it, before any retract names them: what the caller kept of bodies it
-//! may have deleted (`names`, from `nodes.fold`, which wins: a name once
-//! known never changes), and what the rows and bodies given show. Taking does the same with the batch's own bodies, so no
-//! body under another id of a retracted node is taken either. The rows still go, so vectors
-//! count them. A side takes a retract as a forget unless it is the home
-//! (`here`), and rows of the node that come later as stubs. A retract whose
-//! home is a side no one knows keeps the node nowhere: it is a forget.
-//!
-//! **The partner's id** (`myriad_persona_log::partner`): a batch of the
-//! partner's private audience under an old id (from a side that has not
-//! moved yet, or an old file) is moved as it is taken, rows and bodies, so
-//! it is the same bytes this side moved its own to.
+//! the retract goes first with the forgets. The rows still go, so vectors
+//! count them. Every name of the node counts: the nodes that went into it
+//! and the spans a split moved to it, as the rows' envelopes name them
+//! (`to`, `takes`) on the ledger and in the rows, and as the bodies given
+//! show for rows written before envelopes named them. A side takes a
+//! retract as a forget unless it keeps the node (its own `retract.home`,
+//! on its ledger), and rows of the node that come later as stubs.
 //!
 //! What a body must be to travel:
 //!
@@ -104,7 +97,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use base64::Engine as _;
 use myriad_perception_filter::secrets::{self, SecretKind};
 use myriad_persona_log::{
-    AdmitInput, Admitted, Holder, Partner, Replicate, Row, Vector, admit,
+    AdmitInput, Admitted, Holder, Replicate, Row, Vector, admit,
     admit::{Epochs, Reason, Refusal},
     forget::{self, Entry},
     payloads, vector,
@@ -223,7 +216,7 @@ pub struct SendInput {
     /// The other side.
     pub holder: Holder,
     /// This side's ledger: a node it forgot or took back from sync goes as
-    /// stubs, whatever rows are given.
+    /// stubs under every name it has, whatever rows are given.
     #[serde(default)]
     pub ledger: Vec<Entry>,
     /// The nodes (`node:<id>`) this side knows are a person's or a group's
@@ -231,11 +224,6 @@ pub struct SendInput {
     /// goes, though their created row's body is not among `bodies`.
     #[serde(default)]
     pub elsewhere: Vec<String>,
-    /// The other names of nodes this side keeps (`nodes.fold`'s `names`):
-    /// a forgotten or retracted node goes as stubs under every id it has,
-    /// though the bodies that showed them are not among `bodies`.
-    #[serde(default)]
-    pub names: forget::Names,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -265,8 +253,10 @@ pub struct TakeInput {
     pub known: BTreeMap<String, String>,
     #[serde(default)]
     pub members: BTreeMap<String, BTreeSet<String>>,
+    /// This side's ledger, as for `log.admit`: refused without once a
+    /// retract is in the batch.
     #[serde(default)]
-    pub ledger: Vec<Entry>,
+    pub ledger: Option<Vec<Entry>>,
     #[serde(default)]
     pub epochs: Epochs,
     /// The rows this side holds and asked again for the bodies of: one that
@@ -274,14 +264,6 @@ pub struct TakeInput {
     /// taken; one that comes back otherwise is refused.
     #[serde(default)]
     pub held: Vec<Row>,
-    /// Every origin this side writes or wrote as: needed once a retract is
-    /// in the batch or on the ledger, so a node this side is home of stays.
-    #[serde(default)]
-    pub here: Option<Vec<String>>,
-    /// The partner as this side knows them: a batch under an alias is moved
-    /// to the id in use as it is taken.
-    #[serde(default)]
-    pub partner: Option<Partner>,
     /// The nodes this side already knows are a person's or a group's in her
     /// own audience (earlier [`Taken::elsewhere`]): no body of theirs is
     /// taken, in this batch or any later one.
@@ -293,9 +275,6 @@ pub struct TakeInput {
     /// a key in the batch's bodies, makes in this audience.
     #[serde(default)]
     pub people: Vec<String>,
-    /// The other names of nodes this side keeps (`nodes.fold`'s `names`).
-    #[serde(default)]
-    pub names: forget::Names,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -321,10 +300,6 @@ pub struct Taken {
     /// drops any body of theirs it stored before.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub elsewhere: Vec<String>,
-    /// The `names` given, with what this batch's bodies show: the caller
-    /// keeps them in their place.
-    #[serde(skip_serializing_if = "forget::Names::is_empty")]
-    pub names: forget::Names,
 }
 
 /// Whether an id is a local file or path, after its `<type>:`.
@@ -591,7 +566,6 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         holder,
         ledger,
         elsewhere: known_away,
-        names,
     } = input;
     holder
         .check()
@@ -613,14 +587,12 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
-    // under any id of it (the ids it had before the partner's id moved,
-    // nodes that went into it): the other side is no home of anything here.
-    names
-        .check()
-        .map_err(|error| NodeError::new(error.to_string()))?;
-    let ledger = forget::joined(&ledger, &forget::ledger(&rows));
-    let names = crate::fold::names(&rows, &bodies, &names);
-    let (rows, _) = forget::absorb(rows, &ledger, &[], &names);
+    // under any name of it: the other side keeps nothing of this side's.
+    let ledger = forget::joined(
+        &forget::joined(&ledger, &forget::ledger(&rows)),
+        &crate::fold::legacy(&rows, &bodies),
+    );
+    let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Away);
     let mut away = elsewhere(
         rows.iter()
             .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
@@ -697,45 +669,6 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     })
 }
 
-/// A batch as it reads under `partner`: its audience, rows and bodies moved
-/// from an alias to the id in use (`crate::migrate`). A payload that does
-/// not read goes as it came, for the checks below to refuse.
-fn moved(batch: Batch, partner: &Partner) -> Result<Batch, NodeError> {
-    partner
-        .check()
-        .map_err(|error| NodeError::new(error.to_string()))?;
-    let engine = base64::engine::general_purpose::STANDARD;
-    let mut payloads = batch.payloads;
-    for row in &batch.rows {
-        let Some(payload) = &row.payload else {
-            continue;
-        };
-        let Some(one) = payloads
-            .iter_mut()
-            .find(|one| one.reference == payload.reference)
-        else {
-            continue;
-        };
-        let read = engine
-            .decode(&one.data)
-            .ok()
-            .and_then(|data| serde_json::from_slice::<Value>(&data).ok());
-        if let Some(new) = read.and_then(|body| crate::migrate::body(row, &body, partner)) {
-            one.data = engine.encode(canonical_bytes(&new));
-        }
-    }
-    Ok(Batch {
-        audience: partner.audience(&batch.audience),
-        rows: batch
-            .rows
-            .iter()
-            .map(|row| myriad_persona_log::partner::row(row, partner))
-            .collect(),
-        payloads,
-        withheld: batch.withheld,
-    })
-}
-
 /// A batch from another side, checked: the rows to merge and their bodies.
 pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     let TakeInput {
@@ -747,22 +680,12 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         held,
-        here,
-        partner,
         elsewhere: known_away,
         people,
-        names,
     } = input;
-    names
-        .check()
-        .map_err(|error| NodeError::new(error.to_string()))?;
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
-    let batch = match &partner {
-        Some(partner) => moved(batch, partner)?,
-        None => batch,
-    };
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();
     for one in &batch.payloads {
         if carried
@@ -818,9 +741,10 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             rows.push(row.clone());
         }
     }
-    // What the batch's own bodies show, read as sent: other ids of a node
-    // (so a retract taken now reaches the rows under them), and the person
-    // and group keys a node id may be made of.
+    // What the batch's own bodies show, read as sent: the names of rows
+    // from before envelopes held them (so a retract taken now reaches the
+    // rows under them), and the person and group keys a node id may be
+    // made of.
     let shown: BTreeMap<String, Value> = batch
         .rows
         .iter()
@@ -838,7 +762,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .filter(|row| row.audience == batch.audience && row.check().is_ok())
         .cloned()
         .collect();
-    let names = crate::fold::names(&checked, &shown, &names);
+    let legacy = crate::fold::legacy(&checked, &shown);
     // The person and group nodes this side can tie a node of this audience
     // to: only for one of them is the sender's `person_elsewhere` taken.
     let mut keys: BTreeSet<String> = people.into_iter().collect();
@@ -851,27 +775,22 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .filter(|key| Key::parse(key).is_ok_and(|key| !key.fits(&batch.audience)))
         .map(|key| format!("node:{}", crate::key::made_id(&batch.audience, key)))
         .collect();
+    forget::given(ledger.as_deref(), &batch.rows)
+        .map_err(|error| NodeError::new(error.to_string()))?;
     let mut admitted = admit(AdmitInput {
         rows,
         now,
         known,
         members,
-        ledger,
+        ledger: Some(forget::joined(&ledger.unwrap_or_default(), &legacy)),
         epochs,
         holder: Some(holder),
-        here: here.clone(),
-        names: names.clone(),
     })
     .map_err(|error| NodeError::new(error.to_string()))?;
     admitted.refused.extend(astray);
     // A row asked again for is taken as the ledger stands now too: no
     // body of a node forgotten or taken back from this side comes in.
-    let (again, _) = forget::absorb(
-        again,
-        &admitted.ledger,
-        here.as_deref().unwrap_or(&[]),
-        &names,
-    );
+    let (again, _) = forget::absorb(again, &admitted.ledger, forget::Side::Here);
     let engine = base64::engine::general_purpose::STANDARD;
     // The most base64 one body may take.
     let most = MAX_BODY_BYTES.div_ceil(3) * 4;
@@ -954,7 +873,6 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         withheld,
         ask,
         elsewhere: learnt,
-        names,
     })
 }
 

@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 
 use myriad_persona_log::{
     Core, Holder, MergeInput, Row,
-    forget::{Entry, Names},
+    forget::{self, Entry},
     merge,
     vector::holdings,
 };
@@ -60,6 +60,16 @@ fn row(id: &str, origin: &str, dseq: u64, at: u64, audience: &str, key: &str, ki
     serde_json::from_value(value).unwrap()
 }
 
+/// The local row a side writes beside its own retract: it keeps the node.
+fn home_of(retract: &Row) -> Row {
+    let mut home = retract.clone();
+    home.id = format!("{}h", retract.id);
+    home.kind = "retract.home".into();
+    home.replicate = myriad_persona_log::Replicate::Local;
+    home.dseq = None;
+    home
+}
+
 fn created(key: &str, kind: &str, name: &str) -> Value {
     json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "kind": kind, "key": key, "name": name })
 }
@@ -87,10 +97,8 @@ struct Side {
     rows: Vec<Row>,
     bodies: BTreeMap<String, Value>,
     ledger: Vec<Entry>,
-    /// The origins it writes as.
-    here: Vec<String>,
-    /// The other names of nodes it keeps.
-    names: Names,
+    /// The origin it writes as.
+    origin: String,
     /// Person and group keys it knows.
     people: Vec<String>,
 }
@@ -116,25 +124,33 @@ impl Side {
             rows: Vec::new(),
             bodies: BTreeMap::new(),
             ledger: Vec::new(),
-            here: vec![origin.to_string()],
-            names: Names::default(),
+            origin: origin.to_string(),
             people: Vec::new(),
         }
     }
 
-    /// Writes a row; a forget stubs what it reaches here at once, as the
-    /// writing side does before anything is sent.
+    /// Writes a row, as a host does: its own retract with the local
+    /// `retract.home` beside it, each row through `log.ledger`; a forget or
+    /// retract stubs what it reaches here at once, before anything is sent.
     fn write(&mut self, row: Row, body: Option<Value>) {
         if let Some(body) = body {
             self.bodies.insert(row.id.clone(), body);
         }
-        let forget = row.kind == "forget" || row.kind == "retract";
-        self.rows.push(row);
+        let mut wrote = vec![row.clone()];
+        if row.kind == "retract" && row.origin == self.origin {
+            wrote.push(home_of(&row));
+        }
+        self.ledger = forget::record(forget::RecordInput {
+            rows: wrote.clone(),
+            ledger: self.ledger.clone(),
+        })
+        .unwrap()
+        .ledger;
+        let forget = forget::on_ledger(&row);
+        self.rows.extend(wrote);
         if forget {
             let merged = merge(MergeInput {
-                names: Default::default(),
-                ledger: Vec::new(),
-                here: Some(self.here.clone()),
+                ledger: Some(self.ledger.clone()),
                 log: self.rows.clone(),
                 incoming: Vec::new(),
             })
@@ -143,7 +159,6 @@ impl Side {
             for id in merged.stubbed {
                 self.bodies.remove(&id);
             }
-            self.ledger = myriad_persona_log::ledger(&self.rows);
         }
     }
 
@@ -158,7 +173,6 @@ impl Side {
     /// What this side sends `to` of one audience.
     fn send_to(&self, to: &Side, audience: &str) -> crate::wire::Sent {
         send(SendInput {
-            names: self.names.clone(),
             ledger: self.ledger.clone(),
             elsewhere: Vec::new(),
             audience: audience.into(),
@@ -178,29 +192,21 @@ impl Side {
 
     /// The same, for a batch that brings rows this side asked again for.
     fn take_held(&mut self, batch: Batch, held: Vec<Row>) -> crate::wire::Taken {
-        // The names its own rows show, kept as a host keeps a fold's.
-        self.names = crate::fold::names(&self.rows, &self.bodies, &self.names);
         let taken = take(TakeInput {
-            names: self.names.clone(),
             people: self.people.clone(),
-            here: Some(self.here.clone()),
-            partner: None,
             elsewhere: Vec::new(),
             batch,
             holder: self.holder.clone(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
-            ledger: self.ledger.clone(),
+            ledger: Some(self.ledger.clone()),
             epochs: BTreeMap::new(),
             held,
         })
         .unwrap();
-        self.names = taken.names.clone();
         let merged = merge(MergeInput {
-            names: self.names.clone(),
-            ledger: self.ledger.clone(),
-            here: Some(self.here.clone()),
+            ledger: Some(taken.admitted.ledger.clone()),
             log: self.rows.clone(),
             incoming: taken.admitted.accepted.clone(),
         })
@@ -254,16 +260,7 @@ impl Side {
             .into_iter()
             .filter(|(id, _)| rows.iter().any(|row| &row.id == id))
             .collect();
-        serde_json::to_value(
-            fold(FoldInput {
-                names: self.names.clone(),
-                rows,
-                bodies,
-                here: Some(self.here.clone()),
-            })
-            .unwrap(),
-        )
-        .unwrap()
+        serde_json::to_value(fold(FoldInput { rows, bodies }).unwrap()).unwrap()
     }
 
     fn due(&self, audience: &str) -> Vec<Vec<Reason>> {
@@ -278,8 +275,6 @@ impl Side {
             .map(|(id, body)| (id.clone(), body.clone()))
             .collect();
         queue(QueueInput {
-            names: Default::default(),
-            here: Some(self.here.clone()),
             rows: self.of(audience),
             bodies,
             max: 10,
@@ -678,7 +673,6 @@ fn a_body_lost_on_the_way_is_asked_for_again_and_then_both_fold_the_same() {
         .cloned()
         .collect();
     let sent = send(SendInput {
-        names: Default::default(),
         ledger: Vec::new(),
         elsewhere: Vec::new(),
         audience: MINE.into(),
@@ -793,7 +787,7 @@ fn held_of(side: &Side, key: &str) -> (Vec<(String, bool)>, Vec<String>) {
     let rows: Vec<(String, bool)> = side
         .rows
         .iter()
-        .filter(|row| row.object == object && row.kind != "retract")
+        .filter(|row| row.object == object && !forget::on_ledger(row))
         .map(|row| (row.id.clone(), row.forgotten))
         .collect();
     let bodies = rows
@@ -1121,8 +1115,10 @@ fn a_side_that_took_back_a_node_merged_into_another_keeps_it() {
         row("x1", "dev_mac", 4, T + 5, MINE, OTHER_KEY, "node.span"),
         Some(span(MINE, "别的事其实就是发版。")),
     );
+    let mut absorbed = row("x2", "dev_mac", 5, T + 6, MINE, OTHER_KEY, "node.absorbed");
+    absorbed.to = Some(object(MINE, KEY));
     mac.write(
-        row("x2", "dev_mac", 5, T + 6, MINE, OTHER_KEY, "node.absorbed"),
+        absorbed,
         Some(
             json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "how": "merged",
                      "into": KEY, "reason": "同一件事", "because": ["span:x1"] }),
@@ -1160,372 +1156,128 @@ fn a_side_that_took_back_a_node_merged_into_another_keeps_it() {
 }
 
 #[test]
-fn a_retract_needs_to_know_which_side_folds_it() {
-    let (mut mac, _) = shared_node();
-    mac.write(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "retract"), None);
-    let error = fold(FoldInput {
-        names: Default::default(),
-        rows: mac.of(MINE),
-        bodies: mac.bodies.clone(),
-        here: None,
-    })
-    .unwrap_err();
-    assert!(error.to_string().contains("here"), "{error}");
-    // Only the partner writes one, and it travels.
+fn a_retract_sent_in_this_sides_name_is_a_forget_here() {
+    let (mut mac, mut site) = shared_node();
+    // Another side writes a retract that names the Mac as its writer (a
+    // broken or hostile side, or the Mac's own row after it lost its log):
+    // the Mac never pressed it, so it keeps nothing.
+    site.write(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "retract"), None);
+    mac.sync_from(&site, MINE);
+    let (rows, bodies) = held_of(&mac, KEY);
+    assert!(rows.iter().all(|(_, stub)| *stub) && bodies.is_empty());
+    assert!(node(&mac.folded(MINE, false), KEY).get("name").is_none());
+    // A side's home never travels: a batch carrying one is refused it.
+    let (mut home, mut other) = shared_node();
+    home.write(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "retract"), None);
+    let mut batch = home.send_to(&other, MINE).batches.remove(0);
+    batch.rows.push(home_of(&batch.rows[0]));
+    let taken = other.take(batch);
+    assert!(taken.admitted.refused.iter().any(|one| one.id == "r4h"));
+    // Only the partner writes a retract, and it travels.
     let mut hers = row("r9", "dev_mac", 9, T, MINE, KEY, "retract");
     hers.author = myriad_persona_log::Author::Her;
     hers.epoch = Some(1);
     assert!(hers.check().is_err());
+    let mut kept = home_of(&row("r9", "dev_mac", 9, T, MINE, KEY, "retract"));
+    kept.replicate = myriad_persona_log::Replicate::Shared;
+    kept.dseq = Some(9);
+    assert!(kept.check().is_err());
 }
 
-mod partner_id {
-    use myriad_persona_log::{Partner, partner};
-
-    use super::*;
-    use crate::migrate::{MigrateInput, migrate};
-
-    const OLD: &str = "personal:local-owner";
-    const SITE_OLD: &str = "personal:o41";
-
-    fn id() -> Partner {
-        partner::minted(0x0199_d5c0_a000, &[0x5a; 10], Some("local-owner")).unwrap()
-    }
-
-    fn new() -> String {
-        format!("personal:{}", id().id)
-    }
-
-    fn about_you(audience: &str) -> String {
-        format!("person:{}", audience.strip_prefix("personal:").unwrap())
-    }
-
-    /// A Mac's log under its legacy id: 「关于你」, a task with a span and a
-    /// relation to 「关于你」, and who knows it.
-    fn legacy(audience: &str, origin: &str, prefix: &str) -> (Vec<Row>, BTreeMap<String, Value>) {
-        let you = about_you(audience);
-        let who = audience.strip_prefix("personal:").unwrap();
-        let mut rows = Vec::new();
-        let mut bodies = BTreeMap::new();
-        let mut put = |n: u64, key: &str, kind: &str, body: Value| {
-            let id = format!("{prefix}{n}");
-            rows.push(row(&id, origin, n, T + n, audience, key, kind));
-            bodies.insert(id, body);
-        };
-        put(1, &you, "node.created", created(&you, "person", "关于你"));
-        put(2, KEY, "node.created", created(KEY, "task", "发版"));
-        put(3, KEY, "node.span", span(audience, "伙伴说周五发版。"));
-        put(
-            4,
-            KEY,
-            "node.related",
-            json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "relation": "involves",
-                    "to": you, "reason": "伙伴的事", "because": [format!("span:{prefix}3")] }),
-        );
-        put(
-            5,
-            KEY,
-            "node.revised",
-            json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "base": [],
-                    "field": "who_knows", "value": [who] }),
-        );
-        (rows, bodies)
-    }
-
-    fn moved(
-        rows: Vec<Row>,
-        bodies: BTreeMap<String, Value>,
-    ) -> (Vec<Row>, BTreeMap<String, Value>) {
-        let out = migrate(MigrateInput {
-            rows,
-            bodies,
-            partner: id(),
-        })
-        .unwrap();
-        assert!(out.clashes.is_empty());
-        (out.rows, out.bodies)
-    }
-
-    fn fold_of(rows: Vec<Row>, bodies: BTreeMap<String, Value>) -> Value {
-        serde_json::to_value(
-            fold(FoldInput {
-                names: Default::default(),
-                rows,
-                bodies,
-                here: None,
-            })
-            .unwrap(),
-        )
-        .unwrap()
-    }
-
-    #[test]
-    fn moving_keeps_every_node_its_rows_and_its_old_id() {
-        let (rows, bodies) = legacy(OLD, "dev_mac", "m");
-        let before = fold_of(rows.clone(), bodies.clone());
-        let (moved_rows, moved_bodies) = moved(rows.clone(), bodies);
-        // Ids, sides, counts and clocks stay; the audience is the new one.
-        for (was, is) in rows.iter().zip(&moved_rows) {
-            assert_eq!(
-                (&was.id, &was.origin, was.dseq, &was.hlc, &was.object),
-                (&is.id, &is.origin, is.dseq, &is.hlc, &is.object)
-            );
-            assert_eq!(is.audience, new());
-        }
-        // Moving again changes nothing.
-        let again = migrate(MigrateInput {
-            rows: moved_rows.clone(),
-            bodies: moved_bodies.clone(),
-            partner: id(),
-        })
-        .unwrap();
-        assert!(again.moved.is_empty());
-        assert_eq!(again.bodies, moved_bodies);
-        let after = fold_of(moved_rows, moved_bodies);
-        let nodes = after["nodes"].as_array().unwrap();
-        let you = id().id;
-        let mine = format!("personal:{you}");
-        let about = nodes
+#[test]
+fn a_retract_reaches_spans_split_off_to_it_by_their_envelopes_alone() {
+    let (mut mac, mut site) = shared_node();
+    let mut air = Side::named(Core::Pc, "dev_air");
+    air.sync_from(&site, MINE);
+    // Her upkeep on the Mac splits the span r2 off 「发版」 into a part.
+    const PART: &str = "minted:friday";
+    let mut split = row("p1", "dev_mac", 4, T + 5, MINE, KEY, "node.split_off");
+    split.to = Some(object(MINE, PART));
+    split.takes = vec!["r2".into()];
+    mac.write(
+        split,
+        Some(
+            json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "to": PART,
+                     "spans": ["r2"], "reason": "周五的事单独记", "because": ["span:r2"] }),
+        ),
+    );
+    mac.write(
+        row("p2", "dev_mac", 5, T + 6, MINE, PART, "node.created"),
+        Some(created(PART, "task", "周五")),
+    );
+    // The partner takes the part back on the Mac.
+    mac.write(row("p3", "dev_mac", 6, T + 7, MINE, PART, "retract"), None);
+    site.sync_from(&mac, MINE);
+    // The server keeps 「发版」 but not the span the part took, nor the
+    // split that says so: their bodies go, their envelopes stay.
+    let r2 = site.rows.iter().find(|row| row.id == "r2").unwrap();
+    assert!(r2.forgotten && !site.bodies.contains_key("r2"));
+    assert!(!site.bodies.contains_key("p1"));
+    assert_eq!(
+        node(&site.folded(MINE, false), KEY)["name"]["value"],
+        "发版"
+    );
+    // A server that never held the split's body: the other Mac's whole
+    // span reaches it first, then the server's rows, the split among them
+    // only as a stub. Its envelope alone takes the span away.
+    let mut fresh = Side::new(Core::Server);
+    fresh.sync_from(&air, MINE);
+    assert!(fresh.bodies.contains_key("r2"));
+    fresh.sync_from(&site, MINE);
+    let r2 = fresh.rows.iter().find(|row| row.id == "r2").unwrap();
+    assert!(r2.forgotten && !fresh.bodies.contains_key("r2"));
+    assert!(
+        fresh
+            .rows
             .iter()
-            .find(|node| node["id"] == node_id(&mine, &format!("person:{you}")).unwrap())
-            .unwrap();
-        assert_eq!(about["key"], format!("person:{you}"));
-        assert_eq!(
-            about["aliases"],
-            json!([node_id(OLD, "person:local-owner").unwrap()])
-        );
-        let task = nodes
-            .iter()
-            .find(|node| node["id"] == node_id(&mine, KEY).unwrap())
-            .unwrap();
-        assert_eq!(task["name"]["value"], "发版");
-        assert_eq!(task["spans"][0]["audience"], mine);
-        assert_eq!(task["whoKnows"]["value"], json!([you]));
-        // The relation still finds 「关于你」 by its key.
-        assert_eq!(after["relations"][0]["to"], about["id"]);
-        assert_eq!(
-            before["nodes"].as_array().unwrap().len(),
-            nodes.len(),
-            "no node lost or split"
-        );
+            .any(|row| row.id == "p1" && row.forgotten && row.takes == ["r2"])
+    );
+    // And once the other Mac takes the server's rows, it drops it too.
+    air.sync_from(&site, MINE);
+    assert!(!air.bodies.contains_key("r2"));
+    assert!(air.rows.iter().any(|row| row.id == "r2" && row.forgotten));
+    // The home keeps all of it.
+    for id in ["r2", "p1", "p2"] {
+        assert!(mac.bodies.contains_key(id), "{id}");
     }
+}
 
-    #[test]
-    fn a_retract_of_a_moved_node_reaches_its_old_id_before_any_retract_names_it() {
-        let (rows, bodies) = legacy(OLD, "dev_mac", "m");
-        let (mut rows, bodies) = moved(rows, bodies);
-        let mine = new();
-        // The partner takes the task back on the Mac by the id it folds as
-        // now; its rows still name the id it had before.
-        let retract = row("m6", "dev_mac", 6, T + 6, &mine, KEY, "retract");
-        let old = format!("node:{}", node_id(OLD, KEY).unwrap());
-        assert!(retract.object != old && rows.iter().any(|row| row.object == old));
-        rows.push(retract);
-        // What the home sends (to the server, or a file) holds no body of
-        // the task under either id.
-        let sent = send(SendInput {
-            names: Default::default(),
-            audience: mine.clone(),
-            rows: rows.clone(),
-            bodies: bodies.clone(),
-            theirs: Default::default(),
-            ask: Vec::new(),
-            holder: Holder {
-                core: Core::Server,
-                owner: id().id,
-            },
-            ledger: Vec::new(),
-            elsewhere: Vec::new(),
-        })
-        .unwrap();
-        let carried: Vec<&str> = sent
-            .batches
-            .iter()
-            .flat_map(|batch| &batch.payloads)
-            .map(|one| one.reference.as_str())
-            .collect();
-        assert_eq!(carried, ["doc:m1"], "only 「关于你」");
-        // A side that is not home and still holds the bodies drops them at
-        // its next fold; the home keeps the task and lists the old id's
-        // retract to write.
-        let fold_at = |here: &str| {
-            serde_json::to_value(
-                fold(FoldInput {
-                    names: Default::default(),
-                    rows: rows.clone(),
-                    bodies: bodies.clone(),
-                    here: Some(vec![here.into()]),
-                })
-                .unwrap(),
-            )
-            .unwrap()
-        };
-        let task_id = node_id(&mine, KEY).unwrap();
-        let task = |folded: &Value| {
-            folded["nodes"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .find(|node| node["id"] == task_id)
-                .cloned()
-                .unwrap()
-        };
-        let site = fold_at("site");
-        assert_eq!(task(&site)["retracted"], json!(["dev_mac"]));
-        assert!(task(&site).get("name").is_none());
-        assert_eq!(site["stubbed"], json!(["m2", "m3", "m4", "m5"]));
-        let home = fold_at("dev_mac");
-        assert_eq!(task(&home)["name"]["value"], "发版");
-        assert!(home.get("stubbed").is_none());
-        assert_eq!(
-            home["retracts"],
-            json!([{ "audience": mine, "target": old }])
-        );
-        // The names a fold shows are kept, so a side that has deleted the
-        // created body, or sends only what is new, still sends a stub.
-        let names: Names = serde_json::from_value(home["names"].clone()).unwrap();
-        assert_eq!(names.same.get(&old), Some(&format!("node:{task_id}")));
-        let new_rows: Vec<Row> = rows
-            .iter()
-            .filter(|row| row.id == "m3" || row.id == "m6")
-            .cloned()
-            .collect();
-        let delta = send(SendInput {
-            names: names.clone(),
-            audience: mine.clone(),
-            rows: new_rows.clone(),
-            bodies: bodies
-                .iter()
-                .filter(|(id, _)| *id == "m3")
-                .map(|(id, body)| (id.clone(), body.clone()))
-                .collect(),
-            theirs: Default::default(),
-            ask: Vec::new(),
-            holder: Holder {
-                core: Core::Server,
-                owner: id().id,
-            },
-            ledger: Vec::new(),
-            elsewhere: Vec::new(),
-        })
-        .unwrap();
-        assert!(delta.batches.iter().all(|batch| batch.payloads.is_empty()));
-        // A side taking the span whole from one that did not know, with the
-        // retract, takes no body of it.
-        let whole = Batch {
-            audience: mine.clone(),
-            rows: new_rows,
-            payloads: vec![Carried {
-                reference: "doc:m3".into(),
-                data: {
-                    use base64::Engine as _;
-                    base64::engine::general_purpose::STANDARD.encode(canonical_bytes(&bodies["m3"]))
-                },
-            }],
-            withheld: Vec::new(),
-        };
-        let mut server = Side::new(Core::Server);
-        server.holder.owner = id().id;
-        server.names = names;
-        let taken = server.take(whole);
-        assert!(taken.bodies.is_empty(), "{:?}", taken.bodies);
-        assert!(
-            server
-                .rows
-                .iter()
-                .all(|row| row.forgotten || row.kind == "retract")
-        );
-    }
-
-    #[test]
-    fn two_ids_minted_apart_fold_into_one_node_on_either_side() {
-        let (mac_rows, mac_bodies) = legacy(OLD, "dev_mac", "m");
-        let (site_rows, site_bodies) = legacy(SITE_OLD, "site", "s");
-        let mut partner = id();
-        partner.aliases = vec!["local-owner".into(), "o41".into()];
-        let one = |rows: Vec<Row>, bodies| {
-            let out = migrate(MigrateInput {
-                rows,
-                bodies,
-                partner: partner.clone(),
-            })
-            .unwrap();
-            (out.rows, out.bodies)
-        };
-        let (mut rows, mut bodies) = one(mac_rows, mac_bodies);
-        let (site_rows, site_bodies) = one(site_rows, site_bodies);
-        rows.extend(site_rows);
-        bodies.extend(site_bodies);
-        let folded = fold_of(rows.clone(), bodies.clone());
-        let nodes = folded["nodes"].as_array().unwrap();
-        assert_eq!(nodes.len(), 2, "one 「关于你」 and one task");
-        let task = nodes.iter().find(|node| node["key"] == KEY).unwrap();
-        assert_eq!(task["aliases"].as_array().unwrap().len(), 2);
-        assert_eq!(task["spans"].as_array().unwrap().len(), 2);
-        // Forgetting it by the id it reads as takes every old id along:
-        // they are listed for the caller to write.
-        let mut forget = row("f1", "dev_mac", 9, T + 50, &new(), KEY, "forget");
-        forget.object = task["id"].as_str().map(|id| format!("node:{id}")).unwrap();
-        rows.push(forget);
-        let gone = fold(FoldInput {
-            names: Default::default(),
-            rows,
-            bodies,
-            here: None,
-        })
-        .unwrap();
-        let forgets: Vec<String> = gone.forgets.iter().map(|one| one.target.clone()).collect();
-        let mut olds: Vec<String> = task["aliases"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|id| format!("node:{}", id.as_str().unwrap()))
-            .collect();
-        olds.sort();
-        assert_eq!(forgets, olds);
-    }
-
-    #[test]
-    fn a_batch_from_a_side_not_moved_yet_is_moved_as_it_arrives() {
-        let (rows, bodies) = legacy(OLD, "dev_mac", "m");
-        let (moved_rows, moved_bodies) = moved(rows.clone(), bodies.clone());
-        // The old Mac sends the server its batch under the old id; the
-        // server has moved.
-        let mut old_mac = Side::new(Core::Pc);
-        old_mac.holder.owner = "local-owner".into();
-        for row in &rows {
-            old_mac.write(row.clone(), bodies.get(&row.id).cloned());
-        }
-        let mut site = Side::new(Core::Server);
-        site.holder.owner = id().id;
-        let batches = old_mac.send_to(&site, OLD).batches;
-        for batch in batches {
-            let taken = take(TakeInput {
-                names: Default::default(),
-                people: Vec::new(),
-                batch,
-                holder: site.holder.clone(),
-                now: NOW,
-                known: BTreeMap::new(),
-                members: BTreeMap::new(),
-                ledger: Vec::new(),
-                epochs: BTreeMap::new(),
-                held: Vec::new(),
-                here: Some(site.here.clone()),
-                partner: Some(id()),
-                elsewhere: Vec::new(),
-            })
-            .unwrap();
-            assert!(taken.withheld.is_empty(), "{:?}", taken.withheld);
-            site.rows.extend(taken.admitted.accepted);
-            site.bodies.extend(taken.bodies);
-        }
-        // The same bytes the Mac's own move gives.
-        let mut got = site.rows.clone();
-        got.sort_by(|a, b| a.id.cmp(&b.id));
-        let mut want = moved_rows;
-        want.sort_by(|a, b| a.id.cmp(&b.id));
-        assert_eq!(got, want);
-        assert_eq!(site.bodies, moved_bodies);
+#[test]
+fn a_node_merged_into_a_retracted_one_is_stubbed_from_its_envelope_alone() {
+    let (mut mac, mut site) = shared_node();
+    let mut air = Side::named(Core::Pc, "dev_air");
+    air.sync_from(&site, MINE);
+    // The other Mac writes on 「别的事」 while offline.
+    air.write(
+        row("a1", "dev_air", 1, T + 4, MINE, OTHER_KEY, "node.span"),
+        Some(span(MINE, "别的事的一段。")),
+    );
+    // The Mac merges 「别的事」 into 「发版」 and takes 「发版」 back.
+    let mut absorbed = row("x1", "dev_mac", 4, T + 5, MINE, OTHER_KEY, "node.absorbed");
+    absorbed.to = Some(object(MINE, KEY));
+    mac.write(
+        absorbed,
+        Some(
+            json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "how": "merged",
+                     "into": KEY, "reason": "同一件事", "because": ["node:r3"] }),
+        ),
+    );
+    mac.write(row("x2", "dev_mac", 5, T + 6, MINE, KEY, "retract"), None);
+    site.sync_from(&mac, MINE);
+    // The server holds the merge only as a stub now; its envelope still
+    // names where 「别的事」 went, so the other Mac's span comes in a stub.
+    let x1 = site.rows.iter().find(|row| row.id == "x1").unwrap();
+    assert!(x1.forgotten && x1.to.is_some());
+    site.sync_from(&air, MINE);
+    let a1 = site.rows.iter().find(|row| row.id == "a1").unwrap();
+    assert!(a1.forgotten && !site.bodies.contains_key("a1"));
+    let (rows, _) = held_of(&site, OTHER_KEY);
+    assert!(rows.iter().all(|(_, stub)| *stub), "{rows:?}");
+    // The home keeps its own rows whole; the other Mac's span reached it
+    // only as a stub (当作忘掉).
+    mac.sync_from(&site, MINE);
+    for id in ["r1", "r2", "r3", "x1"] {
+        assert!(mac.bodies.contains_key(id), "{id}");
     }
 }
 
@@ -1571,7 +1323,6 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
     said.object = node.clone();
     writer.write(said, Some(span(OWN, "小九说的话。")));
     let second = send(SendInput {
-        names: Default::default(),
         audience: OWN.into(),
         rows: writer.of(OWN),
         bodies: writer.bodies.clone(),
@@ -1585,18 +1336,15 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
     .batches;
     let take_with = |known: Vec<String>| {
         take(TakeInput {
-            names: Default::default(),
             people: Vec::new(),
             batch: second[0].clone(),
             holder: site.holder.clone(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
-            ledger: Vec::new(),
+            ledger: None,
             epochs: BTreeMap::new(),
             held: Vec::new(),
-            here: Some(site.here.clone()),
-            partner: None,
             elsewhere: known,
         })
         .unwrap()
@@ -1616,18 +1364,15 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
     });
     let lone = |known: Vec<String>| {
         take(TakeInput {
-            names: Default::default(),
             people: Vec::new(),
             batch: carried.clone(),
             holder: site.holder.clone(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
-            ledger: Vec::new(),
+            ledger: None,
             epochs: BTreeMap::new(),
             held: Vec::new(),
-            here: Some(site.here.clone()),
-            partner: None,
             elsewhere: known,
         })
         .unwrap()
@@ -1645,7 +1390,6 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
     site.bodies.insert("p2".into(), span(OWN, "小九说的话。"));
     let air = Side::named(Core::Pc, "dev_air");
     let sent = send(SendInput {
-        names: Default::default(),
         audience: OWN.into(),
         rows: site.of(OWN),
         bodies: site.bodies.clone(),

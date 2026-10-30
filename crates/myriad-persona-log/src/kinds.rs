@@ -24,9 +24,32 @@ pub enum Rule {
     /// every side and in any order.
     Forget,
     /// Takes a node back from sync (撤回同步): the partner's row, read as a
-    /// forget on every side but its home, the side that wrote it
-    /// ([`crate::forget`]).
+    /// forget on every side but its homes ([`crate::forget`]).
     Retract,
+    /// The local row a side writes with its own retract: this side keeps
+    /// the node. Local rows never come from another side, so no row
+    /// another side sends makes this one a home ([`crate::forget`]).
+    Home,
+}
+
+/// Which other node a kind's rows may name in their envelope (`to`,
+/// `takes`, [`crate::Row`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Names {
+    None,
+    /// The node it went into (`node.absorbed`).
+    Into,
+    /// The part split off it, and the spans moved there (`node.split_off`).
+    Split,
+}
+
+/// What other node rows of `kind` name in their envelope.
+pub fn names(kind: &str) -> Names {
+    match kind {
+        "node.absorbed" => Names::Into,
+        "node.split_off" => Names::Split,
+        _ => Names::None,
+    }
 }
 
 /// The object a row of `kind` must be about, as the part before `:`;
@@ -96,9 +119,10 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("outfit.write", Some("outfit"), Rule::Latest),
     // One field of her persona per object: `persona:<field>`.
     ("persona.field", Some("persona"), Rule::Latest),
-    // The partner took a node back from sync: it stays on the side that
-    // wrote this row (its home) and is forgotten everywhere else.
+    // The partner took a node back from sync: it is forgotten on every
+    // side but the ones that wrote it with a `retract.home` beside it.
     ("retract", Some("node"), Rule::Retract),
+    ("retract.home", Some("node"), Rule::Home),
     ("segment.close", Some("segment"), Rule::Event),
     ("segment.line", Some("segment"), Rule::Event),
     ("segment.open", Some("segment"), Rule::Event),
@@ -144,5 +168,8 @@ mod tests {
         assert_eq!(object_type("forget"), None);
         assert_eq!(rule("retract"), Some(Rule::Retract));
         assert_eq!(object_type("retract"), Some("node"));
+        assert_eq!(rule("retract.home"), Some(Rule::Home));
+        assert_eq!(names("node.split_off"), Names::Split);
+        assert_eq!(names("node.span"), Names::None);
     }
 }

@@ -40,9 +40,11 @@ pub struct AdmitInput {
     /// them is refused. Groups not listed are not checked.
     #[serde(default)]
     pub members: BTreeMap<String, BTreeSet<String>>,
-    /// This side's ledger.
+    /// This side's ledger: what it forgot, took back and keeps, and the
+    /// other names of its nodes ([`crate::forget`]). Refused without once a
+    /// retract is in the batch: what this side keeps may be only on it.
     #[serde(default)]
-    pub ledger: Vec<Entry>,
+    pub ledger: Option<Vec<Entry>>,
     /// For each audience, then each side, the highest epoch of its her
     /// rows this side holds there.
     #[serde(default)]
@@ -51,15 +53,6 @@ pub struct AdmitInput {
     /// hold is refused ([`crate::holder`]).
     #[serde(default)]
     pub holder: Option<Holder>,
-    /// Every origin this side writes or wrote as, so a node it is the home
-    /// of stays ([`crate::forget`]). Without it this side is no retract's
-    /// home, and once a retract is in the batch or on the ledger it must be
-    /// given: [`admit`] refuses the call without it.
-    #[serde(default)]
-    pub here: Option<Vec<String>>,
-    /// The other names of objects this side keeps ([`forget::Names`]).
-    #[serde(default)]
-    pub names: forget::Names,
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -116,10 +109,9 @@ pub struct Admitted {
     pub epochs: Epochs,
 }
 
-/// A batch checked. Refused as a whole when `here` or `names` is not well
-/// formed, or a retract is in the batch or on the ledger and `here` is not
-/// given: a home never loses its node to a call that did not say where it
-/// runs.
+/// A batch checked. Refused as a whole when a retract is in the batch and
+/// no ledger is given: a home never loses its node to a call that did not
+/// say what it keeps.
 pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
     let AdmitInput {
         mut rows,
@@ -129,20 +121,9 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         ledger,
         mut epochs,
         holder,
-        here,
-        names,
     } = input;
-    names.check()?;
-    let checked: Vec<Row> = rows
-        .iter()
-        .filter(|row| row.check().is_ok())
-        .cloned()
-        .collect();
-    let here = forget::here(
-        &forget::joined(&ledger, &forget::ledger(&checked)),
-        here.as_deref(),
-    )?
-    .to_vec();
+    forget::given(ledger.as_deref(), &rows)?;
+    let ledger = ledger.unwrap_or_default();
     let ahead = rows
         .iter()
         .map(|row| hlc::ahead_ms(&row.hlc, now))
@@ -224,7 +205,7 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         accepted.push(row);
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&accepted));
-    let (accepted, _) = forget::absorb(accepted, &ledger, &here, &names);
+    let (accepted, _) = forget::absorb(accepted, &ledger, forget::Side::Here);
     Ok(Admitted {
         accepted,
         refused,

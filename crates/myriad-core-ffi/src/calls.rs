@@ -29,7 +29,6 @@ mod memory;
 mod nodes;
 mod outfit;
 mod own;
-mod partner;
 mod reach;
 mod reminder;
 mod serial;
@@ -108,6 +107,7 @@ const CALLS: &[(&str, Call)] = &[
     ("log.clock_repair", log::clock_repair),
     ("log.fold", log::fold),
     ("log.holdings", log::holdings),
+    ("log.ledger", log::ledger),
     ("log.merge", log::merge),
     ("log.missing", log::missing),
     ("making.how_it_went", soup::how_it_went),
@@ -150,9 +150,6 @@ const CALLS: &[(&str, Call)] = &[
     ("outfit.resolve_directive", outfit::resolve_directive),
     ("outfit.split_wear", outfit::split_wear),
     ("outfit.wardrobe_section", outfit::wardrobe_section),
-    ("partner.meet", partner::meet),
-    ("partner.migrate", partner::migrate),
-    ("partner.mint", partner::mint),
     ("prompt.untrusted_block", speaking::untrusted_block),
     ("reach.as_text", reach::as_text),
     ("reach.judge_system", reach::judge_system),
