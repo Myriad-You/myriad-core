@@ -219,3 +219,114 @@ fn streaming_in_any_window_sizes_opens_the_same() {
         assert_eq!(parts, sample.parts, "window {window}");
     }
 }
+
+/// One audience's page of her log, as `nodes.wire_send` makes a batch.
+fn log_page(ids: &[&str]) -> serde_json::Value {
+    let rows: Vec<serde_json::Value> = ids
+        .iter()
+        .enumerate()
+        .map(|(at, id)| {
+            serde_json::json!({
+                "version": 1, "id": id, "origin": "dev_mac", "author": "her", "epoch": 1,
+                "dseq": at + 1, "hlc": format!("{:015}-000000-dev_mac", 1_760_000_000_000u64 + at as u64),
+                "audience": "personal:7", "object": "node:a", "kind": "node.span",
+                "payload": { "ref": format!("doc:{id}") }, "replicate": "shared",
+            })
+        })
+        .collect();
+    serde_json::json!({
+        "audience": "personal:7",
+        "rows": rows,
+        "payloads": [{ "ref": format!("doc:{}", ids[0]), "data": "e30=" }],
+    })
+}
+
+/// The sample with log pages after its envelope page, sealed as a
+/// version 2 file (or, with `logs` false, wrongly as version 1).
+fn with_logs(pages: &[serde_json::Value], logs: bool) -> Vec<u8> {
+    let mut sample = archive_sample();
+    let envelopes: Vec<Envelope> = sample
+        .parts
+        .iter()
+        .filter(|(part, _)| matches!(part, Part::Envelope { .. }))
+        .map(|(_, bytes)| serde_json::from_slice(bytes).unwrap())
+        .collect();
+    let manifest = Manifest::of_envelopes(&envelopes)
+        .unwrap()
+        .with_logs(pages)
+        .unwrap();
+    let mut header = ArchiveHeader::new(
+        &[0x11; SALT_BYTES],
+        &[0x22; NONCE_PREFIX_BYTES],
+        HeaderFields {
+            lineage: sample.header.lineage.clone(),
+            epoch: sample.header.epoch,
+            origin: sample.header.origin.clone(),
+            created_at: sample.header.created_at,
+            digest: manifest.digest.clone(),
+            logs,
+        },
+    )
+    .unwrap();
+    header.chunk_bytes = 1024;
+    sample.header = header;
+    for (at, page) in pages.iter().enumerate() {
+        let bytes = crate::canonical::canonical_bytes(page);
+        sample.parts.insert(
+            1 + at,
+            (
+                Part::Log {
+                    bytes: bytes.len() as u64,
+                },
+                bytes,
+            ),
+        );
+    }
+    let end = sample.parts.len() - 1;
+    sample.parts[end] = (Part::End { manifest }, Vec::new());
+    sample.seal()
+}
+
+#[test]
+fn a_file_with_log_pages_is_version_2_and_opens_them() {
+    let pages = [log_page(&["r1", "r2"]), log_page(&["r3"])];
+    let file = with_logs(&pages, true);
+    let opened = open(SAMPLE_PASSPHRASE, &file).unwrap();
+    assert_eq!(opened.header.version, ARCHIVE_LOG_VERSION);
+    assert_eq!(opened.logs, pages);
+    assert_eq!(opened.manifest.log.as_ref().unwrap().count, 3);
+    // The same rows in other pages, in another order: the same manifest.
+    let other = [log_page(&["r3"]), log_page(&["r1", "r2"])];
+    let reread = open(SAMPLE_PASSPHRASE, &with_logs(&other, true)).unwrap();
+    assert_eq!(reread.manifest, opened.manifest);
+    // A file with no log pages is still version 1 and its manifest unchanged.
+    let (header, _, plain) = sealed();
+    assert_eq!(header.version, ARCHIVE_VERSION);
+    assert!(
+        open(SAMPLE_PASSPHRASE, &plain)
+            .unwrap()
+            .manifest
+            .log
+            .is_none()
+    );
+}
+
+#[test]
+fn a_log_page_is_refused_in_a_version_1_file_or_with_a_row_twice() {
+    let file = with_logs(&[log_page(&["r1"])], false);
+    assert!(refused(&file).contains("version 2"), "{}", refused(&file));
+    let twice = [log_page(&["r1"]), log_page(&["r1"])];
+    let sample = archive_sample();
+    let envelopes: Vec<Envelope> = sample
+        .parts
+        .iter()
+        .filter(|(part, _)| matches!(part, Part::Envelope { .. }))
+        .map(|(_, bytes)| serde_json::from_slice(bytes).unwrap())
+        .collect();
+    assert!(
+        Manifest::of_envelopes(&envelopes)
+            .unwrap()
+            .with_logs(&twice)
+            .is_err()
+    );
+}

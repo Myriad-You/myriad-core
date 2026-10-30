@@ -173,14 +173,17 @@ pub(super) fn archive_part(raw: &[u8]) -> Result<Value, Failure> {
     }
 }
 
-/// `{envelopes}` → `{manifest}`: what a copy of her holds, counted and
-/// digested the same on every side. Pages are put in their canonical form
-/// first.
+/// `{envelopes, logs?}` → `{manifest}`: what a copy of her holds, counted
+/// and digested the same on every side. Pages are put in their canonical
+/// form first; log pages (`{audience, rows, payloads?}`) add `log`.
 pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         envelopes: Vec<Envelope>,
+        /// The file's log pages, `{audience, rows, payloads?}`.
+        #[serde(default)]
+        logs: Vec<Value>,
     }
     let req: In = input(raw)?;
     let envelopes = req
@@ -189,6 +192,8 @@ pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
         .map(myriad_persona_sync::canonicalize_envelope)
         .collect::<Result<Vec<_>, _>>()
         .map_err(refused)?;
-    let manifest = Manifest::of_envelopes(&envelopes).map_err(refused)?;
+    let manifest = Manifest::of_envelopes(&envelopes)
+        .and_then(|manifest| manifest.with_logs(&req.logs))
+        .map_err(refused)?;
     Ok(json!({ "manifest": manifest }))
 }
