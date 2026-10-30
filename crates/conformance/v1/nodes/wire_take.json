@@ -1887,6 +1887,10 @@
             "version": 1
           }
         },
+        "elsewhere": [
+          "node:9ddc297b2aed54affc184c6b2070d5ce",
+          "node:ed599c316f18e04d0c10e9a82fe9cc45"
+        ],
         "epochs": {
           "own:": {
             "site": 1
@@ -3305,6 +3309,156 @@
       "name": "refused: a retract taken without here",
       "output": {
         "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "own:",
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "p1",
+              "kind": "node.created",
+              "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:p1"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "p1",
+              "why": "person_elsewhere"
+            }
+          ]
+        },
+        "here": [
+          "site"
+        ],
+        "holder": {
+          "core": "server",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "the sender's person_elsewhere marks the node for later batches",
+      "output": {
+        "accepted": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p1",
+            "kind": "node.created",
+            "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:p1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "elsewhere": [
+          "node:39e5897592d9a4742ebb76d3c1fffbc3"
+        ],
+        "epochs": {
+          "own:": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "withheld": [
+          {
+            "id": "p1",
+            "why": "person_elsewhere"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "own:",
+          "payloads": [
+            {
+              "data": "eyJhdWRpZW5jZSI6Im93bjoiLCJzYWlkQnkiOlsiaGVyIiwicGFydG5lciJdLCJzeW5jIjoic2hhcmVkIiwidGV4dCI6IuWwj+S5neivtOeahOivneOAgiIsInZlcnNpb24iOjF9",
+              "ref": "doc:p2"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "p2",
+              "kind": "node.span",
+              "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:p2"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        },
+        "elsewhere": [
+          "node:39e5897592d9a4742ebb76d3c1fffbc3"
+        ],
+        "here": [
+          "site"
+        ],
+        "holder": {
+          "core": "server",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "a later batch takes no body of a node known to be a person's in her own audience",
+      "output": {
+        "accepted": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p2",
+            "kind": "node.span",
+            "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:p2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "own:": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "withheld": [
+          {
+            "id": "p2",
+            "why": "person_elsewhere"
+          }
+        ]
       }
     }
   ],

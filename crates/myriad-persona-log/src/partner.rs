@@ -18,7 +18,14 @@
 //!   that first links to the site, an export from another side) keep the
 //!   smaller in byte order, which is the one minted first. Every alias
 //!   either side had, and the other id, become aliases. The rule only looks
-//!   at the two ids, so any order of meetings ends on the same id.
+//!   at the two ids, so any order of meetings ends on the same id. A side
+//!   meets only an id it has reason to hold for the partner (the hello of a
+//!   device linked to the partner's own account, the partner's own file),
+//!   and names everyone else it knows (`others`): an id or alias the other
+//!   side brings that is one of them is refused, so no one's private talk
+//!   is ever moved into the partner's. Aliases past [`MAX_ALIASES`] are let
+//!   go, the newest partner ids first (legacy ids stay): a row under one
+//!   let go is moved by its own side when that side meets.
 //! - **Moving** ([`row`]): a side whose id changed rewrites its rows once:
 //!   `personal:<alias>` becomes `personal:<id>`, a subject that was the
 //!   alias becomes the id, and so does an object about it (`subject:<alias>`,
@@ -39,7 +46,7 @@ const TIME_DIGITS: usize = 12;
 pub const RANDOM_BYTES: usize = 10;
 /// The latest mint time the form holds: 16^12 - 1 milliseconds.
 const MAX_MS: i64 = (1 << 48) - 1;
-/// Aliases one partner may carry.
+/// Aliases one partner may carry; a meeting keeps this many.
 pub const MAX_ALIASES: usize = 32;
 
 /// Whether `id` is a partner id in the form this core mints.
@@ -174,9 +181,21 @@ fn is_false(value: &bool) -> bool {
     !*value
 }
 
-pub fn meet(mine: &Partner, theirs: &Partner) -> Result<Met, LogError> {
+/// Two ids meet. `others` are the ids this side knows to be someone else
+/// (every person it holds a private audience or a person node of, the
+/// partner aside); an id `theirs` brings that is among them is refused, and
+/// so is an `others` that names the partner.
+pub fn meet(mine: &Partner, theirs: &Partner, others: &[String]) -> Result<Met, LogError> {
     mine.check()?;
     theirs.check()?;
+    if others.iter().any(|other| mine.is(other)) {
+        return Err(LogError::new("others names the partner"));
+    }
+    if others.iter().any(|other| theirs.is(other)) {
+        return Err(LogError::new(
+            "an id the other side brings is someone else's here",
+        ));
+    }
     let id = mine.id.as_str().min(theirs.id.as_str()).to_string();
     let mut aliases: Vec<String> = mine
         .aliases
@@ -186,8 +205,13 @@ pub fn meet(mine: &Partner, theirs: &Partner) -> Result<Met, LogError> {
         .filter(|alias| **alias != id)
         .cloned()
         .collect();
-    aliases.sort();
+    // Legacy ids first, then partner ids oldest first; the first
+    // MAX_ALIASES stay. Keeping the first of one order is the same in any
+    // order of meetings.
+    aliases.sort_by(|a, b| (check(a).is_ok(), a).cmp(&(check(b).is_ok(), b)));
     aliases.dedup();
+    aliases.truncate(MAX_ALIASES);
+    aliases.sort();
     let partner = Partner { id, aliases };
     partner.check()?;
     Ok(Met {
@@ -262,8 +286,8 @@ mod tests {
         let mac = minted(0x0199_d5c0_a000, &[0x22; 10], Some("local-owner")).unwrap();
         let site = minted(0x0199_d5c0_9000, &[0x33; 10], Some("o41")).unwrap();
         let other = minted(0x0199_d5c0_b000, &[0x01; 10], Some("local-owner")).unwrap();
-        let one = meet(&meet(&mac, &site).unwrap().partner, &other).unwrap();
-        let two = meet(&other, &meet(&site, &mac).unwrap().partner).unwrap();
+        let one = meet(&meet(&mac, &site, &[]).unwrap().partner, &other, &[]).unwrap();
+        let two = meet(&other, &meet(&site, &mac, &[]).unwrap().partner, &[]).unwrap();
         assert_eq!(one.partner, two.partner);
         assert_eq!(one.partner.id, site.id);
         assert_eq!(
@@ -275,8 +299,55 @@ mod tests {
                 other.id.clone()
             ]
         );
-        let met = meet(&mac, &site).unwrap();
+        let met = meet(&mac, &site, &[]).unwrap();
         assert!(met.changed, "the Mac's id lost");
-        assert!(!meet(&site, &mac).unwrap().changed);
+        assert!(!meet(&site, &mac, &[]).unwrap().changed);
+    }
+
+    #[test]
+    fn an_id_that_is_someone_else_here_is_never_taken_for_the_partner() {
+        let site = minted(0x0199_d5c0_a000, &[0x33; 10], Some("o41")).unwrap();
+        // A hello that claims another person of the site as an alias.
+        let claim = Partner {
+            id: mint(0, &[0; 10]).unwrap(),
+            aliases: vec!["o99".into()],
+        };
+        let others = ["o99".to_string(), "o7".into()];
+        assert!(meet(&site, &claim, &others).is_err());
+        let claim = Partner {
+            id: claim.id,
+            aliases: Vec::new(),
+        };
+        assert!(meet(&site, &claim, &others).is_ok());
+        assert!(
+            meet(&site, &claim, &["o41".into()]).is_err(),
+            "others names the partner"
+        );
+    }
+
+    #[test]
+    fn past_the_cap_the_newest_partner_ids_go_the_same_in_any_order() {
+        let side = |n: u8, was: &str| {
+            minted(0x0199_d5c0_a000 + i64::from(n), &[n; 10], Some(was)).unwrap()
+        };
+        let sides: Vec<Partner> = (0..40)
+            .map(|n| side(n, &format!("legacy-{n:02}")))
+            .collect();
+        let forward = sides.iter().skip(1).fold(sides[0].clone(), |held, next| {
+            meet(&held, next, &[]).unwrap().partner
+        });
+        let backward = sides
+            .iter()
+            .rev()
+            .skip(1)
+            .fold(sides[39].clone(), |held, next| {
+                meet(&held, next, &[]).unwrap().partner
+            });
+        assert_eq!(forward, backward);
+        assert_eq!(forward.id, sides[0].id);
+        assert_eq!(forward.aliases.len(), MAX_ALIASES);
+        assert!(forward.check().is_ok());
+        // Legacy ids are kept before partner ids.
+        assert!(forward.aliases.iter().all(|alias| check(alias).is_err()));
     }
 }

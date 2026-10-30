@@ -94,16 +94,8 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
             } = input(raw)?;
             json_of(&crate::vector::answer_to(&rows, &theirs, holder.as_ref())?)
         }
-        "log.admit" => {
-            let rows: AdmitInput = input(raw)?;
-            rows.check()?;
-            json_of(&admit(rows))
-        }
-        "log.merge" => {
-            let rows: MergeInput = input(raw)?;
-            rows.check()?;
-            json_of(&merge(rows))
-        }
+        "log.admit" => json_of(&admit(input::<AdmitInput>(raw)?)?),
+        "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
         "log.fold" => json_of(&fold(input(raw)?)?),
         "log.clock_offset" => {
             #[derive(Deserialize)]
@@ -390,6 +382,7 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
                 log: held,
                 incoming: vec![one],
             })
+            .unwrap()
             .log;
         }
         assert!(
@@ -417,12 +410,14 @@ fn merging_is_a_union_in_any_order() {
         here: None,
         log: a.clone(),
         incoming: b.clone(),
-    });
+    })
+    .unwrap();
     let ba = merge(MergeInput {
         here: None,
         log: b.clone(),
         incoming: a.clone(),
-    });
+    })
+    .unwrap();
     assert_eq!(ab.log, ba.log);
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
@@ -430,7 +425,8 @@ fn merging_is_a_union_in_any_order() {
         here: None,
         log: ab.log.clone(),
         incoming: b,
-    });
+    })
+    .unwrap();
     assert_eq!(again.log, ab.log);
     assert!(again.added.is_empty());
     assert_eq!(
@@ -467,6 +463,7 @@ fn what_one_side_answers_fills_the_other() {
     let sent = answer(&mac, &theirs).unwrap();
     let admitted = admit(AdmitInput {
         here: None,
+        from: None,
         rows: sent,
         now: 1_000_000,
         known: Default::default(),
@@ -474,13 +471,15 @@ fn what_one_side_answers_fills_the_other() {
         ledger: Vec::new(),
         epochs: Default::default(),
         holder: None,
-    });
+    })
+    .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
         here: None,
         log: site,
         incoming: admitted.accepted,
     })
+    .unwrap()
     .log;
     assert_eq!(holdings(&site).unwrap(), holdings(&mac).unwrap());
 }

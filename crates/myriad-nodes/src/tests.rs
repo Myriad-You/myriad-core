@@ -169,9 +169,14 @@ fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
             struct In {
                 mine: Partner,
                 theirs: Partner,
+                others: Vec<String>,
             }
-            let In { mine, theirs } = input(raw)?;
-            json_of(&partner::meet(&mine, &theirs).map_err(refused)?)
+            let In {
+                mine,
+                theirs,
+                others,
+            } = input(raw)?;
+            json_of(&partner::meet(&mine, &theirs, &others).map_err(refused)?)
         }
         "partner.migrate" => json_of(&crate::migrate::migrate(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),

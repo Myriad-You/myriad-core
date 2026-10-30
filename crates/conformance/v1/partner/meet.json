@@ -9,6 +9,10 @@
           ],
           "id": "partner_0199d5c0a00022222222222222222222"
         },
+        "others": [
+          "o7",
+          "o99"
+        ],
         "theirs": {
           "aliases": [
             "o41"
@@ -37,6 +41,7 @@
           ],
           "id": "partner_0199d5c0900033333333333333333333"
         },
+        "others": [],
         "theirs": {
           "aliases": [
             "local-owner"
@@ -61,6 +66,7 @@
         "mine": {
           "id": "partner_0199d5c0900033333333333333333333"
         },
+        "others": [],
         "theirs": {
           "aliases": [
             "o41"
@@ -83,6 +89,7 @@
         "mine": {
           "id": "local-owner"
         },
+        "others": [],
         "theirs": {
           "id": "partner_0199d5c0900033333333333333333333"
         }
@@ -101,11 +108,70 @@
           ],
           "id": "partner_0199d5c0a00022222222222222222222"
         },
+        "others": [],
         "theirs": {
           "id": "partner_0199d5c0900033333333333333333333"
         }
       },
       "name": "refused: aliases out of order",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [
+          "o7",
+          "o99"
+        ],
+        "theirs": {
+          "aliases": [
+            "o99"
+          ],
+          "id": "partner_000000000000ffffffffffffffffffff"
+        }
+      },
+      "name": "refused: an alias they bring is someone else here",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [
+          "o41"
+        ],
+        "theirs": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: others names the partner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "mine": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: others is missing",
       "output": {
         "error": "bad_input"
       }

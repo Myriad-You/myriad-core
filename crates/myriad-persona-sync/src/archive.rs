@@ -182,8 +182,9 @@ pub struct ArchiveHeader {
     /// the writer's partner id and its aliases. Only in a file with log
     /// pages (version [`ARCHIVE_LOG_VERSION`]), so a reader of version 1
     /// never meets it; an importer reads it before the pages, to move them
-    /// to its own id (`myriad_persona_log::partner`). An id, not a
-    /// credential.
+    /// to its own id (`myriad_persona_log::partner`), meeting it with
+    /// everyone else it knows named so no one else's id is taken for the
+    /// partner's. An id, not a credential.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub partner: Option<HeaderPartner>,
 }

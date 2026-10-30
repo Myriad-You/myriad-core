@@ -2698,6 +2698,116 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "bodies": {
+          "p2": {
+            "audience": "own:",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "小九说的话。",
+            "version": 1
+          }
+        },
+        "elsewhere": [
+          "node:39e5897592d9a4742ebb76d3c1fffbc3"
+        ],
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p1",
+            "kind": "node.created",
+            "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:p1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p2",
+            "kind": "node.span",
+            "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:p2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a node known to be a person's in her own audience sends no body, its created body not here",
+      "output": {
+        "batches": [
+          {
+            "audience": "own:",
+            "rows": [
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000000-000000-dev_mac",
+                "id": "p1",
+                "kind": "node.created",
+                "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:p1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-dev_mac",
+                "id": "p2",
+                "kind": "node.span",
+                "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:p2"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ],
+            "withheld": [
+              {
+                "id": "p1",
+                "why": "person_elsewhere"
+              },
+              {
+                "id": "p2",
+                "why": "person_elsewhere"
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1

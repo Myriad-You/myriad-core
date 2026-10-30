@@ -827,6 +827,97 @@ fn moved(rows: Vec<Row>, bodies: &BTreeMap<String, Value>) -> (Vec<Row>, Members
     (rows, members)
 }
 
+/// What the ledger's forgets and retracts of nodes reach beyond the ids
+/// they name: every other id of the node (the ids it was moved from, or the
+/// one it reads as now) and every node that went into it, each with the
+/// entry of the node it is part of. A side sends no body of any of them
+/// even before the forgets or retracts naming them are written.
+pub(crate) fn reach(
+    rows: &[Row],
+    bodies: &BTreeMap<String, Value>,
+    ledger: &[forget::Entry],
+) -> Vec<forget::Entry> {
+    let (rows, members) = moved(rows.to_vec(), bodies);
+    let mut reads_as: BTreeMap<(String, String), String> = BTreeMap::new();
+    for ((audience, is), was) in &members {
+        for id in was {
+            reads_as.insert((audience.clone(), format!("node:{id}")), is.clone());
+        }
+    }
+    // (audience, node as it reads now, a retract) → the earliest entry.
+    type Taken = BTreeMap<(String, String, bool), forget::Entry>;
+    fn take(taken: &mut Taken, entry: forget::Entry) {
+        let key = (
+            entry.audience.clone(),
+            entry.target.clone(),
+            entry.home.is_some(),
+        );
+        match taken.get(&key) {
+            Some(kept) if kept.at <= entry.at => {}
+            _ => {
+                taken.insert(key, entry);
+            }
+        }
+    }
+    let mut taken = Taken::new();
+    for entry in ledger
+        .iter()
+        .filter(|entry| object_type(&entry.target) == Some("node"))
+    {
+        let target = reads_as
+            .get(&(entry.audience.clone(), entry.target.clone()))
+            .cloned()
+            .unwrap_or_else(|| entry.target.clone());
+        take(
+            &mut taken,
+            forget::Entry {
+                target,
+                ..entry.clone()
+            },
+        );
+    }
+    // A node that went into one taken is taken with it: the first such on
+    // its way, for a forget and for a retract each.
+    let absorbing = absorbing(&rows, bodies);
+    let mut more = Vec::new();
+    for (audience, from) in absorbing.into.keys() {
+        for retract in [false, true] {
+            let mut at = from.clone();
+            let mut seen = BTreeSet::new();
+            while let Some((next, _)) = absorbing.into.get(&(audience.clone(), at.clone())) {
+                if !seen.insert(at.clone()) {
+                    break;
+                }
+                let key = (audience.clone(), format!("node:{next}"), retract);
+                if let Some(entry) = taken.get(&key) {
+                    more.push(forget::Entry {
+                        target: format!("node:{from}"),
+                        ..entry.clone()
+                    });
+                    break;
+                }
+                at = next.clone();
+            }
+        }
+    }
+    for entry in more {
+        take(&mut taken, entry);
+    }
+    let mut out = Vec::new();
+    for ((audience, is, _), entry) in taken {
+        let was = members.get(&(audience.clone(), is.clone()));
+        for target in std::iter::once(is.clone())
+            .chain(was.into_iter().flatten().map(|id| format!("node:{id}")))
+        {
+            out.push(forget::Entry {
+                target,
+                ..entry.clone()
+            });
+        }
+    }
+    forget::joined(&[], &out)
+}
+
 fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
     let read = |row: &Row| {
         (!row.forgotten)

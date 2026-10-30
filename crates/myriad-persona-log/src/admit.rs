@@ -15,12 +15,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use myriad_persona_sync::hlc;
+use myriad_persona_sync::{Rev, hlc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     Holder, LogError, Row,
     forget::{self, Entry},
+    kinds::Rule,
     row::{Audience, Replicate, sort},
 };
 
@@ -53,24 +54,16 @@ pub struct AdmitInput {
     pub holder: Option<Holder>,
     /// Every origin this side writes or wrote as, so a node it is the home
     /// of stays ([`crate::forget`]). Without it this side is no retract's
-    /// home; a call across the C entry point must give it once a retract
-    /// is in the batch or on the ledger ([`AdmitInput::check`]).
+    /// home, and once a retract is in the batch or on the ledger it must be
+    /// given: [`admit`] refuses the call without it.
     #[serde(default)]
     pub here: Option<Vec<String>>,
-}
-
-impl AdmitInput {
-    /// Whether `here` is given where a retract needs it, and well formed.
-    pub fn check(&self) -> Result<(), LogError> {
-        let checked: Vec<Row> = self
-            .rows
-            .iter()
-            .filter(|row| row.check().is_ok())
-            .cloned()
-            .collect();
-        let ledger = forget::joined(&self.ledger, &forget::ledger(&checked));
-        forget::here(&ledger, self.here.as_deref()).map(|_| ())
-    }
+    /// Every origin the side that sent the batch writes or wrote as, when
+    /// it sends only what it wrote itself (a device's push to the site,
+    /// not rows the site relays). A retract names its home by its origin,
+    /// so one from any other origin is refused (`not_the_sender`).
+    #[serde(default)]
+    pub from: Option<Vec<String>>,
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -93,6 +86,13 @@ pub enum Reason {
     EpochBack,
     /// Its audience is not one this side may hold.
     NotHeld,
+    /// A retract the sending side did not write (`from`): its origin is its
+    /// home, so no side names another as home.
+    NotTheSender,
+    /// A retract whose clock is behind a row its side wrote before it (a
+    /// lower count in the same audience) in the batch: the earliest retract
+    /// of a node holds, so a clock set back would take the home.
+    Backdated,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -127,7 +127,11 @@ pub struct Admitted {
     pub epochs: Epochs,
 }
 
-pub fn admit(input: AdmitInput) -> Admitted {
+/// A batch checked. Refused as a whole when `here` or `from` is not well
+/// formed, or a retract is in the batch or on the ledger and `here` is not
+/// given: a home never loses its node to a call that did not say where it
+/// runs.
+pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
     let AdmitInput {
         mut rows,
         now,
@@ -137,14 +141,30 @@ pub fn admit(input: AdmitInput) -> Admitted {
         mut epochs,
         holder,
         here,
+        from,
     } = input;
+    let checked: Vec<Row> = rows
+        .iter()
+        .filter(|row| row.check().is_ok())
+        .cloned()
+        .collect();
+    let here = forget::here(
+        &forget::joined(&ledger, &forget::ledger(&checked)),
+        here.as_deref(),
+    )?
+    .to_vec();
+    for name in from.iter().flatten() {
+        hlc::check_node(name)
+            .map_err(|_| LogError::new("from holds a name that is not a clock's node"))?;
+    }
+    let retracts = retracts(&checked, from.as_deref());
     let ahead = rows
         .iter()
         .map(|row| hlc::ahead_ms(&row.hlc, now))
         .max()
         .unwrap_or(0);
     if ahead > hlc::MAX_AHEAD_MS {
-        return Admitted {
+        return Ok(Admitted {
             accepted: Vec::new(),
             refused: Vec::new(),
             clock_ahead: Some(ClockAhead {
@@ -153,7 +173,7 @@ pub fn admit(input: AdmitInput) -> Admitted {
             }),
             ledger,
             epochs,
-        };
+        });
     }
     sort(&mut rows);
     let refuse = |row: &Row, reason, detail: Option<String>| Refusal {
@@ -170,6 +190,10 @@ pub fn admit(input: AdmitInput) -> Admitted {
         }
         if row.replicate == Replicate::Local {
             refused.push(refuse(&row, Reason::Local, None));
+            continue;
+        }
+        if let Some(reason) = retracts.get(row.id.as_str()) {
+            refused.push(refuse(&row, *reason, None));
             continue;
         }
         if holder
@@ -219,12 +243,43 @@ pub fn admit(input: AdmitInput) -> Admitted {
         accepted.push(row);
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&accepted));
-    let (accepted, _) = forget::absorb(accepted, &ledger, here.as_deref().unwrap_or(&[]));
-    Admitted {
+    let (accepted, _) = forget::absorb(accepted, &ledger, &here);
+    Ok(Admitted {
         accepted,
         refused,
         clock_ahead: None,
         ledger,
         epochs,
+    })
+}
+
+/// The retracts in `rows` to refuse, and why: one its sender did not write,
+/// or one set back behind a row its side wrote before it.
+fn retracts<'a>(rows: &'a [Row], from: Option<&[String]>) -> BTreeMap<&'a str, Reason> {
+    let mut clocks: BTreeMap<(&str, &str), Vec<(u64, &Rev)>> = BTreeMap::new();
+    for row in rows {
+        if let Some(dseq) = row.dseq {
+            clocks
+                .entry((row.origin.as_str(), row.audience.as_str()))
+                .or_default()
+                .push((dseq, &row.hlc));
+        }
     }
+    let mut out = BTreeMap::new();
+    for row in rows.iter().filter(|row| row.rule() == Rule::Retract) {
+        let count = row.dseq.unwrap_or(0);
+        let backdated = clocks
+            .get(&(row.origin.as_str(), row.audience.as_str()))
+            .is_some_and(|clocks| {
+                clocks
+                    .iter()
+                    .any(|(dseq, rev)| *dseq < count && **rev > row.hlc)
+            });
+        if from.is_some_and(|from| !from.contains(&row.origin)) {
+            out.insert(row.id.as_str(), Reason::NotTheSender);
+        } else if backdated {
+            out.insert(row.id.as_str(), Reason::Backdated);
+        }
+    }
+    out
 }

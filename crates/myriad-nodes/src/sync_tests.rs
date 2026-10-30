@@ -124,7 +124,8 @@ impl Side {
                 here: Some(self.here.clone()),
                 log: self.rows.clone(),
                 incoming: Vec::new(),
-            });
+            })
+            .unwrap();
             self.rows = merged.log;
             for id in merged.stubbed {
                 self.bodies.remove(&id);
@@ -145,6 +146,7 @@ impl Side {
     fn send_to(&self, to: &Side, audience: &str) -> crate::wire::Sent {
         send(SendInput {
             ledger: self.ledger.clone(),
+            elsewhere: Vec::new(),
             audience: audience.into(),
             rows: self.of(audience),
             bodies: self.bodies.clone(),
@@ -163,8 +165,10 @@ impl Side {
     /// The same, for a batch that brings rows this side asked again for.
     fn take_held(&mut self, batch: Batch, held: Vec<Row>) -> crate::wire::Taken {
         let taken = take(TakeInput {
+            from: None,
             here: Some(self.here.clone()),
             partner: None,
+            elsewhere: Vec::new(),
             batch,
             holder: self.holder.clone(),
             now: NOW,
@@ -179,7 +183,8 @@ impl Side {
             here: Some(self.here.clone()),
             log: self.rows.clone(),
             incoming: taken.admitted.accepted.clone(),
-        });
+        })
+        .unwrap();
         self.rows = merged.log;
         for id in &merged.stubbed {
             self.bodies.remove(id);
@@ -652,6 +657,7 @@ fn a_body_lost_on_the_way_is_asked_for_again_and_then_both_fold_the_same() {
         .collect();
     let sent = send(SendInput {
         ledger: Vec::new(),
+        elsewhere: Vec::new(),
         audience: MINE.into(),
         rows: mac.of(MINE),
         bodies: mac.bodies.clone(),
@@ -925,6 +931,72 @@ fn an_export_after_a_retract_holds_no_body_of_the_node_even_from_its_home() {
 }
 
 #[test]
+fn the_side_whose_retract_came_later_keeps_its_own_local_rows() {
+    let (mut mac, mut site) = shared_node();
+    let mut air = Side::named(Core::Pc, "dev_air");
+    air.sync_from(&site, MINE);
+    // The partner takes the node back on the Mac, then, offline, on the
+    // other Mac too, and goes on writing on it there, kept local.
+    mac.write(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "retract"), None);
+    air.write(row("a1", "dev_air", 1, T + 20, MINE, KEY, "retract"), None);
+    let mut local = row("a2", "dev_air", 1, T + 21, MINE, KEY, "node.span");
+    local.replicate = myriad_persona_log::Replicate::Local;
+    local.dseq = None;
+    let mut body = span(MINE, "只在这台记的。");
+    body["sync"] = json!("local");
+    air.write(local, Some(body));
+    site.sync_from(&mac, MINE);
+    site.sync_from(&air, MINE);
+    air.sync_from(&site, MINE);
+    // The Mac's retract came first: the Mac is home. The other Mac's
+    // shared rows of the node are stubs now, but what it kept local, which
+    // is nowhere else, it still holds.
+    assert_eq!(node(&air.folded(MINE, false), KEY)["retracted"], "dev_mac");
+    let a2 = air.rows.iter().find(|row| row.id == "a2").unwrap();
+    assert!(!a2.forgotten && air.bodies.contains_key("a2"));
+    let (rows, _) = held_of(&air, KEY);
+    assert!(
+        rows.iter()
+            .filter(|(id, _)| id != "a2")
+            .all(|(_, stub)| *stub),
+        "{rows:?}"
+    );
+    assert!(!site.rows.iter().any(|row| row.id == "a2"));
+}
+
+#[test]
+fn a_retract_sent_by_a_side_that_did_not_write_it_is_refused() {
+    let (mut mac, site) = shared_node();
+    mac.write(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "retract"), None);
+    // Another side claims the Mac's retract in its own push.
+    let batch = mac.send_to(&site, MINE).batches.remove(0);
+    let taken = take(TakeInput {
+        from: Some(vec!["dev_air".into()]),
+        here: Some(site.here.clone()),
+        partner: None,
+        elsewhere: Vec::new(),
+        batch,
+        holder: site.holder.clone(),
+        now: NOW,
+        known: BTreeMap::new(),
+        members: BTreeMap::new(),
+        ledger: site.ledger.clone(),
+        epochs: BTreeMap::new(),
+        held: Vec::new(),
+    })
+    .unwrap();
+    let refused: Vec<(&str, Value)> = taken
+        .admitted
+        .refused
+        .iter()
+        .map(|one| (one.id.as_str(), serde_json::to_value(one.reason).unwrap()))
+        .collect();
+    assert_eq!(refused, [("r4", json!("not_the_sender"))]);
+    // Nothing of the node was taken away.
+    assert!(taken.admitted.ledger.is_empty());
+}
+
+#[test]
 fn a_retract_needs_to_know_which_side_folds_it() {
     let (mut mac, _) = shared_node();
     mac.write(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "retract"), None);
@@ -1073,6 +1145,77 @@ mod partner_id {
     }
 
     #[test]
+    fn a_retract_of_a_moved_node_reaches_its_old_id_before_any_retract_names_it() {
+        let (rows, bodies) = legacy(OLD, "dev_mac", "m");
+        let (mut rows, bodies) = moved(rows, bodies);
+        let mine = new();
+        // The partner takes the task back on the Mac by the id it folds as
+        // now; its rows still name the id it had before.
+        let retract = row("m6", "dev_mac", 6, T + 6, &mine, KEY, "retract");
+        let old = format!("node:{}", node_id(OLD, KEY).unwrap());
+        assert!(retract.object != old && rows.iter().any(|row| row.object == old));
+        rows.push(retract);
+        // What the home sends (to the server, or a file) holds no body of
+        // the task under either id.
+        let sent = send(SendInput {
+            audience: mine.clone(),
+            rows: rows.clone(),
+            bodies: bodies.clone(),
+            theirs: Default::default(),
+            ask: Vec::new(),
+            holder: Holder {
+                core: Core::Server,
+                owner: id().id,
+            },
+            ledger: Vec::new(),
+            elsewhere: Vec::new(),
+        })
+        .unwrap();
+        let carried: Vec<&str> = sent
+            .batches
+            .iter()
+            .flat_map(|batch| &batch.payloads)
+            .map(|one| one.reference.as_str())
+            .collect();
+        assert_eq!(carried, ["doc:m1"], "only 「关于你」");
+        // A side that is not home and still holds the bodies drops them at
+        // its next fold; the home keeps the task and lists the old id's
+        // retract to write.
+        let fold_at = |here: &str| {
+            serde_json::to_value(
+                fold(FoldInput {
+                    rows: rows.clone(),
+                    bodies: bodies.clone(),
+                    here: Some(vec![here.into()]),
+                })
+                .unwrap(),
+            )
+            .unwrap()
+        };
+        let task_id = node_id(&mine, KEY).unwrap();
+        let task = |folded: &Value| {
+            folded["nodes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|node| node["id"] == task_id)
+                .cloned()
+                .unwrap()
+        };
+        let site = fold_at("site");
+        assert_eq!(task(&site)["retracted"], "dev_mac");
+        assert!(task(&site).get("name").is_none());
+        assert_eq!(site["stubbed"], json!(["m2", "m3", "m4", "m5"]));
+        let home = fold_at("dev_mac");
+        assert_eq!(task(&home)["name"]["value"], "发版");
+        assert!(home.get("stubbed").is_none());
+        assert_eq!(
+            home["retracts"],
+            json!([{ "audience": mine, "target": old }])
+        );
+    }
+
+    #[test]
     fn two_ids_minted_apart_fold_into_one_node_on_either_side() {
         let (mac_rows, mac_bodies) = legacy(OLD, "dev_mac", "m");
         let (site_rows, site_bodies) = legacy(SITE_OLD, "site", "s");
@@ -1135,6 +1278,7 @@ mod partner_id {
         let batches = old_mac.send_to(&site, OLD).batches;
         for batch in batches {
             let taken = take(TakeInput {
+                from: None,
                 batch,
                 holder: site.holder.clone(),
                 now: NOW,
@@ -1145,6 +1289,7 @@ mod partner_id {
                 held: Vec::new(),
                 here: Some(site.here.clone()),
                 partner: Some(id()),
+                elsewhere: Vec::new(),
             })
             .unwrap();
             assert!(taken.withheld.is_empty(), "{:?}", taken.withheld);
@@ -1159,4 +1304,122 @@ mod partner_id {
         assert_eq!(got, want);
         assert_eq!(site.bodies, moved_bodies);
     }
+}
+
+/// A person's node written in her own audience anyway (a writer's bug): its
+/// created row's body never travels, so the node must stay known as one
+/// across batches, or a later body of it would reach every computer.
+#[test]
+fn a_person_in_her_own_audience_stays_held_back_across_batches() {
+    use myriad_persona_sync::canonical::sha256_hex;
+    const OWN: &str = "own:";
+    // `nodes.id` refuses this id; a writer with a bug made it anyway.
+    let node = format!(
+        "node:{}",
+        &sha256_hex("node\u{1f}own:\u{1f}person:9".as_bytes())[..32]
+    );
+    let mut writer = Side::new(Core::Pc);
+    let mut made = row("p1", "dev_mac", 1, T, OWN, KEY, "node.created");
+    made.object = node.clone();
+    writer.write(made, Some(created("person:9", "person", "小九")));
+    let mut site = Side::new(Core::Server);
+    // The created row comes alone, its body kept back by the writer.
+    let first = writer.send_to(&site, OWN).batches;
+    assert_eq!(first[0].withheld[0].why, Why::PersonElsewhere);
+    let mut known: Vec<String> = Vec::new();
+    for batch in first {
+        known.extend(site.take(batch).elsewhere);
+    }
+    assert_eq!(
+        known,
+        std::slice::from_ref(&node),
+        "the sender's word marks the node"
+    );
+    // Later, in a batch of its own, a span of the same node.
+    let mut said = row("p2", "dev_mac", 2, T + 1, OWN, KEY, "node.span");
+    said.object = node.clone();
+    writer.write(said, Some(span(OWN, "小九说的话。")));
+    let second = send(SendInput {
+        audience: OWN.into(),
+        rows: writer.of(OWN),
+        bodies: writer.bodies.clone(),
+        theirs: holdings(&site.of(OWN)).unwrap().vector,
+        ask: Vec::new(),
+        holder: site.holder.clone(),
+        ledger: Vec::new(),
+        elsewhere: Vec::new(),
+    })
+    .unwrap()
+    .batches;
+    let take_with = |known: Vec<String>| {
+        take(TakeInput {
+            from: None,
+            batch: second[0].clone(),
+            holder: site.holder.clone(),
+            now: NOW,
+            known: BTreeMap::new(),
+            members: BTreeMap::new(),
+            ledger: Vec::new(),
+            epochs: BTreeMap::new(),
+            held: Vec::new(),
+            here: Some(site.here.clone()),
+            partner: None,
+            elsewhere: known,
+        })
+        .unwrap()
+    };
+    // The writer keeps it back too (it holds the created body); a batch
+    // that carries it anyway is held back on the known node.
+    assert_eq!(second[0].withheld[0].why, Why::PersonElsewhere);
+    let mut carried = second[0].clone();
+    carried.withheld.clear();
+    carried.payloads.push(Carried {
+        reference: "doc:p2".into(),
+        data: {
+            use base64::Engine as _;
+            base64::engine::general_purpose::STANDARD
+                .encode(canonical_bytes(&span(OWN, "小九说的话。")))
+        },
+    });
+    let lone = |known: Vec<String>| {
+        take(TakeInput {
+            from: None,
+            batch: carried.clone(),
+            holder: site.holder.clone(),
+            now: NOW,
+            known: BTreeMap::new(),
+            members: BTreeMap::new(),
+            ledger: Vec::new(),
+            epochs: BTreeMap::new(),
+            held: Vec::new(),
+            here: Some(site.here.clone()),
+            partner: None,
+            elsewhere: known,
+        })
+        .unwrap()
+    };
+    assert!(
+        lone(Vec::new()).bodies.contains_key("p2"),
+        "the gap without it"
+    );
+    let taken = lone(known.clone());
+    assert!(taken.bodies.is_empty());
+    assert_eq!(taken.withheld[0].why, Why::PersonElsewhere);
+    assert!(take_with(known.clone()).bodies.is_empty());
+    // And a side that did store a body of it sends none to a computer.
+    site.rows.extend(taken.admitted.accepted.clone());
+    site.bodies.insert("p2".into(), span(OWN, "小九说的话。"));
+    let air = Side::named(Core::Pc, "dev_air");
+    let sent = send(SendInput {
+        audience: OWN.into(),
+        rows: site.of(OWN),
+        bodies: site.bodies.clone(),
+        theirs: BTreeMap::new(),
+        ask: Vec::new(),
+        holder: air.holder.clone(),
+        ledger: Vec::new(),
+        elsewhere: known,
+    })
+    .unwrap();
+    assert!(sent.batches.iter().all(|batch| batch.payloads.is_empty()));
 }

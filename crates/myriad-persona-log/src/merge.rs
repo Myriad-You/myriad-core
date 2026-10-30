@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Row, forget,
+    LogError, Row, forget,
     row::{Replicate, sort},
 };
 
@@ -22,18 +22,10 @@ pub struct MergeInput {
     pub incoming: Vec<Row>,
     /// Every origin this side writes or wrote as: a node it is the home of
     /// stays whole ([`crate::forget`]). Without it this side is no
-    /// retract's home; a call across the C entry point must give it once a
-    /// retract is in the rows ([`MergeInput::check`]).
+    /// retract's home, and once a retract is in the rows it must be given:
+    /// [`merge`] refuses the call without it.
     #[serde(default)]
     pub here: Option<Vec<String>>,
-}
-
-impl MergeInput {
-    /// Whether `here` is given where a retract needs it, and well formed.
-    pub fn check(&self) -> Result<(), crate::LogError> {
-        let ledger = forget::ledger(&[self.log.as_slice(), self.incoming.as_slice()].concat());
-        forget::here(&ledger, self.here.as_deref()).map(|_| ())
-    }
 }
 
 /// Why an incoming row was not taken. Either means a side broke the format
@@ -74,12 +66,17 @@ pub struct Merged {
     pub conflicts: Vec<Conflict>,
 }
 
-pub fn merge(input: MergeInput) -> Merged {
+pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     let MergeInput {
         log,
         mut incoming,
         here,
     } = input;
+    let here = forget::here(
+        &forget::ledger(&[log.as_slice(), incoming.as_slice()].concat()),
+        here.as_deref(),
+    )?
+    .to_vec();
     let mut by_id: BTreeMap<String, Row> = BTreeMap::new();
     let mut places: BTreeMap<(String, String, u64), String> = BTreeMap::new();
     let mut held_payload = Vec::new();
@@ -132,7 +129,7 @@ pub fn merge(input: MergeInput) -> Merged {
     }
     let rows: Vec<Row> = by_id.into_values().collect();
     let ledger = forget::ledger(&rows);
-    let (mut log, _) = forget::absorb(rows, &ledger, here.as_deref().unwrap_or(&[]));
+    let (mut log, _) = forget::absorb(rows, &ledger, &here);
     sort(&mut log);
     let forgotten: BTreeMap<&str, bool> = log
         .iter()
@@ -144,11 +141,11 @@ pub fn merge(input: MergeInput) -> Merged {
         .collect();
     stubbed.sort();
     added.sort();
-    Merged {
+    Ok(Merged {
         log,
         added,
         stubbed,
         duplicates,
         conflicts,
-    }
+    })
 }

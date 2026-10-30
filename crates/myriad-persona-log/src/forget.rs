@@ -12,20 +12,30 @@
 //! the node, its home: the row's `origin`. Every other side reads it as a
 //! forget of that node: its rows become stubs there, their bodies go, and
 //! rows of it that come later (an edit raced from another side, a side that
-//! was offline) come in as stubs. The home keeps the node and every row of
-//! it. So a retract's ledger entry names its home, and a side asks the
-//! ledger as itself: `here` is every origin it writes or wrote as (`loc_…`
-//! before it linked, `dev_…` after, `site`). The first retract of a node, in
-//! clock order, is the one that holds. It is one way, as a forget is:
-//! sharing the node again would be a new row of the partner's, which the
-//! core does not have yet.
+//! was offline) come in as stubs. The home keeps the node and every body of
+//! it the home holds; a body written elsewhere that had not reached the
+//! home before its side learnt of the retract arrives there as a stub, for
+//! that side dropped it (no side keeps a body for another). So a retract's
+//! ledger entry names its home, and a side asks the ledger as itself:
+//! `here` is every origin it writes or wrote as (`loc_…` before it linked,
+//! `dev_…` after, `site`). The first retract of a node, in clock order, is
+//! the one that holds. A local row stays whole on the side that wrote it,
+//! whichever side is home: it was never anywhere else, so a retract (which
+//! takes a node off every side but one) has nothing to take it from. It is
+//! one way, as a forget is: sharing the node again would be a new row of
+//! the partner's, which the core does not have yet.
+//!
+//! A retract names one node id. The node's other ids (the ids it had before
+//! the partner's id moved, and nodes that went into it) are the node layer's
+//! to reach: `myriad_nodes` sends none of their bodies and stubs them in its
+//! fold at once, and the home writes their retracts too.
 
 use std::collections::BTreeMap;
 
 use myriad_persona_sync::{Rev, hlc};
 use serde::{Deserialize, Serialize};
 
-use crate::{LogError, Row, kinds::Rule, kinds::SUBJECT};
+use crate::{LogError, Row, kinds::Rule, kinds::SUBJECT, row::Replicate};
 
 /// One thing forgotten: an object, or `subject:<id>` for everything about
 /// that subject, in one audience. Or one node taken back from sync, with
@@ -106,7 +116,8 @@ pub fn forgets(ledger: &[Entry], row: &Row) -> bool {
 }
 
 /// Whether `ledger` takes `row` away on the side that writes as `here`:
-/// a forget of it, or a retract whose home is not `here`. An empty `here`
+/// a forget of it, or a retract whose home is not `here` (unless the row is
+/// a local one `here` wrote). An empty `here`
 /// is no home at all: every retract takes its node away (what a side sends
 /// another, or a file).
 pub fn absorbs(ledger: &[Entry], row: &Row, here: &[String]) -> bool {
@@ -117,10 +128,15 @@ pub fn absorbs(ledger: &[Entry], row: &Row, here: &[String]) -> bool {
         .subject
         .as_deref()
         .map(|subject| format!("{SUBJECT}:{subject}"));
+    // Its own local row, which exists nowhere else.
+    let own_local = row.replicate == Replicate::Local && here.contains(&row.origin);
     ledger.iter().any(|entry| {
         entry.audience == row.audience
             && (entry.target == row.object || Some(&entry.target) == subject.as_ref())
-            && entry.home.as_ref().is_none_or(|home| !here.contains(home))
+            && entry
+                .home
+                .as_ref()
+                .is_none_or(|home| !here.contains(home) && !own_local)
     })
 }
 
