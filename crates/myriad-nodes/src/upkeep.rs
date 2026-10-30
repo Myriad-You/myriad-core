@@ -48,13 +48,15 @@
 //!
 //! What the partner set stands: an action that would change a head field,
 //! an open item or a view whose current version is the partner's, take
-//! back a relation the partner made, or merge away a node whose own row,
-//! relation, open item or waiting intent is the partner's (a merge writes
-//! those again, as hers) is held (`held`), and she may only raise a hand.
+//! back a relation the partner made, or merge away a node with anything of
+//! the partner's on it (its own row, a relation, a head field, a view, an
+//! open item or a waiting intent: a merge writes some of those again as
+//! hers and leaves the rest behind) is held (`held`), and she may only
+//! raise a hand.
 //! Every other action of the answer stands. What she watched or read with
-//! the partner
-//! (`minted:together-…`) only ever takes others in: merging it away
-//! changes nothing, as for a person or a repository.
+//! the partner (`minted:together-…`) only ever takes others in: merging it
+//! away changes nothing, as for a person or a repository (it may still be
+//! split).
 //!
 //! A `part_of` she writes is checked as the fold will check it: the fold's
 //! rule (in log order, one that would close a loop is passed by) replayed
@@ -93,7 +95,7 @@ use crate::{
     },
     place::{clean, object_in},
     queue::{Reason, Watch},
-    tags::{SaidBy, Sync, check_said_by},
+    tags::{SaidBy, Sync, audience_fits, check_said_by},
 };
 
 /// One inbox item of this audience: what was not on a node yet.
@@ -104,6 +106,16 @@ pub struct InboxItem {
     pub id: String,
     pub said_by: Vec<SaidBy>,
     pub text: String,
+    /// Where it was said, when not in this audience: only the partner's
+    /// own words in a group, kept in their private audience.
+    #[serde(default)]
+    pub audience: Option<String>,
+}
+
+impl InboxItem {
+    fn said_in<'a>(&'a self, audience: &'a str) -> &'a str {
+        self.audience.as_deref().unwrap_or(audience)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -566,6 +578,14 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             return Err(NodeError::new("inbox ids repeat"));
         }
         check_said_by(&item.said_by)?;
+        if let Some(said_in) = &item.audience {
+            check_token("inbox audience", said_in)?;
+            if !audience_fits(said_in, &input.audience, &item.said_by) {
+                return Err(NodeError::new(
+                    "an inbox item said elsewhere is the partner's own words from a group",
+                ));
+            }
+        }
     }
     let mut seen = BTreeSet::new();
     for candidate in &input.candidates {
@@ -872,11 +892,12 @@ pub enum Fallback {
     NoEvidence,
     /// A `part_of` that would close a loop.
     Cycle,
-    /// Something the rules never allow: a person, a repository or what she
-    /// watched with the partner split or merged away, a kind its key does
-    /// not have, a span on 「关于你」, an item placed twice, a field written
-    /// twice, folding back into what it is not part of, taking back a
-    /// relation that is not there, a new node with nothing on it.
+    /// Something the rules never allow: a person split, a person, a
+    /// repository or what she watched with the partner merged away, a kind
+    /// its key does not have, a span on 「关于你」, an item placed twice, a
+    /// field written twice, folding back into what it is not part of,
+    /// taking back a relation that is not there (or any, with no node
+    /// kept), a new node with nothing on it.
     NotAllowed,
 }
 
@@ -1113,7 +1134,7 @@ impl<'a> Reader<'a> {
                 ids.insert(format!("entry:{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
                 let item = &self.context.items[at];
-                counted &= counts(&item.said_by, &self.context.audience);
+                counted &= counts(&item.said_by, item.said_in(&self.context.audience));
                 ids.insert(item.id.clone());
             } else if let Some(rests_on) = self.context.heads.get(label) {
                 counted = false;
@@ -1363,6 +1384,7 @@ impl<'a> Reader<'a> {
                 let text = text(action, "text", TEXT_CHARS, false)?;
                 let mut refs = BTreeSet::new();
                 let mut said_by = BTreeSet::new();
+                let mut said_in = BTreeSet::new();
                 for label in labels(action, "items")? {
                     let &at = self
                         .context
@@ -1375,17 +1397,22 @@ impl<'a> Reader<'a> {
                     }
                     refs.insert(item.id.clone());
                     said_by.extend(item.said_by.iter().copied());
+                    said_in.insert(item.said_in(&self.context.audience).to_string());
                 }
                 if refs.is_empty() || refs.len() > REFS {
                     return Err(Fallback::BadField);
                 }
+                // One span is said in one place: items from a group and from
+                // here are placed apart.
+                let [said_in] = <[String; 1]>::try_from(said_in.into_iter().collect::<Vec<_>>())
+                    .map_err(|_| Fallback::NotAllowed)?;
                 self.write(
                     &target.id,
                     Body::Span(Span {
                         version: 1,
                         sync: self.sync.clone(),
                         said_by: said_by.into_iter().collect(),
-                        audience: self.context.audience.clone(),
+                        audience: said_in,
                         text,
                         refs: refs.into_iter().collect(),
                         from: None,
@@ -1629,16 +1656,28 @@ impl<'a> Reader<'a> {
             .flat_map(|relation| relation.rows.iter())
             .filter_map(|row| self.context.full.rows.iter().find(|known| known.id == *row))
             .any(|row| row.author == Author::Owner);
-        let partner_items = me
-            .open
-            .values()
-            .filter(|open| !open.current.value.closed)
-            .any(|open| open.current.author == Author::Owner)
+        // Anything else the partner set that the node going away would take
+        // with it: a head field, a view, an open item or a waiting intent,
+        // any current version of it theirs.
+        let partner_items = by_partner(&me.kind)
+            || by_partner(&me.name)
+            || by_partner(&me.summary)
+            || by_partner(&me.status)
+            || by_partner(&me.done_when)
+            || by_partner(&me.who_knows)
+            || by_partner(&me.object)
+            || me.progress.values().any(partners)
+            || me.views.values().any(partners)
+            || me
+                .open
+                .values()
+                .filter(|open| !open.current.value.closed)
+                .any(partners)
             || me
                 .intents
                 .values()
                 .filter(|said| said.current.value.status == IntentStatus::Waiting)
-                .any(|said| said.current.author == Author::Owner);
+                .any(partners);
         if me.created_by == Some(Author::Owner) || partner_rows || partner_items {
             self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
@@ -1778,6 +1817,10 @@ impl<'a> Reader<'a> {
     }
 
     fn unrelate(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
+        // Filing the inbox alone, she sees no relation to take back.
+        if self.context.at.is_none() {
+            return Err(Fallback::NotAllowed);
+        }
         let from = self.source(action)?;
         let to = self.label_of(action, "to")?;
         let relation: Relation = enum_of(action, "relation")?;

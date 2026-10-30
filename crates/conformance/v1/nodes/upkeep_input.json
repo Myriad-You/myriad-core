@@ -6804,6 +6804,563 @@
           "spans": 0
         }
       }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "bodies": {
+          "a1": {
+            "key": "minted:weekend-hike",
+            "kind": "task",
+            "name": "周末徒步",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "a2": {
+            "audience": "personal:7",
+            "refs": [
+              "message:m1"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周末想去爬山，还没定去哪。",
+            "version": 1
+          },
+          "a3": {
+            "base": [],
+            "because": [
+              "span:a2"
+            ],
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "走完一趟",
+            "version": 1
+          },
+          "b1": {
+            "key": "minted:takao-plan",
+            "kind": "task",
+            "name": "高尾山计划",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "b2": {
+            "audience": "personal:7",
+            "refs": [
+              "message:m3"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴想这周六去高尾山，坐京王线。",
+            "version": 1
+          },
+          "b3": {
+            "audience": "personal:7",
+            "refs": [
+              "message:m4"
+            ],
+            "saidBy": [
+              "her",
+              "third_party"
+            ],
+            "sync": "shared",
+            "text": "网页上说六号路周末人很多。",
+            "version": 1
+          },
+          "b4": {
+            "base": [],
+            "field": "summary",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              {
+                "because": [
+                  "span:b2"
+                ],
+                "text": "这周六去高尾山。"
+              }
+            ],
+            "version": 1
+          },
+          "b5": {
+            "base": [],
+            "because": [
+              "span:b2"
+            ],
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "伙伴爬山喜欢慢慢走。",
+            "version": 1,
+            "view": "pace"
+          },
+          "b6": {
+            "base": [],
+            "because": [
+              "span:b2"
+            ],
+            "item": "route",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "走哪条路线还没定",
+            "version": 1
+          },
+          "f1": {
+            "key": "minted:together-film1",
+            "kind": "topic",
+            "name": "一起看的纪录片",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "f2": {
+            "audience": "personal:7",
+            "refs": [
+              "event:w1"
+            ],
+            "saidBy": [
+              "her",
+              "partner",
+              "third_party"
+            ],
+            "sync": "shared",
+            "text": "和伙伴一起看了讲山的纪录片。",
+            "version": 1
+          },
+          "g1": {
+            "key": "minted:hiking-shoes",
+            "kind": "task",
+            "name": "买登山鞋",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "g2": {
+            "audience": "personal:7",
+            "refs": [
+              "message:m2"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "爬山之前得先买双登山鞋。",
+            "version": 1
+          },
+          "g3": {
+            "because": [
+              "span:g2"
+            ],
+            "reason": "鞋没买好走不了",
+            "relation": "part_of",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "to": "minted:weekend-hike",
+            "version": 1
+          },
+          "q1": {
+            "key": "minted:takao-squad",
+            "kind": "topic",
+            "name": "高尾山小队",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "q2": {
+            "audience": "group:g1",
+            "refs": [
+              "message:m9"
+            ],
+            "saidBy": [
+              "other_person"
+            ],
+            "sync": "shared",
+            "text": "群里在约高尾山。",
+            "version": 1
+          },
+          "v1": {
+            "key": "minted:visa",
+            "kind": "topic",
+            "name": "签证",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "v2": {
+            "audience": "personal:7",
+            "refs": [
+              "message:m5"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴在等签证材料。",
+            "version": 1
+          },
+          "y1": {
+            "key": "person:7",
+            "kind": "person",
+            "name": "关于你",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "inbox": [
+          {
+            "audience": "group:g1",
+            "id": "message:gw2",
+            "saidBy": [
+              "other_person"
+            ],
+            "text": "群里有人说要早点出发"
+          }
+        ],
+        "node": "9f99994f982bf442264879c5fc9e6882",
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "a1",
+            "kind": "node.created",
+            "object": "node:76589a005a0c0c7c647848b1c973cf5d",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000020-000000-dev_mac",
+            "id": "a2",
+            "kind": "node.span",
+            "object": "node:76589a005a0c0c7c647848b1c973cf5d",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000030-000000-dev_mac",
+            "id": "a3",
+            "kind": "node.done_when",
+            "object": "node:76589a005a0c0c7c647848b1c973cf5d",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000040-000000-dev_mac",
+            "id": "g1",
+            "kind": "node.created",
+            "object": "node:bc9ef1f0cf987d69fd88e2c9122d6730",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:g1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000050-000000-dev_mac",
+            "id": "g2",
+            "kind": "node.span",
+            "object": "node:bc9ef1f0cf987d69fd88e2c9122d6730",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:g2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000000060-000000-dev_mac",
+            "id": "g3",
+            "kind": "node.related",
+            "object": "node:bc9ef1f0cf987d69fd88e2c9122d6730",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:g3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000000070-000000-dev_mac",
+            "id": "b1",
+            "kind": "node.created",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 8,
+            "epoch": 1,
+            "hlc": "001760000000080-000000-dev_mac",
+            "id": "b2",
+            "kind": "node.span",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 9,
+            "epoch": 1,
+            "hlc": "001760000000090-000000-dev_mac",
+            "id": "b3",
+            "kind": "node.span",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 10,
+            "epoch": 1,
+            "hlc": "001760000000100-000000-dev_mac",
+            "id": "b4",
+            "kind": "node.revised",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 11,
+            "epoch": 1,
+            "hlc": "001760000000110-000000-dev_mac",
+            "id": "b5",
+            "kind": "node.view_changed",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 12,
+            "epoch": 1,
+            "hlc": "001760000000120-000000-dev_mac",
+            "id": "b6",
+            "kind": "node.open_item",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b6"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 13,
+            "epoch": 1,
+            "hlc": "001760000000130-000000-dev_mac",
+            "id": "v1",
+            "kind": "node.created",
+            "object": "node:a5a500a428658ce58768f5bf38edde49",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:v1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 14,
+            "epoch": 1,
+            "hlc": "001760000000140-000000-dev_mac",
+            "id": "v2",
+            "kind": "node.span",
+            "object": "node:a5a500a428658ce58768f5bf38edde49",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:v2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 15,
+            "epoch": 1,
+            "hlc": "001760000000150-000000-dev_mac",
+            "id": "y1",
+            "kind": "node.created",
+            "object": "node:8fca7d80a71f0ff968edd2a1162ac8ef",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:y1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 16,
+            "epoch": 1,
+            "hlc": "001760000000160-000000-dev_mac",
+            "id": "f1",
+            "kind": "node.created",
+            "object": "node:4e5a257d570af896619bd9e5a463b007",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:f1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 17,
+            "epoch": 1,
+            "hlc": "001760000000170-000000-dev_mac",
+            "id": "f2",
+            "kind": "node.span",
+            "object": "node:4e5a257d570af896619bd9e5a463b007",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:f2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 18,
+            "epoch": 1,
+            "hlc": "001760000000180-000000-dev_mac",
+            "id": "q1",
+            "kind": "node.created",
+            "object": "node:627ad98e05169b6284f8a23442ae9038",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:q1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 19,
+            "epoch": 1,
+            "hlc": "001760000000190-000000-dev_mac",
+            "id": "q2",
+            "kind": "node.span",
+            "object": "node:627ad98e05169b6284f8a23442ae9038",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:q2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "an inbox item said elsewhere that is not the partner's own words",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

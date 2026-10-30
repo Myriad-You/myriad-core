@@ -228,6 +228,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a candidate in another audience", "of this audience"),
         ("candidate ids that repeat", "candidate ids repeat"),
         ("with no node and nothing in the inbox", "with no node"),
+        (
+            "an inbox item said elsewhere that is not the partner's own words",
+            "the partner's own words from a group",
+        ),
     ];
     let mut seen = 0;
     for path in case_files() {
