@@ -35,7 +35,10 @@
 //! node reaches every id it has and every node that went into it. Which ids
 //! those are only the node layer can tell (from bodies a side may delete),
 //! so the caller keeps them, as `myriad_nodes` folds them, and gives them to
-//! every call that stubs.
+//! every call that stubs. The caller must keep them as it keeps its ledger:
+//! a name once known never changes (what the caller kept wins over what a
+//! body says later), and a side that loses them takes rows under an old or
+//! merged id whole until a fold shows the names again.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -229,26 +232,28 @@ pub fn forgets(ledger: &[Entry], row: &Row, names: &Names) -> bool {
 }
 
 /// Whether `ledger` takes `row` away on the side that writes as `here`:
-/// a forget of it, or a retract none of whose homes is `here` (unless the
-/// row is a local one `here` wrote). An empty `here` is no home at all:
-/// every retract takes its node away (what a side sends another, or a
-/// file).
+/// a forget reaches it, or retracts reach it and none of them has `here`
+/// as a home (unless the row is a local one `here` wrote). An empty
+/// `here` is no home at all: every retract takes its node away (what a
+/// side sends another, or a file). A retract whose home is a side no one
+/// knows is a home of nothing here: it takes the node away, as a forget.
 pub fn absorbs(ledger: &[Entry], row: &Row, here: &[String], names: &Names) -> bool {
+    let reaching = reaching(ledger, row, names);
+    if reaching.iter().any(|entry| !entry.is_retract()) {
+        return true;
+    }
     // Its own local row, which exists nowhere else.
     let own_local = row.replicate == Replicate::Local && here.contains(&row.origin);
-    reaching(ledger, row, names)
-        .iter()
-        .any(|entry| !entry.is_retract() || (!entry.home_is(here) && !own_local))
+    !reaching.is_empty() && !own_local && !reaching.iter().any(|entry| entry.home_is(here))
 }
 
 /// Whether `row` is of a node this side (`here`) is a home of, and nothing
-/// forgets it: its body stays here, whatever arrives.
+/// forgets it: retracts reach it, one of them has `here` as a home, and
+/// so [`absorbs`] does not take it. Its body stays here, whatever arrives.
 pub fn kept_home(ledger: &[Entry], row: &Row, here: &[String], names: &Names) -> bool {
     let reaching = reaching(ledger, row, names);
-    reaching
-        .iter()
-        .any(|entry| entry.is_retract() && entry.home_is(here))
-        && !reaching.iter().any(|entry| !entry.is_retract())
+    !reaching.iter().any(|entry| !entry.is_retract())
+        && reaching.iter().any(|entry| entry.home_is(here))
 }
 
 /// The homes of every retract reaching `audience`'s `object`, sorted.

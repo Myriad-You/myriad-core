@@ -21,7 +21,6 @@ use serde::{Deserialize, Serialize};
 use crate::{
     Holder, LogError, Row,
     forget::{self, Entry},
-    kinds::Rule,
     row::{Audience, Replicate, sort},
 };
 
@@ -58,12 +57,6 @@ pub struct AdmitInput {
     /// given: [`admit`] refuses the call without it.
     #[serde(default)]
     pub here: Option<Vec<String>>,
-    /// Every origin this side knows the partner's sides write as (the
-    /// sides its vectors count). A retract names a home by its origin, so
-    /// one from an origin neither here nor of another row in the batch is
-    /// refused (`unknown_side`).
-    #[serde(default)]
-    pub sides: Option<Vec<String>>,
     /// The other names of objects this side keeps ([`forget::Names`]).
     #[serde(default)]
     pub names: forget::Names,
@@ -89,9 +82,6 @@ pub enum Reason {
     EpochBack,
     /// Its audience is not one this side may hold.
     NotHeld,
-    /// A retract from a side this side does not know (`sides`): its origin
-    /// is a home, so it must be one of the partner's sides.
-    UnknownSide,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -140,7 +130,6 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         mut epochs,
         holder,
         here,
-        sides,
         names,
     } = input;
     names.check()?;
@@ -154,7 +143,6 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         here.as_deref(),
     )?
     .to_vec();
-    let unknown = unknown(&checked, sides.as_deref());
     let ahead = rows
         .iter()
         .map(|row| hlc::ahead_ms(&row.hlc, now))
@@ -187,10 +175,6 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         }
         if row.replicate == Replicate::Local {
             refused.push(refuse(&row, Reason::Local, None));
-            continue;
-        }
-        if unknown.contains(row.id.as_str()) {
-            refused.push(refuse(&row, Reason::UnknownSide, None));
             continue;
         }
         if holder
@@ -248,22 +232,4 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         ledger,
         epochs,
     })
-}
-
-/// The retracts in `rows` from a side neither in `sides` nor the origin of
-/// another row of the batch.
-fn unknown<'a>(rows: &'a [Row], sides: Option<&[String]>) -> BTreeSet<&'a str> {
-    let Some(sides) = sides else {
-        return BTreeSet::new();
-    };
-    let writing: BTreeSet<&str> = rows
-        .iter()
-        .filter(|row| row.rule() != Rule::Retract)
-        .map(|row| row.origin.as_str())
-        .collect();
-    rows.iter()
-        .filter(|row| row.rule() == Rule::Retract)
-        .filter(|row| !sides.contains(&row.origin) && !writing.contains(row.origin.as_str()))
-        .map(|row| row.id.as_str())
-        .collect()
 }

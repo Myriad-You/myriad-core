@@ -41,13 +41,13 @@
 //! so no body of it leaves the side that keeps it, in a batch or a file;
 //! the retract goes first with the forgets. Every id of the node counts:
 //! the ids it had before the partner's id moved, and nodes that went into
-//! it, before any retract names them: what the rows and bodies given show,
-//! and what the caller kept of bodies it deleted (`names`, from
-//! `nodes.fold`). Taking does the same with the batch's own bodies, so no
+//! it, before any retract names them: what the caller kept of bodies it
+//! may have deleted (`names`, from `nodes.fold`, which wins: a name once
+//! known never changes), and what the rows and bodies given show. Taking does the same with the batch's own bodies, so no
 //! body under another id of a retracted node is taken either. The rows still go, so vectors
 //! count them. A side takes a retract as a forget unless it is the home
-//! (`here`), and rows of the node that come later as stubs. A retract from
-//! a side this side does not know (`sides`) is refused.
+//! (`here`), and rows of the node that come later as stubs. A retract whose
+//! home is a side no one knows keeps the node nowhere: it is a forget.
 //!
 //! **The partner's id** (`myriad_persona_log::partner`): a batch of the
 //! partner's private audience under an old id (from a side that has not
@@ -293,10 +293,6 @@ pub struct TakeInput {
     /// a key in the batch's bodies, makes in this audience.
     #[serde(default)]
     pub people: Vec<String>,
-    /// Every origin this side knows the partner's sides write as, as for
-    /// `log.admit`: a retract from any other is refused (`unknown_side`).
-    #[serde(default)]
-    pub sides: Option<Vec<String>>,
     /// The other names of nodes this side keeps (`nodes.fold`'s `names`).
     #[serde(default)]
     pub names: forget::Names,
@@ -755,7 +751,6 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         partner,
         elsewhere: known_away,
         people,
-        sides,
         names,
     } = input;
     names
@@ -864,12 +859,19 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         holder: Some(holder),
-        here,
-        sides,
+        here: here.clone(),
         names: names.clone(),
     })
     .map_err(|error| NodeError::new(error.to_string()))?;
     admitted.refused.extend(astray);
+    // A row asked again for is taken as the ledger stands now too: no
+    // body of a node forgotten or taken back from this side comes in.
+    let (again, _) = forget::absorb(
+        again,
+        &admitted.ledger,
+        here.as_deref().unwrap_or(&[]),
+        &names,
+    );
     let engine = base64::engine::general_purpose::STANDARD;
     // The most base64 one body may take.
     let most = MAX_BODY_BYTES.div_ceil(3) * 4;

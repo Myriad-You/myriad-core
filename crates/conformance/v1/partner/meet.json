@@ -250,12 +250,12 @@
         "others": [],
         "theirs": {
           "aliases": [
-            "o41"
+            "partner_0199d5c0900033333333333333333333"
           ],
           "id": "partner_0199d5c0a00022222222222222222222"
         }
       },
-      "name": "a file that shares an alias meets",
+      "name": "a file that shares a partner id meets",
       "output": {
         "partner": {
           "aliases": [
@@ -299,6 +299,28 @@
         }
       },
       "name": "refused: by is missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "mine": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0b00044444444444444444444"
+        }
+      },
+      "name": "refused: a file that shares only a legacy id (a friend's export with local-owner)",
       "output": {
         "error": "bad_input"
       }

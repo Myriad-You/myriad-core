@@ -805,6 +805,15 @@ fn moved(
     carried: &forget::Names,
 ) -> (Vec<Row>, Members) {
     let mut now: BTreeMap<(String, String), String> = BTreeMap::new();
+    // What the caller kept first (of bodies it may have deleted since): a
+    // name once known never changes.
+    for row in &rows {
+        let is = carried.now(&row.object);
+        if is != row.object && object_type(is) == Some("node") {
+            now.entry((row.audience.clone(), row.object.clone()))
+                .or_insert_with(|| is.to_string());
+        }
+    }
     for row in rows.iter().filter(|row| row.kind == "node.created") {
         let Some(Body::Created(created)) = (!row.forgotten)
             .then(|| bodies.get(&row.id))
@@ -822,14 +831,6 @@ fn moved(
         {
             now.entry((row.audience.clone(), row.object.clone()))
                 .or_insert(format!("node:{is}"));
-        }
-    }
-    // And what the caller kept of bodies it has since deleted.
-    for row in &rows {
-        let is = carried.now(&row.object);
-        if is != row.object && object_type(is) == Some("node") {
-            now.entry((row.audience.clone(), row.object.clone()))
-                .or_insert_with(|| is.to_string());
         }
     }
     let mut members: Members = BTreeMap::new();
@@ -859,7 +860,7 @@ pub(crate) fn names(
 ) -> forget::Names {
     let (rows, members) = moved(rows.to_vec(), bodies, carried);
     let absorbing = absorbing(&rows, bodies);
-    shown(&members, &absorbing).joined(carried)
+    carried.joined(&shown(&members, &absorbing))
 }
 
 /// The names `members` and `absorbing` show.
@@ -884,11 +885,8 @@ fn chain(
     rows: &[Row],
     names: &forget::Names,
 ) -> BTreeMap<(String, String), String> {
-    let mut out: BTreeMap<(String, String), String> = absorbing
-        .into
-        .iter()
-        .map(|(place, (into, _))| (place.clone(), into.clone()))
-        .collect();
+    // What the caller kept first: a name once known never changes.
+    let mut out: BTreeMap<(String, String), String> = BTreeMap::new();
     for row in rows {
         if let Some(into) = names.into.get(&row.object)
             && let Some(into) = names.now(into).strip_prefix("node:")
@@ -896,6 +894,9 @@ fn chain(
             out.entry((row.audience.clone(), node_of(row).to_string()))
                 .or_insert_with(|| into.to_string());
         }
+    }
+    for (place, (into, _)) in &absorbing.into {
+        out.entry(place.clone()).or_insert_with(|| into.clone());
     }
     out
 }
@@ -1079,7 +1080,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         .map_err(|error| NodeError::new(error.to_string()))?;
     let kept = |entry: &forget::Entry| entry.home_is(names);
     let absorbing = absorbing(&rows, &input.bodies);
-    let known = shown(&members, &absorbing).joined(&input.names);
+    let known = input.names.joined(&shown(&members, &absorbing));
     let chain = chain(&absorbing, &rows, &known);
     // Whole nodes forgotten, with the forget that did it: every node the
     // ledger names, whether or not its rows are here, and every node whose

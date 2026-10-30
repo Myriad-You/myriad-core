@@ -472,7 +472,6 @@ fn what_one_side_answers_fills_the_other() {
     let sent = answer(&mac, &theirs).unwrap();
     let admitted = admit(AdmitInput {
         names: Default::default(),
-        sides: None,
         here: None,
         rows: sent,
         now: 1_000_000,

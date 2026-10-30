@@ -20,8 +20,9 @@
 //!   becomes an alias. The rule only looks at the two ids, so any order of
 //!   meetings ends on the same id. A side meets only with a proof it holds
 //!   that the other side is the partner's ([`By`]): an authenticated link
-//!   to the partner's own account, or a file that already shares an id
-//!   with it. Even then it takes none of the other side's aliases but the
+//!   to the partner's own account, or a file that already shares a partner
+//!   id with it (a legacy id such as `local-owner` is every Mac's, so it
+//!   shows nothing). Even then it takes none of the other side's aliases but the
 //!   ones it vouches for itself (`ours`): an alias would move every row
 //!   under it into the partner's private talk, so a claim alone never
 //!   does. An id the other side brings that this side knows is someone
@@ -191,7 +192,8 @@ pub enum By {
     /// welcome to a device it linked, a hello the site took for this
     /// account.
     Link,
-    /// A file: it already shares an id with this side.
+    /// A file: it already shares a partner id with this side (a legacy
+    /// alias does not count).
     File,
 }
 
@@ -218,7 +220,13 @@ pub fn meet(
             "an id the other side brings is someone else's here",
         ));
     }
-    let shared = mine.is(&theirs.id) || theirs.aliases.iter().any(|alias| mine.is(alias));
+    // Only a partner id counts: a legacy one (`local-owner`) is every
+    // Mac's, so it shows nothing about whose file this is.
+    let shared = mine.is(&theirs.id)
+        || theirs
+            .aliases
+            .iter()
+            .any(|alias| check(alias).is_ok() && mine.is(alias));
     if by == By::File && !shared {
         return Err(LogError::new("a file shares no id with this side"));
     }
@@ -362,11 +370,25 @@ mod tests {
             meet(&site, &claim, By::Link, &[], &["o41".into()]).is_err(),
             "others names the partner"
         );
-        // A file meets only when it already shares an id.
+        // A file meets only when it already shares a partner id.
         assert!(meet(&site, &claim, By::File, &[], &[]).is_err());
+        // A friend's export carries `local-owner` too, as every Mac's
+        // partner does: that is no shared id.
+        let mac = minted(0x0199_d5c0_a000, &[0x22; 10], Some("local-owner")).unwrap();
+        let friend = Partner {
+            id: minted(0x0199_d5c0_b000, &[0x44; 10], None).unwrap().id,
+            aliases: vec!["local-owner".into()],
+        };
+        assert!(meet(&mac, &friend, By::File, &[], &[]).is_err());
+        // A legacy id it shares does not count either; a partner id does.
         let file = Partner {
             id: claim.id.clone(),
             aliases: vec!["o41".into()],
+        };
+        assert!(meet(&site, &file, By::File, &[], &[]).is_err());
+        let file = Partner {
+            id: claim.id.clone(),
+            aliases: vec![site.id.clone()],
         };
         assert!(meet(&site, &file, By::File, &[], &[]).is_ok());
     }
