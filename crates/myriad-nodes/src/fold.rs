@@ -473,6 +473,9 @@ pub enum Why {
     NotMinted,
     /// A node going into another a second time; the first stands.
     AbsorbedTwice,
+    /// Something she watched or read with the partner going into another:
+    /// it only ever takes others in.
+    Together,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -784,6 +787,11 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
             .is_some_and(|key| !key.starts_with("minted:"))
         {
             Some(Why::NotMinted)
+        } else if keys
+            .get(&place)
+            .is_some_and(|key| Key::parse(key).is_ok_and(|key| key.is_together()))
+        {
+            Some(Why::Together)
         } else if out.into.contains_key(&place) {
             Some(Why::AbsorbedTwice)
         } else if out.reaches(&audience, &into, &from) {

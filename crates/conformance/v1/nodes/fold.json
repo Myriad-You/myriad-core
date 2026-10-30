@@ -15075,6 +15075,230 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "bodies": {
+          "b1": {
+            "key": "minted:takao-plan",
+            "kind": "task",
+            "name": "高尾山计划",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "f1": {
+            "key": "minted:together-film1",
+            "kind": "topic",
+            "name": "一起看的纪录片",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "f2": {
+            "audience": "personal:7",
+            "refs": [
+              "event:w1"
+            ],
+            "saidBy": [
+              "her",
+              "partner",
+              "third_party"
+            ],
+            "sync": "shared",
+            "text": "和伙伴一起看了讲山的纪录片。",
+            "version": 1
+          },
+          "f3": {
+            "because": [
+              "span:f2"
+            ],
+            "how": "merged",
+            "into": "minted:takao-plan",
+            "reason": "都和高尾山有关",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "f1",
+            "kind": "node.created",
+            "object": "node:4e5a257d570af896619bd9e5a463b007",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:f1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000020-000000-dev_mac",
+            "id": "f2",
+            "kind": "node.span",
+            "object": "node:4e5a257d570af896619bd9e5a463b007",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:f2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000030-000000-dev_mac",
+            "id": "b1",
+            "kind": "node.created",
+            "object": "node:9f99994f982bf442264879c5fc9e6882",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:b1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000040-000000-dev_mac",
+            "id": "f3",
+            "kind": "node.absorbed",
+            "object": "node:4e5a257d570af896619bd9e5a463b007",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:f3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "what she watched with the partner never goes into another",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000010000,
+            "createdBy": "her",
+            "id": "4e5a257d570af896619bd9e5a463b007",
+            "key": "minted:together-film1",
+            "kind": {
+              "at": 1760000000010000,
+              "author": "her",
+              "base": [
+                "f1"
+              ],
+              "epoch": 1,
+              "row": "f1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "topic"
+              }
+            },
+            "name": {
+              "at": 1760000000010000,
+              "author": "her",
+              "base": [
+                "f1"
+              ],
+              "epoch": 1,
+              "row": "f1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "一起看的纪录片"
+            },
+            "spans": [
+              {
+                "at": 1760000000020000,
+                "audience": "personal:7",
+                "author": "her",
+                "refs": [
+                  "event:w1"
+                ],
+                "row": "f2",
+                "saidBy": [
+                  "her",
+                  "partner",
+                  "third_party"
+                ],
+                "sync": "shared",
+                "text": "和伙伴一起看了讲山的纪录片。"
+              }
+            ],
+            "updatedAt": 1760000000040000
+          },
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000030000,
+            "createdBy": "her",
+            "id": "9f99994f982bf442264879c5fc9e6882",
+            "key": "minted:takao-plan",
+            "kind": {
+              "at": 1760000000030000,
+              "author": "her",
+              "base": [
+                "b1"
+              ],
+              "epoch": 1,
+              "row": "b1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "task"
+              }
+            },
+            "name": {
+              "at": 1760000000030000,
+              "author": "her",
+              "base": [
+                "b1"
+              ],
+              "epoch": 1,
+              "row": "b1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "高尾山计划"
+            },
+            "updatedAt": 1760000000030000
+          }
+        ],
+        "skipped": [
+          {
+            "id": "f3",
+            "why": "together"
+          }
+        ]
+      }
     }
   ],
   "version": 1
