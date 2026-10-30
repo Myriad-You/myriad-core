@@ -11,15 +11,17 @@
 //! forget does, except on its homes. The partner writes it on a side that is
 //! to keep the node: the row's `origin` is a home. A node retracted on two
 //! sides (each pressed while the other was offline) has two homes, and
-//! each keeps what it holds: no clock decides between them. Every other
+//! each keeps what it holds: no clock decides between them (the partner's
+//! decision, 2026-10-30: 两台都留). Every other
 //! side reads it as a forget of that node: its rows become stubs there,
 //! their bodies go, and rows of it that come later (an edit raced from
 //! another side, a side that was offline) come in as stubs. A home never
 //! loses a body to a stub: a stub of a row it holds whole does not replace
 //! it ([`crate::merge`]), and a whole row of a stub it holds fills it, so
 //! a home ends the same whatever order the same rows reach it in. A body
-//! that was written elsewhere and dropped there before it reached any home
-//! is gone: no side keeps a body for another. A local row stays whole on
+//! that was written elsewhere and had not reached any home when its side
+//! learnt of the retract is dropped there, as a forget would drop it, and
+//! is kept nowhere (the partner's decision, 2026-10-30: 当作忘掉). A local row stays whole on
 //! the side that wrote it: it was never anywhere else, so there is nothing
 //! to take it from. So a retract's ledger entry names its homes, and a side
 //! asks the ledger as itself: `here` is every origin it writes or wrote as

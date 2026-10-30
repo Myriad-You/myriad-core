@@ -848,11 +848,16 @@ fn a_retract_made_offline_keeps_the_node_home_and_takes_it_from_every_other_side
             .map(|span| span["text"].as_str().unwrap())
             .collect();
         assert_eq!(spans[..2], ["伙伴说周五发版。", "改到下周一。"]);
-        // The server's span: a stub once the server knew of the retract;
-        // pulled before that, the home keeps it as it came (it is home).
+        // The server's span (伙伴 2026-10-30: 当作忘掉). Pulled by the home
+        // before the server knew of the retract, the home keeps it whole.
+        // Not: the server dropped it on learning of the retract, as a
+        // forget would, and no side holds a body of it any more.
         let s1 = mac.rows.iter().find(|row| row.id == "s1").unwrap();
-        assert_eq!(s1.forgotten, at == 0);
-        assert_eq!(spans.len(), if at == 0 { 2 } else { 3 });
+        let reached_home = at == 1;
+        assert_eq!(!s1.forgotten, reached_home);
+        assert_eq!(mac.bodies.contains_key("s1"), reached_home);
+        assert_eq!(spans.len(), if reached_home { 3 } else { 2 });
+        assert!(!site.bodies.contains_key("s1"));
     }
     assert_eq!(first.1.rows, second.1.rows);
     assert_eq!(first.1.bodies, second.1.bodies);
