@@ -65,6 +65,13 @@ pub const UPKEEP_TOTAL_CHARS: usize = 12_000;
 pub const UPKEEP_HEAD_ITEMS: usize = 12;
 /// Nodes one relation away, as the model sees them.
 pub const UPKEEP_NEIGHBOURS: usize = 16;
+/// Other nodes of the audience the caller offers (what might be the same
+/// thing, or where an inbox item belongs), as the model sees them.
+pub const UPKEEP_CANDIDATES: usize = 12;
+/// Entries of the node she is keeping, newest kept, as the model sees them.
+pub const UPKEEP_ENTRIES: usize = 12;
+/// All entries' text together, as the model sees it.
+pub const UPKEEP_ENTRIES_TOTAL_CHARS: usize = 4_000;
 /// Inbox items offered to file, oldest first.
 pub const UPKEEP_INBOX: usize = 20;
 /// All inbox items' text together, as the model sees it.
@@ -114,6 +121,9 @@ pub struct Limits {
     pub upkeep_total_chars: usize,
     pub upkeep_head_items: usize,
     pub upkeep_neighbours: usize,
+    pub upkeep_candidates: usize,
+    pub upkeep_entries: usize,
+    pub upkeep_entries_total_chars: usize,
     pub upkeep_inbox: usize,
     pub upkeep_inbox_total_chars: usize,
     pub upkeep_actions: usize,
@@ -152,6 +162,9 @@ pub fn limits() -> Limits {
         upkeep_total_chars: UPKEEP_TOTAL_CHARS,
         upkeep_head_items: UPKEEP_HEAD_ITEMS,
         upkeep_neighbours: UPKEEP_NEIGHBOURS,
+        upkeep_candidates: UPKEEP_CANDIDATES,
+        upkeep_entries: UPKEEP_ENTRIES,
+        upkeep_entries_total_chars: UPKEEP_ENTRIES_TOTAL_CHARS,
         upkeep_inbox: UPKEEP_INBOX,
         upkeep_inbox_total_chars: UPKEEP_INBOX_TOTAL_CHARS,
         upkeep_actions: UPKEEP_ACTIONS,

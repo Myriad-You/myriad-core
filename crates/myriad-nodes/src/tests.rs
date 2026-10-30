@@ -224,6 +224,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a node gone into another", "gone into another"),
         ("an inbox id that is not <type>:<id>", "<type>:<id>"),
         ("a run token that is empty", "run must be"),
+        // batch 3: candidates and filing the inbox with no node
+        ("a candidate in another audience", "of this audience"),
+        ("candidate ids that repeat", "candidate ids repeat"),
+        ("with no node and nothing in the inbox", "with no node"),
     ];
     let mut seen = 0;
     for path in case_files() {
@@ -481,7 +485,12 @@ fn what_a_run_writes_folds_clean_and_does_not_make_its_node_due_again() {
             json!({ "rows": rows, "bodies": bodies, "max": 200 }),
         )
         .unwrap();
-        let node = given["node"].as_str().unwrap();
+        // Filing the inbox with no node kept leaves no mark: the nodes it
+        // filed onto are due, as they should be.
+        let Some(node) = given["node"].as_str() else {
+            assert!(writes.iter().all(|write| write["kind"] != "node.upkept"));
+            continue;
+        };
         assert!(
             queued["due"]
                 .as_array()

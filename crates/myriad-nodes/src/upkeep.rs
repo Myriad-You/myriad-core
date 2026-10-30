@@ -7,36 +7,54 @@
 //! host write the same rows from the same answer.
 //!
 //! - [`prepare`] folds the rows and shows her the node (its head, its newest
-//!   spans, what the partner set, what was changed on both sides), its
-//!   neighbours one relation away, and the inbox, each cut to the limits in
-//!   [`crate::limits`] and labelled (`n1` the node, `n2`… neighbours, `s1`…
-//!   its spans, `i1`… inbox items) so no id goes to the model.
+//!   spans and entries, what the partner set, what was changed on both
+//!   sides), its neighbours one relation away, the other nodes of the
+//!   audience the caller offers (candidates: what might be the same thing,
+//!   or where an inbox item belongs), and the inbox, each cut to the limits
+//!   in [`crate::limits`] and labelled (`n1` the node, `n2`… neighbours and
+//!   then candidates, `s1`… its spans, `e1`… its entries, `t1`… its summary
+//!   sentences, `o1`… its open items, `v1`… its views, `i1`… inbox items)
+//!   so no id goes to the model. With no node kept she only files the
+//!   inbox, onto candidates or new nodes.
 //! - [`read`] reads her answer, `{"actions": [{"do": …}, …]}`, into the rows
-//!   to write, in order, and last the `node.upkept` mark. What each action
-//!   writes:
+//!   to write, in order, and last the `node.upkept` mark (none when no node
+//!   is kept). What each action writes:
 //!
 //! | `do` | what she says | rows |
 //! | --- | --- | --- |
 //! | `create` | a new node `as` (`new…`), `name`, `done?`, `ongoing?`, `because` (立节点) | `node.created`; `node.done_when` with a done; status `ongoing` |
 //! | `split` | a part `as` with its `spans`, `name`, `done?`, `ongoing?`, `reason`, `because` (拆分) | as `create`; `node.split_off` on this node; `part_of` from the part |
 //! | `place` | inbox `items` onto `node`, in her `text` (收件箱归位) | `node.span`, its refs the items |
-//! | `absorb` | this node `into` a neighbour, `how` `merged` or `folded_back`, `reason`, `because` (并入、收回) | `node.absorbed`; its open items, waiting intents and relations again on the other |
+//! | `absorb` | this node `into` a neighbour or a candidate, `how` `merged` or `folded_back`, `reason`, `because` (并入、收回) | `node.absorbed`; its open items, waiting intents and relations again on the other |
 //! | `relate` | `from?` (this node) → `to`, `relation`, `reason`, `because` (挂两处 is a second `part_of`) | `node.related` |
 //! | `unrelate` | `from?` → `to`, `relation`, `reason` (独立 is a `part_of` taken back) | `node.unrelated` on each node holding it |
 //! | `kind` | `done?` and `ongoing?`, `reason`, `because` (进行中 ↔ 话题) | `node.done_when`, `node.kind_changed`, status, as they change |
 //! | `status` | `status` (`active`, `resting`, `done`, `dropped`, `ongoing`) | `node.revised` |
 //! | `hand` | `text`, `because`: a hand raised to the partner | `node.intent`, waiting |
+//! | `summary` | `sentences`, each `{text, because}` (改写概括) | `node.revised` of the summary |
+//! | `view` | `view?` (a `v…`; none for a new one), `text`, `because` (看法变了) | `node.view_changed` |
+//! | `open` | `item?` (an `o…`; none for a new one), `text?`, `closed?`, `because` (没收尾的事) | `node.open_item` |
+//!
+//! Evidence (`because`) is what she was shown: a span, an entry or an inbox
+//! item is itself; a summary sentence, an open item or a view stands for
+//! what it rests on, so a node with no span of its own can still be
+//! judged. A view changes only on what counts (算数): every piece of it a
+//! span, an entry or an inbox item said only by the partner or her, and not
+//! in a group; anything else is held (`not_counted`).
 //!
 //! The kind follows from her `done` alone: with a "done" it is something in
 //! progress; without one it is a topic, unless it is `ongoing` (always being
 //! done, 每周发版), which is something in progress whose status is ongoing.
 //!
-//! What the partner set stands: an action that would change a head field
-//! whose current version is the partner's, take back a relation the
-//! partner made, or merge away a node whose own row, relation, open item or
-//! waiting intent is the partner's (a merge writes those again, as hers) is
-//! held (`held`), and she may only raise a hand. Every other action of the
-//! answer stands.
+//! What the partner set stands: an action that would change a head field,
+//! an open item or a view whose current version is the partner's, take
+//! back a relation the partner made, or merge away a node whose own row,
+//! relation, open item or waiting intent is the partner's (a merge writes
+//! those again, as hers) is held (`held`), and she may only raise a hand.
+//! Every other action of the answer stands. What she watched or read with
+//! the partner
+//! (`minted:together-…`) only ever takes others in: merging it away
+//! changes nothing, as for a person or a repository.
 //!
 //! A `part_of` she writes is checked as the fold will check it: the fold's
 //! rule (in log order, one that would close a loop is passed by) replayed
@@ -60,16 +78,18 @@ use crate::{
     NodeError,
     body::{
         Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged, OpenItem,
-        Related, Relation, Revised, Span, SplitOff, Status, Unrelated, Upkept,
+        Related, Relation, Revised, Sentence, Span, SplitOff, Status, Unrelated, Upkept,
+        ViewChanged,
     },
     check_token,
     fold::{FoldInput, Full, Item, Node, Parts, fold_full},
     key::{Key, Kind, node_id},
     limits::{
-        BECAUSE_IDS, NAME_CHARS, PLACE_SUMMARY_CHARS, REASON_CHARS, REFS, SEEN_DEVICES, TEXT_CHARS,
-        UPKEEP_ACTIONS, UPKEEP_HEAD_ITEMS, UPKEEP_INBOX, UPKEEP_INBOX_TOTAL_CHARS,
-        UPKEEP_NEIGHBOURS, UPKEEP_OUTPUT_BYTES, UPKEEP_SPAN_CHARS, UPKEEP_SPANS,
-        UPKEEP_TOTAL_CHARS, UPKEEP_WRITES, cut,
+        BECAUSE_IDS, NAME_CHARS, PLACE_SUMMARY_CHARS, REASON_CHARS, REFS, SEEN_DEVICES,
+        SENTENCE_CHARS, SUMMARY_SENTENCES, TEXT_CHARS, UPKEEP_ACTIONS, UPKEEP_CANDIDATES,
+        UPKEEP_ENTRIES, UPKEEP_ENTRIES_TOTAL_CHARS, UPKEEP_HEAD_ITEMS, UPKEEP_INBOX,
+        UPKEEP_INBOX_TOTAL_CHARS, UPKEEP_NEIGHBOURS, UPKEEP_OUTPUT_BYTES, UPKEEP_SPAN_CHARS,
+        UPKEEP_SPANS, UPKEEP_TOTAL_CHARS, UPKEEP_WRITES, cut,
     },
     place::{clean, object_in},
     queue::{Reason, Watch},
@@ -94,8 +114,15 @@ pub struct UpkeepInput {
     #[serde(default)]
     pub bodies: BTreeMap<String, Value>,
     pub audience: String,
-    /// The node she keeps.
-    pub node: String,
+    /// The node she keeps; none when she only files the inbox (the
+    /// audience has no node yet, or none is due).
+    #[serde(default)]
+    pub node: Option<String>,
+    /// Other nodes of this audience, by id, ranked by the caller (by what
+    /// recall finds near the node or the inbox): what might be the same
+    /// thing, or where an inbox item belongs. Their rows are in `rows`.
+    #[serde(default)]
+    pub candidates: Vec<String>,
     /// Inbox items of this audience, oldest first.
     #[serde(default)]
     pub inbox: Vec<InboxItem>,
@@ -114,10 +141,16 @@ pub enum Head {
     Object,
 }
 
+/// An open item or a view of the node, labelled (`o…`, `v…`) so she can
+/// revise it, or cite what it rests on.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ShownText {
+pub struct ShownItem {
+    pub label: String,
     pub text: String,
+    /// Its current version is the partner's: only a hand against it.
+    #[serde(skip_serializing_if = "is_false")]
+    pub by_partner: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -138,14 +171,16 @@ pub struct ShownNode {
     pub status: Status,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub done_when: Option<String>,
+    /// Its sentences in order; the `n`th is `t<n>` when she cites what it
+    /// rests on.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub summary: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub open: Vec<ShownText>,
+    pub open: Vec<ShownItem>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub intents: Vec<ShownIntent>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub views: Vec<ShownText>,
+    pub views: Vec<ShownItem>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parts: Option<Parts>,
     /// The partner made this node: only a hand against merging it away.
@@ -204,6 +239,22 @@ pub struct ShownNeighbour {
     pub relations: Vec<ShownRelation>,
 }
 
+/// A node of the audience the caller offered, with no relation to the node
+/// she keeps (or no node kept).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShownCandidate {
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<Kind>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    pub status: Status,
+    /// Its summary's first sentence, cut.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gist: Option<String>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShownInbox {
@@ -217,6 +268,8 @@ pub struct ShownInbox {
 pub struct Taken {
     /// Its newest spans shown, of all it has.
     pub spans: usize,
+    /// Its newest entries shown, of all it has.
+    pub entries: usize,
     /// The first inbox items shown, of those given.
     pub inbox: usize,
 }
@@ -224,11 +277,18 @@ pub struct Taken {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Prepared {
-    pub node: ShownNode,
+    /// None when she only files the inbox.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub node: Option<ShownNode>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub spans: Vec<ShownSpan>,
+    /// Its entries (facts and preferences), newest kept, labelled `e…`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub entries: Vec<ShownSpan>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub neighbours: Vec<ShownNeighbour>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub candidates: Vec<ShownCandidate>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub inbox: Vec<ShownInbox>,
     /// Why it is due now.
@@ -242,13 +302,16 @@ fn is_false(value: &bool) -> bool {
 }
 
 fn by_partner<T>(item: &Option<Item<T>>) -> bool {
-    item.as_ref().is_some_and(|item| {
-        item.current.author == Author::Owner
-            || item
-                .rivals
-                .iter()
-                .any(|rival| rival.author == Author::Owner)
-    })
+    item.as_ref().is_some_and(partners)
+}
+
+/// Whether the partner wrote a current version of it.
+fn partners<T>(item: &Item<T>) -> bool {
+    item.current.author == Author::Owner
+        || item
+            .rivals
+            .iter()
+            .any(|rival| rival.author == Author::Owner)
 }
 
 fn status_of(node: &Node) -> Status {
@@ -261,52 +324,94 @@ fn status_of(node: &Node) -> Status {
 struct Context {
     full: Full,
     audience: String,
-    /// Index of the node she keeps in the fold.
-    at: usize,
-    /// Label → index in the fold: `n1` the node, `n2`… its neighbours.
+    /// Index of the node she keeps in the fold; none when she only files
+    /// the inbox.
+    at: Option<usize>,
+    /// Label → index in the fold: `n1` the node, `n2`… its neighbours,
+    /// then the candidates.
     nodes: BTreeMap<String, usize>,
     /// `s…` → span row.
     spans: BTreeMap<String, String>,
+    /// `e…` → entry row.
+    entries: BTreeMap<String, String>,
+    /// `t…`, `o…`, `v…` → what that sentence, open item or view rests on.
+    heads: BTreeMap<String, Vec<String>>,
+    /// `o…` → the open item's id.
+    open: BTreeMap<String, String>,
+    /// `v…` → the view's id.
+    views: BTreeMap<String, String>,
     /// `i…` → index in the inbox.
     inbox: BTreeMap<String, usize>,
     items: Vec<InboxItem>,
     prepared: Prepared,
 }
 
-fn context(input: UpkeepInput) -> Result<Context, NodeError> {
-    check_token("node", &input.node)?;
-    let mut seen = BTreeSet::new();
-    for item in &input.inbox {
-        check_token("inbox id", &item.id)?;
-        if myriad_persona_log::row::object_type(&item.id).is_none() {
-            return Err(NodeError::new("an inbox id is <type>:<id>"));
-        }
-        if !seen.insert(item.id.as_str()) {
-            return Err(NodeError::new("inbox ids repeat"));
-        }
-        check_said_by(&item.said_by)?;
-    }
-    let audience = input.audience;
-    check_token("audience", &audience)?;
-    myriad_persona_log::row::Audience::parse(&audience)
-        .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
-    let full = fold_full(FoldInput {
-        rows: input.rows,
-        bodies: input.bodies,
-    })?;
-    let at = full
-        .folded
-        .nodes
-        .iter()
-        .position(|node| node.audience == audience && node.id == input.node)
-        .ok_or_else(|| NodeError::new("the node is not in the rows given"))?;
-    let node = &full.folded.nodes[at];
-    if node.forgotten || node.key.is_none() || node.absorbed_into.is_some() {
-        return Err(NodeError::new(
-            "the node is forgotten, gone into another, or not created yet",
-        ));
-    }
+/// Whether a node is one she can be shown: created, not forgotten, not
+/// gone into another.
+fn alive(node: &Node) -> bool {
+    !node.forgotten && node.key.is_some() && node.absorbed_into.is_none()
+}
 
+fn gist(node: &Node) -> Option<String> {
+    node.summary.as_ref().and_then(|summary| {
+        summary
+            .current
+            .value
+            .first()
+            .map(|sentence| cut(&clean(&sentence.text, true), PLACE_SUMMARY_CHARS))
+    })
+}
+
+fn shown_text(text: &str) -> String {
+    cut(&clean(text, false), UPKEEP_SPAN_CHARS)
+}
+
+/// The newest of `texts` (row, said by, text), within `count` and `budget`
+/// chars, shown oldest first and labelled `<prefix>1`….
+fn newest<'t>(
+    texts: impl DoubleEndedIterator<Item = (&'t str, &'t [SaidBy], &'t str)>,
+    prefix: &str,
+    count: usize,
+    budget: usize,
+) -> (Vec<ShownSpan>, BTreeMap<String, String>) {
+    let mut taken = Vec::new();
+    let mut total = 0;
+    for (row, said_by, text) in texts.rev().take(count) {
+        let text = shown_text(text);
+        let chars = text.chars().count();
+        if !taken.is_empty() && total + chars > budget {
+            break;
+        }
+        total += chars;
+        taken.push((row.to_string(), said_by.to_vec(), text));
+    }
+    taken.reverse();
+    let mut labels = BTreeMap::new();
+    let shown = taken
+        .into_iter()
+        .enumerate()
+        .map(|(n, (row, said_by, text))| {
+            let label = format!("{prefix}{}", n + 1);
+            labels.insert(label.clone(), row);
+            ShownSpan {
+                label,
+                said_by,
+                text,
+            }
+        })
+        .collect();
+    (shown, labels)
+}
+
+/// The node she keeps, as she sees its head, and the labels of its head.
+struct Kept {
+    shown: ShownNode,
+    heads: BTreeMap<String, Vec<String>>,
+    open: BTreeMap<String, String>,
+    views: BTreeMap<String, String>,
+}
+
+fn kept(node: &Node) -> Kept {
     let mut partner_set = Vec::new();
     let mut both_changed = Vec::new();
     let mut head = |field: Head, partner: bool, both: bool| {
@@ -353,7 +458,58 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         by_partner(&node.object),
         both(node.object.as_ref().map(|i| i.both_changed)),
     );
-    let shown_text = |text: &str| cut(&clean(text, false), UPKEEP_SPAN_CHARS);
+    let mut heads = BTreeMap::new();
+    let summary = node
+        .summary
+        .as_ref()
+        .map(|summary| {
+            summary
+                .current
+                .value
+                .iter()
+                .enumerate()
+                .map(|(n, sentence)| {
+                    heads.insert(format!("t{}", n + 1), sentence.because.clone());
+                    sentence.text.clone()
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let mut open_labels = BTreeMap::new();
+    let open = node
+        .open
+        .iter()
+        .filter(|(_, item)| !item.current.value.closed)
+        .take(UPKEEP_HEAD_ITEMS)
+        .enumerate()
+        .map(|(n, (id, item))| {
+            let label = format!("o{}", n + 1);
+            heads.insert(label.clone(), item.current.value.because.clone());
+            open_labels.insert(label.clone(), id.clone());
+            ShownItem {
+                label,
+                text: shown_text(&item.current.value.text),
+                by_partner: partners(item),
+            }
+        })
+        .collect();
+    let mut view_labels = BTreeMap::new();
+    let views = node
+        .views
+        .iter()
+        .take(UPKEEP_HEAD_ITEMS)
+        .enumerate()
+        .map(|(n, (id, view))| {
+            let label = format!("v{}", n + 1);
+            heads.insert(label.clone(), view.current.value.because.clone());
+            view_labels.insert(label.clone(), id.clone());
+            ShownItem {
+                label,
+                text: shown_text(&view.current.value.text),
+                by_partner: partners(view),
+            }
+        })
+        .collect();
     let shown = ShownNode {
         label: "n1".to_string(),
         kind: node.kind.as_ref().map(|kind| kind.current.value.kind),
@@ -363,27 +519,8 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             .done_when
             .as_ref()
             .and_then(|done| done.current.value.as_deref().map(shown_text)),
-        summary: node
-            .summary
-            .as_ref()
-            .map(|summary| {
-                summary
-                    .current
-                    .value
-                    .iter()
-                    .map(|sentence| sentence.text.clone())
-                    .collect()
-            })
-            .unwrap_or_default(),
-        open: node
-            .open
-            .iter()
-            .filter(|(_, item)| !item.current.value.closed)
-            .take(UPKEEP_HEAD_ITEMS)
-            .map(|(_, item)| ShownText {
-                text: shown_text(&item.current.value.text),
-            })
-            .collect(),
+        summary,
+        open,
         intents: node
             .intents
             .iter()
@@ -399,121 +536,213 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
                 status: intent.current.value.status,
             })
             .collect(),
-        views: node
-            .views
-            .iter()
-            .take(UPKEEP_HEAD_ITEMS)
-            .map(|(_, view)| ShownText {
-                text: shown_text(&view.current.value.text),
-            })
-            .collect(),
+        views,
         parts: node.parts,
         made_by_partner: node.created_by == Some(Author::Owner),
         partner_set,
         both_changed,
     };
-
-    // Its newest spans, shown oldest first.
-    let mut spans = Vec::new();
-    let mut total = 0;
-    for span in node.spans.iter().rev().take(UPKEEP_SPANS) {
-        let text = shown_text(&span.text);
-        let chars = text.chars().count();
-        if !spans.is_empty() && total + chars > UPKEEP_TOTAL_CHARS {
-            break;
-        }
-        total += chars;
-        spans.push((span.row.clone(), span.said_by.clone(), text));
+    Kept {
+        shown,
+        heads,
+        open: open_labels,
+        views: view_labels,
     }
-    spans.reverse();
-    let mut span_labels = BTreeMap::new();
-    let shown_spans: Vec<ShownSpan> = spans
-        .into_iter()
-        .enumerate()
-        .map(|(n, (row, said_by, text))| {
-            let label = format!("s{}", n + 1);
-            span_labels.insert(label.clone(), row);
-            ShownSpan {
-                label,
-                said_by,
-                text,
+}
+
+fn context(input: UpkeepInput) -> Result<Context, NodeError> {
+    if let Some(node) = &input.node {
+        check_token("node", node)?;
+    } else if input.inbox.is_empty() {
+        return Err(NodeError::new("with no node, there is an inbox to file"));
+    }
+    let mut seen = BTreeSet::new();
+    for item in &input.inbox {
+        check_token("inbox id", &item.id)?;
+        if myriad_persona_log::row::object_type(&item.id).is_none() {
+            return Err(NodeError::new("an inbox id is <type>:<id>"));
+        }
+        if !seen.insert(item.id.as_str()) {
+            return Err(NodeError::new("inbox ids repeat"));
+        }
+        check_said_by(&item.said_by)?;
+    }
+    let mut seen = BTreeSet::new();
+    for candidate in &input.candidates {
+        check_token("candidate", candidate)?;
+        if !seen.insert(candidate.as_str()) {
+            return Err(NodeError::new("candidate ids repeat"));
+        }
+    }
+    let audience = input.audience;
+    check_token("audience", &audience)?;
+    myriad_persona_log::row::Audience::parse(&audience)
+        .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
+    let full = fold_full(FoldInput {
+        rows: input.rows,
+        bodies: input.bodies,
+    })?;
+    let place = |id: &str| {
+        full.folded
+            .nodes
+            .iter()
+            .position(|node| node.audience == audience && node.id == id)
+    };
+    let at = match &input.node {
+        None => None,
+        Some(id) => {
+            let at =
+                place(id).ok_or_else(|| NodeError::new("the node is not in the rows given"))?;
+            if !alive(&full.folded.nodes[at]) {
+                return Err(NodeError::new(
+                    "the node is forgotten, gone into another, or not created yet",
+                ));
             }
-        })
-        .collect();
-
-    // One relation away.
-    let index: BTreeMap<&str, usize> = full
-        .folded
-        .nodes
-        .iter()
-        .enumerate()
-        .filter(|(_, other)| {
-            other.audience == audience
-                && !other.forgotten
-                && other.key.is_some()
-                && other.absorbed_into.is_none()
-        })
-        .map(|(at, other)| (other.id.as_str(), at))
-        .collect();
-    let mut around: BTreeMap<usize, Vec<ShownRelation>> = BTreeMap::new();
-    for relation in &full.folded.relations {
-        if relation.audience != audience {
-            continue;
+            Some(at)
         }
-        let (other, toward) = if relation.from == node.id {
-            (&relation.to, Toward::Out)
-        } else if relation.to == node.id {
-            (&relation.from, Toward::In)
-        } else {
-            continue;
-        };
-        let Some(&other) = index.get(other.as_str()) else {
-            continue;
-        };
-        around.entry(other).or_default().push(ShownRelation {
-            relation: relation.relation,
-            toward: if relation.relation.symmetric() {
-                Toward::Both
-            } else {
-                toward
-            },
-            by_partner: relation.author == Author::Owner,
-        });
-    }
-    let mut around: Vec<(usize, Vec<ShownRelation>)> = around
-        .into_iter()
-        .map(|(other, mut relations)| {
-            relations.sort_by_key(|shown| (shown.relation, shown.toward));
-            relations.dedup();
-            (other, relations)
+    };
+    // Every candidate is a node of this audience in the rows: one from
+    // another audience is never shown, and is the caller's mistake.
+    let candidates = input
+        .candidates
+        .iter()
+        .map(|id| {
+            place(id).ok_or_else(|| {
+                NodeError::new("a candidate is not a node of this audience in the rows given")
+            })
         })
-        .collect();
-    around.sort_by(|(a, ra), (b, rb)| {
-        let first = |relations: &[ShownRelation]| (relations[0].relation, relations[0].toward);
-        (first(ra), &full.folded.nodes[*a].id).cmp(&(first(rb), &full.folded.nodes[*b].id))
-    });
-    around.truncate(UPKEEP_NEIGHBOURS);
-    let mut nodes = BTreeMap::from([("n1".to_string(), at)]);
-    let neighbours: Vec<ShownNeighbour> = around
+        .collect::<Result<Vec<usize>, _>>()?;
+
+    let mut kept_node = None;
+    let mut spans = Vec::new();
+    let mut span_labels = BTreeMap::new();
+    let mut entries = Vec::new();
+    let mut entry_labels = BTreeMap::new();
+    let mut nodes = BTreeMap::new();
+    let mut neighbours = Vec::new();
+    let mut due = Vec::new();
+    if let Some(at) = at {
+        let node = &full.folded.nodes[at];
+        kept_node = Some(kept(node));
+        // Its newest spans and entries, shown oldest first.
+        (spans, span_labels) = newest(
+            node.spans.iter().map(|span| {
+                (
+                    span.row.as_str(),
+                    span.said_by.as_slice(),
+                    span.text.as_str(),
+                )
+            }),
+            "s",
+            UPKEEP_SPANS,
+            UPKEEP_TOTAL_CHARS,
+        );
+        (entries, entry_labels) = newest(
+            node.entries.iter().map(|entry| {
+                (
+                    entry.row.as_str(),
+                    entry.said_by.as_slice(),
+                    entry.text.as_str(),
+                )
+            }),
+            "e",
+            UPKEEP_ENTRIES,
+            UPKEEP_ENTRIES_TOTAL_CHARS,
+        );
+
+        // One relation away.
+        let index: BTreeMap<&str, usize> = full
+            .folded
+            .nodes
+            .iter()
+            .enumerate()
+            .filter(|(_, other)| other.audience == audience && alive(other))
+            .map(|(at, other)| (other.id.as_str(), at))
+            .collect();
+        let mut around: BTreeMap<usize, Vec<ShownRelation>> = BTreeMap::new();
+        for relation in &full.folded.relations {
+            if relation.audience != audience {
+                continue;
+            }
+            let (other, toward) = if relation.from == node.id {
+                (&relation.to, Toward::Out)
+            } else if relation.to == node.id {
+                (&relation.from, Toward::In)
+            } else {
+                continue;
+            };
+            let Some(&other) = index.get(other.as_str()) else {
+                continue;
+            };
+            around.entry(other).or_default().push(ShownRelation {
+                relation: relation.relation,
+                toward: if relation.relation.symmetric() {
+                    Toward::Both
+                } else {
+                    toward
+                },
+                by_partner: relation.author == Author::Owner,
+            });
+        }
+        let mut around: Vec<(usize, Vec<ShownRelation>)> = around
+            .into_iter()
+            .map(|(other, mut relations)| {
+                relations.sort_by_key(|shown| (shown.relation, shown.toward));
+                relations.dedup();
+                (other, relations)
+            })
+            .collect();
+        around.sort_by(|(a, ra), (b, rb)| {
+            let first = |relations: &[ShownRelation]| (relations[0].relation, relations[0].toward);
+            (first(ra), &full.folded.nodes[*a].id).cmp(&(first(rb), &full.folded.nodes[*b].id))
+        });
+        around.truncate(UPKEEP_NEIGHBOURS);
+        nodes.insert("n1".to_string(), at);
+        neighbours = around
+            .into_iter()
+            .enumerate()
+            .map(|(n, (other, relations))| {
+                let label = format!("n{}", n + 2);
+                nodes.insert(label.clone(), other);
+                let other = &full.folded.nodes[other];
+                ShownNeighbour {
+                    label,
+                    kind: other.kind.as_ref().map(|kind| kind.current.value.kind),
+                    name: other.name.as_ref().map(|name| name.current.value.clone()),
+                    status: status_of(other),
+                    gist: gist(other),
+                    relations,
+                }
+            })
+            .collect();
+        due = Watch::new(&full)
+            .due(&audience, &node.id)
+            .map(|due| due.why)
+            .unwrap_or_default();
+    }
+
+    // The candidates after the neighbours (after `n1` when no node is
+    // kept), in the caller's order: one already shown, or not alive, is
+    // passed by.
+    let first = if at.is_some() { nodes.len() + 1 } else { 2 };
+    let shown_candidates: Vec<ShownCandidate> = candidates
+        .into_iter()
+        .filter(|other| alive(&full.folded.nodes[*other]))
+        .filter(|other| !nodes.values().any(|shown| shown == other))
+        .take(UPKEEP_CANDIDATES)
+        .collect::<Vec<usize>>()
         .into_iter()
         .enumerate()
-        .map(|(n, (other, relations))| {
-            let label = format!("n{}", n + 2);
+        .map(|(n, other)| {
+            let label = format!("n{}", first + n);
             nodes.insert(label.clone(), other);
             let other = &full.folded.nodes[other];
-            ShownNeighbour {
+            ShownCandidate {
                 label,
                 kind: other.kind.as_ref().map(|kind| kind.current.value.kind),
                 name: other.name.as_ref().map(|name| name.current.value.clone()),
                 status: status_of(other),
-                gist: other.summary.as_ref().and_then(|summary| {
-                    summary
-                        .current
-                        .value
-                        .first()
-                        .map(|sentence| cut(&clean(&sentence.text, true), PLACE_SUMMARY_CHARS))
-                }),
-                relations,
+                gist: gist(other),
             }
         })
         .collect();
@@ -537,18 +766,21 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             text,
         });
     }
-    let due = Watch::new(&full)
-        .due(&audience, &node.id)
-        .map(|due| due.why)
-        .unwrap_or_default();
+    let (shown, heads, open, views) = match kept_node {
+        Some(kept) => (Some(kept.shown), kept.heads, kept.open, kept.views),
+        None => (None, BTreeMap::new(), BTreeMap::new(), BTreeMap::new()),
+    };
     let prepared = Prepared {
         node: shown,
         taken: Taken {
-            spans: shown_spans.len(),
+            spans: spans.len(),
+            entries: entries.len(),
             inbox: inbox.len(),
         },
-        spans: shown_spans,
+        spans,
+        entries,
         neighbours,
+        candidates: shown_candidates,
         inbox,
         due,
     };
@@ -558,6 +790,10 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         at,
         nodes,
         spans: span_labels,
+        entries: entry_labels,
+        heads,
+        open,
+        views,
         inbox: inbox_labels,
         items: input.inbox,
         prepared,
@@ -601,6 +837,9 @@ pub struct Write {
 pub enum HeldWhy {
     /// The partner set it: only a hand.
     PartnerSet,
+    /// A view that does not rest only on what counts (算数): the partner's
+    /// or her own words, outside a group, shown to her as they are.
+    NotCounted,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -633,11 +872,11 @@ pub enum Fallback {
     NoEvidence,
     /// A `part_of` that would close a loop.
     Cycle,
-    /// Something the rules never allow: a person split or merged away, a
-    /// kind its key does not have, a span on 「关于你」, an item placed
-    /// twice, a field written twice, folding back into what it is not part
-    /// of, taking back a relation that is not there, a new node with nothing
-    /// on it.
+    /// Something the rules never allow: a person, a repository or what she
+    /// watched with the partner split or merged away, a kind its key does
+    /// not have, a span on 「关于你」, an item placed twice, a field written
+    /// twice, folding back into what it is not part of, taking back a
+    /// relation that is not there, a new node with nothing on it.
     NotAllowed,
 }
 
@@ -661,7 +900,7 @@ impl Fallback {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpkeepRead {
-    /// In order; the last is always the `node.upkept` mark.
+    /// In order; the last is the `node.upkept` mark, when a node is kept.
     pub writes: Vec<Write>,
     /// Inbox items now on a node, sorted: the caller takes them out.
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -691,7 +930,7 @@ struct Reader<'a> {
     placed: BTreeSet<String>,
     news: BTreeMap<String, Named>,
     used: BTreeSet<String>,
-    written: BTreeSet<(String, &'static str)>,
+    written: BTreeSet<(String, String)>,
     /// Every `part_of` row the fold weighs, in log order, as (from, to,
     /// row), with what the answer adds and takes back: the fold's rule is
     /// replayed over it, so what stands here is what will stand there.
@@ -785,8 +1024,13 @@ impl<'a> Reader<'a> {
         &self.context.full.folded.nodes[at]
     }
 
-    fn me(&self) -> &'a Node {
-        self.node(self.context.at)
+    /// The node she keeps: an action on it with none kept names a label
+    /// she was not shown.
+    fn me(&self) -> Result<&'a Node, Fallback> {
+        self.context
+            .at
+            .map(|at| self.node(at))
+            .ok_or(Fallback::UnknownLabel)
     }
 
     fn named(&mut self, label: &str) -> Result<Named, Fallback> {
@@ -824,25 +1068,64 @@ impl<'a> Reader<'a> {
     }
 
     fn evidence(&self, action: &Value) -> Result<Vec<String>, Fallback> {
-        let given = field(action, "because")
+        Ok(self.weighed(action)?.0)
+    }
+
+    /// What `because` names: a span (`s…`), an entry (`e…`) or an inbox
+    /// item (`i…`) is itself; a summary sentence (`t…`), an open item
+    /// (`o…`) or a view (`v…`) is what it rests on. And whether all of it
+    /// counts (算数) for a view: shown as it is (not through the head),
+    /// said only by the partner or her, and not in a group.
+    fn weighed(&self, given: &Value) -> Result<(Vec<String>, bool), Fallback> {
+        let given = field(given, "because")
             .and_then(Value::as_array)
             .ok_or(Fallback::NoEvidence)?;
+        let counts = |said_by: &[SaidBy], audience: &str| {
+            said_by
+                .iter()
+                .all(|said| matches!(said, SaidBy::Partner | SaidBy::Her))
+                && !matches!(
+                    myriad_persona_log::row::Audience::parse(audience),
+                    Ok(myriad_persona_log::row::Audience::Group(_)) | Err(_)
+                )
+        };
         let mut ids = BTreeSet::new();
+        let mut counted = true;
         for label in given {
             let label = label.as_str().ok_or(Fallback::NoEvidence)?.trim();
-            let id = if let Some(row) = self.context.spans.get(label) {
-                format!("span:{row}")
+            if let Some(row) = self.context.spans.get(label) {
+                let span = self
+                    .me()?
+                    .spans
+                    .iter()
+                    .find(|span| span.row == *row)
+                    .ok_or(Fallback::NoEvidence)?;
+                counted &= counts(&span.said_by, &span.audience);
+                ids.insert(format!("span:{row}"));
+            } else if let Some(row) = self.context.entries.get(label) {
+                let entry = self
+                    .me()?
+                    .entries
+                    .iter()
+                    .find(|entry| entry.row == *row)
+                    .ok_or(Fallback::NoEvidence)?;
+                counted &= counts(&entry.said_by, &entry.audience);
+                ids.insert(format!("entry:{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
-                self.context.items[at].id.clone()
+                let item = &self.context.items[at];
+                counted &= counts(&item.said_by, &self.context.audience);
+                ids.insert(item.id.clone());
+            } else if let Some(rests_on) = self.context.heads.get(label) {
+                counted = false;
+                ids.extend(rests_on.iter().cloned());
             } else {
                 return Err(Fallback::NoEvidence);
-            };
-            ids.insert(id);
+            }
         }
         if ids.is_empty() || ids.len() > BECAUSE_IDS {
             return Err(Fallback::NoEvidence);
         }
-        Ok(ids.into_iter().collect())
+        Ok((ids.into_iter().collect(), counted))
     }
 
     fn write(&mut self, node: &str, body: Body) -> Result<(), Fallback> {
@@ -876,8 +1159,8 @@ impl<'a> Reader<'a> {
 
     /// One write per head field per node in one answer: a second would not
     /// know the first's row.
-    fn once(&mut self, node: &str, what: &'static str) -> Result<(), Fallback> {
-        if self.written.insert((node.to_string(), what)) {
+    fn once(&mut self, node: &str, what: &str) -> Result<(), Fallback> {
+        if self.written.insert((node.to_string(), what.to_string())) {
             Ok(())
         } else {
             Err(Fallback::NotAllowed)
@@ -1018,11 +1301,8 @@ impl<'a> Reader<'a> {
         )
     }
 
-    fn hold(&mut self, n: usize) {
-        self.held.push(Held {
-            action: n,
-            why: HeldWhy::PartnerSet,
-        });
+    fn hold(&mut self, n: usize, why: HeldWhy) {
+        self.held.push(Held { action: n, why });
     }
 
     fn action(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
@@ -1034,7 +1314,7 @@ impl<'a> Reader<'a> {
                 self.mint(action)?;
             }
             "split" => {
-                let me = self.me();
+                let me = self.me()?;
                 if me
                     .kind
                     .as_ref()
@@ -1126,7 +1406,7 @@ impl<'a> Reader<'a> {
             "kind" => self.kind(n, action)?,
             "status" => {
                 let status: Status = enum_of(action, "status")?;
-                let me = self.me();
+                let me = self.me()?;
                 let kind = me
                     .kind
                     .as_ref()
@@ -1138,7 +1418,7 @@ impl<'a> Reader<'a> {
                     return Ok(());
                 }
                 if by_partner(&me.status) {
-                    self.hold(n);
+                    self.hold(n, HeldWhy::PartnerSet);
                     return Ok(());
                 }
                 let base = me
@@ -1152,7 +1432,7 @@ impl<'a> Reader<'a> {
             "hand" => {
                 let text = text(action, "text", TEXT_CHARS, false)?;
                 let because = self.evidence(action)?;
-                let id = self.me().id.clone();
+                let id = self.me()?.id.clone();
                 self.write(
                     &id,
                     Body::Intent(Intent {
@@ -1168,13 +1448,145 @@ impl<'a> Reader<'a> {
                     }),
                 )?;
             }
+            "summary" => self.summary(n, action)?,
+            "view" => self.view(n, action)?,
+            "open" => self.open(n, action)?,
             _ => return Err(Fallback::UnknownAction),
         }
         Ok(())
     }
 
+    /// Her summary rewritten, every sentence with what it rests on.
+    fn summary(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
+        let me = self.me()?;
+        let given = field(action, "sentences")
+            .and_then(Value::as_array)
+            .filter(|given| !given.is_empty() && given.len() <= SUMMARY_SENTENCES)
+            .ok_or(Fallback::BadField)?;
+        let mut sentences = Vec::new();
+        for sentence in given {
+            sentences.push(Sentence {
+                text: text(sentence, "text", SENTENCE_CHARS, true)?,
+                because: self.evidence(sentence)?,
+            });
+        }
+        if by_partner(&me.summary) {
+            self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        let id = me.id.clone();
+        self.once(&id, "summary")?;
+        self.write(
+            &id,
+            Body::Revised(Revised {
+                version: 1,
+                sync: self.sync.clone(),
+                said_by: self.her(),
+                base: me
+                    .summary
+                    .as_ref()
+                    .map(|item| item.base.clone())
+                    .unwrap_or_default(),
+                field: Field::Summary,
+                person: None,
+                value: serde_json::to_value(sentences).map_err(|_| Fallback::BadField)?,
+            }),
+        )
+    }
+
+    /// One of her views, changed (`view`, a label she was shown) or new.
+    /// It changes only on what counts: anything else is held.
+    fn view(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
+        let me = self.me()?;
+        let text = text(action, "text", TEXT_CHARS, false)?;
+        let (because, counted) = self.weighed(action)?;
+        let (view, current) = match field(action, "view") {
+            None => (
+                format!("v{}", minted(&format!("view\u{1f}{}\u{1f}{n}", self.run))),
+                None,
+            ),
+            Some(label) => {
+                let label = label.as_str().ok_or(Fallback::BadField)?.trim();
+                let view = self
+                    .context
+                    .views
+                    .get(label)
+                    .ok_or(Fallback::UnknownLabel)?;
+                (view.clone(), me.views.get(view))
+            }
+        };
+        if current.is_some_and(partners) {
+            self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        if !counted {
+            self.hold(n, HeldWhy::NotCounted);
+            return Ok(());
+        }
+        let id = me.id.clone();
+        self.once(&id, &format!("view\u{1f}{view}"))?;
+        self.write(
+            &id,
+            Body::ViewChanged(ViewChanged {
+                version: 1,
+                sync: self.sync.clone(),
+                said_by: self.her(),
+                base: current.map(|item| item.base.clone()).unwrap_or_default(),
+                view,
+                text,
+                because,
+            }),
+        )
+    }
+
+    /// Something not wrapped up yet: new, reworded (`item`, a label she was
+    /// shown), or closed.
+    fn open(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
+        let me = self.me()?;
+        let closed = flag(action, "closed")?;
+        let because = self.evidence(action)?;
+        let (item, current) = match field(action, "item") {
+            None => (
+                format!("o{}", minted(&format!("open\u{1f}{}\u{1f}{n}", self.run))),
+                None,
+            ),
+            Some(label) => {
+                let label = label.as_str().ok_or(Fallback::BadField)?.trim();
+                let item = self.context.open.get(label).ok_or(Fallback::UnknownLabel)?;
+                (item.clone(), me.open.get(item))
+            }
+        };
+        let text = match (optional_text(action, "text", TEXT_CHARS)?, current) {
+            (Some(text), _) => text,
+            (None, Some(current)) => current.current.value.text.clone(),
+            (None, None) => return Err(Fallback::BadField),
+        };
+        if current.is_none() && closed {
+            return Err(Fallback::BadField);
+        }
+        if current.is_some_and(partners) {
+            self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        let id = me.id.clone();
+        self.once(&id, &format!("open\u{1f}{item}"))?;
+        self.write(
+            &id,
+            Body::OpenItem(OpenItem {
+                version: 1,
+                sync: self.sync.clone(),
+                said_by: self.her(),
+                base: current.map(|item| item.base.clone()).unwrap_or_default(),
+                item,
+                text,
+                because,
+                closed,
+            }),
+        )
+    }
+
     fn absorb(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
-        let me = self.me();
+        let me = self.me()?;
         let into = self.label_of(action, "into")?;
         let Some(into_at) = into.at else {
             return Err(Fallback::UnknownLabel);
@@ -1184,13 +1596,14 @@ impl<'a> Reader<'a> {
         let because = self.evidence(action)?;
         let about_you =
             Key::parse(&into.key).is_ok_and(|key| key.is_about_you(&self.context.audience));
-        if !me
+        // Only a minted node goes into another, and not what she watched or
+        // read with the partner: that only ever takes others in.
+        let goes = me
             .key
             .as_deref()
-            .is_some_and(|key| key.starts_with("minted:"))
-            || into_at == self.context.at
-            || about_you
-        {
+            .and_then(|key| Key::parse(key).ok())
+            .is_some_and(|key| matches!(key, Key::Minted(_)) && !key.is_together());
+        if !goes || Some(into_at) == self.context.at || about_you {
             return Err(Fallback::NotAllowed);
         }
         if how == How::FoldedBack
@@ -1227,7 +1640,7 @@ impl<'a> Reader<'a> {
                 .filter(|said| said.current.value.status == IntentStatus::Waiting)
                 .any(|said| said.current.author == Author::Owner);
         if me.created_by == Some(Author::Owner) || partner_rows || partner_items {
-            self.hold(n);
+            self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
         }
         let id = me.id.clone();
@@ -1395,7 +1808,7 @@ impl<'a> Reader<'a> {
             on.entry(node).or_default().insert(row.id.clone());
         }
         if partner {
-            self.hold(n);
+            self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
         }
         if relation == Relation::PartOf {
@@ -1417,7 +1830,7 @@ impl<'a> Reader<'a> {
     }
 
     fn kind(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
-        let me = self.me();
+        let me = self.me()?;
         let done = optional_text(action, "done", TEXT_CHARS)?;
         let ongoing = flag(action, "ongoing")?;
         let reason = text(action, "reason", REASON_CHARS, true)?;
@@ -1444,7 +1857,7 @@ impl<'a> Reader<'a> {
             || (changes_kind && by_partner(&me.kind))
             || (new_status.is_some() && by_partner(&me.status))
         {
-            self.hold(n);
+            self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
         }
         let id = me.id.clone();
@@ -1557,20 +1970,6 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         }
         Ok(())
     });
-    let me = &context.full.folded.nodes[context.at];
-    // What she saw: the newest clock per device of what the node watches,
-    // the newest devices kept, the rest under one floor.
-    let mut seen: Vec<(String, Rev)> = Watch::new(&context.full)
-        .newest(&context.audience, &me.id)
-        .into_iter()
-        .collect();
-    seen.sort_by(|a, b| b.1.cmp(&a.1));
-    let floor = seen
-        .iter()
-        .skip(SEEN_DEVICES)
-        .map(|(_, rev)| rev.wall_ms)
-        .max();
-    seen.truncate(SEEN_DEVICES);
     let (mut writes, placed, held, fallback) = match read {
         Ok(()) => (
             reader.writes,
@@ -1580,26 +1979,51 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         ),
         Err(why) => (Vec::new(), Vec::new(), Vec::new(), Some(why)),
     };
-    let mut wrote: Vec<String> = writes.iter().map(|write| write.id.clone()).collect();
-    wrote.sort();
-    let upkept = Body::Upkept(Upkept {
-        version: 1,
-        sync: input.sync,
-        said_by: vec![SaidBy::Her],
-        run: input.run.clone(),
-        seen: seen.into_iter().collect(),
-        floor,
-        wrote,
-        fallback: fallback.map(|why| why.name().to_string()),
-    });
-    // The mark reads back as it was written, or the queue would never move.
-    let upkept = Body::read("node.upkept", &upkept.to_value())?;
-    writes.push(Write {
-        id: row_id(&input.run, writes.len()),
-        node: me.id.clone(),
-        kind: "node.upkept".to_string(),
-        body: upkept.to_value(),
-    });
+    // Filing the inbox with no node kept leaves no mark: the inbox items
+    // she placed leave the inbox, and the nodes they went on are due.
+    if let Some(at) = context.at {
+        let me = &context.full.folded.nodes[at];
+        // What she saw: the newest clock per device of what the node
+        // watches and of the nodes shown with it, the newest devices kept,
+        // the rest under one floor.
+        let shown: Vec<&str> = context
+            .nodes
+            .values()
+            .map(|&other| context.full.folded.nodes[other].id.as_str())
+            .collect();
+        let mut seen: Vec<(String, Rev)> = Watch::new(&context.full)
+            .newest(&context.audience, &me.id, &shown)
+            .into_iter()
+            .collect();
+        seen.sort_by(|a, b| b.1.cmp(&a.1));
+        let floor = seen
+            .iter()
+            .skip(SEEN_DEVICES)
+            .map(|(_, rev)| rev.wall_ms)
+            .max();
+        seen.truncate(SEEN_DEVICES);
+        let mut wrote: Vec<String> = writes.iter().map(|write| write.id.clone()).collect();
+        wrote.sort();
+        let upkept = Body::Upkept(Upkept {
+            version: 1,
+            sync: input.sync,
+            said_by: vec![SaidBy::Her],
+            run: input.run.clone(),
+            seen: seen.into_iter().collect(),
+            floor,
+            wrote,
+            fallback: fallback.map(|why| why.name().to_string()),
+        });
+        // The mark reads back as it was written, or the queue would never
+        // move.
+        let upkept = Body::read("node.upkept", &upkept.to_value())?;
+        writes.push(Write {
+            id: row_id(&input.run, writes.len()),
+            node: me.id.clone(),
+            kind: "node.upkept".to_string(),
+            body: upkept.to_value(),
+        });
+    }
     Ok(UpkeepRead {
         writes,
         placed,
