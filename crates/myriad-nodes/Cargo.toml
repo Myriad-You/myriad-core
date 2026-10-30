@@ -15,7 +15,13 @@ license = "AGPL-3.0-only"
 # The first batch of node rules (docs/SHARED_CORE.md「她的节点」): what a
 # node is and holds, how its rows fold, and the shape placement returns.
 # Her upkeep, wakes, the rules for views and objections come later.
+#
+# Between host cores (`wire`): base64 for a body's bytes in a batch, and
+# the host filter's secret scan as the backstop that keeps a key in one of
+# her texts from leaving the device.
 [dependencies]
+base64 = "0.23"
+myriad-perception-filter = { path = "../myriad-perception-filter" }
 myriad-persona-log = { path = "../myriad-persona-log" }
 myriad-persona-sync = { path = "../myriad-persona-sync" }
 serde = { version = "1", features = ["derive"] }

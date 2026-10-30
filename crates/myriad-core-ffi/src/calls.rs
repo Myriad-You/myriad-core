@@ -139,6 +139,8 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.repo_key", nodes::repo_key),
     ("nodes.upkeep_input", nodes::upkeep_input),
     ("nodes.upkeep_read", nodes::upkeep_read),
+    ("nodes.wire_send", nodes::wire_send),
+    ("nodes.wire_take", nodes::wire_take),
     ("others.first_words_view", reach::first_words_view),
     ("outfit.after_reply", outfit::after_reply),
     ("outfit.hold_wear", outfit::hold_wear),

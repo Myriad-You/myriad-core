@@ -811,6 +811,28 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
     out
 }
 
+impl Node {
+    /// The `base` of every head item two sides changed (两边都改过).
+    pub(crate) fn both_changed(&self) -> Vec<&[String]> {
+        fn one<T>(item: &Item<T>) -> Option<&[String]> {
+            item.both_changed.then_some(item.base.as_slice())
+        }
+        let mut out = Vec::new();
+        out.extend(self.kind.as_ref().and_then(one));
+        out.extend(self.done_when.as_ref().and_then(one));
+        out.extend(self.name.as_ref().and_then(one));
+        out.extend(self.summary.as_ref().and_then(one));
+        out.extend(self.status.as_ref().and_then(one));
+        out.extend(self.who_knows.as_ref().and_then(one));
+        out.extend(self.object.as_ref().and_then(one));
+        out.extend(self.progress.values().filter_map(one));
+        out.extend(self.views.values().filter_map(one));
+        out.extend(self.open.values().filter_map(one));
+        out.extend(self.intents.values().filter_map(one));
+        out
+    }
+}
+
 /// What her upkeep marks say she saw of one node.
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Seen {
@@ -820,6 +842,10 @@ pub(crate) struct Seen {
     pub floor: Option<u64>,
     /// Rows her runs wrote.
     pub wrote: BTreeSet<String>,
+    /// Each mark on its own: what one run saw. Together they say whether
+    /// some run saw a row; only one run having seen two rows at once says
+    /// she weighed them together.
+    pub each: Vec<Seen>,
 }
 
 impl Seen {
@@ -1347,6 +1373,12 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                     let seen = seen_by
                         .entry((audience.to_string(), id.to_string()))
                         .or_default();
+                    seen.each.push(Seen {
+                        clocks: body.seen.clone(),
+                        floor: body.floor,
+                        wrote: body.wrote.iter().cloned().collect(),
+                        each: Vec::new(),
+                    });
                     for (device, rev) in body.seen {
                         let newest = seen.clocks.entry(device).or_insert_with(|| rev.clone());
                         if rev > *newest {

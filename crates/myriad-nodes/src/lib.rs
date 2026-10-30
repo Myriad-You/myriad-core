@@ -45,8 +45,13 @@
 //! lineage they leave, a whole's parts rolled up, how often recall used a
 //! node or a relation (what fades is what is unused, not what is old).
 //!
+//! Between host cores ([`wire`]): one audience's rows and their bodies in
+//! batches, nothing to a side that may not hold the audience, and every
+//! body checked again where it lands (shared, no local path, no secret,
+//! its own canonical bytes).
+//!
 //! Not here yet: wakes beyond what a blocker's change brings, objections,
-//! forgetting a single span, and sync transport.
+//! and forgetting a single span.
 //!
 //! Pure: nothing here reads a clock, a file, the network, a key or a random
 //! source. Row ids and minted keys come from the caller; times are the rows'
@@ -62,12 +67,14 @@ pub mod place;
 pub mod queue;
 pub mod tags;
 pub mod upkeep;
+pub mod wire;
 
 pub use body::{BODY_VERSION, Body};
 pub use fold::{FoldInput, Folded, Node, fold};
 pub use key::{Kind, node_id, repo_key};
 pub use place::{prepare, read};
 pub use tags::{SaidBy, Sync};
+pub use wire::{Batch, send, take};
 
 /// Why an input was refused. It names a field or a rule, never a value: a
 /// node's input holds her words and the partner's things.
@@ -104,3 +111,6 @@ pub(crate) fn check_token(what: &str, value: &str) -> Result<(), NodeError> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod sync_tests;
