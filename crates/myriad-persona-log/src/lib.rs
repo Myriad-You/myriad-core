@@ -7,7 +7,9 @@
 //! lacks, check what arrives ([`admit`]) and take the union ([`merge`]). What
 //! she is now is folded from the log by the same rules everywhere ([`fold`]).
 //! Forgetting absorbs: a forgotten object never reads back, whatever order
-//! its rows and the forget arrive in ([`forget`]).
+//! its rows and the forget arrive in ([`forget`]). A side holds only the
+//! audiences it may: the partner's computers never get a group's log or
+//! anyone else's private talk ([`holder`]).
 //!
 //! Her own rows are written only by the holder of the lease and carry its
 //! epoch (0 on a side that never knew a lease); the owner's rows are written
@@ -31,6 +33,7 @@ pub mod admit;
 pub mod clock;
 pub mod fold;
 pub mod forget;
+pub mod holder;
 pub mod kinds;
 pub mod lease;
 pub mod merge;
@@ -41,6 +44,7 @@ pub mod vector;
 pub use admit::{AdmitInput, Admitted, admit};
 pub use fold::{FoldInput, Folded, fold};
 pub use forget::{Entry, ledger};
+pub use holder::{Core, Holder};
 pub use kinds::Rule;
 pub use lease::{Grant, Here, How, Moved, Request, Through};
 pub use merge::{MergeInput, Merged, merge};

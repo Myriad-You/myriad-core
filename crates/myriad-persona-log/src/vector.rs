@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    LogError, Row,
+    Holder, LogError, Row,
     kinds::Rule,
     row::{Replicate, sort},
 };
@@ -124,4 +124,41 @@ pub fn answer(rows: &[Row], theirs: &Vector) -> Result<Vec<Row>, LogError> {
         .chain(rest)
         .filter(|row| seen.insert(row.id.clone()))
         .collect())
+}
+
+/// What [`answer_to`] sends.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Answered {
+    pub rows: Vec<Row>,
+    /// The side asking may not hold this audience: nothing goes.
+    #[serde(skip_serializing_if = "is_false")]
+    pub not_held: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+/// [`answer`], for a side that is `holder` when it is known: a side that
+/// may not hold the audience gets nothing ([`crate::holder`]).
+pub fn answer_to(
+    rows: &[Row],
+    theirs: &Vector,
+    holder: Option<&Holder>,
+) -> Result<Answered, LogError> {
+    if let Some(holder) = holder {
+        holder.check()?;
+        one_audience(rows)?;
+        if rows.first().is_some_and(|row| !holder.holds(&row.audience)) {
+            return Ok(Answered {
+                rows: Vec::new(),
+                not_held: true,
+            });
+        }
+    }
+    Ok(Answered {
+        rows: answer(rows, theirs)?,
+        not_held: false,
+    })
 }

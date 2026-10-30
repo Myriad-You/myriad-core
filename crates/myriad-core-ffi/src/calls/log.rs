@@ -4,8 +4,8 @@
 //! carry them across.
 
 use myriad_persona_log::{
-    Grant, Row, Vector, admit as admit_rows, clock, fold as fold_rows, lease, merge as merge_rows,
-    vector,
+    Grant, Holder, Row, Vector, admit as admit_rows, clock, fold as fold_rows, lease,
+    merge as merge_rows, vector,
 };
 use myriad_persona_sync::Rev;
 use serde::{Deserialize, Serialize};
@@ -60,16 +60,23 @@ pub(super) fn missing(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "missing": vector::missing(&mine, &theirs) }))
 }
 
-/// `{rows, theirs}` → `{rows}`: what to send a side holding `theirs`.
+/// `{rows, theirs, holder?}` → `{rows, notHeld?}`: what to send a side
+/// holding `theirs`; nothing to a side that may not hold the audience.
 pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         rows: Vec<Row>,
         theirs: Vector,
+        #[serde(default)]
+        holder: Option<Holder>,
     }
-    let In { rows, theirs } = input(raw)?;
-    Ok(json!({ "rows": vector::answer(&rows, &theirs).map_err(refused)? }))
+    let In {
+        rows,
+        theirs,
+        holder,
+    } = input(raw)?;
+    answer(&vector::answer_to(&rows, &theirs, holder.as_ref()).map_err(refused)?)
 }
 
 pub(super) fn admit(raw: &[u8]) -> Result<Value, Failure> {

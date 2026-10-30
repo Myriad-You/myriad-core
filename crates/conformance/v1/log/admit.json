@@ -590,6 +590,157 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "h-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-site",
+            "id": "h-2",
+            "kind": "node.noted",
+            "object": "node:b",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-site",
+            "id": "h-3",
+            "kind": "node.noted",
+            "object": "node:c",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o2",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000003-000000-site",
+            "id": "h-4",
+            "kind": "node.noted",
+            "object": "node:d",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-4"
+            },
+            "replicate": "shared",
+            "subject": "o2",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1,o2",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000004-000000-site",
+            "id": "h-5",
+            "kind": "node.noted",
+            "object": "node:e",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-5"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a PC refuses what it may not hold: a group's rows and someone else's private talk",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "h-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-site",
+            "id": "h-2",
+            "kind": "node.noted",
+            "object": "node:b",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:h-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "own:": {
+            "site": 1
+          },
+          "personal:o1": {
+            "site": 1
+          }
+        },
+        "ledger": [],
+        "refused": [
+          {
+            "id": "h-3",
+            "reason": "not_held"
+          },
+          {
+            "id": "h-4",
+            "reason": "not_held"
+          },
+          {
+            "id": "h-5",
+            "reason": "not_held"
+          }
+        ]
+      }
     }
   ],
   "version": 1
