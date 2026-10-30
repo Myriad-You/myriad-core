@@ -65,14 +65,15 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `sync.hlc_next` | `{last?, now, node}` → `{rev}` |
 | `sync.hlc_observe` | `{last?, seen, now, node}` → `{last}` |
 | `sync.legacy_rev` | `{updatedAt, origin?}` → `{rev}`（没有修订的旧行现算） |
-| `sync.manifest` | `{envelopes}` → `{manifest}`：每类实体、向量、文件的条数和 digest，与读的顺序无关 |
+| `sync.manifest` | `{envelopes, logs?}` → `{manifest}`：每类实体、向量、文件的条数和 digest，与读的顺序无关；给了日志页（`logs`）时多一项 `log`：每一行按 id 一条，连同它的载荷，没有日志页时清单和以前逐字节相同 |
 | `sync.persona_diff` | `{before, after, revs, legacyRev, rev, origin, reason?}` → `{changed, revs, history}`：人设一次写入逐字段比（字段没了算 `null`），变了的字段记成这次的 `{rev, origin}`，被换掉的旧值连同它原来的 rev 进 `history`（原来就没值的不进）；没有 rev 的旧字段按 `legacyRev`、`site` 算；`reason` 默认 `edit` |
 | `sync.rig_package_id` | `{atlas: base64, manifest}` → `{id}` |
 
 格式里几条平台要照做的规矩：
 
 - **第 2 版的几类只在搬家和导出时出现。** `conversation`（站长的一场私聊连同每一句，含「没听完」标记和句子里的站点图片）、`proactive_line`、`intention`、`owner_state`、`pace`、`present`、`wearing`、`field_history` 是第 2 版加的。首次比对的 pull 只发前 13 类（`Kind::COMPARED`），`sync.compare` 也只读它们。
-- **导出文件 `myriad.her-archive`。** 第一行是明文头（规范 JSON），之后是分块的 XChaCha20-Poly1305：nonce 为头里的 19 字节前缀 + 块序号（u32 大端）+ 最后一块标记，头这一行是每块的附加数据。截断、换块、改头都打不开，口令错和文件坏说的是同一句话。流里依次是信封页、它们引用的文件（rig 是 `manifest.json` 加 `atlas.png`）、清单。导出文件总是加密。盐和 nonce 前缀由调用方从系统随机源取来传入，核心不读随机数。黄金文件在 `fixtures/archive/`。
+- **导出文件 `myriad.her-archive`。** 第一行是明文头（规范 JSON），之后是分块的 XChaCha20-Poly1305：nonce 为头里的 19 字节前缀 + 块序号（u32 大端）+ 最后一块标记，头这一行是每块的附加数据。截断、换块、改头都打不开，口令错和文件坏说的是同一句话。流里依次是信封页、日志页（只在第 2 版）、它们引用的文件（rig 是 `manifest.json` 加 `atlas.png`）、清单。导出文件总是加密。盐和 nonce 前缀由调用方从系统随机源取来传入，核心不读随机数。黄金文件在 `fixtures/archive/`。
+- **日志页（第 2 版文件）。** 她的节点和节点日志进导出文件，用的是端和端之间同样的一批：一个受众的行和它们的载荷 `{audience, rows, payloads?}`（`nodes.wire_send` 的一批，`log.rows` 帧的正文），规范 JSON，段的头是 `{"part": "log", "bytes": n}`。有日志页的文件头写 `version: 2`（`sync.archive_seal` 的 `fields` 给 `logs: true`）；没有的照旧写第 1 版，只读第 1 版的一端照样打开。这一层只查页的外形（规范 JSON、同一个受众、整份文件里每行 id 只出现一次）；导入的一端把每一页当作从文件来源那一端收到的一批，经 `nodes.wire_take` 做所有检查（受众、桩、载荷），再合并。所以站点导入时不用再拒收节点，Mac 专属附件里的节点和节点日志可以搬进来（见「她的节点」›「在端之间」）。
 
 - **不透明的人设键。** 人设里本端不认识的键（站点的 `displayName`、`draftSource`，以及以后别的端加的键）是 `opaque` 类：原样存下，原样传回（值和 `rev` 都不动），按单值合并。比对不列它们：不用这个键的一端谈不上和别人不同。
 - **读不到的图。** 立绘、贴纸、贴纸头像的位置上要么是图片资产，要么是 `{"unreadable": true}`：这一端有这张图，但读不出来（外链失效、文件没了）。没有可拉的文件，界面照比对里的 `unreadablePictures` 提示「站点上有张图读不到」。站点上外链的图（`http`/`https`）在第一次被设备读到时，经出站守卫下载、存进站点的媒体库，她的人设、衣柜立绘、贴纸头像和贴纸改指向这份副本；之后外链失效也不影响。下载失败的地址 10 分钟后再试，这期间带标记。rig 以某个地址为母图时，那个地址保留不改，图从副本读。图按字节的 sha256 跨端，换地址不改变跨端的任何内容。
@@ -121,14 +122,16 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **时钟不能被一次跑快带偏**（`log.clock_*`）：日志的时钟要存下来、只增不减，所以机器的钟跑快时盖的一行会让之后每一行都超前，服务端拒收超前 5 分钟以上的（`hlc::check_ahead`），这一端就一直同步不了。三条规则：时钟的物理部分用「校正后的时间」，即本机时间加上和服务端量出的偏差（`log.clock_offset`：请求发出、服务端的 `serverTime`、收到回答，取中点），偏差由调用方存着、每次握手和每次 `clock_ahead` 时重量；盖章时物理部分最多到校正后的时间加 5 分钟，再往后只走计数（`log.clock_next`、`log.clock_observe`），已经超出的时钟原地不动、`poisoned` 为真；修复（`log.clock_repair`）只给还没离开这一端的行重新盖章，从第一条超前的开始按日志顺序往后，并给出以后要存的时钟。离开过这一端的行永远不重盖：服务端收了它，它就没有超前。收到 `clock_ahead`（带 `serverTime`）时这一端的顺序是：量偏差，修复没同步的行，存新时钟，再发。
 - **两个她只可能来自 `force` 和单机时期。** 折叠时对照执笔权的历史（`leases`）：旧 epoch 的行写在 `force` 签出之后的，是原来那台还在跑时写的，照样留下，标 `concurrent`，碰到的对象也标；第 0 代的行写的时候别的端已经持有执笔权的（签出时间早于这一行、持有者不是它自己），是她在别处住着时这台被单机用了，同样标 `concurrent`，`with` 是当时那一份；那时还没有任何一份、或那一份就是它自己的第一份（时钟稍快会让单机的最后几行排在签出之后）的，是同一个她，不标；`takeover` 之后迟到的旧行是她自己的记忆补上来，不标；不是那个 epoch 的持有者写的（`not_holder`）、交出以后还写的（`after_handover`）是执笔权的 bug，列在 `standing` 里查。同一个 epoch 出现两次时，先签的算，再按持有者的字节序（`lease.newer`）。
 
+- **哪一端能存哪个受众**（`myriad_persona_log::holder`，2026-10-30 起）：`holder` 是 `{core, owner}`，`core` 是 `pc`（伙伴的每一台电脑）、`server`（服务端，今天是站点的后端）或 `child`（手机、XR 这些子机核心），`owner` 是伙伴在私聊受众里的 id。服务端存所有受众；电脑只存伙伴自己的私聊（`personal:<owner>`，只有伙伴一个人）和她自己的（`own:`）；子机核心不存日志。所以群的日志、群里成员的人物节点、别人和她的私聊永远到不了伙伴的电脑：`log.answer` 不发给它，`log.admit` 和 `nodes.wire_take` 在它那一端拒收。按受众判就够了：伙伴私聊里的主体只能是伙伴，她自己的受众里没有主体（`Row::check`），节点关系的另一头按同一个受众算 id。这是伙伴倾向同意、还没最终定的默认（原生 SYNC.md 问题 3），改它就是改所有端。
+
 | 调用 | 输入 → 输出 |
 | --- | --- |
 | `lease.here` | `{me, lease?, now, disconnectedSince?, ownerHereAt?, stopAfter?}` → `{state: "thinking"}`、`{state: "stopped", stoppedAt}` 或 `{state: "child"}`。还没见过任何执笔权的那一端不传 `lease`：单机，`thinking`，她的行写 `epoch: 0` |
 | `lease.move` | `{lease, request, now, issued, holderLastSeen?, holderPlace?, ownerPlace?, stopAfter?}` → `{granted: Grant}` 或 `{refused: 理由}`；`request` 是 `{handover: {from, epoch, to, through?}}`、`{takeover: {server}}` 或 `{force: {to}}`；`issued` 是服务端给新一份的 rev，必须晚于现在这份 |
 | `lease.newer` | `{a, b}` → `{newer: "a" \| "b"}` |
 | `lease.behind` | `{through?, from, held}` → `{behind}`：新执笔的那一端开始想之前还在等什么。`through` 是交出那份的 `{受众: dseq}`，`from` 是交出的那一端，`held` 是这一端每个受众的版本向量 `{受众: {端: dseq}}`；`behind` 是还没补到的受众和要补到的数，空的就是补齐了、可以想。接管和「让她来这里」没有 `through`，不用等 |
-| `log.admit` | `{rows, now, known?, members?, ledger?, epochs?}` → `{accepted, refused?, clockAhead?, ledger, epochs}` |
-| `log.answer` | `{rows, theirs}` → `{rows}`：一个受众里对方（持有这个受众的 `theirs`）缺的行，`forget` 在前；行跨了受众是 `bad_input` |
+| `log.admit` | `{rows, now, known?, members?, ledger?, epochs?, holder?}` → `{accepted, refused?, clockAhead?, ledger, epochs}`；给了 `holder`（这一端）时，它不能存的受众的行拒收（`not_held`） |
+| `log.answer` | `{rows, theirs, holder?}` → `{rows, notHeld?}`：一个受众里对方（持有这个受众的 `theirs`）缺的行，`forget` 在前；行跨了受众是 `bad_input`；给了 `holder`（对方）而对方不能存这个受众时什么都不给，`notHeld: true` |
 | `log.canonical` | `{row}` → `{row, canonical, digest}`；信封不对就是 `bad_input` |
 | `log.clock_next` | `{last?, now, offset, node}` → `{rev, poisoned}`：`now` 是本机时间，`offset` 加上它是服务端的时间 |
 | `log.clock_observe` | `{last?, seen, now, offset, node}` → `{last}`：`seen` 最多把物理部分推到上限 |
@@ -189,7 +192,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 她的节点（`nodes.*`）
 
-节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。第一批定了节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样；第二批定了整理：哪些节点该整理、按什么顺序，她整理一个节点时看到什么、她的回答怎么变成行，以及关系带来的后果；第三批补上整理的缺口：调用方给的同一受众候选、没有经历的节点也能有依据、没有节点时只整理收件箱、一起看过的不被并走、整理里改概括、看法和没收尾的事（看法只凭算数的依据改）。唤醒（除了挡着的那件变了带来的那一种）、反对、只忘掉一段，以及同步的传输还都不在。
+节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。第一批定了节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样；第二批定了整理：哪些节点该整理、按什么顺序，她整理一个节点时看到什么、她的回答怎么变成行，以及关系带来的后果；第三批补上整理的缺口：调用方给的同一受众候选、没有经历的节点也能有依据、没有节点时只整理收件箱、一起看过的不被并走、整理里改概括、看法和没收尾的事（看法只凭算数的依据改）。M7 定了节点在端之间怎么走（下面「在端之间」）。唤醒（除了挡着的那件变了带来的那一种）、反对、只忘掉一段还都不在。
 
 **三种节点**（`kind`）。种类只在规则不同时才成立：
 
@@ -278,7 +281,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - 独立：一条 `part_of` 被收回时，下属多一行 `lineage`（`left`，原来属于）。
 - 忘掉也跟着走：并进被忘掉节点的节点一起忘掉（它的 `forget` 列在 `forgets` 里，调用方写下来，body 删掉以后也一直算数）；被忘掉的拆分部分带走的经历一起忘掉，那行拆分也一起忘掉。
 
-**整理队列**（`nodes.queue`）：只有状态变了才排进来，不看日历、不数次数。一个节点「看着」这些行：自己的行（`own`）、别的节点建给它或收回的关系（`relation`）、它下属的行（`part`）、它上级的行（`whole`）、挡着它的那件的行（`blocker`）；另外互相挡着（`mutual_block`）和撞上（`clash`）是新的时也排进来，好让她举手。回想（`node.used`）和整理标记（`node.upkept`）不算变化，跳过的行不算，相关不算。忘掉的、并走的、created 还没到的节点不排。
+**整理队列**（`nodes.queue`）：只有状态变了才排进来，不看日历、不数次数。一个节点「看着」这些行：自己的行（`own`）、别的节点建给它或收回的关系（`relation`）、它下属的行（`part`）、它上级的行（`whole`）、挡着它的那件的行（`blocker`）；另外互相挡着（`mutual_block`）和撞上（`clash`）是新的时也排进来，好让她举手；头里有一项两边都改过、而没有哪一次整理同时看过它的每个当前版本时，也算它自己的行没看过（`own`，见「在端之间」）。回想（`node.used`）和整理标记（`node.upkept`）不算变化，跳过的行不算，相关不算。忘掉的、并走的、created 还没到的节点不排。
 
 - 看过没有：节点上 `node.upkept` 的 `seen` 记着每台设备她看到的最新时钟（这个节点看着的行，加上和它一起给她看的邻居、候选的行：她看过、又在这次让它看着的节点，不会让它马上再排进来），`wrote` 列出这次整理自己写的行，这些算看过（所以自己写的行不会让它马上又排进来）；她回答的时候同一台设备上别的东西写的行不算看过。一台设备的行按它自己的顺序到，所以每台设备记一个时钟就够。`seen` 取的是这个节点看着的行和给她看的邻居、候选的行里每台设备最新的时钟，所以**调用方必须把这个节点看着的每一行都放进 `rows`**（它自己的、下属、上级、挡着它的）：给了某台设备较新的一行、却漏了同一台设备上它看着的较旧的行，那行会被当成看过。设备超过 64 台时留最新的 64 台，其余的合成一个 `floor`（毫秒）：不在 `seen` 里的设备，时钟不晚于它的算看过。
 - 顺序：最早一行没看过的变化越早，越先整理（从旧到新消化积压，谁都不会一直等）；一样早的按那行的时钟（毫秒、计数、设备），再按受众、id。`max`（1 到 200）是这次给几个，`more` 是还有几个在等。
@@ -332,13 +335,26 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.repo_key` | `{remote}` → `{key}` |
 | `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?}]}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken}` |
 | `nodes.upkeep_read` | `{input: <upkeep_input 的输入>, run, sync, output}` → `{writes: [{id, node, kind, body}], placed?, held?, fallback?}` |
+| `nodes.wire_send` | `{audience, rows, bodies?, theirs?, holder}` → `{batches: [{audience, rows, payloads?}], withheld?: [{id, why}], notHeld?}` |
+| `nodes.wire_take` | `{batch, holder, now, known?, members?, ledger?, epochs?}` → `{accepted, refused?, clockAhead?, ledger, epochs, bodies?, withheld?}` |
+
+**在端之间**（`nodes.wire_send`、`nodes.wire_take`，M7「节点同步」）：每个主机核心都存自己的日志，节点从日志折出来；端和端之间换的是行和行的 body，不是折好的节点。
+
+- **一批**是一个受众的行和它们指向的载荷：`{audience, rows, payloads: [{ref, data}]}`，就是 `log.rows` 帧的正文，也是导出文件的一页日志。`ref` 是那一行自己的 `payload.ref`，`data` 是 body 的规范字节（base64）。行和 body 都按写它的那一端存的字节原样走，所以每一端折的是同样的字节；行上写着受众（`audience`）和写它的那一端（`origin`）。
+- **发**（`wire_send`）：对方缺的行（`log.answer` 的规矩：`forget` 在前，`local` 的行永远不发），对方不能存这个受众时什么都不发（`notHeld`）。每一行都发；body 只在通过下面的检查时跟着走，不通过的这一行单独走，列在 `withheld` 里：对方的版本向量要数到这一行，少一行它在这一端的计数就永远停在那里。每批不超过 256 行、64 个载荷、约 192 KiB（`wire::BATCH_*`，和契约 `log.rows` 的上限对照着测）。
+- **收**（`wire_take`）：先过 `log.admit` 的全部检查（时钟超前整批不收、信封、`local`、对象换了受众、主体不在群里、epoch 回落、忘掉的账、这一端不能存的受众），不是这一批受众的行拒收（`envelope`）；收下的每一行的 body 再过一遍同样的检查，而且必须恰好是它自己的规范字节。不通过的 body 不收（行照收，`withheld`），折叠时这一行跳过（`no_body`）。被忘掉的对象的行进来就是桩，body 丢掉。同一个 `ref` 出现两次是 `bad_input`。
+- **body 要能走**：核心读得懂（`node.*` 里 `nodes.body` 读的十五种，或 `myriad_persona_log::payloads` 里有形状的段、记忆、心情；原生旧的节点种类和判例的 body 还没有形状，只发行，`no_shape`）；`sync` 是 `shared`（`local` 的标签哪怕在 shared 的行上也不走，`not_shared`）；引用和依据里没有本机文件或路径（`file:`、`/…`、`~…`、`C:\…`，`local_ref`；会话记录的 id `record:<会话>#<行>` 作为 id 走，记录本身留在那台机器上）；她的文字里没有密钥扫描（`filter.scan_secrets`）会抹掉的东西（`secret`）。写的一端写之前就该抹掉密钥，这一道是兜底：漏进 body 的密钥不会跟着 body 离开这台设备。body 读不了或不合形状是 `bad_body`，指向的载荷没有是 `no_body`。
+- **合并**照 `log.merge`：并集，按 id 去重，桩赢；折叠按 `(hlc, origin, dseq, id)` 排，所以同样的行不管从哪一端、按什么顺序到，折出同样的节点（`sync_tests.rs` 把每一行单独、按全部 24 种顺序各送两遍对过）。同一项两边从同一版各改一次，折叠标「两边都改过」，两版都留着，后写的不会因为时钟晚就赢（上面「折叠」）。
+- **整理标记跟着走**：`node.upkept` 是普通的 shared 行，`seen` 按设备记时钟，合并后每一端读到的都是所有标记。一行算看过，只要有一次整理看过它。只有一点要补：执笔权被伙伴强行换走、两边同时整理时，每一边的标记只盖住自己那一边的改动，合起来却什么都盖住了，「两边都改过」的那一项就没人管。所以整理队列多看一件事：头里有一项两边都改过，而没有哪一次整理（一个 `node.upkept`）同时看过它的每个当前版本，这个节点就排进来（理由记 `own`：是它自己的行还没被一起看过），直到她写一版把两版都列进 `base`，或者有一次整理同时看过两版。输出的形状不变。
+- **忘掉跟着走**：忘掉是一行 `forget`，发的时候排在最前；收的一端先记进忘掉的账，同一批和以后再到的这个对象的行都只收成桩、body 丢掉，所以离线的一端回来也推不回去。`nodes.fold` 的 `forgets`（并进被忘掉节点的那些）由调用方写成 `forget` 行，照样同步。
+- **谁能存什么**按 `myriad_persona_log::holder`（「她的日志」）：电脑只收伙伴私聊和她自己的，群和别人的私聊只在服务端，子机核心不存。
 
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，现在是 `v1/`，原生按 `CORE_PIN` 复制进它自己的测试。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理，每个 `nodes.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。
 - `nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `log/`、`lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
