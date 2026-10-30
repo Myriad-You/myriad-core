@@ -655,24 +655,28 @@
         "from": "host",
         "delivery": "answer",
         "required": ["audience", "vector"],
-        "optional": ["beyond"],
-        "description": "What this core holds of one audience's log: vector is {origin: last dseq held without gaps}, beyond what it holds past a gap (log.holdings). Sent after welcome for each audience it keeps, and in answer to one; the other side then sends what is missing with log.rows."
+        "optional": ["beyond", "ask"],
+        "maxItems": {
+          "ask": 64
+        },
+        "description": "What this core holds of one audience's log: vector is {origin: last dseq held without gaps}, beyond what it holds past a gap (log.holdings). Sent after welcome for each audience it keeps, and in answer to one; the other side then sends what is missing with log.rows. ask lists rows this core holds whose bodies did not come or came spoilt (nodes.wire_take ask), each at most once per link session: the other side sends them again with their bodies after what is missing (nodes.wire_send ask)."
       },
       "log.rows": {
         "from": "host",
         "delivery": "reliable",
         "required": ["audience"],
-        "optional": ["rows", "sealed", "payloads"],
+        "optional": ["rows", "sealed", "payloads", "withheld"],
         "oneOf": [
           ["rows", "sealed"]
         ],
         "maxItems": {
           "rows": 256,
-          "payloads": 64
+          "payloads": 64,
+          "withheld": 256
         },
         "sealed": ["sealed"],
         "idempotency": "id is made by the sender once per batch.",
-        "description": "A batch of one audience's rows (log.answer: every forget first). rows are row envelopes; payloads is [{ref, data}] for the payloads the rows point at, data base64, sealed per object when S5 lands. Rows only a PC keeps that travel between PCs go sealed to the receiving PC. The receiver checks the batch (log.admit) and merges it (log.merge); a batch with a clock too far ahead is refused whole with error clock_ahead and the server's time."
+        "description": "A batch of one audience's rows (log.answer: every forget first). rows are row envelopes; payloads is [{ref, data}] for the payloads the rows point at, data base64, sealed per object when S5 lands. Rows only a PC keeps that travel between PCs go sealed to the receiving PC. The receiver checks the batch (log.admit) and merges it (log.merge); a batch with a clock too far ahead is refused whole with error clock_ahead and the server's time. withheld is [{id, why}] for the rows here that point at a payload and go without it (nodes.wire_send): a why other than no_body or bad_body is for good, and the receiver does not ask for it again."
       },
       "log.full": {
         "from": "server",

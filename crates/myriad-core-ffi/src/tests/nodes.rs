@@ -158,8 +158,18 @@ fn a_wire_batch_fits_one_log_rows_frame() {
         frame["maxItems"]["payloads"],
         myriad_nodes::wire::BATCH_PAYLOADS
     );
+    assert_eq!(
+        frame["maxItems"]["withheld"],
+        myriad_nodes::wire::BATCH_ROWS
+    );
+    let vector = &contract["next"]["frames"]["log.vector"];
+    assert_eq!(vector["maxItems"]["ask"], myriad_nodes::wire::ASK_ROWS);
     let max = contract["next"]["limits"]["maxFrameBytes"]
         .as_u64()
         .unwrap() as usize;
     assert!(myriad_nodes::wire::BATCH_BYTES + (32 << 10) <= max);
+    // The largest body that travels, in base64, fits one batch with room
+    // for its row.
+    let body = myriad_nodes::wire::MAX_BODY_BYTES.div_ceil(3) * 4;
+    assert!(body + (16 << 10) <= myriad_nodes::wire::BATCH_BYTES);
 }

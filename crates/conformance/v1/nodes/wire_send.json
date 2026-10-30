@@ -778,37 +778,37 @@
                 "replicate": "shared",
                 "version": 1
               }
+            ],
+            "withheld": [
+              {
+                "id": "w1",
+                "why": "secret"
+              },
+              {
+                "id": "w2",
+                "why": "local_ref"
+              },
+              {
+                "id": "w3",
+                "why": "not_shared"
+              },
+              {
+                "id": "w4",
+                "why": "no_shape"
+              },
+              {
+                "id": "w5",
+                "why": "no_body"
+              },
+              {
+                "id": "w6",
+                "why": "bad_body"
+              },
+              {
+                "id": "w7",
+                "why": "secret"
+              }
             ]
-          }
-        ],
-        "withheld": [
-          {
-            "id": "w1",
-            "why": "secret"
-          },
-          {
-            "id": "w2",
-            "why": "local_ref"
-          },
-          {
-            "id": "w3",
-            "why": "not_shared"
-          },
-          {
-            "id": "w4",
-            "why": "no_shape"
-          },
-          {
-            "id": "w5",
-            "why": "no_body"
-          },
-          {
-            "id": "w6",
-            "why": "bad_body"
-          },
-          {
-            "id": "w7",
-            "why": "secret"
           }
         ]
       }
@@ -1625,23 +1625,744 @@
                 "replicate": "shared",
                 "version": 1
               }
+            ],
+            "withheld": [
+              {
+                "id": "p1",
+                "why": "person_elsewhere"
+              },
+              {
+                "id": "p2",
+                "why": "person_elsewhere"
+              },
+              {
+                "id": "p3",
+                "why": "person_elsewhere"
+              }
             ]
           }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:o1",
+        "bodies": {
+          "k1": {
+            "at": 1760000000030,
+            "kind": "fact",
+            "note": "一个核心不认识的字段",
+            "text": "伙伴周五发版"
+          },
+          "k2": {
+            "at": 1760000000031,
+            "line": "password=example-only-not-real",
+            "text": "周五见。"
+          },
+          "k3": {
+            "arousal": 40.0,
+            "at": 1760000000032,
+            "band": "warm",
+            "cause": "password=example-only-not-real",
+            "valence": 60.0
+          },
+          "k4": {
+            "at": 1760000000033,
+            "place": "token: example-only-not-real"
+          },
+          "k5": {
+            "run": "sk-test-example-only-not-real",
+            "saidBy": [
+              "her"
+            ],
+            "seen": {},
+            "sync": "shared",
+            "version": 1
+          },
+          "k6": {
+            "at": 1760000000035,
+            "line": "0f3c9a7e1b2d4c6e8a9b0c1d2e3f4a5b",
+            "replyTo": "msg-8",
+            "text": "好。"
+          }
+        },
+        "holder": {
+          "core": "server",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000030-000000-dev_mac",
+            "id": "k1",
+            "kind": "memory.write",
+            "object": "memory:m-2",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000031-000000-dev_mac",
+            "id": "k2",
+            "kind": "segment.line",
+            "object": "segment:s-2",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000032-000000-dev_mac",
+            "id": "k3",
+            "kind": "affect.change",
+            "object": "affect:o1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000033-000000-dev_mac",
+            "id": "k4",
+            "kind": "segment.open",
+            "object": "segment:s-2",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000034-000000-dev_mac",
+            "id": "k5",
+            "kind": "node.upkept",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 6,
+            "hlc": "001760000000035-000000-dev_mac",
+            "id": "k6",
+            "kind": "segment.line",
+            "object": "segment:s-2",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k6"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
         ],
-        "withheld": [
+        "theirs": {}
+      },
+      "name": "a payload field its shape does not name keeps the body home, and so does a key in any field; an id that only reads as random travels",
+      "output": {
+        "batches": [
           {
-            "id": "p1",
-            "why": "person_elsewhere"
-          },
-          {
-            "id": "p2",
-            "why": "person_elsewhere"
-          },
-          {
-            "id": "p3",
-            "why": "person_elsewhere"
+            "audience": "personal:o1",
+            "payloads": [
+              {
+                "data": "eyJhdCI6MTc2MDAwMDAwMDAzNSwibGluZSI6IjBmM2M5YTdlMWIyZDRjNmU4YTliMGMxZDJlM2Y0YTViIiwicmVwbHlUbyI6Im1zZy04IiwidGV4dCI6IuWlveOAgiJ9",
+                "ref": "doc:k6"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:o1",
+                "author": "owner",
+                "dseq": 1,
+                "hlc": "001760000000030-000000-dev_mac",
+                "id": "k1",
+                "kind": "memory.write",
+                "object": "memory:m-2",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "owner",
+                "dseq": 2,
+                "hlc": "001760000000031-000000-dev_mac",
+                "id": "k2",
+                "kind": "segment.line",
+                "object": "segment:s-2",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k2"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "her",
+                "dseq": 3,
+                "epoch": 1,
+                "hlc": "001760000000032-000000-dev_mac",
+                "id": "k3",
+                "kind": "affect.change",
+                "object": "affect:o1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k3"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "owner",
+                "dseq": 4,
+                "hlc": "001760000000033-000000-dev_mac",
+                "id": "k4",
+                "kind": "segment.open",
+                "object": "segment:s-2",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k4"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "her",
+                "dseq": 5,
+                "epoch": 1,
+                "hlc": "001760000000034-000000-dev_mac",
+                "id": "k5",
+                "kind": "node.upkept",
+                "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k5"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "owner",
+                "dseq": 6,
+                "hlc": "001760000000035-000000-dev_mac",
+                "id": "k6",
+                "kind": "segment.line",
+                "object": "segment:s-2",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k6"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ],
+            "withheld": [
+              {
+                "id": "k1",
+                "why": "bad_body"
+              },
+              {
+                "id": "k2",
+                "why": "secret"
+              },
+              {
+                "id": "k3",
+                "why": "secret"
+              },
+              {
+                "id": "k4",
+                "why": "secret"
+              },
+              {
+                "id": "k5",
+                "why": "secret"
+              }
+            ]
           }
         ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:o1",
+        "bodies": {
+          "t1": {
+            "audience": "group:g1",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "群里有人说要改日子。",
+            "version": 1
+          },
+          "t2": {
+            "audience": "group:g1",
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说群里定了周五。",
+            "version": 1
+          },
+          "t3": {
+            "audience": "personal:o1",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发。",
+            "version": 1
+          }
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000040-000000-dev_mac",
+            "id": "t1",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:t1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000041-000000-dev_mac",
+            "id": "t2",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:t2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000042-000000-dev_mac",
+            "id": "t3",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:t3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a span tagged with another audience goes as a row alone, unless it is a group's the partner said in their own talk",
+      "output": {
+        "batches": [
+          {
+            "audience": "personal:o1",
+            "payloads": [
+              {
+                "data": "eyJhdWRpZW5jZSI6Imdyb3VwOmcxIiwic2FpZEJ5IjpbInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TnvqTph4zlrprkuoblkajkupTjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+                "ref": "doc:t2"
+              },
+              {
+                "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+                "ref": "doc:t3"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:o1",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000040-000000-dev_mac",
+                "id": "t1",
+                "kind": "node.span",
+                "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:t1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000041-000000-dev_mac",
+                "id": "t2",
+                "kind": "node.span",
+                "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:t2"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "her",
+                "dseq": 3,
+                "epoch": 1,
+                "hlc": "001760000000042-000000-dev_mac",
+                "id": "t3",
+                "kind": "node.span",
+                "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:t3"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ],
+            "withheld": [
+              {
+                "id": "t1",
+                "why": "audience_tag"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "ask": [
+          "c4",
+          "c2",
+          "c3",
+          "zz"
+        ],
+        "audience": "personal:o1",
+        "bodies": {
+          "c1": {
+            "key": "minted:release",
+            "kind": "task",
+            "name": "发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "c2": {
+            "audience": "personal:o1",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发。",
+            "version": 1
+          },
+          "c3": {
+            "audience": "personal:o1",
+            "refs": [
+              "record:s#12"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "测试跑了 42 个。",
+            "version": 1
+          },
+          "c4": {
+            "at": 1760000000003,
+            "kind": "fact",
+            "text": "伙伴周五发版"
+          }
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "c3",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c3"
+            },
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c4"
+            },
+            "replicate": "shared",
+            "subject": "o1",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "c5",
+            "kind": "forget",
+            "object": "node:4a2de34c0f7140ea6771d727d70daeb8",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000005-000000-dev_mac",
+            "id": "c6",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {
+          "dev_mac": 5
+        }
+      },
+      "name": "rows the other side asks again for go again with their bodies; a local or unknown one is passed by",
+      "output": {
+        "batches": [
+          {
+            "audience": "personal:o1",
+            "payloads": [
+              {
+                "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+                "ref": "doc:c2"
+              },
+              {
+                "data": "eyJhdCI6MTc2MDAwMDAwMDAwMywia2luZCI6ImZhY3QiLCJ0ZXh0Ijoi5LyZ5Ly05ZGo5LqU5Y+R54mIIn0=",
+                "ref": "doc:c4"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:o1",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-dev_mac",
+                "id": "c2",
+                "kind": "node.span",
+                "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:c2"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:o1",
+                "author": "owner",
+                "dseq": 3,
+                "hlc": "001760000000003-000000-dev_mac",
+                "id": "c4",
+                "kind": "memory.write",
+                "object": "memory:m-1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:c4"
+                },
+                "replicate": "shared",
+                "subject": "o1",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "ask": [
+          "r0",
+          "r1",
+          "r2",
+          "r3",
+          "r4",
+          "r5",
+          "r6",
+          "r7",
+          "r8",
+          "r9",
+          "r10",
+          "r11",
+          "r12",
+          "r13",
+          "r14",
+          "r15",
+          "r16",
+          "r17",
+          "r18",
+          "r19",
+          "r20",
+          "r21",
+          "r22",
+          "r23",
+          "r24",
+          "r25",
+          "r26",
+          "r27",
+          "r28",
+          "r29",
+          "r30",
+          "r31",
+          "r32",
+          "r33",
+          "r34",
+          "r35",
+          "r36",
+          "r37",
+          "r38",
+          "r39",
+          "r40",
+          "r41",
+          "r42",
+          "r43",
+          "r44",
+          "r45",
+          "r46",
+          "r47",
+          "r48",
+          "r49",
+          "r50",
+          "r51",
+          "r52",
+          "r53",
+          "r54",
+          "r55",
+          "r56",
+          "r57",
+          "r58",
+          "r59",
+          "r60",
+          "r61",
+          "r62",
+          "r63",
+          "r64"
+        ],
+        "audience": "personal:o1",
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "rows": []
+      },
+      "name": "asking again for more than 64 rows",
+      "output": {
+        "error": "bad_input"
       }
     }
   ],

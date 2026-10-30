@@ -19,7 +19,7 @@ use crate::{
     fold::{FoldInput, fold},
     node_id,
     queue::{QueueInput, Reason, queue},
-    wire::{Batch, Carried, SendInput, TakeInput, Why, send, take},
+    wire::{Batch, Carried, MAX_BODY_BYTES, SendInput, TakeInput, Why, send, take},
 };
 
 const MINE: &str = "personal:7";
@@ -133,6 +133,7 @@ impl Side {
             rows: self.of(audience),
             bodies: self.bodies.clone(),
             theirs: holdings(&to.of(audience)).unwrap().vector,
+            ask: Vec::new(),
             holder: to.holder.clone(),
         })
         .unwrap()
@@ -140,6 +141,11 @@ impl Side {
 
     /// Takes a batch in and merges it, as a host core does.
     fn take(&mut self, batch: Batch) -> crate::wire::Taken {
+        self.take_held(batch, Vec::new())
+    }
+
+    /// The same, for a batch that brings rows this side asked again for.
+    fn take_held(&mut self, batch: Batch, held: Vec<Row>) -> crate::wire::Taken {
         let taken = take(TakeInput {
             batch,
             holder: self.holder.clone(),
@@ -148,6 +154,7 @@ impl Side {
             members: BTreeMap::new(),
             ledger: self.ledger.clone(),
             epochs: BTreeMap::new(),
+            held,
         })
         .unwrap();
         let merged = merge(MergeInput {
@@ -371,6 +378,12 @@ fn any_arrival_order_folds_the_same() {
                 audience: batch.audience.clone(),
                 rows: vec![row.clone()],
                 payloads,
+                withheld: batch
+                    .withheld
+                    .iter()
+                    .filter(|one| one.id == row.id)
+                    .cloned()
+                    .collect(),
             });
         }
     }
@@ -422,8 +435,9 @@ fn what_cannot_travel_goes_as_a_row_without_its_body() {
     let (mac, site) = apart();
     let sent = mac.send_to(&site, MINE);
     let withheld: Vec<(&str, Why)> = sent
-        .withheld
+        .batches
         .iter()
+        .flat_map(|batch| &batch.withheld)
         .map(|one| (one.id.as_str(), one.why))
         .collect();
     assert_eq!(withheld, [("m6", Why::Secret), ("m7", Why::NoShape)]);
@@ -526,6 +540,7 @@ fn a_forget_made_offline_reaches_the_other_side_and_takes_its_later_rows() {
         payloads: stale.send_to(&Side::new(Core::Server), MINE).batches[0]
             .payloads
             .clone(),
+        withheld: Vec::new(),
     });
     assert!(taken.admitted.accepted[0].forgotten);
     assert!(taken.bodies.is_empty());
@@ -581,4 +596,101 @@ fn a_body_that_is_not_its_own_canonical_bytes_is_not_taken() {
             .any(|one| one.id == "m4" && one.why == Why::BadBody)
     );
     assert!(!taken.bodies.contains_key("m4"));
+}
+
+#[test]
+fn a_body_lost_on_the_way_is_asked_for_again_and_then_both_fold_the_same() {
+    let (mut mac, mut site) = apart();
+    let mac_before = mac.clone();
+    mac.sync_from(&site, MINE);
+    // The Mac's batch reaches the server without one of its bodies.
+    let mut asked: Vec<String> = Vec::new();
+    for mut batch in mac_before.send_to(&site, MINE).batches {
+        batch.payloads.retain(|one| one.reference != "doc:m4");
+        asked.extend(site.take(batch).ask);
+    }
+    // What the server may never have (the key, the older kind) is not
+    // asked for again.
+    assert_eq!(asked, ["m4"]);
+    let shared = |side: &Side| canonical_bytes(&side.folded(MINE, true));
+    assert_ne!(shared(&site), shared(&mac));
+    // Asked again, the row comes back as the server holds it: only its
+    // body is taken, the log stays as it was.
+    let held: Vec<Row> = site
+        .rows
+        .iter()
+        .filter(|row| asked.contains(&row.id))
+        .cloned()
+        .collect();
+    let sent = send(SendInput {
+        audience: MINE.into(),
+        rows: mac.of(MINE),
+        bodies: mac.bodies.clone(),
+        theirs: holdings(&site.of(MINE)).unwrap().vector,
+        ask: asked.clone(),
+        holder: site.holder.clone(),
+    })
+    .unwrap();
+    let again: Vec<&str> = sent
+        .batches
+        .iter()
+        .flat_map(|batch| &batch.rows)
+        .map(|row| row.id.as_str())
+        .collect();
+    assert_eq!(again, ["m4"]);
+    let log = site.rows.clone();
+    for batch in sent.batches {
+        let taken = site.take_held(batch, held.clone());
+        assert!(taken.admitted.accepted.is_empty() && taken.ask.is_empty());
+        assert!(taken.bodies.contains_key("m4"));
+    }
+    assert_eq!(site.rows, log);
+    assert_eq!(shared(&site), shared(&mac));
+}
+
+#[test]
+fn a_body_too_large_goes_as_a_row_alone_and_every_batch_fits_a_frame() {
+    use base64::Engine as _;
+    let line = |id: &str, dseq: u64| {
+        let mut row = row(id, "dev_mac", dseq, T + dseq, MINE, KEY, "segment.line");
+        row.object = "segment:s-1".into();
+        row
+    };
+    let big = json!({ "at": T, "text": "好".repeat(MAX_BODY_BYTES / 3 + 1) });
+    let near = json!({ "at": T, "text": "a".repeat(MAX_BODY_BYTES - 64) });
+    let mut mac = Side::new(Core::Pc);
+    mac.write(line("l1", 1), Some(big.clone()));
+    mac.write(line("l2", 2), Some(near.clone()));
+    mac.write(line("l3", 3), Some(near));
+    let site = Side::new(Core::Server);
+    let sent = mac.send_to(&site, MINE);
+    let withheld: Vec<(&str, Why)> = sent
+        .batches
+        .iter()
+        .flat_map(|batch| &batch.withheld)
+        .map(|one| (one.id.as_str(), one.why))
+        .collect();
+    assert_eq!(withheld, [("l1", Why::TooLarge)]);
+    // One body near the cap to a batch, each under the link's frame limit
+    // (`maxFrameBytes`).
+    assert_eq!(sent.batches.len(), 2);
+    for batch in &sent.batches {
+        assert!(serde_json::to_vec(batch).unwrap().len() < 256 << 10);
+    }
+    // Sent anyway, a body over the cap is not taken.
+    let mut batch = sent.batches[0].clone();
+    batch.withheld.clear();
+    batch.payloads.push(Carried {
+        reference: "doc:l1".into(),
+        data: base64::engine::general_purpose::STANDARD.encode(canonical_bytes(&big)),
+    });
+    let taken = site.clone().take(batch);
+    assert_eq!(
+        taken.withheld,
+        [crate::wire::Withheld {
+            id: "l1".into(),
+            why: Why::TooLarge
+        }]
+    );
+    assert!(taken.bodies.contains_key("l2"));
 }

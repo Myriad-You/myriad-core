@@ -241,6 +241,15 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         ("a holder whose owner is two ids", "one id"),
         ("a payload listed twice", "in the batch twice"),
+        (
+            "asking again for more than 64 rows",
+            "asks again for more than 64",
+        ),
+        (
+            "a withheld body of no row in the batch",
+            "of no row in the batch",
+        ),
+        ("a body both carried and said to be withheld", "carried too"),
         // a person or a group lives in its own audience
         ("a person in her own audience", "lives in its own audience"),
         ("a group in her own audience", "lives in its own audience"),

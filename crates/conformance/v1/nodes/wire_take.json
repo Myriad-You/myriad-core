@@ -400,6 +400,9 @@
             "version": 1
           }
         ],
+        "ask": [
+          "c2"
+        ],
         "bodies": {
           "c1": {
             "key": "minted:release",
@@ -827,6 +830,9 @@
             "replicate": "shared",
             "version": 1
           }
+        ],
+        "ask": [
+          "c1"
         ],
         "bodies": {
           "c2": {
@@ -1901,6 +1907,800 @@
             "why": "person_elsewhere"
           }
         ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "personal:o1",
+          "payloads": [],
+          "rows": [
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000010-000000-dev_mac",
+              "id": "w1",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000011-000000-dev_mac",
+              "id": "w2",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 3,
+              "epoch": 1,
+              "hlc": "001760000000012-000000-dev_mac",
+              "id": "w3",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w3"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 4,
+              "epoch": 1,
+              "hlc": "001760000000013-000000-dev_mac",
+              "id": "w4",
+              "kind": "node.noted",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w4"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 5,
+              "epoch": 1,
+              "hlc": "001760000000014-000000-dev_mac",
+              "id": "w5",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w5"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 6,
+              "epoch": 1,
+              "hlc": "001760000000015-000000-dev_mac",
+              "id": "w6",
+              "kind": "node.created",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w6"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 7,
+              "hlc": "001760000000016-000000-dev_mac",
+              "id": "w7",
+              "kind": "segment.line",
+              "object": "segment:s-1",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w7"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 8,
+              "hlc": "001760000000017-000000-dev_mac",
+              "id": "w8",
+              "kind": "segment.line",
+              "object": "segment:s-1",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:w8"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "w1",
+              "why": "secret"
+            },
+            {
+              "id": "w2",
+              "why": "local_ref"
+            },
+            {
+              "id": "w3",
+              "why": "not_shared"
+            },
+            {
+              "id": "w4",
+              "why": "no_shape"
+            },
+            {
+              "id": "w5",
+              "why": "no_body"
+            },
+            {
+              "id": "w6",
+              "why": "bad_body"
+            },
+            {
+              "id": "w7",
+              "why": "secret"
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "a body the sender withholds for good is not asked for again; one withheld for now, or lost on the way, is",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "w1",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000011-000000-dev_mac",
+            "id": "w2",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000012-000000-dev_mac",
+            "id": "w3",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000013-000000-dev_mac",
+            "id": "w4",
+            "kind": "node.noted",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000014-000000-dev_mac",
+            "id": "w5",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000000015-000000-dev_mac",
+            "id": "w6",
+            "kind": "node.created",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w6"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 7,
+            "hlc": "001760000000016-000000-dev_mac",
+            "id": "w7",
+            "kind": "segment.line",
+            "object": "segment:s-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w7"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 8,
+            "hlc": "001760000000017-000000-dev_mac",
+            "id": "w8",
+            "kind": "segment.line",
+            "object": "segment:s-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:w8"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ask": [
+          "w5",
+          "w6",
+          "w8"
+        ],
+        "epochs": {
+          "personal:o1": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "withheld": [
+          {
+            "id": "w1",
+            "why": "secret"
+          },
+          {
+            "id": "w2",
+            "why": "local_ref"
+          },
+          {
+            "id": "w3",
+            "why": "not_shared"
+          },
+          {
+            "id": "w4",
+            "why": "no_shape"
+          },
+          {
+            "id": "w5",
+            "why": "no_body"
+          },
+          {
+            "id": "w6",
+            "why": "bad_body"
+          },
+          {
+            "id": "w7",
+            "why": "secret"
+          },
+          {
+            "id": "w8",
+            "why": "no_body"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "personal:o1",
+          "payloads": [
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+              "ref": "doc:c2"
+            },
+            {
+              "data": "eyJhdCI6MTc2MDAwMDAwMDAwMywia2luZCI6ImZhY3QiLCJ0ZXh0Ijoi5LyZ5Ly05ZGo5LqU5Y+R54mIIn0=",
+              "ref": "doc:c4"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 3,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "memory.write",
+              "object": "memory:m-1",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c4"
+              },
+              "replicate": "shared",
+              "subject": "o1",
+              "version": 1
+            }
+          ]
+        },
+        "held": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c4"
+            },
+            "replicate": "shared",
+            "subject": "o1",
+            "version": 1
+          }
+        ],
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "a row asked again for comes back as held: only its body is taken, the row is not admitted again",
+      "output": {
+        "accepted": [],
+        "bodies": {
+          "c2": {
+            "audience": "personal:o1",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发。",
+            "version": 1
+          },
+          "c4": {
+            "at": 1760000000003,
+            "kind": "fact",
+            "text": "伙伴周五发版"
+          }
+        },
+        "epochs": {},
+        "ledger": []
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "personal:o1",
+          "payloads": [
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+              "ref": "doc:c2"
+            },
+            {
+              "data": "eyJhdCI6MTc2MDAwMDAwMDAwMywia2luZCI6ImZhY3QiLCJ0ZXh0Ijoi5LyZ5Ly05ZGo5LqU5Y+R54mIIn0=",
+              "ref": "doc:c4"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 3,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "memory.write",
+              "object": "memory:m-1",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c4"
+              },
+              "replicate": "shared",
+              "subject": "o1",
+              "version": 1
+            }
+          ]
+        },
+        "held": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000009-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c4"
+            },
+            "replicate": "shared",
+            "subject": "o1",
+            "version": 1
+          }
+        ],
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "a row asked again for that comes back otherwise is refused",
+      "output": {
+        "accepted": [],
+        "bodies": {
+          "c4": {
+            "at": 1760000000003,
+            "kind": "fact",
+            "text": "伙伴周五发版"
+          }
+        },
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "detail": "not the row this side holds",
+            "id": "c2",
+            "reason": "envelope"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "personal:o1",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            },
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+              "ref": "doc:c2"
+            },
+            {
+              "data": "eyJhdCI6MTc2MDAwMDAwMDAwMywia2luZCI6ImZhY3QiLCJ0ZXh0Ijoi5LyZ5Ly05ZGo5LqU5Y+R54mIIn0=",
+              "ref": "doc:c4"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000004-000000-dev_mac",
+              "id": "c5",
+              "kind": "forget",
+              "object": "node:4a2de34c0f7140ea6771d727d70daeb8",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 3,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "memory.write",
+              "object": "memory:m-1",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c4"
+              },
+              "replicate": "shared",
+              "subject": "o1",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 5,
+              "epoch": 1,
+              "forgotten": true,
+              "hlc": "001760000000005-000000-dev_mac",
+              "id": "c6",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "nope",
+              "why": "secret"
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "a withheld body of no row in the batch",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "personal:o1",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            },
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+              "ref": "doc:c2"
+            },
+            {
+              "data": "eyJhdCI6MTc2MDAwMDAwMDAwMywia2luZCI6ImZhY3QiLCJ0ZXh0Ijoi5LyZ5Ly05ZGo5LqU5Y+R54mIIn0=",
+              "ref": "doc:c4"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000004-000000-dev_mac",
+              "id": "c5",
+              "kind": "forget",
+              "object": "node:4a2de34c0f7140ea6771d727d70daeb8",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "owner",
+              "dseq": 3,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "memory.write",
+              "object": "memory:m-1",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c4"
+              },
+              "replicate": "shared",
+              "subject": "o1",
+              "version": 1
+            },
+            {
+              "audience": "personal:o1",
+              "author": "her",
+              "dseq": 5,
+              "epoch": 1,
+              "forgotten": true,
+              "hlc": "001760000000005-000000-dev_mac",
+              "id": "c6",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "c1",
+              "why": "secret"
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "a body both carried and said to be withheld",
+      "output": {
+        "error": "bad_input"
       }
     }
   ],
