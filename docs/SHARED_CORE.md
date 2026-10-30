@@ -73,6 +73,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **第 2 版的几类只在搬家和导出时出现。** `conversation`（站长的一场私聊连同每一句，含「没听完」标记和句子里的站点图片）、`proactive_line`、`intention`、`owner_state`、`pace`、`present`、`wearing`、`field_history` 是第 2 版加的。首次比对的 pull 只发前 13 类（`Kind::COMPARED`），`sync.compare` 也只读它们。
 - **导出文件 `myriad.her-archive`。** 第一行是明文头（规范 JSON），之后是分块的 XChaCha20-Poly1305：nonce 为头里的 19 字节前缀 + 块序号（u32 大端）+ 最后一块标记，头这一行是每块的附加数据。截断、换块、改头都打不开，口令错和文件坏说的是同一句话。流里依次是信封页、日志页（只在第 2 版）、它们引用的文件（rig 是 `manifest.json` 加 `atlas.png`）、清单。导出文件总是加密。盐和 nonce 前缀由调用方从系统随机源取来传入，核心不读随机数。黄金文件在 `fixtures/archive/`。
+- **文件头里的伙伴（第 2 版文件）。** 有日志页的文件头可以带 `partner`（`{id, aliases?}`，`sync.archive_seal` 的 `fields.partner`，查法和 `partner.meet` 的一样）：写文件那一端的伙伴 id 和它的别名（见「伙伴的 id」）。导入的一端先读头，用它 `partner.meet {by: "file"}`；碰得上（文件和这一端有相同的伙伴 id，或者这一端是空的），读日志页时 `nodes.wire_take` 给 `partner` 和 `met: true`，`personal:<别名>` 的页就在收的时候挪到这一端在用的 id。头里没有 `partner` 的文件（以前的第 2 版、手做的）碰不了：它的 `personal:local-owner` 页只有空的一端能照原样收下（之后再迁），别的一端不挪，电脑也不能存那个受众，所以拒收。只有第 2 版能带它，第 1 版头里有 `partner` 封装时就拒绝。它是 id，不是凭据，但谁看过头都能抄，所以文件从不改变非空一端的 id（见「伙伴的 id」）。
 - **日志页（第 2 版文件）。** 她的节点和节点日志进导出文件，用的是端和端之间同样的一批：一个受众的行和它们的载荷 `{audience, rows, payloads?}`（`nodes.wire_send` 的一批，`log.rows` 帧的正文），规范 JSON，段的头是 `{"part": "log", "bytes": n}`。有日志页的文件头写 `version: 2`（`sync.archive_seal` 的 `fields` 给 `logs: true`）；没有的照旧写第 1 版，只读第 1 版的一端照样打开。这一层只查页的外形（规范 JSON、同一个受众、整份文件里每行 id 只出现一次、每个载荷都有本页的行指向它）；写第 1 版头的文件里放日志页，封装时就拒绝（`Sealer::part`），读的一端也照样拒收。写文件时清单按读文件的一端（`holder`）查每页的受众，所以给伙伴的文件里不会有群的日志或别人的私聊；页里的行和 body 应当就是给这一端的 `nodes.wire_send` 的输出。导入的一端把每一页当作从文件来源那一端收到的一批，经 `nodes.wire_take` 做所有检查（受众、桩、载荷），再合并。所以站点导入时不用再拒收节点，Mac 专属附件里的节点和节点日志可以搬进来（见「她的节点」›「在端之间」）。
 
 - **不透明的人设键。** 人设里本端不认识的键（站点的 `displayName`、`draftSource`，以及以后别的端加的键）是 `opaque` 类：原样存下，原样传回（值和 `rev` 都不动），按单值合并。比对不列它们：不用这个键的一端谈不上和别人不同。
@@ -164,6 +165,26 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `affect.change` | `affect:<subject>` | `{at, valence, arousal, band, cause}`：变化之后的心情，0 到 100；`cause` 是类别，不是原话 |
 
 节点（`node.*`）和判过的事（`case.*`）的载荷随节点的规则一起进来，不在这张表里。
+
+## 伙伴的 id（`partner.*`）
+
+伙伴私聊的受众是 `personal:<id>`，节点 id 又由受众算出，所以两端对伙伴用不同的 id，就会把同一段私聊记成两份日志。以前 Mac 用 `local-owner`，站点用它自己的账号 id。伙伴 2026-10-30 定：换成一个新的 id，不属于哪台设备，也不属于站点，两端都迁过去。规则在 `myriad_persona_log::partner` 和 `myriad_nodes::migrate`。
+
+- **形状**：`partner_` 加 32 个小写十六进制数字：前 12 个是生成它的时间（Unix 毫秒），后 20 个是随机数（80 位）。它是 id，不是凭据，不开任何东西。
+- **谁生成**：哪一端先需要它就由哪一端生成（换钉到这个核心后第一次写伙伴私聊的行，或者迁移旧的行时）。时间和 10 个随机字节由调用方给（`partner.mint`），核心不读时钟和随机源。这一端原来用的 id（`local-owner`、站点的账号 id）记成别名。
+- **两个 id 碰上**（`partner.meet`）：经过连到伙伴自己账号的认证连接（`by: "link"`）碰上的两端留字节序小的那个，也就是先生成的那个，输掉的那个 id 成为别名；规则只看这两个 id，所以不管按什么顺序连，最后都落在同一个 id 上。`changed` 为真的那一端迁移自己的行。文件（`by: "file"`）从不改变已经有东西的一端的 id：明文头里的 id 谁都能抄，先生成的规则会让伪造的更早的 id 赢。这样的文件和这一端有相同的伙伴 id 时，只把文件的 id 加成别名；生成时间早于 2025 年的 id 一律不收。
+- **只凭证明碰，不收对方的别名。** 一个别名会把那个 id 下的私聊全部并进伙伴的，所以 `partner.meet` 要说凭什么相信对方是伙伴的（`by`）：`link` 是连到伙伴自己账号的认证连接（站点只对它认作这个账号的设备的 `hello` 这样做，设备只对这个站点的 `welcome`）；`file` 是文件，只有它和这一端已经有一个相同的伙伴 id（`partner_…`）时才碰；`local-owner` 这样的旧 id 每台 Mac 都有，不算。例外是空的一端（调用方给 `empty: true`：`personal:` 和 `own:` 里一行都没有；核心另外查它从没碰过谁，别名里没有别的伙伴 id）：它直接认文件的伙伴 id，哪怕两边没有相同的 id，也不比谁先生成（伙伴 2026-10-30 定：「空的 Mac 直接认文件」），因为它没有私聊可以混进别人的。站点从不给 `empty`。不是空的一端碰不上就拒绝。经连接碰时，对方的别名一个都不收，除非这一端自己担保（`ours`）；文件的别名一个都不收。`others` 必填：这一端知道是别人的每个 id（站点：它存着私聊受众或人物节点的每个人、它服务的别的伙伴；Mac 给 `[]`）；对方在用的 id、或这一端担保的伙伴 id 有一个在里面，整个拒绝（旧 id 不是伙伴 id，不查：它们本来就不收）。`others` 里有伙伴自己的 id 也拒绝。站点从不担保 `local-owner`。所以两端各自留的别名不一定一样，但 id 一样。
+- **别名最多 32 个**：碰面的两个 id 永远留着；超出的从其余的里放，先放最新的伙伴 id，旧的非伙伴 id（`local-owner`、站点账号 id）最后放。放掉的 id 下的行由还在用它的那一端自己迁（它下次碰面时）。
+- **怎么带过去**：「她的连接」协议 1 的 `hello`、`welcome` 多一个可选的 `partner`（`{id, aliases?}`）。认识这个字段的一端在 `hello` 的 `capabilities` 里列 `partner`；站点只在 `hello` 列了它时才在 `welcome` 里放自己的 `partner`，所以旧的一端收不到它；设备只在这个站点上一次的 `welcome` 接受了这个能力以后才在 `hello` 里放自己的 `partner`，所以旧站点也收不到。双方各自 `partner.meet`；设备的 id 赢了时，它下一次 `hello` 带上，站点再迁。导出文件见「同步」›「文件头里的伙伴」。
+- **迁移**（`partner.migrate`，纯函数）：一端的 id 变了，就把伙伴私聊（任何一个别名下的）和她自己的受众里的行和 body 迁一次：受众 `personal:<别名>` 改成 `personal:<id>`，主体是别名的改成 id，以人为 id 的对象（`subject:<别名>`、`affect:<别名>`）也改；行的 id、`origin`、`dseq`、`hlc` 都不动，所以同一行在每一端迁出来都是同样的字节。body 里提到伙伴的地方：片段和条目的受众标签、`person:<别名>` 的键（`node.created` 的 `key`、`node.related` 的 `to`、`node.absorbed` 的 `into`）、谁知道、谁的进度，迁完重新给出规范字节。别的受众（群、别人的私聊）一行不动。同一端在同一受众里的同一个 `dseq` 落到两行上（一端用两个 id 各自从 1 数过）是 `clashes`，迁移补不了，留日志顺序先的那一行。迁两次和迁一次一样。
+- **节点的 id 不随伙伴的 id 变。** 伙伴私聊（`personal:<一个人>`，这个人是 `local-owner` 或任何 `partner_…`）里的节点 id 用一个固定的名字算：受众按 `personal:local-owner`，伙伴自己的节点（「关于你」，`person:<这个 id>`）的键按 `person:local-owner`（`myriad_nodes::key`）。这就是每台 Mac 一直用的那个，所以已有的 id 都不变。所以迁移只改受众的标签：每一行的对象、信封里的 `to`、`takes`，账里的每一项都照旧成立；迁一次、迁两次，经过谁的 id，各端都还是同一个节点、同一个 id。别人的私聊、站点账号 id 下的私聊、几个人的 `personal:a,b` 照受众本身算，也不迁（站点账号 id 下的节点行还没上线过，迁过去以后它们的 id 不再对得上，`uncertain`：站点要确认那里没有要留的）。`sync_tests.rs` 对过：两台 Mac 各自从 `local-owner` 迁到自己生成的伙伴 id、再连上站点迁到站点那个更早生成的，按两种顺序同步，三端都只折出一个节点、id 就是原来的那个；迁移以前整理写的并入和拆出照样折得出来（不是 `bad_body`）；共享部分逐字节相同。
+- **旧 id 照样认得**：没迁的一端经连接发来的一批（受众是别名）、头里的 `partner` 碰上了的导出文件，`nodes.wire_take` 给 `partner` 和 `met: true` 就在收的时候迁，迁出来和这一端自己迁的字节一样；没给 `met` 的一批照原样收（电脑存不了别名的受众，就拒收）。调用方按受众存的东西（`known`、`epochs`、账里的受众、执笔权的 `through`、版本向量、下一个 `dseq`）用 `personal:<id>` 改键，计数接着原来的往下数；给 `wire_take` 的这些也按挪过去以后的受众查。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `partner.meet` | `{mine, theirs, by, ours?, others, empty?}`（`mine`、`theirs` 各是 `{id, aliases?}`；`by` 是 `link` 或 `file`；`ours` 是这一端担保的对方别名，只对 `link`；`others` 是别人的 id；`empty` 是这一端的 `personal:` 和 `own:` 里还没有行）→ `{partner, changed?}` |
+| `partner.migrate` | `{rows, bodies?, partner}` → `{rows, bodies?, moved?, clashes?}`：`moved` 是信封或 body 变了、要写回的行 |
+| `partner.mint` | `{at, random, was?}`（`at` 是 Unix 毫秒，`random` 是 10 字节的 base64）→ `{partner}` |
 
 ## 她的连接的帧（`link.*`）
 
@@ -347,7 +368,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?}]}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken, local?}`；`local` 为真时这个节点被撤回、这一端是它的家，这一次整理只写 `local` 行 |
 | `nodes.upkeep_read` | `{input: <upkeep_input 的输入>, run, sync, output}` → `{writes: [{id, node, kind, body, to?, takes?}], placed?, held?, fallback?}`；并入、拆出的那一行带 `to`（和拆出的 `takes`），调用方原样写进行的信封；`upkeep_input` 回答 `local` 时 `sync` 必须是 `local`，不然是 `bad_input` |
 | `nodes.wire_send` | `{audience, rows, bodies?, theirs?, ask?, holder, ledger?, elsewhere?}` → `{batches: [{audience, rows, payloads?, withheld?: [{id, why}]}], notHeld?}` |
-| `nodes.wire_take` | `{batch, holder, now, known?, members?, ledger?, epochs?, held?, elsewhere?, people?}` → `{accepted, refused?, clockAhead?, ledger, epochs, bodies?, withheld?, ask?, elsewhere?}`；批里有撤回时必须给 `ledger` |
+| `nodes.wire_take` | `{batch, holder, now, known?, members?, ledger?, epochs?, held?, partner?, met?, elsewhere?, people?}` → `{accepted, refused?, clockAhead?, ledger, epochs, bodies?, withheld?, ask?, elsewhere?}`；批里有撤回时必须给 `ledger`；给了 `partner` 又给了 `met: true`（经连接来的，或头里的 `partner` 碰上了的文件），别名下的一批收的时候迁 |
 
 **在端之间**（`nodes.wire_send`、`nodes.wire_take`，M7「节点同步」）：每个主机核心都存自己的日志，节点从日志折出来；端和端之间换的是行和行的 body，不是折好的节点。
 

@@ -1,0 +1,434 @@
+{
+  "call": "partner.meet",
+  "cases": [
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "others": [
+          "o7",
+          "o99"
+        ],
+        "theirs": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "the id minted first wins and the other becomes an alias",
+      "output": {
+        "changed": true,
+        "partner": {
+          "aliases": [
+            "local-owner",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "the winner's side does not change",
+      "output": {
+        "partner": {
+          "aliases": [
+            "o41",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "the same id on both sides",
+      "output": {
+        "partner": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "id": "local-owner"
+        },
+        "others": [],
+        "theirs": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "refused: a legacy id in use",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41",
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "others": [],
+        "theirs": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "refused: aliases out of order",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [
+          "o7",
+          "partner_0199d5c0b00044444444444444444444"
+        ],
+        "theirs": {
+          "aliases": [
+            "o99"
+          ],
+          "id": "partner_0199d5c0b00044444444444444444444"
+        }
+      },
+      "name": "refused: their id is someone else's here",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [
+          "o7",
+          "o99"
+        ],
+        "theirs": {
+          "aliases": [
+            "o99"
+          ],
+          "id": "partner_0199d5c0b00044444444444444444444"
+        }
+      },
+      "name": "a legacy alias they bring is not checked against others: it is not taken",
+      "output": {
+        "partner": {
+          "aliases": [
+            "o41",
+            "partner_0199d5c0b00044444444444444444444"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "id": "partner_000000000000ffffffffffffffffffff"
+        }
+      },
+      "name": "refused: an id minted before 2025",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [
+          "o41"
+        ],
+        "theirs": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: others names the partner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "mine": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: others is missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "o100"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "an alias the other side brings is not taken",
+      "output": {
+        "partner": {
+          "aliases": [
+            "o41",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "ours": [
+          "local-owner"
+        ],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "an alias this side vouches for is taken",
+      "output": {
+        "partner": {
+          "aliases": [
+            "local-owner",
+            "o41",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "a file that shares a partner id adds its id as an alias; this side's id stays, though the file's was minted first",
+      "output": {
+        "partner": {
+          "aliases": [
+            "o41",
+            "partner_0199d5c0900033333333333333333333"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: a file that shares no id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "empty": true,
+        "mine": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "an empty side takes a file's partner id as it is (空的 Mac 直接认文件)",
+      "output": {
+        "changed": true,
+        "partner": {
+          "aliases": [
+            "local-owner",
+            "partner_0199d5c0900033333333333333333333"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "empty": true,
+        "mine": {
+          "aliases": [
+            "local-owner",
+            "partner_0199d5c0b00044444444444444444444"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: a side that met someone before is not empty, whatever it says",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "mine": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: by is missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "mine": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0b00044444444444444444444"
+        }
+      },
+      "name": "refused: a file that shares only a legacy id (a friend's export with local-owner)",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

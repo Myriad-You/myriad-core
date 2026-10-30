@@ -141,6 +141,94 @@ fn every_conformance_case_answers_as_recorded() {
     }
 }
 
+/// `partner.*` (`crates/conformance/v1/partner/`): the partner's one id,
+/// minted, met and moved to, as the shared core answers it.
+fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
+    use base64::Engine as _;
+    use myriad_persona_log::{Partner, partner};
+    let refused = |error: myriad_persona_log::LogError| NodeError::new(error.to_string());
+    Ok(match call {
+        "partner.mint" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                at: i64,
+                random: String,
+                #[serde(default)]
+                was: Option<String>,
+            }
+            let In { at, random, was } = input(raw)?;
+            let random = base64::engine::general_purpose::STANDARD
+                .decode(random)
+                .map_err(|_| NodeError::new("random is base64"))?;
+            json!({ "partner": partner::minted(at, &random, was.as_deref()).map_err(refused)? })
+        }
+        "partner.meet" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                mine: Partner,
+                theirs: Partner,
+                by: partner::By,
+                #[serde(default)]
+                ours: Vec<String>,
+                others: Vec<String>,
+                #[serde(default)]
+                empty: bool,
+            }
+            let In {
+                mine,
+                theirs,
+                by,
+                ours,
+                others,
+                empty,
+            } = input(raw)?;
+            json_of(&partner::meet(&mine, &theirs, by, &ours, &others, empty).map_err(refused)?)
+        }
+        "partner.migrate" => json_of(&crate::migrate::migrate(input(raw)?)?),
+        other => return Err(NodeError::new(format!("no call {other}"))),
+    })
+}
+
+#[test]
+fn every_partner_case_answers_as_recorded() {
+    let dir = conformance().join("../partner");
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .unwrap_or_else(|e| panic!("{}: {e}", dir.display()))
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
+        .collect();
+    files.sort();
+    assert_eq!(files.len(), 3, "{files:?}");
+    for path in files {
+        let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        let call = file["call"].as_str().unwrap().to_string();
+        let mut changed = false;
+        for case in file["cases"].as_array_mut().unwrap() {
+            let name = case["name"].as_str().unwrap().to_string();
+            let got = run_partner(&call, case["input"].clone()).unwrap_or_else(|_| refused());
+            if blessing() {
+                changed |= case.get("output") != Some(&got);
+                case["output"] = got;
+                continue;
+            }
+            assert!(
+                same(&case["output"], &got),
+                "{} › {name}\nexpected {}\n     got {}",
+                path.display(),
+                case["output"],
+                got
+            );
+        }
+        if changed {
+            let mut text = serde_json::to_string_pretty(&file).unwrap();
+            text.push('\n');
+            std::fs::write(&path, text).unwrap();
+        }
+    }
+}
+
 /// The files only say `bad_input`; each refused case is refused for the
 /// reason its name gives, and no message holds a value from its input.
 #[test]

@@ -23,7 +23,9 @@
 //! own audience ([`Key::fits`]). Hers holds `her`, repositories and minted
 //! things.
 
-use myriad_persona_log::row::Audience;
+use std::borrow::Cow;
+
+use myriad_persona_log::{partner, row::Audience};
 use myriad_persona_sync::canonical::sha256_hex;
 use serde::{Deserialize, Serialize};
 
@@ -147,8 +149,32 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
 
 /// The id `audience` and `key` make, unchecked: also a person's or a
 /// group's in her own audience, which no side may make but one may meet.
+///
+/// The partner's private talk is made under one fixed name whatever id the
+/// partner goes by (`local-owner`, or any `partner_…`;
+/// `myriad_persona_log::partner`), and so is their own node in it
+/// (「关于你」, `person:<that id>`): a node keeps its id when the partner's
+/// id moves, on every side, whatever bodies it holds. The fixed name is the
+/// one every Mac made its nodes under, so their ids stay as they were.
 pub(crate) fn made_id(audience: &str, key: &str) -> String {
+    let (audience, key) = fixed(audience, key);
     sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string()
+}
+
+/// `audience` and `key` as a node id is made from them: the partner's
+/// private talk, and their own node in it, under the fixed name.
+fn fixed<'a>(audience: &'a str, key: &'a str) -> (Cow<'a, str>, Cow<'a, str>) {
+    let Ok(Audience::Personal(member)) = Audience::parse(audience) else {
+        return (Cow::Borrowed(audience), Cow::Borrowed(key));
+    };
+    if !partner::is_partners(member) {
+        return (Cow::Borrowed(audience), Cow::Borrowed(key));
+    }
+    let key = match key.strip_prefix("person:") {
+        Some(person) if person == member => Cow::Owned(format!("person:{}", partner::LEGACY)),
+        _ => Cow::Borrowed(key),
+    };
+    (Cow::Owned(format!("personal:{}", partner::LEGACY)), key)
 }
 
 /// The repository key of a remote: `repo:<host>/<path>`, lowercase, with

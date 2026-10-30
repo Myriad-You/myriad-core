@@ -178,6 +178,57 @@ pub struct ArchiveHeader {
     /// The [`Manifest`]'s digest: what the file holds, checked after it is
     /// opened.
     pub digest: String,
+    /// Whom the partner's private audience in its log pages belongs to:
+    /// the writer's partner id and its aliases. Only in a file with log
+    /// pages (version [`ARCHIVE_LOG_VERSION`]), so a reader of version 1
+    /// never meets it; an importer reads it before the pages, to move them
+    /// to its own id (`myriad_persona_log::partner`), meeting it with
+    /// everyone else it knows named so no one else's id is taken for the
+    /// partner's. An id, not a credential.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partner: Option<HeaderPartner>,
+}
+
+/// The partner as the writer of a file knows them.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HeaderPartner {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
+}
+
+impl HeaderPartner {
+    /// The rules of `myriad_persona_log::partner::Partner::check`, which
+    /// this crate cannot call: a partner id in use (`partner_` and 32
+    /// lowercase hex digits, minted no earlier than 2025), at most 32
+    /// aliases, each one id, sorted, none twice, none the id in use.
+    fn check(&self) -> Result<(), SyncError> {
+        let one = |id: &String| {
+            !id.is_empty()
+                && id.len() <= 512
+                && !id
+                    .chars()
+                    .any(|ch| ch == ',' || ch.is_control() || ch.is_whitespace())
+        };
+        let digits = self.id.strip_prefix("partner_").unwrap_or("");
+        let partner = digits.len() == 32
+            && digits
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+            && i64::from_str_radix(&digits[..12], 16).is_ok_and(|at| at >= 1_735_689_600_000);
+        if !partner
+            || !self.aliases.iter().all(one)
+            || self.aliases.len() > 32
+            || self.aliases.windows(2).any(|pair| pair[0] >= pair[1])
+            || self.aliases.contains(&self.id)
+        {
+            return Err(SyncError::new(
+                "the partner is a partner id and at most 32 sorted aliases, each one id",
+            ));
+        }
+        Ok(())
+    }
 }
 
 fn is_false(value: &bool) -> bool {
@@ -199,6 +250,9 @@ pub struct HeaderFields {
     /// [`ARCHIVE_LOG_VERSION`].
     #[serde(default, skip_serializing_if = "is_false")]
     pub logs: bool,
+    /// The writer's partner, for a file with log pages only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partner: Option<HeaderPartner>,
 }
 
 impl ArchiveHeader {
@@ -226,6 +280,7 @@ impl ArchiveHeader {
             origin: fields.origin,
             created_at: fields.created_at,
             digest: fields.digest,
+            partner: fields.partner,
         };
         header.check()?;
         Ok(header)
@@ -265,6 +320,14 @@ impl ArchiveHeader {
         }
         check_node(&self.origin)?;
         check_sha256(&self.digest, "the header's digest")?;
+        if let Some(partner) = &self.partner {
+            if self.version != ARCHIVE_LOG_VERSION {
+                return Err(SyncError::new(
+                    "only a file with log pages names the partner",
+                ));
+            }
+            partner.check()?;
+        }
         Ok(())
     }
 

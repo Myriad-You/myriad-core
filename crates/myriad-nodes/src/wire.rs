@@ -47,6 +47,20 @@
 //! retract as a forget unless it keeps the node (its own `retract.home`,
 //! on its ledger), and rows of the node that come later as stubs.
 //!
+//! **The partner's id** (`myriad_persona_log::partner`): a batch of the
+//! partner's private audience under an old id (from a side that has not
+//! moved yet, or an old file) is moved as it is taken, rows and bodies, so
+//! it is the same bytes this side moved its own to (`crate::migrate`); its
+//! node ids do not change, for the partner's id is not in them
+//! (`crate::key`). Only a batch whose source proved itself the partner's
+//! is moved (`met`: a link to the partner's account, or a file whose
+//! header partner met this side): `local-owner` is every Mac's, so a file
+//! that only says it would bring anyone's talk into the partner's. Any
+//! other batch is taken as it stands, under its own audience, which a
+//! computer holding only the partner's refuses (`not_held`). Whatever the
+//! caller keeps per audience (`known`, `epochs`, the ledger) it gives under
+//! the audience the batch is moved to.
+//!
 //! What a body must be to travel:
 //!
 //! - **One the core reads**: a node kind of [`crate::body::READ`], or a
@@ -97,7 +111,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use base64::Engine as _;
 use myriad_perception_filter::secrets::{self, SecretKind};
 use myriad_persona_log::{
-    AdmitInput, Admitted, Holder, Replicate, Row, Vector,
+    AdmitInput, Admitted, Holder, Partner, Replicate, Row, Vector,
     admit::{Epochs, Reason, Refusal, admit_unnamed},
     forget::{self, Entry},
     payloads, vector,
@@ -257,6 +271,15 @@ pub struct TakeInput {
     /// retract is in the batch.
     #[serde(default)]
     pub ledger: Option<Vec<Entry>>,
+    /// The partner as this side knows them: a batch under an alias is moved
+    /// to the id in use as it is taken, when `met`.
+    #[serde(default)]
+    pub partner: Option<Partner>,
+    /// The batch's source proved itself the partner's: it comes over a link
+    /// to the partner's account, or from a file whose header partner met
+    /// this side (`partner.meet`). Without it no batch is moved.
+    #[serde(default)]
+    pub met: bool,
     #[serde(default)]
     pub epochs: Epochs,
     /// The rows this side holds and asked again for the bodies of: one that
@@ -670,6 +693,45 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     })
 }
 
+/// A batch as it reads under `partner`: its audience, rows and bodies moved
+/// from an alias to the id in use (`crate::migrate`). A payload that does
+/// not read goes as it came, for the checks below to refuse.
+fn moved(batch: Batch, partner: &Partner) -> Result<Batch, NodeError> {
+    partner
+        .check()
+        .map_err(|error| NodeError::new(error.to_string()))?;
+    let engine = base64::engine::general_purpose::STANDARD;
+    let mut payloads = batch.payloads;
+    for row in &batch.rows {
+        let Some(payload) = &row.payload else {
+            continue;
+        };
+        let Some(one) = payloads
+            .iter_mut()
+            .find(|one| one.reference == payload.reference)
+        else {
+            continue;
+        };
+        let read = engine
+            .decode(&one.data)
+            .ok()
+            .and_then(|data| serde_json::from_slice::<Value>(&data).ok());
+        if let Some(new) = read.and_then(|body| crate::migrate::body(row, &body, partner)) {
+            one.data = engine.encode(canonical_bytes(&new));
+        }
+    }
+    Ok(Batch {
+        audience: partner.audience(&batch.audience),
+        rows: batch
+            .rows
+            .iter()
+            .map(|row| myriad_persona_log::partner::row(row, partner))
+            .collect(),
+        payloads,
+        withheld: batch.withheld,
+    })
+}
+
 /// A batch from another side, checked: the rows to merge and their bodies.
 pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     let TakeInput {
@@ -681,12 +743,18 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         held,
+        partner,
+        met,
         elsewhere: known_away,
         people,
     } = input;
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    let batch = match &partner {
+        Some(partner) if met => moved(batch, partner)?,
+        _ => batch,
+    };
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();
     for one in &batch.payloads {
         if carried
