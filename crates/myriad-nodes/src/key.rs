@@ -12,6 +12,10 @@
 //! | `group:<id>` | a group | person, always |
 //! | `her` | her (「她自己」) in this audience | person, always |
 //! | `minted:<token>` | a thing she made a node for; the writer mints the token once and it travels in the created row | task or topic, and may change |
+//!
+//! A minted token that starts `together-` is what she watched or read with
+//! the partner (一起看过的): it only ever takes others in, and never goes
+//! into another node itself ([`Key::is_together`]).
 
 use myriad_persona_log::row::Audience;
 use myriad_persona_sync::canonical::sha256_hex;
@@ -96,6 +100,13 @@ impl<'a> Key<'a> {
             Self::Person(_) | Self::Group(_) | Self::Her => &[Kind::Person],
             Self::Minted(_) => &[Kind::Task, Kind::Topic],
         }
+    }
+
+    /// Whether this is something she watched or read with the partner
+    /// (`minted:together-…`): it takes others in, and is never merged away
+    /// or folded back.
+    pub fn is_together(&self) -> bool {
+        matches!(self, Self::Minted(token) if token.starts_with("together-"))
     }
 
     /// Whether this is the partner's own node in their private audience
@@ -281,5 +292,8 @@ mod tests {
         assert!(Key::parse("person:7").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:9").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:7").unwrap().is_about_you("personal:7,9"));
+        assert!(Key::parse("minted:together-ab12").unwrap().is_together());
+        assert!(!Key::parse("minted:ab12-together-").unwrap().is_together());
+        assert!(!Key::parse("person:together-ab12").unwrap().is_together());
     }
 }

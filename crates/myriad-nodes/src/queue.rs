@@ -209,11 +209,17 @@ impl<'a> Watch<'a> {
         out
     }
 
-    /// The newest clock per device of what one node watches: what her
-    /// upkeep of it has seen once it looks.
-    pub(crate) fn newest(&self, audience: &str, id: &str) -> BTreeMap<String, Rev> {
+    /// The newest clock per device of what one node watches, and of the
+    /// other nodes she was shown with it (`shown`): what her upkeep of it
+    /// has seen once it looks. A node she was shown and then made it watch
+    /// (a blocker, a whole) has nothing new for it.
+    pub(crate) fn newest(&self, audience: &str, id: &str, shown: &[&str]) -> BTreeMap<String, Rev> {
         let mut newest: BTreeMap<String, Rev> = BTreeMap::new();
-        for (_, row) in self.watched(audience, id) {
+        let watched = self.watched(audience, id).into_iter().map(|(_, row)| row);
+        let shown = shown
+            .iter()
+            .flat_map(|other| self.rows_of(audience, other).iter().copied());
+        for row in watched.chain(shown) {
             let known = newest
                 .entry(row.origin.clone())
                 .or_insert_with(|| row.hlc.clone());
