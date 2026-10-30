@@ -116,6 +116,33 @@ pub fn looking_back(explored: Option<&Explored>) -> (String, bool) {
     }
 }
 
+/// How finding something out left it, when it is still open for her: she
+/// only thought it over on her own and was not sure of it, or went to look
+/// and it was not, or only partly, answered. A question like this (how
+/// people take a work, why someone in it does what they do) is often what
+/// no search settles and someone else's view can add to; one that got its
+/// answer, or that she was sure of, is not. None too when the comparison
+/// never came back: whether it was answered is not known.
+pub fn left_open(explored: &Explored) -> Option<String> {
+    match &explored.compared {
+        Some(compared) if compared.answered == "yes" => None,
+        Some(compared) => Some(format!(
+            "you went to look and it was {} answered; you had thought: {}",
+            if compared.answered == "partly" {
+                "only partly"
+            } else {
+                "not"
+            },
+            explored.thought
+        )),
+        None if explored.sources.is_empty() && explored.sure != "sure" => Some(format!(
+            "you only thought it over on your own ({}): {}",
+            explored.sure, explored.thought
+        )),
+        None => None,
+    }
+}
+
 /// One thing she looked at on the way.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Looked {
@@ -646,5 +673,37 @@ mod tests {
         assert!(material.contains("[page:  (https://a.example)]\n正文"));
         assert!(material.contains("what is said in it:\nso in college"));
         assert_eq!(trip.sources().len(), 2);
+    }
+
+    #[test]
+    fn only_what_finding_out_did_not_settle_stays_open() {
+        let explored = |sure: &str, sources: &[&str], answered: Option<&str>| Explored {
+            thought: "她怕再一次被留下".into(),
+            sure: sure.into(),
+            sources: sources.iter().map(|at| at.to_string()).collect(),
+            compared: answered.map(|answered| Compared {
+                surprise: "some".into(),
+                new: String::new(),
+                already_known: false,
+                answered: answered.into(),
+            }),
+        };
+        let thought_over = left_open(&explored("fairly", &[], None)).unwrap();
+        assert!(thought_over.contains("only thought it over on your own (fairly)"));
+        assert!(thought_over.contains("她怕再一次被留下"));
+        assert!(left_open(&explored("sure", &[], None)).is_none());
+        assert!(
+            left_open(&explored("unsure", &["https://a.example"], Some("partly")))
+                .unwrap()
+                .contains("only partly answered")
+        );
+        assert!(
+            left_open(&explored("unsure", &["https://a.example"], Some("no")))
+                .unwrap()
+                .contains("not answered")
+        );
+        assert!(left_open(&explored("unsure", &["https://a.example"], Some("yes"))).is_none());
+        // Looked, but the comparison never came back.
+        assert!(left_open(&explored("unsure", &["https://a.example"], None)).is_none());
     }
 }
