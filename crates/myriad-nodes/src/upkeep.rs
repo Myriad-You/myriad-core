@@ -65,6 +65,14 @@
 //! mark lists them, so the queue knows what the run wrote and nothing else
 //! written meanwhile is taken as seen.
 //!
+//! A node taken back from sync (撤回同步) is out of shared upkeep on every
+//! side. Only its home folds it whole, and there a run on it writes local
+//! rows only (`local` in what is prepared: the caller passes a local
+//! `sync`, or `read` refuses the call), a split's new part and its
+//! `part_of` included. A shared run never names one: an action that would
+//! merge into it, relate to it or place on it is not allowed. The fold
+//! passes by a shared merge or split of one written after its retract.
+//!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) so the queue moves
 //! on; the node is due again at its next change.
@@ -307,6 +315,10 @@ pub struct Prepared {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub due: Vec<Reason>,
     pub taken: Taken,
+    /// The node is taken back from sync and this side is its home: the
+    /// run writes local rows only (`read` is given a local `sync`).
+    #[serde(skip_serializing_if = "is_false")]
+    pub local: bool,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -621,6 +633,9 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             Some(at)
         }
     };
+    // A run on a node taken back from sync (on its home) is local; a shared
+    // one is never shown such a node.
+    let local = at.is_some_and(|at| !full.folded.nodes[at].retracted.is_empty());
     // Every candidate is a node of this audience in the rows: one from
     // another audience is never shown, and is the caller's mistake.
     let candidates = input
@@ -676,7 +691,9 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             .nodes
             .iter()
             .enumerate()
-            .filter(|(_, other)| other.audience == audience && alive(other))
+            .filter(|(_, other)| {
+                other.audience == audience && alive(other) && (local || other.retracted.is_empty())
+            })
             .map(|(at, other)| (other.id.as_str(), at))
             .collect();
         let mut around: BTreeMap<usize, Vec<ShownRelation>> = BTreeMap::new();
@@ -748,6 +765,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     let shown_candidates: Vec<ShownCandidate> = candidates
         .into_iter()
         .filter(|other| alive(&full.folded.nodes[*other]))
+        .filter(|other| local || full.folded.nodes[*other].retracted.is_empty())
         .filter(|other| !nodes.values().any(|shown| shown == other))
         .take(UPKEEP_CANDIDATES)
         .collect::<Vec<usize>>()
@@ -803,6 +821,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         candidates: shown_candidates,
         inbox,
         due,
+        local,
     };
     Ok(Context {
         full,
@@ -1072,6 +1091,11 @@ impl<'a> Reader<'a> {
             .get(label)
             .ok_or(Fallback::UnknownLabel)?;
         let node = self.node(at);
+        // A node taken back from sync is reorganised only by a local run on
+        // it, at its home.
+        if !node.retracted.is_empty() && !self.context.prepared.local {
+            return Err(Fallback::NotAllowed);
+        }
         Ok(Named {
             id: node.id.clone(),
             key: node.key.clone().ok_or(Fallback::UnknownLabel)?,
@@ -2023,6 +2047,11 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
     check_token("run", &input.run)?;
     input.sync.check()?;
     let context = context(input.input)?;
+    if context.prepared.local && input.sync == Sync::Shared {
+        return Err(NodeError::new(
+            "a node taken back from sync is kept with local rows only",
+        ));
+    }
     let mut reader = Reader::new(&context, &input.run, input.sync.clone());
     let read = actions(&input.output).and_then(|actions| {
         for (at, action) in actions.iter().enumerate() {

@@ -72,14 +72,17 @@ pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, rows, bodies?, theirs?, holder}` → `{batches, withheld?,
-/// notHeld?}`: what to send another host core of one audience.
+/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger?, elsewhere?}`
+/// → `{batches, notHeld?}`: what to send another host core of one
+/// audience; a forgotten or retracted node goes as stubs only.
 pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::send(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{batch, holder, now, known?, members?, ledger?, epochs?}` → what
-/// `log.admit` answers, with `bodies?` and `withheld?`.
+/// `{batch, holder, now, known?, members?, ledger?, epochs?, held?,
+/// elsewhere?, people?}` → what `log.admit` answers, with `bodies?`,
+/// `withheld?`, `ask?` and `elsewhere?`. The ledger is required when the
+/// batch holds a retract; the names it gains are only those the fold takes.
 pub(super) fn wire_take(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::take(quiet_input(raw)?).map_err(refused)?)
 }

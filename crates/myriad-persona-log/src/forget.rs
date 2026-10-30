@@ -40,9 +40,18 @@
 //! envelopes (`to`, `takes`), so a stub keeps it and every side reads the
 //! same from its own log: the ledger holds them too ([`Kind::Into`],
 //! [`Kind::Split`]), so a call given only part of the log still knows them.
-//! A node that went into two (two sides each merged it, offline) went into
-//! the one written first, by clock and then side. A name counts whatever
-//! its body says: a forget or a retract errs toward taking more.
+//! What a forget, a retract or a home reaches only ever grows: a node that
+//! went into two (two sides each merged it, offline) is reached through
+//! both, and a span through every place a split ever moved it, so a row
+//! stubbed once is reached by the same ledger on every side whatever order
+//! its rows came in. Which merge stands (the first written) is the fold's
+//! to show, never what is reached.
+//!
+//! A name is recorded only from a row the node fold accepts as a merge or
+//! a split (`myriad_nodes`, which reads its body): rows a side wrote
+//! itself go through [`record`], and rows from another side through
+//! `nodes.wire_take`. A call given this side's ledger takes names from it,
+//! never from the rows' envelopes.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -120,10 +129,27 @@ pub fn on_ledger(row: &Row) -> bool {
 }
 
 /// The ledger `rows` make: their forgets, retracts, homes and names, sorted,
-/// earliest kept. A stub's envelope makes the same as its row.
+/// earliest kept. A stub's envelope makes the same as its row. Their names
+/// are taken as their envelopes give them: for rows this side wrote.
 pub fn ledger(rows: &[Row]) -> Vec<Entry> {
     let entries: Vec<Entry> = rows.iter().filter_map(entry_of).collect();
     joined(&[], &entries)
+}
+
+/// The ledger `rows` make without their names: their forgets, retracts and
+/// homes.
+pub fn unnamed(rows: &[Row]) -> Vec<Entry> {
+    let entries: Vec<Entry> = rows
+        .iter()
+        .filter(|row| on_ledger(row))
+        .filter_map(entry_of)
+        .collect();
+    joined(&[], &entries)
+}
+
+/// Whether an entry is one of a node's other names.
+pub fn is_name(entry: &Entry) -> bool {
+    matches!(entry.kind, Kind::Into | Kind::Split)
 }
 
 fn entry_of(row: &Row) -> Option<Entry> {
@@ -161,15 +187,13 @@ fn entry_of(row: &Row) -> Option<Entry> {
 }
 
 /// The ledger with `more` added, sorted: per target one forget, one
-/// retract with every home, one home, one node it went into (the earliest
-/// written) and one split per part, each at its earliest.
+/// retract with every home, one home, one entry per node it went into and
+/// one split per part, each at its earliest. Nothing on it is ever dropped.
 pub fn joined(ledger: &[Entry], more: &[Entry]) -> Vec<Entry> {
     type Key<'a> = (&'a str, &'a str, Kind, Option<&'a str>);
     let mut entries: BTreeMap<Key, Entry> = BTreeMap::new();
     for entry in ledger.iter().chain(more) {
-        let part = (entry.kind == Kind::Split)
-            .then_some(entry.to.as_deref())
-            .flatten();
+        let part = is_name(entry).then_some(entry.to.as_deref()).flatten();
         let key = (
             entry.audience.as_str(),
             entry.target.as_str(),
@@ -200,17 +224,16 @@ pub fn has_retract(ledger: &[Entry]) -> bool {
     ledger.iter().any(Entry::is_retract)
 }
 
-/// A split taking a row: its clock, the node split and the part.
-type Taking<'a> = (&'a Rev, &'a str, &'a str);
-
 /// The ledger read for one call: what reaches which row.
 pub struct View<'a> {
     /// (audience, target) → its forgets, retracts and homes.
     by_target: BTreeMap<(&'a str, &'a str), Vec<&'a Entry>>,
-    /// (audience, node) → the node it went into.
-    into: BTreeMap<(&'a str, &'a str), &'a str>,
-    /// (audience, row id) → the splits that take it: (at, from, to).
-    splits: BTreeMap<(&'a str, &'a str), Vec<Taking<'a>>>,
+    /// (audience, node) → every node it went into.
+    into: BTreeMap<(&'a str, &'a str), BTreeSet<&'a str>>,
+    /// (audience, row id) → every split that took it: (from, to).
+    splits: BTreeMap<(&'a str, &'a str), BTreeSet<(&'a str, &'a str)>>,
+    /// (audience, node, other) of every name on the ledger.
+    named: BTreeSet<(&'a str, &'a str, &'a str)>,
 }
 
 impl<'a> View<'a> {
@@ -219,10 +242,8 @@ impl<'a> View<'a> {
             by_target: BTreeMap::new(),
             into: BTreeMap::new(),
             splits: BTreeMap::new(),
+            named: BTreeSet::new(),
         };
-        // `joined` leaves one into per node, but a caller's ledger may not
-        // have been through it: the earliest still wins.
-        let mut into: BTreeMap<(&str, &str), (&Rev, &str)> = BTreeMap::new();
         for entry in ledger {
             let place = (entry.audience.as_str(), entry.target.as_str());
             match (entry.kind, entry.to.as_deref()) {
@@ -230,69 +251,76 @@ impl<'a> View<'a> {
                     view.by_target.entry(place).or_default().push(entry);
                 }
                 (Kind::Into, Some(to)) => {
-                    let first = into.entry(place).or_insert((&entry.at, to));
-                    if (&entry.at, to) < *first {
-                        *first = (&entry.at, to);
-                    }
+                    view.into.entry(place).or_default().insert(to);
+                    view.named.insert((place.0, place.1, to));
                 }
                 (Kind::Split, Some(to)) => {
+                    view.named.insert((place.0, place.1, to));
                     for row in &entry.takes {
                         view.splits
                             .entry((entry.audience.as_str(), row.as_str()))
                             .or_default()
-                            .push((&entry.at, entry.target.as_str(), to));
+                            .insert((entry.target.as_str(), to));
                     }
                 }
                 (Kind::Into | Kind::Split, None) => {}
             }
         }
-        view.into = into
-            .into_iter()
-            .map(|(place, (_, to))| (place, to))
-            .collect();
-        for splits in view.splits.values_mut() {
-            splits.sort();
-        }
         view
     }
 
-    /// `object`, then each node it went into, in order.
-    pub fn chain(&self, audience: &str, object: &'a str) -> Vec<&'a str> {
-        let mut out = vec![object];
-        while let Some(&next) = self
-            .into
-            .get(&(audience, *out.last().expect("one at least")))
-        {
-            if out.contains(&next) {
-                break;
+    /// `nodes`, with every node any of them went into, and on: all of
+    /// them, however many merges each saw.
+    fn onward(&self, audience: &str, nodes: &mut BTreeSet<&'a str>) {
+        let mut todo: Vec<&str> = nodes.iter().copied().collect();
+        while let Some(node) = todo.pop() {
+            for &next in self.into.get(&(audience, node)).into_iter().flatten() {
+                if nodes.insert(next) {
+                    todo.push(next);
+                }
             }
-            out.push(next);
         }
+    }
+
+    /// `object` and every node it went into, and on.
+    pub fn reach(&self, audience: &str, object: &'a str) -> BTreeSet<&'a str> {
+        let mut out = BTreeSet::from([object]);
+        self.onward(audience, &mut out);
         out
     }
 
     /// Every object whose forget or retract reaches `row`: its object and
-    /// each node that went on from it; where the splits that took it put
-    /// it, and on from there; and for a row naming another node, that one.
+    /// each node it went on into; every place a split that took it moved
+    /// it from one of those, and on from there; and for a merge or a split
+    /// whose name is on the ledger, the other node and on. A row naming a
+    /// node in its envelope that the ledger does not hold (the fold passed
+    /// it by) is not reached through it: it would turn into a stub, and a
+    /// stub's envelope names what it names.
     fn targets(&self, row: &'a Row) -> BTreeSet<&'a str> {
         let audience = row.audience.as_str();
-        let mut out: BTreeSet<&str> = self.chain(audience, &row.object).into_iter().collect();
-        let mut at: &str = &row.object;
-        for &(_, from, to) in self
-            .splits
-            .get(&(audience, row.id.as_str()))
-            .into_iter()
-            .flatten()
+        let mut out = BTreeSet::from([row.object.as_str()]);
+        if let Some(to) = &row.to
+            && self
+                .named
+                .contains(&(audience, row.object.as_str(), to.as_str()))
         {
-            if self.chain(audience, at).contains(&from) {
-                at = to;
+            out.insert(to.as_str());
+        }
+        self.onward(audience, &mut out);
+        let splits = self.splits.get(&(audience, row.id.as_str()));
+        loop {
+            let more: Vec<&str> = splits
+                .into_iter()
+                .flatten()
+                .filter(|(from, to)| out.contains(from) && !out.contains(to))
+                .map(|&(_, to)| to)
+                .collect();
+            if more.is_empty() {
+                return out;
             }
+            out.extend(more);
+            self.onward(audience, &mut out);
         }
-        out.extend(self.chain(audience, at));
-        if let Some(to) = &row.to {
-            out.extend(self.chain(audience, to));
-        }
-        out
     }
 
     /// The forgets, retracts and homes that reach `row` (none reaches a
@@ -368,7 +396,7 @@ impl<'a> View<'a> {
     /// The entries that name `audience`'s `object` or a node it went on
     /// into, of `kind`.
     fn about(&self, audience: &str, object: &'a str, kind: Kind) -> Vec<&'a Entry> {
-        self.chain(audience, object)
+        self.reach(audience, object)
             .into_iter()
             .filter_map(|target| self.by_target.get(&(audience, target)))
             .flatten()
@@ -392,6 +420,22 @@ impl<'a> View<'a> {
     /// it).
     pub fn kept(&self, audience: &str, object: &'a str) -> bool {
         !self.about(audience, object, Kind::Home).is_empty()
+    }
+
+    /// Whether this side wrote the retract of `audience`'s `object` itself
+    /// (not of a node it went into).
+    pub fn home_of(&self, audience: &str, object: &str) -> bool {
+        self.by_target
+            .get(&(audience, object))
+            .is_some_and(|entries| entries.iter().any(|entry| entry.kind == Kind::Home))
+    }
+
+    /// The earliest retract reaching `audience`'s `object`.
+    pub fn retracted_at(&self, audience: &str, object: &'a str) -> Option<&'a Rev> {
+        self.about(audience, object, Kind::Retract)
+            .into_iter()
+            .map(|entry| &entry.at)
+            .min()
     }
 
     /// The earliest forget of `audience`'s `object` or a node it went on
@@ -437,14 +481,19 @@ pub fn absorb(rows: Vec<Row>, ledger: &[Entry], side: Side) -> (Vec<Row>, Vec<St
     (rows, stubbed)
 }
 
-/// The ledger a call holds: the one given, with what `rows` show. Once a
-/// retract is in play the caller's own ledger must be given (a home may be
-/// only on it, and a home never loses its node to a call that did not say
-/// what it keeps).
+/// The ledger a call holds: the one given, with the forgets, retracts and
+/// homes `rows` show; the names are the ledger's (it holds those of every
+/// row the node fold accepted), never an envelope's. Once a retract is in
+/// play the caller's own ledger must be given (a home may be only on it,
+/// and a home never loses its node to a call that did not say what it
+/// keeps). With none given, the rows' envelopes name what they name.
 pub fn given(ledger: Option<&[Entry]>, rows: &[Row]) -> Result<Vec<Entry>, LogError> {
     let shown = ledger_of_checked(rows);
     match ledger {
-        Some(ledger) => Ok(joined(ledger, &shown)),
+        Some(ledger) => {
+            let unnamed: Vec<Entry> = shown.into_iter().filter(|entry| !is_name(entry)).collect();
+            Ok(joined(ledger, &unnamed))
+        }
         None if has_retract(&shown) => Err(LogError::new(
             "a retract is in the rows: give this side's ledger",
         )),
@@ -489,4 +538,33 @@ pub fn record(input: RecordInput) -> Result<Recorded, LogError> {
     Ok(Recorded {
         ledger: joined(&input.ledger, &ledger(&input.rows)),
     })
+}
+
+/// `log.reach`: rows of this side's log (any of them, as stubs or whole)
+/// and its ledger.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ReachInput {
+    pub rows: Vec<Row>,
+    pub ledger: Vec<Entry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Reached {
+    /// The rows given whole that the ledger takes away here, sorted: their
+    /// payloads go.
+    pub stubbed: Vec<String>,
+}
+
+/// Which of this side's rows its ledger takes away now: a host that merged
+/// only part of its log (or learnt a name or a retract) asks this over the
+/// rest, rather than working out what a forget reaches itself.
+pub fn reach(input: ReachInput) -> Result<Reached, LogError> {
+    for row in &input.rows {
+        row.check()
+            .map_err(|_| LogError::new("a row's envelope is not whole"))?;
+    }
+    let (_, stubbed) = absorb(input.rows, &input.ledger, Side::Here);
+    Ok(Reached { stubbed })
 }

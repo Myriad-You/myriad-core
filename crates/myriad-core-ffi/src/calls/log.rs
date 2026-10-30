@@ -99,6 +99,12 @@ pub(super) fn ledger(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_persona_log::forget::record(input(raw)?).map_err(refused)?)
 }
 
+/// `{rows, ledger}` → `{stubbed}`: which of this side's rows its ledger
+/// takes away now.
+pub(super) fn reach(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_persona_log::forget::reach(input(raw)?).map_err(refused)?)
+}
+
 /// `{sent, serverTime, received}` (local, server, local; microseconds) →
 /// `{offset, uncertainty}`.
 pub(super) fn clock_offset(raw: &[u8]) -> Result<Value, Failure> {

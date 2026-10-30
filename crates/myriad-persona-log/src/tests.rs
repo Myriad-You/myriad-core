@@ -98,6 +98,7 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
         "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
         "log.fold" => json_of(&fold(input(raw)?)?),
         "log.ledger" => json_of(&forget::record(input(raw)?)?),
+        "log.reach" => json_of(&forget::reach(input(raw)?)?),
         "log.clock_offset" => {
             #[derive(Deserialize)]
             #[serde(rename_all = "camelCase", deny_unknown_fields)]

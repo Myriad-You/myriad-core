@@ -97,8 +97,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use base64::Engine as _;
 use myriad_perception_filter::secrets::{self, SecretKind};
 use myriad_persona_log::{
-    AdmitInput, Admitted, Holder, Replicate, Row, Vector, admit,
-    admit::{Epochs, Reason, Refusal},
+    AdmitInput, Admitted, Holder, Replicate, Row, Vector,
+    admit::{Epochs, Reason, Refusal, admit_unnamed},
     forget::{self, Entry},
     payloads, vector,
 };
@@ -587,10 +587,11 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
-    // under any name of it: the other side keeps nothing of this side's.
+    // under any name of it the fold takes: the other side keeps nothing of
+    // this side's.
     let ledger = forget::joined(
-        &forget::joined(&ledger, &forget::ledger(&rows)),
-        &crate::fold::legacy(&rows, &bodies),
+        &forget::joined(&ledger, &forget::unnamed(&rows)),
+        &crate::fold::named(&rows, &bodies),
     );
     let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Away);
     let mut away = elsewhere(
@@ -741,10 +742,8 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             rows.push(row.clone());
         }
     }
-    // What the batch's own bodies show, read as sent: the names of rows
-    // from before envelopes held them (so a retract taken now reaches the
-    // rows under them), and the person and group keys a node id may be
-    // made of.
+    // What the batch's own bodies show, read as sent: the person and group
+    // keys a node id may be made of.
     let shown: BTreeMap<String, Value> = batch
         .rows
         .iter()
@@ -756,13 +755,6 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             Some((row.id.clone(), serde_json::from_slice(&data).ok()?))
         })
         .collect();
-    let checked: Vec<Row> = batch
-        .rows
-        .iter()
-        .filter(|row| row.audience == batch.audience && row.check().is_ok())
-        .cloned()
-        .collect();
-    let legacy = crate::fold::legacy(&checked, &shown);
     // The person and group nodes this side can tie a node of this audience
     // to: only for one of them is the sender's `person_elsewhere` taken.
     let mut keys: BTreeSet<String> = people.into_iter().collect();
@@ -777,12 +769,13 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .collect();
     forget::given(ledger.as_deref(), &batch.rows)
         .map_err(|error| NodeError::new(error.to_string()))?;
-    let mut admitted = admit(AdmitInput {
+    // The batch's names go on the ledger once their bodies are taken, below.
+    let mut admitted = admit_unnamed(AdmitInput {
         rows,
         now,
         known,
         members,
-        ledger: Some(forget::joined(&ledger.unwrap_or_default(), &legacy)),
+        ledger,
         epochs,
         holder: Some(holder),
     })
@@ -862,6 +855,22 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             }),
         }
     }
+    // The names of the rows taken, as the fold here reads them: of each
+    // merge and split whose body came and reads, and of each stub. A row
+    // whose body did not come names nothing until it does (asked again, it
+    // comes back as `held`). What they reach is taken now.
+    let taken: Vec<Row> = admitted.accepted.iter().chain(&again).cloned().collect();
+    admitted.ledger = forget::joined(&admitted.ledger, &crate::fold::named(&taken, &bodies));
+    let (accepted, stubbed) = forget::absorb(
+        std::mem::take(&mut admitted.accepted),
+        &admitted.ledger,
+        forget::Side::Here,
+    );
+    admitted.accepted = accepted;
+    let (_, stubbed_again) = forget::absorb(again, &admitted.ledger, forget::Side::Here);
+    let gone: BTreeSet<&String> = stubbed.iter().chain(&stubbed_again).collect();
+    bodies.retain(|id, _| !gone.contains(id));
+    withheld.retain(|one| !gone.contains(&one.id));
     let ask = withheld
         .iter()
         .filter(|one| !one.why.lasting())

@@ -110,6 +110,7 @@ const CALLS: &[(&str, Call)] = &[
     ("log.ledger", log::ledger),
     ("log.merge", log::merge),
     ("log.missing", log::missing),
+    ("log.reach", log::reach),
     ("making.how_it_went", soup::how_it_went),
     ("making.kept_line", soup::kept_line),
     ("making.make_input", soup::make_input),

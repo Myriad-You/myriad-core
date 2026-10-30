@@ -90,7 +90,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use myriad_persona_log::{
     Row, forget,
     kinds::Rule,
-    row::{Audience, Author, object_type},
+    row::{Audience, Author, Replicate, object_type},
 };
 use myriad_persona_sync::Rev;
 use serde::{Deserialize, Serialize};
@@ -99,8 +99,7 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Absorbed, Body, Change, How, IntentStatus, Object, ObjectKind, Relation, Sentence, Status,
-        Trigger,
+        Body, Change, How, IntentStatus, Object, ObjectKind, Relation, Sentence, Status, Trigger,
     },
     key::{Key, Kind, node_id},
     limits::HISTORY,
@@ -496,6 +495,11 @@ pub enum Why {
     /// Something she watched or read with the partner going into another:
     /// it only ever takes others in.
     Together,
+    /// A shared merge or split of a node taken back from sync, written
+    /// after the retract, or of a node this side is the home of: only its
+    /// home reorganises it, in local rows, and a home shows what it keeps
+    /// as its own node.
+    Retracted,
     /// A person's or a group's node in her own audience: it lives in that
     /// person's or group's own audience, never in hers.
     PersonElsewhere,
@@ -768,44 +772,145 @@ impl Absorbing {
     }
 }
 
-/// The names of rows written before envelopes held them (no `to`), as
-/// their bodies show: the node it went into, the part split off and its
-/// spans. Each side that still holds the body reads the same.
-pub(crate) fn legacy(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Vec<forget::Entry> {
+/// What a merge or a split row names, as the fold reads it: the node it
+/// went into, or the part split off and the spans it moves; or why the fold
+/// passes it by. It rests only on the row, its body and the key of the node
+/// it is of (where that node's created body is here), so a side names a
+/// node only where its fold takes the merge or the split, and every side
+/// holding the same rows names the same. Which of two merges stands, and
+/// whether one closes a loop, is the fold's to show and names nothing.
+fn name_of(row: &Row, body: &Body, from_key: Option<&str>) -> Option<Result<Named, Why>> {
+    let (kind, key, takes) = match body {
+        Body::Absorbed(body) => (forget::Kind::Into, &body.into, None),
+        Body::SplitOff(body) => (forget::Kind::Split, &body.to, Some(sorted(&body.spans))),
+        _ => return None,
+    };
+    let audience = row.audience.as_str();
+    let from = from_key.and_then(|key| Key::parse(key).ok());
+    let named = || {
+        if let Some(why) = misfit(row, body) {
+            return Err(why);
+        }
+        if from.as_ref().is_some_and(|from| !from.fits(audience)) {
+            return Err(Why::PersonElsewhere);
+        }
+        if kind == forget::Kind::Split
+            && from
+                .as_ref()
+                .is_some_and(|from| from.kinds() == [Kind::Person])
+        {
+            return Err(Why::KindFixed);
+        }
+        // The key was checked as the body was read.
+        let to = node_id(audience, key).map_err(|_| Why::BadBody)?;
+        if kind == forget::Kind::Into && !envelope_agrees(row, &to, None) {
+            return Err(Why::BadBody);
+        }
+        if to == node_of(row) {
+            return Err(Why::SelfRelation);
+        }
+        if kind == forget::Kind::Split && !envelope_agrees(row, &to, takes.as_deref()) {
+            return Err(Why::BadBody);
+        }
+        if kind == forget::Kind::Into {
+            if Key::parse(key).is_ok_and(|key| key.is_about_you(audience)) {
+                return Err(Why::NoSpansHere);
+            }
+            if from_key.is_some_and(|key| !key.starts_with("minted:")) {
+                return Err(Why::NotMinted);
+            }
+            if from.as_ref().is_some_and(Key::is_together) {
+                return Err(Why::Together);
+            }
+        }
+        Ok(Named {
+            kind,
+            to,
+            takes: takes.clone().unwrap_or_default(),
+        })
+    };
+    Some(named())
+}
+
+/// A merge's or a split's name: the other node's id and the spans moved.
+struct Named {
+    kind: forget::Kind,
+    to: String,
+    takes: Vec<String>,
+}
+
+/// (audience, node) → its key, from the created bodies of `rows`.
+fn keys_of(
+    rows: &[Row],
+    read: impl Fn(&Row) -> Option<Body>,
+) -> BTreeMap<(String, String), String> {
+    let mut keys: BTreeMap<(String, String), String> = BTreeMap::new();
+    for row in rows.iter().filter(|row| row.kind == "node.created") {
+        if let Some(Body::Created(created)) = read(row)
+            && node_id(&row.audience, &created.key).ok().as_deref() == Some(node_of(row))
+        {
+            keys.entry((row.audience.clone(), node_of(row).to_string()))
+                .or_insert(created.key);
+        }
+    }
+    keys
+}
+
+/// The names `rows` give that the fold takes, for the ledger: each merge
+/// and split whose body reads and passes [`name_of`] (a row from before
+/// envelopes held them included), and each stub's as its envelope keeps it
+/// (its body is gone, as on every side that stubbed it). A row whole here
+/// but without its body names nothing yet. With each, whether the envelope
+/// names it (not only a body).
+pub(crate) fn names(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Vec<(forget::Entry, bool)> {
+    let read = |row: &Row| {
+        (!row.forgotten)
+            .then(|| bodies.get(&row.id))
+            .flatten()
+            .and_then(|raw| Body::read(&row.kind, raw).ok())
+    };
+    let keys = keys_of(rows, read);
     let mut out = Vec::new();
     for row in rows {
-        if row.to.is_some() || row.forgotten || object_type(&row.object) != Some("node") {
+        if object_type(&row.object) != Some("node") {
             continue;
         }
-        let Some(body) = bodies
-            .get(&row.id)
-            .and_then(|raw| Body::read(&row.kind, raw).ok())
-        else {
-            continue;
-        };
-        let (kind, key, takes) = match body {
-            Body::Absorbed(body) => (forget::Kind::Into, body.into, Vec::new()),
-            Body::SplitOff(body) => (forget::Kind::Split, body.to, sorted(&body.spans)),
-            _ => continue,
-        };
-        let Ok(to) = node_id(&row.audience, &key) else {
-            continue;
-        };
-        let to = format!("node:{to}");
-        if to == row.object {
+        if row.forgotten {
+            out.extend(
+                forget::ledger(std::slice::from_ref(row))
+                    .into_iter()
+                    .filter(forget::is_name)
+                    .map(|entry| (entry, true)),
+            );
             continue;
         }
-        out.push(forget::Entry {
-            audience: row.audience.clone(),
-            target: row.object.clone(),
-            at: row.hlc.clone(),
-            kind,
-            homes: Vec::new(),
-            to: Some(to),
-            takes,
-        });
+        let Some(body) = read(row) else { continue };
+        let from_key = keys.get(&(row.audience.clone(), node_of(row).to_string()));
+        let Some(Ok(named)) = name_of(row, &body, from_key.map(String::as_str)) else {
+            continue;
+        };
+        out.push((
+            forget::Entry {
+                audience: row.audience.clone(),
+                target: row.object.clone(),
+                at: row.hlc.clone(),
+                kind: named.kind,
+                homes: Vec::new(),
+                to: Some(format!("node:{}", named.to)),
+                takes: named.takes,
+            },
+            row.to.is_some(),
+        ));
     }
     out
+}
+
+/// [`names`], as ledger entries.
+pub(crate) fn named(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Vec<forget::Entry> {
+    names(rows, bodies)
+        .into_iter()
+        .map(|(entry, _)| entry)
+        .collect()
 }
 
 fn sorted(ids: &[String]) -> Vec<String> {
@@ -824,22 +929,28 @@ fn envelope_agrees(row: &Row, to: &str, takes: Option<&[String]>) -> bool {
     }
 }
 
-fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
+/// Whether a shared merge or split of `audience` touching `nodes` is one
+/// no upkeep may write: one of them was taken back from sync before it
+/// (any side that knew would have kept it out, and only a home reorganises
+/// its node, in local rows), or this side is the home of the node it is
+/// of, which a home always shows as its own.
+fn retracted_away(view: &forget::View, row: &Row, nodes: [&str; 2]) -> bool {
+    row.replicate == Replicate::Shared
+        && (view.home_of(&row.audience, &row.object)
+            || nodes.into_iter().any(|node| {
+                view.retracted_at(&row.audience, node)
+                    .is_some_and(|at| *at < row.hlc)
+            }))
+}
+
+fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>, view: &forget::View) -> Absorbing {
     let read = |row: &Row| {
         (!row.forgotten)
             .then(|| bodies.get(&row.id))
             .flatten()
             .and_then(|raw| Body::read(&row.kind, raw).ok())
     };
-    let mut keys: BTreeMap<(String, String), String> = BTreeMap::new();
-    for row in rows.iter().filter(|row| row.kind == "node.created") {
-        if let Some(Body::Created(created)) = read(row)
-            && node_id(&row.audience, &created.key).ok().as_deref() == Some(node_of(row))
-        {
-            keys.entry((row.audience.clone(), node_of(row).to_string()))
-                .or_insert(created.key);
-        }
-    }
+    let keys = keys_of(rows, read);
     let mut out = Absorbing {
         into: BTreeMap::new(),
         why: BTreeMap::new(),
@@ -849,49 +960,35 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
             continue;
         }
         let Some(body) = read(row) else { continue };
+        // A row whose tags do not fit is passed by with the node's rows.
         if misfit(row, &body).is_some() {
             continue;
         }
-        let Body::Absorbed(Absorbed { into, .. }) = body else {
-            continue;
-        };
         let (audience, from) = (row.audience.clone(), node_of(row).to_string());
-        let about_you = Key::parse(&into).is_ok_and(|key| key.is_about_you(&audience));
-        // The key was checked as the body was read.
-        let Ok(into) = node_id(&audience, &into) else {
-            continue;
-        };
         let place = (audience.clone(), from.clone());
-        let why = if !envelope_agrees(row, &into, None) {
-            Some(Why::BadBody)
-        } else if into == from {
-            Some(Why::SelfRelation)
-        } else if about_you {
-            Some(Why::NoSpansHere)
-        } else if keys
-            .get(&place)
-            .is_some_and(|key| !key.starts_with("minted:"))
-        {
-            Some(Why::NotMinted)
-        } else if keys
-            .get(&place)
-            .is_some_and(|key| Key::parse(key).is_ok_and(|key| key.is_together()))
-        {
-            Some(Why::Together)
-        } else if out.into.contains_key(&place) {
-            Some(Why::AbsorbedTwice)
-        } else if out.reaches(&audience, &into, &from) {
-            Some(Why::Cycle)
-        } else {
-            None
+        let named = name_of(row, &body, keys.get(&place).map(String::as_str));
+        let why = match named {
+            None => continue,
+            Some(Err(why)) => Some(why),
+            Some(Ok(Named { to: ref into, .. }))
+                if retracted_away(view, row, [&row.object, &format!("node:{into}")]) =>
+            {
+                Some(Why::Retracted)
+            }
+            Some(Ok(_)) if out.into.contains_key(&place) => Some(Why::AbsorbedTwice),
+            Some(Ok(Named { to: ref into, .. })) if out.reaches(&audience, into, &from) => {
+                Some(Why::Cycle)
+            }
+            Some(Ok(_)) => None,
         };
-        match why {
-            Some(why) => {
+        match (why, named) {
+            (Some(why), _) => {
                 out.why.insert(row.id.clone(), why);
             }
-            None => {
+            (None, Some(Ok(Named { to: into, .. }))) => {
                 out.into.insert(place, (into, at));
             }
+            (None, _) => {}
         }
     }
     out
@@ -983,11 +1080,22 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         .collect();
     let rows = myriad_persona_log::fold::dedupe(rows)
         .map_err(|_| NodeError::new("two different rows share an id"))?;
-    let shown = forget::ledger(&rows);
-    let ledger = forget::joined(&shown, &legacy(&rows, &input.bodies));
+    // The ledger the rows make, with the names the fold takes; and with
+    // only those their envelopes give, to see what only a body shows.
+    let unnamed = forget::unnamed(&rows);
+    let names = names(&rows, &input.bodies);
+    let pick = |envelope_only: bool| -> Vec<forget::Entry> {
+        names
+            .iter()
+            .filter(|(_, envelope)| *envelope || !envelope_only)
+            .map(|(entry, _)| entry.clone())
+            .collect()
+    };
+    let ledger = forget::joined(&unnamed, &pick(false));
+    let shown = forget::joined(&unnamed, &pick(true));
     let view = forget::View::new(&ledger);
     let only_shown = forget::View::new(&shown);
-    let absorbing = absorbing(&rows, &input.bodies);
+    let absorbing = absorbing(&rows, &input.bodies, &view);
     // Every node the rows or the ledger name.
     let mut places: BTreeSet<(String, String)> = rows
         .iter()
@@ -1445,6 +1553,10 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                     }
                     if !envelope_agrees(row, &to, Some(&body.spans)) {
                         skip(row, Why::BadBody);
+                        continue;
+                    }
+                    if retracted_away(&view, row, [object, &format!("node:{to}")]) {
+                        skip(row, Why::Retracted);
                         continue;
                     }
                     splits.push(Splitting {

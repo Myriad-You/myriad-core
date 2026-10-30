@@ -28,6 +28,7 @@ pub(super) const TESTED: &[&str] = &[
     "log.ledger",
     "log.merge",
     "log.missing",
+    "log.reach",
 ];
 
 fn conformance() -> PathBuf {

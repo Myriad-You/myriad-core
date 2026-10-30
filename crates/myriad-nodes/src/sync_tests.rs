@@ -1281,6 +1281,270 @@ fn a_node_merged_into_a_retracted_one_is_stubbed_from_its_envelope_alone() {
     }
 }
 
+const THIRD_KEY: &str = "minted:third";
+
+/// A merge of `from` into `into`, with its name in the envelope.
+fn merge_of(id: &str, origin: &str, dseq: u64, at: u64, from: &str, into: &str) -> (Row, Value) {
+    let mut merge = row(id, origin, dseq, at, MINE, from, "node.absorbed");
+    merge.to = Some(object(MINE, into));
+    let body = json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "how": "merged",
+                       "into": into, "reason": "同一件事", "because": ["node:r3"] });
+    (merge, body)
+}
+
+/// A split of `spans` off `from` into the part `part`.
+fn split_of(id: &str, origin: &str, dseq: u64, at: u64, from: &str, part: &str) -> (Row, Value) {
+    let mut split = row(id, origin, dseq, at, MINE, from, "node.split_off");
+    split.to = Some(object(MINE, part));
+    split.takes = vec!["r2".into()];
+    let body = json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "to": part,
+                       "spans": ["r2"], "reason": "单独记", "because": ["span:r2"] });
+    (split, body)
+}
+
+/// The Mac, the server and the other Mac, each holding 「发版」, 「别的事」
+/// and a third node.
+fn three_sides() -> (Side, Side, Side) {
+    let (mut mac, mut site) = shared_node();
+    mac.write(
+        row("r5", "dev_mac", 4, T + 3, MINE, THIRD_KEY, "node.created"),
+        Some(created(THIRD_KEY, "topic", "第三件事")),
+    );
+    site.sync_from(&mac, MINE);
+    let mut air = Side::named(Core::Pc, "dev_air");
+    air.sync_from(&site, MINE);
+    (mac, site, air)
+}
+
+/// Whether a side holds a row whole, its body with it.
+fn whole(side: &Side, id: &str) -> bool {
+    side.rows.iter().any(|row| row.id == id && !row.forgotten) && side.bodies.contains_key(id)
+}
+
+/// The server takes both Macs' rows, in one order or the other; then each
+/// Mac takes the server's.
+fn meet(mac: &mut Side, site: &mut Side, air: &mut Side, mac_first: bool) {
+    if mac_first {
+        site.sync_from(mac, MINE);
+        site.sync_from(air, MINE);
+    } else {
+        site.sync_from(air, MINE);
+        site.sync_from(mac, MINE);
+    }
+    mac.sync_from(site, MINE);
+    air.sync_from(site, MINE);
+}
+
+#[test]
+fn a_node_merged_into_two_is_reached_through_both_in_any_order() {
+    for both_kept in [false, true] {
+        let mut servers = Vec::new();
+        for mac_first in [true, false] {
+            let (mut mac, mut site, mut air) = three_sides();
+            // Offline, each Mac merges 「别的事」 into another node: the Mac
+            // into 「发版」 first, the other Mac into the third later, and
+            // the partner takes the third back there.
+            let (merge, body) = merge_of("m1", "dev_mac", 5, T + 5, OTHER_KEY, KEY);
+            mac.write(merge, Some(body));
+            let (merge, body) = merge_of("a1", "dev_air", 1, T + 6, OTHER_KEY, THIRD_KEY);
+            air.write(merge, Some(body));
+            air.write(
+                row("a2", "dev_air", 2, T + 7, MINE, THIRD_KEY, "retract"),
+                None,
+            );
+            if both_kept {
+                // And 「发版」 on the Mac.
+                mac.write(row("m2", "dev_mac", 6, T + 8, MINE, KEY, "retract"), None);
+            }
+            meet(&mut mac, &mut site, &mut air, mac_first);
+            // The third's retract reaches 「别的事」 through the later merge
+            // as well as the earlier one stands: only a home keeps it.
+            for id in ["r3", "m1", "a1"] {
+                assert!(!whole(&site, id), "{id} {mac_first}");
+                assert_eq!(whole(&mac, id), both_kept && id != "a1", "{id} {mac_first}");
+            }
+            for id in ["r3", "a1"] {
+                assert!(whole(&air, id), "{id} {mac_first}");
+            }
+            servers.push(site.shared(MINE));
+        }
+        assert_eq!(servers[0], servers[1]);
+    }
+}
+
+#[test]
+fn a_span_split_on_and_on_is_reached_from_every_part_in_any_order() {
+    const PART: &str = "minted:friday";
+    const PIECE: &str = "minted:friday-noon";
+    let mut servers = Vec::new();
+    for mac_first in [true, false] {
+        let (mut mac, mut site, mut air) = three_sides();
+        // The Mac splits the span r2 off 「发版」 into a part, and the other
+        // Mac learns of it.
+        let (split, body) = split_of("p1", "dev_mac", 5, T + 5, KEY, PART);
+        mac.write(split, Some(body));
+        mac.write(
+            row("p2", "dev_mac", 6, T + 6, MINE, PART, "node.created"),
+            Some(created(PART, "task", "周五")),
+        );
+        site.sync_from(&mac, MINE);
+        air.sync_from(&site, MINE);
+        // Then, each offline: the other Mac splits it on into a piece, and
+        // the partner takes the part back on the Mac.
+        let (split, body) = split_of("a1", "dev_air", 1, T + 7, PART, PIECE);
+        air.write(split, Some(body));
+        air.write(
+            row("a2", "dev_air", 2, T + 8, MINE, PIECE, "node.created"),
+            Some(created(PIECE, "task", "周五中午")),
+        );
+        mac.write(row("p3", "dev_mac", 7, T + 9, MINE, PART, "retract"), None);
+        meet(&mut mac, &mut site, &mut air, mac_first);
+        // The part's retract reaches the span wherever a split moved it on.
+        assert!(!whole(&site, "r2") && !whole(&air, "r2"), "{mac_first}");
+        assert!(whole(&mac, "r2"), "{mac_first}");
+        servers.push(site.shared(MINE));
+    }
+    assert_eq!(servers[0], servers[1]);
+}
+
+#[test]
+fn an_early_merge_from_elsewhere_never_keeps_a_retract_from_its_node() {
+    let mut servers = Vec::new();
+    for mac_first in [true, false] {
+        let (mut mac, mut site, mut air) = three_sides();
+        // The other Mac relays a merge of 「别的事」 into the third that a
+        // side wrote with an early clock.
+        let (merge, body) = merge_of("z1", "dev_odd", 1, T + 4, OTHER_KEY, THIRD_KEY);
+        air.write(merge, Some(body));
+        // The Mac merges 「别的事」 into 「发版」 later, and the partner
+        // takes 「发版」 back there.
+        let (merge, body) = merge_of("m1", "dev_mac", 5, T + 5, OTHER_KEY, KEY);
+        mac.write(merge, Some(body));
+        mac.write(row("m2", "dev_mac", 6, T + 6, MINE, KEY, "retract"), None);
+        meet(&mut mac, &mut site, &mut air, mac_first);
+        for id in ["r3", "m1"] {
+            assert!(!whole(&site, id) && !whole(&air, id), "{id} {mac_first}");
+            assert!(whole(&mac, id), "{id} {mac_first}");
+        }
+        servers.push(site.shared(MINE));
+    }
+    assert_eq!(servers[0], servers[1]);
+}
+
+#[test]
+fn a_merge_the_fold_passes_by_names_nothing_and_takes_nothing_away() {
+    let (mut mac, mut site, mut air) = three_sides();
+    // The other Mac sends a merge of 「别的事」 whose envelope says 「发版」
+    // and whose body says the third: the fold passes it by (bad_body).
+    let (mut merge, body) = merge_of("a1", "dev_air", 1, T + 5, OTHER_KEY, THIRD_KEY);
+    merge.to = Some(object(MINE, KEY));
+    air.write(merge, Some(body));
+    mac.write(row("m1", "dev_mac", 5, T + 6, MINE, KEY, "retract"), None);
+    meet(&mut mac, &mut site, &mut air, false);
+    // No side but its writer names it: 「别的事」 stays whole and its own
+    // node, and so does the merge row (no name, so no reach).
+    for side in [&site, &mac] {
+        assert!(whole(side, "r3") && whole(side, "a1"));
+        assert!(!side.ledger.iter().any(forget::is_name));
+        let folded = side.folded(MINE, false);
+        let other = node(&folded, OTHER_KEY);
+        assert_eq!(other["name"]["value"], "别的事", "{other}");
+        assert!(other.get("absorbedInto").is_none(), "{other}");
+    }
+    // Before the retract, the fold says why it passed the merge by.
+    let (_, mut site, mut air) = three_sides();
+    let (mut merge, body) = merge_of("a1", "dev_air", 1, T + 5, OTHER_KEY, THIRD_KEY);
+    merge.to = Some(object(MINE, KEY));
+    air.write(merge, Some(body));
+    site.sync_from(&air, MINE);
+    let folded = site.folded(MINE, false);
+    assert!(
+        folded["skipped"]
+            .as_array()
+            .unwrap()
+            .contains(&json!({ "id": "a1", "why": "bad_body" })),
+        "{folded}"
+    );
+}
+
+#[test]
+fn a_home_shows_its_node_as_its_own_and_a_late_shared_merge_is_passed_by() {
+    let (mut mac, mut site, mut air) = three_sides();
+    // The partner takes 「别的事」 back on the other Mac; the Mac, offline,
+    // merges it into 「发版」 after, and its merge reaches the server first,
+    // whole, and from there the other Mac.
+    air.write(
+        row("a1", "dev_air", 1, T + 5, MINE, OTHER_KEY, "retract"),
+        None,
+    );
+    let (merge, body) = merge_of("m1", "dev_mac", 5, T + 6, OTHER_KEY, KEY);
+    mac.write(merge, Some(body));
+    site.sync_from(&mac, MINE);
+    air.sync_from(&site, MINE);
+    site.sync_from(&air, MINE);
+    mac.sync_from(&site, MINE);
+    // The home kept the merge's body, but shows 「别的事」 as its own node:
+    // the merge came after the retract, and only a home reorganises it.
+    assert!(whole(&air, "m1") && whole(&air, "r3"));
+    let folded = air.folded(MINE, false);
+    let other = node(&folded, OTHER_KEY);
+    assert!(other.get("absorbedInto").is_none(), "{other}");
+    assert_eq!(other["name"]["value"], "别的事");
+    assert!(
+        folded["skipped"]
+            .as_array()
+            .unwrap()
+            .contains(&json!({ "id": "m1", "why": "retracted" })),
+        "{folded}"
+    );
+    // Every other side keeps nothing of it.
+    for side in [&site, &mac] {
+        assert!(!whole(side, "m1") && !whole(side, "r3"));
+    }
+}
+
+#[test]
+fn upkeep_leaves_a_retracted_node_to_a_local_run_on_its_home() {
+    use crate::{
+        Sync,
+        upkeep::{ReadInput, UpkeepInput, prepare, read},
+    };
+    let (mut mac, _site, _air) = three_sides();
+    mac.write(row("m1", "dev_mac", 5, T + 5, MINE, KEY, "retract"), None);
+    let id = |key: &str| node_id(MINE, key).unwrap();
+    let input = |node: &str, candidates: Vec<String>| UpkeepInput {
+        rows: mac.of(MINE),
+        bodies: mac.bodies.clone(),
+        audience: MINE.into(),
+        node: Some(id(node)),
+        candidates,
+        inbox: Vec::new(),
+    };
+    // A shared run on another node is never shown it, so never merges into
+    // it.
+    let prepared = prepare(input(OTHER_KEY, vec![id(KEY), id(THIRD_KEY)])).unwrap();
+    assert!(!prepared.local);
+    assert_eq!(prepared.candidates.len(), 1);
+    // A run on it writes local rows only.
+    assert!(prepare(input(KEY, Vec::new())).unwrap().local);
+    let run = |sync: Sync| {
+        read(ReadInput {
+            input: input(KEY, Vec::new()),
+            run: "run1".into(),
+            sync,
+            output: r#"{"actions": []}"#.into(),
+        })
+    };
+    assert!(run(Sync::Shared).is_err());
+    let read = run(Sync::Local("dev_mac".into())).unwrap();
+    assert!(!read.writes.is_empty());
+    assert!(
+        read.writes
+            .iter()
+            .all(|write| write.body["sync"] == json!({ "local": "dev_mac" }))
+    );
+}
+
 /// A person's node written in her own audience anyway (a writer's bug): its
 /// created row's body never travels, so the node must stay known as one
 /// across batches, or a later body of it would reach every computer.
