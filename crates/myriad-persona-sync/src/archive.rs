@@ -475,6 +475,11 @@ impl Sealer {
         if part.payload_bytes() != payload.len() as u64 {
             return Err(SyncError::new("a part's bytes are its payload's length"));
         }
+        if matches!(part, Part::Log { .. }) && self.header.version < ARCHIVE_LOG_VERSION {
+            return Err(SyncError::new(format!(
+                "a log page is only in a version {ARCHIVE_LOG_VERSION} file"
+            )));
+        }
         if let Part::End { manifest } = part
             && manifest.digest != self.header.digest
         {
@@ -818,13 +823,29 @@ impl Manifest {
     /// This manifest with log pages counted in: each row once, by id, with
     /// the data of its payload when its page carries it. No pages, no
     /// change: a version 1 file's manifest is what it always was.
-    pub fn with_logs(mut self, pages: &[serde_json::Value]) -> Result<Self, SyncError> {
+    ///
+    /// `may_hold` says whether the file's reader may hold an audience
+    /// (`myriad_persona_log::Holder::holds`): a page of any other is
+    /// refused, so a file written for the partner never carries a group's
+    /// log or someone else's private talk. A reader checking a file it
+    /// opened passes every audience; it takes the pages in through
+    /// `nodes.wire_take`, which holds them to its own.
+    pub fn with_logs(
+        mut self,
+        pages: &[serde_json::Value],
+        may_hold: impl Fn(&str) -> bool,
+    ) -> Result<Self, SyncError> {
         if pages.is_empty() {
             return Ok(self);
         }
         let mut items: BTreeMap<String, Vec<u8>> = BTreeMap::new();
         for page in pages {
             let page = LogPage::read(page)?;
+            if !may_hold(page.audience) {
+                return Err(SyncError::new(
+                    "a log page of an audience the file's reader may not hold",
+                ));
+            }
             for row in page.rows {
                 let id = row["id"].as_str().unwrap_or_default().to_string();
                 let data = row
@@ -872,6 +893,7 @@ impl Manifest {
 /// What the rows and payloads say is checked where the page is taken in
 /// (`nodes.wire_take`), not here.
 struct LogPage<'a> {
+    audience: &'a str,
     rows: Vec<&'a serde_json::Value>,
     payloads: BTreeMap<&'a str, &'a str>,
 }
@@ -916,7 +938,25 @@ impl<'a> LogPage<'a> {
                 }
             }
         }
-        Ok(Self { rows, payloads })
+        // Every payload is one a row of the page points at: the manifest
+        // counts payloads by their rows, so a stray one would go uncounted.
+        let pointed: Vec<&str> = rows
+            .iter()
+            .filter_map(|row| row.get("payload")?.get("ref")?.as_str())
+            .collect();
+        if payloads
+            .keys()
+            .any(|reference| !pointed.contains(reference))
+        {
+            return Err(SyncError::new(
+                "a log page carries a payload no row of it points at",
+            ));
+        }
+        Ok(Self {
+            audience,
+            rows,
+            payloads,
+        })
     }
 }
 
@@ -1055,7 +1095,7 @@ pub fn check_parts(
             }
         }
     }
-    let manifest = Manifest::of_envelopes(&envelopes)?.with_logs(&logs)?;
+    let manifest = Manifest::of_envelopes(&envelopes)?.with_logs(&logs, |_| true)?;
     if stated != manifest || manifest.digest != header.digest {
         return Err(SyncError::new(
             "the archive does not hold what its manifest says",

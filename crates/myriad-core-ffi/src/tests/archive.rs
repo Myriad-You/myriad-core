@@ -207,13 +207,26 @@ fn log_pages_have_a_part_and_a_tally() {
     });
     let page = json!({ "audience": "personal:7", "rows": [row], "payloads": [{ "ref": "doc:r1", "data": "e30=" }] });
     let plain = ok("sync.manifest", json!({ "envelopes": [] }));
-    let logged = ok("sync.manifest", json!({ "envelopes": [], "logs": [page] }));
+    let pc = json!({ "core": "pc", "owner": "7" });
+    let logged = ok(
+        "sync.manifest",
+        json!({ "envelopes": [], "logs": [page], "holder": pc }),
+    );
     assert!(plain["manifest"].get("log").is_none());
     assert_eq!(logged["manifest"]["log"]["count"], 1);
     assert_ne!(plain["manifest"]["digest"], logged["manifest"]["digest"]);
-    let (status, _) = ffi(
-        "sync.manifest",
-        &json!({ "envelopes": [], "logs": [page, page] }),
-    );
-    assert_eq!(status, STATUS_BAD_INPUT, "a row twice");
+    for (input, why) in [
+        (
+            json!({ "envelopes": [], "logs": [page, page], "holder": pc }),
+            "a row twice",
+        ),
+        (json!({ "envelopes": [], "logs": [page] }), "no holder"),
+        (
+            json!({ "envelopes": [], "logs": [page], "holder": { "core": "pc", "owner": "9" } }),
+            "someone else's private talk, for the partner's file",
+        ),
+    ] {
+        let (status, _) = ffi("sync.manifest", &input);
+        assert_eq!(status, STATUS_BAD_INPUT, "{why}");
+    }
 }

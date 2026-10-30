@@ -14,6 +14,7 @@
 //! The passphrase and the key never appear in an answer's error.
 
 use base64::Engine as _;
+use myriad_persona_log::Holder;
 use myriad_persona_sync::{
     Envelope,
     archive::{self, ArchiveHeader, ArchiveKey, HeaderFields, Kdf, Manifest, Part},
@@ -184,8 +185,20 @@ pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
         /// The file's log pages, `{audience, rows, payloads?}`.
         #[serde(default)]
         logs: Vec<Value>,
+        /// Who the file is for (`{core, owner}`), needed with `logs`: a
+        /// page of an audience it may not hold is refused.
+        #[serde(default)]
+        holder: Option<Holder>,
     }
     let req: In = input(raw)?;
+    let holder = match (&req.holder, req.logs.is_empty()) {
+        (None, false) => return Err(refused("log pages need the holder the file is for")),
+        (Some(holder), _) => {
+            holder.check().map_err(refused)?;
+            Some(holder)
+        }
+        (None, true) => None,
+    };
     let envelopes = req
         .envelopes
         .into_iter()
@@ -193,7 +206,11 @@ pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
         .collect::<Result<Vec<_>, _>>()
         .map_err(refused)?;
     let manifest = Manifest::of_envelopes(&envelopes)
-        .and_then(|manifest| manifest.with_logs(&req.logs))
+        .and_then(|manifest| {
+            manifest.with_logs(&req.logs, |audience| {
+                holder.is_some_and(|holder| holder.holds(audience))
+            })
+        })
         .map_err(refused)?;
     Ok(json!({ "manifest": manifest }))
 }

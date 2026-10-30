@@ -243,7 +243,7 @@ fn log_page(ids: &[&str]) -> serde_json::Value {
 
 /// The sample with log pages after its envelope page, sealed as a
 /// version 2 file (or, with `logs` false, wrongly as version 1).
-fn with_logs(pages: &[serde_json::Value], logs: bool) -> Vec<u8> {
+fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::SyncError> {
     let mut sample = archive_sample();
     let envelopes: Vec<Envelope> = sample
         .parts
@@ -253,7 +253,7 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Vec<u8> {
         .collect();
     let manifest = Manifest::of_envelopes(&envelopes)
         .unwrap()
-        .with_logs(pages)
+        .with_logs(pages, |_| true)
         .unwrap();
     let mut header = ArchiveHeader::new(
         &[0x11; SALT_BYTES],
@@ -284,20 +284,30 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Vec<u8> {
     }
     let end = sample.parts.len() - 1;
     sample.parts[end] = (Part::End { manifest }, Vec::new());
-    sample.seal()
+    sample.try_seal()
+}
+
+/// The sample's envelopes, for a manifest.
+fn envelopes() -> Vec<Envelope> {
+    archive_sample()
+        .parts
+        .iter()
+        .filter(|(part, _)| matches!(part, Part::Envelope { .. }))
+        .map(|(_, bytes)| serde_json::from_slice(bytes).unwrap())
+        .collect()
 }
 
 #[test]
 fn a_file_with_log_pages_is_version_2_and_opens_them() {
     let pages = [log_page(&["r1", "r2"]), log_page(&["r3"])];
-    let file = with_logs(&pages, true);
+    let file = with_logs(&pages, true).unwrap();
     let opened = open(SAMPLE_PASSPHRASE, &file).unwrap();
     assert_eq!(opened.header.version, ARCHIVE_LOG_VERSION);
     assert_eq!(opened.logs, pages);
     assert_eq!(opened.manifest.log.as_ref().unwrap().count, 3);
     // The same rows in other pages, in another order: the same manifest.
     let other = [log_page(&["r3"]), log_page(&["r1", "r2"])];
-    let reread = open(SAMPLE_PASSPHRASE, &with_logs(&other, true)).unwrap();
+    let reread = open(SAMPLE_PASSPHRASE, &with_logs(&other, true).unwrap()).unwrap();
     assert_eq!(reread.manifest, opened.manifest);
     // A file with no log pages is still version 1 and its manifest unchanged.
     let (header, _, plain) = sealed();
@@ -313,20 +323,40 @@ fn a_file_with_log_pages_is_version_2_and_opens_them() {
 
 #[test]
 fn a_log_page_is_refused_in_a_version_1_file_or_with_a_row_twice() {
-    let file = with_logs(&[log_page(&["r1"])], false);
-    assert!(refused(&file).contains("version 2"), "{}", refused(&file));
+    // Not written: the sealer refuses it before a byte goes out (and a
+    // reader refuses such a file all the same).
+    let error = with_logs(&[log_page(&["r1"])], false).unwrap_err();
+    assert!(error.to_string().contains("version 2"), "{error}");
     let twice = [log_page(&["r1"]), log_page(&["r1"])];
-    let sample = archive_sample();
-    let envelopes: Vec<Envelope> = sample
-        .parts
-        .iter()
-        .filter(|(part, _)| matches!(part, Part::Envelope { .. }))
-        .map(|(_, bytes)| serde_json::from_slice(bytes).unwrap())
-        .collect();
     assert!(
-        Manifest::of_envelopes(&envelopes)
+        Manifest::of_envelopes(&envelopes())
             .unwrap()
-            .with_logs(&twice)
+            .with_logs(&twice, |_| true)
             .is_err()
+    );
+}
+
+#[test]
+fn a_log_page_with_a_stray_payload_or_of_an_audience_its_reader_may_not_hold_is_refused() {
+    let manifest = || Manifest::of_envelopes(&envelopes()).unwrap();
+    let mut stray = log_page(&["r1"]);
+    stray["payloads"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({ "ref": "doc:nobody", "data": "e30=" }));
+    let error = manifest().with_logs(&[stray], |_| true).unwrap_err();
+    assert!(
+        error.to_string().contains("no row of it points at"),
+        "{error}"
+    );
+    // A file for a reader who holds only her own audience.
+    let error = manifest()
+        .with_logs(&[log_page(&["r1"])], |audience| audience == "own:")
+        .unwrap_err();
+    assert!(error.to_string().contains("may not hold"), "{error}");
+    assert!(
+        manifest()
+            .with_logs(&[log_page(&["r1"])], |audience| audience == "personal:7")
+            .is_ok()
     );
 }
