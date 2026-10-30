@@ -90,6 +90,9 @@ pub struct QueueInput {
     /// the rows.
     #[serde(default)]
     pub here: Option<Vec<String>>,
+    /// The other names of nodes this side keeps, as for the fold.
+    #[serde(default)]
+    pub names: myriad_persona_log::forget::Names,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -113,6 +116,7 @@ pub fn queue(input: QueueInput) -> Result<Queue, NodeError> {
         rows: input.rows,
         bodies: input.bodies,
         here: input.here,
+        names: input.names,
     })?;
     let mut due: Vec<Due> = Watch::new(&full).all();
     let more = due.len().saturating_sub(input.max);

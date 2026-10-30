@@ -849,7 +849,9 @@
           {
             "at": "001760000000002-000000-dev_mac",
             "audience": "personal:o1",
-            "home": "dev_mac",
+            "homes": [
+              "dev_mac"
+            ],
             "target": "node:0c2573a2514b3b8ec39ddb60f133e266"
           }
         ]
@@ -912,9 +914,6 @@
     },
     {
       "input": {
-        "from": [
-          "dev_air"
-        ],
         "here": [
           "site"
         ],
@@ -948,9 +947,13 @@
             "replicate": "shared",
             "version": 1
           }
+        ],
+        "sides": [
+          "site",
+          "dev_air"
         ]
       },
-      "name": "refused: a retract its sender did not write (from)",
+      "name": "refused: a retract from a side this side does not know",
       "output": {
         "accepted": [
           {
@@ -979,88 +982,13 @@
         "refused": [
           {
             "id": "l3",
-            "reason": "not_the_sender"
+            "reason": "unknown_side"
           }
         ]
       }
     },
     {
       "input": {
-        "here": [
-          "site"
-        ],
-        "now": 1760000100000000,
-        "rows": [
-          {
-            "audience": "personal:o1",
-            "author": "her",
-            "dseq": 1,
-            "epoch": 1,
-            "hlc": "001760000000005-000000-dev_mac",
-            "id": "l1",
-            "kind": "node.created",
-            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
-            "origin": "dev_mac",
-            "payload": {
-              "ref": "doc:l1"
-            },
-            "replicate": "shared",
-            "version": 1
-          },
-          {
-            "audience": "personal:o1",
-            "author": "owner",
-            "dseq": 2,
-            "hlc": "001760000000002-000000-dev_mac",
-            "id": "l3",
-            "kind": "retract",
-            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ]
-      },
-      "name": "refused: a retract set back behind a row its side wrote before it",
-      "output": {
-        "accepted": [
-          {
-            "audience": "personal:o1",
-            "author": "her",
-            "dseq": 1,
-            "epoch": 1,
-            "hlc": "001760000000005-000000-dev_mac",
-            "id": "l1",
-            "kind": "node.created",
-            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
-            "origin": "dev_mac",
-            "payload": {
-              "ref": "doc:l1"
-            },
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
-        "epochs": {
-          "personal:o1": {
-            "dev_mac": 1
-          }
-        },
-        "ledger": [],
-        "refused": [
-          {
-            "id": "l3",
-            "reason": "backdated"
-          }
-        ]
-      }
-    },
-    {
-      "input": {
-        "from": [
-          "dev_mac",
-          "loc_mac"
-        ],
         "here": [
           "site"
         ],
@@ -1094,9 +1022,12 @@
             "replicate": "shared",
             "version": 1
           }
+        ],
+        "sides": [
+          "site"
         ]
       },
-      "name": "a retract its sender wrote, from that sender",
+      "name": "a retract from a side another row of the batch is from",
       "output": {
         "accepted": [
           {
@@ -1135,7 +1066,9 @@
           {
             "at": "001760000000002-000000-dev_mac",
             "audience": "personal:o1",
-            "home": "dev_mac",
+            "homes": [
+              "dev_mac"
+            ],
             "target": "node:0c2573a2514b3b8ec39ddb60f133e266"
           }
         ]

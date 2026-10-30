@@ -1,6 +1,8 @@
 //! Merging is a union: the log only grows, and no order of arrival loses a
-//! row. A row seen twice counts once (by id); a stub beats the row it was;
-//! after the union every row the ledger forgets becomes a stub.
+//! row. A row seen twice counts once (by id); a stub beats the row it was,
+//! except on a home of the node it is about, where the whole row stays (and
+//! fills a stub held): a retract keeps everything there; after the union
+//! every row the ledger takes away here becomes a stub.
 
 use std::collections::BTreeMap;
 
@@ -26,6 +28,13 @@ pub struct MergeInput {
     /// [`merge`] refuses the call without it.
     #[serde(default)]
     pub here: Option<Vec<String>>,
+    /// This side's ledger: the forgets and retracts held here that the
+    /// rows given may not show (a retract taken in an earlier batch).
+    #[serde(default)]
+    pub ledger: Vec<forget::Entry>,
+    /// The other names of objects this side keeps ([`forget::Names`]).
+    #[serde(default)]
+    pub names: forget::Names,
 }
 
 /// Why an incoming row was not taken. Either means a side broke the format
@@ -60,6 +69,10 @@ pub struct Merged {
     /// Rows of this side's log that are stubs now: delete their payloads.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub stubbed: Vec<String>,
+    /// Stubs held that an incoming whole row filled, on a home of their
+    /// node: store their payloads.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub filled: Vec<String>,
     /// Incoming rows already held.
     pub duplicates: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -71,12 +84,15 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         log,
         mut incoming,
         here,
+        ledger,
+        names,
     } = input;
-    let here = forget::here(
+    names.check()?;
+    let ledger = forget::joined(
+        &ledger,
         &forget::ledger(&[log.as_slice(), incoming.as_slice()].concat()),
-        here.as_deref(),
-    )?
-    .to_vec();
+    );
+    let here = forget::here(&ledger, here.as_deref())?.to_vec();
     let mut by_id: BTreeMap<String, Row> = BTreeMap::new();
     let mut places: BTreeMap<(String, String, u64), String> = BTreeMap::new();
     let mut held_payload = Vec::new();
@@ -94,15 +110,25 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     }
     sort(&mut incoming);
     let mut added = Vec::new();
+    let mut filled = Vec::new();
     let mut duplicates = 0;
     let mut conflicts = Vec::new();
     for row in incoming {
         if let Some(held) = by_id.get(&row.id) {
-            if *held == row || held.is_stub_of(&row) {
+            let home = forget::kept_home(&ledger, &row, &here, &names);
+            if *held == row {
                 duplicates += 1;
+            } else if held.is_stub_of(&row) {
+                duplicates += 1;
+                if home {
+                    filled.push(row.id.clone());
+                    by_id.insert(row.id.clone(), row);
+                }
             } else if row.is_stub_of(held) {
                 duplicates += 1;
-                by_id.insert(row.id.clone(), row);
+                if !home {
+                    by_id.insert(row.id.clone(), row);
+                }
             } else {
                 conflicts.push(Conflict {
                     id: row.id.clone(),
@@ -128,8 +154,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         by_id.insert(row.id.clone(), row);
     }
     let rows: Vec<Row> = by_id.into_values().collect();
-    let ledger = forget::ledger(&rows);
-    let (mut log, _) = forget::absorb(rows, &ledger, &here);
+    let (mut log, _) = forget::absorb(rows, &ledger, &here, &names);
     sort(&mut log);
     let forgotten: BTreeMap<&str, bool> = log
         .iter()
@@ -141,10 +166,12 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         .collect();
     stubbed.sort();
     added.sort();
+    filled.sort();
     Ok(Merged {
         log,
         added,
         stubbed,
+        filled,
         duplicates,
         conflicts,
     })

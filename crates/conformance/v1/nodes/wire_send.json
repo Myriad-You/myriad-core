@@ -2583,7 +2583,9 @@
           {
             "at": "001760000000003-000000-dev_mac",
             "audience": "personal:o1",
-            "home": "dev_mac",
+            "homes": [
+              "dev_mac"
+            ],
             "target": "node:0c2573a2514b3b8ec39ddb60f133e266"
           }
         ],

@@ -142,6 +142,9 @@ pub struct UpkeepInput {
     /// the rows.
     #[serde(default)]
     pub here: Option<Vec<String>>,
+    /// The other names of nodes this side keeps, as for the fold.
+    #[serde(default)]
+    pub names: myriad_persona_log::forget::Names,
 }
 
 /// A head field, as the partner may have set it.
@@ -606,6 +609,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         rows: input.rows,
         bodies: input.bodies,
         here: input.here,
+        names: input.names,
     })?;
     let place = |id: &str| {
         full.folded

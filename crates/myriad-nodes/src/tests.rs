@@ -169,14 +169,19 @@ fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
             struct In {
                 mine: Partner,
                 theirs: Partner,
+                by: partner::By,
+                #[serde(default)]
+                ours: Vec<String>,
                 others: Vec<String>,
             }
             let In {
                 mine,
                 theirs,
+                by,
+                ours,
                 others,
             } = input(raw)?;
-            json_of(&partner::meet(&mine, &theirs, &others).map_err(refused)?)
+            json_of(&partner::meet(&mine, &theirs, by, &ours, &others).map_err(refused)?)
         }
         "partner.migrate" => json_of(&crate::migrate::migrate(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
@@ -444,6 +449,7 @@ fn sample() -> Vec<(Row, Option<Value>)> {
 
 fn fold_of(log: &[(Row, Option<Value>)]) -> Folded {
     fold(FoldInput {
+        names: Default::default(),
         here: None,
         rows: log.iter().map(|(row, _)| row.clone()).collect(),
         bodies: log

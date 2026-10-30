@@ -2878,7 +2878,9 @@
           {
             "at": "001760000000003-000000-dev_mac",
             "audience": "personal:o1",
-            "home": "dev_mac",
+            "homes": [
+              "dev_mac"
+            ],
             "target": "node:0c2573a2514b3b8ec39ddb60f133e266"
           }
         ]
@@ -3080,7 +3082,9 @@
           {
             "at": "001760000000003-000000-dev_mac",
             "audience": "personal:o1",
-            "home": "dev_mac",
+            "homes": [
+              "dev_mac"
+            ],
             "target": "node:0c2573a2514b3b8ec39ddb60f133e266"
           }
         ]
@@ -3216,7 +3220,12 @@
             "dev_mac": 1
           }
         },
-        "ledger": []
+        "ledger": [],
+        "names": {
+          "same": {
+            "node:2f7ad76812703f2f55a3e866fd3f02e9": "node:6abcd3a0497415ef698f44779f6e8057"
+          }
+        }
       }
     },
     {
@@ -3347,9 +3356,12 @@
           "core": "server",
           "owner": "o1"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "people": [
+          "person:9"
+        ]
       },
-      "name": "the sender's person_elsewhere marks the node for later batches",
+      "name": "the sender's person_elsewhere marks a node this side ties to a person, for later batches",
       "output": {
         "accepted": [
           {
@@ -3371,6 +3383,78 @@
         ],
         "elsewhere": [
           "node:39e5897592d9a4742ebb76d3c1fffbc3"
+        ],
+        "epochs": {
+          "own:": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "withheld": [
+          {
+            "id": "p1",
+            "why": "person_elsewhere"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "own:",
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "p1",
+              "kind": "node.created",
+              "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:p1"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "p1",
+              "why": "person_elsewhere"
+            }
+          ]
+        },
+        "here": [
+          "site"
+        ],
+        "holder": {
+          "core": "server",
+          "owner": "o1"
+        },
+        "now": 1760000100000000
+      },
+      "name": "the sender's person_elsewhere for a node this side cannot tie to a person is not taken",
+      "output": {
+        "accepted": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p1",
+            "kind": "node.created",
+            "object": "node:39e5897592d9a4742ebb76d3c1fffbc3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:p1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
         ],
         "epochs": {
           "own:": {

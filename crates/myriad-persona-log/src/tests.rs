@@ -338,6 +338,7 @@ fn permutations(rows: &[Row]) -> Vec<Vec<Row>> {
 fn folded(rows: Vec<Row>) -> Value {
     json_of(
         &fold(FoldInput {
+            names: Default::default(),
             here: None,
             rows,
             leases: Vec::new(),
@@ -378,6 +379,8 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
         let mut held: Vec<Row> = Vec::new();
         for one in order {
             held = merge(MergeInput {
+                names: Default::default(),
+                ledger: Vec::new(),
                 here: None,
                 log: held,
                 incoming: vec![one],
@@ -407,12 +410,16 @@ fn merging_is_a_union_in_any_order() {
         owner(row("b2", "site", 2, 250, "memory:x", "memory.write")),
     ];
     let ab = merge(MergeInput {
+        names: Default::default(),
+        ledger: Vec::new(),
         here: None,
         log: a.clone(),
         incoming: b.clone(),
     })
     .unwrap();
     let ba = merge(MergeInput {
+        names: Default::default(),
+        ledger: Vec::new(),
         here: None,
         log: b.clone(),
         incoming: a.clone(),
@@ -422,6 +429,8 @@ fn merging_is_a_union_in_any_order() {
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
     let again = merge(MergeInput {
+        names: Default::default(),
+        ledger: Vec::new(),
         here: None,
         log: ab.log.clone(),
         incoming: b,
@@ -462,8 +471,9 @@ fn what_one_side_answers_fills_the_other() {
     );
     let sent = answer(&mac, &theirs).unwrap();
     let admitted = admit(AdmitInput {
+        names: Default::default(),
+        sides: None,
         here: None,
-        from: None,
         rows: sent,
         now: 1_000_000,
         known: Default::default(),
@@ -475,6 +485,8 @@ fn what_one_side_answers_fills_the_other() {
     .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
+        names: Default::default(),
+        ledger: Vec::new(),
         here: None,
         log: site,
         incoming: admitted.accepted,

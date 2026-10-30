@@ -41,6 +41,9 @@ pub struct FoldInput {
     /// in the rows, so the home keeps its node ([`crate::forget`]).
     #[serde(default)]
     pub here: Option<Vec<String>>,
+    /// The other names of objects this side keeps ([`forget::Names`]).
+    #[serde(default)]
+    pub names: forget::Names,
 }
 
 /// One object as its rows stand now.
@@ -69,10 +72,10 @@ pub struct ObjectFold {
     /// Some of its rows were written while she was in two places.
     #[serde(skip_serializing_if = "is_false")]
     pub concurrent: bool,
-    /// Taken back from sync: the side that keeps it. Anywhere else nothing
-    /// else about it reads back.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub retracted: Option<String>,
+    /// Taken back from sync: the sides that keep it. Anywhere else
+    /// nothing else about it reads back.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub retracted: Vec<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -91,7 +94,7 @@ impl ObjectFold {
             history: BTreeMap::new(),
             retired: None,
             concurrent: false,
-            retracted: None,
+            retracted: Vec::new(),
         }
     }
 }
@@ -140,23 +143,18 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
     for grant in &input.leases {
         grant.check()?;
     }
+    input.names.check()?;
+    let names = &input.names;
     let rows = dedupe(input.rows)?;
     let ledger = forget::ledger(&rows);
     let here = forget::here(&ledger, input.here.as_deref())?;
-    let (rows, _) = forget::absorb(rows, &ledger, here);
+    let (rows, _) = forget::absorb(rows, &ledger, here, names);
     // Retracted objects and their homes; away: not kept on this side.
-    let retracted: BTreeMap<(&str, &str), &str> = ledger
-        .iter()
-        .filter_map(|entry| {
-            let home = entry.home.as_deref()?;
-            Some(((entry.audience.as_str(), entry.target.as_str()), home))
-        })
-        .collect();
+    let homes = |audience: &str, object: &str| forget::homes(&ledger, audience, object, names);
+    let kept = |homes: &[String]| homes.iter().any(|home| here.contains(home));
     let away = |row: &Row| {
-        retracted
-            .get(&(row.audience.as_str(), row.object.as_str()))
-            .is_some_and(|home| !here.iter().any(|name| name == home))
-            && !forget::forgets(&ledger, row)
+        let homes = homes(&row.audience, &row.object);
+        !homes.is_empty() && !kept(&homes) && !forget::forgets(&ledger, row, names)
     };
     let standing = lease::standings(&rows, &input.leases);
     let concurrent: Vec<&str> = standing
@@ -200,25 +198,20 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
     let objects = objects
         .into_values()
         .map(|object| {
-            let home = retracted
-                .get(&(object.audience.as_str(), object.object.as_str()))
-                .map(|home| home.to_string());
+            let homes = homes(&object.audience, &object.object);
             if object.forgotten {
                 ObjectFold {
                     forgotten: true,
                     ..ObjectFold::empty(&object.audience, &object.object)
                 }
-            } else if home
-                .as_ref()
-                .is_some_and(|home| !here.iter().any(|name| name == home))
-            {
+            } else if !homes.is_empty() && !kept(&homes) {
                 ObjectFold {
-                    retracted: home,
+                    retracted: homes,
                     ..ObjectFold::empty(&object.audience, &object.object)
                 }
             } else {
                 ObjectFold {
-                    retracted: home,
+                    retracted: homes,
                     ..object
                 }
             }

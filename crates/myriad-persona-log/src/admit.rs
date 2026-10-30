@@ -15,7 +15,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use myriad_persona_sync::{Rev, hlc};
+use myriad_persona_sync::hlc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -58,12 +58,15 @@ pub struct AdmitInput {
     /// given: [`admit`] refuses the call without it.
     #[serde(default)]
     pub here: Option<Vec<String>>,
-    /// Every origin the side that sent the batch writes or wrote as, when
-    /// it sends only what it wrote itself (a device's push to the site,
-    /// not rows the site relays). A retract names its home by its origin,
-    /// so one from any other origin is refused (`not_the_sender`).
+    /// Every origin this side knows the partner's sides write as (the
+    /// sides its vectors count). A retract names a home by its origin, so
+    /// one from an origin neither here nor of another row in the batch is
+    /// refused (`unknown_side`).
     #[serde(default)]
-    pub from: Option<Vec<String>>,
+    pub sides: Option<Vec<String>>,
+    /// The other names of objects this side keeps ([`forget::Names`]).
+    #[serde(default)]
+    pub names: forget::Names,
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -86,13 +89,9 @@ pub enum Reason {
     EpochBack,
     /// Its audience is not one this side may hold.
     NotHeld,
-    /// A retract the sending side did not write (`from`): its origin is its
-    /// home, so no side names another as home.
-    NotTheSender,
-    /// A retract whose clock is behind a row its side wrote before it (a
-    /// lower count in the same audience) in the batch: the earliest retract
-    /// of a node holds, so a clock set back would take the home.
-    Backdated,
+    /// A retract from a side this side does not know (`sides`): its origin
+    /// is a home, so it must be one of the partner's sides.
+    UnknownSide,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -127,7 +126,7 @@ pub struct Admitted {
     pub epochs: Epochs,
 }
 
-/// A batch checked. Refused as a whole when `here` or `from` is not well
+/// A batch checked. Refused as a whole when `here` or `names` is not well
 /// formed, or a retract is in the batch or on the ledger and `here` is not
 /// given: a home never loses its node to a call that did not say where it
 /// runs.
@@ -141,8 +140,10 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         mut epochs,
         holder,
         here,
-        from,
+        sides,
+        names,
     } = input;
+    names.check()?;
     let checked: Vec<Row> = rows
         .iter()
         .filter(|row| row.check().is_ok())
@@ -153,11 +154,7 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         here.as_deref(),
     )?
     .to_vec();
-    for name in from.iter().flatten() {
-        hlc::check_node(name)
-            .map_err(|_| LogError::new("from holds a name that is not a clock's node"))?;
-    }
-    let retracts = retracts(&checked, from.as_deref());
+    let unknown = unknown(&checked, sides.as_deref());
     let ahead = rows
         .iter()
         .map(|row| hlc::ahead_ms(&row.hlc, now))
@@ -192,8 +189,8 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             refused.push(refuse(&row, Reason::Local, None));
             continue;
         }
-        if let Some(reason) = retracts.get(row.id.as_str()) {
-            refused.push(refuse(&row, *reason, None));
+        if unknown.contains(row.id.as_str()) {
+            refused.push(refuse(&row, Reason::UnknownSide, None));
             continue;
         }
         if holder
@@ -243,7 +240,7 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         accepted.push(row);
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&accepted));
-    let (accepted, _) = forget::absorb(accepted, &ledger, &here);
+    let (accepted, _) = forget::absorb(accepted, &ledger, &here, &names);
     Ok(Admitted {
         accepted,
         refused,
@@ -253,33 +250,20 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
     })
 }
 
-/// The retracts in `rows` to refuse, and why: one its sender did not write,
-/// or one set back behind a row its side wrote before it.
-fn retracts<'a>(rows: &'a [Row], from: Option<&[String]>) -> BTreeMap<&'a str, Reason> {
-    let mut clocks: BTreeMap<(&str, &str), Vec<(u64, &Rev)>> = BTreeMap::new();
-    for row in rows {
-        if let Some(dseq) = row.dseq {
-            clocks
-                .entry((row.origin.as_str(), row.audience.as_str()))
-                .or_default()
-                .push((dseq, &row.hlc));
-        }
-    }
-    let mut out = BTreeMap::new();
-    for row in rows.iter().filter(|row| row.rule() == Rule::Retract) {
-        let count = row.dseq.unwrap_or(0);
-        let backdated = clocks
-            .get(&(row.origin.as_str(), row.audience.as_str()))
-            .is_some_and(|clocks| {
-                clocks
-                    .iter()
-                    .any(|(dseq, rev)| *dseq < count && **rev > row.hlc)
-            });
-        if from.is_some_and(|from| !from.contains(&row.origin)) {
-            out.insert(row.id.as_str(), Reason::NotTheSender);
-        } else if backdated {
-            out.insert(row.id.as_str(), Reason::Backdated);
-        }
-    }
-    out
+/// The retracts in `rows` from a side neither in `sides` nor the origin of
+/// another row of the batch.
+fn unknown<'a>(rows: &'a [Row], sides: Option<&[String]>) -> BTreeSet<&'a str> {
+    let Some(sides) = sides else {
+        return BTreeSet::new();
+    };
+    let writing: BTreeSet<&str> = rows
+        .iter()
+        .filter(|row| row.rule() != Rule::Retract)
+        .map(|row| row.origin.as_str())
+        .collect();
+    rows.iter()
+        .filter(|row| row.rule() == Rule::Retract)
+        .filter(|row| !sides.contains(&row.origin) && !writing.contains(row.origin.as_str()))
+        .map(|row| row.id.as_str())
+        .collect()
 }

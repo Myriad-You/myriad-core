@@ -3,6 +3,7 @@
   "cases": [
     {
       "input": {
+        "by": "link",
         "mine": {
           "aliases": [
             "local-owner"
@@ -26,7 +27,6 @@
         "partner": {
           "aliases": [
             "local-owner",
-            "o41",
             "partner_0199d5c0a00022222222222222222222"
           ],
           "id": "partner_0199d5c0900033333333333333333333"
@@ -35,6 +35,7 @@
     },
     {
       "input": {
+        "by": "link",
         "mine": {
           "aliases": [
             "o41"
@@ -53,7 +54,6 @@
       "output": {
         "partner": {
           "aliases": [
-            "local-owner",
             "o41",
             "partner_0199d5c0a00022222222222222222222"
           ],
@@ -63,6 +63,7 @@
     },
     {
       "input": {
+        "by": "link",
         "mine": {
           "id": "partner_0199d5c0900033333333333333333333"
         },
@@ -77,15 +78,13 @@
       "name": "the same id on both sides",
       "output": {
         "partner": {
-          "aliases": [
-            "o41"
-          ],
           "id": "partner_0199d5c0900033333333333333333333"
         }
       }
     },
     {
       "input": {
+        "by": "link",
         "mine": {
           "id": "local-owner"
         },
@@ -101,6 +100,7 @@
     },
     {
       "input": {
+        "by": "link",
         "mine": {
           "aliases": [
             "o41",
@@ -120,6 +120,7 @@
     },
     {
       "input": {
+        "by": "link",
         "mine": {
           "aliases": [
             "o41"
@@ -144,6 +145,7 @@
     },
     {
       "input": {
+        "by": "link",
         "mine": {
           "aliases": [
             "o41"
@@ -172,6 +174,131 @@
         }
       },
       "name": "refused: others is missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "o100"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "an alias the other side brings is not taken",
+      "output": {
+        "partner": {
+          "aliases": [
+            "o41",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "link",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "ours": [
+          "local-owner"
+        ],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "an alias this side vouches for is taken",
+      "output": {
+        "partner": {
+          "aliases": [
+            "local-owner",
+            "o41",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "a file that shares an alias meets",
+      "output": {
+        "partner": {
+          "aliases": [
+            "o41",
+            "partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        }
+      }
+    },
+    {
+      "input": {
+        "by": "file",
+        "mine": {
+          "aliases": [
+            "o41"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "aliases": [
+            "local-owner"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: a file that shares no id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "mine": {
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "others": [],
+        "theirs": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: by is missing",
       "output": {
         "error": "bad_input"
       }

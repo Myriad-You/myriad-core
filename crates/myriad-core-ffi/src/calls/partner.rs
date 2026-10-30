@@ -40,23 +40,28 @@ pub(super) fn mint(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "partner": partner }))
 }
 
-/// `{mine, theirs, others}` → `{partner, changed?}`. `others` is every id
-/// this side knows to be someone other than the partner; the other side may
-/// not bring one of them.
+/// `{mine, theirs, by, ours?, others}` → `{partner, changed?}`. `by` is
+/// the proof this side holds (`link`, `file`); `ours` the other side's
+/// aliases it vouches for; `others` every id it knows to be someone else.
 pub(super) fn meet(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         mine: Partner,
         theirs: Partner,
+        by: partner::By,
+        #[serde(default)]
+        ours: Vec<String>,
         others: Vec<String>,
     }
     let In {
         mine,
         theirs,
+        by,
+        ours,
         others,
     } = quiet_input(raw)?;
-    answer(&partner::meet(&mine, &theirs, &others).map_err(refused)?)
+    answer(&partner::meet(&mine, &theirs, by, &ours, &others).map_err(refused)?)
 }
 
 /// `{rows, bodies?, partner}` → `{rows, bodies?, moved?, clashes?}`.

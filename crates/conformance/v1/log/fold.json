@@ -1519,7 +1519,9 @@
           {
             "audience": "personal:o1",
             "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
-            "retracted": "dev_mac",
+            "retracted": [
+              "dev_mac"
+            ],
             "rows": [
               "l1",
               "l2"
@@ -1586,7 +1588,9 @@
           {
             "audience": "personal:o1",
             "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
-            "retracted": "dev_mac"
+            "retracted": [
+              "dev_mac"
+            ]
           }
         ]
       }

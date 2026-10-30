@@ -7955,6 +7955,11 @@
       },
       "name": "a merge moves spans and entries, and its relations go with it",
       "output": {
+        "names": {
+          "into": {
+            "node:a623d5fa498a9c6539bd12ac285ecb18": "node:69192ad55e973984fc259bc057995248"
+          }
+        },
         "nodes": [
           {
             "audience": "personal:7",
@@ -8909,6 +8914,12 @@
       },
       "name": "a merge chain ends on the last node; a second merge and a loop pass by",
       "output": {
+        "names": {
+          "into": {
+            "node:69192ad55e973984fc259bc057995248": "node:25ae623559006437c416adbde717a853",
+            "node:a623d5fa498a9c6539bd12ac285ecb18": "node:69192ad55e973984fc259bc057995248"
+          }
+        },
         "nodes": [
           {
             "audience": "personal:7",
@@ -10057,6 +10068,11 @@
             "target": "node:a623d5fa498a9c6539bd12ac285ecb18"
           }
         ],
+        "names": {
+          "into": {
+            "node:a623d5fa498a9c6539bd12ac285ecb18": "node:69192ad55e973984fc259bc057995248"
+          }
+        },
         "nodes": [
           {
             "audience": "personal:7",
@@ -11502,6 +11518,11 @@
       },
       "name": "a split takes a span a merge brought, and a part can split again",
       "output": {
+        "names": {
+          "into": {
+            "node:a623d5fa498a9c6539bd12ac285ecb18": "node:69192ad55e973984fc259bc057995248"
+          }
+        },
         "nodes": [
           {
             "audience": "personal:7",
@@ -12533,6 +12554,11 @@
       },
       "name": "forgetting a part forgets the merged span it took",
       "output": {
+        "names": {
+          "into": {
+            "node:a623d5fa498a9c6539bd12ac285ecb18": "node:69192ad55e973984fc259bc057995248"
+          }
+        },
         "nodes": [
           {
             "audience": "personal:7",
@@ -15653,7 +15679,9 @@
               "sync": "shared",
               "value": "发版"
             },
-            "retracted": "dev_mac",
+            "retracted": [
+              "dev_mac"
+            ],
             "spans": [
               {
                 "at": 1760000000001000,
@@ -15817,7 +15845,9 @@
           {
             "audience": "personal:o1",
             "id": "0c2573a2514b3b8ec39ddb60f133e266",
-            "retracted": "dev_mac"
+            "retracted": [
+              "dev_mac"
+            ]
           },
           {
             "audience": "personal:o1",
@@ -16031,6 +16061,11 @@
       },
       "name": "a node moved to the partner's one id folds as its new id, the old one an alias",
       "output": {
+        "names": {
+          "same": {
+            "node:2f7ad76812703f2f55a3e866fd3f02e9": "node:6abcd3a0497415ef698f44779f6e8057"
+          }
+        },
         "nodes": [
           {
             "aliases": [
