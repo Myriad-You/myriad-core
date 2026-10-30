@@ -245,6 +245,21 @@ impl Row {
         if rule == Rule::Forget && self.forgotten {
             return Err(LogError::new("a forget is never forgotten"));
         }
+        if rule == Rule::Retract {
+            if self.author != Author::Owner {
+                return Err(LogError::new("a retract is the owner's row"));
+            }
+            if self.replicate != Replicate::Shared {
+                return Err(LogError::new(
+                    "a retract is shared: it must reach every side",
+                ));
+            }
+            if self.payload.is_some() || self.forgotten {
+                return Err(LogError::new(
+                    "a retract holds no payload and is never forgotten",
+                ));
+            }
+        }
         if self.forgotten && self.payload.is_some() {
             return Err(LogError::new("a stub keeps no payload"));
         }

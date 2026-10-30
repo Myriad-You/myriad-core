@@ -199,6 +199,19 @@ pub struct Created {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub object: Option<Object>,
+    /// Where its id was made, when that is not its row's audience and key
+    /// now: the partner's id changed and the node moved with its audience
+    /// (`crate::migrate`). Its id stays the one made from these.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub born: Option<Born>,
+}
+
+/// The audience and key a moved node's id was made from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Born {
+    pub audience: String,
+    pub key: String,
 }
 
 /// `node.kind_changed`: she (or the partner) changed what the node is.
@@ -684,6 +697,10 @@ impl Body {
                     return Err(NodeError::new(
                         "a repo key has a repo object, and only a repo key",
                     ));
+                }
+                if let Some(born) = &body.born {
+                    check_audience(&born.audience)?;
+                    Key::parse(&born.key)?;
                 }
             }
             Self::KindChanged(body) => {

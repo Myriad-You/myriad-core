@@ -265,6 +265,7 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::
             created_at: sample.header.created_at,
             digest: manifest.digest.clone(),
             logs,
+            partner: None,
         },
     )
     .unwrap();
@@ -359,4 +360,37 @@ fn a_log_page_with_a_stray_payload_or_of_an_audience_its_reader_may_not_hold_is_
             .with_logs(&[log_page(&["r1"])], |audience| audience == "personal:7")
             .is_ok()
     );
+}
+
+#[test]
+fn only_a_file_with_log_pages_names_the_partner() {
+    let fields = |logs: bool| HeaderFields {
+        lineage: None,
+        epoch: None,
+        origin: "dev_mac".into(),
+        created_at: 1_760_000_000_000_000,
+        digest: "0".repeat(64),
+        logs,
+        partner: Some(crate::archive::HeaderPartner {
+            id: "partner_0199d5c0900033333333333333333333".into(),
+            aliases: vec!["local-owner".into()],
+        }),
+    };
+    let salt = [0x11; SALT_BYTES];
+    let nonce = [0x22; NONCE_PREFIX_BYTES];
+    let header = ArchiveHeader::new(&salt, &nonce, fields(true)).unwrap();
+    let line = String::from_utf8(header.line().unwrap()).unwrap();
+    assert!(
+        line.contains("\"partner\":{\"aliases\":[\"local-owner\"]"),
+        "{line}"
+    );
+    assert!(ArchiveHeader::new(&salt, &nonce, fields(false)).is_err());
+    // Without one, a header is the bytes it always was.
+    let mut plain = fields(true);
+    plain.partner = None;
+    let line = ArchiveHeader::new(&salt, &nonce, plain)
+        .unwrap()
+        .line()
+        .unwrap();
+    assert!(!String::from_utf8(line).unwrap().contains("partner"));
 }

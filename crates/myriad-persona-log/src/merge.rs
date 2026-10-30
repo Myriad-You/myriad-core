@@ -20,6 +20,20 @@ pub struct MergeInput {
     pub log: Vec<Row>,
     /// Rows already through [`crate::admit`].
     pub incoming: Vec<Row>,
+    /// Every origin this side writes or wrote as: a node it is the home of
+    /// stays whole ([`crate::forget`]). Without it this side is no
+    /// retract's home; a call across the C entry point must give it once a
+    /// retract is in the rows ([`MergeInput::check`]).
+    #[serde(default)]
+    pub here: Option<Vec<String>>,
+}
+
+impl MergeInput {
+    /// Whether `here` is given where a retract needs it, and well formed.
+    pub fn check(&self) -> Result<(), crate::LogError> {
+        let ledger = forget::ledger(&[self.log.as_slice(), self.incoming.as_slice()].concat());
+        forget::here(&ledger, self.here.as_deref()).map(|_| ())
+    }
 }
 
 /// Why an incoming row was not taken. Either means a side broke the format
@@ -61,7 +75,11 @@ pub struct Merged {
 }
 
 pub fn merge(input: MergeInput) -> Merged {
-    let MergeInput { log, mut incoming } = input;
+    let MergeInput {
+        log,
+        mut incoming,
+        here,
+    } = input;
     let mut by_id: BTreeMap<String, Row> = BTreeMap::new();
     let mut places: BTreeMap<(String, String, u64), String> = BTreeMap::new();
     let mut held_payload = Vec::new();
@@ -114,7 +132,7 @@ pub fn merge(input: MergeInput) -> Merged {
     }
     let rows: Vec<Row> = by_id.into_values().collect();
     let ledger = forget::ledger(&rows);
-    let (mut log, _) = forget::absorb(rows, &ledger);
+    let (mut log, _) = forget::absorb(rows, &ledger, here.as_deref().unwrap_or(&[]));
     sort(&mut log);
     let forgotten: BTreeMap<&str, bool> = log
         .iter()

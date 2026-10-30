@@ -138,6 +138,10 @@ pub struct UpkeepInput {
     /// Inbox items of this audience, oldest first.
     #[serde(default)]
     pub inbox: Vec<InboxItem>,
+    /// This side's origins, as for the fold: needed once a retract is in
+    /// the rows.
+    #[serde(default)]
+    pub here: Option<Vec<String>>,
 }
 
 /// A head field, as the partner may have set it.
@@ -601,6 +605,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     let full = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
+        here: input.here,
     })?;
     let place = |id: &str| {
         full.folded
@@ -1278,6 +1283,7 @@ impl<'a> Reader<'a> {
                 key: key.clone(),
                 name,
                 object: None,
+                born: None,
             }),
         )?;
         if done.is_some() {

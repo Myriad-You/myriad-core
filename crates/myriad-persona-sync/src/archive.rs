@@ -178,6 +178,41 @@ pub struct ArchiveHeader {
     /// The [`Manifest`]'s digest: what the file holds, checked after it is
     /// opened.
     pub digest: String,
+    /// Whom the partner's private audience in its log pages belongs to:
+    /// the writer's partner id and its aliases. Only in a file with log
+    /// pages (version [`ARCHIVE_LOG_VERSION`]), so a reader of version 1
+    /// never meets it; an importer reads it before the pages, to move them
+    /// to its own id (`myriad_persona_log::partner`). An id, not a
+    /// credential.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partner: Option<HeaderPartner>,
+}
+
+/// The partner as the writer of a file knows them.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HeaderPartner {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
+}
+
+impl HeaderPartner {
+    fn check(&self) -> Result<(), SyncError> {
+        let one = |id: &String| {
+            !id.is_empty()
+                && id.len() <= 512
+                && !id
+                    .chars()
+                    .any(|ch| ch == ',' || ch.is_control() || ch.is_whitespace())
+        };
+        if !one(&self.id) || !self.aliases.iter().all(one) || self.aliases.len() > 32 {
+            return Err(SyncError::new(
+                "the partner is one id and at most 32 aliases, each one id",
+            ));
+        }
+        Ok(())
+    }
 }
 
 fn is_false(value: &bool) -> bool {
@@ -199,6 +234,9 @@ pub struct HeaderFields {
     /// [`ARCHIVE_LOG_VERSION`].
     #[serde(default, skip_serializing_if = "is_false")]
     pub logs: bool,
+    /// The writer's partner, for a file with log pages only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partner: Option<HeaderPartner>,
 }
 
 impl ArchiveHeader {
@@ -226,6 +264,7 @@ impl ArchiveHeader {
             origin: fields.origin,
             created_at: fields.created_at,
             digest: fields.digest,
+            partner: fields.partner,
         };
         header.check()?;
         Ok(header)
@@ -265,6 +304,14 @@ impl ArchiveHeader {
         }
         check_node(&self.origin)?;
         check_sha256(&self.digest, "the header's digest")?;
+        if let Some(partner) = &self.partner {
+            if self.version != ARCHIVE_LOG_VERSION {
+                return Err(SyncError::new(
+                    "only a file with log pages names the partner",
+                ));
+            }
+            partner.check()?;
+        }
         Ok(())
     }
 

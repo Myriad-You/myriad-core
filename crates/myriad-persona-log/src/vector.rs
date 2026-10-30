@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     Holder, LogError, Row,
-    kinds::Rule,
     row::{Replicate, sort},
 };
 
@@ -107,14 +106,14 @@ pub fn answer(rows: &[Row], theirs: &Vector) -> Result<Vec<Row>, LogError> {
     let mut forgets: Vec<Row> = rows
         .iter()
         .filter(lacking)
-        .filter(|row| row.rule() == Rule::Forget)
+        .filter(|row| crate::forget::on_ledger(row))
         .cloned()
         .collect();
     sort(&mut forgets);
     let mut rest: Vec<Row> = rows
         .iter()
         .filter(lacking)
-        .filter(|row| row.rule() != Rule::Forget)
+        .filter(|row| !crate::forget::on_ledger(row))
         .cloned()
         .collect();
     rest.sort_by(|a, b| (&a.origin, a.dseq, &a.id).cmp(&(&b.origin, b.dseq, &b.id)));

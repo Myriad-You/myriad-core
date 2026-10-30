@@ -29,6 +29,7 @@ mod memory;
 mod nodes;
 mod outfit;
 mod own;
+mod partner;
 mod reach;
 mod reminder;
 mod serial;
@@ -149,6 +150,9 @@ const CALLS: &[(&str, Call)] = &[
     ("outfit.resolve_directive", outfit::resolve_directive),
     ("outfit.split_wear", outfit::split_wear),
     ("outfit.wardrobe_section", outfit::wardrobe_section),
+    ("partner.meet", partner::meet),
+    ("partner.migrate", partner::migrate),
+    ("partner.mint", partner::mint),
     ("prompt.untrusted_block", speaking::untrusted_block),
     ("reach.as_text", reach::as_text),
     ("reach.judge_system", reach::judge_system),

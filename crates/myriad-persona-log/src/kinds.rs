@@ -23,6 +23,10 @@ pub enum Rule {
     /// Forgets the object it names (or everything about a subject), on
     /// every side and in any order.
     Forget,
+    /// Takes a node back from sync (撤回同步): the partner's row, read as a
+    /// forget on every side but its home, the side that wrote it
+    /// ([`crate::forget`]).
+    Retract,
 }
 
 /// The object a row of `kind` must be about, as the part before `:`;
@@ -92,6 +96,9 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("outfit.write", Some("outfit"), Rule::Latest),
     // One field of her persona per object: `persona:<field>`.
     ("persona.field", Some("persona"), Rule::Latest),
+    // The partner took a node back from sync: it stays on the side that
+    // wrote this row (its home) and is forgotten everywhere else.
+    ("retract", Some("node"), Rule::Retract),
     ("segment.close", Some("segment"), Rule::Event),
     ("segment.line", Some("segment"), Rule::Event),
     ("segment.open", Some("segment"), Rule::Event),
@@ -135,5 +142,7 @@ mod tests {
         assert_eq!(rule("node.unknown"), None);
         assert_eq!(object_type("persona.field"), Some("persona"));
         assert_eq!(object_type("forget"), None);
+        assert_eq!(rule("retract"), Some(Rule::Retract));
+        assert_eq!(object_type("retract"), Some("node"));
     }
 }

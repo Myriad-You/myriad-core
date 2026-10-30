@@ -36,6 +36,18 @@
 //! ([`Taken::ask`], the link's `log.vector` `ask`), at most once per link
 //! session; once it comes, both sides fold the same.
 //!
+//! **Taken back from sync** (a `retract`, `myriad_persona_log::forget`):
+//! a retracted node's rows go only as stubs, from every side, its home too,
+//! so no body of it leaves the side that keeps it, in a batch or a file;
+//! the retract goes first with the forgets. The rows still go, so vectors
+//! count them. A side takes a retract as a forget unless it is the home
+//! (`here`), and rows of the node that come later as stubs.
+//!
+//! **The partner's id** (`myriad_persona_log::partner`): a batch of the
+//! partner's private audience under an old id (from a side that has not
+//! moved yet, or an old file) is moved as it is taken, rows and bodies, so
+//! it is the same bytes this side moved its own to.
+//!
 //! What a body must be to travel:
 //!
 //! - **One the core reads**: a node kind of [`crate::body::READ`], or a
@@ -77,9 +89,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use base64::Engine as _;
 use myriad_perception_filter::secrets::{self, SecretKind};
 use myriad_persona_log::{
-    AdmitInput, Admitted, Holder, Replicate, Row, Vector, admit,
+    AdmitInput, Admitted, Holder, Partner, Replicate, Row, Vector, admit,
     admit::{Epochs, Reason, Refusal},
-    forget::Entry,
+    forget::{self, Entry},
     payloads, vector,
 };
 use myriad_persona_sync::canonical::canonical_bytes;
@@ -195,6 +207,10 @@ pub struct SendInput {
     pub ask: Vec<String>,
     /// The other side.
     pub holder: Holder,
+    /// This side's ledger: a node it forgot or took back from sync goes as
+    /// stubs, whatever rows are given.
+    #[serde(default)]
+    pub ledger: Vec<Entry>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -233,6 +249,14 @@ pub struct TakeInput {
     /// taken; one that comes back otherwise is refused.
     #[serde(default)]
     pub held: Vec<Row>,
+    /// Every origin this side writes or wrote as: needed once a retract is
+    /// in the batch or on the ledger, so a node this side is home of stays.
+    #[serde(default)]
+    pub here: Option<Vec<String>>,
+    /// The partner as this side knows them: a batch under an alias is moved
+    /// to the id in use as it is taken.
+    #[serde(default)]
+    pub partner: Option<Partner>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -515,6 +539,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         theirs,
         ask,
         holder,
+        ledger,
     } = input;
     holder
         .check()
@@ -535,6 +560,10 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             not_held: true,
         });
     }
+    // Nothing of a forgotten or retracted node leaves this side but stubs:
+    // the other side is no home of anything here.
+    let ledger = forget::joined(&ledger, &forget::ledger(&rows));
+    let (rows, _) = forget::absorb(rows, &ledger, &[]);
     let away = elsewhere(
         rows.iter()
             .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
@@ -610,6 +639,45 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     })
 }
 
+/// A batch as it reads under `partner`: its audience, rows and bodies moved
+/// from an alias to the id in use (`crate::migrate`). A payload that does
+/// not read goes as it came, for the checks below to refuse.
+fn moved(batch: Batch, partner: &Partner) -> Result<Batch, NodeError> {
+    partner
+        .check()
+        .map_err(|error| NodeError::new(error.to_string()))?;
+    let engine = base64::engine::general_purpose::STANDARD;
+    let mut payloads = batch.payloads;
+    for row in &batch.rows {
+        let Some(payload) = &row.payload else {
+            continue;
+        };
+        let Some(one) = payloads
+            .iter_mut()
+            .find(|one| one.reference == payload.reference)
+        else {
+            continue;
+        };
+        let read = engine
+            .decode(&one.data)
+            .ok()
+            .and_then(|data| serde_json::from_slice::<Value>(&data).ok());
+        if let Some(new) = read.and_then(|body| crate::migrate::body(row, &body, partner)) {
+            one.data = engine.encode(canonical_bytes(&new));
+        }
+    }
+    Ok(Batch {
+        audience: partner.audience(&batch.audience),
+        rows: batch
+            .rows
+            .iter()
+            .map(|row| myriad_persona_log::partner::row(row, partner))
+            .collect(),
+        payloads,
+        withheld: batch.withheld,
+    })
+}
+
 /// A batch from another side, checked: the rows to merge and their bodies.
 pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     let TakeInput {
@@ -621,10 +689,27 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         held,
+        here,
+        partner,
     } = input;
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    let batch = match &partner {
+        Some(partner) => moved(batch, partner)?,
+        None => batch,
+    };
+    let checked: Vec<Row> = batch
+        .rows
+        .iter()
+        .filter(|row| row.check().is_ok())
+        .cloned()
+        .collect();
+    forget::here(
+        &forget::joined(&ledger, &forget::ledger(&checked)),
+        here.as_deref(),
+    )
+    .map_err(|error| NodeError::new(error.to_string()))?;
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();
     for one in &batch.payloads {
         if carried
@@ -688,6 +773,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         holder: Some(holder),
+        here,
     });
     admitted.refused.extend(astray);
     let engine = base64::engine::general_purpose::STANDARD;

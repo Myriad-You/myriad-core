@@ -79,12 +79,18 @@ pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&vector::answer_to(&rows, &theirs, holder.as_ref()).map_err(refused)?)
 }
 
+/// A retract on the batch or the ledger needs `here`, so a home never
+/// loses its node to a call that did not say where it runs.
 pub(super) fn admit(raw: &[u8]) -> Result<Value, Failure> {
-    answer(&admit_rows(input(raw)?))
+    let rows: myriad_persona_log::AdmitInput = input(raw)?;
+    rows.check().map_err(refused)?;
+    answer(&admit_rows(rows))
 }
 
 pub(super) fn merge(raw: &[u8]) -> Result<Value, Failure> {
-    answer(&merge_rows(input(raw)?))
+    let rows: myriad_persona_log::MergeInput = input(raw)?;
+    rows.check().map_err(refused)?;
+    answer(&merge_rows(rows))
 }
 
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {

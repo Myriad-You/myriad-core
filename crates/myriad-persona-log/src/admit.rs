@@ -19,7 +19,7 @@ use myriad_persona_sync::hlc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Holder, Row,
+    Holder, LogError, Row,
     forget::{self, Entry},
     row::{Audience, Replicate, sort},
 };
@@ -51,6 +51,26 @@ pub struct AdmitInput {
     /// hold is refused ([`crate::holder`]).
     #[serde(default)]
     pub holder: Option<Holder>,
+    /// Every origin this side writes or wrote as, so a node it is the home
+    /// of stays ([`crate::forget`]). Without it this side is no retract's
+    /// home; a call across the C entry point must give it once a retract
+    /// is in the batch or on the ledger ([`AdmitInput::check`]).
+    #[serde(default)]
+    pub here: Option<Vec<String>>,
+}
+
+impl AdmitInput {
+    /// Whether `here` is given where a retract needs it, and well formed.
+    pub fn check(&self) -> Result<(), LogError> {
+        let checked: Vec<Row> = self
+            .rows
+            .iter()
+            .filter(|row| row.check().is_ok())
+            .cloned()
+            .collect();
+        let ledger = forget::joined(&self.ledger, &forget::ledger(&checked));
+        forget::here(&ledger, self.here.as_deref()).map(|_| ())
+    }
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -116,6 +136,7 @@ pub fn admit(input: AdmitInput) -> Admitted {
         ledger,
         mut epochs,
         holder,
+        here,
     } = input;
     let ahead = rows
         .iter()
@@ -198,7 +219,7 @@ pub fn admit(input: AdmitInput) -> Admitted {
         accepted.push(row);
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&accepted));
-    let (accepted, _) = forget::absorb(accepted, &ledger);
+    let (accepted, _) = forget::absorb(accepted, &ledger, here.as_deref().unwrap_or(&[]));
     Admitted {
         accepted,
         refused,

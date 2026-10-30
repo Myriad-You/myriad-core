@@ -37,6 +37,10 @@ pub struct FoldInput {
     /// The lease history this side knows, for marking her rows.
     #[serde(default)]
     pub leases: Vec<Grant>,
+    /// Every origin this side writes or wrote as; needed once a retract is
+    /// in the rows, so the home keeps its node ([`crate::forget`]).
+    #[serde(default)]
+    pub here: Option<Vec<String>>,
 }
 
 /// One object as its rows stand now.
@@ -65,6 +69,10 @@ pub struct ObjectFold {
     /// Some of its rows were written while she was in two places.
     #[serde(skip_serializing_if = "is_false")]
     pub concurrent: bool,
+    /// Taken back from sync: the side that keeps it. Anywhere else nothing
+    /// else about it reads back.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub retracted: Option<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -83,6 +91,7 @@ impl ObjectFold {
             history: BTreeMap::new(),
             retired: None,
             concurrent: false,
+            retracted: None,
         }
     }
 }
@@ -133,7 +142,22 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
     }
     let rows = dedupe(input.rows)?;
     let ledger = forget::ledger(&rows);
-    let (rows, _) = forget::absorb(rows, &ledger);
+    let here = forget::here(&ledger, input.here.as_deref())?;
+    let (rows, _) = forget::absorb(rows, &ledger, here);
+    // Retracted objects and their homes; away: not kept on this side.
+    let retracted: BTreeMap<(&str, &str), &str> = ledger
+        .iter()
+        .filter_map(|entry| {
+            let home = entry.home.as_deref()?;
+            Some(((entry.audience.as_str(), entry.target.as_str()), home))
+        })
+        .collect();
+    let away = |row: &Row| {
+        retracted
+            .get(&(row.audience.as_str(), row.object.as_str()))
+            .is_some_and(|home| !here.iter().any(|name| name == home))
+            && !forget::forgets(&ledger, row)
+    };
     let standing = lease::standings(&rows, &input.leases);
     let concurrent: Vec<&str> = standing
         .iter()
@@ -146,6 +170,9 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
         let object = objects
             .entry((row.audience.clone(), row.object.clone()))
             .or_insert_with(|| ObjectFold::empty(&row.audience, &row.object));
+        if row.rule() == Rule::Retract || away(row) {
+            continue;
+        }
         if row.rule() == Rule::Forget || row.forgotten {
             object.forgotten = true;
             continue;
@@ -167,19 +194,33 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
             }
             Rule::Retire => object.retired = Some(true),
             Rule::Restore => object.retired = Some(false),
-            Rule::Event | Rule::Forget => {}
+            Rule::Event | Rule::Forget | Rule::Retract => {}
         }
     }
     let objects = objects
         .into_values()
         .map(|object| {
+            let home = retracted
+                .get(&(object.audience.as_str(), object.object.as_str()))
+                .map(|home| home.to_string());
             if object.forgotten {
                 ObjectFold {
                     forgotten: true,
                     ..ObjectFold::empty(&object.audience, &object.object)
                 }
+            } else if home
+                .as_ref()
+                .is_some_and(|home| !here.iter().any(|name| name == home))
+            {
+                ObjectFold {
+                    retracted: home,
+                    ..ObjectFold::empty(&object.audience, &object.object)
+                }
             } else {
-                object
+                ObjectFold {
+                    retracted: home,
+                    ..object
+                }
             }
         })
         .collect();

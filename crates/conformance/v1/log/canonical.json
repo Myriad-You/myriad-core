@@ -371,6 +371,99 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1",
+          "author": "owner",
+          "dseq": 4,
+          "hlc": "001760000000000-000000-dev_mac",
+          "id": "k1",
+          "kind": "retract",
+          "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "a retract: the partner's, shared, about a node, no payload",
+      "output": {
+        "canonical": "{\"audience\":\"personal:o1\",\"author\":\"owner\",\"dseq\":4,\"hlc\":\"001760000000000-000000-dev_mac\",\"id\":\"k1\",\"kind\":\"retract\",\"object\":\"node:0c2573a2514b3b8ec39ddb60f133e266\",\"origin\":\"dev_mac\",\"replicate\":\"shared\",\"version\":1}",
+        "digest": "07a4b916b1ef368713c509f93d027066",
+        "row": {
+          "audience": "personal:o1",
+          "author": "owner",
+          "dseq": 4,
+          "hlc": "001760000000000-000000-dev_mac",
+          "id": "k1",
+          "kind": "retract",
+          "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1",
+          "author": "her",
+          "dseq": 4,
+          "epoch": 1,
+          "hlc": "001760000000000-000000-dev_mac",
+          "id": "k1",
+          "kind": "retract",
+          "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: a retract of hers",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1",
+          "author": "owner",
+          "hlc": "001760000000000-000000-dev_mac",
+          "id": "k1",
+          "kind": "retract",
+          "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+          "origin": "dev_mac",
+          "replicate": "local",
+          "version": 1
+        }
+      },
+      "name": "refused: a retract kept local",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1",
+          "author": "owner",
+          "dseq": 4,
+          "hlc": "001760000000000-000000-dev_mac",
+          "id": "k1",
+          "kind": "retract",
+          "object": "memory:m-1",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: a retract about a memory",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1
