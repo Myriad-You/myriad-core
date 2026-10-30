@@ -78,7 +78,8 @@
     "conversations.live",
     "reminders",
     "moments",
-    "nodes"
+    "nodes",
+    "images"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
   "noticeKinds": ["work", "waiting", "report", "reminder"],
@@ -140,8 +141,9 @@
       "delivery": "reliable",
       "idempotency": "id is the turnId: made by the child, one per thing the person says, kept across resends.",
       "required": ["surface", "text"],
-      "optional": ["sessionId", "rigState"],
-      "description": "Something the site owner said to her on this child: a chat turn. The host starts a run for the site owner as their current role allows, and answers run.accepted or run.rejected. sessionId is the chat session to continue (from an earlier run.accepted); without it the host starts one. rigState is the rig as it stands, the same summary the site's face sends, so her acting fits this body."
+      "optional": ["sessionId", "rigState", "images"],
+      "maxItems": {"images": 2},
+      "description": "Something the site owner said to her on this child: a chat turn. The host starts a run for the site owner as their current role allows, and answers run.accepted or run.rejected. sessionId is the chat session to continue (from an earlier run.accepted); without it the host starts one. rigState is the rig as it stands, the same summary the site's face sends, so her acting fits this body. images is what the owner showed her with it (what this child's camera saw when they asked her to look): only from a child whose hello listed images, at most two, each a data URL of a PNG, JPEG or WebP (data:image/jpeg;base64,…). The host hands them to her run as the site's chat hands her the images attached to a message, for this turn only, and keeps none of them; one it cannot read is left out. The whole frame stays within limits.maxFrameBytes, so a child sends them small (about 768 px on the long side)."
     },
     "presence": {
       "from": "child",
