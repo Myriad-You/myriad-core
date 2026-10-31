@@ -1,4 +1,4 @@
-//! The shared conformance files in `crates/conformance/v1/` (log and lease
+//! The shared conformance files in `crates/conformance/` (`v2/log`, `v1/lease`
 //! cases) run here through the crate, and through the C entry point in
 //! `myriad-core-ffi`; another platform runs the same files through its own
 //! runtime. Below them, the properties the files only sample: forgetting in
@@ -19,9 +19,15 @@ use crate::{
     vector::{answer, holdings, missing},
 };
 
-/// The conformance files' directory.
+/// The conformance files' directory: `log/` is version 2 (merge, split
+/// and retract rows name what they reach), `lease/` still version 1.
 pub(crate) fn conformance() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
+}
+
+/// Where an area's case files are.
+fn area_dir(area: &str) -> &'static str {
+    if area == "log" { "v2/log" } else { "v1/lease" }
 }
 
 fn blessing() -> bool {
@@ -94,9 +100,11 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
             } = input(raw)?;
             json_of(&crate::vector::answer_to(&rows, &theirs, holder.as_ref())?)
         }
-        "log.admit" => json_of(&admit(input(raw)?)),
-        "log.merge" => json_of(&merge(input(raw)?)),
+        "log.admit" => json_of(&admit(input::<AdmitInput>(raw)?)?),
+        "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
         "log.fold" => json_of(&fold(input(raw)?)?),
+        "log.ledger" => json_of(&forget::record(input(raw)?)?),
+        "log.reach" => json_of(&forget::reach(input(raw)?)?),
         "log.clock_offset" => {
             #[derive(Deserialize)]
             #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -196,7 +204,7 @@ fn same(one: &Value, other: &Value) -> bool {
 pub(crate) fn case_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
     for area in ["log", "lease"] {
-        let dir = conformance().join(area);
+        let dir = conformance().join(area_dir(area));
         for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
             let path = entry.unwrap().path();
             if path.extension().is_some_and(|ext| ext == "json") {
@@ -258,10 +266,34 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ),
         ("a subject in her own audience", "subject is not one of"),
         ("a forget with a payload", "holds no payload"),
+        ("a retract of hers", "the owner's row"),
+        ("a retract kept local", "is shared"),
+        ("a retract about a memory", "is about a node"),
+        (
+            "to on a kind that names no other node",
+            "names no other node",
+        ),
+        ("takes out of order", "takes is sorted"),
+        ("a retract's home shared", "is local"),
+        (
+            "a merge without the node it went into",
+            "names the other node (to)",
+        ),
+        (
+            "a split without the spans it moves",
+            "names the spans it moves",
+        ),
+        ("a retract's list out of order", "takes is sorted"),
+        ("a retract listing more than 256 rows", "at most 256 rows"),
+        ("a retract's home with a list", "lists no rows"),
+        ("a retract naming another node", "names no other node"),
+        ("a forget's list out of order", "takes is sorted"),
+        ("a forget listing more than 256 rows", "at most 256 rows"),
     ];
-    let file: Value =
-        serde_json::from_slice(&std::fs::read(conformance().join("log/canonical.json")).unwrap())
-            .unwrap();
+    let file: Value = serde_json::from_slice(
+        &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),
+    )
+    .unwrap();
     let mut seen = 0;
     for case in file["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
@@ -307,6 +339,8 @@ fn row(id: &str, origin: &str, dseq: u64, at: u64, object: &str, kind: &str) -> 
         }),
         replicate: Replicate::Shared,
         forgotten: false,
+        to: None,
+        takes: Vec::new(),
     }
 }
 
@@ -337,6 +371,7 @@ fn folded(rows: Vec<Row>) -> Value {
         &fold(FoldInput {
             rows,
             leases: Vec::new(),
+            ledger: Vec::new(),
         })
         .unwrap(),
     )
@@ -374,9 +409,11 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
         let mut held: Vec<Row> = Vec::new();
         for one in order {
             held = merge(MergeInput {
+                ledger: Vec::new(),
                 log: held,
                 incoming: vec![one],
             })
+            .unwrap()
             .log;
         }
         assert!(
@@ -401,20 +438,26 @@ fn merging_is_a_union_in_any_order() {
         owner(row("b2", "site", 2, 250, "memory:x", "memory.write")),
     ];
     let ab = merge(MergeInput {
+        ledger: Vec::new(),
         log: a.clone(),
         incoming: b.clone(),
-    });
+    })
+    .unwrap();
     let ba = merge(MergeInput {
+        ledger: Vec::new(),
         log: b.clone(),
         incoming: a.clone(),
-    });
+    })
+    .unwrap();
     assert_eq!(ab.log, ba.log);
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
     let again = merge(MergeInput {
+        ledger: Vec::new(),
         log: ab.log.clone(),
         incoming: b,
-    });
+    })
+    .unwrap();
     assert_eq!(again.log, ab.log);
     assert!(again.added.is_empty());
     assert_eq!(
@@ -454,15 +497,18 @@ fn what_one_side_answers_fills_the_other() {
         now: 1_000_000,
         known: Default::default(),
         members: Default::default(),
-        ledger: Vec::new(),
+        ledger: None,
         epochs: Default::default(),
         holder: None,
-    });
+    })
+    .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
+        ledger: Vec::new(),
         log: site,
         incoming: admitted.accepted,
     })
+    .unwrap()
     .log;
     assert_eq!(holdings(&site).unwrap(), holdings(&mac).unwrap());
 }

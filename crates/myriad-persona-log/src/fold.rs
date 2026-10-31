@@ -37,6 +37,12 @@ pub struct FoldInput {
     /// The lease history this side knows, for marking her rows.
     #[serde(default)]
     pub leases: Vec<Grant>,
+    /// This side's ledger ([`forget`]), as `nodes.fold` takes it: what this
+    /// side forgot or took back, and of which nodes it is the home, beyond
+    /// the rows given. A host passes it; without it only the rows' own
+    /// forgets and retracts count.
+    #[serde(default)]
+    pub ledger: Vec<forget::Entry>,
 }
 
 /// One object as its rows stand now.
@@ -65,6 +71,11 @@ pub struct ObjectFold {
     /// Some of its rows were written while she was in two places.
     #[serde(skip_serializing_if = "is_false")]
     pub concurrent: bool,
+    /// Taken back from sync: the sides that wrote its retract. On a side
+    /// that keeps it (its `retract.home` is here) it folds as ever besides;
+    /// anywhere else nothing else about it reads back.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub retracted: Vec<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -83,6 +94,7 @@ impl ObjectFold {
             history: BTreeMap::new(),
             retired: None,
             concurrent: false,
+            retracted: Vec::new(),
         }
     }
 }
@@ -132,8 +144,15 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
         grant.check()?;
     }
     let rows = dedupe(input.rows)?;
-    let ledger = forget::ledger(&rows);
-    let (rows, _) = forget::absorb(rows, &ledger);
+    let ledger = forget::joined(&input.ledger, &forget::ledger(&rows));
+    let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Here);
+    let view = forget::View::new(&ledger);
+    // Retracted objects, and the ones not kept on this side.
+    let away = |audience: &str, object: &str| {
+        !view.homes(audience, object).is_empty()
+            && !view.kept(audience, object)
+            && view.forgotten(audience, object).is_none()
+    };
     let standing = lease::standings(&rows, &input.leases);
     let concurrent: Vec<&str> = standing
         .iter()
@@ -146,8 +165,21 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
         let object = objects
             .entry((row.audience.clone(), row.object.clone()))
             .or_insert_with(|| ObjectFold::empty(&row.audience, &row.object));
-        if row.rule() == Rule::Forget || row.forgotten {
+        if (forget::on_ledger(row) && row.rule() != Rule::Forget)
+            || away(&row.audience, &row.object)
+        {
+            continue;
+        }
+        if row.rule() == Rule::Forget {
             object.forgotten = true;
+            continue;
+        }
+        if row.forgotten {
+            // A span a split moved to a part forgotten since is a stub of
+            // this object, which stays.
+            if view.forgets_object(row) || view.reaching(row).is_empty() {
+                object.forgotten = true;
+            }
             continue;
         }
         if object.subject.is_none() {
@@ -167,19 +199,28 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
             }
             Rule::Retire => object.retired = Some(true),
             Rule::Restore => object.retired = Some(false),
-            Rule::Event | Rule::Forget => {}
+            Rule::Event | Rule::Forget | Rule::Retract | Rule::Home => {}
         }
     }
     let objects = objects
         .into_values()
         .map(|object| {
+            let homes = view.homes(&object.audience, &object.object);
             if object.forgotten {
                 ObjectFold {
                     forgotten: true,
                     ..ObjectFold::empty(&object.audience, &object.object)
                 }
+            } else if away(&object.audience, &object.object) {
+                ObjectFold {
+                    retracted: homes,
+                    ..ObjectFold::empty(&object.audience, &object.object)
+                }
             } else {
-                object
+                ObjectFold {
+                    retracted: homes,
+                    ..object
+                }
             }
         })
         .collect();

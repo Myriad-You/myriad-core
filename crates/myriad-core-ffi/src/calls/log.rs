@@ -62,6 +62,8 @@ pub(super) fn missing(raw: &[u8]) -> Result<Value, Failure> {
 
 /// `{rows, theirs, holder?}` → `{rows, notHeld?}`: what to send a side
 /// holding `theirs`; nothing to a side that may not hold the audience.
+/// Only for a log from before ABI 2: rows that name another node (`to`,
+/// `takes`) or a retract are refused, and go by `nodes.wire_send`.
 pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -79,16 +81,32 @@ pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&vector::answer_to(&rows, &theirs, holder.as_ref()).map_err(refused)?)
 }
 
+/// A retract in the batch needs this side's ledger, so a home never loses
+/// its node to a call that did not say what it keeps.
 pub(super) fn admit(raw: &[u8]) -> Result<Value, Failure> {
-    answer(&admit_rows(input(raw)?))
+    answer(&admit_rows(input(raw)?).map_err(refused)?)
 }
 
 pub(super) fn merge(raw: &[u8]) -> Result<Value, Failure> {
-    answer(&merge_rows(input(raw)?))
+    answer(&merge_rows(input(raw)?).map_err(refused)?)
 }
 
+/// `{rows, leases?, ledger?}` → `{objects, standing?}`: the ledger is this
+/// side's, as `nodes.fold` takes it.
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(input(raw)?).map_err(refused)?)
+}
+
+/// `{rows, ledger?}` → `{ledger}`: the ledger with the rows this side
+/// wrote.
+pub(super) fn ledger(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_persona_log::forget::record(input(raw)?).map_err(refused)?)
+}
+
+/// `{rows, ledger}` → `{stubbed}`: which of this side's rows its ledger
+/// takes away now.
+pub(super) fn reach(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_persona_log::forget::reach(input(raw)?).map_err(refused)?)
 }
 
 /// `{sent, serverTime, received}` (local, server, local; microseconds) →

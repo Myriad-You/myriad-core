@@ -65,13 +65,25 @@
 //! mark lists them, so the queue knows what the run wrote and nothing else
 //! written meanwhile is taken as seen.
 //!
+//! A node taken back from sync (撤回同步) is out of shared upkeep on every
+//! side. Only its home folds it whole, and there a run on it writes local
+//! rows only (`local` in what is prepared: the caller passes a local
+//! `sync`, or `read` refuses the call), names no node but the ones this
+//! side keeps, and makes none (`create` and `split` are `not_allowed`: a
+//! node it made would have local rows and no retract). A shared run is never shown one, so never merges into it: a
+//! preference, not a rule of the log (a merge of a node with stubs in it is
+//! harmless, and a retract never reaches through one). Nor is a shared run
+//! shown a span or an entry any retract reaches, wherever the fold shows it
+//! (split off into a node not taken back, or in a node it went into since),
+//! so nothing the home keeps goes into shared text.
+//!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) so the queue moves
 //! on; the node is due again at its next change.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use myriad_persona_log::row::Author;
+use myriad_persona_log::{forget, row::Author};
 use myriad_persona_sync::{Rev, canonical::sha256_hex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -125,6 +137,9 @@ pub struct UpkeepInput {
     pub rows: Vec<myriad_persona_log::Row>,
     #[serde(default)]
     pub bodies: BTreeMap<String, Value>,
+    /// This side's ledger, as for the fold.
+    #[serde(default)]
+    pub ledger: Vec<myriad_persona_log::forget::Entry>,
     pub audience: String,
     /// The node she keeps; none when she only files the inbox (the
     /// audience has no node yet, or none is due).
@@ -307,6 +322,10 @@ pub struct Prepared {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub due: Vec<Reason>,
     pub taken: Taken,
+    /// The node is taken back from sync and this side is its home: the
+    /// run writes local rows only (`read` is given a local `sync`).
+    #[serde(skip_serializing_if = "is_false")]
+    pub local: bool,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -598,9 +617,11 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     check_token("audience", &audience)?;
     myriad_persona_log::row::Audience::parse(&audience)
         .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
+    let ledger = forget::joined(&input.ledger, &forget::ledger(&input.rows));
     let full = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
+        ledger: input.ledger,
     })?;
     let place = |id: &str| {
         full.folded
@@ -620,6 +641,24 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             }
             Some(at)
         }
+    };
+    // A run on a node taken back from sync (on its home) is local; a shared
+    // one is never shown such a node.
+    let local = at.is_some_and(|at| !full.folded.nodes[at].retracted.is_empty());
+    // Nor is a shared run shown a span or an entry a retract reaches,
+    // wherever the fold shows it (split off into a node not taken back, or
+    // in one the node went into since): what the home keeps goes into no
+    // shared text. A local run sees them.
+    let view = forget::View::new(&ledger);
+    let by_id: BTreeMap<&str, &myriad_persona_log::Row> =
+        full.rows.iter().map(|row| (row.id.as_str(), row)).collect();
+    let withdrawn = |row: &str| {
+        !local
+            && by_id.get(row).is_some_and(|row| {
+                view.reaching(row)
+                    .iter()
+                    .any(|entry| entry.is_retract() || entry.kind == forget::Kind::Home)
+            })
     };
     // Every candidate is a node of this audience in the rows: one from
     // another audience is never shown, and is the caller's mistake.
@@ -646,25 +685,31 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         kept_node = Some(kept(node));
         // Its newest spans and entries, shown oldest first.
         (spans, span_labels) = newest(
-            node.spans.iter().map(|span| {
-                (
-                    span.row.as_str(),
-                    span.said_by.as_slice(),
-                    span.text.as_str(),
-                )
-            }),
+            node.spans
+                .iter()
+                .filter(|span| !withdrawn(&span.row))
+                .map(|span| {
+                    (
+                        span.row.as_str(),
+                        span.said_by.as_slice(),
+                        span.text.as_str(),
+                    )
+                }),
             "s",
             UPKEEP_SPANS,
             UPKEEP_TOTAL_CHARS,
         );
         (entries, entry_labels) = newest(
-            node.entries.iter().map(|entry| {
-                (
-                    entry.row.as_str(),
-                    entry.said_by.as_slice(),
-                    entry.text.as_str(),
-                )
-            }),
+            node.entries
+                .iter()
+                .filter(|entry| !withdrawn(&entry.row))
+                .map(|entry| {
+                    (
+                        entry.row.as_str(),
+                        entry.said_by.as_slice(),
+                        entry.text.as_str(),
+                    )
+                }),
             "e",
             UPKEEP_ENTRIES,
             UPKEEP_ENTRIES_TOTAL_CHARS,
@@ -676,7 +721,9 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             .nodes
             .iter()
             .enumerate()
-            .filter(|(_, other)| other.audience == audience && alive(other))
+            .filter(|(_, other)| {
+                other.audience == audience && alive(other) && local != other.retracted.is_empty()
+            })
             .map(|(at, other)| (other.id.as_str(), at))
             .collect();
         let mut around: BTreeMap<usize, Vec<ShownRelation>> = BTreeMap::new();
@@ -748,6 +795,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     let shown_candidates: Vec<ShownCandidate> = candidates
         .into_iter()
         .filter(|other| alive(&full.folded.nodes[*other]))
+        .filter(|other| local != full.folded.nodes[*other].retracted.is_empty())
         .filter(|other| !nodes.values().any(|shown| shown == other))
         .take(UPKEEP_CANDIDATES)
         .collect::<Vec<usize>>()
@@ -803,6 +851,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         candidates: shown_candidates,
         inbox,
         due,
+        local,
     };
     Ok(Context {
         full,
@@ -841,7 +890,9 @@ pub struct ReadInput {
 /// One row to write: its id, its node, its kind, its body. The caller
 /// writes it under this id (the mark lists the ids, so the queue knows what
 /// the run wrote), adds the rest of the envelope (clock, device), and keeps
-/// the order.
+/// the order. A merge or a split also names the other node in the
+/// envelope: the caller writes `to` and `takes` into the row as they are
+/// (`myriad_persona_log::Row`), so a stub of it keeps them.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Write {
@@ -849,6 +900,10 @@ pub struct Write {
     pub node: String,
     pub kind: String,
     pub body: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub takes: Vec<String>,
 }
 
 /// Why an action was held.
@@ -1066,6 +1121,11 @@ impl<'a> Reader<'a> {
             .get(label)
             .ok_or(Fallback::UnknownLabel)?;
         let node = self.node(at);
+        // A shared run names no node taken back from sync; a local run (on
+        // one, at its home) names only those this side keeps.
+        if node.retracted.is_empty() == self.context.prepared.local {
+            return Err(Fallback::NotAllowed);
+        }
         Ok(Named {
             id: node.id.clone(),
             key: node.key.clone().ok_or(Fallback::UnknownLabel)?,
@@ -1169,11 +1229,30 @@ impl<'a> Reader<'a> {
         };
         // What it writes reads back as it was written, or nothing is written.
         let body = Body::read(kind, &body.to_value()).map_err(|_| Fallback::BadField)?;
+        let audience = self.context.audience.as_str();
+        let other = |key: &str| {
+            node_id(audience, key)
+                .map(|id| format!("node:{id}"))
+                .map_err(|_| Fallback::BadField)
+        };
+        let (to, takes) = match &body {
+            Body::Absorbed(absorbed) => (Some(other(&absorbed.into)?), Vec::new()),
+            Body::SplitOff(split) => {
+                let takes: BTreeSet<&String> = split.spans.iter().collect();
+                (
+                    Some(other(&split.to)?),
+                    takes.into_iter().cloned().collect(),
+                )
+            }
+            _ => (None, Vec::new()),
+        };
         self.writes.push(Write {
             id: row_id(self.run, self.writes.len()),
             node: node.to_string(),
             kind: kind.to_string(),
             body: body.to_value(),
+            to,
+            takes,
         });
         Ok(())
     }
@@ -1331,6 +1410,12 @@ impl<'a> Reader<'a> {
             .and_then(Value::as_str)
             .ok_or(Fallback::UnknownAction)?;
         match what.trim() {
+            // A local run makes no node: one it made would have local rows
+            // and no retract, and a shared run could then use it or merge
+            // into it, pointing at a node no other side has.
+            "create" | "split" if self.context.prepared.local => {
+                return Err(Fallback::NotAllowed);
+            }
             "create" => {
                 self.mint(action)?;
             }
@@ -1788,6 +1873,11 @@ impl<'a> Reader<'a> {
             else {
                 continue;
             };
+            // A shared row never names a node taken back from sync: on the
+            // home its relations stay its own (`local`).
+            if !self.context.prepared.local && !other.retracted.is_empty() {
+                continue;
+            }
             let other = Named {
                 id: other.id.clone(),
                 key: other_key,
@@ -1998,6 +2088,11 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
     check_token("run", &input.run)?;
     input.sync.check()?;
     let context = context(input.input)?;
+    if context.prepared.local && input.sync == Sync::Shared {
+        return Err(NodeError::new(
+            "a node taken back from sync is kept with local rows only",
+        ));
+    }
     let mut reader = Reader::new(&context, &input.run, input.sync.clone());
     let read = actions(&input.output).and_then(|actions| {
         for (at, action) in actions.iter().enumerate() {
@@ -2065,6 +2160,8 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
             node: me.id.clone(),
             kind: "node.upkept".to_string(),
             body: upkept.to_value(),
+            to: None,
+            takes: Vec::new(),
         });
     }
     Ok(UpkeepRead {

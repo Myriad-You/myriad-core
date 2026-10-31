@@ -20,6 +20,10 @@ const FILE: &[u8] = include_bytes!("../../../myriad-persona-sync/fixtures/archiv
 const INPUTS: &[u8] = include_bytes!("../../../myriad-persona-sync/fixtures/archive/inputs.json");
 const MANIFEST: &[u8] =
     include_bytes!("../../../myriad-persona-sync/fixtures/archive/manifest.json");
+const HOME_FILE: &[u8] =
+    include_bytes!("../../../myriad-persona-sync/fixtures/archive/home.her-archive");
+const HOME_INPUTS: &[u8] =
+    include_bytes!("../../../myriad-persona-sync/fixtures/archive/home-inputs.json");
 
 fn b64(bytes: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(bytes)
@@ -89,7 +93,19 @@ fn open_stream(file: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
 
 #[test]
 fn the_golden_file_seals_from_its_inputs_through_the_core() {
-    let inputs = inputs();
+    seals_through_the_core(FILE, inputs());
+}
+
+/// A home's file too: its header's `home` comes from the fields given.
+#[test]
+fn the_golden_home_file_seals_through_the_core_and_its_home_part_reads_on_a_pc() {
+    seals_through_the_core(HOME_FILE, serde_json::from_slice(HOME_INPUTS).unwrap());
+    let (header, _) = header_of(HOME_FILE);
+    assert_eq!(header["home"], true);
+}
+
+/// Seals `inputs` through the C entry point and checks it is `golden`.
+fn seals_through_the_core(golden: &[u8], inputs: Value) {
     let made = ok(
         "sync.archive_seal",
         json!({
@@ -102,7 +118,7 @@ fn the_golden_file_seals_from_its_inputs_through_the_core() {
     // The golden file is in 1 KiB chunks; a writer's own are 1 MiB.
     assert_eq!(header["chunkBytes"], 1 << 20);
     header["chunkBytes"] = inputs["chunkBytes"].clone();
-    let (golden_header, offset) = header_of(FILE);
+    let (golden_header, offset) = header_of(golden);
     assert_eq!(header, golden_header);
     let (_, key) = key_for(inputs["passphrase"].as_str().unwrap(), &header);
     let mut stream = Vec::new();
@@ -111,7 +127,7 @@ fn the_golden_file_seals_from_its_inputs_through_the_core() {
         stream.extend(unb64(&head["head"]));
         stream.extend(unhex(part["payload"].as_str().unwrap()));
     }
-    let mut file = FILE[..offset].to_vec();
+    let mut file = golden[..offset].to_vec();
     let size = header["chunkBytes"].as_u64().unwrap() as usize;
     let pieces: Vec<&[u8]> = stream.chunks(size).collect();
     // A stream that fills its last chunk exactly ends on an empty one.
@@ -132,7 +148,7 @@ fn the_golden_file_seals_from_its_inputs_through_the_core() {
         file.extend(unb64(&sealed["sealed"]));
     }
     assert!(
-        file == FILE,
+        file == golden,
         "the core sealed other bytes than the golden file"
     );
 }
@@ -215,6 +231,45 @@ fn log_pages_have_a_part_and_a_tally() {
     assert!(plain["manifest"].get("log").is_none());
     assert_eq!(logged["manifest"]["log"]["count"], 1);
     assert_ne!(plain["manifest"]["digest"], logged["manifest"]["digest"]);
+    let homed = ok(
+        "sync.manifest",
+        json!({ "envelopes": [], "logs": [page], "homes": [page], "holder": pc }),
+    );
+    assert_eq!(homed["manifest"]["home"]["count"], 1);
+    assert_ne!(homed["manifest"]["digest"], logged["manifest"]["digest"]);
+    let head = ok(
+        "sync.archive_part",
+        json!({ "part": { "part": "home", "bytes": 12 } }),
+    );
+    // Read only for a computer of the partner's.
+    let read = ok(
+        "sync.archive_part",
+        json!({ "bytes": head["head"], "holder": pc }),
+    );
+    assert_eq!(read["part"], json!({ "part": "home", "bytes": 12 }));
+    for holder in [json!(null), json!({ "core": "server", "owner": "7" })] {
+        let (status, out) = ffi(
+            "sync.archive_part",
+            &json!({ "bytes": head["head"], "holder": holder }),
+        );
+        assert_eq!(status, STATUS_BAD_INPUT, "{out}");
+    }
+    // A header for such a file says so, and is version 2.
+    let sealed = ok(
+        "sync.archive_seal",
+        json!({
+            "salt": b64(&[1; 16]),
+            "noncePrefix": b64(&[2; 19]),
+            "fields": {
+                "origin": "dev_mac",
+                "createdAt": 1_760_000_000_000_000_i64,
+                "digest": homed["manifest"]["digest"],
+                "home": true,
+            },
+        }),
+    );
+    assert_eq!(sealed["header"]["home"], true);
+    assert_eq!(sealed["header"]["version"], 2);
     for (input, why) in [
         (
             json!({ "envelopes": [], "logs": [page, page], "holder": pc }),
@@ -224,6 +279,14 @@ fn log_pages_have_a_part_and_a_tally() {
         (
             json!({ "envelopes": [], "logs": [page], "holder": { "core": "pc", "owner": "9" } }),
             "someone else's private talk, for the partner's file",
+        ),
+        (
+            json!({ "envelopes": [], "homes": [page], "holder": { "core": "server", "owner": "7" } }),
+            "a home's pages, for the server's file",
+        ),
+        (
+            json!({ "envelopes": [], "homes": [page] }),
+            "home pages, no holder",
         ),
     ] {
         let (status, _) = ffi("sync.manifest", &input);

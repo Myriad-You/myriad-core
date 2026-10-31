@@ -142,7 +142,13 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
             "a person or group lives in its own audience, not hers",
         ));
     }
-    Ok(sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string())
+    Ok(made_id(audience, key))
+}
+
+/// The id `audience` and `key` make, unchecked: also a person's or a
+/// group's in her own audience, which no side may make but one may meet.
+pub(crate) fn made_id(audience: &str, key: &str) -> String {
+    sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string()
 }
 
 /// The repository key of a remote: `repo:<host>/<path>`, lowercase, with

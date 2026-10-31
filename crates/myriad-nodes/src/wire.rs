@@ -36,6 +36,20 @@
 //! ([`Taken::ask`], the link's `log.vector` `ask`), at most once per link
 //! session; once it comes, both sides fold the same.
 //!
+//! **Taken back from sync** (a `retract`, `myriad_persona_log::forget`):
+//! a retracted node's rows go only as stubs, from every side, its home too,
+//! so no body of it leaves the side that keeps it, in a batch or a file;
+//! the retract goes first with the forgets. The rows still go, so vectors
+//! count them. A retract reaches its node's own rows and the rows it lists
+//! (`takes`), never through a merge or a split. A side takes a retract as
+//! a forget unless it keeps the node (its own `retract.home`, on its
+//! ledger), and rows of the node that come later as stubs.
+//!
+//! **An older side** ([`SendInput::peer_abi`]): a core of ABI 1 refuses a
+//! batch with a row that names another node (`to`, `takes`) and reads a
+//! retract as nothing, so nothing goes to it while one of those would
+//! ([`Sent::too_old`]).
+//!
 //! What a body must be to travel:
 //!
 //! - **One the core reads**: a node kind of [`crate::body::READ`], or a
@@ -59,7 +73,16 @@
 //!   row puts a person or a group in her own audience (`own:`), which every
 //!   PC holds. Such a node is refused where it is made (`nodes.id`) and
 //!   passed by in the fold; this keeps what a side wrote anyway off the
-//!   wire (`person_elsewhere`).
+//!   wire (`person_elsewhere`). A side knows such a node by its created
+//!   body, or by the sender's word that it withheld that body for this
+//!   reason, taken only for a node the receiving side itself makes from a
+//!   person or group key it knows (`people`, its partner, a key in the
+//!   batch's bodies) in this audience: no sender's word takes a body of an
+//!   ordinary node away. The created row and the node's later rows may
+//!   come in different batches, so `take` lists the nodes it learnt of
+//!   ([`Taken::elsewhere`]) and the caller keeps them and gives them to
+//!   every later `take` and `send` (`elsewhere`): no body of such a node
+//!   is taken or sent again, whatever batch it comes in.
 //! - **No secret** (`secret`): none of her texts in it holds what the host
 //!   filter's secret scan would wipe, and no other string in it (an id, a
 //!   token, a key of a map) holds a key of a known shape. Ids and digests
@@ -79,7 +102,7 @@ use myriad_perception_filter::secrets::{self, SecretKind};
 use myriad_persona_log::{
     AdmitInput, Admitted, Holder, Replicate, Row, Vector, admit,
     admit::{Epochs, Reason, Refusal},
-    forget::Entry,
+    forget::{self, Entry},
     payloads, vector,
 };
 use myriad_persona_sync::canonical::canonical_bytes;
@@ -195,6 +218,19 @@ pub struct SendInput {
     pub ask: Vec<String>,
     /// The other side.
     pub holder: Holder,
+    /// The other side's core ABI (`meta.version` `abi`): 2 when its link's
+    /// `hello` or `welcome` lists the `log2` capability, 1 when not. A side
+    /// below 2 gets nothing that carries a merge's or a split's names or a
+    /// retract (`tooOld`): its core would refuse the whole batch.
+    pub peer_abi: u32,
+    /// This side's ledger, required: a node it forgot or took back from
+    /// sync goes as stubs under every name it has, whatever rows are given.
+    pub ledger: Vec<Entry>,
+    /// The nodes (`node:<id>`) this side knows are a person's or a group's
+    /// in her own audience ([`Taken::elsewhere`], kept): no body of theirs
+    /// goes, though their created row's body is not among `bodies`.
+    #[serde(default)]
+    pub elsewhere: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -206,6 +242,21 @@ pub struct Sent {
     /// The other side may not hold this audience: nothing goes.
     #[serde(skip_serializing_if = "is_false")]
     pub not_held: bool,
+    /// The other side's core is older than ABI 2 and would refuse a row
+    /// that is to go: nothing goes until it repins.
+    #[serde(skip_serializing_if = "is_false")]
+    pub too_old: bool,
+}
+
+/// The core ABI a row needs on the side that takes it: 2 for one with a
+/// name in its envelope (`to`, `takes`) or a retract.
+fn needs_abi(row: &Row) -> u32 {
+    let retract = matches!(row.rule(), myriad_persona_log::Rule::Retract);
+    if row.to.is_some() || !row.takes.is_empty() || retract {
+        2
+    } else {
+        1
+    }
 }
 
 fn is_false(value: &bool) -> bool {
@@ -224,8 +275,10 @@ pub struct TakeInput {
     pub known: BTreeMap<String, String>,
     #[serde(default)]
     pub members: BTreeMap<String, BTreeSet<String>>,
+    /// This side's ledger, as for `log.admit`: refused without once a
+    /// retract is in the batch.
     #[serde(default)]
-    pub ledger: Vec<Entry>,
+    pub ledger: Option<Vec<Entry>>,
     #[serde(default)]
     pub epochs: Epochs,
     /// The rows this side holds and asked again for the bodies of: one that
@@ -233,6 +286,17 @@ pub struct TakeInput {
     /// taken; one that comes back otherwise is refused.
     #[serde(default)]
     pub held: Vec<Row>,
+    /// The nodes this side already knows are a person's or a group's in her
+    /// own audience (earlier [`Taken::elsewhere`]): no body of theirs is
+    /// taken, in this batch or any later one.
+    #[serde(default)]
+    pub elsewhere: Vec<String>,
+    /// Person and group keys this side knows (`person:<id>`, `group:<id>`):
+    /// the sender's word that it kept a node's body back as a person's or
+    /// a group's (`person_elsewhere`) holds only for a node one of them, or
+    /// a key in the batch's bodies, makes in this audience.
+    #[serde(default)]
+    pub people: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -251,6 +315,13 @@ pub struct Taken {
     /// (`log.vector` `ask`), at most once per link session.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub ask: Vec<String>,
+    /// Nodes this batch showed to be a person's or a group's in her own
+    /// audience (by a created body, or the sender's `person_elsewhere` for
+    /// a node this side can tie to such a key), not among the `elsewhere`
+    /// given: the caller keeps them for every later `take` and `send`, and
+    /// drops any body of theirs it stored before.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub elsewhere: Vec<String>,
 }
 
 /// Whether an id is a local file or path, after its `<type>:`.
@@ -445,7 +516,9 @@ fn payload(kind: &str, body: &Value) -> Result<(), Why> {
 
 /// The nodes whose created row (among `created`, row and body) puts a
 /// person or a group in her own audience.
-fn elsewhere<'a>(created: impl Iterator<Item = (&'a Row, &'a Value)>) -> BTreeSet<String> {
+pub(crate) fn elsewhere<'a>(
+    created: impl Iterator<Item = (&'a Row, &'a Value)>,
+) -> BTreeSet<String> {
     created
         .filter(|(row, _)| row.kind == "node.created")
         .filter(|(row, body)| {
@@ -461,6 +534,17 @@ fn elsewhere<'a>(created: impl Iterator<Item = (&'a Row, &'a Value)>) -> BTreeSe
 /// The body of `row` checked for the wire: its canonical bytes, and the
 /// body as read; or why it does not travel.
 pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
+    carry_as(row, body, true)
+}
+
+/// The body of `row` checked for a home's own backup
+/// ([`crate::home`]): as for the wire, but a body kept on its device
+/// (`sync: local`) goes too, for the file stays on the partner's computers.
+pub fn carry_home(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
+    carry_as(row, body, false)
+}
+
+fn carry_as(row: &Row, body: &Value, shared_only: bool) -> Result<(Vec<u8>, Value), Why> {
     if elsewhere(std::iter::once((row, body))).contains(&row.object) {
         return Err(Why::PersonElsewhere);
     }
@@ -480,7 +564,7 @@ pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
     if bytes.len() > MAX_BODY_BYTES {
         return Err(Why::TooLarge);
     }
-    if body.tags().0 != &Sync::Shared {
+    if shared_only && body.tags().0 != &Sync::Shared {
         return Err(Why::NotShared);
     }
     let fits = match &body {
@@ -504,7 +588,7 @@ pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
 }
 
 /// A payload as it arrived: its bytes and the JSON they read as.
-type Decoded = Result<(Vec<u8>, Value), Why>;
+pub(crate) type Decoded = Result<(Vec<u8>, Value), Why>;
 
 /// What to send a side holding `theirs` of one audience, in batches.
 pub fn send(input: SendInput) -> Result<Sent, NodeError> {
@@ -515,10 +599,16 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         theirs,
         ask,
         holder,
+        peer_abi,
+        ledger,
+        elsewhere: known_away,
     } = input;
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    if peer_abi == 0 {
+        return Err(NodeError::new("the other side's ABI is 1 or more"));
+    }
     myriad_persona_log::row::Audience::parse(&audience)
         .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
     if rows.iter().any(|row| row.audience != audience) {
@@ -533,12 +623,18 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         return Ok(Sent {
             batches: Vec::new(),
             not_held: true,
+            too_old: false,
         });
     }
-    let away = elsewhere(
+    // Nothing of a forgotten or retracted node leaves this side but stubs,
+    // under any name of it: the other side keeps nothing of this side's.
+    let ledger = forget::joined(&ledger, &forget::ledger(&rows));
+    let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Away);
+    let mut away = elsewhere(
         rows.iter()
             .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
     );
+    away.extend(known_away);
     let answered =
         vector::answer(&rows, &theirs).map_err(|error| NodeError::new(error.to_string()))?;
     let lacked: BTreeSet<&str> = answered.iter().map(|row| row.id.as_str()).collect();
@@ -551,6 +647,17 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut again);
+    if answered
+        .iter()
+        .chain(&again)
+        .any(|row| needs_abi(row) > peer_abi)
+    {
+        return Ok(Sent {
+            batches: Vec::new(),
+            not_held: false,
+            too_old: true,
+        });
+    }
     let engine = base64::engine::general_purpose::STANDARD;
     let mut batches: Vec<Batch> = Vec::new();
     let mut bytes = 0;
@@ -607,6 +714,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     Ok(Sent {
         batches,
         not_held: false,
+        too_old: false,
     })
 }
 
@@ -621,6 +729,8 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         held,
+        elsewhere: known_away,
+        people,
     } = input;
     holder
         .check()
@@ -680,6 +790,33 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             rows.push(row.clone());
         }
     }
+    // What the batch's own bodies show, read as sent: the person and group
+    // keys a node id may be made of.
+    let shown: BTreeMap<String, Value> = batch
+        .rows
+        .iter()
+        .filter_map(|row| {
+            let payload = row.payload.as_ref().filter(|_| !row.forgotten)?;
+            let data = base64::engine::general_purpose::STANDARD
+                .decode(carried.get(payload.reference.as_str())?)
+                .ok()?;
+            Some((row.id.clone(), serde_json::from_slice(&data).ok()?))
+        })
+        .collect();
+    // The person and group nodes this side can tie a node of this audience
+    // to: only for one of them is the sender's `person_elsewhere` taken.
+    let mut keys: BTreeSet<String> = people.into_iter().collect();
+    keys.insert(format!("person:{}", holder.owner));
+    for body in shown.values() {
+        strings(body, &mut keys);
+    }
+    let ties: BTreeSet<String> = keys
+        .iter()
+        .filter(|key| Key::parse(key).is_ok_and(|key| !key.fits(&batch.audience)))
+        .map(|key| format!("node:{}", crate::key::made_id(&batch.audience, key)))
+        .collect();
+    forget::given(ledger.as_deref(), &batch.rows)
+        .map_err(|error| NodeError::new(error.to_string()))?;
     let mut admitted = admit(AdmitInput {
         rows,
         now,
@@ -688,8 +825,12 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         holder: Some(holder),
-    });
+    })
+    .map_err(|error| NodeError::new(error.to_string()))?;
     admitted.refused.extend(astray);
+    // A row asked again for is taken as the ledger stands now too: no
+    // body of a node forgotten or taken back from this side comes in.
+    let (again, _) = forget::absorb(again, &admitted.ledger, forget::Side::Here);
     let engine = base64::engine::general_purpose::STANDARD;
     // The most base64 one body may take.
     let most = MAX_BODY_BYTES.div_ceil(3) * 4;
@@ -715,11 +856,28 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             Some((row, read))
         })
         .collect();
-    let away = elsewhere(
+    let mut away = elsewhere(
         decoded
             .iter()
             .filter_map(|(row, read)| read.as_ref().ok().map(|(_, body)| (*row, body))),
     );
+    // The sender's word that it kept a body back for this reason marks the
+    // node too (the created body that would show it may never come), but
+    // only a node this side itself ties to a person or a group.
+    away.extend(
+        batch
+            .rows
+            .iter()
+            .filter(|row| said.get(row.id.as_str()) == Some(&Why::PersonElsewhere))
+            .filter(|row| ties.contains(&row.object))
+            .map(|row| row.object.clone()),
+    );
+    let learnt: Vec<String> = away
+        .iter()
+        .filter(|node| !known_away.contains(node))
+        .cloned()
+        .collect();
+    away.extend(known_away);
     let mut bodies = BTreeMap::new();
     let mut withheld = Vec::new();
     for (row, read) in decoded {
@@ -754,7 +912,20 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         bodies,
         withheld,
         ask,
+        elsewhere: learnt,
     })
+}
+
+/// Every string in `value`, into `out`.
+fn strings(value: &Value, out: &mut BTreeSet<String>) {
+    match value {
+        Value::String(one) => {
+            out.insert(one.clone());
+        }
+        Value::Array(items) => items.iter().for_each(|item| strings(item, out)),
+        Value::Object(map) => map.values().for_each(|item| strings(item, out)),
+        _ => {}
+    }
 }
 
 #[cfg(test)]

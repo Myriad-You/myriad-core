@@ -5,7 +5,8 @@
 //! so a refusal names a field, never a value.
 
 use myriad_nodes::{
-    Body, NodeError, fold as fold_rows, limits as node_limits, place, queue as due, upkeep, wire,
+    Body, NodeError, fold as fold_rows, home, limits as node_limits, place, queue as due, upkeep,
+    wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -68,18 +69,65 @@ pub(super) fn limits(raw: &[u8]) -> Result<Value, Failure> {
     answer(&node_limits::limits())
 }
 
+/// `{rows, bodies?, ledger}` → the nodes folded; the ledger is required.
+/// `reached` is what this side's forgets reach through merges and splits,
+/// for local cleanup only: a host writes only the forget the partner made,
+/// never a row for these.
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, rows, bodies?, theirs?, holder}` → `{batches, withheld?,
-/// notHeld?}`: what to send another host core of one audience.
+/// `{audience, node, rows, bodies?, ledger, forget?}` → `{takes}`: the
+/// rows of other nodes this side's fold places in the node the partner
+/// takes back from sync, one sorted list per `retract` row to write (at
+/// least one). A retract reaches its node's own rows and what it lists,
+/// never through a merge or a split. With `forget`, the lists for a
+/// `forget` row a home writes: only the rows it keeps that its fold shows
+/// in the node, which a forget takes only when it lists them.
+pub(super) fn retract(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&fold_rows::retract_lists(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{audience, rows, bodies?, ledger, holder, elsewhere?}` → a home page
+/// (`{audience, rows, payloads, withheld?}`): every row of a node this side
+/// keeps, whole, for the export file's home part. A body goes as it would
+/// on the wire, but one kept on its device goes too; one that may not go
+/// goes as its row alone (`withheld`), and is stored with its body missing
+/// where the page is taken. Only a computer of the partner's.
+pub(super) fn home_send(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&home::send(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{ledger, origin}` → `{retract}`: the nodes this side is a home of and
+/// has written no retract of; it writes one for each, with no list.
+pub(super) fn home_owed(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&home::home_owed(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{page, holder, ledger, held?, origin?}` → `{rows, bodies?, filled?,
+/// withheld?, ledger, retract?}`: a home page taken onto this computer,
+/// which becomes the home (`retract`: [`home::owed`]);
+/// the rows are stored as its own, before the file's log pages, and each
+/// stub of `held` the page holds whole is `filled`. Each body is checked as
+/// one from the wire; one that fails is `withheld`. Only a computer of the
+/// partner's.
+pub(super) fn home_take(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&home::take(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger, peerAbi,
+/// elsewhere?}` → `{batches, notHeld?, tooOld?}`: what to send another
+/// host core of one audience; a forgotten or retracted node goes as stubs
+/// only. `peerAbi` is the other side's ABI (2 when its hello listed
+/// `log2`, else 1): rows it cannot read are not sent to it (`tooOld`).
 pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::send(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{batch, holder, now, known?, members?, ledger?, epochs?}` → what
-/// `log.admit` answers, with `bodies?` and `withheld?`.
+/// `{batch, holder, now, known?, members?, ledger?, epochs?, held?,
+/// elsewhere?, people?}` → what `log.admit` answers, with `bodies?`,
+/// `withheld?`, `ask?` and `elsewhere?`. The ledger is required when the
+/// batch holds a retract; names come from the rows' envelopes.
 pub(super) fn wire_take(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::take(quiet_input(raw)?).map_err(refused)?)
 }

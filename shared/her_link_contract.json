@@ -79,7 +79,8 @@
     "reminders",
     "moments",
     "nodes",
-    "images"
+    "images",
+    "log2"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
   "noticeKinds": ["work", "waiting", "report", "reminder"],
@@ -127,14 +128,14 @@
       "delivery": "handshake",
       "required": ["protocol", "role", "surface"],
       "optional": ["capabilities", "app", "lineage", "hostEpoch"],
-      "description": "The first frame, within helloTimeoutMs of the upgrade. role is child for a child end. role host is the device she lives on (her host lease names it, H3e): it is welcomed only while it holds the lease at the hostEpoch it says, and then only hears what becomes of her there (host.freeze, host.thaw, host.moved); otherwise the link closes with host_moved, and it lets its copy of her go. host while the site has no lease closes with host_is_site. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time); the host does not act on them yet."
+      "description": "The first frame, within helloTimeoutMs of the upgrade. role is child for a child end. role host is the device she lives on (her host lease names it, H3e): it is welcomed only while it holds the lease at the hostEpoch it says, and then only hears what becomes of her there (host.freeze, host.thaw, host.moved); otherwise the link closes with host_moved, and it lets its copy of her go. host while the site has no lease closes with host_is_site. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. log2 says this end's shared core is ABI 2 or later (it reads her log's merge, split and retract rows, MYRIAD_CORE_ABI_VERSION): an end sends those rows only to a side that listed it (nodes.wire_send peerAbi). app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time); the host does not act on them yet."
     },
     "welcome": {
       "from": "host",
       "delivery": "handshake",
       "required": ["protocol", "role", "host", "deviceId", "heartbeatMs", "capabilities", "turns", "serverTime"],
       "optional": ["deviceName", "lineage", "hostEpoch"],
-      "description": "The answer to hello. host is where she lives (site; app on the link of the device she lives on, whose welcome has role site, no capabilities and no turns). lineage is her birth and hostEpoch her host lease's epoch, which only goes up: a child that later hears a higher epoch knows she moved in between. Both are null while the site has no her. deviceId and deviceName are this device as the site knows it. capabilities is the child's list as accepted. turns is this device's recent turns the host still has: [{turnId, runId, sessionId?, lastSequence, completed}], newest first, so a child can tell what to resume. serverTime is milliseconds since the epoch. After welcome the host sends mood, when her persona is on."
+      "description": "The answer to hello. host is where she lives (site; app on the link of the device she lives on, whose welcome has role site and no turns, and lists as capabilities what the site itself can do, so that device learns the site's core reads log2 rows: without it, it sends with peerAbi 1). lineage is her birth and hostEpoch her host lease's epoch, which only goes up: a child that later hears a higher epoch knows she moved in between. Both are null while the site has no her. deviceId and deviceName are this device as the site knows it. capabilities is the child's list as accepted; on the link of the device she lives on, the site's own list (log2 when the site's core is ABI 2 or later). turns is this device's recent turns the host still has: [{turnId, runId, sessionId?, lastSequence, completed}], newest first, so a child can tell what to resume. serverTime is milliseconds since the epoch. After welcome the host sends mood, when her persona is on."
     },
     "input": {
       "from": "child",

@@ -19,7 +19,7 @@ use myriad_persona_sync::hlc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    Holder, Row,
+    Holder, LogError, Row,
     forget::{self, Entry},
     row::{Audience, Replicate, sort},
 };
@@ -40,9 +40,11 @@ pub struct AdmitInput {
     /// them is refused. Groups not listed are not checked.
     #[serde(default)]
     pub members: BTreeMap<String, BTreeSet<String>>,
-    /// This side's ledger.
+    /// This side's ledger: what it forgot, took back and keeps, and the
+    /// other names of its nodes ([`crate::forget`]). Refused without once a
+    /// retract is in the batch: what this side keeps may be only on it.
     #[serde(default)]
-    pub ledger: Vec<Entry>,
+    pub ledger: Option<Vec<Entry>>,
     /// For each audience, then each side, the highest epoch of its her
     /// rows this side holds there.
     #[serde(default)]
@@ -107,7 +109,10 @@ pub struct Admitted {
     pub epochs: Epochs,
 }
 
-pub fn admit(input: AdmitInput) -> Admitted {
+/// A batch checked. Refused as a whole when a retract is in the batch and
+/// no ledger is given: a home never loses its node to a call that did not
+/// say what it keeps.
+pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
     let AdmitInput {
         mut rows,
         now,
@@ -117,13 +122,15 @@ pub fn admit(input: AdmitInput) -> Admitted {
         mut epochs,
         holder,
     } = input;
+    forget::given(ledger.as_deref(), &rows)?;
+    let ledger = ledger.unwrap_or_default();
     let ahead = rows
         .iter()
         .map(|row| hlc::ahead_ms(&row.hlc, now))
         .max()
         .unwrap_or(0);
     if ahead > hlc::MAX_AHEAD_MS {
-        return Admitted {
+        return Ok(Admitted {
             accepted: Vec::new(),
             refused: Vec::new(),
             clock_ahead: Some(ClockAhead {
@@ -132,7 +139,7 @@ pub fn admit(input: AdmitInput) -> Admitted {
             }),
             ledger,
             epochs,
-        };
+        });
     }
     sort(&mut rows);
     let refuse = |row: &Row, reason, detail: Option<String>| Refusal {
@@ -198,12 +205,12 @@ pub fn admit(input: AdmitInput) -> Admitted {
         accepted.push(row);
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&accepted));
-    let (accepted, _) = forget::absorb(accepted, &ledger);
-    Admitted {
+    let (accepted, _) = forget::absorb(accepted, &ledger, forget::Side::Here);
+    Ok(Admitted {
         accepted,
         refused,
         clock_ahead: None,
         ledger,
         epochs,
-    }
+    })
 }

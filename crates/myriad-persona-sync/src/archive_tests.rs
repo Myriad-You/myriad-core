@@ -10,7 +10,9 @@ fn sealed() -> (ArchiveHeader, usize, Vec<u8>) {
 }
 
 fn refused(file: &[u8]) -> String {
-    open(SAMPLE_PASSPHRASE, file).unwrap_err().to_string()
+    open(SAMPLE_PASSPHRASE, file, false)
+        .unwrap_err()
+        .to_string()
 }
 
 #[test]
@@ -18,7 +20,7 @@ fn the_sample_spans_several_chunks_and_opens() {
     let (header, start, file) = sealed();
     let chunk = header.chunk_bytes as usize + TAG_BYTES;
     assert!(file.len() - start > 2 * chunk, "{}", file.len());
-    let opened = open(SAMPLE_PASSPHRASE, &file).unwrap();
+    let opened = open(SAMPLE_PASSPHRASE, &file, false).unwrap();
     assert_eq!(opened.manifest.digest, header.digest);
     assert_eq!(opened.manifest.kinds["memory"].count, 1);
     assert_eq!(opened.manifest.embeddings.count, 1);
@@ -28,10 +30,12 @@ fn the_sample_spans_several_chunks_and_opens() {
 #[test]
 fn a_wrong_passphrase_opens_nothing_and_says_nothing_of_it() {
     let (_, _, file) = sealed();
-    let error = open("雨天的伞 umbrella 8", &file).unwrap_err().to_string();
+    let error = open("雨天的伞 umbrella 8", &file, false)
+        .unwrap_err()
+        .to_string();
     assert_eq!(error, DOES_NOT_OPEN);
     assert!(!error.contains("umbrella"));
-    assert!(open("", &file).is_err());
+    assert!(open("", &file, false).is_err());
 }
 
 #[test]
@@ -59,7 +63,7 @@ fn a_file_cut_short_anywhere_is_refused() {
     let last = (file.len() - start) % chunk;
     assert_eq!(refused(&file[..file.len() - last]), DOES_NOT_OPEN);
     // Inside the header line.
-    assert!(open(SAMPLE_PASSPHRASE, &file[..start - 1]).is_err());
+    assert!(open(SAMPLE_PASSPHRASE, &file[..start - 1], false).is_err());
     // Nothing after the header.
     assert_eq!(refused(&file[..start]), DOES_NOT_OPEN);
 }
@@ -89,7 +93,7 @@ fn moved_changed_or_added_bytes_are_refused() {
     // A header not in its canonical form.
     let mut spaced = b"{ ".to_vec();
     spaced.extend_from_slice(&file[1..]);
-    assert!(open(SAMPLE_PASSPHRASE, &spaced).is_err());
+    assert!(open(SAMPLE_PASSPHRASE, &spaced, false).is_err());
 }
 
 #[test]
@@ -156,7 +160,7 @@ fn parts_are_checked_against_the_manifest_and_their_files() {
     // A page dropped: the manifest no longer holds.
     let mut parts = sample.parts.clone();
     parts.remove(0);
-    assert!(open(SAMPLE_PASSPHRASE, &reseal(parts)).is_err());
+    assert!(open(SAMPLE_PASSPHRASE, &reseal(parts), false).is_err());
     // No end.
     let mut parts = sample.parts.clone();
     parts.pop();
@@ -177,7 +181,7 @@ fn parts_are_checked_against_the_manifest_and_their_files() {
 
 #[test]
 fn the_manifest_does_not_depend_on_the_order_her_pages_came_in() {
-    let opened = open(SAMPLE_PASSPHRASE, &archive_sample().seal()).unwrap();
+    let opened = open(SAMPLE_PASSPHRASE, &archive_sample().seal(), false).unwrap();
     let envelope = &opened.envelopes[0];
     let mut split: Vec<Envelope> = envelope
         .entities
@@ -220,6 +224,22 @@ fn streaming_in_any_window_sizes_opens_the_same() {
     }
 }
 
+/// A whole file's parts, opened with the sample's passphrase but not
+/// checked.
+fn parts_of(file: &[u8]) -> Vec<(Part, Vec<u8>)> {
+    let (header, start) = read_header(file).unwrap();
+    let key = derive_key(SAMPLE_PASSPHRASE, &header.kdf).unwrap();
+    let mut opener = Opener::new(key, header.clone()).unwrap();
+    let mut reader = PartReader::new();
+    let mut parts = Vec::new();
+    for window in file[start..].chunks(header.chunk_bytes as usize + TAG_BYTES) {
+        parts.extend(reader.push(&opener.push(window).unwrap()).unwrap());
+    }
+    parts.extend(reader.push(&opener.finish().unwrap()).unwrap());
+    reader.finish().unwrap();
+    parts
+}
+
 /// One audience's page of her log, as `nodes.wire_send` makes a batch.
 fn log_page(ids: &[&str]) -> serde_json::Value {
     let rows: Vec<serde_json::Value> = ids
@@ -244,6 +264,16 @@ fn log_page(ids: &[&str]) -> serde_json::Value {
 /// The sample with log pages after its envelope page, sealed as a
 /// version 2 file (or, with `logs` false, wrongly as version 1).
 fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::SyncError> {
+    with_pages(pages, &[], logs, false)
+}
+
+/// The sample with log pages, then a home's pages, after its envelope page.
+fn with_pages(
+    pages: &[serde_json::Value],
+    homes: &[serde_json::Value],
+    logs: bool,
+    home: bool,
+) -> Result<Vec<u8>, crate::SyncError> {
     let mut sample = archive_sample();
     let envelopes: Vec<Envelope> = sample
         .parts
@@ -254,6 +284,8 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::
     let manifest = Manifest::of_envelopes(&envelopes)
         .unwrap()
         .with_logs(pages, |_| true)
+        .unwrap()
+        .with_home(homes, true)
         .unwrap();
     let mut header = ArchiveHeader::new(
         &[0x11; SALT_BYTES],
@@ -265,22 +297,21 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::
             created_at: sample.header.created_at,
             digest: manifest.digest.clone(),
             logs,
+            home,
         },
     )
     .unwrap();
     header.chunk_bytes = 1024;
     sample.header = header;
-    for (at, page) in pages.iter().enumerate() {
+    for (at, page) in pages.iter().chain(homes).enumerate() {
         let bytes = crate::canonical::canonical_bytes(page);
-        sample.parts.insert(
-            1 + at,
-            (
-                Part::Log {
-                    bytes: bytes.len() as u64,
-                },
-                bytes,
-            ),
-        );
+        let size = bytes.len() as u64;
+        let part = if at < pages.len() {
+            Part::Log { bytes: size }
+        } else {
+            Part::Home { bytes: size }
+        };
+        sample.parts.insert(1 + at, (part, bytes));
     }
     let end = sample.parts.len() - 1;
     sample.parts[end] = (Part::End { manifest }, Vec::new());
@@ -301,24 +332,74 @@ fn envelopes() -> Vec<Envelope> {
 fn a_file_with_log_pages_is_version_2_and_opens_them() {
     let pages = [log_page(&["r1", "r2"]), log_page(&["r3"])];
     let file = with_logs(&pages, true).unwrap();
-    let opened = open(SAMPLE_PASSPHRASE, &file).unwrap();
+    let opened = open(SAMPLE_PASSPHRASE, &file, false).unwrap();
     assert_eq!(opened.header.version, ARCHIVE_LOG_VERSION);
     assert_eq!(opened.logs, pages);
     assert_eq!(opened.manifest.log.as_ref().unwrap().count, 3);
     // The same rows in other pages, in another order: the same manifest.
     let other = [log_page(&["r3"]), log_page(&["r1", "r2"])];
-    let reread = open(SAMPLE_PASSPHRASE, &with_logs(&other, true).unwrap()).unwrap();
+    let reread = open(SAMPLE_PASSPHRASE, &with_logs(&other, true).unwrap(), false).unwrap();
     assert_eq!(reread.manifest, opened.manifest);
     // A file with no log pages is still version 1 and its manifest unchanged.
     let (header, _, plain) = sealed();
     assert_eq!(header.version, ARCHIVE_VERSION);
     assert!(
-        open(SAMPLE_PASSPHRASE, &plain)
+        open(SAMPLE_PASSPHRASE, &plain, false)
             .unwrap()
             .manifest
             .log
             .is_none()
     );
+}
+
+#[test]
+fn a_homes_pages_open_apart_and_only_a_computer_of_the_partners_holds_them() {
+    let pages = [log_page(&["r1", "r2"])];
+    let homes = [log_page(&["r1"])];
+    let file = with_pages(&pages, &homes, true, true).unwrap();
+    let opened = open(SAMPLE_PASSPHRASE, &file, true).unwrap();
+    assert!(opened.header.home);
+    assert_eq!(opened.logs, pages);
+    assert_eq!(opened.homes, homes);
+    assert_eq!(opened.manifest.home.as_ref().unwrap().count, 1);
+    let logs_only = open(SAMPLE_PASSPHRASE, &with_logs(&pages, true).unwrap(), false).unwrap();
+    assert!(logs_only.homes.is_empty() && logs_only.manifest.home.is_none());
+    assert_ne!(logs_only.manifest.digest, opened.manifest.digest);
+    // A file for a site or a server holds none.
+    let refused = Manifest::of_envelopes(&envelopes())
+        .unwrap()
+        .with_home(&homes, false)
+        .unwrap_err();
+    assert!(
+        refused.to_string().contains("only for a computer"),
+        "{refused}"
+    );
+    // A site or a server never opens a file holding a home's pages.
+    let error = open(SAMPLE_PASSPHRASE, &file, false).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("only a computer of the partner's"),
+        "{error}"
+    );
+    // The header says the file holds them: not written without it, and a
+    // file without it whose pages say otherwise is refused on opening.
+    let error = with_pages(&pages, &homes, true, false).unwrap_err();
+    assert!(error.to_string().contains("header"), "{error}");
+    let (header, _) = read_header(&file).unwrap();
+    let mut parts = parts_of(&file);
+    let mut plain = header.clone();
+    plain.home = false;
+    let refused = check_parts(plain, std::mem::take(&mut parts), true).unwrap_err();
+    assert!(refused.to_string().contains("header"), "{refused}");
+    // A header that says so with no home pages is refused too.
+    let mut said = read_header(&with_logs(&pages, true).unwrap()).unwrap().0;
+    said.home = true;
+    assert!(check_parts(said, parts_of(&with_logs(&pages, true).unwrap()), true).is_err());
+    // A version 1 header never says so.
+    let mut old = header;
+    old.version = ARCHIVE_VERSION;
+    assert!(old.check().is_err());
 }
 
 #[test]
