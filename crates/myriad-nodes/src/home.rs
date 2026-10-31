@@ -10,11 +10,18 @@
 //! local `retract.home` marks, and each row's body as its canonical bytes,
 //! base64, in the batch frame (`{audience, rows, payloads, withheld?}`).
 //!
-//! A body goes into a page only as it would go on the wire
-//! ([`crate::wire::carry`]): shared, no local path, no secret, not too
-//! large, of its row's audience, not a person's or a group's node in hers.
-//! One that fails goes as its row alone, and the page says why
-//! (`withheld`), on writing and again on taking.
+//! A body goes into a page only as it would go on the wire, but for its
+//! sync tag ([`crate::wire::carry_home`]): a body kept on its device goes
+//! too, for upkeep on a kept node writes only such bodies and the file's
+//! home part is opened only on a computer of the partner's
+//! (`myriad_persona_sync::archive`). Still no local path, no secret, not
+//! too large, of its row's audience, not a person's or a group's node in
+//! hers (by the created bodies in the page, and `elsewhere`). One that
+//! fails goes as its row alone, and the page says why (`withheld`), on
+//! writing and again on taking: the host tells the partner what the file
+//! leaves out. Taken onto another computer, such a row is stored whole but
+//! with its body missing, not as a stub: it is no row forgotten, and a body
+//! of it that comes later fills it.
 //!
 //! Only a computer of the partner's writes or takes one ([`send`],
 //! [`take`]): a site or a server never holds what a home keeps. Taking a
@@ -37,7 +44,7 @@ use serde_json::Value;
 
 use crate::{
     NodeError,
-    wire::{Batch, Carried, Why, Withheld, carry},
+    wire::{Batch, Carried, Decoded, Why, Withheld, carry_home, elsewhere},
 };
 
 #[derive(Debug, Clone, Deserialize)]
@@ -53,6 +60,10 @@ pub struct SendInput {
     pub ledger: Vec<Entry>,
     /// This side: a computer of the partner's.
     pub holder: Holder,
+    /// Nodes known to put a person or a group in her own audience
+    /// ([`crate::wire::Taken::elsewhere`], kept): no body of theirs goes.
+    #[serde(default)]
+    pub elsewhere: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -126,6 +137,7 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
         bodies,
         ledger,
         holder,
+        elsewhere: known_away,
     } = input;
     check_holder(&holder, &audience)?;
     if rows.iter().any(|row| row.audience != audience) {
@@ -142,6 +154,11 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut kept);
+    let mut away = elsewhere(
+        kept.iter()
+            .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
+    );
+    away.extend(known_away);
     let engine = base64::engine::general_purpose::STANDARD;
     let mut payloads = Vec::new();
     let mut withheld = Vec::new();
@@ -153,7 +170,8 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
         };
         let carried = match bodies.get(&row.id) {
             None => Err(Why::NoBody),
-            Some(body) => carry(row, body).map(|(bytes, _)| bytes),
+            Some(_) if away.contains(&row.object) => Err(Why::PersonElsewhere),
+            Some(body) => carry_home(row, body).map(|(bytes, _)| bytes),
         };
         match carried {
             Ok(bytes) => payloads.push(Carried {
@@ -227,27 +245,44 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     let (mut rows, _) = forget::absorb(page.rows.clone(), &ledger, Side::Here);
     myriad_persona_log::row::sort(&mut rows);
     let engine = base64::engine::general_purpose::STANDARD;
+    let decoded: Vec<(&Row, Decoded)> = rows
+        .iter()
+        .filter_map(|row| {
+            let payload = row.payload.as_ref().filter(|_| !row.forgotten)?;
+            let read = match carried.get(payload.reference.as_str()) {
+                None => Err(said.get(row.id.as_str()).copied().unwrap_or(Why::NoBody)),
+                Some(data) => engine
+                    .decode(data)
+                    .map_err(|_| Why::BadBody)
+                    .and_then(|bytes| {
+                        let body = serde_json::from_slice(&bytes).map_err(|_| Why::BadBody)?;
+                        Ok((bytes, body))
+                    }),
+            };
+            Some((row, read))
+        })
+        .collect();
+    // A person's or a group's node in her own audience, by the created
+    // bodies in the page: no body of it comes in.
+    let away = elsewhere(
+        decoded
+            .iter()
+            .filter_map(|(row, read)| read.as_ref().ok().map(|(_, body)| (*row, body))),
+    );
     let mut bodies = BTreeMap::new();
     let mut withheld = Vec::new();
-    for row in &rows {
-        let Some(payload) = row.payload.as_ref().filter(|_| !row.forgotten) else {
-            continue;
-        };
-        let read = match carried.get(payload.reference.as_str()) {
-            None => Err(said.get(row.id.as_str()).copied().unwrap_or(Why::NoBody)),
-            Some(data) => engine
-                .decode(data)
-                .map_err(|_| Why::BadBody)
-                .and_then(|bytes| {
-                    let body: Value = serde_json::from_slice(&bytes).map_err(|_| Why::BadBody)?;
-                    let (canonical, value) = carry(row, &body)?;
-                    if canonical == bytes {
-                        Ok(value)
-                    } else {
-                        Err(Why::BadBody)
-                    }
-                }),
-        };
+    for (row, read) in decoded {
+        let read = read.and_then(|(bytes, body)| {
+            if away.contains(&row.object) {
+                return Err(Why::PersonElsewhere);
+            }
+            let (canonical, value) = carry_home(row, &body)?;
+            if canonical == bytes {
+                Ok(value)
+            } else {
+                Err(Why::BadBody)
+            }
+        });
         match read {
             Ok(body) => {
                 bodies.insert(row.id.clone(), body);

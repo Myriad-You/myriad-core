@@ -143,7 +143,16 @@ impl Side {
             self.bodies.insert(row.id.clone(), body);
         }
         if row.kind == "retract" && row.origin == self.origin && row.takes.is_empty() {
-            row.takes = self.retract_list(&row);
+            row.takes = self.retract_list(&row, false);
+        }
+        // A forget pressed here lists the kept rows this side's fold shows
+        // in the node (none off a home).
+        if row.kind == "forget"
+            && row.origin == self.origin
+            && row.takes.is_empty()
+            && row.object.starts_with("node:")
+        {
+            row.takes = self.retract_list(&row, true);
         }
         let mut wrote = vec![row.clone()];
         if row.kind == "retract" && row.origin == self.origin {
@@ -171,9 +180,9 @@ impl Side {
         }
     }
 
-    /// What a retract of this row's node lists, as this side folds it now
-    /// (one row's worth: no test node holds more).
-    fn retract_list(&self, retract: &Row) -> Vec<String> {
+    /// What a retract (or, `forget`, a forget) of this row's node lists, as
+    /// this side folds it now (one row's worth: no test node holds more).
+    fn retract_list(&self, retract: &Row, forget: bool) -> Vec<String> {
         let rows = self.of(&retract.audience);
         let bodies = self
             .bodies
@@ -187,6 +196,7 @@ impl Side {
             rows,
             bodies,
             ledger: self.ledger.clone(),
+            forget,
         })
         .map(|lists| lists.takes)
         .unwrap_or_else(|_| vec![Vec::new()]);
@@ -1312,6 +1322,10 @@ fn a_row_of_a_merged_node_the_retract_did_not_list_is_not_reached() {
             let release = node(&folded, KEY);
             assert_eq!(release["retracted"], json!(["dev_mac"]));
             assert!(release.get("spans").is_none(), "{release}");
+            // The merge is a stub there, and still places 「别的事」 in
+            // 「发版」 by its envelope: the span shows nowhere.
+            assert!(!whole(side, "x1"));
+            assert!(!shows(&folded, "别的事的一段。"), "{mac_first} {folded}");
         }
         // On the home it is one more line of 「发版」.
         let folded = mac.folded(MINE, false);
@@ -1353,6 +1367,39 @@ fn three_sides() -> (Side, Side, Side) {
     let mut air = Side::named(Core::Pc, "dev_air");
     air.sync_from(&site, MINE);
     (mac, site, air)
+}
+
+/// Whether any node of a fold shows a span of this text.
+fn shows(folded: &Value, text: &str) -> bool {
+    folded["nodes"].as_array().unwrap().iter().any(|node| {
+        node["spans"]
+            .as_array()
+            .is_some_and(|spans| spans.iter().any(|span| span["text"] == text))
+    })
+}
+
+/// The ids a fold stubs, for the host to delete their bodies.
+fn stubbed(folded: &Value) -> Vec<String> {
+    folded["stubbed"]
+        .as_array()
+        .map(|ids| {
+            ids.iter()
+                .map(|id| id.as_str().unwrap().to_string())
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// The nodes a fold says are reached, by id.
+fn reached(folded: &Value) -> Vec<String> {
+    folded["reached"]
+        .as_array()
+        .map(|all| {
+            all.iter()
+                .map(|one| one["target"].as_str().unwrap().to_string())
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 /// Whether a side holds a row whole, its body with it.
@@ -1682,6 +1729,17 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
         row("k1", "dev_mac", 5, T + 4, MINE, OTHER_KEY, "node.span"),
         Some(span(MINE, &format!("伙伴贴了 {} 让我记着。", token()))),
     );
+    // A local upkeep row on it: kept on its device, but in the page.
+    let mut local = row("l1", "dev_mac", 0, T + 4, MINE, OTHER_KEY, "node.span");
+    local.replicate = myriad_persona_log::Replicate::Local;
+    local.dseq = None;
+    mac.write(
+        local,
+        Some(json!({
+            "version": 1, "sync": {"local": "dev_mac"}, "saidBy": ["her"],
+            "audience": MINE, "text": "只在这台电脑上的一段。",
+        })),
+    );
     mac.write(
         row("m1", "dev_mac", 6, T + 5, MINE, OTHER_KEY, "retract"),
         None,
@@ -1695,6 +1753,7 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
             bodies: mac.bodies.clone(),
             ledger: mac.ledger.clone(),
             holder,
+            elsewhere: Vec::new(),
         })
     };
     let page = send_as(mac.holder.clone()).unwrap();
@@ -1711,6 +1770,7 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
         }]
     );
     assert!(!page.payloads.iter().any(|one| one.reference == "doc:k1"));
+    assert!(page.payloads.iter().any(|one| one.reference == "doc:l1"));
     // A site or a server never writes or takes one.
     let server = Holder {
         core: Core::Server,
@@ -1751,9 +1811,17 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
             why: Why::Secret
         }]
     );
+    // The key's span is stored with its body missing, not as a stub.
+    assert!(
+        taken
+            .rows
+            .iter()
+            .any(|row| row.id == "k1" && !row.forgotten)
+    );
     fresh.sync_from(&site, MINE);
     assert!(whole(&fresh, "r3"));
     assert!(whole(&fresh, "r1"));
+    assert!(whole(&fresh, "l1"));
     let folded = fresh.folded(MINE, false);
     let other = node(&folded, OTHER_KEY);
     assert_eq!(other["name"]["value"], "别的事", "{other}");
@@ -1941,6 +2009,7 @@ fn a_retract_of_a_node_that_took_many_rows_is_written_in_lists_that_fit() {
         rows: mac.of(MINE),
         bodies: mac.bodies.clone(),
         ledger: mac.ledger.clone(),
+        forget: false,
     })
     .unwrap()
     .takes;
@@ -1978,6 +2047,7 @@ fn a_retract_of_a_node_that_took_many_rows_is_written_in_lists_that_fit() {
             rows: fresh.of(MINE),
             bodies: fresh.bodies.clone(),
             ledger: fresh.ledger.clone(),
+            forget: false,
         })
     };
     assert_eq!(lists(OTHER_KEY).unwrap().takes, [Vec::<String>::new()]);
@@ -2106,4 +2176,134 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
     })
     .unwrap();
     assert!(sent.batches.iter().all(|batch| batch.payloads.is_empty()));
+}
+
+/// The Mac splits the span r2 off 「发版」 into a part, the server learns
+/// of it, and the partner takes 「发版」 back on the Mac: the span is a row
+/// of 「发版」, so the Mac keeps it, though it folds in the part.
+fn split_then_retracted() -> (Side, Side) {
+    const PART: &str = "minted:friday";
+    let (mut mac, mut site) = shared_node();
+    let (split, body) = split_of("p1", "dev_mac", 4, T + 5, KEY, PART);
+    mac.write(split, Some(body));
+    mac.write(
+        row("p2", "dev_mac", 5, T + 6, MINE, PART, "node.created"),
+        Some(created(PART, "task", "周五")),
+    );
+    site.sync_from(&mac, MINE);
+    mac.write(row("p3", "dev_mac", 6, T + 7, MINE, KEY, "retract"), None);
+    site.sync_from(&mac, MINE);
+    (mac, site)
+}
+
+#[test]
+fn a_home_deletes_nothing_it_keeps_when_a_part_it_split_off_is_forgotten() {
+    const PART: &str = "minted:friday";
+    let (mut mac, mut site) = split_then_retracted();
+    // The partner forgets the part on the site. Its forget reaches the
+    // span only through the split, which takes nothing the Mac keeps.
+    site.write(row("f1", "site", 1, T + 8, MINE, PART, "forget"), None);
+    mac.sync_from(&site, MINE);
+    let folded = mac.folded(MINE, false);
+    for id in ["r2", "p1"] {
+        assert!(whole(&mac, id), "{id}");
+        assert!(!stubbed(&folded).contains(&id.to_string()), "{id} {folded}");
+    }
+    // Nor does it show anywhere: it ends on a forgotten part.
+    assert!(!shows(&folded, "伙伴说周五发版。"), "{folded}");
+}
+
+#[test]
+fn a_shared_run_is_never_shown_what_a_retract_reaches() {
+    use crate::upkeep::{UpkeepInput, prepare};
+    const PART: &str = "minted:friday";
+    let shown = |side: &Side, key: &str| {
+        prepare(UpkeepInput {
+            rows: side.of(MINE),
+            bodies: side.bodies.clone(),
+            audience: MINE.into(),
+            node: Some(node_id(MINE, key).unwrap()),
+            candidates: Vec::new(),
+            inbox: Vec::new(),
+            ledger: side.ledger.clone(),
+        })
+        .unwrap()
+    };
+    // A span split off into a part, then taken back with 「发版」: the
+    // part is no node taken back, so a run on it is shared and is not
+    // shown the span, though the Mac's fold shows it there.
+    let (mac, _) = split_then_retracted();
+    assert!(shows(&mac.folded(MINE, false), "伙伴说周五发版。"));
+    let part = shown(&mac, PART);
+    assert!(!part.local);
+    assert!(part.spans.is_empty(), "{:?}", part.spans);
+    // Before the retract it was.
+    let (mut before, _) = shared_node();
+    let (split, body) = split_of("p1", "dev_mac", 4, T + 5, KEY, PART);
+    before.write(split, Some(body));
+    before.write(
+        row("p2", "dev_mac", 5, T + 6, MINE, PART, "node.created"),
+        Some(created(PART, "task", "周五")),
+    );
+    assert_eq!(shown(&before, PART).spans.len(), 1);
+    // 「发版」 merged into 「别的事」 after its retract: a shared run on
+    // 「别的事」 is not shown 「发版」's span either; a local run on a node
+    // taken back still sees its own.
+    let (mut mac, _) = shared_node();
+    mac.write(row("m1", "dev_mac", 4, T + 5, MINE, KEY, "retract"), None);
+    assert!(shown(&mac, KEY).local);
+    assert_eq!(shown(&mac, KEY).spans.len(), 1);
+    let (merge, body) = merge_of("m2", "dev_mac", 5, T + 6, KEY, OTHER_KEY);
+    mac.write(merge, Some(body));
+    assert!(shows(&mac.folded(MINE, false), "伙伴说周五发版。"));
+    let other = shown(&mac, OTHER_KEY);
+    assert!(!other.local);
+    assert!(other.spans.is_empty(), "{:?}", other.spans);
+}
+
+#[test]
+fn a_forget_pressed_on_a_home_takes_the_kept_rows_it_showed() {
+    const PART: &str = "minted:friday";
+    // The split: the part shows the span the Mac keeps; the partner
+    // forgets the part on the Mac, and the forget lists the span and the
+    // split that moved it.
+    let (mut mac, mut site) = split_then_retracted();
+    mac.write(row("f1", "dev_mac", 7, T + 8, MINE, PART, "forget"), None);
+    let forget = mac.rows.iter().find(|row| row.id == "f1").unwrap();
+    assert_eq!(forget.takes, ["p1", "r2"]);
+    for id in ["r2", "p1"] {
+        assert!(!whole(&mac, id), "{id}");
+    }
+    // 「发版」's own created row stays kept.
+    assert!(whole(&mac, "r1"));
+    site.sync_from(&mac, MINE);
+    assert!(!whole(&site, "r2"));
+    // The merge: 「发版」, taken back, went into 「别的事」 after; the
+    // partner forgets 「别的事」 on the Mac, which showed 「发版」 in it.
+    let (mut mac, _) = shared_node();
+    mac.write(row("m1", "dev_mac", 4, T + 5, MINE, KEY, "retract"), None);
+    let (merge, body) = merge_of("m2", "dev_mac", 5, T + 6, KEY, OTHER_KEY);
+    mac.write(merge, Some(body));
+    // A forget from elsewhere, which lists nothing, takes none of it: the
+    // Mac keeps 「发版」, and its fold does not tell it to clean it up.
+    let mut elsewhere = mac.clone();
+    let mut site = Side::new(Core::Server);
+    site.write(row("f2", "site", 1, T + 7, MINE, OTHER_KEY, "forget"), None);
+    elsewhere.sync_from(&site, MINE);
+    for id in ["r1", "r2", "m2"] {
+        assert!(whole(&elsewhere, id), "{id}");
+    }
+    let id = node_id(MINE, KEY).unwrap();
+    assert!(!reached(&elsewhere.folded(MINE, false)).contains(&format!("node:{id}")));
+    // Pressed on the Mac, it lists all of 「发版」 that 「别的事」 showed.
+    mac.write(
+        row("f3", "dev_mac", 6, T + 7, MINE, OTHER_KEY, "forget"),
+        None,
+    );
+    let forget = mac.rows.iter().find(|row| row.id == "f3").unwrap();
+    assert_eq!(forget.takes, ["m2", "r1", "r2"]);
+    for id in ["r1", "r2", "m2"] {
+        assert!(!whole(&mac, id), "{id}");
+    }
+    assert!(reached(&mac.folded(MINE, false)).contains(&format!("node:{id}")));
 }

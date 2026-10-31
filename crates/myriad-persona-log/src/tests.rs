@@ -369,6 +369,7 @@ fn folded(rows: Vec<Row>) -> Value {
         &fold(FoldInput {
             rows,
             leases: Vec::new(),
+            ledger: Vec::new(),
         })
         .unwrap(),
     )

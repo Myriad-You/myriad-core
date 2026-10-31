@@ -37,6 +37,12 @@ pub struct FoldInput {
     /// The lease history this side knows, for marking her rows.
     #[serde(default)]
     pub leases: Vec<Grant>,
+    /// This side's ledger ([`forget`]), as `nodes.fold` takes it: what this
+    /// side forgot or took back, and of which nodes it is the home, beyond
+    /// the rows given. A host passes it; without it only the rows' own
+    /// forgets and retracts count.
+    #[serde(default)]
+    pub ledger: Vec<forget::Entry>,
 }
 
 /// One object as its rows stand now.
@@ -138,7 +144,7 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
         grant.check()?;
     }
     let rows = dedupe(input.rows)?;
-    let ledger = forget::ledger(&rows);
+    let ledger = forget::joined(&input.ledger, &forget::ledger(&rows));
     let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Here);
     let view = forget::View::new(&ledger);
     // Retracted objects, and the ones not kept on this side.

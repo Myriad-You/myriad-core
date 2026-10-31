@@ -3303,6 +3303,243 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "bodies": {
+          "a1": {
+            "key": "minted:task-a",
+            "kind": "task",
+            "name": "任务一",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "c1": {
+            "key": "minted:task-b",
+            "kind": "topic",
+            "name": "任务二",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "m1": {
+            "because": [
+              "node:x"
+            ],
+            "how": "merged",
+            "into": "minted:task-b",
+            "reason": "同一件事",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "7"
+        },
+        "ledger": [],
+        "peerAbi": 1,
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a1",
+            "kind": "node.created",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "m1",
+            "kind": "node.absorbed",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:m1"
+            },
+            "replicate": "shared",
+            "to": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a side whose core is ABI 1 gets nothing while a merge naming its node would go to it",
+      "output": {
+        "batches": [],
+        "tooOld": true
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "bodies": {
+          "a1": {
+            "key": "minted:task-a",
+            "kind": "task",
+            "name": "任务一",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "a2": {
+            "audience": "personal:7",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五交。",
+            "version": 1
+          },
+          "z0": {
+            "because": [
+              "span:a2"
+            ],
+            "reason": "单独记",
+            "saidBy": [
+              "her"
+            ],
+            "spans": [
+              "a2"
+            ],
+            "sync": "shared",
+            "to": "minted:three",
+            "version": 1
+          },
+          "z1": {
+            "key": "minted:three",
+            "kind": "task",
+            "name": "周五",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "7"
+        },
+        "ledger": [],
+        "peerAbi": 1,
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a1",
+            "kind": "node.created",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "a2",
+            "kind": "node.span",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:a2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "z0",
+            "kind": "node.split_off",
+            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:z0"
+            },
+            "replicate": "shared",
+            "takes": [
+              "a2"
+            ],
+            "to": "node:b1344154c7b2a6c2d0a896ec3af739cd",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "z1",
+            "kind": "node.created",
+            "object": "node:b1344154c7b2a6c2d0a896ec3af739cd",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:z1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a side whose core is ABI 1 gets nothing while a split naming its spans would go to it",
+      "output": {
+        "batches": [],
+        "tooOld": true
+      }
     }
   ],
   "version": 1

@@ -962,6 +962,9 @@ fn tally_pages(pages: &[serde_json::Value]) -> Result<Tally, SyncError> {
             if let Some(data) = data {
                 item["data"] = serde_json::Value::String((*data).to_string());
             }
+            if let Some(why) = page.withheld.get(id.as_str()) {
+                item["withheld"] = serde_json::Value::String((*why).to_string());
+            }
             if items.insert(id, canonical_bytes(&item)).is_some() {
                 return Err(SyncError::new("a log row is in the file twice"));
             }
@@ -970,22 +973,34 @@ fn tally_pages(pages: &[serde_json::Value]) -> Result<Tally, SyncError> {
     Ok(Tally::of(items.values().map(Vec::as_slice)))
 }
 
-/// A log page's frame, read: its rows as JSON and its payloads by ref.
-/// What the rows and payloads say is checked where the page is taken in
-/// (`nodes.wire_take`), not here.
+/// The payload ref of the row `id` among `rows`.
+fn payloads_of<'a>(rows: &[&'a serde_json::Value], id: &str) -> Option<&'a str> {
+    rows.iter()
+        .find(|row| row.get("id").and_then(serde_json::Value::as_str) == Some(id))?
+        .get("payload")?
+        .get("ref")?
+        .as_str()
+}
+
+/// A log page's frame, read: its rows as JSON, its payloads by ref, and
+/// why a row goes without its body (`withheld`, by row id: a home's page
+/// says so, so the side that takes it can tell the partner). What the rows
+/// and payloads say is checked where the page is taken in
+/// (`nodes.wire_take`, `nodes.home_take`), not here.
 struct LogPage<'a> {
     audience: &'a str,
     rows: Vec<&'a serde_json::Value>,
     payloads: BTreeMap<&'a str, &'a str>,
+    withheld: BTreeMap<&'a str, &'a str>,
 }
 
 impl<'a> LogPage<'a> {
     fn read(page: &'a serde_json::Value) -> Result<Self, SyncError> {
-        let bad = || SyncError::new("a log page is {audience, rows, payloads?}");
+        let bad = || SyncError::new("a log page is {audience, rows, payloads?, withheld?}");
         let fields = page.as_object().ok_or_else(bad)?;
         if fields
             .keys()
-            .any(|key| !matches!(key.as_str(), "audience" | "rows" | "payloads"))
+            .any(|key| !matches!(key.as_str(), "audience" | "rows" | "payloads" | "withheld"))
         {
             return Err(bad());
         }
@@ -1033,10 +1048,33 @@ impl<'a> LogPage<'a> {
                 "a log page carries a payload no row of it points at",
             ));
         }
+        let mut withheld = BTreeMap::new();
+        if let Some(said) = page.get("withheld") {
+            for one in said.as_array().ok_or_else(bad)? {
+                let (Some(id), Some(why)) = (
+                    one.get("id").and_then(serde_json::Value::as_str),
+                    one.get("why").and_then(serde_json::Value::as_str),
+                ) else {
+                    return Err(bad());
+                };
+                let of_page = rows
+                    .iter()
+                    .any(|row| row.get("id").and_then(serde_json::Value::as_str) == Some(id));
+                if !of_page || payloads_of(&rows, id).is_some_and(|at| payloads.contains_key(at)) {
+                    return Err(SyncError::new(
+                        "a log page withholds a body it carries, or of no row of it",
+                    ));
+                }
+                if withheld.insert(id, why).is_some() {
+                    return Err(SyncError::new("a row is withheld twice in a log page"));
+                }
+            }
+        }
         Ok(Self {
             audience,
             rows,
             payloads,
+            withheld,
         })
     }
 }

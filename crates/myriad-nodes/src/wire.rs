@@ -516,7 +516,9 @@ fn payload(kind: &str, body: &Value) -> Result<(), Why> {
 
 /// The nodes whose created row (among `created`, row and body) puts a
 /// person or a group in her own audience.
-fn elsewhere<'a>(created: impl Iterator<Item = (&'a Row, &'a Value)>) -> BTreeSet<String> {
+pub(crate) fn elsewhere<'a>(
+    created: impl Iterator<Item = (&'a Row, &'a Value)>,
+) -> BTreeSet<String> {
     created
         .filter(|(row, _)| row.kind == "node.created")
         .filter(|(row, body)| {
@@ -532,6 +534,17 @@ fn elsewhere<'a>(created: impl Iterator<Item = (&'a Row, &'a Value)>) -> BTreeSe
 /// The body of `row` checked for the wire: its canonical bytes, and the
 /// body as read; or why it does not travel.
 pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
+    carry_as(row, body, true)
+}
+
+/// The body of `row` checked for a home's own backup
+/// ([`crate::home`]): as for the wire, but a body kept on its device
+/// (`sync: local`) goes too, for the file stays on the partner's computers.
+pub fn carry_home(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
+    carry_as(row, body, false)
+}
+
+fn carry_as(row: &Row, body: &Value, shared_only: bool) -> Result<(Vec<u8>, Value), Why> {
     if elsewhere(std::iter::once((row, body))).contains(&row.object) {
         return Err(Why::PersonElsewhere);
     }
@@ -551,7 +564,7 @@ pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
     if bytes.len() > MAX_BODY_BYTES {
         return Err(Why::TooLarge);
     }
-    if body.tags().0 != &Sync::Shared {
+    if shared_only && body.tags().0 != &Sync::Shared {
         return Err(Why::NotShared);
     }
     let fits = match &body {
@@ -575,7 +588,7 @@ pub fn carry(row: &Row, body: &Value) -> Result<(Vec<u8>, Value), Why> {
 }
 
 /// A payload as it arrived: its bytes and the JSON they read as.
-type Decoded = Result<(Vec<u8>, Value), Why>;
+pub(crate) type Decoded = Result<(Vec<u8>, Value), Why>;
 
 /// What to send a side holding `theirs` of one audience, in batches.
 pub fn send(input: SendInput) -> Result<Sent, NodeError> {

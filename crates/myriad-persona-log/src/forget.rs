@@ -164,7 +164,10 @@ fn entry_of(row: &Row) -> Option<Entry> {
         takes: Vec::new(),
     };
     match row.rule() {
-        Rule::Forget => Some(entry(Kind::Forget)),
+        Rule::Forget => Some(Entry {
+            takes: row.takes.clone(),
+            ..entry(Kind::Forget)
+        }),
         Rule::Retract => Some(Entry {
             homes: vec![row.origin.clone()],
             takes: row.takes.clone(),
@@ -236,6 +239,9 @@ pub struct View<'a> {
     splits: BTreeMap<(&'a str, &'a str), BTreeSet<(&'a str, &'a str)>>,
     /// (audience, row id) → every retract that lists it.
     listed: BTreeMap<(&'a str, &'a str), Vec<&'a Entry>>,
+    /// (audience, row id) → every forget that lists it: one pressed on a
+    /// home names the kept rows its fold showed in the node.
+    forget_listed: BTreeMap<(&'a str, &'a str), Vec<&'a Entry>>,
 }
 
 impl<'a> View<'a> {
@@ -245,12 +251,22 @@ impl<'a> View<'a> {
             into: BTreeMap::new(),
             splits: BTreeMap::new(),
             listed: BTreeMap::new(),
+            forget_listed: BTreeMap::new(),
         };
         for entry in ledger {
             let place = (entry.audience.as_str(), entry.target.as_str());
             match (entry.kind, entry.to.as_deref()) {
-                (Kind::Forget | Kind::Home, _) => {
+                (Kind::Home, _) => {
                     view.by_target.entry(place).or_default().push(entry);
+                }
+                (Kind::Forget, _) => {
+                    view.by_target.entry(place).or_default().push(entry);
+                    for row in &entry.takes {
+                        view.forget_listed
+                            .entry((entry.audience.as_str(), row.as_str()))
+                            .or_default()
+                            .push(entry);
+                    }
                 }
                 (Kind::Retract, _) => {
                     view.by_target.entry(place).or_default().push(entry);
@@ -364,6 +380,7 @@ impl<'a> View<'a> {
             .copied()
             .collect();
         out.extend(self.subject_of(row));
+        out.extend(self.listing_forgets(row));
         let retracts = self.retracts(row);
         let nodes: BTreeSet<&str> = retracts.iter().map(|entry| entry.target.as_str()).collect();
         out.extend(retracts);
@@ -376,6 +393,16 @@ impl<'a> View<'a> {
                 .copied(),
         );
         out
+    }
+
+    /// The forgets that list `row`.
+    fn listing_forgets(&self, row: &'a Row) -> Vec<&'a Entry> {
+        self.forget_listed
+            .get(&(row.audience.as_str(), row.id.as_str()))
+            .into_iter()
+            .flatten()
+            .copied()
+            .collect()
     }
 
     /// The forgets of everything about `row`'s subject.
@@ -407,8 +434,10 @@ impl<'a> View<'a> {
 
     /// Whether a forget takes a row this side keeps: only one that names
     /// it directly: its own node, the node of a retract of this side's that
-    /// reaches it, or its subject. None through a merge, a split or another
-    /// node, whatever its clock.
+    /// reaches it, its subject, or a forget that lists it (pressed on a
+    /// home, it names the kept rows its fold showed in the node: what the
+    /// partner saw is what they forget). None through a merge, a split or
+    /// another node, whatever its clock.
     fn forgets_kept(&self, row: &'a Row, reaching: &[&'a Entry]) -> bool {
         let audience = row.audience.as_str();
         let named = |target: &str| {
@@ -422,6 +451,7 @@ impl<'a> View<'a> {
                 .filter(|entry| entry.kind == Kind::Home)
                 .any(|entry| named(&entry.target))
             || !self.subject_of(row).is_empty()
+            || !self.listing_forgets(row).is_empty()
     }
 
     /// Whether `row` is taken away on `side`. On a home, a row a retract of
