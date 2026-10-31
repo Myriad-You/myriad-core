@@ -33,6 +33,33 @@
       }
     },
     {
+      "t": "hello", "seq": 1, "ack": 0, "at": 1760140820000,
+      "body": {
+        "protocol": 1,
+        "role": "host",
+        "surface": "app",
+        "capabilities": ["rig", "notify", "panel", "partner", "log2"],
+        "app": { "name": "MyriadNative", "version": "0.2.0" },
+        "hostEpoch": 3
+      }
+    },
+    {
+      "t": "welcome", "seq": 1, "ack": 1, "at": 1760140820050,
+      "body": {
+        "protocol": 1,
+        "role": "site",
+        "host": "app",
+        "deviceId": "dev_fedcba9876543210fedcba9876543210",
+        "deviceName": "Mac Studio",
+        "hostEpoch": 3,
+        "heartbeatMs": 15000,
+        "capabilities": ["nodes", "partner", "log2"],
+        "turns": [],
+        "serverTime": 1760140820050,
+        "partner": "partner_0199d5c0b00044444444444444444444"
+      }
+    },
+    {
       "t": "input", "seq": 2, "ack": 1, "id": "t_02", "at": 1760140801000,
       "body": {
         "surface": "app",
