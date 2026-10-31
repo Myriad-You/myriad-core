@@ -1,5 +1,5 @@
 //! Her log across host cores: every case in the shared conformance files
-//! (`crates/conformance/v1/log`, `…/lease`) through the C entry point, as
+//! (`crates/conformance/v2/log`, `v1/lease`) through the C entry point, as
 //! another platform runs them. `myriad-persona-log` runs the same files
 //! through the crate and blesses them.
 
@@ -32,7 +32,7 @@ pub(super) const TESTED: &[&str] = &[
 ];
 
 fn conformance() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
 }
 
 #[test]
@@ -40,11 +40,15 @@ fn every_conformance_case_answers_through_the_c_entry_point() {
     let mut calls = std::collections::BTreeSet::new();
     let mut cases = 0;
     for area in ["log", "lease"] {
-        let mut files: Vec<PathBuf> = std::fs::read_dir(conformance().join(area))
-            .unwrap()
-            .map(|entry| entry.unwrap().path())
-            .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
-            .collect();
+        let mut files: Vec<PathBuf> = std::fs::read_dir(conformance().join(if area == "log" {
+            "v2/log"
+        } else {
+            "v1/lease"
+        }))
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
+        .collect();
         files.sort();
         for path in files {
             let file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();

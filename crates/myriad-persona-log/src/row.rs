@@ -28,6 +28,9 @@ pub const MAX_TOKEN_BYTES: usize = 512;
 
 /// The most spans one split moves (`takes`): as many as its body names.
 pub const MAX_TAKES: usize = 64;
+/// The most rows one retract lists (`takes`): a node placed more rows of
+/// other nodes than this is taken back in several retract rows.
+pub const MAX_RETRACT_TAKES: usize = 256;
 
 /// Who wrote a row. Her rows come only from the holder of the lease; the
 /// owner's (what they said, set, approved, revoked, had her forget) from
@@ -106,7 +109,8 @@ pub struct Row {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
     /// A `node.split_off`'s spans: the ids of the rows it moves to `to`,
-    /// sorted.
+    /// sorted. A `retract`'s rows: those of other nodes its writer's fold
+    /// placed in the node it takes back, sorted ([`crate::forget`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub takes: Vec<String>,
 }
@@ -301,6 +305,7 @@ impl Row {
     /// moves: no node row was written before envelopes held them.
     fn check_names(&self) -> Result<(), LogError> {
         let names = kinds::names(&self.kind);
+        let retract = self.rule() == kinds::Rule::Retract;
         if names != kinds::Names::None && self.to.is_none() {
             return Err(LogError::new(format!(
                 "a {} row names the other node (to)",
@@ -310,39 +315,34 @@ impl Row {
         if names == kinds::Names::Split && self.takes.is_empty() {
             return Err(LogError::new("a split names the spans it moves (takes)"));
         }
-        match (&self.to, names) {
-            (None, _) => {
-                if !self.takes.is_empty() {
-                    return Err(LogError::new("takes goes with to"));
-                }
-                return Ok(());
-            }
-            (Some(_), kinds::Names::None) => {
+        if let Some(to) = &self.to {
+            if names == kinds::Names::None {
                 return Err(LogError::new(format!(
                     "a {} row names no other node (to)",
                     self.kind
                 )));
             }
-            (Some(to), _) => {
-                check_token("to", to)?;
-                if object_type(to) != Some("node") {
-                    return Err(LogError::new("to is a node:<id>"));
-                }
-                if *to == self.object {
-                    return Err(LogError::new("to is another node than the row's own"));
-                }
+            check_token("to", to)?;
+            if object_type(to) != Some("node") {
+                return Err(LogError::new("to is a node:<id>"));
+            }
+            if *to == self.object {
+                return Err(LogError::new("to is another node than the row's own"));
             }
         }
-        if names != kinds::Names::Split && !self.takes.is_empty() {
+        if names != kinds::Names::Split && !retract && !self.takes.is_empty() {
             return Err(LogError::new(format!(
-                "a {} row moves no spans (takes)",
+                "a {} row lists no rows (takes)",
                 self.kind
             )));
         }
-        if self.takes.len() > MAX_TAKES {
-            return Err(LogError::new(format!(
-                "takes holds at most {MAX_TAKES} rows"
-            )));
+        let most = if retract {
+            MAX_RETRACT_TAKES
+        } else {
+            MAX_TAKES
+        };
+        if self.takes.len() > most {
+            return Err(LogError::new(format!("takes holds at most {most} rows")));
         }
         for id in &self.takes {
             check_token("takes", id)?;

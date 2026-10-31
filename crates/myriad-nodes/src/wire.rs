@@ -40,11 +40,15 @@
 //! a retracted node's rows go only as stubs, from every side, its home too,
 //! so no body of it leaves the side that keeps it, in a batch or a file;
 //! the retract goes first with the forgets. The rows still go, so vectors
-//! count them. Every name of the node counts: the nodes that went into it
-//! and the spans a split moved to it, as the rows' envelopes name them
-//! (`to`, `takes`) on the ledger and in the rows. A side takes a
-//! retract as a forget unless it keeps the node (its own `retract.home`,
-//! on its ledger), and rows of the node that come later as stubs.
+//! count them. A retract reaches its node's own rows and the rows it lists
+//! (`takes`), never through a merge or a split. A side takes a retract as
+//! a forget unless it keeps the node (its own `retract.home`, on its
+//! ledger), and rows of the node that come later as stubs.
+//!
+//! **An older side** ([`SendInput::peer_abi`]): a core of ABI 1 refuses a
+//! batch with a row that names another node (`to`, `takes`) and reads a
+//! retract as nothing, so nothing goes to it while one of those would
+//! ([`Sent::too_old`]).
 //!
 //! What a body must be to travel:
 //!
@@ -214,6 +218,11 @@ pub struct SendInput {
     pub ask: Vec<String>,
     /// The other side.
     pub holder: Holder,
+    /// The other side's core ABI (`meta.version` `abi`): 2 when its link's
+    /// `hello` or `welcome` lists the `log2` capability, 1 when not. A side
+    /// below 2 gets nothing that carries a merge's or a split's names or a
+    /// retract (`tooOld`): its core would refuse the whole batch.
+    pub peer_abi: u32,
     /// This side's ledger, required: a node it forgot or took back from
     /// sync goes as stubs under every name it has, whatever rows are given.
     pub ledger: Vec<Entry>,
@@ -233,6 +242,21 @@ pub struct Sent {
     /// The other side may not hold this audience: nothing goes.
     #[serde(skip_serializing_if = "is_false")]
     pub not_held: bool,
+    /// The other side's core is older than ABI 2 and would refuse a row
+    /// that is to go: nothing goes until it repins.
+    #[serde(skip_serializing_if = "is_false")]
+    pub too_old: bool,
+}
+
+/// The core ABI a row needs on the side that takes it: 2 for one with a
+/// name in its envelope (`to`, `takes`) or a retract.
+fn needs_abi(row: &Row) -> u32 {
+    let retract = matches!(row.rule(), myriad_persona_log::Rule::Retract);
+    if row.to.is_some() || !row.takes.is_empty() || retract {
+        2
+    } else {
+        1
+    }
 }
 
 fn is_false(value: &bool) -> bool {
@@ -562,12 +586,16 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         theirs,
         ask,
         holder,
+        peer_abi,
         ledger,
         elsewhere: known_away,
     } = input;
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    if peer_abi == 0 {
+        return Err(NodeError::new("the other side's ABI is 1 or more"));
+    }
     myriad_persona_log::row::Audience::parse(&audience)
         .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
     if rows.iter().any(|row| row.audience != audience) {
@@ -582,6 +610,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         return Ok(Sent {
             batches: Vec::new(),
             not_held: true,
+            too_old: false,
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
@@ -605,6 +634,17 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut again);
+    if answered
+        .iter()
+        .chain(&again)
+        .any(|row| needs_abi(row) > peer_abi)
+    {
+        return Ok(Sent {
+            batches: Vec::new(),
+            not_held: false,
+            too_old: true,
+        });
+    }
     let engine = base64::engine::general_purpose::STANDARD;
     let mut batches: Vec<Batch> = Vec::new();
     let mut bytes = 0;
@@ -661,6 +701,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     Ok(Sent {
         batches,
         not_held: false,
+        too_old: false,
     })
 }
 

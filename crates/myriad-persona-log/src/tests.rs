@@ -1,4 +1,4 @@
-//! The shared conformance files in `crates/conformance/v1/` (log and lease
+//! The shared conformance files in `crates/conformance/` (`v2/log`, `v1/lease`
 //! cases) run here through the crate, and through the C entry point in
 //! `myriad-core-ffi`; another platform runs the same files through its own
 //! runtime. Below them, the properties the files only sample: forgetting in
@@ -19,9 +19,15 @@ use crate::{
     vector::{answer, holdings, missing},
 };
 
-/// The conformance files' directory.
+/// The conformance files' directory: `log/` is version 2 (merge, split
+/// and retract rows name what they reach), `lease/` still version 1.
 pub(crate) fn conformance() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
+}
+
+/// Where an area's case files are.
+fn area_dir(area: &str) -> &'static str {
+    if area == "log" { "v2/log" } else { "v1/lease" }
 }
 
 fn blessing() -> bool {
@@ -198,7 +204,7 @@ fn same(one: &Value, other: &Value) -> bool {
 pub(crate) fn case_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
     for area in ["log", "lease"] {
-        let dir = conformance().join(area);
+        let dir = conformance().join(area_dir(area));
         for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
             let path = entry.unwrap().path();
             if path.extension().is_some_and(|ext| ext == "json") {
@@ -269,10 +275,23 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ),
         ("takes out of order", "takes is sorted"),
         ("a retract's home shared", "is local"),
+        (
+            "a merge without the node it went into",
+            "names the other node (to)",
+        ),
+        (
+            "a split without the spans it moves",
+            "names the spans it moves",
+        ),
+        ("a retract's list out of order", "takes is sorted"),
+        ("a retract listing more than 256 rows", "at most 256 rows"),
+        ("a retract's home with a list", "lists no rows"),
+        ("a retract naming another node", "names no other node"),
     ];
-    let file: Value =
-        serde_json::from_slice(&std::fs::read(conformance().join("log/canonical.json")).unwrap())
-            .unwrap();
+    let file: Value = serde_json::from_slice(
+        &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),
+    )
+    .unwrap();
     let mut seen = 0;
     for case in file["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();

@@ -87,6 +87,7 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.wire_take" => json_of(&wire::take(input(raw)?)?),
         "nodes.home_send" => json_of(&home::send(input(raw)?)?),
         "nodes.home_take" => json_of(&home::take(input(raw)?)?),
+        "nodes.retract" => json_of(&fold::retract_lists(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -113,7 +114,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 14, "{files:?}");
+    assert_eq!(files.len(), 15, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -278,10 +279,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "refused: a row of a node no mark keeps",
             "of no node kept here",
         ),
-        (
-            "refused: a body that is not its canonical bytes",
-            "canonical bytes",
-        ),
+        // nodes.retract
+        ("refused: a node not in the rows", "not in the rows given"),
+        // nodes.wire_send to an older side
+        ("refused: a peer of no ABI", "ABI is 1 or more"),
     ];
     let mut seen = 0;
     for path in case_files() {

@@ -23,6 +23,7 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.place_read",
     "nodes.queue",
     "nodes.repo_key",
+    "nodes.retract",
     "nodes.upkeep_input",
     "nodes.upkeep_read",
     "nodes.wire_send",

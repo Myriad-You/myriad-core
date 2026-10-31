@@ -26149,13 +26149,74 @@
           "local": "dev_mac"
         }
       },
-      "name": "a local run on a retracted node splits nothing off it",
+      "name": "a local run on a retracted node may split it, in local rows",
       "output": {
-        "fallback": "not_allowed",
         "writes": [
           {
             "body": {
-              "fallback": "not_allowed",
+              "key": "minted:u8c2185dd23818f43335b18c9",
+              "kind": "topic",
+              "name": "单独",
+              "saidBy": [
+                "her"
+              ],
+              "sync": {
+                "local": "dev_mac"
+              },
+              "version": 1
+            },
+            "id": "u200f02bb41472015eb6b697b",
+            "kind": "node.created",
+            "node": "216b666928c534a7281cf1d1897f01d8"
+          },
+          {
+            "body": {
+              "because": [
+                "span:c2"
+              ],
+              "reason": "单独记",
+              "saidBy": [
+                "her"
+              ],
+              "spans": [
+                "c2"
+              ],
+              "sync": {
+                "local": "dev_mac"
+              },
+              "to": "minted:u8c2185dd23818f43335b18c9",
+              "version": 1
+            },
+            "id": "ua9e2ecb8e5acc33aee8ba4c6",
+            "kind": "node.split_off",
+            "node": "0c2573a2514b3b8ec39ddb60f133e266",
+            "takes": [
+              "c2"
+            ],
+            "to": "node:216b666928c534a7281cf1d1897f01d8"
+          },
+          {
+            "body": {
+              "because": [
+                "span:c2"
+              ],
+              "reason": "单独记",
+              "relation": "part_of",
+              "saidBy": [
+                "her"
+              ],
+              "sync": {
+                "local": "dev_mac"
+              },
+              "to": "minted:release",
+              "version": 1
+            },
+            "id": "ucbe7693a54f0537fef1ec24c",
+            "kind": "node.related",
+            "node": "216b666928c534a7281cf1d1897f01d8"
+          },
+          {
+            "body": {
               "run": "run-7",
               "saidBy": [
                 "her"
@@ -26166,9 +26227,14 @@
               "sync": {
                 "local": "dev_mac"
               },
-              "version": 1
+              "version": 1,
+              "wrote": [
+                "u200f02bb41472015eb6b697b",
+                "ua9e2ecb8e5acc33aee8ba4c6",
+                "ucbe7693a54f0537fef1ec24c"
+              ]
             },
-            "id": "u200f02bb41472015eb6b697b",
+            "id": "u1814ac3f02f96220245dd145",
             "kind": "node.upkept",
             "node": "0c2573a2514b3b8ec39ddb60f133e266"
           }

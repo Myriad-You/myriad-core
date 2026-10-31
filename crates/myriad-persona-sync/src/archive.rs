@@ -43,8 +43,10 @@
 //! of nodes taken back from sync (撤回同步), their whole rows and bodies and
 //! its `retract.home` marks, in pages of the same frame, which the log pages
 //! carry only as stubs. Only a file for a computer of the partner's holds
-//! them ([`Manifest::with_home`]); importing them onto a new computer makes
-//! it the home (`nodes.home_take`), and no other side takes them (the
+//! them ([`Manifest::with_home`]), and its header says so
+//! ([`ArchiveHeader::home`]); only a computer of the partner's opens such a
+//! file ([`check_parts`]). Importing them onto a new computer makes it the
+//! home (`nodes.home_take`), and no other side takes them (the
 //! coordinator's decision, 2026-10-31; the partner may override it).
 //!
 //! Pure like the rest of the crate: the salt and the nonce prefix come in
@@ -186,6 +188,10 @@ pub struct ArchiveHeader {
     /// The [`Manifest`]'s digest: what the file holds, checked after it is
     /// opened.
     pub digest: String,
+    /// The file holds a home's pages ([`Part::Home`], version 2 only): it
+    /// is for a computer of the partner's, and only one opens it.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub home: bool,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -207,6 +213,10 @@ pub struct HeaderFields {
     /// [`ARCHIVE_LOG_VERSION`].
     #[serde(default, skip_serializing_if = "is_false")]
     pub logs: bool,
+    /// The file holds a home's pages: it is for a computer of the
+    /// partner's, and written as version [`ARCHIVE_LOG_VERSION`].
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub home: bool,
 }
 
 impl ArchiveHeader {
@@ -219,7 +229,7 @@ impl ArchiveHeader {
     ) -> Result<Self, SyncError> {
         let header = Self {
             format: ARCHIVE_FORMAT.into(),
-            version: if fields.logs {
+            version: if fields.logs || fields.home {
                 ARCHIVE_LOG_VERSION
             } else {
                 ARCHIVE_VERSION
@@ -234,6 +244,7 @@ impl ArchiveHeader {
             origin: fields.origin,
             created_at: fields.created_at,
             digest: fields.digest,
+            home: fields.home,
         };
         header.check()?;
         Ok(header)
@@ -270,6 +281,11 @@ impl ArchiveHeader {
             && (lineage.is_empty() || lineage.len() > 64 || lineage.chars().any(char::is_control))
         {
             return Err(SyncError::new("a lineage is 1 to 64 printable characters"));
+        }
+        if self.home && self.version < ARCHIVE_LOG_VERSION {
+            return Err(SyncError::new(format!(
+                "a home's pages are only in a version {ARCHIVE_LOG_VERSION} file"
+            )));
         }
         check_node(&self.origin)?;
         check_sha256(&self.digest, "the header's digest")?;
@@ -489,6 +505,11 @@ impl Sealer {
             return Err(SyncError::new(format!(
                 "a log page is only in a version {ARCHIVE_LOG_VERSION} file"
             )));
+        }
+        if matches!(part, Part::Home { .. }) && !self.header.home {
+            return Err(SyncError::new(
+                "a home's pages are only in a file whose header says it is for a computer of the partner's",
+            ));
         }
         if let Part::End { manifest } = part
             && manifest.digest != self.header.digest
@@ -1055,15 +1076,17 @@ pub fn seal(
     Ok(out)
 }
 
-/// Opens and checks a whole file with the passphrase.
-pub fn open(passphrase: &str, file: &[u8]) -> Result<Opened, SyncError> {
+/// Opens and checks a whole file with the passphrase. `for_pc`: the side
+/// opening it is a computer of the partner's, the only side that opens a
+/// file holding a home's pages.
+pub fn open(passphrase: &str, file: &[u8], for_pc: bool) -> Result<Opened, SyncError> {
     let (header, _) = read_header(file)?;
     let key = derive_key(passphrase, &header.kdf)?;
-    open_with_key(key, file)
+    open_with_key(key, file, for_pc)
 }
 
 /// [`open`] with the key already derived from the header's costs.
-pub fn open_with_key(key: ArchiveKey, file: &[u8]) -> Result<Opened, SyncError> {
+pub fn open_with_key(key: ArchiveKey, file: &[u8], for_pc: bool) -> Result<Opened, SyncError> {
     let (header, start) = read_header(file)?;
     let mut opener = Opener::new(key, header.clone())?;
     let mut reader = PartReader::new();
@@ -1073,14 +1096,23 @@ pub fn open_with_key(key: ArchiveKey, file: &[u8]) -> Result<Opened, SyncError> 
     }
     parts.extend(reader.push(&opener.finish()?)?);
     reader.finish()?;
-    check_parts(header, parts)
+    check_parts(header, parts, for_pc)
 }
 
-/// Checks the parts of an opened file and gathers them.
+/// Checks the parts of an opened file and gathers them. A home's pages
+/// are refused unless the header says the file is for a computer of the
+/// partner's and the side opening it is one (`for_pc`): a site or a server
+/// never takes what a home keeps.
 pub fn check_parts(
     header: ArchiveHeader,
     parts: Vec<(Part, Vec<u8>)>,
+    for_pc: bool,
 ) -> Result<Opened, SyncError> {
+    if header.home && !for_pc {
+        return Err(SyncError::new(
+            "this file holds a home's pages: only a computer of the partner's opens it",
+        ));
+    }
     let mut envelopes = Vec::new();
     let mut logs = Vec::new();
     let mut homes = Vec::new();
@@ -1099,6 +1131,11 @@ pub fn check_parts(
                 envelopes.push(envelope);
             }
             Part::Log { .. } | Part::Home { .. } => {
+                if matches!(part, Part::Home { .. }) && !header.home {
+                    return Err(SyncError::new(
+                        "a home's page is in a file whose header does not say it is for a computer of the partner's",
+                    ));
+                }
                 if header.version < ARCHIVE_LOG_VERSION {
                     return Err(SyncError::new(format!(
                         "a log page is only in a version {ARCHIVE_LOG_VERSION} file"
@@ -1164,8 +1201,11 @@ pub fn check_parts(
     }
     let manifest = Manifest::of_envelopes(&envelopes)?
         .with_logs(&logs, |_| true)?
-        .with_home(&homes, true)?;
-    if stated != manifest || manifest.digest != header.digest {
+        .with_home(&homes, for_pc)?;
+    if stated != manifest
+        || manifest.digest != header.digest
+        || header.home != manifest.home.is_some()
+    {
         return Err(SyncError::new(
             "the archive does not hold what its manifest says",
         ));
