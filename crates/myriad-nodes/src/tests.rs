@@ -142,10 +142,10 @@ fn every_conformance_case_answers_as_recorded() {
 }
 
 /// `partner.*` (`crates/conformance/v1/partner/`): the partner's one id,
-/// minted, met and moved to, as the shared core answers it.
+/// minted, linked to, filed and moved to, as the shared core answers it.
 fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
     use base64::Engine as _;
-    use myriad_persona_log::{Partner, partner};
+    use myriad_persona_log::partner::{self, Here};
     let refused = |error: myriad_persona_log::LogError| NodeError::new(error.to_string());
     Ok(match call {
         "partner.mint" => {
@@ -154,37 +154,33 @@ fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
             struct In {
                 at: i64,
                 random: String,
-                #[serde(default)]
-                was: Option<String>,
             }
-            let In { at, random, was } = input(raw)?;
+            let In { at, random } = input(raw)?;
             let random = base64::engine::general_purpose::STANDARD
                 .decode(random)
                 .map_err(|_| NodeError::new("random is base64"))?;
-            json!({ "partner": partner::minted(at, &random, was.as_deref()).map_err(refused)? })
+            json!({ "id": partner::mint(at, &random).map_err(refused)? })
         }
-        "partner.meet" => {
+        "partner.link" => {
             #[derive(Deserialize)]
             #[serde(deny_unknown_fields)]
             struct In {
-                mine: Partner,
-                theirs: Partner,
-                by: partner::By,
-                #[serde(default)]
-                ours: Vec<String>,
-                others: Vec<String>,
-                #[serde(default)]
-                empty: bool,
+                here: Here,
+                theirs: String,
             }
-            let In {
-                mine,
-                theirs,
-                by,
-                ours,
-                others,
-                empty,
-            } = input(raw)?;
-            json_of(&partner::meet(&mine, &theirs, by, &ours, &others, empty).map_err(refused)?)
+            let In { here, theirs } = input(raw)?;
+            json_of(&partner::link(&here, &theirs).map_err(refused)?)
+        }
+        "partner.file" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                here: Here,
+                #[serde(default)]
+                header: Option<String>,
+            }
+            let In { here, header } = input(raw)?;
+            json_of(&partner::file(&here, header.as_deref()).map_err(refused)?)
         }
         "partner.migrate" => json_of(&crate::migrate::migrate(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
@@ -200,7 +196,7 @@ fn every_partner_case_answers_as_recorded() {
         .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
         .collect();
     files.sort();
-    assert_eq!(files.len(), 3, "{files:?}");
+    assert_eq!(files.len(), 4, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         let call = file["call"].as_str().unwrap().to_string();

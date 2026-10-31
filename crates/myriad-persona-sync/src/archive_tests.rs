@@ -371,20 +371,20 @@ fn only_a_file_with_log_pages_names_the_partner() {
         created_at: 1_760_000_000_000_000,
         digest: "0".repeat(64),
         logs,
-        partner: Some(crate::archive::HeaderPartner {
-            id: "partner_0199d5c0900033333333333333333333".into(),
-            aliases: vec!["local-owner".into()],
-        }),
+        partner: Some("partner_0199d5c0900033333333333333333333".into()),
     };
     let salt = [0x11; SALT_BYTES];
     let nonce = [0x22; NONCE_PREFIX_BYTES];
     let header = ArchiveHeader::new(&salt, &nonce, fields(true)).unwrap();
     let line = String::from_utf8(header.line().unwrap()).unwrap();
     assert!(
-        line.contains("\"partner\":{\"aliases\":[\"local-owner\"]"),
+        line.contains("\"partner\":\"partner_0199d5c0900033333333333333333333\""),
         "{line}"
     );
     assert!(ArchiveHeader::new(&salt, &nonce, fields(false)).is_err());
+    let mut legacy = fields(true);
+    legacy.partner = Some("local-owner".into());
+    assert!(ArchiveHeader::new(&salt, &nonce, legacy).is_err());
     // Without one, a header is the bytes it always was.
     let mut plain = fields(true);
     plain.partner = None;

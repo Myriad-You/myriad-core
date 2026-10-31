@@ -66,10 +66,19 @@ impl Holder {
 
     /// Whether this side may hold rows of `audience`: the server any; a PC
     /// the partner's own private audience (theirs alone) and hers; a child
-    /// core none.
+    /// core none. No side, the server included, holds the private talk of
+    /// an id a partner goes by (`local-owner`, a partner id) but its own
+    /// partner's: a computer that has not moved to the one id yet is
+    /// refused, not stored under ids its log was not made for
+    /// (`crate::partner`).
     pub fn holds(&self, audience: &str) -> bool {
         match (self.core, Audience::parse(audience)) {
             (_, Err(_)) | (Core::Child, _) => false,
+            (_, Ok(Audience::Personal(member)))
+                if crate::partner::is_partners(member) && member != self.owner =>
+            {
+                false
+            }
             (Core::Server, Ok(_)) | (Core::Pc, Ok(Audience::Own)) => true,
             (Core::Pc, Ok(Audience::Personal(members))) => members == self.owner,
             (Core::Pc, Ok(Audience::Group(_))) => false,
@@ -86,6 +95,31 @@ mod tests {
             core,
             owner: "7".into(),
         }
+    }
+
+    #[test]
+    fn no_side_holds_another_partners_talk_or_an_unmoved_one() {
+        let p0 = "partner_0199d5c0900033333333333333333333";
+        for core in [Core::Server, Core::Pc] {
+            let side = Holder {
+                core,
+                owner: p0.into(),
+            };
+            assert!(side.holds(&format!("personal:{p0}")));
+            assert!(!side.holds("personal:local-owner"), "{core:?}");
+            assert!(!side.holds("personal:partner_0199d5c0a00011111111111111111111"));
+        }
+        let site = Holder {
+            core: Core::Server,
+            owner: p0.into(),
+        };
+        assert!(site.holds("personal:9"));
+        let unmoved = Holder {
+            core: Core::Pc,
+            owner: "local-owner".into(),
+        };
+        assert!(unmoved.holds("personal:local-owner"));
+        assert!(!unmoved.holds(&format!("personal:{p0}")));
     }
 
     #[test]

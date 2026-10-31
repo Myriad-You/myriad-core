@@ -49,7 +49,6 @@ pub use holder::{Core, Holder};
 pub use kinds::Rule;
 pub use lease::{Grant, Here, How, Moved, Request, Through};
 pub use merge::{MergeInput, Merged, merge};
-pub use partner::Partner;
 pub use row::{Author, LOG_VERSION, Payload, Replicate, Row};
 pub use vector::{Holdings, Span, Vector};
 

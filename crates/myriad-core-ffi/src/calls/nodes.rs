@@ -80,7 +80,7 @@ pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{batch, holder, now, known?, members?, ledger?, epochs?, held?,
-/// partner?, met?, elsewhere?, people?}` → what `log.admit` answers, with `bodies?`,
+/// elsewhere?, people?}` → what `log.admit` answers, with `bodies?`,
 /// `withheld?`, `ask?` and `elsewhere?`. The ledger is required when the
 /// batch holds a retract; the names it gains are only those the fold takes.
 pub(super) fn wire_take(raw: &[u8]) -> Result<Value, Failure> {

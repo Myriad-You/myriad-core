@@ -126,12 +126,22 @@ impl<'a> Key<'a> {
 
     /// Whether this is the partner's own node in their private audience
     /// (「关于你」): what is only about them, with no experience hung on it.
+    /// Every check of 「关于你」 asks this, and the id is made by the same
+    /// rule ([`made_id`]), so no key reaches that node past it.
     pub fn is_about_you(&self, audience: &str) -> bool {
         match (self, Audience::parse(audience)) {
-            (Self::Person(person), Ok(Audience::Personal(members))) => members == *person,
+            (Self::Person(person), Ok(Audience::Personal(members))) => is_member(person, members),
             _ => false,
         }
     }
+}
+
+/// Whether `person` is `member`, the one member of a private audience, as
+/// 「关于你」 reads it: that member; and in the partner's private talk any
+/// id the partner goes by there, the member or `local-owner`, which make
+/// one node.
+fn is_member(person: &str, member: &str) -> bool {
+    person == member || (partner::is_partners(member) && person == partner::LEGACY)
 }
 
 /// The node of `key` in `audience`.
@@ -171,7 +181,9 @@ fn fixed<'a>(audience: &'a str, key: &'a str) -> (Cow<'a, str>, Cow<'a, str>) {
         return (Cow::Borrowed(audience), Cow::Borrowed(key));
     }
     let key = match key.strip_prefix("person:") {
-        Some(person) if person == member => Cow::Owned(format!("person:{}", partner::LEGACY)),
+        Some(person) if is_member(person, member) => {
+            Cow::Owned(format!("person:{}", partner::LEGACY))
+        }
         _ => Cow::Borrowed(key),
     };
     (Cow::Owned(format!("personal:{}", partner::LEGACY)), key)
@@ -346,6 +358,26 @@ mod tests {
         assert!(Key::parse("person:7").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:9").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:7").unwrap().is_about_you("personal:7,9"));
+        // In the partner's talk, `local-owner` and the partner id are one
+        // node, and both are 「关于你」; another partner id is someone else.
+        let p0 = "personal:partner_0199d5c0900033333333333333333333";
+        for key in [
+            "person:local-owner",
+            "person:partner_0199d5c0900033333333333333333333",
+        ] {
+            assert!(Key::parse(key).unwrap().is_about_you(p0), "{key}");
+            assert_eq!(
+                node_id(p0, key).unwrap(),
+                node_id("personal:local-owner", "person:local-owner").unwrap()
+            );
+        }
+        let other = Key::parse("person:partner_0199d5c0a00011111111111111111111").unwrap();
+        assert!(!other.is_about_you(p0));
+        assert!(
+            !Key::parse("person:local-owner")
+                .unwrap()
+                .is_about_you("personal:7")
+        );
         assert!(Key::parse("minted:together-ab12").unwrap().is_together());
         assert!(!Key::parse("minted:ab12-together-").unwrap().is_together());
         assert!(!Key::parse("person:together-ab12").unwrap().is_together());

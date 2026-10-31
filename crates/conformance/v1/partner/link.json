@@ -1,0 +1,89 @@
+{
+  "call": "partner.link",
+  "cases": [
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ]
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac still local-owner takes the site's id and moves from local-owner",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac that took a file's id while empty gives it up for the link's",
+      "output": {
+        "from": "partner_0199d5c0a00022222222222222222222",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a side linked before to the same id has nothing to do",
+      "output": {
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "id": "partner_0199d5c0a00022222222222222222222",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a side linked before to another id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {},
+        "theirs": "acct_7"
+      },
+      "name": "refused: the link's id is not a partner id (a raw account id)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a linked side with no id",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

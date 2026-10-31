@@ -67,14 +67,24 @@
             "valence": 60.0
           }
         },
-        "partner": {
-          "aliases": [
-            "local-owner",
-            "o41",
-            "partner_0199d5c0a00022222222222222222222"
-          ],
-          "id": "partner_0199d5c0900033333333333333333333"
-        },
+        "from": "local-owner",
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:local-owner",
+            "target": "subject:local-owner"
+          },
+          {
+            "at": "001760000000006-000000-dev_mac",
+            "audience": "own:",
+            "target": "affect:local-owner"
+          },
+          {
+            "at": "001760000000006-000000-dev_mac",
+            "audience": "personal:9",
+            "target": "subject:9"
+          }
+        ],
         "rows": [
           {
             "audience": "personal:local-owner",
@@ -200,9 +210,10 @@
             "replicate": "shared",
             "version": 1
           }
-        ]
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
       },
-      "name": "a Mac's legacy log moves to the one id: audience, subject, keys, tags, who knows; node ids stay",
+      "name": "a Mac's log moves from local-owner to the site's id: audience, subject, keys, tags, who knows, and its ledger's forgets of all about the partner; node ids stay",
       "output": {
         "bodies": {
           "m1": {
@@ -268,6 +279,23 @@
             "valence": 60.0
           }
         },
+        "ledger": [
+          {
+            "at": "001760000000006-000000-dev_mac",
+            "audience": "own:",
+            "target": "affect:partner_0199d5c0900033333333333333333333"
+          },
+          {
+            "at": "001760000000006-000000-dev_mac",
+            "audience": "personal:9",
+            "target": "subject:9"
+          },
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "target": "subject:partner_0199d5c0900033333333333333333333"
+          }
+        ],
         "moved": [
           "m1",
           "m2",
@@ -419,14 +447,8 @@
             "version": 1
           }
         },
-        "partner": {
-          "aliases": [
-            "local-owner",
-            "o41",
-            "partner_0199d5c0a00022222222222222222222"
-          ],
-          "id": "partner_0199d5c0900033333333333333333333"
-        },
+        "from": "local-owner",
+        "ledger": [],
         "rows": [
           {
             "audience": "personal:partner_0199d5c0900033333333333333333333",
@@ -444,7 +466,8 @@
             "replicate": "shared",
             "version": 1
           }
-        ]
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
       },
       "name": "moving rows already moved changes nothing",
       "output": {
@@ -460,6 +483,7 @@
             "version": 1
           }
         },
+        "ledger": [],
         "rows": [
           {
             "audience": "personal:partner_0199d5c0900033333333333333333333",
@@ -482,14 +506,8 @@
     },
     {
       "input": {
-        "partner": {
-          "aliases": [
-            "local-owner",
-            "o41",
-            "partner_0199d5c0a00022222222222222222222"
-          ],
-          "id": "partner_0199d5c0900033333333333333333333"
-        },
+        "from": "local-owner",
+        "ledger": [],
         "rows": [
           {
             "audience": "personal:local-owner",
@@ -523,7 +541,8 @@
             "replicate": "shared",
             "version": 1
           }
-        ]
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
       },
       "name": "two rows that land on one place clash",
       "output": {
@@ -533,6 +552,7 @@
             "with": "m3"
           }
         ],
+        "ledger": [],
         "moved": [
           "m3"
         ],
@@ -574,14 +594,123 @@
     },
     {
       "input": {
-        "partner": {
-          "id": "o41"
-        },
-        "rows": []
+        "from": "acct_7",
+        "ledger": [],
+        "rows": [],
+        "to": "partner_0199d5c0900033333333333333333333"
       },
-      "name": "refused: a partner id not in the form",
+      "name": "refused: a move from a site account id (its node ids are made from it)",
       "output": {
         "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "ledger": [],
+        "rows": [],
+        "to": "o41"
+      },
+      "name": "refused: a move to an id not in the form",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "rows": [],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: the ledger is missing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "m3": {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发版。",
+            "version": 1
+          }
+        },
+        "from": "partner_0199d5c0a00022222222222222222222",
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0a00022222222222222222222",
+            "target": "subject:partner_0199d5c0a00022222222222222222222"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0a00022222222222222222222",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "m3",
+            "kind": "node.span",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:m3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac that took a file's id while empty moves on to the link's",
+      "output": {
+        "bodies": {
+          "m3": {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发版。",
+            "version": 1
+          }
+        },
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "target": "subject:partner_0199d5c0900033333333333333333333"
+          }
+        ],
+        "moved": [
+          "m3"
+        ],
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "m3",
+            "kind": "node.span",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:m3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
       }
     }
   ],

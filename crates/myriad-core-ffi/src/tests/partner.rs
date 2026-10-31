@@ -11,7 +11,12 @@ use serde_json::{Value, json};
 use super::ffi;
 use crate::{STATUS_BAD_INPUT, STATUS_OK};
 
-pub(super) const TESTED: &[&str] = &["partner.meet", "partner.migrate", "partner.mint"];
+pub(super) const TESTED: &[&str] = &[
+    "partner.file",
+    "partner.link",
+    "partner.migrate",
+    "partner.mint",
+];
 
 #[test]
 fn every_partner_case_answers_through_the_c_entry_point() {

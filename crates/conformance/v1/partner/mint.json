@@ -4,17 +4,11 @@
     {
       "input": {
         "at": 1760227794944,
-        "random": "IiIiIiIiIiIiIg==",
-        "was": "local-owner"
+        "random": "IiIiIiIiIiIiIg=="
       },
       "name": "a mint is partner_, the time in hex, then the random",
       "output": {
-        "partner": {
-          "aliases": [
-            "local-owner"
-          ],
-          "id": "partner_0199d5c0a00022222222222222222222"
-        }
+        "id": "partner_0199d5c0a00022222222222222222222"
       }
     },
     {
@@ -22,11 +16,9 @@
         "at": 1760227790848,
         "random": "MzMzMzMzMzMzMw=="
       },
-      "name": "a first side with nothing before it",
+      "name": "the site mints one id per account",
       "output": {
-        "partner": {
-          "id": "partner_0199d5c0900033333333333333333333"
-        }
+        "id": "partner_0199d5c0900033333333333333333333"
       }
     },
     {
@@ -55,6 +47,17 @@
         "random": "AAAAAAAAAAAAAA=="
       },
       "name": "refused: a time before 2025",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "at": 1760227790848,
+        "random": "MzMzMzMzMzMzMw==",
+        "was": "local-owner"
+      },
+      "name": "refused: an id from before is not a mint (no was)",
       "output": {
         "error": "bad_input"
       }

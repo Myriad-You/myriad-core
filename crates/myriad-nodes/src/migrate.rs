@@ -1,22 +1,30 @@
 //! Moving her nodes to the partner's one id (`myriad_persona_log::partner`).
 //!
-//! A side whose partner id changed rewrites its rows once
-//! (`partner::row`), and the bodies that name the partner: the audience tag
-//! of a span or an entry, a `person:<alias>` key (made, related to, gone
-//! into), who knows and whose progress. Every side that holds a body moves
-//! it to the same bytes, so a body is still the same bytes wherever it is;
-//! bodies that arrive later from a side that has not moved are moved as
-//! they arrive (`wire::take` with `partner`).
+//! A side that links for the first time (or that took an id from a file
+//! while empty, then links) moves once, before its first sync on the link:
+//! its rows (`partner::row`), its ledger (`partner::entry`: audiences, and
+//! forgets of all about the partner, so nothing forgotten comes back), and
+//! the bodies that name the partner: the audience tag of a span or an
+//! entry, a `person:<from>` key (made, related to, gone into), who knows
+//! and whose progress. Every side moves a body to the same bytes.
 //!
 //! **A node keeps its id.** The id of a node in the partner's private talk
-//! is not made from the partner's id (`crate::key::node_id`), so moving
-//! relabels the audience and nothing else: every row keeps its object, and
-//! the names in envelopes (`to`, `takes`) and on the ledger stay true. A
-//! private audience of several people (`personal:a,b`) does not move.
+//! is not made from the partner's id (`crate::key`), so moving relabels the
+//! audience and nothing else: every row keeps its object, and the names in
+//! envelopes (`to`, `takes`) and on the ledger stay true. A move is only
+//! from `local-owner` or a partner id: rows under a site's account id
+//! cannot be moved (their node ids are made from it), so a site holding any
+//! has to say so rather than move them. A private audience of several
+//! people (`personal:a,b`) does not move.
 
 use std::collections::BTreeMap;
 
-use myriad_persona_log::{Partner, Row, partner, row::sort};
+use myriad_persona_log::{
+    Row,
+    forget::{self, Entry},
+    partner::{self, Move},
+    row::sort,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -29,12 +37,17 @@ use crate::{
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MigrateInput {
     /// The rows to move: a side's whole log of the partner's private
-    /// audience under any of their ids, and of her own.
+    /// audience, and of her own.
     pub rows: Vec<Row>,
     /// Each row's body, by row id.
     #[serde(default)]
     pub bodies: BTreeMap<String, Value>,
-    pub partner: Partner,
+    /// This side's ledger.
+    pub ledger: Vec<Entry>,
+    /// The id it went by: `local-owner`, or one it took from a file.
+    pub from: String,
+    /// The id the link gave.
+    pub to: String,
 }
 
 /// Two rows that land on one place: the same side's same count in one
@@ -56,6 +69,8 @@ pub struct Migrated {
     /// partner).
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub bodies: BTreeMap<String, Value>,
+    /// The ledger, moved: what to keep from now on.
+    pub ledger: Vec<Entry>,
     /// The rows whose envelope or body changed: what to write back.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub moved: Vec<String>,
@@ -63,47 +78,36 @@ pub struct Migrated {
     pub clashes: Vec<Clash>,
 }
 
-/// A key as it reads under `partner`: `person:<alias>` is `person:<id>`.
-pub fn key(key: &str, partner: &Partner) -> String {
+/// A key moved: `person:<from>` is `person:<to>`.
+fn key(key: &str, by: &Move) -> String {
     match key.strip_prefix("person:") {
-        Some(person) if partner.is(person) => format!("person:{}", partner.id),
+        Some(person) if person == by.from => format!("person:{}", by.to),
         _ => key.to_string(),
     }
 }
 
-/// Whether the rows of `audience` move with the partner: theirs, under any
-/// id, and her own.
-fn moves(audience: &str, partner: &Partner) -> bool {
-    audience == "own:"
-        || audience
-            .strip_prefix("personal:")
-            .is_some_and(|member| partner.is(member))
-}
-
-/// The body of `row` (as it was before moving) moved under `partner`, when
-/// anything in it changes; `None` when nothing does, or the body is not one
-/// the core reads (it goes unchanged).
-pub fn body(row: &Row, value: &Value, partner: &Partner) -> Option<Value> {
-    if !moves(&row.audience, partner) || !row.kind.starts_with("node.") {
+/// The body of `row` (as it was before moving) moved, when anything in it
+/// changes; `None` when nothing does, or the body is not one the core reads
+/// (it goes unchanged).
+fn body(row: &Row, value: &Value, by: &Move) -> Option<Value> {
+    let moves = by.is_ours(&row.audience) || row.audience == "own:";
+    if !moves || !row.kind.starts_with("node.") {
         return None;
     }
     let mut body = Body::read(&row.kind, value).ok()?;
     let before = body.clone();
     match &mut body {
-        Body::Created(created) => created.key = key(&created.key, partner),
-        Body::Related(related) => related.to = key(&related.to, partner),
-        Body::Absorbed(absorbed) => absorbed.into = key(&absorbed.into, partner),
-        Body::Span(span) => span.audience = partner.audience(&span.audience),
-        Body::Entry(entry) => entry.audience = partner.audience(&entry.audience),
+        Body::Created(created) => created.key = key(&created.key, by),
+        Body::Related(related) => related.to = key(&related.to, by),
+        Body::Absorbed(absorbed) => absorbed.into = key(&absorbed.into, by),
+        Body::Span(span) => span.audience = by.audience(&span.audience),
+        Body::Entry(entry) => entry.audience = by.audience(&entry.audience),
         Body::Revised(revised) => {
             if let Some(person) = &revised.person {
-                revised.person = Some(partner.person(person).to_string());
+                revised.person = Some(by.person(person).to_string());
             }
             if let Ok(Change::WhoKnows(ids)) = revised.change() {
-                let mut ids: Vec<String> = ids
-                    .iter()
-                    .map(|id| partner.person(id).to_string())
-                    .collect();
+                let mut ids: Vec<String> = ids.iter().map(|id| by.person(id).to_string()).collect();
                 ids.sort();
                 ids.dedup();
                 revised.value = Value::from(ids);
@@ -120,15 +124,17 @@ pub fn body(row: &Row, value: &Value, partner: &Partner) -> Option<Value> {
         .map(|body| body.to_value())
 }
 
-/// `rows` and their bodies moved to the partner's id in use.
+/// `rows`, their bodies and the ledger moved from one id to the other.
 pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
     let MigrateInput {
         rows,
         mut bodies,
-        partner,
+        ledger,
+        from,
+        to,
     } = input;
-    partner
-        .check()
+    let by = Move { from, to };
+    by.check()
         .map_err(|error| NodeError::new(error.to_string()))?;
     let mut moved = Vec::new();
     let mut out = Vec::new();
@@ -136,14 +142,12 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
         row.check()
             .map_err(|_| NodeError::new("a row's envelope is not whole"))?;
         let mut changed = false;
-        let body = bodies
-            .get(&row.id)
-            .and_then(|value| body(&row, value, &partner));
+        let body = bodies.get(&row.id).and_then(|value| body(&row, value, &by));
         if let Some(new) = body {
             bodies.insert(row.id.clone(), new);
             changed = true;
         }
-        let new = partner::row(&row, &partner);
+        let new = partner::row(&row, &by);
         changed |= new != row;
         if changed {
             moved.push(new.id.clone());
@@ -168,9 +172,14 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
     }
     moved.sort();
     moved.dedup();
+    let ledger: Vec<Entry> = ledger
+        .iter()
+        .map(|entry| partner::entry(entry, &by))
+        .collect();
     Ok(Migrated {
         rows: out,
         bodies,
+        ledger: forget::joined(&[], &ledger),
         moved,
         clashes,
     })

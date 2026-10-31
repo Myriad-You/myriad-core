@@ -101,8 +101,6 @@ struct Side {
     origin: String,
     /// Person and group keys it knows.
     people: Vec<String>,
-    /// The partner as it knows them, once it has moved to one id.
-    partner: Option<myriad_persona_log::Partner>,
 }
 
 impl Side {
@@ -128,7 +126,6 @@ impl Side {
             ledger: Vec::new(),
             origin: origin.to_string(),
             people: Vec::new(),
-            partner: None,
         }
     }
 
@@ -197,8 +194,6 @@ impl Side {
     fn take_held(&mut self, batch: Batch, held: Vec<Row>) -> crate::wire::Taken {
         let taken = take(TakeInput {
             people: self.people.clone(),
-            partner: self.partner.clone(),
-            met: self.partner.is_some(),
             elsewhere: Vec::new(),
             batch,
             holder: self.holder.clone(),
@@ -1614,8 +1609,6 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
             ledger: None,
             epochs: BTreeMap::new(),
             held: Vec::new(),
-            partner: None,
-            met: false,
             elsewhere: known,
         })
         .unwrap()
@@ -1644,8 +1637,6 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
             ledger: None,
             epochs: BTreeMap::new(),
             held: Vec::new(),
-            partner: None,
-            met: false,
             elsewhere: known,
         })
         .unwrap()
@@ -1676,16 +1667,18 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
     assert!(sent.batches.iter().all(|batch| batch.payloads.is_empty()));
 }
 
-/// The partner's one id: two Macs that each moved twice, through ids of
-/// their own, end on one node with one id, and what upkeep wrote before
-/// the moves (a merge, a split) still folds.
+/// The partner's one id: the site issues it, a Mac takes it over the link
+/// and moves to it once (rows, bodies, ledger), files never change an id,
+/// and no side holds the talk of an id that is not its partner's.
 mod partner_id {
-    use myriad_persona_log::{Partner, partner};
+    use myriad_persona_log::partner::{self, Here};
 
     use super::*;
     use crate::migrate::{MigrateInput, migrate};
 
     const PART_KEY: &str = "minted:friday";
+    const P0: &str = "partner_0199d5c0900033333333333333333333";
+    const PF: &str = "partner_0199d5c0a00022222222222222222222";
 
     fn private(owner: &str) -> String {
         format!("personal:{owner}")
@@ -1698,21 +1691,38 @@ mod partner_id {
             side
         }
 
-        /// Moves this side to `partner`, as a host does: its rows and
-        /// bodies once, its ledger keyed anew.
-        fn move_to(&mut self, partner: &Partner) {
-            let out = migrate(MigrateInput {
-                rows: self.rows.clone(),
-                bodies: self.bodies.clone(),
-                partner: partner.clone(),
-            })
-            .unwrap();
-            assert!(out.clashes.is_empty());
-            self.rows = out.rows;
-            self.bodies.extend(out.bodies);
-            self.ledger = myriad_persona_log::ledger(&self.rows);
-            self.holder.owner = partner.id.clone();
-            self.partner = Some(partner.clone());
+        /// What it tells `partner.link` and `partner.file`.
+        fn here(&self, linked: bool) -> Here {
+            let mut audiences: Vec<String> =
+                self.rows.iter().map(|row| row.audience.clone()).collect();
+            audiences.sort();
+            audiences.dedup();
+            Here {
+                id: (self.holder.owner != partner::LEGACY).then(|| self.holder.owner.clone()),
+                linked,
+                audiences,
+            }
+        }
+
+        /// Links to the site's id, as a host does: `partner.link`, then
+        /// moving its rows, bodies and ledger once before it syncs.
+        fn link_to(&mut self, linked: bool, id: &str) {
+            let link = partner::link(&self.here(linked), id).unwrap();
+            if let Some(from) = link.from {
+                let out = migrate(MigrateInput {
+                    rows: self.rows.clone(),
+                    bodies: self.bodies.clone(),
+                    ledger: self.ledger.clone(),
+                    from,
+                    to: id.into(),
+                })
+                .unwrap();
+                assert!(out.clashes.is_empty());
+                self.rows = out.rows;
+                self.bodies.extend(out.bodies);
+                self.ledger = out.ledger;
+            }
+            self.holder.owner = link.id;
         }
 
         /// The nodes it folds in `audience`, by key.
@@ -1727,11 +1737,12 @@ mod partner_id {
         }
     }
 
-    /// A Mac with 「发版」 and 「别的事」 under `local-owner`; on the first,
-    /// her upkeep merged 「别的事」 into 「发版」 and split a part off it.
-    fn mac(origin: &str, at: u64) -> Side {
-        let old = private(partner::LEGACY);
-        let mut mac = Side::owned(Core::Pc, origin, partner::LEGACY);
+    /// A Mac with 「发版」 under `owner` (`local-owner` unless it took a
+    /// file's id); `dev_a` also merged 「别的事」 into it and split a part
+    /// off it.
+    fn mac(origin: &str, at: u64, owner: &str) -> Side {
+        let old = private(owner);
+        let mut mac = Side::owned(Core::Pc, origin, owner);
         let id = |n: u64| format!("{origin}-{n}");
         mac.write(
             row(&id(1), origin, 1, at, &old, KEY, "node.created"),
@@ -1771,28 +1782,15 @@ mod partner_id {
     }
 
     #[test]
-    fn two_macs_moved_twice_end_on_one_node_and_one_id_and_old_upkeep_still_folds() {
-        // The site minted first; each Mac mints its own when it first needs
-        // one, then meets the site's over a link.
-        let p0 = partner::minted(0x0199_d5c0_9000, &[0x33; 10], Some("acct_7")).unwrap();
-        let p1 = partner::minted(0x0199_d5c0_a000, &[0x22; 10], Some(partner::LEGACY)).unwrap();
-        let p2 = partner::minted(0x0199_d5c0_b000, &[0x44; 10], Some(partner::LEGACY)).unwrap();
-        let link = |mine: &Partner| {
-            let met = partner::meet(mine, &p0, partner::By::Link, &[], &[], false).unwrap();
-            assert!(met.changed && met.partner.id == p0.id);
-            met.partner
-        };
-        let audience = private(&p0.id);
+    fn two_macs_linked_end_on_one_node_and_one_id_and_old_upkeep_still_folds() {
+        let audience = private(P0);
         let mut ends = Vec::new();
         for a_first in [true, false] {
-            let mut a = mac("dev_a", T);
-            let mut b = mac("dev_b", T + 100);
-            let mut site = Side::owned(Core::Server, "site", "acct_7");
-            site.move_to(&p0);
-            a.move_to(&p1);
-            b.move_to(&p2);
-            a.move_to(&link(&p1));
-            b.move_to(&link(&p2));
+            let mut a = mac("dev_a", T, partner::LEGACY);
+            let mut b = mac("dev_b", T + 100, partner::LEGACY);
+            let mut site = Side::owned(Core::Server, "site", P0);
+            a.link_to(false, P0);
+            b.link_to(false, P0);
             let order: [&mut Side; 2] = if a_first {
                 [&mut a, &mut b]
             } else {
@@ -1812,22 +1810,15 @@ mod partner_id {
                     release["id"],
                     node_id(&private(partner::LEGACY), KEY).unwrap()
                 );
-                assert_eq!(release["id"], node_id(&audience, KEY).unwrap());
                 assert_eq!(release["name"]["value"], "发版");
-                // The merge written before the moves still folds.
+                // The merge and the split written before the move fold.
                 assert_eq!(
                     nodes[OTHER_KEY]["absorbedInto"]["into"],
                     node_id(&audience, KEY).unwrap()
                 );
-                // And so does the split: its span is on the part.
-                let part = &nodes[PART_KEY]["spans"];
-                assert_eq!(part[0]["text"], "dev_a 记的：周五发版。", "{}", side.origin);
-                assert!(
-                    nodes[KEY]["spans"]
-                        .as_array()
-                        .unwrap()
-                        .iter()
-                        .any(|one| one["text"] == "dev_b 记的：周五发版。")
+                assert_eq!(
+                    nodes[PART_KEY]["spans"][0]["text"],
+                    "dev_a 记的：周五发版。"
                 );
                 assert!(
                     side.folded(&audience, false)["skipped"]
@@ -1841,59 +1832,108 @@ mod partner_id {
                 canonical_bytes(&a.folded(&audience, true)),
                 canonical_bytes(&site.folded(&audience, true))
             );
-            assert_eq!(
-                canonical_bytes(&b.folded(&audience, true)),
-                canonical_bytes(&site.folded(&audience, true))
-            );
             ends.push(canonical_bytes(&site.folded(&audience, true)));
         }
         assert_eq!(ends[0], ends[1]);
     }
 
+    /// A row of her own audience about the partner (her mood towards
+    /// them), or a forget of it.
+    fn about_partner(id: &str, origin: &str, dseq: u64, at: u64, partner: &str, kind: &str) -> Row {
+        let mut about = row(id, origin, dseq, at, "own:", KEY, kind);
+        about.object = format!("affect:{partner}");
+        about
+    }
+
     #[test]
-    fn a_batch_under_an_old_id_is_moved_only_from_a_source_that_met() {
-        let p0 = partner::minted(0x0199_d5c0_9000, &[0x33; 10], Some(partner::LEGACY)).unwrap();
-        // A Mac that moved, and a page of someone's file under
-        // `local-owner` with no partner in its header.
-        let mut mine = mac("dev_b", T);
-        mine.move_to(&p0);
-        let stranger = mac("dev_x", T + 50);
-        let file = Side::owned(Core::Pc, "dev_file", partner::LEGACY);
-        let page = stranger
-            .send_to(&file, &private(partner::LEGACY))
-            .batches
-            .remove(0);
-        let take_page = |side: &Side, met: bool| {
-            take(TakeInput {
-                batch: page.clone(),
-                holder: side.holder.clone(),
-                now: NOW,
-                known: BTreeMap::new(),
-                members: BTreeMap::new(),
-                ledger: Some(side.ledger.clone()),
-                epochs: BTreeMap::new(),
-                held: Vec::new(),
-                partner: side.partner.clone(),
-                met,
-                elsewhere: Vec::new(),
-                people: Vec::new(),
-            })
-            .unwrap()
-        };
-        // Not met: taken as it stands, in an audience this computer may not
-        // hold, so refused, and nothing reaches the partner's talk.
-        let taken = take_page(&mine, false);
-        assert!(taken.admitted.accepted.is_empty());
-        assert!(taken.bodies.is_empty());
-        // A file whose header partner met this side (or a link): moved.
-        let taken = take_page(&mine, true);
-        assert!(!taken.admitted.accepted.is_empty());
-        assert!(
-            taken
-                .admitted
-                .accepted
-                .iter()
-                .all(|row| row.audience == private(&p0.id))
+    fn a_forget_of_all_about_the_partner_holds_across_the_move() {
+        // The Mac forgot her mood towards the partner while still
+        // `local-owner`; the site holds such a row under its id.
+        let mut mac = Side::owned(Core::Pc, "dev_mac", partner::LEGACY);
+        mac.write(
+            about_partner("f1", "dev_mac", 1, T, partner::LEGACY, "forget"),
+            None,
         );
+        let mut site = Side::owned(Core::Server, "site", P0);
+        site.write(
+            about_partner("s1", "site", 1, T + 5, P0, "affect.change"),
+            None,
+        );
+        // The move takes the Mac's ledger with it, so the forget now names
+        // the partner's one id, and the site's row comes in a stub.
+        mac.link_to(false, P0);
+        assert!(
+            mac.ledger
+                .iter()
+                .any(|entry| entry.target == format!("affect:{P0}"))
+        );
+        mac.sync_from(&site, "own:");
+        let s1 = mac.rows.iter().find(|row| row.id == "s1").unwrap();
+        assert!(s1.forgotten);
+        // And the site, taking the Mac's forget, stubs its own.
+        site.sync_from(&mac, "own:");
+        assert!(site.rows.iter().any(|row| row.id == "s1" && row.forgotten));
+    }
+
+    #[test]
+    fn no_side_takes_talk_under_an_id_that_is_not_its_partners() {
+        // A stranger's pages: from before (local-owner, no header partner),
+        // and under another partner id.
+        let stranger = mac("dev_x", T + 50, partner::LEGACY);
+        let other = mac("dev_y", T + 60, PF);
+        let page = |side: &Side, owner: &str| {
+            let reader = Side::owned(Core::Pc, "dev_file", owner);
+            side.send_to(&reader, &private(owner)).batches.remove(0)
+        };
+        let legacy = page(&stranger, partner::LEGACY);
+        let foreign = page(&other, PF);
+        // A Mac that holds anything, and the site.
+        let mut mine = mac("dev_b", T, partner::LEGACY);
+        mine.link_to(false, P0);
+        let site = Side::owned(Core::Server, "site", P0);
+        for side in [&mine, &site] {
+            assert!(partner::file(&side.here(true), None).is_err());
+            assert!(partner::file(&side.here(true), Some(PF)).is_err());
+            assert!(partner::file(&side.here(true), Some(P0)).is_ok());
+            for batch in [&legacy, &foreign] {
+                let mut side = side.clone();
+                let taken = side.take(batch.clone());
+                assert!(taken.admitted.accepted.is_empty(), "{}", side.origin);
+                assert!(taken.bodies.is_empty());
+            }
+        }
+        // A Mac that holds anything and never linked takes no other Mac's
+        // file either: link both, or import onto an empty Mac.
+        let unlinked = mac("dev_c", T, partner::LEGACY);
+        assert!(partner::file(&unlinked.here(false), None).is_err());
+        assert!(partner::file(&unlinked.here(false), Some(PF)).is_err());
+    }
+
+    #[test]
+    fn an_empty_mac_takes_a_files_id_then_the_links_and_the_pages_move() {
+        // Another Mac's file, under its id.
+        let writer = mac("dev_a", T, PF);
+        let mut empty = Side::owned(Core::Pc, "dev_new", partner::LEGACY);
+        let filed = partner::file(&empty.here(false), Some(PF)).unwrap();
+        assert!(filed.adopt);
+        empty.holder.owner = filed.id;
+        for batch in writer.send_to(&empty, &private(PF)).batches {
+            let taken = empty.take(batch);
+            assert!(taken.admitted.refused.is_empty());
+        }
+        // Then it links: the site's id wins, and the file's pages move.
+        let mut site = Side::owned(Core::Server, "site", P0);
+        empty.link_to(false, P0);
+        assert!(empty.rows.iter().all(|row| row.audience == private(P0)));
+        site.sync_from(&empty, &private(P0));
+        let nodes = site.by_key(&private(P0));
+        assert_eq!(nodes[KEY]["id"], node_id(&private(PF), KEY).unwrap());
+        assert_eq!(
+            nodes[OTHER_KEY]["absorbedInto"]["into"],
+            node_id(&private(P0), KEY).unwrap()
+        );
+        // Linked now, it takes no other id.
+        assert!(partner::link(&empty.here(true), PF).is_err());
+        assert!(partner::file(&empty.here(true), Some(PF)).is_err());
     }
 }

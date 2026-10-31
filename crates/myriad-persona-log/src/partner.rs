@@ -1,49 +1,45 @@
 //! One id for the partner on every side.
 //!
-//! The partner's private audience is `personal:<id>`, and node ids are made
-//! from the audience, so two sides that call the partner by different ids
-//! keep two logs of the same talk. Until now the Mac said `local-owner` and
-//! the site its own account id. From here every side uses one id that
-//! belongs to neither a device nor the site:
+//! The partner's private audience is `personal:<id>`. Until now the Mac
+//! said `local-owner` and the site its own account id. From here every side
+//! uses one id, which the site issues (the partner's decision, 2026-10-30:
+//! one new id on both ends):
 //!
 //! - **Its form** ([`check`]): `partner_` and 32 lowercase hex digits: 12
 //!   of the time it was minted (Unix milliseconds) then 20 random (80
 //!   bits). It is an id, not a credential: it opens nothing, and it may
 //!   stand in a file's clear header.
-//! - **Who mints it** ([`mint`]): whichever side first needs it (the first
-//!   time it writes a row of the partner's private talk under this core, or
-//!   moves an old one). The caller gives the time and ten random bytes; the
-//!   core reads neither. The id the side used before stays as an alias.
-//! - **Two ids meet** ([`meet`]): over an authenticated link to the
-//!   partner's own account two sides keep the smaller id in byte order,
-//!   which is the one minted first, and the other becomes an alias. The
-//!   rule only looks at the two ids, so any order of links ends on the same
-//!   id. A file proves less: the id in its clear header can be copied by
-//!   anyone who saw it, so a file never changes a side's id. A file that
-//!   shares a partner id with this side adds its id as an alias, nothing
-//!   more; a side that holds nothing of the partner yet and never met
-//!   anyone takes a file's id as it is (the partner's decision, 2026-10-30:
-//!   空的 Mac 直接认文件). A legacy id such as `local-owner` is every Mac's,
-//!   so it shows nothing. A link takes none of the other side's aliases
-//!   but the ones this side vouches for (`ours`): an alias would move every
-//!   row under it into the partner's private talk, so a claim alone never
-//!   does. An id the other side brings that this side knows is someone
-//!   else's (`others`) is refused. Aliases past [`MAX_ALIASES`] are let
-//!   go, never the two ids that meet, then the newest partner ids first: a
-//!   row under one let go is moved by its own side when that side meets.
-//! - **Moving** ([`row`]): a side whose id changed rewrites its rows once:
-//!   `personal:<alias>` becomes `personal:<id>`, a subject that was the
-//!   alias becomes the id, and so does an object about it (`subject:<alias>`,
-//!   `affect:<alias>`). Ids, sides, counts and clocks stay, so a row is the
-//!   same row on every side that moved it, and rows that come later from a
-//!   side that has not moved yet are moved as they arrive. Node ids do not
-//!   move: the partner's private talk makes them under one fixed name,
-//!   [`LEGACY`] (`myriad_nodes::key`). What nodes add (bodies) is
-//!   `myriad_nodes::migrate`.
+//! - **Who mints it** ([`mint`]): the site, once per account (not the
+//!   account id itself). The caller gives the time and ten random bytes;
+//!   the core reads neither. A Mac never mints one.
+//! - **How a Mac gets it** ([`link`]): only over the authenticated link to
+//!   the partner's account (the site's welcome). Before its first sync on
+//!   that link the Mac moves what it held under `local-owner` (or under an
+//!   id it took from a file while empty) to it: rows, bodies and its ledger
+//!   (`myriad_nodes::migrate`). A Mac that never linked stays `local-owner`.
+//!   A Mac linked once never takes another id.
+//! - **Files** ([`file`]) never change or add an id. A file is taken when
+//!   the partner id in its header is this side's. A side that holds no row
+//!   of a `personal:` audience or of `own:` and never linked may take the
+//!   file's id as its own (the partner's decision, 2026-10-30: 空的 Mac
+//!   直接认文件); a file with no partner in its header (its pages under
+//!   `local-owner`) only onto such a side, as it is. Anything else is
+//!   refused. So a Mac that holds anything and never linked cannot take
+//!   another unlinked Mac's file: link both, or import onto an empty Mac.
+//! - **Nobody else's partner talk** (`crate::Holder::holds`): no side, the
+//!   server included, holds a private audience of `local-owner` or of a
+//!   partner id but its own partner's.
+//! - **Moving** ([`row`], [`entry`]): `personal:<from>` becomes
+//!   `personal:<to>`, a subject that was `from` becomes `to`, and so does an
+//!   object or a ledger target about them (`subject:<from>`,
+//!   `affect:<from>`), in the partner's talk and in her own. Ids, sides,
+//!   counts and clocks stay, so a row is the same row on every side. Node
+//!   ids do not move: the partner's private talk makes them under one fixed
+//!   name, [`LEGACY`] (`myriad_nodes::key`).
 
 use serde::{Deserialize, Serialize};
 
-use crate::{LogError, Row, row::Audience, row::MAX_TOKEN_BYTES};
+use crate::{LogError, Row, forget::Entry, row::Audience};
 
 /// What every partner id starts with.
 pub const PREFIX: &str = "partner_";
@@ -53,8 +49,7 @@ const TIME_DIGITS: usize = 12;
 pub const RANDOM_BYTES: usize = 10;
 /// The latest mint time the form holds: 16^12 - 1 milliseconds.
 const MAX_MS: i64 = (1 << 48) - 1;
-/// The earliest mint time: 2025-01-01, before any side minted one. An id
-/// that says it is older is made up, to win a meeting.
+/// The earliest mint time: 2025-01-01, before any side minted one.
 const MIN_MS: i64 = 1_735_689_600_000;
 /// The id every Mac's partner went by before the partner's one id, and the
 /// fixed name node ids of the partner's private talk are made under.
@@ -66,8 +61,6 @@ pub const LEGACY: &str = "local-owner";
 pub fn is_partners(member: &str) -> bool {
     member == LEGACY || check(member).is_ok()
 }
-/// Aliases one partner may carry; a meeting keeps this many.
-pub const MAX_ALIASES: usize = 32;
 
 /// Whether `id` is a partner id in the form this core mints.
 pub fn check(id: &str) -> Result<(), LogError> {
@@ -108,243 +101,218 @@ pub fn mint(at_ms: i64, random: &[u8]) -> Result<String, LogError> {
     Ok(id)
 }
 
-/// The partner as a side knows them: the id in use, and every id that
-/// stood for them before (a legacy one such as `local-owner`, or a partner
-/// id that lost a meeting), sorted.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// What a side knows of its partner, for [`link`] and [`file`].
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Partner {
-    pub id: String,
+pub struct Here {
+    /// The partner id this side goes by; none while it is `local-owner`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    /// Whether the id came over a link to the partner's account (the site
+    /// is always linked).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub linked: bool,
+    /// Every audience this side holds a row of.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub aliases: Vec<String>,
-}
-
-/// An alias is any one id a private audience could have held.
-fn check_alias(alias: &str) -> Result<(), LogError> {
-    let one = !alias.is_empty()
-        && alias.len() <= MAX_TOKEN_BYTES
-        && !alias
-            .chars()
-            .any(|ch| ch == ',' || ch.is_control() || ch.is_whitespace());
-    if !one {
-        return Err(LogError::new(
-            "an alias is one id: no comma, space or control character",
-        ));
-    }
-    Ok(())
-}
-
-impl Partner {
-    pub fn check(&self) -> Result<(), LogError> {
-        check(&self.id)?;
-        if self.aliases.len() > MAX_ALIASES {
-            return Err(LogError::new(format!(
-                "a partner carries at most {MAX_ALIASES} aliases"
-            )));
-        }
-        for alias in &self.aliases {
-            check_alias(alias)?;
-        }
-        if self.aliases.windows(2).any(|pair| pair[0] >= pair[1]) {
-            return Err(LogError::new("aliases are sorted and do not repeat"));
-        }
-        if self.aliases.contains(&self.id) {
-            return Err(LogError::new("the id in use is not its own alias"));
-        }
-        Ok(())
-    }
-
-    /// Whether `id` is this partner, by the id in use or an alias.
-    pub fn is(&self, id: &str) -> bool {
-        self.id == id || self.aliases.iter().any(|alias| alias == id)
-    }
-
-    /// `audience` as it reads now: `personal:<alias>`, the partner's alone,
-    /// is `personal:<id>`; anything else is itself.
-    pub fn audience(&self, audience: &str) -> String {
-        match Audience::parse(audience) {
-            Ok(Audience::Personal(member)) if member != self.id && self.is(member) => {
-                format!("personal:{}", self.id)
-            }
-            _ => audience.to_string(),
-        }
-    }
-
-    /// `id` as it reads now: an alias is the id in use.
-    pub fn person<'a>(&'a self, id: &'a str) -> &'a str {
-        if self.is(id) { &self.id } else { id }
-    }
-}
-
-/// A side's partner, minted: `was`, the id it used until now, becomes an
-/// alias.
-pub fn minted(at_ms: i64, random: &[u8], was: Option<&str>) -> Result<Partner, LogError> {
-    let id = mint(at_ms, random)?;
-    let aliases: Vec<String> = was
-        .filter(|was| *was != id)
-        .map(str::to_string)
-        .into_iter()
-        .collect();
-    let partner = Partner { id, aliases };
-    partner.check()?;
-    Ok(partner)
-}
-
-/// What two sides call the partner once they meet: the smaller id (the one
-/// minted first), every other id an alias. `changed` says this side's id
-/// moved, so it moves its rows.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Met {
-    pub partner: Partner,
-    #[serde(skip_serializing_if = "is_false")]
-    pub changed: bool,
+    pub audiences: Vec<String>,
 }
 
 fn is_false(value: &bool) -> bool {
     !*value
 }
 
-/// How a side knows the other side it meets is the partner's.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum By {
-    /// An authenticated link to the partner's own account: the site's
-    /// welcome to a device it linked, a hello the site took for this
-    /// account.
-    Link,
-    /// A file: it already shares a partner id with this side (a legacy
-    /// alias does not count), or this side holds nothing of the partner yet
-    /// (`empty`). It never changes the id of a side that holds anything.
-    File,
+impl Here {
+    fn check(&self) -> Result<(), LogError> {
+        if let Some(id) = &self.id {
+            check(id)?;
+        }
+        if self.linked && self.id.is_none() {
+            return Err(LogError::new("a linked side has a partner id"));
+        }
+        Ok(())
+    }
+
+    /// Whether this side holds nothing of the partner's or hers: no row of
+    /// a `personal:` audience or of `own:`.
+    fn empty(&self) -> bool {
+        !self.audiences.iter().any(|audience| {
+            matches!(
+                Audience::parse(audience),
+                Ok(Audience::Personal(_) | Audience::Own)
+            )
+        })
+    }
 }
 
-/// Two ids meet, `by` a proof this side holds.
-///
-/// - `link`: the smaller id wins. Of the other side's aliases only those
-///   this side vouches for (`ours`) are taken.
-/// - `file`: a file that shares a partner id with this side adds its id as
-///   an alias and changes nothing else. A side that holds nothing of the
-///   partner yet (`empty`: no row in a `personal:` audience or in `own:`)
-///   and never met anyone (no partner id among its aliases) takes the
-///   file's id as it is (the partner's decision, 2026-10-30: 空的 Mac 直接认
-///   文件). Any other file is refused.
-///
-/// The other side's id, and each alias this side vouches for, that this
-/// side knows is someone else's (`others`: every person it holds a private
-/// audience or a person node of, every other partner it serves) is refused;
-/// legacy ids are not partner ids and are not checked. An `others` that
-/// names the partner is refused too.
-pub fn meet(
-    mine: &Partner,
-    theirs: &Partner,
-    by: By,
-    ours: &[String],
-    others: &[String],
-    empty: bool,
-) -> Result<Met, LogError> {
-    mine.check()?;
-    theirs.check()?;
-    if others.iter().any(|other| mine.is(other)) {
-        return Err(LogError::new("others names the partner"));
-    }
-    let vouched: Vec<&String> = match by {
-        By::Link => theirs
-            .aliases
-            .iter()
-            .filter(|alias| ours.contains(alias))
-            .collect(),
-        By::File => Vec::new(),
-    };
-    let brought = std::iter::once(&theirs.id).chain(vouched.iter().copied());
-    if brought
-        .filter(|id| check(id).is_ok())
-        .any(|id| others.contains(id))
-    {
-        return Err(LogError::new(
-            "an id the other side brings is someone else's here",
-        ));
-    }
-    // Only a partner id counts: a legacy one (`local-owner`) is every
-    // Mac's, so it shows nothing about whose file this is.
-    let shared = mine.is(&theirs.id)
-        || theirs
-            .aliases
-            .iter()
-            .any(|alias| check(alias).is_ok() && mine.is(alias));
-    let never_met = !mine.aliases.iter().any(|alias| check(alias).is_ok());
-    let id = match by {
-        By::Link => mine.id.as_str().min(theirs.id.as_str()).to_string(),
-        By::File if empty && never_met => theirs.id.clone(),
-        By::File if shared => mine.id.clone(),
-        By::File => {
-            return Err(LogError::new(
-                "a file shares no partner id with this side, which is not empty",
-            ));
+/// What a link's partner id means for this side.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Linked {
+    /// The id this side goes by from now on.
+    pub id: String,
+    /// The id to move from first (`myriad_nodes::migrate`), when it had
+    /// another.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
+}
+
+/// The site's id for the partner, as it comes over the authenticated link:
+/// a side still `local-owner`, or with an id it only took from a file,
+/// takes it and moves; a side linked before keeps its own and refuses
+/// another.
+pub fn link(here: &Here, theirs: &str) -> Result<Linked, LogError> {
+    here.check()?;
+    check(theirs)?;
+    let from = match &here.id {
+        None => Some(LEGACY.to_string()),
+        Some(id) if id == theirs => None,
+        Some(id) if !here.linked => Some(id.clone()),
+        Some(_) => {
+            return Err(LogError::new("this side is linked to another partner id"));
         }
     };
-    // The two ids that meet always stay; then this side's aliases, and the
-    // other side's it vouches for.
-    let meeting: Vec<String> = [&mine.id, &theirs.id]
-        .into_iter()
-        .filter(|one| **one != id)
-        .cloned()
-        .collect();
-    let mut rest: Vec<String> = mine
-        .aliases
-        .iter()
-        .chain(vouched.iter().copied())
-        .filter(|alias| **alias != id && !meeting.contains(alias))
-        .cloned()
-        .collect();
-    // Past the cap: legacy ids first, then partner ids oldest first.
-    rest.sort_by(|a, b| (check(a).is_ok(), a).cmp(&(check(b).is_ok(), b)));
-    rest.dedup();
-    rest.truncate(MAX_ALIASES - meeting.len());
-    let mut aliases: Vec<String> = meeting.into_iter().chain(rest).collect();
-    aliases.sort();
-    aliases.dedup();
-    let partner = Partner { id, aliases };
-    partner.check()?;
-    Ok(Met {
-        changed: partner.id != mine.id,
-        partner,
+    Ok(Linked {
+        id: theirs.to_string(),
+        from,
     })
+}
+
+/// What a file means for this side.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Filed {
+    /// The id its pages are under, which is this side's from now on: the
+    /// holder's `owner` to take them with (`nodes.wire_take`).
+    pub id: String,
+    /// This side takes it as its own id (it was empty and never linked).
+    #[serde(skip_serializing_if = "is_false")]
+    pub adopt: bool,
+}
+
+/// Whether a file of the partner id `header` (none: a file from before,
+/// its pages under `local-owner`) may come in here, and under which id.
+pub fn file(here: &Here, header: Option<&str>) -> Result<Filed, LogError> {
+    here.check()?;
+    let open = here.empty() && !here.linked;
+    let id = header.unwrap_or(LEGACY);
+    if let Some(header) = header {
+        check(header)?;
+    }
+    let mine = here.id.as_deref().unwrap_or(LEGACY);
+    if header.is_some() && id == mine {
+        return Ok(Filed {
+            id: id.to_string(),
+            adopt: false,
+        });
+    }
+    if !open {
+        return Err(LogError::new(
+            "the file's partner is not this side's, and this side is not empty",
+        ));
+    }
+    Ok(Filed {
+        id: id.to_string(),
+        adopt: id != mine,
+    })
+}
+
+/// One move of a side's partner id: from the id it went by
+/// (`local-owner`, or a partner id taken from a file) to the one the link
+/// gave.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Move {
+    pub from: String,
+    pub to: String,
+}
+
+impl Move {
+    pub fn check(&self) -> Result<(), LogError> {
+        if !is_partners(&self.from) {
+            return Err(LogError::new("a move is from local-owner or a partner id"));
+        }
+        check(&self.to)?;
+        if self.from == self.to {
+            return Err(LogError::new("a move goes to another id"));
+        }
+        Ok(())
+    }
+
+    /// Whether `audience` is the partner's private talk, before or after.
+    pub fn is_ours(&self, audience: &str) -> bool {
+        audience
+            .strip_prefix("personal:")
+            .is_some_and(|member| member == self.from || member == self.to)
+    }
+
+    /// `audience` moved: `personal:<from>` is `personal:<to>`.
+    pub fn audience(&self, audience: &str) -> String {
+        match audience.strip_prefix("personal:") {
+            Some(member) if member == self.from => format!("personal:{}", self.to),
+            _ => audience.to_string(),
+        }
+    }
+
+    /// A person's id moved: `from` is `to`.
+    pub fn person<'a>(&'a self, id: &'a str) -> &'a str {
+        if id == self.from { &self.to } else { id }
+    }
+
+    /// An object or a ledger target about a person moved.
+    fn about(&self, object: &str) -> String {
+        match object.split_once(':') {
+            Some((kind, id)) if PERSON_OBJECTS.contains(&kind) && id == self.from => {
+                format!("{kind}:{}", self.to)
+            }
+            _ => object.to_string(),
+        }
+    }
+
+    /// Whether rows of `audience` may name the partner: theirs, and hers.
+    fn touches(&self, audience: &str) -> bool {
+        self.is_ours(audience) || matches!(Audience::parse(audience), Ok(Audience::Own))
+    }
 }
 
 /// Object types whose id is a person: `subject:<id>` (a forget of all
 /// about them), `affect:<id>` (her mood towards them).
 const PERSON_OBJECTS: [&str; 2] = [crate::kinds::SUBJECT, "affect"];
 
-/// `row` as it reads under `partner`: the partner's private audience under
-/// the id in use, and the partner as subject and as an object's id. Rows of
-/// her own audience change only in such objects; other audiences not at
-/// all. The same row moves to the same bytes on every side.
-pub fn row(row: &Row, partner: &Partner) -> Row {
-    let audience = partner.audience(&row.audience);
-    let ours = audience != row.audience || row.audience == format!("personal:{}", partner.id);
-    let own = matches!(Audience::parse(&row.audience), Ok(Audience::Own));
-    if !ours && !own {
+/// `row` moved: the partner's private audience under the new id, and the
+/// partner as subject and as an object's id. Rows of her own audience
+/// change only in such objects; other audiences not at all. The same row
+/// moves to the same bytes on every side.
+pub fn row(row: &Row, by: &Move) -> Row {
+    if !by.touches(&row.audience) {
         return row.clone();
     }
-    let object = match row.object.split_once(':') {
-        Some((kind, id)) if PERSON_OBJECTS.contains(&kind) && partner.is(id) => {
-            format!("{kind}:{}", partner.id)
-        }
-        _ => row.object.clone(),
-    };
-    let subject = if ours {
-        row.subject
+    let subject = match by.is_ours(&row.audience) {
+        true => row
+            .subject
             .as_deref()
-            .map(|subject| partner.person(subject).to_string())
-    } else {
-        row.subject.clone()
+            .map(|subject| by.person(subject).to_string()),
+        false => row.subject.clone(),
     };
     Row {
-        audience,
+        audience: by.audience(&row.audience),
         subject,
-        object,
+        object: by.about(&row.object),
         ..row.clone()
+    }
+}
+
+/// A ledger line moved as [`row`] moves rows: its audience, and a target
+/// about the partner (`subject:<from>`, `affect:<from>`), so what was
+/// forgotten under the old id stays forgotten under the new. Node ids,
+/// homes and names stay.
+pub fn entry(entry: &Entry, by: &Move) -> Entry {
+    if !by.touches(&entry.audience) {
+        return entry.clone();
+    }
+    Entry {
+        audience: by.audience(&entry.audience),
+        target: by.about(&entry.target),
+        ..entry.clone()
     }
 }
 
@@ -352,20 +320,27 @@ pub fn row(row: &Row, partner: &Partner) -> Row {
 mod tests {
     use super::*;
 
-    const A: &str = "partner_0199d5c0a00011111111111111111111";
+    const P0: &str = "partner_0199d5c0900033333333333333333333";
+    const PF: &str = "partner_0199d5c0a00011111111111111111111";
+
+    fn here(id: Option<&str>, linked: bool, audiences: &[&str]) -> Here {
+        Here {
+            id: id.map(str::to_string),
+            linked,
+            audiences: audiences.iter().map(|one| one.to_string()).collect(),
+        }
+    }
 
     #[test]
-    fn a_mint_is_its_time_then_its_random_and_the_first_one_wins() {
-        let early = mint(0x0199_d5c0_a000, &[0x11; 10]).unwrap();
-        assert_eq!(early, A);
-        assert!(check(&early).is_ok());
-        let late = mint(0x0199_d5c0_a001, &[0x00; 10]).unwrap();
-        assert!(early < late, "the earlier mint sorts first");
+    fn a_mint_is_its_time_then_its_random() {
+        let id = mint(0x0199_d5c0_a000, &[0x11; 10]).unwrap();
+        assert_eq!(id, PF);
+        assert!(check(&id).is_ok());
         assert!(mint(-1, &[0; 10]).is_err());
         assert!(mint(MIN_MS - 1, &[0; 10]).is_err(), "before 2025");
         assert!(check("partner_00000000000011111111111111111111").is_err());
         assert!(mint(MAX_MS + 1, &[0; 10]).is_err());
-        assert!(mint(1, &[0; 9]).is_err());
+        assert!(mint(0x0199_d5c0_a000, &[0; 9]).is_err());
         for bad in [
             "local-owner",
             "partner_",
@@ -376,141 +351,98 @@ mod tests {
     }
 
     #[test]
-    fn meetings_in_any_order_end_on_the_same_id() {
-        let mac = minted(0x0199_d5c0_a000, &[0x22; 10], Some("local-owner")).unwrap();
-        let site = minted(0x0199_d5c0_9000, &[0x33; 10], Some("o41")).unwrap();
-        let other = minted(0x0199_d5c0_b000, &[0x01; 10], Some("local-owner")).unwrap();
-        let link =
-            |a: &Partner, b: &Partner| meet(a, b, By::Link, &[], &[], false).unwrap().partner;
-        let one = link(&link(&mac, &site), &other);
-        let two = link(&other, &link(&site, &mac));
-        assert_eq!(one.id, site.id);
-        assert_eq!(two.id, site.id);
-        // Each side keeps its own former ids and the ids it met; none of
-        // the other side's aliases.
+    fn a_link_gives_its_id_once_and_a_side_moves_to_it() {
+        // A Mac still local-owner takes the site's id and moves.
+        let fresh = link(&here(None, false, &["personal:local-owner"]), P0).unwrap();
         assert_eq!(
-            link(&site, &mac).aliases,
-            ["o41".to_string(), mac.id.clone()]
+            (fresh.id.as_str(), fresh.from.as_deref()),
+            (P0, Some(LEGACY))
         );
-        assert_eq!(
-            link(&mac, &site).aliases,
-            ["local-owner".to_string(), mac.id.clone()]
-        );
-        let met = meet(&mac, &site, By::Link, &[], &[], false).unwrap();
-        assert!(met.changed, "the Mac's id lost");
-        assert!(
-            !meet(&site, &mac, By::Link, &[], &[], false)
-                .unwrap()
-                .changed
-        );
-        // An alias the side vouches for is taken.
-        let vouched = meet(&site, &mac, By::Link, &["local-owner".into()], &[], false).unwrap();
-        assert_eq!(
-            vouched.partner.aliases,
-            ["local-owner".to_string(), "o41".into(), mac.id.clone()]
-        );
-    }
-
-    #[test]
-    fn no_claim_alone_moves_anyone_else_into_the_partner() {
-        let site = minted(0x0199_d5c0_a000, &[0x33; 10], Some("o41")).unwrap();
-        // A hello that claims another person of the site as an alias, and
-        // one the site does not hold yet: neither alias is taken.
-        let claim = Partner {
-            id: mint(0x0199_d5c0_8000, &[0; 10]).unwrap(),
-            aliases: vec!["o100".into(), "o99".into()],
-        };
-        let met = meet(&site, &claim, By::Link, &[], &[], false).unwrap();
-        assert_eq!(met.partner.aliases, ["o41".to_string(), site.id.clone()]);
-        // Its id, if this side knows it is someone else's, is refused; a
-        // legacy alias it brings is not looked at, for it is not taken.
-        assert!(meet(&site, &claim, By::Link, &[], &["o99".into()], false).is_ok());
-        assert!(
-            meet(
-                &site,
-                &claim,
-                By::Link,
-                &[],
-                std::slice::from_ref(&claim.id),
-                false
-            )
-            .is_err()
-        );
-        assert!(
-            meet(&site, &claim, By::Link, &[], &["o41".into()], false).is_err(),
-            "others names the partner"
-        );
-        // A file meets only when it already shares a partner id.
-        assert!(meet(&site, &claim, By::File, &[], &[], false).is_err());
-        // A friend's export carries `local-owner` too, as every Mac's
-        // partner does: that is no shared id.
-        let mac = minted(0x0199_d5c0_a000, &[0x22; 10], Some(LEGACY)).unwrap();
-        let friend = Partner {
-            id: minted(0x0199_d5c0_b000, &[0x44; 10], None).unwrap().id,
-            aliases: vec![LEGACY.into()],
-        };
-        assert!(meet(&mac, &friend, By::File, &[], &[], false).is_err());
-        // A legacy id it shares does not count either; a partner id does.
-        let file = Partner {
-            id: claim.id.clone(),
-            aliases: vec!["o41".into()],
-        };
-        assert!(meet(&site, &file, By::File, &[], &[], false).is_err());
+        // One that took a file's id while empty gives it up for the link's.
+        let filed = link(&here(Some(PF), false, &["personal:x"]), P0).unwrap();
+        assert_eq!(filed.from.as_deref(), Some(PF));
+        // Linked before: the same id is nothing to do, another is refused.
+        assert_eq!(link(&here(Some(P0), true, &[]), P0).unwrap().from, None);
+        assert!(link(&here(Some(PF), true, &[]), P0).is_err());
+        assert!(link(&here(None, false, &[]), "acct_7").is_err());
     }
 
     #[test]
     fn a_file_never_changes_the_id_of_a_side_that_holds_anything() {
-        let site = minted(0x0199_d5c0_a000, &[0x33; 10], Some("o41")).unwrap();
-        // A file that shares the site's id, under an earlier id anyone who
-        // saw a header could have made: only that id becomes an alias.
-        let file = Partner {
-            id: mint(0x0199_d5c0_8000, &[0x99; 10]).unwrap(),
-            aliases: vec!["o7".into(), site.id.clone()],
-        };
-        let met = meet(&site, &file, By::File, &["o7".into()], &[], false).unwrap();
-        assert!(!met.changed);
-        assert_eq!(met.partner.id, site.id);
-        assert_eq!(met.partner.aliases, ["o41".to_string(), file.id.clone()]);
-    }
-
-    #[test]
-    fn an_empty_side_takes_a_files_partner_id_as_it_is() {
-        // A Mac set up just now: its id was minted before the file's, and
-        // it holds nothing of the partner.
-        let fresh = minted(0x0199_d5c0_9000, &[0x55; 10], Some(LEGACY)).unwrap();
-        let file = minted(0x0199_d5c0_a000, &[0x66; 10], Some("o41")).unwrap();
-        assert!(meet(&fresh, &file, By::File, &[], &[], false).is_err());
-        let met = meet(&fresh, &file, By::File, &[], &[], true).unwrap();
-        assert!(met.changed);
-        assert_eq!(met.partner.id, file.id, "the file's id, not the smaller");
-        assert!(!met.partner.is("o41"), "none of the file's aliases");
-        // A side that met someone before is not empty, whatever it says.
-        let other = minted(0x0199_d5c0_b000, &[0x77; 10], None).unwrap();
-        let linked = meet(&fresh, &other, By::Link, &[], &[], false)
-            .unwrap()
-            .partner;
-        assert!(meet(&linked, &file, By::File, &[], &[], true).is_err());
-        // A link still keeps the smaller.
-        let linked = meet(&fresh, &file, By::Link, &[], &[], true).unwrap();
-        assert_eq!(linked.partner.id, fresh.id);
-    }
-
-    #[test]
-    fn past_the_cap_the_ids_that_meet_always_stay() {
-        let side = |n: u8| minted(0x0199_d5c0_a000 + i64::from(n), &[n; 10], None).unwrap();
-        let sides: Vec<Partner> = (0..40).map(side).collect();
-        let mut held = minted(0x0199_d5c0_9000, &[0x77; 10], Some("local-owner")).unwrap();
-        for next in sides.iter().rev() {
-            let met = meet(&held, next, By::Link, &[], &[], false)
-                .unwrap()
-                .partner;
-            assert!(met.check().is_ok());
-            assert!(met.aliases.len() <= MAX_ALIASES);
-            assert!(met.is(&next.id), "the id it met stays");
-            assert!(met.is(&held.id), "its own id stays");
-            assert!(met.is("local-owner"), "a legacy id goes last");
-            held = met;
+        let full = |id, linked| here(id, linked, &["own:"]);
+        // Its own partner's file comes in, as it is.
+        let same = file(&full(Some(P0), true), Some(P0)).unwrap();
+        assert_eq!((same.id.as_str(), same.adopt), (P0, false));
+        // Another partner id, a file from before (local-owner), or a
+        // made-up header: refused, on a Mac and on the site alike.
+        for (side, header) in [
+            (full(Some(P0), true), Some(PF)),
+            (full(Some(P0), true), None),
+            (full(None, false), Some(PF)),
+            (full(None, false), None),
+            (
+                full(None, false),
+                Some("partner_00000000000011111111111111111111"),
+            ),
+        ] {
+            assert!(file(&side, header).is_err(), "{side:?} {header:?}");
         }
-        assert_eq!(held.aliases.len(), MAX_ALIASES);
+        // An empty Mac that never linked takes the file's id, or a file
+        // from before as it is; an empty linked one does not.
+        let empty = here(None, false, &["group:g1"]);
+        assert_eq!(
+            file(&empty, Some(PF)).unwrap(),
+            Filed {
+                id: PF.into(),
+                adopt: true
+            }
+        );
+        assert_eq!(
+            file(&empty, None).unwrap(),
+            Filed {
+                id: LEGACY.into(),
+                adopt: false
+            }
+        );
+        assert!(file(&here(Some(P0), true, &[]), Some(PF)).is_err());
+        assert!(file(&here(Some(P0), true, &[]), None).is_err());
+    }
+
+    #[test]
+    fn a_move_takes_rows_and_the_ledger_to_the_new_id() {
+        let by = Move {
+            from: LEGACY.into(),
+            to: P0.into(),
+        };
+        assert!(by.check().is_ok());
+        for bad in [("acct_7", P0), (LEGACY, LEGACY), (P0, P0), (LEGACY, "x")] {
+            let bad = Move {
+                from: bad.0.into(),
+                to: bad.1.into(),
+            };
+            assert!(bad.check().is_err(), "{bad:?}");
+        }
+        let line = |audience: &str, target: &str| Entry {
+            audience: audience.into(),
+            target: target.into(),
+            at: serde_json::from_value(serde_json::json!("001760000000001-000000-dev_mac"))
+                .unwrap(),
+            kind: crate::forget::Kind::Forget,
+            homes: Vec::new(),
+            to: None,
+            takes: Vec::new(),
+        };
+        let moved = entry(&line("personal:local-owner", "subject:local-owner"), &by);
+        assert_eq!(
+            moved,
+            line(&format!("personal:{P0}"), &format!("subject:{P0}"))
+        );
+        let moved = entry(&line("own:", "affect:local-owner"), &by);
+        assert_eq!(moved, line("own:", &format!("affect:{P0}")));
+        // Someone else's talk, and her mood towards someone else, stay.
+        let other = line("personal:9", "subject:local-owner");
+        assert_eq!(entry(&other, &by), other);
+        let other = line("own:", "affect:9");
+        assert_eq!(entry(&other, &by), other);
     }
 }
