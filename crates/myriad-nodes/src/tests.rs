@@ -87,6 +87,7 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.wire_take" => json_of(&wire::take(input(raw)?)?),
         "nodes.home_send" => json_of(&home::send(input(raw)?)?),
         "nodes.home_take" => json_of(&home::take(input(raw)?)?),
+        "nodes.home_owed" => json_of(&home::home_owed(input(raw)?)?),
         "nodes.retract" => json_of(&fold::retract_lists(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
@@ -114,7 +115,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 15, "{files:?}");
+    assert_eq!(files.len(), 16, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -265,6 +266,8 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "refused: a shared run on a retracted node",
             "kept with local rows only",
         ),
+        // nodes.home_owed
+        ("refused: an empty origin", "origin must be 1 to"),
         // nodes.home_send, nodes.home_take
         (
             "refused: a server never writes a home page",

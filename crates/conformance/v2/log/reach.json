@@ -1060,11 +1060,9 @@
           }
         ]
       },
-      "name": "elsewhere, a forget that lists a row takes it, whoever wrote it",
+      "name": "elsewhere, a forget that lists a row takes nothing when no home of a retract reaching it wrote it",
       "output": {
-        "stubbed": [
-          "x1"
-        ]
+        "stubbed": []
       }
     },
     {
