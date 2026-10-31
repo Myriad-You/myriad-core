@@ -1873,6 +1873,257 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "personal:partner_0199d5c0900033333333333333333333"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "two partners with the same node id: another partner's talk does not count against this one's",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "personal:partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "personal:partner_0199d5c0b00044444444444444444444"
+        },
+        "members": {
+          "group:g1": [
+            "partner_0199d5c0b00044444444444444444444",
+            "9"
+          ]
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: the same partner moving an object from their private talk into a group they are in (audience_changed)",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "id": "k-2",
+            "reason": "audience_changed"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "group:g1"
+        },
+        "members": {
+          "group:g1": [
+            "partner_0199d5c0b00044444444444444444444"
+          ]
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: the same partner moving an object from a group they are in into their private talk (audience_changed)",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "id": "k-3",
+            "reason": "audience_changed"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "own:"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-4",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: the same partner moving an object from her own audience into their private talk (audience_changed)",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "id": "k-4",
+            "reason": "audience_changed"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "group:g1"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-5",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-5"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a group the side cannot tell the partner is in counts for no one",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-5",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-5"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "personal:partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": []
+      }
     }
   ],
   "version": 1

@@ -170,7 +170,9 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
 /// So a node id is unique only per account and audience: two accounts'
 /// partners make the same id for the same key in their private talk. A
 /// side that holds several accounts (the site) keys everything it stores
-/// by audience as well as by node id.
+/// by audience as well as by node id, and `log.admit` counts an object
+/// known under another audience only when both are one partner's
+/// (`myriad_persona_log::admit`, `known`).
 pub(crate) fn made_id(audience: &str, key: &str) -> String {
     let (audience, key) = fixed(audience, key);
     sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string()
