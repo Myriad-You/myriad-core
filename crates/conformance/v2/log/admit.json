@@ -1411,15 +1411,37 @@
           }
         ]
       },
-      "name": "refused: a forget that lists rows from a side that wrote no retract in its audience (not_a_home)",
+      "name": "a forget that lists rows from a side that wrote no retract in its audience is taken: it takes only on a home of a retract reaching the row",
       "output": {
-        "accepted": [],
-        "epochs": {},
-        "ledger": [],
-        "refused": [
+        "accepted": [
           {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-site",
             "id": "fz",
-            "reason": "not_a_home"
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "site",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [
+          {
+            "at": "001760000000007-000000-site",
+            "audience": "personal:o1",
+            "homes": [
+              "site"
+            ],
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
           }
         ]
       }
@@ -1589,6 +1611,168 @@
             "audience": "personal:o1",
             "homes": [
               "mac_2"
+            ],
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "now": 1760000100000000,
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-dev_new",
+            "id": "fz",
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ]
+      },
+      "name": "a forget that lists rows from a restored home, before its own retract arrives, is taken",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-dev_new",
+            "id": "fz",
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000007-000000-dev_new",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_new"
+            ],
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac",
+              "dev_new"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "now": 1760000100000000,
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-dev_new",
+            "id": "fz",
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ]
+      },
+      "name": "a forget that lists rows from a restored home, after its own retract arrived, is taken",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-dev_new",
+            "id": "fz",
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac",
+              "dev_new"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000007-000000-dev_new",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_new"
             ],
             "takes": [
               "x1"

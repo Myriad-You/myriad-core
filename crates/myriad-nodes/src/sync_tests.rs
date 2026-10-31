@@ -1798,6 +1798,7 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
             holder,
             ledger: Vec::new(),
             held,
+            origin: None,
         })
     };
     assert!(take_as(page.clone(), server, Vec::new()).is_err());

@@ -329,6 +329,12 @@ impl<'a> View<'a> {
         out
     }
 
+    /// Every node (or object) a forget of which reaches `row`: what the
+    /// fold may place it in or pass it through.
+    pub fn places(&self, row: &'a Row) -> BTreeSet<&'a str> {
+        self.targets(row)
+    }
+
     /// Every object whose forget reaches `row`: its object and each node
     /// it went on into; every place a split that took it moved it from one
     /// of those, and on from there; and for a merge or a split, the other
@@ -475,16 +481,6 @@ impl<'a> View<'a> {
                         .any(|entry| entry.is_retract() && entry.homes.contains(origin))
                 })
             })
-    }
-
-    /// Whether `origin` wrote a retract in `audience`: a home, whose fold
-    /// may show rows a retract keeps.
-    pub fn retracted_in(&self, audience: &str, origin: &str) -> bool {
-        self.by_target
-            .iter()
-            .filter(|((at, _), _)| *at == audience)
-            .flat_map(|(_, entries)| entries)
-            .any(|entry| entry.is_retract() && entry.homes.iter().any(|home| home == origin))
     }
 
     /// Whether `row` is taken away on `side`. On a home, a row a retract of

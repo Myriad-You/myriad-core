@@ -80,6 +80,10 @@ pub struct TakeInput {
     /// `filled`.
     #[serde(default)]
     pub held: Vec<Row>,
+    /// The side this one writes as: a node it keeps already by a retract
+    /// of its own is not listed in [`Taken::retract`].
+    #[serde(default)]
+    pub origin: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -103,6 +107,13 @@ pub struct Taken {
     /// This side's ledger with the page's marks: this side is now a home of
     /// the nodes it took.
     pub ledger: Vec<Entry>,
+    /// The nodes (`node:<id>`) this side keeps now by the page's marks and
+    /// has written no retract of, sorted. It writes one for each, as when
+    /// the partner presses it here (`nodes.retract` lists it, beside a
+    /// `retract.home`): a restored home is a home every side knows, so a
+    /// forget it lists counts as a home's ([`myriad_persona_log::forget`]).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub retract: Vec<String>,
 }
 
 /// Only a computer of the partner's holds what a home keeps, and only of an
@@ -203,6 +214,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         holder,
         ledger,
         held,
+        origin,
     } = input;
     check_holder(&holder, &page.audience)?;
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();
@@ -323,11 +335,26 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
+    let view = forget::View::new(&ledger);
+    let retract: Vec<String> = page
+        .rows
+        .iter()
+        .filter(|row| row.rule() == Rule::Home)
+        .filter(|row| {
+            !origin
+                .as_ref()
+                .is_some_and(|origin| view.homes(&row.audience, &row.object).contains(origin))
+        })
+        .map(|row| row.object.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
     Ok(Taken {
         rows,
         bodies,
         filled,
         withheld,
         ledger,
+        retract,
     })
 }

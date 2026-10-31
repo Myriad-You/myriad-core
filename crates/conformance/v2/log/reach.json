@@ -1066,6 +1066,119 @@
           "x1"
         ]
       }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000007-000000-dev_new",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_new"
+            ],
+            "kind": "forget",
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a restored home, its own forget that lists a kept row takes nothing before it writes its own retract",
+      "output": {
+        "stubbed": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac",
+              "dev_new"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000007-000000-dev_new",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_new"
+            ],
+            "kind": "forget",
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a restored home, its own forget that lists a kept row takes it once it wrote its own retract",
+      "output": {
+        "stubbed": [
+          "x1"
+        ]
+      }
     }
   ],
   "version": 1

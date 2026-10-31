@@ -1833,6 +1833,330 @@
           "x1"
         ]
       }
+    },
+    {
+      "input": {
+        "incoming": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-dev_new",
+            "id": "fz",
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x0",
+            "kind": "node.created",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x0"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rt",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rth",
+            "kind": "retract.home",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a home, a forget listing a kept row from a restored home stubs nothing before that home's own retract arrives",
+      "output": {
+        "added": [
+          "fz"
+        ],
+        "duplicates": 0,
+        "log": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x0",
+            "kind": "node.created",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x0"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rth",
+            "kind": "retract.home",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rt",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 9,
+            "hlc": "001760000000007-000000-dev_new",
+            "id": "fz",
+            "kind": "forget",
+            "object": "node:b7f0fde2e17a02ec9b0f9c83eda59b05",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "takes": [
+              "x1"
+            ],
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "incoming": [
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 8,
+            "hlc": "001760000000006-000000-dev_new",
+            "id": "rn",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ledger": [
+          {
+            "at": "001760000000007-000000-dev_new",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_new"
+            ],
+            "kind": "forget",
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ],
+        "log": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x0",
+            "kind": "node.created",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x0"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rt",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rth",
+            "kind": "retract.home",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a home, a forget listing a kept row from a restored home stubs it once that home's own retract arrives",
+      "output": {
+        "added": [
+          "rn"
+        ],
+        "duplicates": 0,
+        "log": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x0",
+            "kind": "node.created",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x0"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rth",
+            "kind": "retract.home",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rt",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 8,
+            "hlc": "001760000000006-000000-dev_new",
+            "id": "rn",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_new",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "stubbed": [
+          "x1"
+        ]
+      }
     }
   ],
   "version": 1
