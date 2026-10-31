@@ -3,6 +3,10 @@
   "cases": [
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "now": 1760000000000000,
         "rows": [
           {
@@ -37,11 +41,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "a clock six minutes ahead refuses the whole batch",
       "output": {
@@ -56,6 +56,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "known": {
           "memory:g-1": "group:g7",
           "node:a": "personal:o1"
@@ -215,11 +219,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "each row on its own",
       "output": {
@@ -344,6 +344,10 @@
           "personal:o1": {
             "dev_mac": 3
           }
+        },
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000060000000,
         "rows": [
@@ -475,11 +479,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "one side's epochs never go down in an audience: alone rows come up first there, never after",
       "output": {
@@ -756,6 +756,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "ledger": [],
         "now": 1760000100000000,
         "rows": [
@@ -803,11 +807,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "a retract taken: the node's rows in the batch come in as stubs and the ledger names its home",
       "output": {
@@ -874,6 +874,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "now": 1760000100000000,
         "rows": [
           {
@@ -920,11 +924,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "refused: a retract in the batch without the ledger",
       "output": {
@@ -933,6 +933,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "ledger": [],
         "now": 1760000100000000,
         "rows": [
@@ -948,11 +952,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "a retract from a side this side has never seen is taken: its first row",
       "output": {
@@ -986,6 +986,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "ledger": [
           {
             "at": "001760000000009-000000-dev_mac",
@@ -1064,11 +1068,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "a retract reaches no row of a node merged into it, nor a span split off to it, that it does not list",
       "output": {
@@ -1159,6 +1159,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "ledger": [
           {
             "at": "001760000000009-000000-dev_mac",
@@ -1241,11 +1245,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "a retract reaches the rows it lists, whatever node they are of",
       "output": {
@@ -1336,6 +1336,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "ledger": [],
         "now": 1760000100000000,
         "rows": [
@@ -1367,11 +1371,7 @@
             "replicate": "shared",
             "version": 1
           }
-        ],
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        ]
       },
       "name": "a retract with no home of it on the ledger takes the node away here, whatever side it names as its writer",
       "output": {
@@ -1544,6 +1544,331 @@
           },
           {
             "id": "a-2",
+            "reason": "not_held"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0a00022222222222222222222",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused on a PC that moved: the partner's talk under local-owner or another partner id (not_held)",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "p-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "personal:partner_0199d5c0900033333333333333333333": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "refused": [
+          {
+            "id": "p-1",
+            "reason": "not_held"
+          },
+          {
+            "id": "p-2",
+            "reason": "not_held"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "s-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:s-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "s-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:s-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "s-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:s-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:9",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "s-4",
+            "kind": "node.noted",
+            "object": "node:b",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:s-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused on the server: the talk under local-owner or another partner id; its own and someone else's are held",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "s-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:s-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:9",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "s-4",
+            "kind": "node.noted",
+            "object": "node:b",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:s-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "personal:9": {
+            "dev_mac": 1
+          },
+          "personal:partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "refused": [
+          {
+            "id": "s-1",
+            "reason": "not_held"
+          },
+          {
+            "id": "s-2",
+            "reason": "not_held"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "f-1",
+            "kind": "forget",
+            "object": "subject:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "f-2",
+            "kind": "forget",
+            "object": "subject:partner_0199d5c0a00022222222222222222222",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "f-3",
+            "kind": "forget",
+            "object": "subject:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "f-4",
+            "kind": "forget",
+            "object": "subject:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "in every audience, a forget of all about the partner under another id is refused (not_held)",
+      "output": {
+        "accepted": [
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "f-4",
+            "kind": "forget",
+            "object": "subject:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "target": "subject:partner_0199d5c0b00044444444444444444444"
+          }
+        ],
+        "refused": [
+          {
+            "id": "f-1",
+            "reason": "not_held"
+          },
+          {
+            "id": "f-2",
+            "reason": "not_held"
+          },
+          {
+            "id": "f-3",
             "reason": "not_held"
           }
         ]

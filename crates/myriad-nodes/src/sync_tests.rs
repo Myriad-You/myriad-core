@@ -30,6 +30,8 @@ use crate::{
 const MINE: &str = "personal:7";
 const GROUP: &str = "group:g1";
 const OTHER: &str = "personal:9";
+/// The site's id for the account: what a server goes by.
+const SITE: &str = "partner_0199d5c0b00044444444444444444444";
 const KEY: &str = "minted:release";
 const T: u64 = 1_760_000_000_000;
 const NOW: i64 = (T as i64 + 100_000) * 1000;
@@ -123,7 +125,8 @@ impl Side {
         Self {
             holder: Holder {
                 core,
-                owner: "7".into(),
+                // A server goes by the site's id for the account.
+                owner: if core == Core::Server { SITE } else { "7" }.into(),
             },
             rows: Vec::new(),
             bodies: BTreeMap::new(),
@@ -1714,7 +1717,7 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
     // A site or a server never writes or takes one.
     let server = Holder {
         core: Core::Server,
-        owner: "7".into(),
+        owner: SITE.into(),
     };
     assert!(send_as(server.clone()).is_err());
     let take_as = |page: Batch, holder: Holder, held: Vec<Row>| {
@@ -2142,6 +2145,7 @@ mod partner_id {
                 id: (self.holder.owner != partner::LEGACY).then(|| self.holder.owner.clone()),
                 linked,
                 audiences,
+                filed: false,
             }
         }
 

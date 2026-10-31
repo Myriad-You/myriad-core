@@ -347,7 +347,7 @@
       "input": {
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
         "page": {
@@ -876,6 +876,89 @@
             "version": 1
           }
         ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "ledger": [],
+        "page": {
+          "audience": "personal:partner_0199d5c0a00022222222222222222222",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            },
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOm8xIiwic2FpZEJ5IjpbImhlciIsInBhcnRuZXIiXSwic3luYyI6InNoYXJlZCIsInRleHQiOiLkvJnkvLTor7TlkajkupTlj5HniYjjgIIiLCJ2ZXJzaW9uIjoxfQ==",
+              "ref": "doc:c2"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0a00022222222222222222222",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0a00022222222222222222222",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0a00022222222222222222222",
+              "author": "owner",
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4h",
+              "kind": "retract.home",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "replicate": "local",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0a00022222222222222222222",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "retract",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "name": "refused: a home page of another partner id's talk",
+      "output": {
+        "error": "bad_input"
       }
     }
   ],

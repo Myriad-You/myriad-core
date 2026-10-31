@@ -498,7 +498,7 @@ fn what_one_side_answers_fills_the_other() {
         epochs: Default::default(),
         holder: crate::Holder {
             core: crate::Core::Server,
-            owner: "o1".into(),
+            owner: "partner_0199d5c0b00044444444444444444444".into(),
         },
     })
     .unwrap();

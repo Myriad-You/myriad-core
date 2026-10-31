@@ -97,6 +97,70 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a move cut off half way moves again: the id is set, rows under local-owner remain",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ],
+          "filed": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac that took a file from before while empty asks before it moves (confirm)",
+      "output": {
+        "confirm": true,
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {},
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "on no, the Mac started empty: nothing to ask",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "filed": true,
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "on yes, once moved: nothing left to ask",
+      "output": {
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
     }
   ],
   "version": 1

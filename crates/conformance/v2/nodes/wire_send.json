@@ -512,7 +512,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
         "peerAbi": 2,
@@ -883,7 +883,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
         "peerAbi": 2,
@@ -1137,7 +1137,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
         "peerAbi": 2,
@@ -1706,7 +1706,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
         "peerAbi": 2,
@@ -2605,7 +2605,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [
           {

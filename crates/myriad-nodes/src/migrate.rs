@@ -15,11 +15,16 @@
 //! envelopes (`to`, `takes`) and on the ledger stay true. A key moves only
 //! in the partner's private talk, where `person:<from>` and `person:<to>`
 //! make the same node id; in her own audience a person key's id is made
-//! from the key itself, so it stays as written. A move is only
-//! from `local-owner` or a partner id: rows under a site's account id
-//! cannot be moved (their node ids are made from it), so a site holding any
-//! has to say so rather than move them. A private audience of several
-//! people (`personal:a,b`) does not move.
+//! from the key itself, so it stays as written. A move is only from
+//! `local-owner`: rows under a partner id are that partner's, and rows
+//! under a site's account id cannot be moved (their node ids are made from
+//! it), so a site holding any has to say so rather than move them. A
+//! private audience of several people (`personal:a,b`) does not move.
+//!
+//! A move is the same whether it runs once or again after it was cut off:
+//! rows already under the new id are left as they are. A body the core
+//! cannot read is never changed; its row is listed (`unread`) so the host
+//! can see what may still name `local-owner`.
 
 use std::collections::BTreeMap;
 
@@ -81,6 +86,10 @@ pub struct Migrated {
     pub moved: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub clashes: Vec<Clash>,
+    /// Rows of a node kind in the moved audiences whose body the core does
+    /// not read (or no longer reads once moved): left as they are, sorted.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub unread: Vec<String>,
 }
 
 /// A key moved: `person:<from>` is `person:<to>`.
@@ -91,15 +100,16 @@ fn key(key: &str, by: &Move) -> String {
     }
 }
 
-/// The body of `row` (as it was before moving) moved, when anything in it
-/// changes; `None` when nothing does, or the body is not one the core reads
-/// (it goes unchanged).
-fn body(row: &Row, value: &Value, by: &Move) -> Option<Value> {
+/// The body of `row` (as it was before moving) moved: `Ok(Some)` when
+/// anything in it changes, `Ok(None)` when nothing does or it is no body
+/// that moves, `Err(())` when it is a node body the core does not read (it
+/// goes unchanged, and is listed).
+fn body(row: &Row, value: &Value, by: &Move) -> Result<Option<Value>, ()> {
     let moves = by.is_ours(&row.audience) || row.audience == "own:";
     if !moves || !row.kind.starts_with("node.") {
-        return None;
+        return Ok(None);
     }
-    let mut body = Body::read(&row.kind, value).ok()?;
+    let mut body = Body::read(&row.kind, value).map_err(|_| ())?;
     let before = body.clone();
     let keys = by.is_ours(&row.audience);
     match &mut body {
@@ -122,12 +132,12 @@ fn body(row: &Row, value: &Value, by: &Move) -> Option<Value> {
         _ => {}
     }
     if body == before {
-        return None;
+        return Ok(None);
     }
     // Read again: the one byte form, and the same checks as any body.
     Body::read(&row.kind, &body.to_value())
-        .ok()
-        .map(|body| body.to_value())
+        .map(|body| Some(body.to_value()))
+        .map_err(|_| ())
 }
 
 /// `rows`, their bodies and the ledger moved from one id to the other.
@@ -143,15 +153,19 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
     by.check()
         .map_err(|error| NodeError::new(error.to_string()))?;
     let mut moved = Vec::new();
+    let mut unread = Vec::new();
     let mut out = Vec::new();
     for row in rows {
         row.check()
             .map_err(|_| NodeError::new("a row's envelope is not whole"))?;
         let mut changed = false;
-        let body = bodies.get(&row.id).and_then(|value| body(&row, value, &by));
-        if let Some(new) = body {
-            bodies.insert(row.id.clone(), new);
-            changed = true;
+        match bodies.get(&row.id).map(|value| body(&row, value, &by)) {
+            Some(Ok(Some(new))) => {
+                bodies.insert(row.id.clone(), new);
+                changed = true;
+            }
+            Some(Err(())) => unread.push(row.id.clone()),
+            Some(Ok(None)) | None => {}
         }
         let new = partner::row(&row, &by);
         changed |= new != row;
@@ -178,6 +192,8 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
     }
     moved.sort();
     moved.dedup();
+    unread.sort();
+    unread.dedup();
     let ledger: Vec<Entry> = ledger
         .iter()
         .map(|entry| partner::entry(entry, &by))
@@ -188,5 +204,6 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
         ledger: forget::joined(&[], &ledger),
         moved,
         clashes,
+        unread,
     })
 }

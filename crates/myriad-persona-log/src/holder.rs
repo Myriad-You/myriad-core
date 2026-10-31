@@ -61,6 +61,12 @@ impl Holder {
                 "the holder's owner is one id: no comma, space or control character",
             ));
         }
+        // The server is the site's: its partner goes by the id it minted,
+        // never `local-owner` or an account id.
+        if self.core == Core::Server {
+            crate::partner::check(&self.owner)
+                .map_err(|_| LogError::new("the server's owner is a partner id"))?;
+        }
         Ok(())
     }
 
@@ -86,16 +92,13 @@ impl Holder {
     }
 
     /// Whether this side may hold `row`: one of an audience it holds, and,
-    /// in her own audience, no object about the partner under an id this
-    /// side does not go by (`subject:` or `affect:` of `local-owner` or of
+    /// in any audience, no object about the partner under an id this side
+    /// does not go by (`subject:` or `affect:` of `local-owner` or of
     /// another partner id): a row an unmoved computer wrote, or one about
     /// someone else's partner, is refused, not stored beside the moved ones.
     pub fn holds_row(&self, row: &Row) -> bool {
         if !self.holds(&row.audience) {
             return false;
-        }
-        if !matches!(Audience::parse(&row.audience), Ok(Audience::Own)) {
-            return true;
         }
         !row.object.split_once(':').is_some_and(|(kind, id)| {
             crate::partner::PERSON_OBJECTS.contains(&kind)
@@ -112,9 +115,15 @@ mod tests {
     fn holder(core: Core) -> Holder {
         Holder {
             core,
-            owner: "7".into(),
+            owner: if core == Core::Server {
+                SITE.into()
+            } else {
+                "7".into()
+            },
         }
     }
+
+    const SITE: &str = "partner_0199d5c0b00022222222222222222222";
 
     #[test]
     fn no_side_holds_another_partners_talk_or_an_unmoved_one() {
@@ -151,7 +160,12 @@ mod tests {
         assert!(!pc.holds("group:g1"));
         assert!(!pc.holds("nonsense"));
         let server = holder(Core::Server);
-        for audience in ["personal:7", "personal:9", "own:", "group:g1"] {
+        for audience in [
+            &format!("personal:{SITE}"),
+            "personal:9",
+            "own:",
+            "group:g1",
+        ] {
             assert!(server.holds(audience), "{audience}");
             assert!(!holder(Core::Child).holds(audience), "{audience}");
         }
@@ -160,6 +174,15 @@ mod tests {
     #[test]
     fn an_owner_is_one_id() {
         assert!(holder(Core::Pc).check().is_ok());
+        assert!(holder(Core::Server).check().is_ok());
+        // The server's partner goes by the id the site minted.
+        for owner in ["local-owner", "acct_7", "7"] {
+            let server = Holder {
+                core: Core::Server,
+                owner: owner.into(),
+            };
+            assert!(server.check().is_err(), "{owner}");
+        }
         for owner in ["", "7,9", "7\n"] {
             let bad = Holder {
                 core: Core::Pc,

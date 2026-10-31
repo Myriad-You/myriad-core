@@ -117,8 +117,9 @@
       "input": {
         "here": {}
       },
-      "name": "an empty Mac that never linked takes a file from before as it is",
+      "name": "an empty Mac that never linked takes a file from before as it is, and is filed until it links",
       "output": {
+        "filed": true,
         "id": "local-owner"
       }
     },

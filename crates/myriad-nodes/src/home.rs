@@ -205,6 +205,13 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         }
         row.check()
             .map_err(|_| NodeError::new("a row's envelope is not whole"))?;
+        // As from the wire: nothing about the partner under an id this side
+        // does not go by (`Holder::holds_row`).
+        if !holder.holds_row(row) {
+            return Err(NodeError::new(
+                "a row of a home page is one this side may not hold",
+            ));
+        }
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&page.rows));
     let view = forget::View::new(&ledger);

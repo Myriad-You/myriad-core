@@ -37,8 +37,9 @@ pub(super) fn mint(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "id": partner::mint(at, &random).map_err(refused)? }))
 }
 
-/// `{here: {id?, linked?, audiences?}, theirs}` → `{id, from?}`: the
-/// site's id as the link brings it, and the id to move from first.
+/// `{here: {id?, linked?, audiences?, filed?}, theirs}` → `{id, from?,
+/// confirm?}`: the site's id as the link brings it, the id to move from
+/// first, and whether to ask the partner before moving.
 pub(super) fn link(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -50,9 +51,9 @@ pub(super) fn link(raw: &[u8]) -> Result<Value, Failure> {
     answer(&partner::link(&here, &theirs).map_err(refused)?)
 }
 
-/// `{here: {id?, linked?, audiences?}, header?}` → `{id, adopt?}`: whether
-/// a file whose header names `header` (none: a file from before) comes in,
-/// and under which id.
+/// `{here: {id?, linked?, audiences?, filed?}, header?}` → `{id, adopt?,
+/// filed?}`: whether a file whose header names `header` (none: a file from
+/// before) comes in, and under which id.
 pub(super) fn file(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -66,7 +67,7 @@ pub(super) fn file(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{rows, bodies?, ledger, from, to}` → `{rows, bodies?, ledger, moved?,
-/// clashes?}`.
+/// clashes?, unread?}`: `from` is `local-owner`, nothing else.
 pub(super) fn migrate(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_nodes::migrate::migrate(quiet_input(raw)?).map_err(refused)?)
 }

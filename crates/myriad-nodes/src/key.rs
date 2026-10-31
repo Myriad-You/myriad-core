@@ -166,6 +166,11 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
 /// (「关于你」, `person:<that id>`): a node keeps its id when the partner's
 /// id moves, on every side, whatever bodies it holds. The fixed name is the
 /// one every Mac made its nodes under, so their ids stay as they were.
+///
+/// So a node id is unique only per account and audience: two accounts'
+/// partners make the same id for the same key in their private talk. A
+/// side that holds several accounts (the site) keys everything it stores
+/// by audience as well as by node id.
 pub(crate) fn made_id(audience: &str, key: &str) -> String {
     let (audience, key) = fixed(audience, key);
     sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string()

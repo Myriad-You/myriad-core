@@ -365,6 +365,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         // nodes.retract
         ("refused: a node not in the rows", "not in the rows given"),
+        (
+            "refused: a home page of another partner id's talk",
+            "an audience this side may not hold",
+        ),
         // nodes.wire_send to an older side
         ("refused: a peer of no ABI", "ABI is 1 or more"),
     ];

@@ -3,6 +3,10 @@
   "cases": [
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -98,10 +102,6 @@
         ],
         "theirs": {
           "dev_mac": 1
-        },
-        "holder": {
-          "core": "server",
-          "owner": "o1"
         }
       },
       "name": "forgets go first; local rows never go",
@@ -172,6 +172,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -206,11 +210,7 @@
             "version": 1
           }
         ],
-        "theirs": {},
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        "theirs": {}
       },
       "name": "refused: rows of two audiences, whose counts are separate",
       "output": {
@@ -281,7 +281,7 @@
       "input": {
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "rows": [
           {
@@ -415,6 +415,10 @@
     },
     {
       "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -445,11 +449,7 @@
             "version": 1
           }
         ],
-        "theirs": {},
-        "holder": {
-          "core": "server",
-          "owner": "o1"
-        }
+        "theirs": {}
       },
       "name": "a retract goes first with the forgets",
       "output": {
@@ -483,6 +483,70 @@
             "version": 1
           }
         ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "l-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:l-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a PC that moved is given nothing of the talk under local-owner",
+      "output": {
+        "notHeld": true,
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "l-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:l-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "the server is given nothing of another partner id's talk",
+      "output": {
+        "notHeld": true,
+        "rows": []
       }
     }
   ],

@@ -50,3 +50,45 @@ fn every_partner_case_answers_through_the_c_entry_point() {
     }
     assert_eq!(calls, TESTED);
 }
+
+/// The export header checks a partner id itself (`myriad-persona-sync`
+/// cannot call `myriad-persona-log`); both must read the same ids as
+/// partner ids.
+#[test]
+fn the_export_header_reads_partner_ids_as_the_log_does() {
+    use myriad_persona_log::partner;
+    use myriad_persona_sync::archive::{
+        ArchiveHeader, HeaderFields, NONCE_PREFIX_BYTES, SALT_BYTES,
+    };
+    let minted = partner::mint(1_760_227_790_848, &[0x33; partner::RANDOM_BYTES]).unwrap();
+    let ids = [
+        minted.as_str(),
+        "partner_0199d5c0a00022222222222222222222",
+        "local-owner",
+        "partner_",
+        "partner_0199D5C0A00022222222222222222222",
+        "partner_0199d5c0a0002222222222222222222",
+        "partner_0199d5c0a000222222222222222222222",
+        "partner_00000000000022222222222222222222",
+        "partner_01941f297c00ffffffffffffffffffff",
+        "partner_01941f297bffffffffffffffffffffff",
+        "acct_7",
+    ];
+    for id in ids {
+        let header = ArchiveHeader::new(
+            &[0x11; SALT_BYTES],
+            &[0x22; NONCE_PREFIX_BYTES],
+            HeaderFields {
+                lineage: None,
+                epoch: None,
+                origin: "dev_mac".into(),
+                created_at: 1_760_000_000_000_000,
+                digest: "0".repeat(64),
+                logs: true,
+                home: false,
+                partner: Some(id.into()),
+            },
+        );
+        assert_eq!(header.is_ok(), partner::check(id).is_ok(), "{id}");
+    }
+}

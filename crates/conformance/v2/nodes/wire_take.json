@@ -1158,7 +1158,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000100000000
       },
@@ -1315,7 +1315,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000100000000
       },
@@ -2790,7 +2790,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
         "now": 1760000100000000
@@ -3223,7 +3223,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000100000000,
         "people": [
@@ -3298,7 +3298,7 @@
         },
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000100000000
       },
@@ -3370,7 +3370,7 @@
         ],
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000100000000
       },
@@ -3404,6 +3404,45 @@
           {
             "id": "p2",
             "why": "person_elsewhere"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "personal:partner_0199d5c0a00022222222222222222222",
+          "payloads": [],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0a00022222222222222222222",
+              "author": "owner",
+              "dseq": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "w-1",
+              "kind": "forget",
+              "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "now": 1760000100000000
+      },
+      "name": "refused rows of another partner id's talk on a PC (not_held)",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "id": "w-1",
+            "reason": "not_held"
           }
         ]
       }
