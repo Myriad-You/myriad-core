@@ -72,6 +72,11 @@ pub struct Merged {
     /// their payloads. Never a row the ledger takes away here.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub filled: Vec<String>,
+    /// Stubs held back under `local-owner` that the same row moved to this
+    /// side's id (`holder`) came in for as a stub too: they take its
+    /// envelope. Store the envelope; there is no payload either way.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub relabelled: Vec<String>,
     /// Incoming rows already held.
     pub duplicates: u64,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -122,6 +127,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     sort(&mut incoming);
     let mut added = Vec::new();
     let mut filled = Vec::new();
+    let mut relabelled = Vec::new();
     let mut duplicates = 0;
     let mut conflicts = Vec::new();
     for row in incoming {
@@ -150,6 +156,18 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
                 // moved to this side's id: it fills the stub.
                 duplicates += 1;
                 filled.push(row.id.clone());
+                by_id.insert(row.id.clone(), row);
+            } else if held.forgotten
+                && row.forgotten
+                && !crate::forget::on_ledger(&row)
+                && moved
+                    .as_ref()
+                    .is_some_and(|by| crate::partner::row(held, by) == row)
+            {
+                // The same, but forgotten there too: the stub takes the
+                // moved envelope, so both sides hold one row.
+                duplicates += 1;
+                relabelled.push(row.id.clone());
                 by_id.insert(row.id.clone(), row);
             } else {
                 conflicts.push(Conflict {
@@ -192,11 +210,13 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     // its payload is not stored.
     filled.retain(|id| forgotten.get(id.as_str()) == Some(&false));
     filled.sort();
+    relabelled.sort();
     Ok(Merged {
         log,
         added,
         stubbed,
         filled,
+        relabelled,
         duplicates,
         conflicts,
     })

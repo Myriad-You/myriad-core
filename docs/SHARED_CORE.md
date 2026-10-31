@@ -151,7 +151,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `log.fold` | `{rows, leases?, ledger?}` → `{objects, standing?}`：`ledger` 是这一端的账，和 `nodes.fold` 一样（调用方要给：没给就只算给的行里自己的忘掉和撤回）；每个对象的 `rows`、`current`、`history`、`retired`、`concurrent`，或只有 `forgotten`；被撤回的对象带 `retracted`（写过撤回的各端），不是家的一端只有这一项 |
 | `log.holdings` | `{rows}` → `{vector, beyond?}`：一个受众的行里每一端连续持有到第几条，和跳号之后先到的；行跨了受众是 `bad_input` |
 | `log.ledger` | `{rows, ledger?, holder?}` → `{ledger}`：账加上这些行（这一端自己写的，或整个日志）给的项；信封不完整的行是 `bad_input`；给了 `holder`（这一端），它不能存的行（`Holder::holds_row`）也是 `bad_input`（这样一行的桩照记，和 `log.admit` 收的一样；`forget` 连桩也不行），所以这一端从不写出关于别的 id 下的伙伴的行。宿主写行时都给 `holder` |
-| `log.merge` | `{log, incoming, ledger, holder?}` → `{log, added?, stubbed?, filled?, duplicates, conflicts?}`；给了 `holder`（这一端）且它按伙伴 id 走时，手里一行 `local-owner` 下的桩（从没迁的一端扣下来的，宿主的毛病），来了它迁到这个 id 以后的完整行，就补上它、列在 `filled`，除非账本在这里拿走它（那它还是桩，`filled` 不列；不是迁过来的同一行则是 `same_id_differs`）；`ledger` 必填（ABI 2 起，没有就给空的）：后来的一批里没有撤回，也不会因为少给了账把家留着的行变成桩；`log` 可以只给和这批有关的行；`incoming` 里有 `local` 的行是 `bad_input`；家里桩不换掉完整的行，完整的行补上桩（`filled`） |
+| `log.merge` | `{log, incoming, ledger, holder?}` → `{log, added?, stubbed?, filled?, relabelled?, duplicates, conflicts?}`；给了 `holder`（这一端）且它按伙伴 id 走时，手里一行 `local-owner` 下的桩（从没迁的一端扣下来的，宿主的毛病），来了它迁到这个 id 以后的完整行，就补上它、列在 `filled`，除非账本在这里拿走它（那它还是桩，`filled` 不列；来的迁过来的那一行也已经是桩时，手里的桩换成它的信封、列在 `relabelled`，两边存的是同一行（都没有正文）；不是迁过来的同一行则是 `same_id_differs`）；`ledger` 必填（ABI 2 起，没有就给空的）：后来的一批里没有撤回，也不会因为少给了账把家留着的行变成桩；`log` 可以只给和这批有关的行；`incoming` 里有 `local` 的行是 `bad_input`；家里桩不换掉完整的行，完整的行补上桩（`filled`） |
 | `log.missing` | `{mine, theirs}` → `{missing: [{origin, from, through}]}` |
 | `log.reach` | `{rows, ledger}` → `{stubbed}`：给的行（这一端日志里的任意一部分，信封就够，桩也行）里，账现在在这一端拿走、还完整的那些，排好序；信封不完整的行、没给账都是 `bad_input` |
 
