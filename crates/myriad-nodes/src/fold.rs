@@ -74,6 +74,9 @@
 //! `reached`, for the caller's own cleanup only: the forget the partner
 //! made is the only row to write, and every side reaches the same from the
 //! rows' envelopes, so a reached node's forget is never written as a row.
+//! A node the fold puts a row this side keeps in (its own retract keeps
+//! it), or passes one through, is never reached: a host never deletes a
+//! kept row's body for `reached`, only the bodies the fold no longer shows.
 //!
 //! **Taken back from sync** (a `retract` row, `myriad_persona_log::forget`):
 //! on a side that keeps the node (its `retract.home` is in the rows) it
@@ -1154,10 +1157,9 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         .filter(|entry| entry.kind == forget::Kind::Forget)
     {
         if object_type(&entry.target) == Some("node") {
-            gone.insert(
-                (entry.audience.clone(), entry.target.clone()),
-                entry.at.clone(),
-            );
+            gone.entry((entry.audience.clone(), entry.target.clone()))
+                .and_modify(|at| *at = at.clone().min(entry.at.clone()))
+                .or_insert_with(|| entry.at.clone());
         }
     }
     for row in rows.iter().filter(|row| row.rule() != Rule::Forget) {
@@ -1249,6 +1251,26 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         let id = object.strip_prefix("node:").unwrap_or(object);
         let place = (audience.to_string(), object.to_string());
         let homes = retracted.get(&place).cloned().unwrap_or_default();
+        // A node that does not fold here still moves what its splits
+        // name, by their envelopes, stub or whole: a part split off it
+        // that is not itself gone keeps what it took.
+        if gone.contains(&place) {
+            for &(at, row) in &rows {
+                if row.kind == "node.split_off"
+                    && let Some(to) = row.to.as_deref().and_then(|to| to.strip_prefix("node:"))
+                    && to != id
+                {
+                    splits.push(Splitting {
+                        at,
+                        audience: audience.to_string(),
+                        from: id.to_string(),
+                        to: to.to_string(),
+                        spans: row.takes.clone(),
+                        line: None,
+                    });
+                }
+            }
+        }
         if away_here.contains(&place) {
             nodes.push(Node {
                 retracted: homes,
@@ -1808,6 +1830,27 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
             }
         }
     }
+    // A node the fold puts a kept row in, or passes one through on its way
+    // to where it ends, is not reached: its host would delete what this
+    // side keeps.
+    let mut holds_kept: BTreeSet<(String, String)> = BTreeSet::new();
+    for node in &nodes {
+        for span in node.spans.iter().filter(|span| kept(&span.row)) {
+            let mut at = location
+                .get(&(node.audience.clone(), span.row.clone()))
+                .cloned()
+                .unwrap_or_else(|| node.id.clone());
+            let mut seen = BTreeSet::new();
+            while seen.insert(at.clone()) {
+                holds_kept.insert((node.audience.clone(), format!("node:{at}")));
+                match went.get(&(node.audience.clone(), at.clone())) {
+                    Some(next) => at = next.clone(),
+                    None => break,
+                }
+            }
+        }
+    }
+    reached.retain(|one| !holds_kept.contains(&(one.audience.clone(), one.target.clone())));
     let mut moving: Vec<(usize, Option<SpanOut>, Option<EntryOut>)> = Vec::new();
     for (at, node) in nodes.iter_mut().enumerate() {
         if node.forgotten {
@@ -1837,7 +1880,10 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
             }
         }
         let last = end(&went, &audience, &id);
-        if let Some(&to) = here.get(&(audience.clone(), last))
+        if is_gone(&audience, &last) {
+            // What went into a node that does not fold here is not shown.
+            node.entries.clear();
+        } else if let Some(&to) = here.get(&(audience.clone(), last))
             && to != at
         {
             for mut entry in std::mem::take(&mut node.entries) {
@@ -1850,9 +1896,12 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         nodes[to].spans.extend(span);
         nodes[to].entries.extend(entry);
     }
+    let folds_here =
+        |place: &(String, String)| !gone.contains(&(place.0.clone(), format!("node:{}", place.1)));
     for (place, line) in lines_for {
         if let Some(&at) = here.get(&place)
             && !nodes[at].forgotten
+            && folds_here(&place)
         {
             nodes[at].lineage.push(line);
         }
@@ -1905,7 +1954,9 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         .collect();
     let (mut relations, left) = relate(edges, &taken_back, &gone, &away, &mut skipped);
     for (place, line) in left {
-        if let Some(&at) = here.get(&place) {
+        if let Some(&at) = here.get(&place)
+            && folds_here(&place)
+        {
             nodes[at].lineage.push(line);
         }
     }

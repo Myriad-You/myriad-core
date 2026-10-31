@@ -75,6 +75,10 @@ pub enum Reason {
     EpochBack,
     /// Its audience is not one this side may hold.
     NotHeld,
+    /// A forget that lists rows (`takes`) from a side that wrote no retract
+    /// in its audience: only a home's fold shows the rows a retract keeps,
+    /// so no other side has any to list.
+    NotAHome,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -142,6 +146,10 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         });
     }
     sort(&mut rows);
+    // What the batch's own retracts add counts: a home sends its retract
+    // before the forget it presses there.
+    let homes = forget::joined(&ledger, &forget::ledger(&rows));
+    let homes = forget::View::new(&homes);
     let refuse = |row: &Row, reason, detail: Option<String>| Refusal {
         id: row.id.clone(),
         reason,
@@ -163,6 +171,13 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             .is_some_and(|holder| !holder.holds(&row.audience))
         {
             refused.push(refuse(&row, Reason::NotHeld, None));
+            continue;
+        }
+        if row.rule() == crate::kinds::Rule::Forget
+            && !row.takes.is_empty()
+            && !homes.retracted_in(&row.audience, &row.origin)
+        {
+            refused.push(refuse(&row, Reason::NotAHome, None));
             continue;
         }
         if let Some(epoch) = row.epoch

@@ -911,6 +911,161 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac",
+              "mac_2"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000007-000000-mac_2",
+            "audience": "personal:o1",
+            "homes": [
+              "mac_2"
+            ],
+            "kind": "forget",
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a home, a forget that lists a kept row takes it when a home of its retract wrote it",
+      "output": {
+        "stubbed": [
+          "x1"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000007-000000-site",
+            "audience": "personal:o1",
+            "homes": [
+              "site"
+            ],
+            "kind": "forget",
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a home, a forget that lists a kept row takes nothing when no home of its retract wrote it",
+      "output": {
+        "stubbed": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000007-000000-site",
+            "audience": "personal:o1",
+            "homes": [
+              "site"
+            ],
+            "kind": "forget",
+            "takes": [
+              "x1"
+            ],
+            "target": "node:b7f0fde2e17a02ec9b0f9c83eda59b05"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "elsewhere, a forget that lists a row takes it, whoever wrote it",
+      "output": {
+        "stubbed": [
+          "x1"
+        ]
+      }
     }
   ],
   "version": 1

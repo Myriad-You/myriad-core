@@ -168,7 +168,7 @@ impl Side {
         self.rows.extend(wrote);
         if forget {
             let merged = merge(MergeInput {
-                ledger: Some(self.ledger.clone()),
+                ledger: self.ledger.clone(),
                 log: self.rows.clone(),
                 incoming: Vec::new(),
             })
@@ -249,7 +249,7 @@ impl Side {
         })
         .unwrap();
         let merged = merge(MergeInput {
-            ledger: Some(taken.admitted.ledger.clone()),
+            ledger: taken.admitted.ledger.clone(),
             log: self.rows.clone(),
             incoming: taken.admitted.accepted.clone(),
         })
@@ -1302,6 +1302,13 @@ fn a_row_of_a_merged_node_the_retract_did_not_list_is_not_reached() {
         row("a1", "dev_air", 1, T + 4, MINE, OTHER_KEY, "node.span"),
         Some(span(MINE, "别的事的一段。")),
     );
+    air.write(
+        row("a2", "dev_air", 2, T + 4, MINE, OTHER_KEY, "node.entry"),
+        Some(
+            json!({ "version": 1, "sync": "shared", "saidBy": ["partner"], "audience": MINE,
+                     "refs": ["message:e1"], "text": "别的事的一条。" }),
+        ),
+    );
     // The Mac merges 「别的事」 into 「发版」 and takes 「发版」 back: its
     // retract lists what it holds of 「别的事」, not the span it never saw.
     let (merge, body) = merge_of("x1", "dev_mac", 4, T + 5, OTHER_KEY, KEY);
@@ -1322,15 +1329,23 @@ fn a_row_of_a_merged_node_the_retract_did_not_list_is_not_reached() {
             let release = node(&folded, KEY);
             assert_eq!(release["retracted"], json!(["dev_mac"]));
             assert!(release.get("spans").is_none(), "{release}");
+            assert!(release.get("entries").is_none(), "{release}");
+            assert!(release.get("lineage").is_none(), "{release}");
             // The merge is a stub there, and still places 「别的事」 in
             // 「发版」 by its envelope: the span shows nowhere.
             assert!(!whole(side, "x1"));
             assert!(!shows(&folded, "别的事的一段。"), "{mac_first} {folded}");
+            assert!(
+                !folded.to_string().contains("别的事的一条。"),
+                "{mac_first} {folded}"
+            );
         }
         // On the home it is one more line of 「发版」.
         let folded = mac.folded(MINE, false);
         let spans = node(&folded, KEY)["spans"].as_array().unwrap().clone();
         assert!(spans.iter().any(|one| one["text"] == "别的事的一段。"));
+        let entries = node(&folded, KEY)["entries"].as_array().unwrap().clone();
+        assert!(entries.iter().any(|one| one["text"] == "别的事的一条。"));
     }
 }
 

@@ -5239,6 +5239,388 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "name": "a node the ledger forgets is never due, its forget not in the rows",
+      "input": {
+        "bodies": {
+          "c1": {
+            "key": "minted:changelog",
+            "kind": "task",
+            "name": "写更新说明",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "c2": {
+            "because": [
+              "span:c3"
+            ],
+            "reason": "说明写完之前不能发版",
+            "relation": "part_of",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "to": "minted:release-week",
+            "version": 1
+          },
+          "c3": {
+            "audience": "personal:7",
+            "refs": [
+              "message:a2"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "更新说明还差截图。",
+            "version": 1
+          },
+          "c4": {
+            "audience": "personal:7",
+            "refs": [
+              "message:a3"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "截图要等新图标。",
+            "version": 1
+          },
+          "c5": {
+            "base": [],
+            "because": [
+              "span:c3"
+            ],
+            "item": "shots",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "截图还没换",
+            "version": 1
+          },
+          "k1": {
+            "key": "minted:release-talk",
+            "kind": "topic",
+            "name": "发版这件事",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "k2": {
+            "because": [
+              "span:w3"
+            ],
+            "reason": "聊发版时总会说到这周的发版",
+            "relation": "related",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "to": "minted:release-week",
+            "version": 1
+          },
+          "r1": {
+            "key": "minted:review-wait",
+            "kind": "task",
+            "name": "等审核",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "r2": {
+            "because": [
+              "span:c4"
+            ],
+            "reason": "审核不过说明写了也白写",
+            "relation": "blocks",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "to": "minted:changelog",
+            "version": 1
+          },
+          "w1": {
+            "key": "minted:release-week",
+            "kind": "task",
+            "name": "这周发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "w2": {
+            "base": [],
+            "because": [
+              "span:w3"
+            ],
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "装进商店",
+            "version": 1
+          },
+          "w3": {
+            "audience": "personal:7",
+            "refs": [
+              "message:a1"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说这周要发版。",
+            "version": 1
+          }
+        },
+        "ledger": [
+          {
+            "at": "001760000999999-000000-dev_mac",
+            "audience": "personal:7",
+            "target": "node:25ae623559006437c416adbde717a853"
+          }
+        ],
+        "max": 10,
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "w1",
+            "kind": "node.created",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:w1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "w2",
+            "kind": "node.done_when",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:w2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000020-000000-dev_mac",
+            "id": "w3",
+            "kind": "node.span",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:w3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000100-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000110-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.related",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000000120-000000-dev_mac",
+            "id": "c3",
+            "kind": "node.span",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000000130-000000-dev_mac",
+            "id": "c4",
+            "kind": "node.span",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 8,
+            "epoch": 1,
+            "hlc": "001760000000140-000000-dev_mac",
+            "id": "c5",
+            "kind": "node.open_item",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 9,
+            "epoch": 1,
+            "hlc": "001760000000200-000000-dev_mac",
+            "id": "r1",
+            "kind": "node.created",
+            "object": "node:1ec3c21870995e9dcd73c503df438f45",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:r1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 10,
+            "epoch": 1,
+            "hlc": "001760000000210-000000-dev_mac",
+            "id": "r2",
+            "kind": "node.related",
+            "object": "node:1ec3c21870995e9dcd73c503df438f45",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:r2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 11,
+            "epoch": 1,
+            "hlc": "001760000000300-000000-dev_mac",
+            "id": "k1",
+            "kind": "node.created",
+            "object": "node:87b8ab182e7db8215da0180e813b98dd",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:k1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 12,
+            "epoch": 1,
+            "hlc": "001760000000310-000000-dev_mac",
+            "id": "k2",
+            "kind": "node.related",
+            "object": "node:87b8ab182e7db8215da0180e813b98dd",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "output": {
+        "due": [
+          {
+            "audience": "personal:7",
+            "node": "69192ad55e973984fc259bc057995248",
+            "since": 1760000000100000,
+            "why": [
+              "own",
+              "relation",
+              "blocker"
+            ]
+          },
+          {
+            "audience": "personal:7",
+            "node": "1ec3c21870995e9dcd73c503df438f45",
+            "since": 1760000000200000,
+            "why": [
+              "own"
+            ]
+          },
+          {
+            "audience": "personal:7",
+            "node": "87b8ab182e7db8215da0180e813b98dd",
+            "since": 1760000000300000,
+            "why": [
+              "own"
+            ]
+          }
+        ]
+      }
     }
   ]
 }

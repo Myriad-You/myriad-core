@@ -107,7 +107,8 @@ pub struct Entry {
     pub at: Rev,
     #[serde(default, skip_serializing_if = "Kind::is_forget")]
     pub kind: Kind,
-    /// A retract's: every side that wrote one, sorted.
+    /// A retract's: every side that wrote one, sorted. A forget that lists
+    /// rows (`takes`): the side that wrote it, one entry per side.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub homes: Vec<String>,
     /// A name's: the other node (`node:<id>`).
@@ -164,7 +165,14 @@ fn entry_of(row: &Row) -> Option<Entry> {
         takes: Vec::new(),
     };
     match row.rule() {
+        // A forget that lists rows keeps who wrote it: its list counts
+        // against a kept row only from a home of a retract that reaches it.
         Rule::Forget => Some(Entry {
+            homes: if row.takes.is_empty() {
+                Vec::new()
+            } else {
+                vec![row.origin.clone()]
+            },
             takes: row.takes.clone(),
             ..entry(Kind::Forget)
         }),
@@ -191,14 +199,21 @@ fn entry_of(row: &Row) -> Option<Entry> {
     }
 }
 
-/// The ledger with `more` added, sorted: per target one forget, one
-/// retract with every home, one home, one entry per node it went into and
-/// one split per part, each at its earliest. Nothing on it is ever dropped.
+/// The ledger with `more` added, sorted: per target one forget (and one
+/// more for each side that wrote a forget listing rows), one retract with
+/// every home, one home, one entry per node it went into and one split per
+/// part, each at its earliest. Nothing on it is ever dropped.
 pub fn joined(ledger: &[Entry], more: &[Entry]) -> Vec<Entry> {
     type Key<'a> = (&'a str, &'a str, Kind, Option<&'a str>);
     let mut entries: BTreeMap<Key, Entry> = BTreeMap::new();
     for entry in ledger.iter().chain(more) {
-        let part = is_name(entry).then_some(entry.to.as_deref()).flatten();
+        let part = if is_name(entry) {
+            entry.to.as_deref()
+        } else if entry.kind == Kind::Forget {
+            entry.homes.first().map(String::as_str)
+        } else {
+            None
+        };
         let key = (
             entry.audience.as_str(),
             entry.target.as_str(),
@@ -436,8 +451,10 @@ impl<'a> View<'a> {
     /// it directly: its own node, the node of a retract of this side's that
     /// reaches it, its subject, or a forget that lists it (pressed on a
     /// home, it names the kept rows its fold showed in the node: what the
-    /// partner saw is what they forget). None through a merge, a split or
-    /// another node, whatever its clock.
+    /// partner saw is what they forget; it counts only when its writer is
+    /// a home of a retract that reaches the row, since no other side's fold
+    /// shows it). None through a merge, a split or another node, whatever
+    /// its clock.
     fn forgets_kept(&self, row: &'a Row, reaching: &[&'a Entry]) -> bool {
         let audience = row.audience.as_str();
         let named = |target: &str| {
@@ -451,7 +468,23 @@ impl<'a> View<'a> {
                 .filter(|entry| entry.kind == Kind::Home)
                 .any(|entry| named(&entry.target))
             || !self.subject_of(row).is_empty()
-            || !self.listing_forgets(row).is_empty()
+            || self.listing_forgets(row).iter().any(|forget| {
+                forget.homes.iter().any(|origin| {
+                    reaching
+                        .iter()
+                        .any(|entry| entry.is_retract() && entry.homes.contains(origin))
+                })
+            })
+    }
+
+    /// Whether `origin` wrote a retract in `audience`: a home, whose fold
+    /// may show rows a retract keeps.
+    pub fn retracted_in(&self, audience: &str, origin: &str) -> bool {
+        self.by_target
+            .iter()
+            .filter(|((at, _), _)| *at == audience)
+            .flat_map(|(_, entries)| entries)
+            .any(|entry| entry.is_retract() && entry.homes.iter().any(|home| home == origin))
     }
 
     /// Whether `row` is taken away on `side`. On a home, a row a retract of

@@ -86,7 +86,9 @@ pub struct TakeInput {
 #[serde(rename_all = "camelCase")]
 pub struct Taken {
     /// The rows to store as this side's own, in log order, each replacing
-    /// the row of its id this side holds.
+    /// the row of its id this side holds. A row held whole whose body the
+    /// page does not bring is left out (and out of `withheld`): it stays as
+    /// held.
     pub rows: Vec<Row>,
     /// Their bodies, by row id, as read.
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
@@ -242,6 +244,11 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .filter(|row| row.forgotten && row.audience == page.audience)
         .map(|row| row.id.as_str())
         .collect();
+    let whole: BTreeSet<String> = held
+        .iter()
+        .filter(|row| !row.forgotten && row.audience == page.audience)
+        .map(|row| row.id.clone())
+        .collect();
     let (mut rows, _) = forget::absorb(page.rows.clone(), &ledger, Side::Here);
     myriad_persona_log::row::sort(&mut rows);
     let engine = base64::engine::general_purpose::STANDARD;
@@ -293,6 +300,22 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             }),
         }
     }
+    // A row held here whole that the page brings without its body stays as
+    // it is held: a copy without the body would replace it (two homes, or a
+    // home taking its own file back with a body withheld from it).
+    let kept_whole = |row: &Row| {
+        whole.contains(&row.id)
+            && !row.forgotten
+            && row.payload.is_some()
+            && !bodies.contains_key(&row.id)
+    };
+    let held_whole: BTreeSet<String> = rows
+        .iter()
+        .filter(|row| kept_whole(row))
+        .map(|row| row.id.clone())
+        .collect();
+    rows.retain(|row| !held_whole.contains(&row.id));
+    withheld.retain(|one| !held_whole.contains(&one.id));
     let filled: Vec<String> = rows
         .iter()
         .filter(|row| stubs.contains(row.id.as_str()) && bodies.contains_key(&row.id))
