@@ -69,7 +69,7 @@ pub struct Merged {
     pub stubbed: Vec<String>,
     /// Stubs held that an incoming whole row filled, on a home of their
     /// node, or that a row moved to this side's id filled (`holder`): store
-    /// their payloads.
+    /// their payloads. Never a row the ledger takes away here.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub filled: Vec<String>,
     /// Incoming rows already held.
@@ -188,6 +188,9 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         .collect();
     stubbed.sort();
     added.sort();
+    // A stub filled above that the ledger takes away here is a stub again:
+    // its payload is not stored.
+    filled.retain(|id| forgotten.get(id.as_str()) == Some(&false));
     filled.sort();
     Ok(Merged {
         log,
