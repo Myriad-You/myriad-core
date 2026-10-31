@@ -1873,6 +1873,11 @@ impl<'a> Reader<'a> {
             else {
                 continue;
             };
+            // A shared row never names a node taken back from sync: on the
+            // home its relations stay its own (`local`).
+            if !self.context.prepared.local && !other.retracted.is_empty() {
+                continue;
+            }
             let other = Named {
                 id: other.id.clone(),
                 key: other_key,
