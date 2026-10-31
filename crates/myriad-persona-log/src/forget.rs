@@ -18,6 +18,10 @@
 //! ([`crate::admit`] refuses one), so only the side that pressed it is ever
 //! a home: a retract another side sends that names this side as its
 //! writer, and that this side never wrote, is a forget here like any other.
+//! The one other way is a home's own backup: a computer a home page is
+//! taken onto gets its marks (`nodes.home_take`) and then writes a retract
+//! of its own, with no list, so every side knows it as a home of the node
+//! and its retract reaches nothing the first did not.
 //! A node retracted on two sides (each pressed while the other was
 //! offline) has two homes, and each keeps what it holds: no clock decides
 //! between them (the partner's decision, 2026-10-30: 两台都留).
@@ -62,6 +66,14 @@
 //! its clock. No forget that reaches it through a merge, a split or
 //! another node takes it. Kept rows fold as any rows do there, wherever
 //! the fold puts them.
+//!
+//! **A forget pressed on a home lists what it showed.** Only a home's fold
+//! shows the rows a retract keeps, so a forget written there lists the kept
+//! rows its fold showed in the node (`takes`), and those count as named
+//! directly. A list counts, on every side, only when its writer is a home
+//! of a retract that reaches the row: one from any other side takes
+//! nothing anywhere (elsewhere the retract has made the row a stub anyway).
+//! The forget of the target itself counts as any forget, from any side.
 
 use std::collections::{BTreeMap, BTreeSet};
 
