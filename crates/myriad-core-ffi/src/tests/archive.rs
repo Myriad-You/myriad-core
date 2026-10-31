@@ -225,8 +225,35 @@ fn log_pages_have_a_part_and_a_tally() {
         "sync.archive_part",
         json!({ "part": { "part": "home", "bytes": 12 } }),
     );
-    let read = ok("sync.archive_part", json!({ "bytes": head["head"] }));
+    // Read only for a computer of the partner's.
+    let read = ok(
+        "sync.archive_part",
+        json!({ "bytes": head["head"], "holder": pc }),
+    );
     assert_eq!(read["part"], json!({ "part": "home", "bytes": 12 }));
+    for holder in [json!(null), json!({ "core": "server", "owner": "7" })] {
+        let (status, out) = ffi(
+            "sync.archive_part",
+            &json!({ "bytes": head["head"], "holder": holder }),
+        );
+        assert_eq!(status, STATUS_BAD_INPUT, "{out}");
+    }
+    // A header for such a file says so, and is version 2.
+    let sealed = ok(
+        "sync.archive_seal",
+        json!({
+            "salt": b64(&[1; 16]),
+            "noncePrefix": b64(&[2; 19]),
+            "fields": {
+                "origin": "dev_mac",
+                "createdAt": 1_760_000_000_000_000_i64,
+                "digest": homed["manifest"]["digest"],
+                "home": true,
+            },
+        }),
+    );
+    assert_eq!(sealed["header"]["home"], true);
+    assert_eq!(sealed["header"]["version"], 2);
     for (input, why) in [
         (
             json!({ "envelopes": [], "logs": [page, page], "holder": pc }),

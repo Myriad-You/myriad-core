@@ -80,7 +80,8 @@
     "moments",
     "nodes",
     "images",
-    "partner"
+    "partner",
+    "log2"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
   "noticeKinds": ["work", "waiting", "report", "reminder"],
@@ -128,7 +129,7 @@
       "delivery": "handshake",
       "required": ["protocol", "role", "surface"],
       "optional": ["capabilities", "app", "lineage", "hostEpoch"],
-      "description": "The first frame, within helloTimeoutMs of the upgrade. role is child for a child end. role host is the device she lives on (her host lease names it, H3e): it is welcomed only while it holds the lease at the hostEpoch it says, and then only hears what becomes of her there (host.freeze, host.thaw, host.moved); otherwise the link closes with host_moved, and it lets its copy of her go. host while the site has no lease closes with host_is_site. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time); the host does not act on them yet. An end lists the capability partner when its core knows the welcome's partner field."
+      "description": "The first frame, within helloTimeoutMs of the upgrade. role is child for a child end. role host is the device she lives on (her host lease names it, H3e): it is welcomed only while it holds the lease at the hostEpoch it says, and then only hears what becomes of her there (host.freeze, host.thaw, host.moved); otherwise the link closes with host_moved, and it lets its copy of her go. host while the site has no lease closes with host_is_site. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. log2 says this end's shared core is ABI 2 or later (it reads her log's merge, split and retract rows, MYRIAD_CORE_ABI_VERSION): an end sends those rows only to a side that listed it (nodes.wire_send peerAbi). app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time); the host does not act on them yet. An end lists the capability partner when its core knows the welcome's partner field."
     },
     "welcome": {
       "from": "host",

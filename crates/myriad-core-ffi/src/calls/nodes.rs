@@ -70,28 +70,46 @@ pub(super) fn limits(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{rows, bodies?, ledger}` → the nodes folded; the ledger is required.
+/// `reached` is what this side's forgets reach through merges and splits,
+/// for local cleanup only: a host writes only the forget the partner made,
+/// never a row for these.
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
+/// `{audience, node, rows, bodies?, ledger}` → `{takes}`: the rows of
+/// other nodes this side's fold places in the node the partner takes back
+/// from sync, one sorted list per `retract` row to write (at least one).
+/// A retract reaches its node's own rows and what it lists, never through
+/// a merge or a split.
+pub(super) fn retract(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&fold_rows::retract_lists(quiet_input(raw)?).map_err(refused)?)
+}
+
 /// `{audience, rows, bodies?, ledger, holder}` → a home page
 /// (`{audience, rows, payloads, withheld?}`): every row of a node this side
-/// keeps, whole, for the export file's home part. Only a computer of the
+/// keeps, whole, for the export file's home part; a body that may not go on
+/// the wire goes as its row alone (`withheld`). Only a computer of the
 /// partner's.
 pub(super) fn home_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&home::send(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{page, holder, ledger}` → `{rows, bodies?, ledger}`: a home page taken
-/// onto this computer, which becomes the home; the rows are stored as its
-/// own, before the file's log pages. Only a computer of the partner's.
+/// `{page, holder, ledger, held?}` → `{rows, bodies?, filled?, withheld?,
+/// ledger}`: a home page taken onto this computer, which becomes the home;
+/// the rows are stored as its own, before the file's log pages, and each
+/// stub of `held` the page holds whole is `filled`. Each body is checked as
+/// one from the wire; one that fails is `withheld`. Only a computer of the
+/// partner's.
 pub(super) fn home_take(raw: &[u8]) -> Result<Value, Failure> {
     answer(&home::take(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger, elsewhere?}`
-/// → `{batches, notHeld?}`: what to send another host core of one
-/// audience; a forgotten or retracted node goes as stubs only.
+/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger, peerAbi,
+/// elsewhere?}` → `{batches, notHeld?, tooOld?}`: what to send another
+/// host core of one audience; a forgotten or retracted node goes as stubs
+/// only. `peerAbi` is the other side's ABI (2 when its hello listed
+/// `log2`, else 1): rows it cannot read are not sent to it (`tooOld`).
 pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::send(quiet_input(raw)?).map_err(refused)?)
 }

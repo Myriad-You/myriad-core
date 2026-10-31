@@ -142,6 +142,7 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.place_read", nodes::place_read),
     ("nodes.queue", nodes::queue),
     ("nodes.repo_key", nodes::repo_key),
+    ("nodes.retract", nodes::retract),
     ("nodes.upkeep_input", nodes::upkeep_input),
     ("nodes.upkeep_read", nodes::upkeep_read),
     ("nodes.wire_send", nodes::wire_send),

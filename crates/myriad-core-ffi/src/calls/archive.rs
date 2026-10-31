@@ -153,20 +153,37 @@ pub(super) fn archive_open(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// A part's head as it stands in the stream, `{part}` → `{head}`; or the
-/// part whose head starts `{bytes}` → `{part, headBytes}` (its payload,
-/// `part.bytes` long, follows), `{part: null}` until the whole head is
-/// there.
+/// part whose head starts `{bytes, holder?}` → `{part, headBytes}` (its
+/// payload, `part.bytes` long, follows), `{part: null}` until the whole
+/// head is there. A home's page (`home`) is read only for a computer of
+/// the partner's (`holder`), and only from a file whose header says it is
+/// for one (`header.home`, checked when the file is opened).
 pub(super) fn archive_part(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(untagged)]
     enum In {
-        Write { part: Part },
-        Read { bytes: String },
+        Write {
+            part: Part,
+        },
+        Read {
+            bytes: String,
+            #[serde(default)]
+            holder: Option<Holder>,
+        },
     }
     match input::<In>(raw)? {
         In::Write { part } => Ok(json!({ "head": base64(&part.head().map_err(refused)?) })),
-        In::Read { bytes: raw } => {
+        In::Read { bytes: raw, holder } => {
             match Part::read_head(&bytes(&raw, "bytes")?).map_err(refused)? {
+                Some((Part::Home { .. }, _))
+                    if !holder.as_ref().is_some_and(|holder| {
+                        holder.check().is_ok() && holder.core == Core::Pc
+                    }) =>
+                {
+                    Err(refused(
+                        "a home's page is only for a computer of the partner's",
+                    ))
+                }
                 Some((part, used)) => Ok(json!({ "part": part, "headBytes": used })),
                 None => Ok(json!({ "part": null })),
             }

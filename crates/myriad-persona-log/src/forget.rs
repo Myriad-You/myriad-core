@@ -9,18 +9,28 @@
 //!
 //! **Taking a node back from sync** (撤回同步) works as a forget does,
 //! except on its homes. The partner presses it on a side that is to keep
-//! the node, and that side writes two rows: a shared `retract`, which every
-//! side reads, and a local `retract.home` beside it. Every side without a
-//! `retract.home` of the node reads the retract as a forget of it: its rows
-//! become stubs there, their bodies go, and rows of it that come later (an
-//! edit raced from another side, a side that was offline) come in as
-//! stubs. A local row never comes from another side ([`crate::admit`]
-//! refuses one), so only the side that pressed it is ever a home: a
-//! retract another side sends that names this side as its writer, and that
-//! this side never wrote, is a forget here like any other. A node retracted
-//! on two sides (each pressed while the other was offline) has two homes,
-//! and each keeps what it holds: no clock decides between them (the
-//! partner's decision, 2026-10-30: 两台都留).
+//! the node, and that side writes a shared `retract`, which every side
+//! reads, and a local `retract.home` beside it. Every side without a
+//! `retract.home` of the node reads the retract as a forget of what it
+//! reaches: those rows become stubs there, their bodies go, and rows that
+//! come later (an edit raced from another side, a side that was offline)
+//! come in as stubs. A local row never comes from another side
+//! ([`crate::admit`] refuses one), so only the side that pressed it is ever
+//! a home: a retract another side sends that names this side as its
+//! writer, and that this side never wrote, is a forget here like any other.
+//! A node retracted on two sides (each pressed while the other was
+//! offline) has two homes, and each keeps what it holds: no clock decides
+//! between them (the partner's decision, 2026-10-30: 两台都留).
+//!
+//! **What a retract reaches is named outright.** Every row whose own
+//! object is the node, whatever its clock or the side it came from, and
+//! the rows its `takes` lists: those of other nodes the writing home's fold
+//! placed in the node when it was pressed (what went into it, spans split
+//! onto it), as `nodes.retract` lists them, in several retract rows when
+//! there are more than [`crate::row::MAX_RETRACT_TAKES`]. A row's object
+//! never changes, so no side reads it otherwise. A retract never reaches
+//! anything through a merge or a split, in either direction: what goes
+//! into the node later, or what it went into, is not taken back by it.
 //!
 //! A home never loses a body to a stub: a stub of a row it holds whole does
 //! not replace it ([`crate::merge`]), and a whole row of a stub it holds
@@ -34,30 +44,24 @@
 //! is: sharing the node again would be a new row of the partner's, which
 //! the core does not have yet.
 //!
-//! **Other names of a node.** A forget or a retract names one node, and
+//! **Other names of a node, for forgets.** A forget names one node, and
 //! reaches every node that went into it (`node.absorbed`), and the spans a
 //! split moved to it (`node.split_off`). Which those are is in the rows'
-//! envelopes (`to`, `takes`), so a stub keeps it and every side reads the
-//! same from its own log: the ledger holds them too ([`Kind::Into`],
-//! [`Kind::Split`]), so a call given only part of the log still knows them.
-//! A node that went into two (two sides each merged it, offline) is
-//! reached through both, and a span through every place a split ever
-//! moved it: the union, erring toward taking more. Which merge stands (the
-//! first written) is the fold's to show, never what is reached. Every
-//! merge and split row names its other node in its envelope, and that is
-//! its name, whatever its body says.
+//! envelopes (`to`, `takes`, which every merge and split row carries), so
+//! a stub keeps it and every side reads the same from its own log: the
+//! ledger holds them too ([`Kind::Into`], [`Kind::Split`]), so a call given
+//! only part of the log still knows them. Every merge and split counts,
+//! whenever it was written and whatever its body: what a forget reaches
+//! only grows, and the same on every side in any order. A node that went
+//! into two is reached through both, and a span through every place a
+//! split ever moved it.
 //!
-//! **A retracted node's structure is frozen.** A merge or a split counts
-//! (for what is reached, and for the fold) only if its clock is before
-//! every retract of the node it is of and of the other node: one written
-//! after is void on every side, by the clocks alone, whatever order the
-//! rows came in.
-//!
-//! **A home keeps what it keeps.** On a home, a row of a node it keeps (a
-//! `retract.home` of it, or of a node it went into) is taken away only by a
-//! forget of its own node, of a node this side keeps that it reaches, or of
-//! its subject: never by a forget that reaches it only through a merge or a
-//! split onto a node this side does not keep.
+//! **A home keeps what its retracts reach.** On a home, a row a retract of
+//! its own reaches is taken away only by a forget that names it directly:
+//! of its own node, of that retract's node, or of its subject, whatever
+//! its clock. No forget that reaches it through a merge, a split or
+//! another node takes it. Kept rows fold as any rows do there, wherever
+//! the fold puts them.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -73,7 +77,8 @@ pub enum Kind {
     /// The target is forgotten.
     #[default]
     Forget,
-    /// The target node is taken back from sync; `homes` wrote it.
+    /// The target node is taken back from sync; `homes` wrote it, and it
+    /// lists the rows of other nodes it takes too (`takes`).
     Retract,
     /// This side keeps the target node: it wrote its retract.
     Home,
@@ -108,7 +113,8 @@ pub struct Entry {
     /// A name's: the other node (`node:<id>`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub to: Option<String>,
-    /// A split's: the rows it moved, sorted.
+    /// A split's: the rows it moved, sorted. A retract's: the rows of other
+    /// nodes it lists (every retract row of the node, together), sorted.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub takes: Vec<String>,
 }
@@ -161,6 +167,7 @@ fn entry_of(row: &Row) -> Option<Entry> {
         Rule::Forget => Some(entry(Kind::Forget)),
         Rule::Retract => Some(Entry {
             homes: vec![row.origin.clone()],
+            takes: row.takes.clone(),
             ..entry(Kind::Retract)
         }),
         // Only the side that wrote it holds a local row.
@@ -227,8 +234,8 @@ pub struct View<'a> {
     into: BTreeMap<(&'a str, &'a str), BTreeSet<&'a str>>,
     /// (audience, row id) → every split that took it: (from, to).
     splits: BTreeMap<(&'a str, &'a str), BTreeSet<(&'a str, &'a str)>>,
-    /// (audience, node, other) of every name on the ledger that counts.
-    named: BTreeSet<(&'a str, &'a str, &'a str)>,
+    /// (audience, row id) → every retract that lists it.
+    listed: BTreeMap<(&'a str, &'a str), Vec<&'a Entry>>,
 }
 
 impl<'a> View<'a> {
@@ -237,44 +244,27 @@ impl<'a> View<'a> {
             by_target: BTreeMap::new(),
             into: BTreeMap::new(),
             splits: BTreeMap::new(),
-            named: BTreeSet::new(),
-        };
-        // The earliest retract of each node: a name written at or after it
-        // is void.
-        let mut retracted: BTreeMap<(&str, &str), &Rev> = BTreeMap::new();
-        for entry in ledger.iter().filter(|entry| entry.is_retract()) {
-            let at = retracted
-                .entry((entry.audience.as_str(), entry.target.as_str()))
-                .or_insert(&entry.at);
-            if entry.at < **at {
-                *at = &entry.at;
-            }
-        }
-        let void = |entry: &Entry| {
-            [Some(entry.target.as_str()), entry.to.as_deref()]
-                .into_iter()
-                .flatten()
-                .any(|node| {
-                    retracted
-                        .get(&(entry.audience.as_str(), node))
-                        .is_some_and(|at| entry.at >= **at)
-                })
+            listed: BTreeMap::new(),
         };
         for entry in ledger {
             let place = (entry.audience.as_str(), entry.target.as_str());
-            if is_name(entry) && void(entry) {
-                continue;
-            }
             match (entry.kind, entry.to.as_deref()) {
-                (Kind::Forget | Kind::Retract | Kind::Home, _) => {
+                (Kind::Forget | Kind::Home, _) => {
                     view.by_target.entry(place).or_default().push(entry);
+                }
+                (Kind::Retract, _) => {
+                    view.by_target.entry(place).or_default().push(entry);
+                    for row in &entry.takes {
+                        view.listed
+                            .entry((entry.audience.as_str(), row.as_str()))
+                            .or_default()
+                            .push(entry);
+                    }
                 }
                 (Kind::Into, Some(to)) => {
                     view.into.entry(place).or_default().insert(to);
-                    view.named.insert((place.0, place.1, to));
                 }
                 (Kind::Split, Some(to)) => {
-                    view.named.insert((place.0, place.1, to));
                     for row in &entry.takes {
                         view.splits
                             .entry((entry.audience.as_str(), row.as_str()))
@@ -308,19 +298,14 @@ impl<'a> View<'a> {
         out
     }
 
-    /// Every object whose forget or retract reaches `row`: its object and
-    /// each node it went on into; every place a split that took it moved
-    /// it from one of those, and on from there; and for a merge or a split
-    /// whose name counts, the other node and on. A merge or split written
-    /// after a retract of its nodes is void, and not reached through it.
+    /// Every object whose forget reaches `row`: its object and each node
+    /// it went on into; every place a split that took it moved it from one
+    /// of those, and on from there; and for a merge or a split, the other
+    /// node it names and on.
     fn targets(&self, row: &'a Row) -> BTreeSet<&'a str> {
         let audience = row.audience.as_str();
         let mut out = BTreeSet::from([row.object.as_str()]);
-        if let Some(to) = &row.to
-            && self
-                .named
-                .contains(&(audience, row.object.as_str(), to.as_str()))
-        {
+        if let Some(to) = &row.to {
             out.insert(to.as_str());
         }
         self.onward(audience, &mut out);
@@ -340,89 +325,115 @@ impl<'a> View<'a> {
         }
     }
 
+    /// The retracts that reach `row`: one of its own node, and one that
+    /// lists it. Never through a merge or a split.
+    fn retracts(&self, row: &'a Row) -> Vec<&'a Entry> {
+        let audience = row.audience.as_str();
+        let mut out: Vec<&Entry> = self
+            .by_target
+            .get(&(audience, row.object.as_str()))
+            .into_iter()
+            .flatten()
+            .filter(|entry| entry.is_retract())
+            .copied()
+            .collect();
+        out.extend(
+            self.listed
+                .get(&(audience, row.id.as_str()))
+                .into_iter()
+                .flatten()
+                .copied(),
+        );
+        out
+    }
+
     /// The forgets, retracts and homes that reach `row` (none reaches a
-    /// row of the ledger itself).
+    /// row of the ledger itself): forgets through every name and the
+    /// subject; retracts, and this side's homes of them, only directly.
     pub fn reaching(&self, row: &'a Row) -> Vec<&'a Entry> {
         if on_ledger(row) {
             return Vec::new();
         }
         let audience = row.audience.as_str();
-        let subject = row
-            .subject
-            .as_deref()
-            .map(|subject| format!("{SUBJECT}:{subject}"));
         let mut out: Vec<&Entry> = self
             .targets(row)
             .into_iter()
             .filter_map(|target| self.by_target.get(&(audience, target)))
             .flatten()
+            .filter(|entry| entry.kind == Kind::Forget)
             .copied()
             .collect();
-        if let Some(subject) = &subject
-            && let Some(entries) = self.by_target.get(&(audience, subject.as_str()))
-        {
-            out.extend(entries.iter().filter(|entry| entry.kind == Kind::Forget));
-        }
+        out.extend(self.subject_of(row));
+        let retracts = self.retracts(row);
+        let nodes: BTreeSet<&str> = retracts.iter().map(|entry| entry.target.as_str()).collect();
+        out.extend(retracts);
+        out.extend(
+            nodes
+                .into_iter()
+                .filter_map(|node| self.by_target.get(&(audience, node)))
+                .flatten()
+                .filter(|entry| entry.kind == Kind::Home)
+                .copied(),
+        );
         out
+    }
+
+    /// The forgets of everything about `row`'s subject.
+    fn subject_of(&self, row: &'a Row) -> Vec<&'a Entry> {
+        let Some(subject) = row.subject.as_deref() else {
+            return Vec::new();
+        };
+        let target = format!("{SUBJECT}:{subject}");
+        self.by_target
+            .get(&(row.audience.as_str(), target.as_str()))
+            .into_iter()
+            .flatten()
+            .filter(|entry| entry.kind == Kind::Forget)
+            .copied()
+            .collect()
     }
 
     /// Whether a forget reaches `row` through its object (or a node it
     /// went into) or its subject: the whole object is gone, not only this
     /// row.
     pub fn forgets_object(&self, row: &'a Row) -> bool {
-        let subject = row
-            .subject
-            .as_deref()
-            .map(|subject| format!("{SUBJECT}:{subject}"));
-        self.forgotten(&row.audience, &row.object).is_some()
-            || subject.is_some_and(|subject| {
-                self.by_target
-                    .get(&(row.audience.as_str(), subject.as_str()))
-                    .is_some_and(|entries| entries.iter().any(|entry| entry.kind == Kind::Forget))
-            })
+        self.forgotten(&row.audience, &row.object).is_some() || !self.subject_of(row).is_empty()
     }
 
-    /// The nodes this side keeps among `nodes`: those with a home here.
-    fn kept_among(&self, audience: &str, nodes: &BTreeSet<&'a str>) -> BTreeSet<&'a str> {
-        nodes
-            .iter()
-            .copied()
-            .filter(|node| self.home_of(audience, node))
-            .collect()
+    /// Whether this side keeps `row`: a retract of this side's reaches it.
+    fn kept_by(&self, reaching: &[&'a Entry]) -> bool {
+        reaching.iter().any(|entry| entry.kind == Kind::Home)
     }
 
-    /// Whether a forget reaching something of `object`, whose reach holds
-    /// the nodes this side keeps in `kept`, counts here: anywhere but a home,
-    /// any does; on a home, only one of `object` itself, of a node it keeps,
-    /// or of a subject.
-    fn counts(entry: &Entry, object: &str, kept: &BTreeSet<&str>) -> bool {
-        kept.is_empty()
-            || entry.target == object
-            || kept.contains(entry.target.as_str())
-            || entry
-                .target
-                .strip_prefix(SUBJECT)
-                .is_some_and(|rest| rest.starts_with(':'))
-    }
-
-    /// Whether a forget that counts on `side` reaches `row`.
-    fn forgets_here(&self, row: &'a Row, reaching: &[&'a Entry], side: Side) -> bool {
-        let kept = match side {
-            Side::Here => self.kept_among(&row.audience, &self.targets(row)),
-            Side::Away => BTreeSet::new(),
+    /// Whether a forget takes a row this side keeps: only one that names
+    /// it directly: its own node, the node of a retract of this side's that
+    /// reaches it, or its subject. None through a merge, a split or another
+    /// node, whatever its clock.
+    fn forgets_kept(&self, row: &'a Row, reaching: &[&'a Entry]) -> bool {
+        let audience = row.audience.as_str();
+        let named = |target: &str| {
+            self.by_target
+                .get(&(audience, target))
+                .is_some_and(|entries| entries.iter().any(|entry| entry.kind == Kind::Forget))
         };
-        reaching
-            .iter()
-            .filter(|entry| entry.kind == Kind::Forget)
-            .any(|entry| Self::counts(entry, &row.object, &kept))
+        named(&row.object)
+            || reaching
+                .iter()
+                .filter(|entry| entry.kind == Kind::Home)
+                .any(|entry| named(&entry.target))
+            || !self.subject_of(row).is_empty()
     }
 
-    /// Whether `row` is taken away on `side`: a forget reaches it (on a
-    /// home, one that counts there), or retracts do and no home of this side
-    /// does (a local row stays on the side that wrote it).
+    /// Whether `row` is taken away on `side`. On a home, a row a retract of
+    /// its own reaches is taken only by a forget that names it directly.
+    /// Otherwise a forget that reaches it takes it, and so do retracts (a
+    /// local row stays on the side that wrote it).
     pub fn absorbs(&self, row: &'a Row, side: Side) -> bool {
         let reaching = self.reaching(row);
-        if self.forgets_here(row, &reaching, side) {
+        if side == Side::Here && self.kept_by(&reaching) {
+            return self.forgets_kept(row, &reaching);
+        }
+        if reaching.iter().any(|entry| entry.kind == Kind::Forget) {
             return true;
         }
         if !reaching.iter().any(|entry| entry.is_retract()) {
@@ -430,85 +441,56 @@ impl<'a> View<'a> {
         }
         match side {
             Side::Away => true,
-            Side::Here => {
-                row.replicate != Replicate::Local
-                    && !reaching.iter().any(|entry| entry.kind == Kind::Home)
-            }
+            Side::Here => row.replicate != Replicate::Local,
         }
     }
 
-    /// Whether `row` is of a node this side keeps, and nothing forgets it:
-    /// its body stays here, whatever arrives.
+    /// Whether a retract of this side's reaches `row`, forgotten since or
+    /// not.
+    pub fn keeps(&self, row: &'a Row) -> bool {
+        self.kept_by(&self.reaching(row))
+    }
+
+    /// Whether `row` is one this side keeps, and nothing forgets it: its
+    /// body stays here, whatever arrives.
     pub fn kept_home(&self, row: &'a Row) -> bool {
         let reaching = self.reaching(row);
-        !self.forgets_here(row, &reaching, Side::Here)
-            && reaching.iter().any(|entry| entry.kind == Kind::Home)
+        self.kept_by(&reaching) && !self.forgets_kept(row, &reaching)
     }
 
-    /// The entries that name `audience`'s `object` or a node it went on
-    /// into, of `kind`.
-    fn about(&self, audience: &str, object: &'a str, kind: Kind) -> Vec<&'a Entry> {
-        self.reach(audience, object)
-            .into_iter()
-            .filter_map(|target| self.by_target.get(&(audience, target)))
-            .flatten()
-            .filter(|entry| entry.kind == kind)
-            .copied()
-            .collect()
-    }
-
-    /// The sides that wrote a retract reaching `audience`'s `object`,
-    /// sorted.
-    pub fn homes(&self, audience: &str, object: &'a str) -> Vec<String> {
+    /// The sides that wrote a retract of `audience`'s `object`, sorted.
+    pub fn homes(&self, audience: &str, object: &str) -> Vec<String> {
         let homes: BTreeSet<&String> = self
-            .about(audience, object, Kind::Retract)
+            .by_target
+            .get(&(audience, object))
             .into_iter()
+            .flatten()
+            .filter(|entry| entry.is_retract())
             .flat_map(|entry| &entry.homes)
             .collect();
         homes.into_iter().cloned().collect()
     }
 
-    /// Whether this side keeps `audience`'s `object` (a home of it reaches
-    /// it).
-    pub fn kept(&self, audience: &str, object: &'a str) -> bool {
-        !self.about(audience, object, Kind::Home).is_empty()
+    /// Whether this side keeps `audience`'s `object`: it wrote its retract.
+    pub fn kept(&self, audience: &str, object: &str) -> bool {
+        self.home_of(audience, object)
     }
 
-    /// Whether this side wrote the retract of `audience`'s `object` itself
-    /// (not of a node it went into).
+    /// Whether this side wrote the retract of `audience`'s `object`.
     pub fn home_of(&self, audience: &str, object: &str) -> bool {
         self.by_target
             .get(&(audience, object))
             .is_some_and(|entries| entries.iter().any(|entry| entry.kind == Kind::Home))
     }
 
-    /// The earliest retract of `audience`'s `object` itself: a merge or a
-    /// split of it written at or after this is void.
-    pub fn retract_of(&self, audience: &str, object: &str) -> Option<&'a Rev> {
-        self.by_target
-            .get(&(audience, object))
-            .into_iter()
-            .flatten()
-            .filter(|entry| entry.is_retract())
-            .map(|entry| &entry.at)
-            .min()
-    }
-
-    /// The earliest retract reaching `audience`'s `object`.
-    pub fn retracted_at(&self, audience: &str, object: &'a str) -> Option<&'a Rev> {
-        self.about(audience, object, Kind::Retract)
-            .into_iter()
-            .map(|entry| &entry.at)
-            .min()
-    }
-
     /// The earliest forget of `audience`'s `object` or a node it went on
-    /// into (on a home of any of them, one that counts there).
+    /// into.
     pub fn forgotten(&self, audience: &str, object: &'a str) -> Option<&'a Rev> {
-        let kept = self.kept_among(audience, &self.reach(audience, object));
-        self.about(audience, object, Kind::Forget)
+        self.reach(audience, object)
             .into_iter()
-            .filter(|entry| Self::counts(entry, object, &kept))
+            .filter_map(|target| self.by_target.get(&(audience, target)))
+            .flatten()
+            .filter(|entry| entry.kind == Kind::Forget)
             .map(|entry| &entry.at)
             .min()
     }

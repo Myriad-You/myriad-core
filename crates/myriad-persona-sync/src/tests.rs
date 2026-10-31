@@ -597,6 +597,7 @@ pub(crate) fn archive_sample() -> ArchiveSample {
             digest: manifest.digest.clone(),
             logs: false,
             partner: None,
+            home: false,
         },
     )
     .unwrap();
@@ -692,7 +693,7 @@ fn the_golden_archive_is_what_its_inputs_seal_to() {
             path.display()
         );
     }
-    let opened = archive::open(sample.passphrase, &file).unwrap();
+    let opened = archive::open(sample.passphrase, &file, false).unwrap();
     assert_eq!(opened.header, sample.header);
     golden(
         "archive/manifest.json",

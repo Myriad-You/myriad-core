@@ -20,7 +20,8 @@ use crate::{
 };
 
 /// The conformance files' directory: `log/` is version 2 (a holder on every
-/// `log.admit` and `log.answer`), `lease/` still version 1.
+/// `log.admit` and `log.answer`; merge, split and retract rows name what
+/// they reach), `lease/` still version 1.
 pub(crate) fn conformance() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
 }
@@ -274,6 +275,18 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ),
         ("takes out of order", "takes is sorted"),
         ("a retract's home shared", "is local"),
+        (
+            "a merge without the node it went into",
+            "names the other node (to)",
+        ),
+        (
+            "a split without the spans it moves",
+            "names the spans it moves",
+        ),
+        ("a retract's list out of order", "takes is sorted"),
+        ("a retract listing more than 256 rows", "at most 256 rows"),
+        ("a retract's home with a list", "lists no rows"),
+        ("a retract naming another node", "names no other node"),
     ];
     let file: Value = serde_json::from_slice(
         &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),

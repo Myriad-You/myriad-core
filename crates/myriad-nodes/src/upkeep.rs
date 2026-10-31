@@ -66,12 +66,12 @@
 //! written meanwhile is taken as seen.
 //!
 //! A node taken back from sync (撤回同步) is out of shared upkeep on every
-//! side, and its structure is frozen. Only its home folds it whole, and
-//! there a run on it writes local rows only (`local` in what is prepared:
-//! the caller passes a local `sync`, or `read` refuses the call) and edits
-//! only what is on it: no merge or split of it or into it, and no other
-//! node is named but the ones this side keeps. A shared run never names
-//! one. The fold voids a merge or split of one written after its retract.
+//! side. Only its home folds it whole, and there a run on it writes local
+//! rows only (`local` in what is prepared: the caller passes a local
+//! `sync`, or `read` refuses the call) and names no node but the ones this
+//! side keeps. A shared run is never shown one, so never merges into it: a
+//! preference, not a rule of the log (a merge of a node with stubs in it is
+//! harmless, and a retract never reaches through one).
 //!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) so the queue moves
@@ -1389,12 +1389,10 @@ impl<'a> Reader<'a> {
             }
             "split" => {
                 let me = self.me()?;
-                // A retracted node's structure is frozen.
-                if !me.retracted.is_empty()
-                    || me
-                        .kind
-                        .as_ref()
-                        .is_some_and(|kind| kind.current.value.kind == Kind::Person)
+                if me
+                    .kind
+                    .as_ref()
+                    .is_some_and(|kind| kind.current.value.kind == Kind::Person)
                 {
                     return Err(Fallback::NotAllowed);
                 }
@@ -1678,11 +1676,6 @@ impl<'a> Reader<'a> {
         let because = self.evidence(action)?;
         let about_you =
             Key::parse(&into.key).is_ok_and(|key| key.is_about_you(&self.context.audience));
-        // A retracted node's structure is frozen: it goes into nothing, and
-        // nothing goes into it.
-        if !me.retracted.is_empty() || !self.node(into_at).retracted.is_empty() {
-            return Err(Fallback::NotAllowed);
-        }
         // Only a minted node goes into another, and not what she watched or
         // read with the partner: that only ever takes others in.
         let goes = me

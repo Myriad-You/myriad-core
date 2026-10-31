@@ -69,30 +69,28 @@
 //!   this, never by its age alone; the weights are the caller's.
 //!
 //! Forgetting reaches what upkeep moved: a node that went into a forgotten
-//! node is forgotten with it (its forget is listed in `forgets` for the
-//! caller to write, so it holds once the bodies are gone), and the spans a
-//! forgotten part took in a split go with it, and so does the split row.
+//! node is forgotten with it, and the spans a forgotten part took in a
+//! split go with it, and so does the split row. Those nodes are listed in
+//! `reached`, for the caller's own cleanup only: the forget the partner
+//! made is the only row to write, and every side reaches the same from the
+//! rows' envelopes, so a reached node's forget is never written as a row.
 //!
 //! **Taken back from sync** (a `retract` row, `myriad_persona_log::forget`):
 //! on a side that keeps the node (its `retract.home` is in the rows) it
 //! folds as ever and says so (`retracted`: the sides that wrote a retract);
-//! everywhere else it folds to that mark alone, its rows become stubs
-//! (`stubbed`), and relations to it go, as for a forgotten node. A node
-//! that went into it goes with it, and so do the spans a split moved to
-//! it: which those are is in the rows' envelopes (`to`, `takes`), so a stub
-//! keeps it, and on this side's ledger (given whole: a home is on it).
-//!
-//! A retracted node's structure is frozen: a merge or a split of it, or
-//! into it, written after its retract is void on every side (`void`), and
-//! a home shows a node it keeps as its own, whatever shared merge or split
-//! of it was written before (`retracted`).
+//! everywhere else it folds to that mark alone, the rows the retract
+//! reaches become stubs (`stubbed`), and relations to it go, as for a
+//! forgotten node. A retract reaches the node's own rows and the rows its
+//! envelope lists (`takes`: what the home's fold had placed in it, as
+//! [`retract_lists`] lists them), never through a merge or a split. Merges
+//! and splits of a retracted node fold as any others.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use myriad_persona_log::{
     Row, forget,
     kinds::Rule,
-    row::{Audience, Author, Replicate, object_type},
+    row::{Audience, Author, object_type},
 };
 use myriad_persona_sync::Rev;
 use serde::{Deserialize, Serialize};
@@ -291,10 +289,12 @@ pub struct Parts {
     pub dropped: usize,
 }
 
-/// A forget the caller writes: a node gone with the node it went into.
+/// A node gone with a forgotten node it went into, or that took a
+/// forgotten part's spans: for the caller's own cleanup, never a row to
+/// write.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ToForget {
+pub struct Reached {
     pub audience: String,
     pub target: String,
 }
@@ -499,13 +499,6 @@ pub enum Why {
     /// Something she watched or read with the partner going into another:
     /// it only ever takes others in.
     Together,
-    /// A shared merge or split of a node this side keeps (its home): a home
-    /// shows what it keeps as its own node.
-    Retracted,
-    /// A merge or a split written at or after a retract of its node or of
-    /// the other: a retracted node's structure is frozen, so it is void on
-    /// every side and names nothing.
-    Void,
     /// A person's or a group's node in her own audience: it lives in that
     /// person's or group's own audience, never in hers.
     PersonElsewhere,
@@ -532,11 +525,12 @@ pub struct Folded {
     /// Node by node, each in log order; then relations, in log order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub skipped: Vec<Skipped>,
-    /// Nodes gone with a forgotten node they went into, not on the ledger
-    /// yet: the caller writes their forgets, so the forget holds once the
-    /// bodies are deleted.
+    /// Nodes gone with a forget the partner made of another node, through a
+    /// merge or a split: for the caller's own cleanup. Never written as
+    /// rows: the forget the partner made is the only one, and every side
+    /// reaches these from it.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub forgets: Vec<ToForget>,
+    pub reached: Vec<Reached>,
 }
 
 /// What is wrong with a row, by field or rule: the log's own message may
@@ -859,25 +853,7 @@ fn envelope_agrees(row: &Row, to: &str, takes: Option<&[String]>) -> bool {
         && takes.is_none_or(|takes| row.takes == sorted(takes))
 }
 
-/// Why a shared merge or split of `nodes` (its own node, the other) does
-/// not fold: written at or after a retract of either (`void`, on every
-/// side: a retracted node's structure is frozen), or of a node this side
-/// keeps, which a home shows as its own (`retracted`).
-fn frozen(view: &forget::View, row: &Row, nodes: [&str; 2]) -> Option<Why> {
-    let late = nodes.into_iter().any(|node| {
-        view.retract_of(&row.audience, node)
-            .is_some_and(|at| row.hlc >= *at)
-    });
-    if late {
-        Some(Why::Void)
-    } else if row.replicate == Replicate::Shared && view.home_of(&row.audience, &row.object) {
-        Some(Why::Retracted)
-    } else {
-        None
-    }
-}
-
-fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>, view: &forget::View) -> Absorbing {
+fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
     let read = |row: &Row| {
         (!row.forgotten)
             .then(|| bodies.get(&row.id))
@@ -904,11 +880,6 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>, view: &forget::View
         let why = match named {
             None => continue,
             Some(Err(why)) => Some(why),
-            Some(Ok(Named { to: ref into, .. }))
-                if frozen(view, row, [&row.object, &format!("node:{into}")]).is_some() =>
-            {
-                frozen(view, row, [&row.object, &format!("node:{into}")])
-            }
             Some(Ok(_)) if out.into.contains_key(&place) => Some(Why::AbsorbedTwice),
             Some(Ok(Named { to: ref into, .. })) if out.reaches(&audience, into, &from) => {
                 Some(Why::Cycle)
@@ -998,6 +969,123 @@ pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
     Ok(fold_full(input)?.folded)
 }
 
+/// `nodes.retract`: a node the partner takes back from sync, on the side
+/// that keeps it, as this side folds it now.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RetractInput {
+    pub audience: String,
+    /// The node's id (without `node:`).
+    pub node: String,
+    /// This side's rows of the audience.
+    pub rows: Vec<Row>,
+    #[serde(default)]
+    pub bodies: BTreeMap<String, Value>,
+    /// This side's ledger.
+    pub ledger: Vec<forget::Entry>,
+}
+
+/// What its retract rows list.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RetractLists {
+    /// One list per `retract` row to write (`takes`), each sorted and at
+    /// most [`myriad_persona_log::row::MAX_RETRACT_TAKES`]; at least one,
+    /// empty when nothing of another node is in it.
+    pub takes: Vec<Vec<String>>,
+}
+
+/// The rows of other nodes the fold places in `node`: every row of a node
+/// that went into it (on and on), but a span the fold placed in a node
+/// outside them; every span or entry it holds that a split moved in; and
+/// every row of its lineage (the split that made it, a merge into it).
+/// The node's own rows are not listed: its retract reaches them by their
+/// object.
+pub fn retract_lists(input: RetractInput) -> Result<RetractLists, NodeError> {
+    crate::check_token("audience", &input.audience)?;
+    crate::check_token("node", &input.node)?;
+    let audience = input.audience.clone();
+    let rows = input.rows.clone();
+    let folded = fold_full(FoldInput {
+        rows: input.rows,
+        bodies: input.bodies,
+        ledger: input.ledger,
+    })?
+    .folded;
+    let nodes: Vec<&Node> = folded
+        .nodes
+        .iter()
+        .filter(|node| node.audience == audience)
+        .collect();
+    let Some(own) = nodes.iter().find(|node| node.id == input.node) else {
+        return Err(NodeError::new("the node is not in the rows given"));
+    };
+    let into: BTreeMap<&str, &str> = nodes
+        .iter()
+        .filter_map(|node| Some((node.id.as_str(), node.absorbed_into.as_ref()?.into.as_str())))
+        .collect();
+    // Every node whose merges end in this one.
+    let inside: BTreeSet<&str> = nodes
+        .iter()
+        .map(|node| node.id.as_str())
+        .filter(|id| {
+            let mut at = *id;
+            for _ in 0..=into.len() {
+                if at == input.node {
+                    return true;
+                }
+                match into.get(at) {
+                    Some(next) => at = next,
+                    None => return false,
+                }
+            }
+            false
+        })
+        .collect();
+    let held = |node: &Node| -> Vec<String> {
+        node.spans
+            .iter()
+            .map(|span| span.row.clone())
+            .chain(node.entries.iter().map(|entry| entry.row.clone()))
+            .collect()
+    };
+    let elsewhere: BTreeSet<String> = nodes
+        .iter()
+        .filter(|node| !inside.contains(node.id.as_str()))
+        .flat_map(|node| held(node))
+        .collect();
+    // What the node shows: its spans and entries, and the lines of where it
+    // came from (the split that made it, a merge into it).
+    let here: BTreeSet<String> = held(own)
+        .into_iter()
+        .chain(own.lineage.iter().map(|line| line.row.clone()))
+        .collect();
+    let object = format!("node:{}", input.node);
+    let mut listed: BTreeSet<String> = BTreeSet::new();
+    for row in &rows {
+        if row.audience != audience
+            || row.forgotten
+            || row.object == object
+            || forget::on_ledger(row)
+        {
+            continue;
+        }
+        let of = row.object.strip_prefix("node:").unwrap_or("");
+        if (inside.contains(of) && !elsewhere.contains(&row.id)) || here.contains(&row.id) {
+            listed.insert(row.id.clone());
+        }
+    }
+    let listed: Vec<String> = listed.into_iter().collect();
+    let mut takes: Vec<Vec<String>> = listed
+        .chunks(myriad_persona_log::row::MAX_RETRACT_TAKES)
+        .map(<[String]>::to_vec)
+        .collect();
+    if takes.is_empty() {
+        takes.push(Vec::new());
+    }
+    Ok(RetractLists { takes })
+}
+
 pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
     for row in &input.rows {
         row.check()
@@ -1017,7 +1105,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
     // This side's ledger, with what the rows show.
     let ledger = forget::joined(&input.ledger, &forget::ledger(&rows));
     let view = forget::View::new(&ledger);
-    let absorbing = absorbing(&rows, &input.bodies, &view);
+    let absorbing = absorbing(&rows, &input.bodies);
     // Every node the rows or the ledger name.
     let mut places: BTreeSet<(String, String)> = rows
         .iter()
@@ -1062,14 +1150,14 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
     // A node that went into a forgotten one is gone with it: what it held
     // was shown there. Its forget is the caller's to write, so it holds
     // once the bodies are deleted.
-    let mut forgets: Vec<ToForget> = Vec::new();
+    let mut reached: Vec<Reached> = Vec::new();
     for place in &places {
         if gone.contains_key(place) {
             continue;
         }
         if let Some(at) = view.forgotten(&place.0, &place.1) {
             gone.insert(place.clone(), at.clone());
-            forgets.push(ToForget {
+            reached.push(Reached {
                 audience: place.0.clone(),
                 target: place.1.clone(),
             });
@@ -1469,10 +1557,6 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                         skip(row, Why::BadBody);
                         continue;
                     }
-                    if let Some(why) = frozen(&view, row, [object, &format!("node:{to}")]) {
-                        skip(row, why);
-                        continue;
-                    }
                     splits.push(Splitting {
                         at,
                         audience: audience.to_string(),
@@ -1779,7 +1863,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
             relations,
             stubbed,
             skipped,
-            forgets,
+            reached,
         },
         rows,
         seen: seen_by,
