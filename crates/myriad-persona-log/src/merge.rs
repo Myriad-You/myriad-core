@@ -73,8 +73,9 @@ pub struct Merged {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub filled: Vec<String>,
     /// Stubs held back under `local-owner` that the same row moved to this
-    /// side's id (`holder`) came in for as a stub too: they take its
-    /// envelope. Store the envelope; there is no payload either way.
+    /// side's id (`holder`) came in for as a stub too, or whole but taken
+    /// away here by the ledger: they take its envelope. Store the envelope;
+    /// there is no payload either way.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub relabelled: Vec<String>,
     /// Incoming rows already held.
@@ -125,6 +126,9 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     let mut added = Vec::new();
     let mut filled = Vec::new();
     let mut relabelled = Vec::new();
+    // Stubs a whole row moved to this side's id filled: filled, or
+    // relabelled if the ledger stubs them again here.
+    let mut moved_whole = Vec::new();
     let mut duplicates = 0;
     let mut conflicts = Vec::new();
     for row in incoming {
@@ -176,7 +180,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
                 duplicates += 1;
                 match row.forgotten {
                     true => relabelled.push(row.id.clone()),
-                    false => filled.push(row.id.clone()),
+                    false => moved_whole.push(row.id.clone()),
                 }
                 by_id.insert(row.id.clone(), row);
             } else {
@@ -216,8 +220,15 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     stubbed.sort();
     added.sort();
     // A stub filled above that the ledger takes away here is a stub again:
-    // its payload is not stored.
+    // its payload is not stored. Filled by a row moved to this side's id,
+    // it still takes the moved envelope: relabelled.
     filled.retain(|id| forgotten.get(id.as_str()) == Some(&false));
+    for id in moved_whole {
+        match forgotten.get(id.as_str()) == Some(&false) {
+            true => filled.push(id),
+            false => relabelled.push(id),
+        }
+    }
     filled.sort();
     relabelled.sort();
     Ok(Merged {

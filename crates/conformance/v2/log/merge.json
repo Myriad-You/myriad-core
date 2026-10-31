@@ -2913,7 +2913,7 @@
           }
         ]
       },
-      "name": "a stub held back under local-owner and a forget of everything about the partner: the moved row stays a stub, nothing is filled",
+      "name": "a stub held back under local-owner and a forget of everything about the partner: the moved row stays a stub, nothing is filled, the stub takes the moved envelope",
       "output": {
         "duplicates": 1,
         "log": [
@@ -2932,6 +2932,84 @@
             "subject": "partner_0199d5c0900033333333333333333333",
             "version": 1
           }
+        ],
+        "relabelled": [
+          "x-1"
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "incoming": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:x-1"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0900033333333333333333333",
+            "version": 1
+          }
+        ],
+        "ledger": [
+          {
+            "at": "001760000000001-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "target": "memory:m-1"
+          }
+        ],
+        "log": [
+          {
+            "audience": "personal:local-owner",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "local-owner",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a stub held back under local-owner and a forget of its object under this side's id: the moved row stays a stub, the stub takes the moved envelope",
+      "output": {
+        "duplicates": 1,
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "partner_0199d5c0900033333333333333333333",
+            "version": 1
+          }
+        ],
+        "relabelled": [
+          "x-1"
         ]
       }
     },
