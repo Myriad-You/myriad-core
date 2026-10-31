@@ -77,20 +77,23 @@ pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, node, rows, bodies?, ledger}` → `{takes}`: the rows of
-/// other nodes this side's fold places in the node the partner takes back
-/// from sync, one sorted list per `retract` row to write (at least one).
-/// A retract reaches its node's own rows and what it lists, never through
-/// a merge or a split.
+/// `{audience, node, rows, bodies?, ledger, forget?}` → `{takes}`: the
+/// rows of other nodes this side's fold places in the node the partner
+/// takes back from sync, one sorted list per `retract` row to write (at
+/// least one). A retract reaches its node's own rows and what it lists,
+/// never through a merge or a split. With `forget`, the lists for a
+/// `forget` row a home writes: only the rows it keeps that its fold shows
+/// in the node, which a forget takes only when it lists them.
 pub(super) fn retract(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows::retract_lists(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, rows, bodies?, ledger, holder}` → a home page
+/// `{audience, rows, bodies?, ledger, holder, elsewhere?}` → a home page
 /// (`{audience, rows, payloads, withheld?}`): every row of a node this side
-/// keeps, whole, for the export file's home part; a body that may not go on
-/// the wire goes as its row alone (`withheld`). Only a computer of the
-/// partner's.
+/// keeps, whole, for the export file's home part. A body goes as it would
+/// on the wire, but one kept on its device goes too; one that may not go
+/// goes as its row alone (`withheld`), and is stored with its body missing
+/// where the page is taken. Only a computer of the partner's.
 pub(super) fn home_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&home::send(quiet_input(raw)?).map_err(refused)?)
 }

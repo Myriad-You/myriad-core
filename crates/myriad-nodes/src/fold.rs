@@ -708,7 +708,8 @@ struct Splitting {
     from: String,
     to: String,
     spans: Vec<String>,
-    line: Line,
+    /// None for a stub: it places by its envelope and leaves no line.
+    line: Option<Line>,
 }
 
 /// A `node.unrelated` row while folding: what lineage it leaves.
@@ -869,6 +870,19 @@ fn absorbing(rows: &[Row], bodies: &BTreeMap<String, Value>) -> Absorbing {
         if row.kind != "node.absorbed" {
             continue;
         }
+        // A stub still places by its envelope: where its node went, with
+        // no line of why (its body is gone).
+        if row.forgotten {
+            let (audience, from) = (row.audience.clone(), node_of(row).to_string());
+            let place = (audience.clone(), from.clone());
+            let Some(into) = row.to.as_deref().and_then(|to| to.strip_prefix("node:")) else {
+                continue;
+            };
+            if !out.into.contains_key(&place) && !out.reaches(&audience, into, &from) {
+                out.into.insert(place, (into.to_string(), at));
+            }
+            continue;
+        }
         let Some(body) = read(row) else { continue };
         // A row whose tags do not fit is passed by with the node's rows.
         if misfit(row, &body).is_some() {
@@ -970,7 +984,8 @@ pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
 }
 
 /// `nodes.retract`: a node the partner takes back from sync, on the side
-/// that keeps it, as this side folds it now.
+/// that keeps it, as this side folds it now; or (`forget`) a node the
+/// partner forgets on a home, where it shows rows it keeps.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RetractInput {
@@ -983,13 +998,18 @@ pub struct RetractInput {
     pub bodies: BTreeMap<String, Value>,
     /// This side's ledger.
     pub ledger: Vec<forget::Entry>,
+    /// Lists for a `forget` row instead: only the rows this side keeps
+    /// (`View::kept_home`), which a forget takes only when it lists them.
+    #[serde(default)]
+    pub forget: bool,
 }
 
-/// What its retract rows list.
+/// What its retract (or forget) rows list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RetractLists {
-    /// One list per `retract` row to write (`takes`), each sorted and at
+    /// One list per `retract` (or `forget`) row to write (`takes`), each
+    /// sorted and at
     /// most [`myriad_persona_log::row::MAX_RETRACT_TAKES`]; at least one,
     /// empty when nothing of another node is in it.
     pub takes: Vec<Vec<String>>,
@@ -1000,12 +1020,16 @@ pub struct RetractLists {
 /// outside them; every span or entry it holds that a split moved in; and
 /// every row of its lineage (the split that made it, a merge into it).
 /// The node's own rows are not listed: its retract reaches them by their
-/// object.
+/// object. For a forget, only the rows of these this side keeps: the rest a
+/// forget reaches through the merge or the split already.
 pub fn retract_lists(input: RetractInput) -> Result<RetractLists, NodeError> {
     crate::check_token("audience", &input.audience)?;
     crate::check_token("node", &input.node)?;
     let audience = input.audience.clone();
     let rows = input.rows.clone();
+    let for_forget = input.forget;
+    let ledger = forget::joined(&input.ledger, &forget::ledger(&rows));
+    let view = forget::View::new(&ledger);
     let folded = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
@@ -1071,6 +1095,9 @@ pub fn retract_lists(input: RetractInput) -> Result<RetractLists, NodeError> {
             continue;
         }
         let of = row.object.strip_prefix("node:").unwrap_or("");
+        if for_forget && !view.kept_home(row) {
+            continue;
+        }
         if (inside.contains(of) && !elsewhere.contains(&row.id)) || here.contains(&row.id) {
             listed.insert(row.id.clone());
         }
@@ -1149,7 +1176,9 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
     }
     // A node that went into a forgotten one is gone with it: what it held
     // was shown there. Its forget is the caller's to write, so it holds
-    // once the bodies are deleted.
+    // once the bodies are deleted. A node this side keeps is not listed
+    // while any of its rows is still kept: a forget through a merge takes
+    // none of them, only one that lists them.
     let mut reached: Vec<Reached> = Vec::new();
     for place in &places {
         if gone.contains_key(place) {
@@ -1157,10 +1186,15 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         }
         if let Some(at) = view.forgotten(&place.0, &place.1) {
             gone.insert(place.clone(), at.clone());
-            reached.push(Reached {
-                audience: place.0.clone(),
-                target: place.1.clone(),
-            });
+            let keeps = rows
+                .iter()
+                .any(|row| row.audience == place.0 && row.object == place.1 && view.kept_home(row));
+            if !keeps {
+                reached.push(Reached {
+                    audience: place.0.clone(),
+                    target: place.1.clone(),
+                });
+            }
         }
     }
     // Taken back from sync: the sides that wrote a retract reaching it.
@@ -1243,6 +1277,21 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
             let time = micros(row);
             first = Some(first.map_or(time, |known| known.min(time)));
             last = Some(last.map_or(time, |known| known.max(time)));
+            // A split's stub still moves what its envelope names.
+            if row.forgotten
+                && row.kind == "node.split_off"
+                && let Some(to) = row.to.as_deref().and_then(|to| to.strip_prefix("node:"))
+                && to != id
+            {
+                splits.push(Splitting {
+                    at,
+                    audience: audience.to_string(),
+                    from: id.to_string(),
+                    to: to.to_string(),
+                    spans: row.takes.clone(),
+                    line: None,
+                });
+            }
             if row.forgotten || !crate::body::READ.contains(&row.kind.as_str()) {
                 continue;
             }
@@ -1563,7 +1612,13 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                         from: id.to_string(),
                         to: to.clone(),
                         spans: body.spans,
-                        line: line(LineEvent::SplitOff, &to, None, &body.reason, &body.because),
+                        line: Some(line(
+                            LineEvent::SplitOff,
+                            &to,
+                            None,
+                            &body.reason,
+                            &body.because,
+                        )),
                     });
                 }
                 Body::Absorbed(body) => {
@@ -1658,6 +1713,21 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         .collect();
     let is_gone =
         |audience: &str, id: &str| gone.contains(&(audience.to_string(), format!("node:{id}")));
+    // Gone because forgotten, not only taken back elsewhere: what ends there
+    // goes with it. What ends on a node taken back elsewhere is not reached
+    // by its retract (only what the retract names is): it is not shown, and
+    // its body stays.
+    let is_forgotten = |audience: &str, id: &str| {
+        let place = (audience.to_string(), format!("node:{id}"));
+        gone.contains(&place) && !away_here.contains(&place)
+    };
+    // A row this side keeps (its own retract reaches it) is never stubbed by
+    // where the fold puts it: only a forget that names it takes it.
+    let kept = |row: &str| {
+        position
+            .get(row)
+            .is_some_and(|&at| view.kept_home(&rows[at]))
+    };
 
     // Splits and merges, in log order, move each span from where it is at
     // that point: a split takes the spans it names that are on the node
@@ -1719,14 +1789,22 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                 }
                 if is_gone(&split.audience, &split.to) {
                     // The part was forgotten: what she said of it goes too.
-                    stubbed.push(split.line.row);
+                    if let Some(line) = split.line
+                        && is_forgotten(&split.audience, &split.to)
+                        && !kept(&line.row)
+                    {
+                        stubbed.push(line.row);
+                    }
                     continue;
                 }
-                let mut line = split.line.clone();
+                let Some(split_line) = split.line else {
+                    continue;
+                };
+                let mut line = split_line.clone();
                 line.event = LineEvent::SplitFrom;
                 line.other = split.from.clone();
                 lines_for.push(((split.audience.clone(), split.to.clone()), line));
-                nodes[from].lineage.push(split.line);
+                nodes[from].lineage.push(split_line);
             }
         }
     }
@@ -1743,7 +1821,11 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                 .unwrap_or_else(|| id.clone());
             let last = end(&went, &audience, &now);
             if is_gone(&audience, &now) || is_gone(&audience, &last) {
-                stubbed.push(span.row);
+                if (is_forgotten(&audience, &now) || is_forgotten(&audience, &last))
+                    && !kept(&span.row)
+                {
+                    stubbed.push(span.row);
+                }
                 continue;
             }
             match here.get(&(audience.clone(), last)) {

@@ -71,7 +71,10 @@
 //! `sync`, or `read` refuses the call) and names no node but the ones this
 //! side keeps. A shared run is never shown one, so never merges into it: a
 //! preference, not a rule of the log (a merge of a node with stubs in it is
-//! harmless, and a retract never reaches through one).
+//! harmless, and a retract never reaches through one). Nor is a shared run
+//! shown a span or an entry any retract reaches, wherever the fold shows it
+//! (split off into a node not taken back, or in a node it went into since),
+//! so nothing the home keeps goes into shared text.
 //!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) so the queue moves
@@ -79,7 +82,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use myriad_persona_log::row::Author;
+use myriad_persona_log::{forget, row::Author};
 use myriad_persona_sync::{Rev, canonical::sha256_hex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -613,6 +616,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     check_token("audience", &audience)?;
     myriad_persona_log::row::Audience::parse(&audience)
         .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
+    let ledger = forget::joined(&input.ledger, &forget::ledger(&input.rows));
     let full = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
@@ -640,6 +644,21 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     // A run on a node taken back from sync (on its home) is local; a shared
     // one is never shown such a node.
     let local = at.is_some_and(|at| !full.folded.nodes[at].retracted.is_empty());
+    // Nor is a shared run shown a span or an entry a retract reaches,
+    // wherever the fold shows it (split off into a node not taken back, or
+    // in one the node went into since): what the home keeps goes into no
+    // shared text. A local run sees them.
+    let view = forget::View::new(&ledger);
+    let by_id: BTreeMap<&str, &myriad_persona_log::Row> =
+        full.rows.iter().map(|row| (row.id.as_str(), row)).collect();
+    let withdrawn = |row: &str| {
+        !local
+            && by_id.get(row).is_some_and(|row| {
+                view.reaching(row)
+                    .iter()
+                    .any(|entry| entry.is_retract() || entry.kind == forget::Kind::Home)
+            })
+    };
     // Every candidate is a node of this audience in the rows: one from
     // another audience is never shown, and is the caller's mistake.
     let candidates = input
@@ -665,25 +684,31 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         kept_node = Some(kept(node));
         // Its newest spans and entries, shown oldest first.
         (spans, span_labels) = newest(
-            node.spans.iter().map(|span| {
-                (
-                    span.row.as_str(),
-                    span.said_by.as_slice(),
-                    span.text.as_str(),
-                )
-            }),
+            node.spans
+                .iter()
+                .filter(|span| !withdrawn(&span.row))
+                .map(|span| {
+                    (
+                        span.row.as_str(),
+                        span.said_by.as_slice(),
+                        span.text.as_str(),
+                    )
+                }),
             "s",
             UPKEEP_SPANS,
             UPKEEP_TOTAL_CHARS,
         );
         (entries, entry_labels) = newest(
-            node.entries.iter().map(|entry| {
-                (
-                    entry.row.as_str(),
-                    entry.said_by.as_slice(),
-                    entry.text.as_str(),
-                )
-            }),
+            node.entries
+                .iter()
+                .filter(|entry| !withdrawn(&entry.row))
+                .map(|entry| {
+                    (
+                        entry.row.as_str(),
+                        entry.said_by.as_slice(),
+                        entry.text.as_str(),
+                    )
+                }),
             "e",
             UPKEEP_ENTRIES,
             UPKEEP_ENTRIES_TOTAL_CHARS,

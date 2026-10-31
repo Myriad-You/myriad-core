@@ -141,7 +141,21 @@ fn is_false(value: &bool) -> bool {
 
 /// [`answer`], for the side that is `holder`: a side that may not hold the
 /// audience gets nothing ([`crate::holder`]).
+///
+/// Only for a log of rows from before ABI 2: a row that names another node
+/// (`to`, `takes`) or a retract is refused, for what such a log sends
+/// depends on this side's ledger (stubs of what it forgot or took back)
+/// and on the other side's ABI, which `nodes.wire_send` weighs and this
+/// does not.
 pub fn answer_to(rows: &[Row], theirs: &Vector, holder: &Holder) -> Result<Answered, LogError> {
+    if rows
+        .iter()
+        .any(|row| row.to.is_some() || !row.takes.is_empty() || row.rule() == crate::Rule::Retract)
+    {
+        return Err(LogError::new(
+            "a row names another node or is a retract: it goes by nodes.wire_send",
+        ));
+    }
     holder.check()?;
     one_audience(rows)?;
     if rows.first().is_some_and(|row| !holder.holds(&row.audience)) {

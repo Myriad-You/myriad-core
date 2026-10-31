@@ -20,6 +20,10 @@ const FILE: &[u8] = include_bytes!("../../../myriad-persona-sync/fixtures/archiv
 const INPUTS: &[u8] = include_bytes!("../../../myriad-persona-sync/fixtures/archive/inputs.json");
 const MANIFEST: &[u8] =
     include_bytes!("../../../myriad-persona-sync/fixtures/archive/manifest.json");
+const HOME_FILE: &[u8] =
+    include_bytes!("../../../myriad-persona-sync/fixtures/archive/home.her-archive");
+const HOME_INPUTS: &[u8] =
+    include_bytes!("../../../myriad-persona-sync/fixtures/archive/home-inputs.json");
 
 fn b64(bytes: &[u8]) -> String {
     base64::engine::general_purpose::STANDARD.encode(bytes)
@@ -89,7 +93,19 @@ fn open_stream(file: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
 
 #[test]
 fn the_golden_file_seals_from_its_inputs_through_the_core() {
-    let inputs = inputs();
+    seals_through_the_core(FILE, inputs());
+}
+
+/// A home's file too: its header's `home` comes from the fields given.
+#[test]
+fn the_golden_home_file_seals_through_the_core_and_its_home_part_reads_on_a_pc() {
+    seals_through_the_core(HOME_FILE, serde_json::from_slice(HOME_INPUTS).unwrap());
+    let (header, _) = header_of(HOME_FILE);
+    assert_eq!(header["home"], true);
+}
+
+/// Seals `inputs` through the C entry point and checks it is `golden`.
+fn seals_through_the_core(golden: &[u8], inputs: Value) {
     let made = ok(
         "sync.archive_seal",
         json!({
@@ -102,7 +118,7 @@ fn the_golden_file_seals_from_its_inputs_through_the_core() {
     // The golden file is in 1 KiB chunks; a writer's own are 1 MiB.
     assert_eq!(header["chunkBytes"], 1 << 20);
     header["chunkBytes"] = inputs["chunkBytes"].clone();
-    let (golden_header, offset) = header_of(FILE);
+    let (golden_header, offset) = header_of(golden);
     assert_eq!(header, golden_header);
     let (_, key) = key_for(inputs["passphrase"].as_str().unwrap(), &header);
     let mut stream = Vec::new();
@@ -111,7 +127,7 @@ fn the_golden_file_seals_from_its_inputs_through_the_core() {
         stream.extend(unb64(&head["head"]));
         stream.extend(unhex(part["payload"].as_str().unwrap()));
     }
-    let mut file = FILE[..offset].to_vec();
+    let mut file = golden[..offset].to_vec();
     let size = header["chunkBytes"].as_u64().unwrap() as usize;
     let pieces: Vec<&[u8]> = stream.chunks(size).collect();
     // A stream that fills its last chunk exactly ends on an empty one.
@@ -132,7 +148,7 @@ fn the_golden_file_seals_from_its_inputs_through_the_core() {
         file.extend(unb64(&sealed["sealed"]));
     }
     assert!(
-        file == FILE,
+        file == golden,
         "the core sealed other bytes than the golden file"
     );
 }

@@ -62,6 +62,8 @@ pub(super) fn missing(raw: &[u8]) -> Result<Value, Failure> {
 
 /// `{rows, theirs, holder}` → `{rows, notHeld?}`: what to send a side
 /// holding `theirs`; nothing to a side that may not hold the audience.
+/// Only for a log from before ABI 2: rows that name another node (`to`,
+/// `takes`) or a retract are refused, and go by `nodes.wire_send`.
 pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -88,6 +90,8 @@ pub(super) fn merge(raw: &[u8]) -> Result<Value, Failure> {
     answer(&merge_rows(input(raw)?).map_err(refused)?)
 }
 
+/// `{rows, leases?, ledger?}` → `{objects, standing?}`: the ledger is this
+/// side's, as `nodes.fold` takes it.
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(input(raw)?).map_err(refused)?)
 }

@@ -663,8 +663,96 @@ impl ArchiveSample {
 #[test]
 fn the_golden_archive_is_what_its_inputs_seal_to() {
     let sample = archive_sample();
+    let file = golden_archive(&sample, "archive/inputs.json", "archive/her.her-archive");
+    let opened = archive::open(sample.passphrase, &file, false).unwrap();
+    assert_eq!(opened.header, sample.header);
+    golden(
+        "archive/manifest.json",
+        &canonical_bytes(&serde_json::to_value(&opened.manifest).unwrap()),
+    );
+    assert_eq!(opened.envelopes.len(), 1);
+    assert_eq!(opened.assets.len(), 2);
+}
+
+/// A home's own backup: its header says it holds a home's pages (`home`),
+/// and only a computer of the partner's opens it. Its page says why a row
+/// goes without its body (`withheld`), and the manifest counts that too.
+#[test]
+fn the_golden_home_archive_opens_only_on_a_computer_of_the_partners() {
+    use archive::{ArchiveHeader, HeaderFields, Manifest, Part};
+    let row = |id: &str| {
+        json!({
+            "version": 1, "id": id, "origin": "dev_mac", "author": "her", "epoch": 1,
+            "dseq": 1, "hlc": "001760000000000-000000-dev_mac", "audience": "personal:7",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266", "kind": "node.span",
+            "payload": { "ref": format!("doc:{id}") }, "replicate": "shared",
+        })
+    };
+    let page = json!({
+        "audience": "personal:7",
+        "rows": [row("h1"), row("h2")],
+        "payloads": [{ "ref": "doc:h1", "data": "e30=" }],
+        "withheld": [{ "id": "h2", "why": "secret" }],
+    });
+    let bytes = canonical_bytes(&page);
+    let manifest = Manifest::of(&[], &[], &[])
+        .unwrap()
+        .with_home(std::slice::from_ref(&page), true)
+        .unwrap();
+    let mut header = ArchiveHeader::new(
+        &[0x33; archive::SALT_BYTES],
+        &[0x44; archive::NONCE_PREFIX_BYTES],
+        HeaderFields {
+            lineage: None,
+            epoch: None,
+            origin: "dev_mac".into(),
+            created_at: 1_760_000_000_654_321,
+            digest: manifest.digest.clone(),
+            logs: false,
+            home: true,
+            partner: None,
+        },
+    )
+    .unwrap();
+    header.chunk_bytes = 1024;
+    let sample = ArchiveSample {
+        passphrase: SAMPLE_PASSPHRASE,
+        header,
+        parts: vec![
+            (
+                Part::Home {
+                    bytes: bytes.len() as u64,
+                },
+                bytes,
+            ),
+            (Part::End { manifest }, Vec::new()),
+        ],
+    };
+    let file = golden_archive(
+        &sample,
+        "archive/home-inputs.json",
+        "archive/home.her-archive",
+    );
+    assert!(archive::open(sample.passphrase, &file, false).is_err());
+    let opened = archive::open(sample.passphrase, &file, true).unwrap();
+    assert!(opened.header.home);
+    assert_eq!(opened.homes, std::slice::from_ref(&page));
+    // A page that says it withholds a body it carries is refused.
+    let mut wrong = page;
+    wrong["withheld"] = json!([{ "id": "h1", "why": "secret" }]);
+    assert!(
+        Manifest::of(&[], &[], &[])
+            .unwrap()
+            .with_home(&[wrong], true)
+            .is_err()
+    );
+}
+
+/// `sample` sealed, checked against (or, blessing, written to) the golden
+/// inputs and file.
+fn golden_archive(sample: &ArchiveSample, inputs_path: &str, file_path: &str) -> Vec<u8> {
     let file = sample.seal();
-    let inputs = json!({
+    let mut inputs = json!({
         "passphrase": sample.passphrase,
         "salt": sample.header.kdf.salt,
         "noncePrefix": sample.header.nonce_prefix,
@@ -681,8 +769,11 @@ fn the_golden_archive_is_what_its_inputs_seal_to() {
             "payload": crate::canonical::hex(payload),
         })).collect::<Vec<_>>(),
     });
-    golden("archive/inputs.json", &canonical_bytes(&inputs));
-    let path = fixtures().join("archive/her.her-archive");
+    if sample.header.home {
+        inputs["fields"]["home"] = json!(true);
+    }
+    golden(inputs_path, &canonical_bytes(&inputs));
+    let path = fixtures().join(file_path);
     if blessing() {
         std::fs::write(&path, &file).unwrap();
     } else {
@@ -693,12 +784,5 @@ fn the_golden_archive_is_what_its_inputs_seal_to() {
             path.display()
         );
     }
-    let opened = archive::open(sample.passphrase, &file, false).unwrap();
-    assert_eq!(opened.header, sample.header);
-    golden(
-        "archive/manifest.json",
-        &canonical_bytes(&serde_json::to_value(&opened.manifest).unwrap()),
-    );
-    assert_eq!(opened.envelopes.len(), 1);
-    assert_eq!(opened.assets.len(), 2);
+    file
 }

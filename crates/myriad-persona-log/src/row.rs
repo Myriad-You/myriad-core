@@ -28,8 +28,9 @@ pub const MAX_TOKEN_BYTES: usize = 512;
 
 /// The most spans one split moves (`takes`): as many as its body names.
 pub const MAX_TAKES: usize = 64;
-/// The most rows one retract lists (`takes`): a node placed more rows of
-/// other nodes than this is taken back in several retract rows.
+/// The most rows one retract or forget lists (`takes`): a node placed more
+/// rows of other nodes than this is taken back in several retract rows, and
+/// a home that showed more kept rows in a node forgets it in several rows.
 pub const MAX_RETRACT_TAKES: usize = 256;
 
 /// Who wrote a row. Her rows come only from the holder of the lease; the
@@ -110,7 +111,9 @@ pub struct Row {
     pub to: Option<String>,
     /// A `node.split_off`'s spans: the ids of the rows it moves to `to`,
     /// sorted. A `retract`'s rows: those of other nodes its writer's fold
-    /// placed in the node it takes back, sorted ([`crate::forget`]).
+    /// placed in the node it takes back, sorted. A `forget` written on a
+    /// home: the rows it keeps that its fold showed in the node forgotten
+    /// ([`crate::forget`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub takes: Vec<String>,
 }
@@ -305,7 +308,9 @@ impl Row {
     /// moves: no node row was written before envelopes held them.
     fn check_names(&self) -> Result<(), LogError> {
         let names = kinds::names(&self.kind);
-        let retract = self.rule() == kinds::Rule::Retract;
+        // A retract lists what it reaches; a forget, the kept rows a home
+        // showed in the node.
+        let lists = matches!(self.rule(), kinds::Rule::Retract | kinds::Rule::Forget);
         if names != kinds::Names::None && self.to.is_none() {
             return Err(LogError::new(format!(
                 "a {} row names the other node (to)",
@@ -330,17 +335,13 @@ impl Row {
                 return Err(LogError::new("to is another node than the row's own"));
             }
         }
-        if names != kinds::Names::Split && !retract && !self.takes.is_empty() {
+        if names != kinds::Names::Split && !lists && !self.takes.is_empty() {
             return Err(LogError::new(format!(
                 "a {} row lists no rows (takes)",
                 self.kind
             )));
         }
-        let most = if retract {
-            MAX_RETRACT_TAKES
-        } else {
-            MAX_TAKES
-        };
+        let most = if lists { MAX_RETRACT_TAKES } else { MAX_TAKES };
         if self.takes.len() > most {
             return Err(LogError::new(format!("takes holds at most {most} rows")));
         }
