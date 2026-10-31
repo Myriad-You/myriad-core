@@ -1825,6 +1825,411 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "held": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "retract",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "page": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4h",
+              "kind": "retract.home",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "local",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "retract",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "c2",
+              "why": "secret"
+            }
+          ]
+        }
+      },
+      "name": "two homes: a row held whole that the page brings without its body stays as held",
+      "output": {
+        "bodies": {
+          "c1": {
+            "key": "minted:release",
+            "kind": "task",
+            "name": "发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "ledger": [
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "kind": "home",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4h",
+            "kind": "retract.home",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "retract",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "held": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4h",
+            "kind": "retract.home",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "retract",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "page": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4h",
+              "kind": "retract.home",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "local",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "retract",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "name": "a home taking its own file back: a row it holds whole, its body not in the page, stays as held",
+      "output": {
+        "bodies": {
+          "c1": {
+            "key": "minted:release",
+            "kind": "task",
+            "name": "发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "ledger": [
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "kind": "home",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4h",
+            "kind": "retract.home",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "retract",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
     }
   ],
   "version": 1

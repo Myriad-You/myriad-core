@@ -3613,6 +3613,119 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "c1": {
+            "key": "minted:release",
+            "kind": "task",
+            "name": "发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "c2": {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发版。",
+            "version": 1
+          },
+          "c3": {
+            "key": "minted:other",
+            "kind": "topic",
+            "name": "别的事",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 1,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "c3",
+            "kind": "node.created",
+            "object": "node:4de5b8e4e22c63a1d543ebb36579613d",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "forget",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1,
+            "takes": [
+              "x1"
+            ]
+          }
+        ]
+      },
+      "name": "a side whose core is ABI 1 gets nothing while a forget that lists rows would go to it",
+      "output": {
+        "batches": [],
+        "tooOld": true
+      }
     }
   ],
   "version": 1

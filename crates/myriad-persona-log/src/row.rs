@@ -112,8 +112,10 @@ pub struct Row {
     /// A `node.split_off`'s spans: the ids of the rows it moves to `to`,
     /// sorted. A `retract`'s rows: those of other nodes its writer's fold
     /// placed in the node it takes back, sorted. A `forget` written on a
-    /// home: the rows it keeps that its fold showed in the node forgotten
-    /// ([`crate::forget`]).
+    /// home: the rows it keeps that its fold showed in the node forgotten,
+    /// sorted; they count only from a home of a retract that reaches them,
+    /// and `log.admit` refuses one from a side that wrote no retract in its
+    /// audience ([`crate::forget`]).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub takes: Vec<String>,
 }

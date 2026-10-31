@@ -287,6 +287,8 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ("a retract listing more than 256 rows", "at most 256 rows"),
         ("a retract's home with a list", "lists no rows"),
         ("a retract naming another node", "names no other node"),
+        ("a forget's list out of order", "takes is sorted"),
+        ("a forget listing more than 256 rows", "at most 256 rows"),
     ];
     let file: Value = serde_json::from_slice(
         &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),
@@ -407,7 +409,7 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
         let mut held: Vec<Row> = Vec::new();
         for one in order {
             held = merge(MergeInput {
-                ledger: None,
+                ledger: Vec::new(),
                 log: held,
                 incoming: vec![one],
             })
@@ -436,13 +438,13 @@ fn merging_is_a_union_in_any_order() {
         owner(row("b2", "site", 2, 250, "memory:x", "memory.write")),
     ];
     let ab = merge(MergeInput {
-        ledger: None,
+        ledger: Vec::new(),
         log: a.clone(),
         incoming: b.clone(),
     })
     .unwrap();
     let ba = merge(MergeInput {
-        ledger: None,
+        ledger: Vec::new(),
         log: b.clone(),
         incoming: a.clone(),
     })
@@ -451,7 +453,7 @@ fn merging_is_a_union_in_any_order() {
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
     let again = merge(MergeInput {
-        ledger: None,
+        ledger: Vec::new(),
         log: ab.log.clone(),
         incoming: b,
     })
@@ -505,7 +507,7 @@ fn what_one_side_answers_fills_the_other() {
     .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
-        ledger: None,
+        ledger: Vec::new(),
         log: site,
         incoming: admitted.accepted,
     })

@@ -23,12 +23,10 @@ pub struct MergeInput {
     /// Rows already through [`crate::admit`].
     pub incoming: Vec<Row>,
     /// This side's ledger ([`crate::forget`]): the forgets, retracts, homes
-    /// and names held here that the rows given may not show. Required
-    /// whenever `log` is not the whole log, and refused without when a
-    /// retract is in the rows: a home never loses its node to a call that
-    /// did not say what it keeps.
-    #[serde(default)]
-    pub ledger: Option<Vec<forget::Entry>>,
+    /// and names held here that the rows given may not show. Always given
+    /// (empty when there is none): a later batch without the retract never
+    /// stubs a row a home keeps.
+    pub ledger: Vec<forget::Entry>,
 }
 
 /// Why an incoming row was not taken. Either means a side broke the format
@@ -87,7 +85,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         ));
     }
     let ledger = forget::given(
-        ledger.as_deref(),
+        Some(&ledger),
         &[log.as_slice(), incoming.as_slice()].concat(),
     )?;
     let view = forget::View::new(&ledger);

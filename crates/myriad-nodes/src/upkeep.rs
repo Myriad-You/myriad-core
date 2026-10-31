@@ -68,8 +68,9 @@
 //! A node taken back from sync (撤回同步) is out of shared upkeep on every
 //! side. Only its home folds it whole, and there a run on it writes local
 //! rows only (`local` in what is prepared: the caller passes a local
-//! `sync`, or `read` refuses the call) and names no node but the ones this
-//! side keeps. A shared run is never shown one, so never merges into it: a
+//! `sync`, or `read` refuses the call), names no node but the ones this
+//! side keeps, and makes none (`create` and `split` are `not_allowed`: a
+//! node it made would have local rows and no retract). A shared run is never shown one, so never merges into it: a
 //! preference, not a rule of the log (a merge of a node with stubs in it is
 //! harmless, and a retract never reaches through one). Nor is a shared run
 //! shown a span or an entry any retract reaches, wherever the fold shows it
@@ -1409,6 +1410,12 @@ impl<'a> Reader<'a> {
             .and_then(Value::as_str)
             .ok_or(Fallback::UnknownAction)?;
         match what.trim() {
+            // A local run makes no node: one it made would have local rows
+            // and no retract, and a shared run could then use it or merge
+            // into it, pointing at a node no other side has.
+            "create" | "split" if self.context.prepared.local => {
+                return Err(Fallback::NotAllowed);
+            }
             "create" => {
                 self.mint(action)?;
             }
