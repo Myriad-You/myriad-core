@@ -113,11 +113,8 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     let mut places: BTreeMap<(String, String, u64), String> = BTreeMap::new();
     let mut held_payload = Vec::new();
     for row in log {
-        if let (Replicate::Shared, Some(dseq)) = (row.replicate, row.dseq) {
-            places.insert(
-                (row.audience.clone(), row.origin.clone(), dseq),
-                row.id.clone(),
-            );
+        if let Some(at) = place(&row) {
+            places.insert(at, row.id.clone());
         }
         if !row.forgotten {
             held_payload.push(row.id.clone());
@@ -148,26 +145,39 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
                 }
             } else if held.forgotten
                 && !crate::forget::on_ledger(&row)
-                && moved
-                    .as_ref()
-                    .is_some_and(|by| crate::partner::row(held, by).is_stub_of(&row))
+                && moved.as_ref().is_some_and(|by| {
+                    let held = crate::partner::row(held, by);
+                    held.is_stub_of(&row) || held == row
+                })
             {
                 // A stub held back under `local-owner`, and the same row
-                // moved to this side's id: it fills the stub.
+                // moved to this side's id: whole, it fills the stub;
+                // forgotten there too, the stub takes its envelope, so both
+                // sides hold one row. Either way the row stands in its moved
+                // place, which no other row may hold.
+                let before = place(held);
+                if let Some(other) = place(&row)
+                    .and_then(|at| places.get(&at))
+                    .filter(|other| **other != row.id)
+                {
+                    conflicts.push(Conflict {
+                        id: row.id.clone(),
+                        clash: Clash::SamePlace,
+                        with: Some(other.clone()),
+                    });
+                    continue;
+                }
+                if let Some(before) = before.filter(|at| places.get(at) == Some(&row.id)) {
+                    places.remove(&before);
+                }
+                if let Some(at) = place(&row) {
+                    places.insert(at, row.id.clone());
+                }
                 duplicates += 1;
-                filled.push(row.id.clone());
-                by_id.insert(row.id.clone(), row);
-            } else if held.forgotten
-                && row.forgotten
-                && !crate::forget::on_ledger(&row)
-                && moved
-                    .as_ref()
-                    .is_some_and(|by| crate::partner::row(held, by) == row)
-            {
-                // The same, but forgotten there too: the stub takes the
-                // moved envelope, so both sides hold one row.
-                duplicates += 1;
-                relabelled.push(row.id.clone());
+                match row.forgotten {
+                    true => relabelled.push(row.id.clone()),
+                    false => filled.push(row.id.clone()),
+                }
                 by_id.insert(row.id.clone(), row);
             } else {
                 conflicts.push(Conflict {
@@ -178,9 +188,8 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
             }
             continue;
         }
-        if let (Replicate::Shared, Some(dseq)) = (row.replicate, row.dseq) {
-            let place = (row.audience.clone(), row.origin.clone(), dseq);
-            if let Some(other) = places.get(&place) {
+        if let Some(at) = place(&row) {
+            if let Some(other) = places.get(&at) {
                 conflicts.push(Conflict {
                     id: row.id.clone(),
                     clash: Clash::SamePlace,
@@ -188,7 +197,7 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
                 });
                 continue;
             }
-            places.insert(place, row.id.clone());
+            places.insert(at, row.id.clone());
         }
         added.push(row.id.clone());
         by_id.insert(row.id.clone(), row);
@@ -220,4 +229,13 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         duplicates,
         conflicts,
     })
+}
+
+/// Where a shared row stands: its audience, its side and that side's count
+/// there. No two rows stand in one place.
+fn place(row: &Row) -> Option<(String, String, u64)> {
+    match (row.replicate, row.dseq) {
+        (Replicate::Shared, Some(dseq)) => Some((row.audience.clone(), row.origin.clone(), dseq)),
+        _ => None,
+    }
 }
