@@ -24,7 +24,15 @@
 //! A move is the same whether it runs once or again after it was cut off:
 //! rows already under the new id are left as they are. A body the core
 //! cannot read is never changed; its row is listed (`unread`) so the host
-//! can see what may still name `local-owner`.
+//! can see what may still name `local-owner`. A body the core keeps opaque
+//! is not read either: a `case.*` payload (a judged case, 判过的事) goes as
+//! it is, and the host moves any id of the partner's inside it itself.
+//!
+//! The host writes a move in one transaction where it can. Where it
+//! cannot, it sets `here.moving` before the first write and clears it after
+//! the last; the id, `linked`, and clearing `filed` are saved last, so a
+//! move cut off anywhere is taken up again by the next link
+//! (`myriad_persona_log::partner::link`).
 
 use std::collections::BTreeMap;
 
@@ -62,7 +70,8 @@ pub struct MigrateInput {
 
 /// Two rows that land on one place: the same side's same count in one
 /// audience. A side wrote under two of the partner's ids with one count,
-/// which moving cannot mend; the first in log order stays.
+/// which moving cannot mend; the first in log order stays, and the later
+/// one (`id`) is left out of what is returned: rows, bodies and `moved`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Clash {
@@ -73,7 +82,7 @@ pub struct Clash {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Migrated {
-    /// Every row, moved, in log order.
+    /// Every row, moved, in log order, but the later of each clash.
     pub rows: Vec<Row>,
     /// Every body given, moved (the same when nothing in it named the
     /// partner).
@@ -190,6 +199,12 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
             }
         }
     }
+    let dropped: std::collections::BTreeSet<String> =
+        clashes.iter().map(|clash| clash.id.clone()).collect();
+    out.retain(|row| !dropped.contains(&row.id));
+    bodies.retain(|id, _| !dropped.contains(id));
+    moved.retain(|id| !dropped.contains(id));
+    unread.retain(|id| !dropped.contains(id));
     moved.sort();
     moved.dedup();
     unread.sort();

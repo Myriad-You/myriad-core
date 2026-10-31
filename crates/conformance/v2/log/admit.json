@@ -607,12 +607,12 @@
       "input": {
         "holder": {
           "core": "pc",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000000000000,
         "rows": [
           {
-            "audience": "personal:o1",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 1,
             "epoch": 1,
@@ -676,7 +676,7 @@
             "version": 1
           },
           {
-            "audience": "personal:o1,o2",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444,o2",
             "author": "her",
             "dseq": 1,
             "epoch": 1,
@@ -697,7 +697,7 @@
       "output": {
         "accepted": [
           {
-            "audience": "personal:o1",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 1,
             "epoch": 1,
@@ -733,7 +733,7 @@
           "own:": {
             "site": 1
           },
-          "personal:o1": {
+          "personal:partner_0199d5c0b00044444444444444444444": {
             "site": 1
           }
         },
@@ -2215,6 +2215,284 @@
           }
         },
         "ledger": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "acct_7"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:9",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "o-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:o-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: a server whose owner is not a partner id (an account id)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "acct_7"
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "o-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:o-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: a computer whose owner is neither a partner id nor local-owner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "members": {
+          "group:g1": [
+            "partner_0199d5c0b00044444444444444444444",
+            "partner_0199d5c0a00022222222222222222222",
+            "9"
+          ]
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:9,partner_0199d5c0a00022222222222222222222",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:9,local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:9,partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-4",
+            "kind": "memory.write",
+            "object": "memory:g-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-4"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0a00022222222222222222222",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-5",
+            "kind": "memory.write",
+            "object": "memory:g-2",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-5"
+            },
+            "replicate": "shared",
+            "subject": "local-owner",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-6",
+            "kind": "memory.write",
+            "object": "memory:g-3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-6"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0b00044444444444444444444",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-7",
+            "kind": "memory.write",
+            "object": "memory:g-4",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-7"
+            },
+            "replicate": "shared",
+            "subject": "9",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused on the server: a private audience of several with another partner id or local-owner in it, and a subject naming another partner id (not_held)",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:9,partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-3",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-6",
+            "kind": "memory.write",
+            "object": "memory:g-3",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-6"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0b00044444444444444444444",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "m-7",
+            "kind": "memory.write",
+            "object": "memory:g-4",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-7"
+            },
+            "replicate": "shared",
+            "subject": "9",
+            "version": 1
+          }
+        ],
+        "epochs": {
+          "group:g1": {
+            "dev_mac": 1
+          },
+          "personal:9,partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "refused": [
+          {
+            "id": "m-1",
+            "reason": "not_held"
+          },
+          {
+            "id": "m-4",
+            "reason": "not_held"
+          },
+          {
+            "id": "m-2",
+            "reason": "not_held"
+          },
+          {
+            "id": "m-5",
+            "reason": "not_held"
+          }
+        ]
       }
     }
   ],

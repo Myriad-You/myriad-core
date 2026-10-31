@@ -24,8 +24,11 @@
 //!   holds talk that may be someone else's under `local-owner` too: its
 //!   link asks first ([`Linked::confirm`]; the coordinator's decision,
 //!   2026-10-31). A move cut off half way is taken up again: a side that
-//!   still holds `personal:local-owner` moves from it, whatever id it goes
-//!   by already. A Mac that never linked stays `local-owner`.
+//!   still holds `personal:local-owner`, or says it is moving
+//!   ([`Here::moving`]: set before the first write of a move, cleared after
+//!   the last), moves from it, whatever id it goes by already. A side that
+//!   holds the talk of another partner id than the link's is refused: it
+//!   would go by two ids. A Mac that never linked stays `local-owner`.
 //! - **Files** ([`file`]) never change or add an id. A file is taken when
 //!   the partner id in its header is this side's. A side with no id yet
 //!   (still `local-owner`) that holds no row of a `personal:` audience or of
@@ -34,9 +37,10 @@
 //!   partner in its header (its pages under `local-owner`) only onto such a
 //!   side, as it is. Anything else is refused: a side that took an id never
 //!   takes another file's, and a side with an id never takes pages under
-//!   `local-owner`. So a Mac that holds anything and never linked cannot
-//!   take another unlinked Mac's file: link both, or import onto an empty
-//!   Mac. The header's id is in the clear: it guards against a mix-up (the
+//!   `local-owner`, nor a side that holds another partner id's talk the
+//!   file of its own id. So a Mac that holds anything and never linked
+//!   cannot take another unlinked Mac's file: link both, or import onto an
+//!   empty Mac. The header's id is in the clear: it guards against a mix-up (the
 //!   wrong file, the wrong Mac), not against anyone; it authenticates
 //!   nothing.
 //! - **Nobody else's partner talk** (`crate::Holder::holds`): no side, the
@@ -129,10 +133,17 @@ pub struct Here {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub audiences: Vec<String>,
     /// This side took a file from before (no partner in its header) while
-    /// it was empty ([`Filed::filed`]), and has not linked since: what it
-    /// holds under `local-owner` may be another account's partner's.
+    /// it was empty ([`Filed::filed`]): what it holds under `local-owner`
+    /// may be another account's partner's. Kept until its move from
+    /// `local-owner` has finished, or the side is started empty.
     #[serde(default, skip_serializing_if = "is_false")]
     pub filed: bool,
+    /// A move from `local-owner` is under way: set before its first write,
+    /// cleared after its last. While it is set, [`link`] moves again, so a
+    /// move cut off after the partner's talk but before her own rows or the
+    /// ledger is finished.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub moving: bool,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -156,6 +167,16 @@ impl Here {
         self.audiences
             .iter()
             .any(|audience| audience.strip_prefix("personal:") == Some(LEGACY))
+    }
+
+    /// Whether this side holds the private talk of a partner id other than
+    /// `id`: it would go by two ids.
+    fn holds_another(&self, id: &str) -> bool {
+        self.audiences.iter().any(|audience| {
+            audience
+                .strip_prefix("personal:")
+                .is_some_and(|member| member != id && check(member).is_ok())
+        })
     }
 
     /// Whether this side holds nothing of the partner's or hers: no row of
@@ -191,15 +212,21 @@ pub struct Linked {
 /// The site's id for the partner, as it comes over the authenticated link:
 /// a side still `local-owner` takes it and moves (asking first when it took
 /// a file from before while empty); a side that already goes by it has
-/// nothing to do, but a move it did not finish; a side that goes by another
-/// (linked, or taken from a file) is refused, and may be started empty to
-/// link.
+/// nothing to do, but a move it did not finish (rows left under
+/// `local-owner`, or [`Here::moving`] still set); a side that goes by
+/// another (linked, or taken from a file), or holds another partner id's
+/// talk, is refused, and may be started empty to link.
 pub fn link(here: &Here, theirs: &str) -> Result<Linked, LogError> {
     here.check()?;
     check(theirs)?;
+    if here.holds_another(theirs) {
+        return Err(LogError::new(
+            "this side holds another partner id's talk: start it empty to link",
+        ));
+    }
     let from = match &here.id {
         None => Some(LEGACY.to_string()),
-        Some(id) if id == theirs => here.unmoved().then(|| LEGACY.to_string()),
+        Some(id) if id == theirs => (here.unmoved() || here.moving).then(|| LEGACY.to_string()),
         Some(_) => {
             return Err(LogError::new(
                 "this side goes by another partner id: start it empty to link",
@@ -224,7 +251,8 @@ pub struct Filed {
     #[serde(skip_serializing_if = "is_false")]
     pub adopt: bool,
     /// A file from before taken onto an empty side, as it is: keep
-    /// [`Here::filed`] set until this side links.
+    /// [`Here::filed`] set until this side's move from `local-owner` has
+    /// finished, or it is started empty.
     #[serde(skip_serializing_if = "is_false")]
     pub filed: bool,
 }
@@ -239,6 +267,11 @@ pub fn file(here: &Here, header: Option<&str>) -> Result<Filed, LogError> {
         check(header)?;
     }
     let mine = here.id.as_deref().unwrap_or(LEGACY);
+    if here.holds_another(mine) {
+        return Err(LogError::new(
+            "this side holds another partner id's talk than its own",
+        ));
+    }
     if header.is_some() && id == mine {
         return Ok(Filed {
             id: id.to_string(),
@@ -371,6 +404,7 @@ mod tests {
             linked,
             audiences: audiences.iter().map(|one| one.to_string()).collect(),
             filed: false,
+            moving: false,
         }
     }
 
@@ -446,10 +480,53 @@ mod tests {
                 confirm: false
             }
         );
+        // Half way through the move it still asks: `filed` stays until the
+        // move has finished.
+        let mut half = here(
+            Some(P0),
+            true,
+            &["personal:local-owner", &format!("personal:{P0}")],
+        );
+        half.filed = true;
+        assert!(link(&half, P0).unwrap().confirm);
         // The file says so when it comes in.
         let empty = here(None, false, &[]);
         assert!(file(&empty, None).unwrap().filed);
         assert!(!file(&empty, Some(PF)).unwrap().filed);
+        // A filed side takes no other file.
+        let filed = here(None, false, &["personal:local-owner", "own:"]);
+        assert!(file(&filed, None).is_err());
+        assert!(file(&filed, Some(PF)).is_err());
+    }
+
+    #[test]
+    fn a_move_cut_off_is_taken_up_again_until_the_side_says_it_is_done() {
+        // The partner's talk moved and the id was saved, but not her own
+        // rows or the ledger: no row of local-owner is left to say so, but
+        // the side says it is moving.
+        let mut cut = here(Some(P0), true, &[&format!("personal:{P0}"), "own:"]);
+        cut.moving = true;
+        assert_eq!(link(&cut, P0).unwrap().from.as_deref(), Some(LEGACY));
+        cut.moving = false;
+        assert_eq!(link(&cut, P0).unwrap().from, None);
+        // Rows moved, the id not saved yet: it moves again.
+        let unsaved = here(None, false, &[&format!("personal:{P0}"), "own:"]);
+        assert_eq!(link(&unsaved, P0).unwrap().from.as_deref(), Some(LEGACY));
+    }
+
+    #[test]
+    fn a_side_never_goes_by_two_ids() {
+        // It holds another partner id's talk: no link, and no file of its
+        // own id either.
+        let two = here(
+            Some(P0),
+            true,
+            &[&format!("personal:{P0}"), &format!("personal:{PF}")],
+        );
+        assert!(link(&two, P0).is_err());
+        assert!(file(&two, Some(P0)).is_err());
+        let unsaved = here(None, false, &[&format!("personal:{PF}")]);
+        assert!(link(&unsaved, P0).is_err());
     }
 
     #[test]

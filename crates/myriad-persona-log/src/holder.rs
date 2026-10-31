@@ -62,10 +62,17 @@ impl Holder {
             ));
         }
         // The server is the site's: its partner goes by the id it minted,
-        // never `local-owner` or an account id.
-        if self.core == Core::Server {
-            crate::partner::check(&self.owner)
-                .map_err(|_| LogError::new("the server's owner is a partner id"))?;
+        // never `local-owner` or an account id. A computer of the partner's
+        // goes by that id or, until it moves, `local-owner`.
+        match self.core {
+            Core::Server => crate::partner::check(&self.owner)
+                .map_err(|_| LogError::new("the server's owner is a partner id"))?,
+            Core::Pc if !crate::partner::is_partners(&self.owner) => {
+                return Err(LogError::new(
+                    "a computer's owner is a partner id or local-owner",
+                ));
+            }
+            _ => {}
         }
         Ok(())
     }
@@ -80,8 +87,12 @@ impl Holder {
     pub fn holds(&self, audience: &str) -> bool {
         match (self.core, Audience::parse(audience)) {
             (_, Err(_)) | (Core::Child, _) => false,
-            (_, Ok(Audience::Personal(member)))
-                if crate::partner::is_partners(member) && member != self.owner =>
+            // Nor a private audience of several people with one of those
+            // ids in it.
+            (_, Ok(Audience::Personal(members)))
+                if members
+                    .split(',')
+                    .any(|member| crate::partner::is_partners(member) && member != self.owner) =>
             {
                 false
             }
@@ -94,17 +105,18 @@ impl Holder {
     /// Whether this side may hold `row`: one of an audience it holds, and,
     /// in any audience, no object about the partner under an id this side
     /// does not go by (`subject:` or `affect:` of `local-owner` or of
-    /// another partner id): a row an unmoved computer wrote, or one about
-    /// someone else's partner, is refused, not stored beside the moved ones.
+    /// another partner id), and no such subject: a row an unmoved computer
+    /// wrote, or one about someone else's partner, is refused, not stored
+    /// beside the moved ones.
     pub fn holds_row(&self, row: &Row) -> bool {
         if !self.holds(&row.audience) {
             return false;
         }
-        !row.object.split_once(':').is_some_and(|(kind, id)| {
-            crate::partner::PERSON_OBJECTS.contains(&kind)
-                && crate::partner::is_partners(id)
-                && id != self.owner
-        })
+        let another = |id: &str| crate::partner::is_partners(id) && id != self.owner;
+        let object = row.object.split_once(':').is_some_and(|(kind, id)| {
+            crate::partner::PERSON_OBJECTS.contains(&kind) && another(id)
+        });
+        !object && !row.subject.as_deref().is_some_and(another)
     }
 }
 
@@ -112,13 +124,16 @@ impl Holder {
 mod tests {
     use super::*;
 
+    const ME: &str = "partner_0199d5c0800011111111111111111111";
+    const PF: &str = "partner_0199d5c0a00011111111111111111111";
+
     fn holder(core: Core) -> Holder {
         Holder {
             core,
             owner: if core == Core::Server {
                 SITE.into()
             } else {
-                "7".into()
+                ME.into()
             },
         }
     }
@@ -153,7 +168,7 @@ mod tests {
     #[test]
     fn a_pc_holds_the_partners_talk_and_hers_only() {
         let pc = holder(Core::Pc);
-        assert!(pc.holds("personal:7"));
+        assert!(pc.holds(&format!("personal:{ME}")));
         assert!(pc.holds("own:"));
         assert!(!pc.holds("personal:9"), "someone else's private talk");
         assert!(!pc.holds("personal:7,9"), "not the partner's alone");
@@ -183,12 +198,43 @@ mod tests {
             };
             assert!(server.check().is_err(), "{owner}");
         }
-        for owner in ["", "7,9", "7\n"] {
+        // A computer's goes by it too, or by local-owner until it moves.
+        for owner in ["", "7,9", "7\n", "7", "acct_7"] {
             let bad = Holder {
                 core: Core::Pc,
                 owner: owner.into(),
             };
             assert!(bad.check().is_err(), "{owner:?}");
         }
+        for owner in ["local-owner", ME] {
+            let good = Holder {
+                core: Core::Pc,
+                owner: owner.into(),
+            };
+            assert!(good.check().is_ok(), "{owner:?}");
+        }
+    }
+
+    #[test]
+    fn no_private_audience_of_several_holds_another_partner_id_and_no_subject_names_one() {
+        for core in [Core::Pc, Core::Server] {
+            let side = holder(core);
+            assert!(!side.holds(&format!("personal:9,{PF}")), "{core:?}");
+            assert!(!side.holds("personal:9,local-owner"), "{core:?}");
+        }
+        let site = holder(Core::Server);
+        assert!(site.holds("personal:9,10"));
+        let row = |subject: &str| -> Row {
+            serde_json::from_value(serde_json::json!({
+                "version": 1, "id": "s1", "origin": "dev_mac", "author": "owner", "dseq": 1,
+                "hlc": "001760000000000-000000-dev_mac", "audience": "group:g1",
+                "object": "memory:m1", "kind": "memory.write", "subject": subject,
+                "replicate": "shared",
+            }))
+            .unwrap()
+        };
+        assert!(site.holds_row(&row("9")));
+        assert!(!site.holds_row(&row(PF)));
+        assert!(!site.holds_row(&row("local-owner")));
     }
 }

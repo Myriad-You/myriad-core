@@ -221,7 +221,7 @@
       "input": {
         "holder": {
           "core": "pc",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "rows": [
           {
@@ -460,14 +460,14 @@
       "input": {
         "rows": [
           {
-            "audience": "personal:7",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 1,
             "epoch": 1,
             "hlc": "001760000000000-000000-dev_mac",
             "id": "a1",
             "kind": "node.created",
-            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "object": "node:9c336ff0dcd91a7736bea9c3a3eb8103",
             "origin": "dev_mac",
             "payload": {
               "ref": "doc:a1"
@@ -476,14 +476,14 @@
             "version": 1
           },
           {
-            "audience": "personal:7",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 2,
             "epoch": 1,
             "hlc": "001760000000001-000000-dev_mac",
             "id": "c1",
             "kind": "node.created",
-            "object": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "object": "node:6a89186a68c66094dcc95839120b1210",
             "origin": "dev_mac",
             "payload": {
               "ref": "doc:c1"
@@ -492,27 +492,27 @@
             "version": 1
           },
           {
-            "audience": "personal:7",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 3,
             "epoch": 1,
             "hlc": "001760000000002-000000-dev_mac",
             "id": "m1",
             "kind": "node.absorbed",
-            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "object": "node:9c336ff0dcd91a7736bea9c3a3eb8103",
             "origin": "dev_mac",
             "payload": {
               "ref": "doc:m1"
             },
             "replicate": "shared",
-            "to": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "to": "node:6a89186a68c66094dcc95839120b1210",
             "version": 1
           }
         ],
         "theirs": {},
         "holder": {
           "core": "pc",
-          "owner": "7"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         }
       },
       "name": "refused: a row naming another node (to) goes by nodes.wire_send",

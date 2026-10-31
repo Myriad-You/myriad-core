@@ -37,7 +37,7 @@ pub(super) fn mint(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "id": partner::mint(at, &random).map_err(refused)? }))
 }
 
-/// `{here: {id?, linked?, audiences?, filed?}, theirs}` → `{id, from?,
+/// `{here: {id?, linked?, audiences?, filed?, moving?}, theirs}` → `{id, from?,
 /// confirm?}`: the site's id as the link brings it, the id to move from
 /// first, and whether to ask the partner before moving.
 pub(super) fn link(raw: &[u8]) -> Result<Value, Failure> {
@@ -51,7 +51,7 @@ pub(super) fn link(raw: &[u8]) -> Result<Value, Failure> {
     answer(&partner::link(&here, &theirs).map_err(refused)?)
 }
 
-/// `{here: {id?, linked?, audiences?, filed?}, header?}` → `{id, adopt?,
+/// `{here: {id?, linked?, audiences?, filed?, moving?}, header?}` → `{id, adopt?,
 /// filed?}`: whether a file whose header names `header` (none: a file from
 /// before) comes in, and under which id.
 pub(super) fn file(raw: &[u8]) -> Result<Value, Failure> {

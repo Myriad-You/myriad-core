@@ -185,6 +185,54 @@
       "output": {
         "id": "partner_0199d5c0a00022222222222222222222"
       }
+    },
+    {
+      "input": {
+        "header": "partner_0199d5c0900033333333333333333333",
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333",
+            "personal:partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        }
+      },
+      "name": "refused: a file of this side's own id, on a side that also holds another partner id's talk",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "header": "partner_0199d5c0a00022222222222222222222",
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ],
+          "filed": true
+        }
+      },
+      "name": "refused: a filed side takes no other file of a partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ],
+          "filed": true
+        }
+      },
+      "name": "refused: a filed side takes no other file from before",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

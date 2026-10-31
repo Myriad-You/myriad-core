@@ -635,8 +635,14 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
     );
     away.extend(known_away);
-    let answered =
-        vector::answer(&rows, &theirs).map_err(|error| NodeError::new(error.to_string()))?;
+    // A row the other side would refuse (`Holder::holds_row`: about the
+    // partner under an id it does not go by) is never sent: it would be
+    // lacked, sent and refused again on every sync.
+    let answered: Vec<Row> = vector::answer(&rows, &theirs)
+        .map_err(|error| NodeError::new(error.to_string()))?
+        .into_iter()
+        .filter(|row| holder.holds_row(row))
+        .collect();
     let lacked: BTreeSet<&str> = answered.iter().map(|row| row.id.as_str()).collect();
     let asked: BTreeSet<&str> = ask.iter().map(String::as_str).collect();
     let mut again: Vec<Row> = rows
@@ -644,6 +650,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         .filter(|row| asked.contains(row.id.as_str()) && !lacked.contains(row.id.as_str()))
         .filter(|row| row.replicate == Replicate::Shared && !row.forgotten)
         .filter(|row| row.payload.is_some())
+        .filter(|row| holder.holds_row(row))
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut again);
