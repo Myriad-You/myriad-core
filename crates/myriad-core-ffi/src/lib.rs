@@ -18,7 +18,7 @@ mod calls;
 
 /// Bumped when a call's input or output changes incompatibly, or a call is
 /// removed. Adding a call or an optional field does not bump it.
-pub const ABI_VERSION: u32 = 1;
+pub const ABI_VERSION: u32 = 2;
 
 /// The upstream commit this library was built from (see `build.rs`).
 pub const UPSTREAM_COMMIT: &str = env!("MYRIAD_CORE_UPSTREAM_COMMIT");

@@ -187,6 +187,240 @@
           {
             "at": "001760000000005-000000-dev_mac",
             "audience": "personal:o1",
+            "kind": "into",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "to": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "at": "001760000000008-000000-dev_air",
+            "audience": "personal:o1",
+            "kind": "into",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "to": "node:cccccccccccccccccccccccccccccccc"
+          },
+          {
+            "at": "001760000000007-000000-dev_air",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_air"
+            ],
+            "kind": "retract",
+            "target": "node:cccccccccccccccccccccccccccccccc"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "r3",
+            "kind": "node.span",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:r3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000005-000000-dev_mac",
+            "id": "m1",
+            "kind": "node.absorbed",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:m1"
+            },
+            "replicate": "shared",
+            "to": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000008-000000-dev_air",
+            "id": "a1",
+            "kind": "node.absorbed",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_air",
+            "payload": {
+              "ref": "doc:a1"
+            },
+            "replicate": "shared",
+            "to": "node:cccccccccccccccccccccccccccccccc",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a merge written after the retract of the node it went into names nothing: its rows stay",
+      "output": {
+        "stubbed": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "into",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "to": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "at": "001760000000007-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          {
+            "at": "001760000000007-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          {
+            "at": "001760000000009-000000-site",
+            "audience": "personal:o1",
+            "kind": "forget",
+            "target": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "r3",
+            "kind": "node.span",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:r3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000005-000000-dev_mac",
+            "id": "m1",
+            "kind": "node.absorbed",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:m1"
+            },
+            "replicate": "shared",
+            "to": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a home, a forget of the node it went into does not reach it",
+      "output": {
+        "stubbed": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "into",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "to": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "at": "001760000000007-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          {
+            "at": "001760000000007-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          {
+            "at": "001760000000009-000000-site",
+            "audience": "personal:o1",
+            "kind": "forget",
+            "target": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "r3",
+            "kind": "node.span",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:r3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000005-000000-dev_mac",
+            "id": "m1",
+            "kind": "node.absorbed",
+            "object": "node:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:m1"
+            },
+            "replicate": "shared",
+            "to": "node:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "version": 1
+          }
+        ]
+      },
+      "name": "on a home, a forget of the kept node itself reaches it",
+      "output": {
+        "stubbed": [
+          "m1",
+          "r3"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:o1",
             "kind": "split",
             "takes": [
               "r2"

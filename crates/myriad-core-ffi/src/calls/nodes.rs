@@ -5,7 +5,8 @@
 //! so a refusal names a field, never a value.
 
 use myriad_nodes::{
-    Body, NodeError, fold as fold_rows, limits as node_limits, place, queue as due, upkeep, wire,
+    Body, NodeError, fold as fold_rows, home, limits as node_limits, place, queue as due, upkeep,
+    wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -68,11 +69,27 @@ pub(super) fn limits(raw: &[u8]) -> Result<Value, Failure> {
     answer(&node_limits::limits())
 }
 
+/// `{rows, bodies?, ledger}` → the nodes folded; the ledger is required.
 pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger?, elsewhere?}`
+/// `{audience, rows, bodies?, ledger, holder}` → a home page
+/// (`{audience, rows, payloads, withheld?}`): every row of a node this side
+/// keeps, whole, for the export file's home part. Only a computer of the
+/// partner's.
+pub(super) fn home_send(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&home::send(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{page, holder, ledger}` → `{rows, bodies?, ledger}`: a home page taken
+/// onto this computer, which becomes the home; the rows are stored as its
+/// own, before the file's log pages. Only a computer of the partner's.
+pub(super) fn home_take(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&home::take(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger, elsewhere?}`
 /// → `{batches, notHeld?}`: what to send another host core of one
 /// audience; a forgotten or retracted node goes as stubs only.
 pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
@@ -82,7 +99,7 @@ pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
 /// `{batch, holder, now, known?, members?, ledger?, epochs?, held?,
 /// elsewhere?, people?}` → what `log.admit` answers, with `bodies?`,
 /// `withheld?`, `ask?` and `elsewhere?`. The ledger is required when the
-/// batch holds a retract; the names it gains are only those the fold takes.
+/// batch holds a retract; names come from the rows' envelopes.
 pub(super) fn wire_take(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::take(quiet_input(raw)?).map_err(refused)?)
 }

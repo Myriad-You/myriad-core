@@ -1,0 +1,49 @@
+{
+  "call": "nodes.limits",
+  "cases": [
+    {
+      "input": {},
+      "name": "the limits both hosts cut to",
+      "output": {
+        "aliases": 16,
+        "bases": 16,
+        "becauseIds": 32,
+        "history": 20,
+        "itemIdBytes": 64,
+        "mintedBytes": 64,
+        "nameChars": 80,
+        "placeCandidates": 12,
+        "placeGistChars": 120,
+        "placeItemChars": 600,
+        "placeItems": 40,
+        "placeNameChars": 40,
+        "placeOutputBytes": 16384,
+        "placeSummaryChars": 160,
+        "placeTotalChars": 12000,
+        "progressChars": 200,
+        "queueMax": 200,
+        "reasonChars": 300,
+        "refs": 64,
+        "seenDevices": 64,
+        "sentenceChars": 300,
+        "summarySentences": 12,
+        "textChars": 1000,
+        "upkeepActions": 24,
+        "upkeepCandidates": 12,
+        "upkeepEntries": 12,
+        "upkeepEntriesTotalChars": 4000,
+        "upkeepHeadItems": 12,
+        "upkeepInbox": 20,
+        "upkeepInboxTotalChars": 6000,
+        "upkeepNeighbours": 16,
+        "upkeepOutputBytes": 32768,
+        "upkeepSpanChars": 400,
+        "upkeepSpans": 24,
+        "upkeepTotalChars": 12000,
+        "upkeepWrites": 256,
+        "whoKnows": 64
+      }
+    }
+  ],
+  "version": 1
+}

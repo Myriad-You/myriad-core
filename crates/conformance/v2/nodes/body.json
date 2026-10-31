@@ -1,0 +1,1545 @@
+{
+  "version": 1,
+  "call": "nodes.body",
+  "cases": [
+    {
+      "input": {
+        "body": {
+          "key": "repo:github.com/demo/sample-repo",
+          "kind": "topic",
+          "name": "sample-repo",
+          "object": {
+            "aliases": [
+              "样例仓库"
+            ],
+            "kind": "repo",
+            "name": "sample-repo"
+          },
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a created repo topic",
+      "output": {
+        "body": {
+          "key": "repo:github.com/demo/sample-repo",
+          "kind": "topic",
+          "name": "sample-repo",
+          "object": {
+            "aliases": [
+              "样例仓库"
+            ],
+            "kind": "repo",
+            "name": "sample-repo"
+          },
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"key\":\"repo:github.com/demo/sample-repo\",\"kind\":\"topic\",\"name\":\"sample-repo\",\"object\":{\"aliases\":[\"样例仓库\"],\"kind\":\"repo\",\"name\":\"sample-repo\"},\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "352716d419f70a3000b29f36614a193b"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "minted:release-week",
+          "kind": "task",
+          "name": "发版",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a created task",
+      "output": {
+        "body": {
+          "key": "minted:release-week",
+          "kind": "task",
+          "name": "发版",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"key\":\"minted:release-week\",\"kind\":\"task\",\"name\":\"发版\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "1f3ef411c3034c41ba7b321a6adefe60"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "person:7",
+          "kind": "person",
+          "name": "关于你",
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a created person",
+      "output": {
+        "body": {
+          "key": "person:7",
+          "kind": "person",
+          "name": "关于你",
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"key\":\"person:7\",\"kind\":\"person\",\"name\":\"关于你\",\"saidBy\":[\"partner\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "c3249a5f1de297cb58718a160ba6c528"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [
+            "r1"
+          ],
+          "because": [
+            "span:a"
+          ],
+          "kind": "topic",
+          "reason": "没有做完的标准",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.kind_changed"
+      },
+      "name": "a kind change",
+      "output": {
+        "body": {
+          "base": [
+            "r1"
+          ],
+          "because": [
+            "span:a"
+          ],
+          "kind": "topic",
+          "reason": "没有做完的标准",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"r1\"],\"because\":[\"span:a\"],\"kind\":\"topic\",\"reason\":\"没有做完的标准\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "fae3364f76b712b7b3024364013ac164"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [
+            "r1"
+          ],
+          "field": "summary",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            {
+              "because": [
+                "span:a",
+                "span:b"
+              ],
+              "text": "第一句。"
+            }
+          ],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a summary",
+      "output": {
+        "body": {
+          "base": [
+            "r1"
+          ],
+          "field": "summary",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            {
+              "because": [
+                "span:a",
+                "span:b"
+              ],
+              "text": "第一句。"
+            }
+          ],
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"r1\"],\"field\":\"summary\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"value\":[{\"because\":[\"span:a\",\"span:b\"],\"text\":\"第一句。\"}],\"version\":1}",
+        "digest": "a4f52ac0d1381cb05c6bcbf5e614c06a"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "object",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": {
+            "aliases": [],
+            "kind": "work",
+            "name": "某本书"
+          },
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "an object without aliases loses the empty list",
+      "output": {
+        "body": {
+          "base": [],
+          "field": "object",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": {
+            "kind": "work",
+            "name": "某本书"
+          },
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"field\":\"object\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"value\":{\"kind\":\"work\",\"name\":\"某本书\"},\"version\":1}",
+        "digest": "6413b6699373d3a310046cd9b061c460"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "progress",
+          "person": "9",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "第 3 章",
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a progress",
+      "output": {
+        "body": {
+          "base": [],
+          "field": "progress",
+          "person": "9",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "第 3 章",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"field\":\"progress\",\"person\":\"9\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"value\":\"第 3 章\",\"version\":1}",
+        "digest": "3ed334071e9a183efaac6e9a1db1018d"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "status",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "resting",
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a status",
+      "output": {
+        "body": {
+          "base": [],
+          "field": "status",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "resting",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"field\":\"status\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"value\":\"resting\",\"version\":1}",
+        "digest": "a854fe7e8b97bdda773e433355b51b59"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "她觉得这样更好。",
+          "version": 1,
+          "view": "v1"
+        },
+        "kind": "node.view_changed"
+      },
+      "name": "a view",
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "她觉得这样更好。",
+          "version": 1,
+          "view": "v1"
+        },
+        "canonical": "{\"base\":[],\"because\":[\"span:a\"],\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":\"她觉得这样更好。\",\"version\":1,\"view\":\"v1\"}",
+        "digest": "ebd256510907ad351677d2572cff43ff"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "closed": false,
+          "item": "o1",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "还没回复。",
+          "version": 1
+        },
+        "kind": "node.open_item"
+      },
+      "name": "an open item, not closed",
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "item": "o1",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "还没回复。",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"span:a\"],\"item\":\"o1\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":\"还没回复。\",\"version\":1}",
+        "digest": "86041a1d3ab7de9b02b69c43314d6816"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "intent": "i1",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "提醒伙伴休息。",
+          "trigger": {
+            "at": 1760000000000000,
+            "zone": "+09:00"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "an intent with a trigger",
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "intent": "i1",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "提醒伙伴休息。",
+          "trigger": {
+            "at": 1760000000000000,
+            "zone": "+09:00"
+          },
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"span:a\"],\"intent\":\"i1\",\"saidBy\":[\"her\"],\"status\":\"waiting\",\"sync\":\"shared\",\"text\":\"提醒伙伴休息。\",\"trigger\":{\"at\":1760000000000000,\"zone\":\"+09:00\"},\"version\":1}",
+        "digest": "cab396baef4b294bde99793322611c7d"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "from": 1,
+          "refs": [
+            "record:r1"
+          ],
+          "saidBy": [
+            "her",
+            "third_party"
+          ],
+          "sync": {
+            "local": "dev_mac"
+          },
+          "text": "一段。",
+          "to": 2,
+          "version": 1
+        },
+        "kind": "node.span"
+      },
+      "name": "a local span",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "from": 1,
+          "refs": [
+            "record:r1"
+          ],
+          "saidBy": [
+            "her",
+            "third_party"
+          ],
+          "sync": {
+            "local": "dev_mac"
+          },
+          "text": "一段。",
+          "to": 2,
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"from\":1,\"refs\":[\"record:r1\"],\"saidBy\":[\"her\",\"third_party\"],\"sync\":{\"local\":\"dev_mac\"},\"text\":\"一段。\",\"to\":2,\"version\":1}",
+        "digest": "9aab9f3a7c17d1aa82c838fbebfe0e7b"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "refs": [
+            "message:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "伙伴不吃香菜。",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "refs": [
+            "message:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "伙伴不吃香菜。",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"refs\":[\"message:m1\"],\"saidBy\":[\"partner\"],\"sync\":\"shared\",\"text\":\"伙伴不吃香菜。\",\"version\":1}",
+        "digest": "1e62c570d5a9cc29d336b98e0355cefa"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "because": [
+            "span:a"
+          ],
+          "reason": "伙伴在等",
+          "relation": "involves",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "to": "person:7",
+          "version": 1
+        },
+        "kind": "node.related"
+      },
+      "name": "a relation",
+      "output": {
+        "body": {
+          "because": [
+            "span:a"
+          ],
+          "reason": "伙伴在等",
+          "relation": "involves",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "to": "person:7",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:a\"],\"reason\":\"伙伴在等\",\"relation\":\"involves\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"to\":\"person:7\",\"version\":1}",
+        "digest": "8f016a473938deb73ac9514fcd47837d"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [
+            "r4"
+          ],
+          "reason": "不再相关",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.unrelated"
+      },
+      "name": "a relation taken back",
+      "output": {
+        "body": {
+          "base": [
+            "r4"
+          ],
+          "reason": "不再相关",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"r4\"],\"reason\":\"不再相关\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "ab1a7fe9215eb5aea7fafd4ce0dc48f1"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "mood": "happy",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "一段。",
+          "version": 1
+        },
+        "kind": "node.span"
+      },
+      "name": "a field the body does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "一段。",
+          "version": 2
+        },
+        "kind": "node.span"
+      },
+      "name": "a newer body version",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "一段。",
+          "version": 1
+        },
+        "kind": "memory.write"
+      },
+      "name": "a kind that is not a node's",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "一段。",
+          "version": 1
+        },
+        "kind": "node.decided"
+      },
+      "name": "a kind this batch does not read",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "repo:github.com/demo/sample-repo",
+          "kind": "task",
+          "name": "sample-repo",
+          "object": {
+            "aliases": [
+              "样例仓库"
+            ],
+            "kind": "repo",
+            "name": "sample-repo"
+          },
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a repo key as a task",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "repo:github.com/demo/sample-repo",
+          "kind": "topic",
+          "name": "sample-repo",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a repo key without its object",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "minted:release-week",
+          "kind": "topic",
+          "name": "x",
+          "object": {
+            "aliases": [
+              "样例仓库"
+            ],
+            "kind": "repo",
+            "name": "sample-repo"
+          },
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a repo object on a minted key",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "person:7",
+          "kind": "topic",
+          "name": "关于你",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a person key as a topic",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "repo:/Users/demo/sample-repo",
+          "kind": "topic",
+          "name": "x",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a key that is a local path",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "kind": "person",
+          "reason": "x",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.kind_changed"
+      },
+      "name": "a kind change to a person",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "summary",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            {
+              "because": [],
+              "text": "没有依据。"
+            }
+          ],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a sentence without evidence",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "because": [],
+          "reason": "x",
+          "relation": "related",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "to": "minted:release-week",
+          "version": 1
+        },
+        "kind": "node.related"
+      },
+      "name": "a relation without evidence",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [
+            "partner",
+            "her"
+          ],
+          "sync": "shared",
+          "text": "一段。",
+          "version": 1
+        },
+        "kind": "node.span"
+      },
+      "name": "saidBy out of order",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [],
+          "sync": "shared",
+          "text": "一段。",
+          "version": 1
+        },
+        "kind": "node.span"
+      },
+      "name": "saidBy empty",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "一段。 ",
+          "version": 1
+        },
+        "kind": "node.span"
+      },
+      "name": "a text with a space at its end",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "key": "minted:release-week",
+          "kind": "task",
+          "name": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.created"
+      },
+      "name": "a name too long",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "a1"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "x",
+          "version": 1,
+          "view": "v1"
+        },
+        "kind": "node.view_changed"
+      },
+      "name": "evidence that is not typed",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:b",
+            "span:a"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "x",
+          "version": 1,
+          "view": "v1"
+        },
+        "kind": "node.view_changed"
+      },
+      "name": "evidence out of order",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "message:m1"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "x",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "a quote-only entry with refs",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "x",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry without refs",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "from": 5,
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "x",
+          "to": 4,
+          "version": 1
+        },
+        "kind": "node.span"
+      },
+      "name": "a span that ends before it starts",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "intent": "i1",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "x",
+          "trigger": {
+            "at": 1,
+            "zone": "9 hours"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "a trigger zone that is no zone",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "progress",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "第 3 章",
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "progress without a person",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "name",
+          "person": "7",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "x",
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a person on a name",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:a"
+          ],
+          "item": "a:b",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "x",
+          "version": 1
+        },
+        "kind": "node.open_item"
+      },
+      "name": "an item id with a colon",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "reason": "x",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "kind": "node.unrelated"
+      },
+      "name": "taking back nothing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "because": [
+            "span:a"
+          ],
+          "reason": "x",
+          "relation": "related",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "to": "somewhere",
+          "version": 1
+        },
+        "kind": "node.related"
+      },
+      "name": "a relation to a key that is not one",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "status",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": "finished",
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a status that is not one",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a done-when",
+      "input": {
+        "kind": "node.done_when",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "text": "装进商店、伙伴说可以了",
+          "because": [
+            "span:m2"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "span:m2"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "装进商店、伙伴说可以了",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"span:m2\"],\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":\"装进商店、伙伴说可以了\",\"version\":1}",
+        "digest": "605edc654746aeb163cd24d82bf5bdcf"
+      }
+    },
+    {
+      "name": "a done-when taken off",
+      "input": {
+        "kind": "node.done_when",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [
+            "m9"
+          ],
+          "text": null,
+          "because": [
+            "span:m2"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "base": [
+            "m9"
+          ],
+          "because": [
+            "span:m2"
+          ],
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": null,
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"m9\"],\"because\":[\"span:m2\"],\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":null,\"version\":1}",
+        "digest": "6d36d46b7d08f9cbdd1eb1e7aeb5c62b"
+      }
+    },
+    {
+      "name": "a done-when without evidence",
+      "input": {
+        "kind": "node.done_when",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "text": "装进商店",
+          "because": []
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a part split off",
+      "input": {
+        "kind": "node.split_off",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "to": "minted:changelog",
+          "spans": [
+            "c3",
+            "c4"
+          ],
+          "reason": "更新说明自己有没收尾的事",
+          "because": [
+            "span:c3"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "because": [
+            "span:c3"
+          ],
+          "reason": "更新说明自己有没收尾的事",
+          "saidBy": [
+            "her"
+          ],
+          "spans": [
+            "c3",
+            "c4"
+          ],
+          "sync": "shared",
+          "to": "minted:changelog",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:c3\"],\"reason\":\"更新说明自己有没收尾的事\",\"saidBy\":[\"her\"],\"spans\":[\"c3\",\"c4\"],\"sync\":\"shared\",\"to\":\"minted:changelog\",\"version\":1}",
+        "digest": "6af7e5b17b738a286fe0138f4c4396dc"
+      }
+    },
+    {
+      "name": "a part split off onto a person",
+      "input": {
+        "kind": "node.split_off",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "to": "person:7",
+          "spans": [
+            "c3"
+          ],
+          "reason": "x",
+          "because": [
+            "span:c3"
+          ]
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a part split off with no spans",
+      "input": {
+        "kind": "node.split_off",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "to": "minted:changelog",
+          "spans": [],
+          "reason": "x",
+          "because": [
+            "span:c3"
+          ]
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a merge",
+      "input": {
+        "kind": "node.absorbed",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "into": "minted:changelog",
+          "how": "merged",
+          "reason": "两个说的是同一份说明",
+          "because": [
+            "span:d1"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "because": [
+            "span:d1"
+          ],
+          "how": "merged",
+          "into": "minted:changelog",
+          "reason": "两个说的是同一份说明",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:d1\"],\"how\":\"merged\",\"into\":\"minted:changelog\",\"reason\":\"两个说的是同一份说明\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "abf1a7205b21d09d02716f18165fad42"
+      }
+    },
+    {
+      "name": "a fold back",
+      "input": {
+        "kind": "node.absorbed",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "into": "minted:release-week",
+          "how": "folded_back",
+          "reason": "说明写完了，没有自己的事了",
+          "because": [
+            "span:c4"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "because": [
+            "span:c4"
+          ],
+          "how": "folded_back",
+          "into": "minted:release-week",
+          "reason": "说明写完了，没有自己的事了",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"because\":[\"span:c4\"],\"how\":\"folded_back\",\"into\":\"minted:release-week\",\"reason\":\"说明写完了，没有自己的事了\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "d76f688bc25a6bcff33fea80a06043e1"
+      }
+    },
+    {
+      "name": "an unknown way to go into another",
+      "input": {
+        "kind": "node.absorbed",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "into": "minted:changelog",
+          "how": "glued",
+          "reason": "x",
+          "because": [
+            "span:d1"
+          ]
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a recall use",
+      "input": {
+        "kind": "node.used",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "via": [
+            "k2"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1,
+          "via": [
+            "k2"
+          ]
+        },
+        "canonical": "{\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1,\"via\":[\"k2\"]}",
+        "digest": "59d1610c89cbe003a3513df64aeb9227"
+      }
+    },
+    {
+      "name": "a recall use by itself",
+      "input": {
+        "kind": "node.used",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ]
+        }
+      },
+      "output": {
+        "body": {
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "e6c3b0dbe16a602306fdf37d0600c23a"
+      }
+    },
+    {
+      "name": "an upkeep mark",
+      "input": {
+        "kind": "node.upkept",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "run": "run-1",
+          "seen": {
+            "dev_mac": "001760000005000-000000-dev_mac",
+            "site": "001760000007000-000000-site"
+          }
+        }
+      },
+      "output": {
+        "body": {
+          "run": "run-1",
+          "saidBy": [
+            "her"
+          ],
+          "seen": {
+            "dev_mac": "001760000005000-000000-dev_mac",
+            "site": "001760000007000-000000-site"
+          },
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"run\":\"run-1\",\"saidBy\":[\"her\"],\"seen\":{\"dev_mac\":\"001760000005000-000000-dev_mac\",\"site\":\"001760000007000-000000-site\"},\"sync\":\"shared\",\"version\":1}",
+        "digest": "197c5e9ed823600ccc81e8ce0f82f528"
+      }
+    },
+    {
+      "name": "an upkeep mark that changed nothing",
+      "input": {
+        "kind": "node.upkept",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "run": "run-2",
+          "fallback": "not_json"
+        }
+      },
+      "output": {
+        "body": {
+          "fallback": "not_json",
+          "run": "run-2",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "version": 1
+        },
+        "canonical": "{\"fallback\":\"not_json\",\"run\":\"run-2\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"version\":1}",
+        "digest": "24b0caa239c190f88bc77a22d937abd3"
+      }
+    },
+    {
+      "name": "an upkeep mark naming a clock by another device",
+      "input": {
+        "kind": "node.upkept",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "run": "run-1",
+          "seen": {
+            "dev_mac": "001760000000000-000000-site"
+          }
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

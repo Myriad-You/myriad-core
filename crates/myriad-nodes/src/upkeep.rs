@@ -66,12 +66,12 @@
 //! written meanwhile is taken as seen.
 //!
 //! A node taken back from sync (撤回同步) is out of shared upkeep on every
-//! side. Only its home folds it whole, and there a run on it writes local
-//! rows only (`local` in what is prepared: the caller passes a local
-//! `sync`, or `read` refuses the call), a split's new part and its
-//! `part_of` included. A shared run never names one: an action that would
-//! merge into it, relate to it or place on it is not allowed. The fold
-//! passes by a shared merge or split of one written after its retract.
+//! side, and its structure is frozen. Only its home folds it whole, and
+//! there a run on it writes local rows only (`local` in what is prepared:
+//! the caller passes a local `sync`, or `read` refuses the call) and edits
+//! only what is on it: no merge or split of it or into it, and no other
+//! node is named but the ones this side keeps. A shared run never names
+//! one. The fold voids a merge or split of one written after its retract.
 //!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) so the queue moves
@@ -133,6 +133,9 @@ pub struct UpkeepInput {
     pub rows: Vec<myriad_persona_log::Row>,
     #[serde(default)]
     pub bodies: BTreeMap<String, Value>,
+    /// This side's ledger, as for the fold.
+    #[serde(default)]
+    pub ledger: Vec<myriad_persona_log::forget::Entry>,
     pub audience: String,
     /// The node she keeps; none when she only files the inbox (the
     /// audience has no node yet, or none is due).
@@ -613,6 +616,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     let full = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
+        ledger: input.ledger,
     })?;
     let place = |id: &str| {
         full.folded
@@ -692,7 +696,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             .iter()
             .enumerate()
             .filter(|(_, other)| {
-                other.audience == audience && alive(other) && (local || other.retracted.is_empty())
+                other.audience == audience && alive(other) && local != other.retracted.is_empty()
             })
             .map(|(at, other)| (other.id.as_str(), at))
             .collect();
@@ -765,7 +769,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
     let shown_candidates: Vec<ShownCandidate> = candidates
         .into_iter()
         .filter(|other| alive(&full.folded.nodes[*other]))
-        .filter(|other| local || full.folded.nodes[*other].retracted.is_empty())
+        .filter(|other| local != full.folded.nodes[*other].retracted.is_empty())
         .filter(|other| !nodes.values().any(|shown| shown == other))
         .take(UPKEEP_CANDIDATES)
         .collect::<Vec<usize>>()
@@ -1091,9 +1095,9 @@ impl<'a> Reader<'a> {
             .get(label)
             .ok_or(Fallback::UnknownLabel)?;
         let node = self.node(at);
-        // A node taken back from sync is reorganised only by a local run on
-        // it, at its home.
-        if !node.retracted.is_empty() && !self.context.prepared.local {
+        // A shared run names no node taken back from sync; a local run (on
+        // one, at its home) names only those this side keeps.
+        if node.retracted.is_empty() == self.context.prepared.local {
             return Err(Fallback::NotAllowed);
         }
         Ok(Named {
@@ -1385,10 +1389,12 @@ impl<'a> Reader<'a> {
             }
             "split" => {
                 let me = self.me()?;
-                if me
-                    .kind
-                    .as_ref()
-                    .is_some_and(|kind| kind.current.value.kind == Kind::Person)
+                // A retracted node's structure is frozen.
+                if !me.retracted.is_empty()
+                    || me
+                        .kind
+                        .as_ref()
+                        .is_some_and(|kind| kind.current.value.kind == Kind::Person)
                 {
                     return Err(Fallback::NotAllowed);
                 }
@@ -1672,6 +1678,11 @@ impl<'a> Reader<'a> {
         let because = self.evidence(action)?;
         let about_you =
             Key::parse(&into.key).is_ok_and(|key| key.is_about_you(&self.context.audience));
+        // A retracted node's structure is frozen: it goes into nothing, and
+        // nothing goes into it.
+        if !me.retracted.is_empty() || !self.node(into_at).retracted.is_empty() {
+            return Err(Fallback::NotAllowed);
+        }
         // Only a minted node goes into another, and not what she watched or
         // read with the partner: that only ever takes others in.
         let goes = me

@@ -1,4 +1,4 @@
-//! The shared conformance files in `crates/conformance/v1/nodes/` run here
+//! The shared conformance files in `crates/conformance/v2/nodes/` run here
 //! through the crate, and through the C entry point in `myriad-core-ffi`;
 //! another platform runs the same files through its own runtime. Below
 //! them, the properties the files only sample: a fold that does not care
@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 use super::*;
 
 fn conformance() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/nodes")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v2/nodes")
 }
 
 fn blessing() -> bool {
@@ -85,6 +85,8 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.upkeep_read" => json_of(&upkeep::read(input(raw)?)?),
         "nodes.wire_send" => json_of(&wire::send(input(raw)?)?),
         "nodes.wire_take" => json_of(&wire::take(input(raw)?)?),
+        "nodes.home_send" => json_of(&home::send(input(raw)?)?),
+        "nodes.home_take" => json_of(&home::take(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -111,7 +113,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 12, "{files:?}");
+    assert_eq!(files.len(), 14, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -258,6 +260,28 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "refused: a retract taken without the ledger",
             "give this side's ledger",
         ),
+        (
+            "refused: a shared run on a retracted node",
+            "kept with local rows only",
+        ),
+        // nodes.home_send, nodes.home_take
+        (
+            "refused: a server never writes a home page",
+            "only a computer of the partner's",
+        ),
+        ("refused: a row of another audience", "not of the audience"),
+        (
+            "refused: a server never takes a home page",
+            "only a computer of the partner's",
+        ),
+        (
+            "refused: a row of a node no mark keeps",
+            "of no node kept here",
+        ),
+        (
+            "refused: a body that is not its canonical bytes",
+            "canonical bytes",
+        ),
     ];
     let mut seen = 0;
     for path in case_files() {
@@ -371,6 +395,7 @@ fn fold_of(log: &[(Row, Option<Value>)]) -> Folded {
             .iter()
             .filter_map(|(row, body)| body.clone().map(|body| (row.id.clone(), body)))
             .collect(),
+        ledger: Vec::new(),
     })
     .unwrap()
 }
@@ -493,10 +518,15 @@ fn what_a_run_writes_folds_clean_and_does_not_make_its_node_due_again() {
             if !local {
                 row["dseq"] = json!(1000 + n);
             }
+            for name in ["to", "takes"] {
+                if let Some(value) = write.get(name) {
+                    row[name] = value.clone();
+                }
+            }
             rows.push(row);
             bodies[&id] = write["body"].clone();
         }
-        let after = json!({ "rows": rows.clone(), "bodies": bodies.clone() });
+        let after = json!({ "rows": rows.clone(), "bodies": bodies.clone(), "ledger": [] });
         let folded = run("nodes.fold", after).unwrap();
         let wrote: Vec<&str> = writes
             .iter()

@@ -296,9 +296,20 @@ impl Row {
     }
 
     /// `to` and `takes`: only where a kind names another node, never the
-    /// row's own object, the spans sorted and each once.
+    /// row's own object, the spans sorted and each once. A merge always
+    /// names the node it went into, and a split the part and the spans it
+    /// moves: no node row was written before envelopes held them.
     fn check_names(&self) -> Result<(), LogError> {
         let names = kinds::names(&self.kind);
+        if names != kinds::Names::None && self.to.is_none() {
+            return Err(LogError::new(format!(
+                "a {} row names the other node (to)",
+                self.kind
+            )));
+        }
+        if names == kinds::Names::Split && self.takes.is_empty() {
+            return Err(LogError::new("a split names the spans it moves (takes)"));
+        }
         match (&self.to, names) {
             (None, _) => {
                 if !self.takes.is_empty() {

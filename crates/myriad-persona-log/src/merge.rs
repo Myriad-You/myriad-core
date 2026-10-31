@@ -79,6 +79,13 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         mut incoming,
         ledger,
     } = input;
+    // A local row stays on the side that wrote it: one in `incoming` came
+    // from elsewhere (it would make another side's home this one's).
+    if incoming.iter().any(|row| row.replicate == Replicate::Local) {
+        return Err(LogError::new(
+            "a local row never comes in from another side",
+        ));
+    }
     let ledger = forget::given(
         ledger.as_deref(),
         &[log.as_slice(), incoming.as_slice()].concat(),

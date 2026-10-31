@@ -84,6 +84,9 @@ pub struct QueueInput {
     pub rows: Vec<Row>,
     #[serde(default)]
     pub bodies: BTreeMap<String, Value>,
+    /// This side's ledger, as for the fold: a node it keeps is due as ever.
+    #[serde(default)]
+    pub ledger: Vec<myriad_persona_log::forget::Entry>,
     /// How many to hand out, 1 to [`QUEUE_MAX`].
     pub max: usize,
 }
@@ -108,6 +111,7 @@ pub fn queue(input: QueueInput) -> Result<Queue, NodeError> {
     let full = fold_full(FoldInput {
         rows: input.rows,
         bodies: input.bodies,
+        ledger: input.ledger,
     })?;
     let mut due: Vec<Due> = Watch::new(&full).all();
     let more = due.len().saturating_sub(input.max);

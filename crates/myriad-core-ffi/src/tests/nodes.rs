@@ -1,5 +1,5 @@
 //! Her nodes: every case in the shared conformance files
-//! (`crates/conformance/v1/nodes`) through the C entry point, as another
+//! (`crates/conformance/v2/nodes`) through the C entry point, as another
 //! platform runs them. `myriad-nodes` runs the same files through the crate
 //! and blesses them, so passing here is the C entry point answering byte
 //! for byte as the crate does.
@@ -15,6 +15,8 @@ use crate::{STATUS_BAD_INPUT, STATUS_OK};
 pub(super) const TESTED: &[&str] = &[
     "nodes.body",
     "nodes.fold",
+    "nodes.home_send",
+    "nodes.home_take",
     "nodes.id",
     "nodes.limits",
     "nodes.place_input",
@@ -29,7 +31,7 @@ pub(super) const TESTED: &[&str] = &[
 
 #[test]
 fn every_node_case_answers_through_the_c_entry_point() {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/nodes");
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v2/nodes");
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
         .unwrap()
         .map(|entry| entry.unwrap().path())
@@ -103,7 +105,7 @@ fn a_refused_row_is_named_by_its_field_never_by_its_value() {
     cases.extend([origin, hlc_node, subject, wrong_type]);
     let mut messages = Vec::new();
     for bad in cases {
-        let (status, out) = ffi("nodes.fold", &json!({ "rows": [bad] }));
+        let (status, out) = ffi("nodes.fold", &json!({ "rows": [bad], "ledger": [] }));
         let message = out["error"]["message"].as_str().unwrap_or("").to_string();
         assert_eq!(status, STATUS_BAD_INPUT, "{bad}: {out}");
         assert!(!message.contains("sensitive"), "{message}");
@@ -128,7 +130,7 @@ fn a_refused_row_is_named_by_its_field_never_by_its_value() {
 #[test]
 fn every_repo_key_made_is_a_key_nodes_id_takes() {
     let path =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/nodes/repo_key.json");
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v2/nodes/repo_key.json");
     let file: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
     let mut made = 0;
     for case in file["cases"].as_array().unwrap() {
