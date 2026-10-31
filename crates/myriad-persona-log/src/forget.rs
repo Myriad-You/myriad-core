@@ -659,7 +659,7 @@ pub fn record(input: RecordInput) -> Result<Recorded, LogError> {
         if input
             .holder
             .as_ref()
-            .is_some_and(|holder| !holder.holds_row(row))
+            .is_some_and(|holder| !holder.holds_row(row) && !holder.holds_stub(row))
         {
             return Err(LogError::new("a row this side may not hold"));
         }

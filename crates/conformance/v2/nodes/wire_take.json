@@ -100,7 +100,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a batch taken whole: the rows to merge and each one's body",
       "output": {
@@ -320,7 +321,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body that is not its own canonical bytes is not taken; its row is",
       "output": {
@@ -539,7 +541,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body whose tag keeps it on its device is not taken, even when sent",
       "output": {
@@ -751,7 +754,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body that did not come: the row is taken alone",
       "output": {
@@ -977,7 +981,8 @@
             "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
           }
         ],
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a forgotten node's rows come in as stubs and their bodies are dropped",
       "output": {
@@ -1112,7 +1117,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a PC refuses a group's batch row by row",
       "output": {
@@ -1160,7 +1166,8 @@
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "the server takes it",
       "output": {
@@ -1317,7 +1324,8 @@
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a row of another audience in the batch is refused",
       "output": {
@@ -1544,7 +1552,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a clock six minutes ahead refuses the whole batch",
       "output": {
@@ -1660,7 +1669,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a payload listed twice",
       "output": {
@@ -1780,7 +1790,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a person's or a group's node in her own audience, sent anyway, is taken as rows alone",
       "output": {
@@ -2081,7 +2092,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body the sender withholds for good is not asked for again; one withheld for now, or lost on the way, is",
       "output": {
@@ -2347,7 +2359,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a row asked again for comes back as held: only its body is taken, the row is not admitted again",
       "output": {
@@ -2460,7 +2473,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a row asked again for that comes back otherwise is refused",
       "output": {
@@ -2588,7 +2602,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a withheld body of no row in the batch",
       "output": {
@@ -2700,7 +2715,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body both carried and said to be withheld",
       "output": {
@@ -2793,7 +2809,8 @@
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "ledger": [],
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a retract is a forget on a side that is not its home: rows as stubs, no body",
       "output": {
@@ -2978,7 +2995,8 @@
             "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
           }
         ],
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "its home takes everything",
       "output": {
@@ -3185,7 +3203,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "refused: a retract taken without the ledger",
       "output": {
@@ -3226,6 +3245,7 @@
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
         "people": [
           "person:9"
         ]
@@ -3300,7 +3320,8 @@
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "the sender's person_elsewhere for a node this side cannot tie to a person is not taken",
       "output": {
@@ -3372,7 +3393,8 @@
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a later batch takes no body of a node known to be a person's in her own audience",
       "output": {
@@ -3432,7 +3454,8 @@
           "core": "pc",
           "owner": "partner_0199d5c0900033333333333333333333"
         },
-        "now": 1760000100000000
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0900033333333333333333333"
       },
       "name": "refused rows of another partner id's talk on a PC (not_held)",
       "output": {
@@ -3445,6 +3468,225 @@
             "reason": "not_held"
           }
         ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "own:",
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "h1",
+              "kind": "affect.change",
+              "object": "affect:partner_0199d5c0b00044444444444444444444",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "forgotten": true,
+              "hlc": "001760000000002-000000-dev_mac",
+              "id": "h2",
+              "kind": "affect.change",
+              "object": "affect:local-owner",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 3,
+              "epoch": 1,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "h3",
+              "kind": "affect.change",
+              "object": "affect:partner_0199d5c0b00044444444444444444444",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h3"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "h1",
+              "why": "no_body"
+            },
+            {
+              "id": "h3",
+              "why": "no_body"
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444"
+      },
+      "name": "a stub held back by the sender is taken: it keeps the place, nothing of it whole",
+      "output": {
+        "accepted": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ask": [
+          "h1",
+          "h3"
+        ],
+        "epochs": {
+          "own:": {
+            "dev_mac": 1
+          }
+        },
+        "ledger": [],
+        "withheld": [
+          {
+            "id": "h1",
+            "why": "no_body"
+          },
+          {
+            "id": "h3",
+            "why": "no_body"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "own:",
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "h1",
+              "kind": "affect.change",
+              "object": "affect:partner_0199d5c0b00044444444444444444444",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "forgotten": true,
+              "hlc": "001760000000002-000000-dev_mac",
+              "id": "h2",
+              "kind": "affect.change",
+              "object": "affect:local-owner",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 3,
+              "epoch": 1,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "h3",
+              "kind": "affect.change",
+              "object": "affect:partner_0199d5c0b00044444444444444444444",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h3"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "h1",
+              "why": "no_body"
+            },
+            {
+              "id": "h3",
+              "why": "no_body"
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0a00022222222222222222222"
+      },
+      "name": "refused: a batch from a side under another partner id",
+      "output": {
+        "error": "bad_input"
       }
     }
   ],

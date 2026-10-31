@@ -67,6 +67,7 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
         rows: Vec<Row>,
         theirs: Vector,
         holder: crate::Holder,
+        here: String,
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -97,8 +98,9 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
                 rows,
                 theirs,
                 holder,
+                here,
             } = input(raw)?;
-            json_of(&crate::vector::answer_to(&rows, &theirs, &holder)?)
+            json_of(&crate::vector::answer_to(&rows, &theirs, &holder, &here)?)
         }
         "log.admit" => json_of(&admit(input::<AdmitInput>(raw)?)?),
         "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
@@ -503,6 +505,7 @@ fn what_one_side_answers_fills_the_other() {
             core: crate::Core::Server,
             owner: "partner_0199d5c0b00044444444444444444444".into(),
         },
+        peer: "partner_0199d5c0b00044444444444444444444".into(),
     })
     .unwrap();
     assert!(admitted.refused.is_empty());

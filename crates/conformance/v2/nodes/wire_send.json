@@ -46,6 +46,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -289,6 +290,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -510,6 +512,7 @@
             "text": "周五见。"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -834,6 +837,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -881,6 +885,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -985,6 +990,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "o1",
         "holder": {
           "core": "child",
           "owner": "o1"
@@ -1135,6 +1141,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -1300,6 +1307,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "o1,o2",
         "holder": {
           "core": "pc",
           "owner": "o1,o2"
@@ -1457,6 +1465,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -1704,6 +1713,7 @@
             "text": "好。"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -1970,6 +1980,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -2154,6 +2165,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -2378,6 +2390,7 @@
           "r64"
         ],
         "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -2426,6 +2439,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -2603,6 +2617,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "server",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -2748,6 +2763,7 @@
         "elsewhere": [
           "node:39e5897592d9a4742ebb76d3c1fffbc3"
         ],
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -2887,6 +2903,7 @@
             "text": "伙伴周五发版"
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3120,6 +3137,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3230,6 +3248,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3342,6 +3361,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3457,6 +3477,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3545,6 +3566,7 @@
       "input": {
         "audience": "own:",
         "bodies": {},
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3653,6 +3675,7 @@
             "version": 1
           }
         },
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3735,6 +3758,7 @@
       "input": {
         "audience": "own:",
         "bodies": {},
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
           "owner": "partner_0199d5c0b00044444444444444444444"
@@ -3861,6 +3885,142 @@
         "heldBack": [
           "h2"
         ]
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "bodies": {},
+        "here": "local-owner",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 2,
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: a side under local-owner never sends to one under a partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "bodies": {},
+        "here": "partner_0199d5c0a00022222222222222222222",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 2,
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: a side never sends to one under another partner id",
+      "output": {
+        "error": "bad_input"
       }
     }
   ],

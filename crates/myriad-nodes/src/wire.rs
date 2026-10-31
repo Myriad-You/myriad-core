@@ -218,6 +218,9 @@ pub struct SendInput {
     pub ask: Vec<String>,
     /// The other side.
     pub holder: Holder,
+    /// The id this side goes by: a side under another id gets nothing
+    /// ([`myriad_persona_log::partner::exchange`]).
+    pub here: String,
     /// The other side's core ABI (`meta.version` `abi`): 2 when its link's
     /// `hello` or `welcome` lists the `log2` capability, 1 when not. A side
     /// below 2 gets nothing that carries a merge's or a split's names or a
@@ -250,9 +253,10 @@ pub struct Sent {
     /// the partner under an id it does not go by), sorted. Each goes as a
     /// stub, so that side's count has no gap and nothing of it goes; a
     /// forget or a retract has no stub and is left out, which leaves a gap
-    /// there that never closes. No side writes such a row once it gives
-    /// `log.ledger` its holder, and `partner.migrate` moves or refuses the
-    /// ones from before.
+    /// there that never closes. Sides exchange rows only under one id
+    /// (`here`), no side writes such a row once it gives `log.ledger` its
+    /// holder, and `partner.migrate` moves or refuses the ones from before:
+    /// such a row in a log is a host's fault, reported here.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub held_back: Vec<String>,
 }
@@ -278,6 +282,8 @@ pub struct TakeInput {
     pub batch: Batch,
     /// This side.
     pub holder: Holder,
+    /// The id the other side goes by, as for `log.admit`.
+    pub peer: String,
     /// This side's clock, as for `log.admit`.
     pub now: i64,
     #[serde(default)]
@@ -608,6 +614,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         theirs,
         ask,
         holder,
+        here,
         peer_abi,
         ledger,
         elsewhere: known_away,
@@ -615,6 +622,11 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    // A child core holds no log: it gets nothing, whatever id it names.
+    if holder.core != myriad_persona_log::Core::Child {
+        myriad_persona_log::partner::exchange(&here, &holder.owner)
+            .map_err(|error| NodeError::new(error.to_string()))?;
+    }
     if peer_abi == 0 {
         return Err(NodeError::new("the other side's ABI is 1 or more"));
     }
@@ -752,6 +764,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     let TakeInput {
         batch,
         holder,
+        peer,
         now,
         known,
         members,
@@ -859,6 +872,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         ledger,
         epochs,
         holder,
+        peer,
     })
     .map_err(|error| NodeError::new(error.to_string()))?;
     admitted.refused.extend(astray);

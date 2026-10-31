@@ -60,8 +60,9 @@ pub(super) fn missing(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "missing": vector::missing(&mine, &theirs) }))
 }
 
-/// `{rows, theirs, holder}` → `{rows, notHeld?}`: what to send a side
-/// holding `theirs`; nothing to a side that may not hold the audience.
+/// `{rows, theirs, holder, here}` → `{rows, notHeld?, heldBack?}`: what to
+/// send a side holding `theirs`; nothing to a side that may not hold the
+/// audience, and none to one that goes by another id than `here`.
 /// Only for a log from before ABI 2: rows that name another node (`to`,
 /// `takes`) or a retract are refused, and go by `nodes.wire_send`.
 pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
@@ -71,13 +72,15 @@ pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
         rows: Vec<Row>,
         theirs: Vector,
         holder: Holder,
+        here: String,
     }
     let In {
         rows,
         theirs,
         holder,
+        here,
     } = input(raw)?;
-    answer(&vector::answer_to(&rows, &theirs, &holder).map_err(refused)?)
+    answer(&vector::answer_to(&rows, &theirs, &holder, &here).map_err(refused)?)
 }
 
 /// A retract in the batch needs this side's ledger, so a home never loses

@@ -364,6 +364,19 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         // nodes.home_owed
         ("refused: an empty origin", "origin must be 1 to"),
+        // nodes.wire_send, nodes.wire_take: one id per exchange
+        (
+            "refused: a side under local-owner never sends to one under a partner id",
+            "goes by the same id",
+        ),
+        (
+            "refused: a side never sends to one under another partner id",
+            "goes by the same id",
+        ),
+        (
+            "refused: a batch from a side under another partner id",
+            "goes by the same id",
+        ),
         // nodes.home_send, nodes.home_take
         (
             "refused: a server never writes a home page",

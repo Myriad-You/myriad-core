@@ -118,6 +118,19 @@ impl Holder {
         });
         !object && !row.subject.as_deref().is_some_and(another)
     }
+
+    /// Whether `row` is a stub this side keeps for its place though it may
+    /// not hold the row whole ([`Self::holds_row`]): one of an audience it
+    /// holds, never a forget or a retract (they have no stub: one about the
+    /// partner under another id would forget under it later, once moved).
+    /// Such a stub comes only of a host's fault: sides exchange rows only
+    /// under one id ([`crate::partner::exchange`]).
+    pub fn holds_stub(&self, row: &Row) -> bool {
+        row.forgotten
+            && row.payload.is_none()
+            && self.holds(&row.audience)
+            && !crate::forget::on_ledger(row)
+    }
 }
 
 #[cfg(test)]

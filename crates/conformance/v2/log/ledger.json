@@ -394,6 +394,88 @@
       "output": {
         "ledger": []
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "a-2",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0a00022222222222222222222",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "a-4",
+            "kind": "affect.change",
+            "object": "affect:9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "with this side's holder, a stub of a row it may not hold whole is recorded",
+      "output": {
+        "ledger": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "f-3",
+            "kind": "forget",
+            "object": "subject:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: with this side's holder, a forget about the partner under another id",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

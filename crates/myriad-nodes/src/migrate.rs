@@ -73,9 +73,12 @@ pub struct MigrateInput {
 /// audience. A side wrote under two of the partner's ids with one count,
 /// which moving cannot mend. The row already under `to` stays (or, with
 /// none, the first in log order), and the other (`id`) is left out of what
-/// is returned: rows, bodies and `moved`. The host deletes it, or sets it
-/// aside out of the log: left there under `local-owner`, it keeps
-/// `partner.link` moving again forever (`Here::audiences`).
+/// is returned: rows, bodies and `moved`. The host sets it aside out of the
+/// log (by default: kept, not synced, so nothing of hers is lost), or
+/// deletes it if the partner says so: left there under `local-owner`, it
+/// keeps `partner.link` moving again forever (`Here::audiences`). A row
+/// that comes in later on the place of one under `to` (`SamePlace`) is the
+/// same clash, met late: the host does the same with it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Clash {
@@ -166,17 +169,32 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
     by.check()
         .map_err(|error| NodeError::new(error.to_string()))?;
     // A row about another partner id is that partner's: no move makes it
-    // this one's.
+    // this one's. So is one of such a partner's talk, and a ledger entry of
+    // either (a host's fault: no side holds them, but none moves them).
     let another = |id: &str| id != by.to && partner::check(id).is_ok();
+    let about = |object: &str| {
+        object
+            .split_once(':')
+            .is_some_and(|(kind, id)| partner::PERSON_OBJECTS.contains(&kind) && another(id))
+    };
+    let talk = |audience: &str| {
+        audience
+            .strip_prefix("personal:")
+            .is_some_and(|members| members.split(',').any(another))
+    };
     if rows.iter().any(|row| {
-        row.subject.as_deref().is_some_and(another)
-            || row
-                .object
-                .split_once(':')
-                .is_some_and(|(kind, id)| partner::PERSON_OBJECTS.contains(&kind) && another(id))
+        row.subject.as_deref().is_some_and(another) || about(&row.object) || talk(&row.audience)
     }) {
         return Err(NodeError::new(
             "a row is about another partner id: it is not this partner's to move",
+        ));
+    }
+    if ledger
+        .iter()
+        .any(|entry| talk(&entry.audience) || about(&entry.target))
+    {
+        return Err(NodeError::new(
+            "a ledger entry is about another partner id: it is not this partner's to move",
         ));
     }
     // Rows already under `to`, before the move: on a clash, they stay.

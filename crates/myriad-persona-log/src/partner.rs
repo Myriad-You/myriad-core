@@ -82,6 +82,27 @@ pub fn is_partners(member: &str) -> bool {
     member == LEGACY || check(member).is_ok()
 }
 
+/// Whether two sides may exchange rows: only when they go by the same id
+/// (`here` this side's, `peer` the other's, as its link names it). A side
+/// still under `local-owner` and one under a partner id, or two partner
+/// ids, never sync or answer each other: the partner's own audience
+/// (`own:`) carries no id, so rows about one partner would land as
+/// another's, or stand as stubs in their place for good. Files keep their
+/// own rule ([`file`]).
+pub fn exchange(here: &str, peer: &str) -> Result<(), LogError> {
+    if !is_partners(peer) {
+        return Err(LogError::new(
+            "the other side goes by a partner id or local-owner",
+        ));
+    }
+    if here != peer {
+        return Err(LogError::new(
+            "a side exchanges rows only with a side that goes by the same id",
+        ));
+    }
+    Ok(())
+}
+
 /// Whether `id` is a partner id in the form this core mints.
 pub fn check(id: &str) -> Result<(), LogError> {
     let digits = id.strip_prefix(PREFIX).unwrap_or("");
@@ -164,6 +185,13 @@ impl Here {
         }
         if self.linked && self.id.is_none() {
             return Err(LogError::new("a linked side has a partner id"));
+        }
+        if let (Some(id), Some(to)) = (&self.id, &self.moving)
+            && id != to
+        {
+            return Err(LogError::new(
+                "a side moves only to the partner id it goes by",
+            ));
         }
         Ok(())
     }
@@ -318,18 +346,21 @@ pub fn page(header: Option<&str>, audience: &str) -> Result<(), LogError> {
     if let Some(header) = header {
         check(header)?;
     }
-    let Some(member) = audience.strip_prefix("personal:") else {
+    let Some(members) = audience.strip_prefix("personal:") else {
         return Ok(());
     };
-    if member == LEGACY && header.is_some() {
-        return Err(LogError::new(
-            "a file that names the partner holds no page of the talk under local-owner",
-        ));
-    }
-    if check(member).is_ok() && header != Some(member) {
-        return Err(LogError::new(
-            "a page of a partner's talk is only in a file whose header names that partner",
-        ));
+    // Each member of a talk of several, as of one.
+    for member in members.split(',') {
+        if member == LEGACY && header.is_some() {
+            return Err(LogError::new(
+                "a file that names the partner holds no page of the talk under local-owner",
+            ));
+        }
+        if check(member).is_ok() && header != Some(member) {
+            return Err(LogError::new(
+                "a page of a partner's talk is only in a file whose header names that partner",
+            ));
+        }
     }
     Ok(())
 }

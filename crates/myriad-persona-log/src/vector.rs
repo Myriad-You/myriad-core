@@ -133,6 +133,11 @@ pub struct Answered {
     /// The side asking may not hold this audience: nothing goes.
     #[serde(skip_serializing_if = "is_false")]
     pub not_held: bool,
+    /// Rows the other side may not hold whole, sorted: each goes as a stub
+    /// (a forget is left out), as `nodes.wire_send`'s `heldBack`. Only a
+    /// host's fault leaves such a row in a log.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub held_back: Vec<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -147,7 +152,15 @@ fn is_false(value: &bool) -> bool {
 /// depends on this side's ledger (stubs of what it forgot or took back)
 /// and on the other side's ABI, which `nodes.wire_send` weighs and this
 /// does not.
-pub fn answer_to(rows: &[Row], theirs: &Vector, holder: &Holder) -> Result<Answered, LogError> {
+///
+/// `here` is the id this side goes by: a side under another id gets
+/// nothing ([`crate::partner::exchange`]).
+pub fn answer_to(
+    rows: &[Row],
+    theirs: &Vector,
+    holder: &Holder,
+    here: &str,
+) -> Result<Answered, LogError> {
     if rows
         .iter()
         .any(|row| row.to.is_some() || !row.takes.is_empty() || row.rule() == crate::Rule::Retract)
@@ -157,28 +170,36 @@ pub fn answer_to(rows: &[Row], theirs: &Vector, holder: &Holder) -> Result<Answe
         ));
     }
     holder.check()?;
+    // A child core holds no log: it gets nothing, whatever id it names.
+    if holder.core != crate::Core::Child {
+        crate::partner::exchange(here, &holder.owner)?;
+    }
     one_audience(rows)?;
     if rows.first().is_some_and(|row| !holder.holds(&row.audience)) {
         return Ok(Answered {
             rows: Vec::new(),
             not_held: true,
+            held_back: Vec::new(),
         });
     }
     // As `nodes.wire_send` does: a row the other side may not hold whole
     // goes as a stub, so its count has no gap.
+    let mut held_back = Vec::new();
     let rows = answer(rows, theirs)?
         .into_iter()
         .filter_map(|row| {
             if holder.holds_row(&row) {
-                Some(row)
-            } else {
-                // A forget has no stub: it is left out.
-                (!crate::forget::on_ledger(&row)).then(|| row.stub())
+                return Some(row);
             }
+            held_back.push(row.id.clone());
+            // A forget has no stub: it is left out.
+            (!crate::forget::on_ledger(&row)).then(|| row.stub())
         })
         .collect();
+    held_back.sort();
     Ok(Answered {
         rows,
         not_held: false,
+        held_back,
     })
 }

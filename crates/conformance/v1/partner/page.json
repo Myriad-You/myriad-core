@@ -84,6 +84,41 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "personal:9,partner_0199d5c0b00044444444444444444444",
+        "header": "partner_0199d5c0b00044444444444444444444"
+      },
+      "name": "a page of a talk of several with the partner in it, in a file that names them",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "personal:9,partner_0199d5c0a00022222222222222222222",
+        "header": "partner_0199d5c0b00044444444444444444444"
+      },
+      "name": "refused: a page of a talk of several with another partner in it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:9,local-owner",
+        "header": "partner_0199d5c0b00044444444444444444444"
+      },
+      "name": "refused: a page of a talk of several with local-owner in it, in a file that names the partner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:9,local-owner"
+      },
+      "name": "a page of a talk of several with local-owner in it, in a file from before",
+      "output": {}
     }
   ],
   "version": 1

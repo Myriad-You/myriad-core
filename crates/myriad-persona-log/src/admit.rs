@@ -56,6 +56,9 @@ pub struct AdmitInput {
     /// This side: a row it may not hold is refused (`not_held`,
     /// [`crate::Holder::holds_row`]).
     pub holder: Holder,
+    /// The id the other side goes by, as its link names it: a batch from a
+    /// side under another id is refused whole ([`crate::partner::exchange`]).
+    pub peer: String,
 }
 
 /// The partner `audience` is of, on this side: the one member of a
@@ -156,8 +159,10 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         ledger,
         mut epochs,
         holder,
+        peer,
     } = input;
     holder.check()?;
+    crate::partner::exchange(&holder.owner, &peer)?;
     forget::given(ledger.as_deref(), &rows)?;
     let ledger = ledger.unwrap_or_default();
     let ahead = rows
@@ -195,9 +200,9 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             continue;
         }
         // A stub of a row about the partner under another id is held: it
-        // keeps only its place, so this side's count has no gap.
-        let stub = row.forgotten && row.payload.is_none() && holder.holds(&row.audience);
-        if !holder.holds_row(&row) && !stub {
+        // keeps only its place, so this side's count has no gap. Never a
+        // forget's.
+        if !holder.holds_row(&row) && !holder.holds_stub(&row) {
             refused.push(refuse(&row, Reason::NotHeld, None));
             continue;
         }

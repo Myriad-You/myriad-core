@@ -225,22 +225,25 @@ fn is_false(value: &bool) -> bool {
 /// that partner, and a file that names one holds no page under
 /// `local-owner`: a side that goes by an id writes it in its header.
 fn check_page_partner(header: &ArchiveHeader, page: &serde_json::Value) -> Result<(), SyncError> {
-    let Some(member) = page
+    let Some(members) = page
         .get("audience")
         .and_then(serde_json::Value::as_str)
         .and_then(|audience| audience.strip_prefix("personal:"))
     else {
         return Ok(());
     };
-    if member == "local-owner" && header.partner.is_some() {
-        return Err(SyncError::new(
-            "a file that names the partner holds no page of the talk under local-owner",
-        ));
-    }
-    if is_partner_id(member) && header.partner.as_deref() != Some(member) {
-        return Err(SyncError::new(
-            "a page of a partner's talk is only in a file whose header names that partner",
-        ));
+    // Each member of a talk of several, as of one.
+    for member in members.split(',') {
+        if member == "local-owner" && header.partner.is_some() {
+            return Err(SyncError::new(
+                "a file that names the partner holds no page of the talk under local-owner",
+            ));
+        }
+        if is_partner_id(member) && header.partner.as_deref() != Some(member) {
+            return Err(SyncError::new(
+                "a page of a partner's talk is only in a file whose header names that partner",
+            ));
+        }
     }
     Ok(())
 }

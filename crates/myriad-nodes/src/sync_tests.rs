@@ -229,6 +229,7 @@ impl Side {
             theirs: holdings(&to.of(audience)).unwrap().vector,
             ask: Vec::new(),
             holder: to.holder.clone(),
+            here: self.holder.owner.clone(),
             peer_abi: to.abi,
         })
         .unwrap()
@@ -246,6 +247,9 @@ impl Side {
             elsewhere: Vec::new(),
             batch,
             holder: self.holder.clone(),
+            // The sender goes by the same id: sides under two ids never
+            // sync (`partner::exchange`).
+            peer: self.holder.owner.clone(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
@@ -739,6 +743,7 @@ fn a_body_lost_on_the_way_is_asked_for_again_and_then_both_fold_the_same() {
         theirs: holdings(&site.of(MINE)).unwrap().vector,
         ask: asked.clone(),
         holder: site.holder.clone(),
+        here: site.holder.owner.clone(),
         peer_abi: 2,
     })
     .unwrap();
@@ -1991,6 +1996,7 @@ fn a_side_whose_core_is_older_gets_no_row_it_cannot_read() {
         theirs: BTreeMap::new(),
         ask: Vec::new(),
         holder: site.holder.clone(),
+        here: site.holder.owner.clone(),
         peer_abi: 0,
     });
     assert!(refused.is_err());
@@ -2124,6 +2130,7 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
         theirs: holdings(&site.of(OWN)).unwrap().vector,
         ask: Vec::new(),
         holder: site.holder.clone(),
+        here: site.holder.owner.clone(),
         ledger: Vec::new(),
         elsewhere: Vec::new(),
         peer_abi: 2,
@@ -2135,6 +2142,7 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
             people: Vec::new(),
             batch: second[0].clone(),
             holder: site.holder.clone(),
+            peer: site.holder.owner.clone(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
@@ -2163,6 +2171,7 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
             people: Vec::new(),
             batch: carried.clone(),
             holder: site.holder.clone(),
+            peer: site.holder.owner.clone(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
@@ -2192,6 +2201,7 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
         theirs: BTreeMap::new(),
         ask: Vec::new(),
         holder: air.holder.clone(),
+        here: air.holder.owner.clone(),
         ledger: Vec::new(),
         elsewhere: known,
         peer_abi: 2,
@@ -2462,30 +2472,70 @@ mod partner_id {
         let mut moved = Side::owned(Core::Pc, "dev_mac", partner::LEGACY);
         moved.link_to(false, P0);
         let site = Side::owned(Core::Server, "site", P0);
-        // It goes as a stub (`held_back`), so the other side's count has no
-        // gap, and nothing of it comes in whole.
-        for side in [moved, site] {
+        // Neither syncs with a side under the one id, either way: `own:`
+        // names no id, so its rows would stand there as stubs for good.
+        for side in [&moved, &site] {
             for from in [&unmoved, &stranger] {
-                let mut side = side.clone();
-                let sent = from.send_to(&side, "own:");
-                assert_eq!(sent.held_back.len(), 1, "{}", side.origin);
-                for batch in sent.batches {
-                    let taken = side.take(batch);
-                    assert!(taken.admitted.refused.is_empty(), "{}", side.origin);
-                    assert!(taken.admitted.accepted.iter().all(|row| row.forgotten));
+                let send_as = |here: &Side, to: &Side| {
+                    send(SendInput {
+                        ledger: here.ledger.clone(),
+                        elsewhere: Vec::new(),
+                        audience: "own:".into(),
+                        rows: here.of("own:"),
+                        bodies: here.bodies.clone(),
+                        theirs: holdings(&to.of("own:")).unwrap().vector,
+                        ask: Vec::new(),
+                        holder: to.holder.clone(),
+                        here: here.holder.owner.clone(),
+                        peer_abi: to.abi,
+                    })
+                };
+                assert!(send_as(from, side).is_err(), "{}", side.origin);
+                assert!(send_as(side, from).is_err(), "{}", side.origin);
+                // Taken as if it came from that side: refused whole.
+                let fresh = Side::owned(Core::Pc, "dev_tmp", &from.holder.owner);
+                let batches = from.send_to(&fresh, "own:").batches;
+                assert!(!batches.is_empty());
+                for batch in batches {
+                    let taken = take(TakeInput {
+                        people: Vec::new(),
+                        elsewhere: Vec::new(),
+                        batch,
+                        holder: side.holder.clone(),
+                        peer: from.holder.owner.clone(),
+                        now: NOW,
+                        known: BTreeMap::new(),
+                        members: BTreeMap::new(),
+                        ledger: Some(side.ledger.clone()),
+                        epochs: BTreeMap::new(),
+                        held: Vec::new(),
+                    });
+                    assert!(taken.is_err(), "{}", side.origin);
                 }
-                assert!(
-                    !side
-                        .rows
-                        .iter()
-                        .any(|row| row.origin == from.origin && !row.forgotten)
-                );
-                assert_eq!(
-                    holdings(&side.of("own:")).unwrap().vector.get(&from.origin),
-                    Some(&1)
-                );
             }
         }
+        // A host's fault: a side under the one id holds such a row all the
+        // same. It goes as a stub (`held_back`, reported), so the other
+        // side's count has no gap, and nothing of it comes in whole.
+        let mut faulty = Side::owned(Core::Pc, "dev_f", P0);
+        // Not through `log.ledger`, which refuses it: in the log as a
+        // faulty host left it.
+        faulty
+            .rows
+            .push(about_partner("f1", "dev_f", 1, T, PF, "affect.change"));
+        let mut site = Side::owned(Core::Server, "site", P0);
+        let sent = faulty.send_to(&site, "own:");
+        assert_eq!(sent.held_back, ["f1"]);
+        for batch in sent.batches {
+            let taken = site.take(batch);
+            assert!(taken.admitted.refused.is_empty());
+            assert!(taken.admitted.accepted.iter().all(|row| row.forgotten));
+        }
+        assert!(!site.rows.iter().any(|row| row.id == "f1" && !row.forgotten));
+        assert_eq!(
+            holdings(&site.of("own:")).unwrap().vector.get("dev_f"),
+            Some(&1)
+        );
         // Her mood towards the partner under the one id comes in.
         let mut mine = Side::owned(Core::Pc, "dev_b", P0);
         mine.write(
