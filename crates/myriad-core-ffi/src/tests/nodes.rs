@@ -15,6 +15,7 @@ use crate::{STATUS_BAD_INPUT, STATUS_OK};
 pub(super) const TESTED: &[&str] = &[
     "nodes.body",
     "nodes.fold",
+    "nodes.home_owed",
     "nodes.home_send",
     "nodes.home_take",
     "nodes.id",

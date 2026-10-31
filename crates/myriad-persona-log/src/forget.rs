@@ -416,12 +416,21 @@ impl<'a> View<'a> {
         out
     }
 
-    /// The forgets that list `row`.
+    /// The forgets that list `row` and count: those written by a home of a
+    /// retract that reaches it. Only a home's fold shows the rows a retract
+    /// keeps, so a list from any other side takes nothing on any side.
     fn listing_forgets(&self, row: &'a Row) -> Vec<&'a Entry> {
+        let retracts = self.retracts(row);
         self.forget_listed
             .get(&(row.audience.as_str(), row.id.as_str()))
             .into_iter()
             .flatten()
+            .filter(|forget| {
+                forget
+                    .homes
+                    .iter()
+                    .any(|origin| retracts.iter().any(|entry| entry.homes.contains(origin)))
+            })
             .copied()
             .collect()
     }
@@ -474,13 +483,7 @@ impl<'a> View<'a> {
                 .filter(|entry| entry.kind == Kind::Home)
                 .any(|entry| named(&entry.target))
             || !self.subject_of(row).is_empty()
-            || self.listing_forgets(row).iter().any(|forget| {
-                forget.homes.iter().any(|origin| {
-                    reaching
-                        .iter()
-                        .any(|entry| entry.is_retract() && entry.homes.contains(origin))
-                })
-            })
+            || !self.listing_forgets(row).is_empty()
     }
 
     /// Whether `row` is taken away on `side`. On a home, a row a retract of
@@ -533,6 +536,14 @@ impl<'a> View<'a> {
     /// Whether this side keeps `audience`'s `object`: it wrote its retract.
     pub fn kept(&self, audience: &str, object: &str) -> bool {
         self.home_of(audience, object)
+    }
+
+    /// Whether a forget names `audience`'s `target` itself (not through a
+    /// merge or a split).
+    pub fn forgets_directly(&self, audience: &str, target: &str) -> bool {
+        self.by_target
+            .get(&(audience, target))
+            .is_some_and(|entries| entries.iter().any(|entry| entry.kind == Kind::Forget))
     }
 
     /// Whether this side wrote the retract of `audience`'s `object`.

@@ -134,6 +134,7 @@ const CALLS: &[(&str, Call)] = &[
     ("meta.version", version),
     ("nodes.body", nodes::body),
     ("nodes.fold", nodes::fold),
+    ("nodes.home_owed", nodes::home_owed),
     ("nodes.home_send", nodes::home_send),
     ("nodes.home_take", nodes::home_take),
     ("nodes.id", nodes::node_id),

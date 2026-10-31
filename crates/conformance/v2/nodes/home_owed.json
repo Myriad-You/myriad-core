@@ -1,0 +1,162 @@
+{
+  "call": "nodes.home_owed",
+  "cases": [
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "a node this side is a home of by a page taken onto it is owed a retract",
+      "output": {
+        "retract": [
+          "node:20f18911b98aa0b65728234cef5d20ac"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac",
+              "dev_new"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "a node this side retracted itself is not owed",
+      "output": {
+        "retract": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000005-000000-site",
+            "audience": "personal:o1",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "a node a forget names itself is not owed: the forget took all a home keeps of it",
+      "output": {
+        "retract": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000004-000000-site",
+            "audience": "personal:o1",
+            "kind": "into",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac",
+            "to": "node:db53f82d0bbd4201fb222518d7799c3c"
+          },
+          {
+            "at": "001760000000005-000000-site",
+            "audience": "personal:o1",
+            "target": "node:db53f82d0bbd4201fb222518d7799c3c"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "a node gone with a forgotten node it went into is still owed: its kept rows stay",
+      "output": {
+        "retract": [
+          "node:20f18911b98aa0b65728234cef5d20ac"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "a retract with no home entry here is owed nothing: this side is no home of it",
+      "output": {
+        "retract": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [],
+        "origin": ""
+      },
+      "name": "refused: an empty origin",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

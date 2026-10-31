@@ -98,8 +98,15 @@ pub(super) fn home_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&home::send(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{page, holder, ledger, held?}` → `{rows, bodies?, filled?, withheld?,
-/// ledger}`: a home page taken onto this computer, which becomes the home;
+/// `{ledger, origin}` → `{retract}`: the nodes this side is a home of and
+/// has written no retract of; it writes one for each, with no list.
+pub(super) fn home_owed(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&home::home_owed(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{page, holder, ledger, held?, origin?}` → `{rows, bodies?, filled?,
+/// withheld?, ledger, retract?}`: a home page taken onto this computer,
+/// which becomes the home (`retract`: [`home::owed`]);
 /// the rows are stored as its own, before the file's log pages, and each
 /// stub of `held` the page holds whole is `filled`. Each body is checked as
 /// one from the wire; one that fails is `withheld`. Only a computer of the

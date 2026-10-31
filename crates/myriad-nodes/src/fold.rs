@@ -1090,12 +1090,13 @@ pub fn retract_lists(input: RetractInput) -> Result<RetractLists, NodeError> {
     let object = format!("node:{}", input.node);
     let mut listed: BTreeSet<String> = BTreeSet::new();
     for row in &rows {
-        // A `local` row never leaves this side: no other side's fold
-        // reaches it to take it.
+        // A retract lists no `local` row: it never leaves this side, so
+        // no other side's fold reaches it to take it. A forget pressed on
+        // a home lists the kept ones it showed: they go here too.
         if row.audience != audience
             || row.forgotten
             || row.object == object
-            || row.replicate == Replicate::Local
+            || (!for_forget && row.replicate == Replicate::Local)
             || forget::on_ledger(row)
         {
             continue;

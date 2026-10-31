@@ -291,9 +291,6 @@
             "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
           }
         ],
-        "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
-        ],
         "rows": [
           {
             "audience": "personal:partner_0199d5c0b00044444444444444444444",

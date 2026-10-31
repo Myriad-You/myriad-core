@@ -1776,7 +1776,7 @@
           }
         ]
       },
-      "name": "elsewhere, a forget listing a row stubs it",
+      "name": "elsewhere, a forget listing a row stubs nothing when no home of a retract reaching it wrote it",
       "output": {
         "added": [
           "fz"
@@ -1804,12 +1804,14 @@
             "author": "her",
             "dseq": 2,
             "epoch": 1,
-            "forgotten": true,
             "hlc": "001760000000001-000000-dev_mac",
             "id": "x1",
             "kind": "node.span",
             "object": "node:20f18911b98aa0b65728234cef5d20ac",
             "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
             "replicate": "shared",
             "version": 1
           },
@@ -1828,9 +1830,6 @@
             ],
             "version": 1
           }
-        ],
-        "stubbed": [
-          "x1"
         ]
       }
     },

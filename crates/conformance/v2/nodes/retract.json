@@ -11661,6 +11661,188 @@
           ]
         ]
       }
+    },
+    {
+      "input": {
+        "audience": "personal:o1",
+        "bodies": {
+          "x0": {
+            "key": "minted:x",
+            "kind": "task",
+            "name": "留着的",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "x1": {
+            "audience": "personal:o1",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说先买票。",
+            "version": 1
+          },
+          "x2": {
+            "audience": "personal:o1",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "只在这台电脑上。",
+            "version": 1
+          },
+          "xa": {
+            "because": [
+              "node:x"
+            ],
+            "how": "merged",
+            "into": "minted:y",
+            "reason": "同一件事",
+            "saidBy": [
+              "her"
+            ],
+            "sync": {
+              "local": "dev_mac"
+            },
+            "version": 1
+          },
+          "y0": {
+            "key": "minted:y",
+            "kind": "task",
+            "name": "大的",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "forget": true,
+        "ledger": [],
+        "node": "5c6a4e0af0db15828e245718ee994ca8",
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "y0",
+            "kind": "node.created",
+            "object": "node:5c6a4e0af0db15828e245718ee994ca8",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:y0"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "x0",
+            "kind": "node.created",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x0"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "x1",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rt",
+            "kind": "retract",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "rth",
+            "kind": "retract.home",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "x2",
+            "kind": "node.span",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:x2"
+            },
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "xa",
+            "kind": "node.absorbed",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:xa"
+            },
+            "replicate": "local",
+            "to": "node:5c6a4e0af0db15828e245718ee994ca8",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a forget pressed on a home lists the kept local rows it showed",
+      "output": {
+        "takes": [
+          [
+            "x0",
+            "x1",
+            "x2",
+            "xa"
+          ]
+        ]
+      }
     }
   ],
   "version": 1

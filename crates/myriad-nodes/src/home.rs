@@ -81,7 +81,7 @@ pub struct TakeInput {
     #[serde(default)]
     pub held: Vec<Row>,
     /// The side this one writes as: a node it keeps already by a retract
-    /// of its own is not listed in [`Taken::retract`].
+    /// of its own is not listed in [`Taken::retract`] ([`owed`]).
     #[serde(default)]
     pub origin: Option<String>,
 }
@@ -107,13 +107,66 @@ pub struct Taken {
     /// This side's ledger with the page's marks: this side is now a home of
     /// the nodes it took.
     pub ledger: Vec<Entry>,
-    /// The nodes (`node:<id>`) this side keeps now by the page's marks and
-    /// has written no retract of, sorted. It writes one for each, as when
-    /// the partner presses it here (`nodes.retract` lists it, beside a
-    /// `retract.home`): a restored home is a home every side knows, so a
-    /// forget it lists counts as a home's ([`myriad_persona_log::forget`]).
+    /// What this side owes now ([`owed`] of `ledger`): the nodes
+    /// (`node:<id>`) it is a home of and has written no retract of.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub retract: Vec<String>,
+}
+
+/// `nodes.home_owed`: what a side owes as a home, from its ledger alone, so
+/// a host that stopped half way asks again.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OwedInput {
+    pub ledger: Vec<Entry>,
+    /// The side this one writes as.
+    pub origin: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Owed {
+    /// See [`owed`].
+    pub retract: Vec<String>,
+}
+
+/// The nodes (`node:<id>`, sorted) this side is a home of (a `home` entry)
+/// whose retract it has not written itself (`origin` not among its
+/// `homes`), as on a computer a home page was taken onto; a node a forget
+/// names itself is left out (it takes all a home keeps of it). Without an
+/// origin, every such node.
+///
+/// For each, this side writes its own shared `retract`, with no list
+/// (`takes` empty), and its `retract.home`, through `log.ledger`, and sends
+/// it as usual: retracts of one node join, so it adds nothing to what the
+/// first one reached (a list from this side's fold now would also name what
+/// was merged or split into the node since), and this side is then a home
+/// every side knows, so a forget the partner presses here lists rows that
+/// count on every home ([`myriad_persona_log::forget`]).
+pub fn owed(ledger: &[Entry], origin: Option<&str>) -> Vec<String> {
+    let view = forget::View::new(ledger);
+    let owed: BTreeSet<&str> = ledger
+        .iter()
+        .filter(|entry| entry.kind == forget::Kind::Home)
+        .filter(|entry| !view.forgets_directly(&entry.audience, &entry.target))
+        .filter(|entry| {
+            !origin.is_some_and(|origin| {
+                view.homes(&entry.audience, &entry.target)
+                    .iter()
+                    .any(|home| home == origin)
+            })
+        })
+        .map(|entry| entry.target.as_str())
+        .collect();
+    owed.into_iter().map(str::to_string).collect()
+}
+
+/// `nodes.home_owed`.
+pub fn home_owed(input: OwedInput) -> Result<Owed, NodeError> {
+    crate::check_token("origin", &input.origin)?;
+    Ok(Owed {
+        retract: owed(&input.ledger, Some(&input.origin)),
+    })
 }
 
 /// Only a computer of the partner's holds what a home keeps, and only of an
@@ -344,20 +397,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
-    let view = forget::View::new(&ledger);
-    let retract: Vec<String> = page
-        .rows
-        .iter()
-        .filter(|row| row.rule() == Rule::Home)
-        .filter(|row| {
-            !origin
-                .as_ref()
-                .is_some_and(|origin| view.homes(&row.audience, &row.object).contains(origin))
-        })
-        .map(|row| row.object.clone())
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect();
+    let retract = owed(&ledger, origin.as_deref());
     Ok(Taken {
         rows,
         bodies,
