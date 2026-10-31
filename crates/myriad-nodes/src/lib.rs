@@ -48,7 +48,8 @@
 //! Between host cores ([`wire`]): one audience's rows and their bodies in
 //! batches, nothing to a side that may not hold the audience, and every
 //! body checked again where it lands (shared, no local path, no secret,
-//! its own canonical bytes).
+//! its own canonical bytes). A home's own backup of the nodes it keeps
+//! ([`home`]) goes only to a computer of the partner's.
 //!
 //! Not here yet: wakes beyond what a blocker's change brings, objections,
 //! and forgetting a single span.
@@ -61,6 +62,7 @@ use std::fmt;
 
 pub mod body;
 pub mod fold;
+pub mod home;
 pub mod key;
 pub mod limits;
 pub mod migrate;

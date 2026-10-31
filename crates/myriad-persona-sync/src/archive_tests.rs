@@ -244,6 +244,15 @@ fn log_page(ids: &[&str]) -> serde_json::Value {
 /// The sample with log pages after its envelope page, sealed as a
 /// version 2 file (or, with `logs` false, wrongly as version 1).
 fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::SyncError> {
+    with_pages(pages, &[], logs)
+}
+
+/// The sample with log pages, then a home's pages, after its envelope page.
+fn with_pages(
+    pages: &[serde_json::Value],
+    homes: &[serde_json::Value],
+    logs: bool,
+) -> Result<Vec<u8>, crate::SyncError> {
     let mut sample = archive_sample();
     let envelopes: Vec<Envelope> = sample
         .parts
@@ -254,6 +263,8 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::
     let manifest = Manifest::of_envelopes(&envelopes)
         .unwrap()
         .with_logs(pages, |_| true)
+        .unwrap()
+        .with_home(homes, true)
         .unwrap();
     let mut header = ArchiveHeader::new(
         &[0x11; SALT_BYTES],
@@ -271,17 +282,15 @@ fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::
     .unwrap();
     header.chunk_bytes = 1024;
     sample.header = header;
-    for (at, page) in pages.iter().enumerate() {
+    for (at, page) in pages.iter().chain(homes).enumerate() {
         let bytes = crate::canonical::canonical_bytes(page);
-        sample.parts.insert(
-            1 + at,
-            (
-                Part::Log {
-                    bytes: bytes.len() as u64,
-                },
-                bytes,
-            ),
-        );
+        let size = bytes.len() as u64;
+        let part = if at < pages.len() {
+            Part::Log { bytes: size }
+        } else {
+            Part::Home { bytes: size }
+        };
+        sample.parts.insert(1 + at, (part, bytes));
     }
     let end = sample.parts.len() - 1;
     sample.parts[end] = (Part::End { manifest }, Vec::new());
@@ -320,6 +329,31 @@ fn a_file_with_log_pages_is_version_2_and_opens_them() {
             .log
             .is_none()
     );
+}
+
+#[test]
+fn a_homes_pages_open_apart_and_only_a_computer_of_the_partners_holds_them() {
+    let pages = [log_page(&["r1", "r2"])];
+    let homes = [log_page(&["r1"])];
+    let file = with_pages(&pages, &homes, true).unwrap();
+    let opened = open(SAMPLE_PASSPHRASE, &file).unwrap();
+    assert_eq!(opened.logs, pages);
+    assert_eq!(opened.homes, homes);
+    assert_eq!(opened.manifest.home.as_ref().unwrap().count, 1);
+    let logs_only = open(SAMPLE_PASSPHRASE, &with_logs(&pages, true).unwrap()).unwrap();
+    assert!(logs_only.homes.is_empty() && logs_only.manifest.home.is_none());
+    assert_ne!(logs_only.manifest.digest, opened.manifest.digest);
+    // A file for a site or a server holds none.
+    let refused = Manifest::of_envelopes(&envelopes())
+        .unwrap()
+        .with_home(&homes, false)
+        .unwrap_err();
+    assert!(
+        refused.to_string().contains("only for a computer"),
+        "{refused}"
+    );
+    // Nor does a version 1 file.
+    assert!(with_pages(&[], &homes, false).is_err());
 }
 
 #[test]

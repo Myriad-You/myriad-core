@@ -42,8 +42,7 @@
 //! the retract goes first with the forgets. The rows still go, so vectors
 //! count them. Every name of the node counts: the nodes that went into it
 //! and the spans a split moved to it, as the rows' envelopes name them
-//! (`to`, `takes`) on the ledger and in the rows, and as the bodies given
-//! show for rows written before envelopes named them. A side takes a
+//! (`to`, `takes`) on the ledger and in the rows. A side takes a
 //! retract as a forget unless it keeps the node (its own `retract.home`,
 //! on its ledger), and rows of the node that come later as stubs.
 //!
@@ -97,8 +96,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use base64::Engine as _;
 use myriad_perception_filter::secrets::{self, SecretKind};
 use myriad_persona_log::{
-    AdmitInput, Admitted, Holder, Replicate, Row, Vector,
-    admit::{Epochs, Reason, Refusal, admit_unnamed},
+    AdmitInput, Admitted, Holder, Replicate, Row, Vector, admit,
+    admit::{Epochs, Reason, Refusal},
     forget::{self, Entry},
     payloads, vector,
 };
@@ -215,9 +214,8 @@ pub struct SendInput {
     pub ask: Vec<String>,
     /// The other side.
     pub holder: Holder,
-    /// This side's ledger: a node it forgot or took back from sync goes as
-    /// stubs under every name it has, whatever rows are given.
-    #[serde(default)]
+    /// This side's ledger, required: a node it forgot or took back from
+    /// sync goes as stubs under every name it has, whatever rows are given.
     pub ledger: Vec<Entry>,
     /// The nodes (`node:<id>`) this side knows are a person's or a group's
     /// in her own audience ([`Taken::elsewhere`], kept): no body of theirs
@@ -587,12 +585,8 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
-    // under any name of it the fold takes: the other side keeps nothing of
-    // this side's.
-    let ledger = forget::joined(
-        &forget::joined(&ledger, &forget::unnamed(&rows)),
-        &crate::fold::named(&rows, &bodies),
-    );
+    // under any name of it: the other side keeps nothing of this side's.
+    let ledger = forget::joined(&ledger, &forget::ledger(&rows));
     let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Away);
     let mut away = elsewhere(
         rows.iter()
@@ -769,8 +763,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .collect();
     forget::given(ledger.as_deref(), &batch.rows)
         .map_err(|error| NodeError::new(error.to_string()))?;
-    // The batch's names go on the ledger once their bodies are taken, below.
-    let mut admitted = admit_unnamed(AdmitInput {
+    let mut admitted = admit(AdmitInput {
         rows,
         now,
         known,
@@ -855,22 +848,6 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             }),
         }
     }
-    // The names of the rows taken, as the fold here reads them: of each
-    // merge and split whose body came and reads, and of each stub. A row
-    // whose body did not come names nothing until it does (asked again, it
-    // comes back as `held`). What they reach is taken now.
-    let taken: Vec<Row> = admitted.accepted.iter().chain(&again).cloned().collect();
-    admitted.ledger = forget::joined(&admitted.ledger, &crate::fold::named(&taken, &bodies));
-    let (accepted, stubbed) = forget::absorb(
-        std::mem::take(&mut admitted.accepted),
-        &admitted.ledger,
-        forget::Side::Here,
-    );
-    admitted.accepted = accepted;
-    let (_, stubbed_again) = forget::absorb(again, &admitted.ledger, forget::Side::Here);
-    let gone: BTreeSet<&String> = stubbed.iter().chain(&stubbed_again).collect();
-    bodies.retain(|id, _| !gone.contains(id));
-    withheld.retain(|one| !gone.contains(&one.id));
     let ask = withheld
         .iter()
         .filter(|one| !one.why.lasting())

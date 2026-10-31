@@ -14,7 +14,7 @@
 //! The passphrase and the key never appear in an answer's error.
 
 use base64::Engine as _;
-use myriad_persona_log::Holder;
+use myriad_persona_log::{Core, Holder};
 use myriad_persona_sync::{
     Envelope,
     archive::{self, ArchiveHeader, ArchiveKey, HeaderFields, Kdf, Manifest, Part},
@@ -174,9 +174,11 @@ pub(super) fn archive_part(raw: &[u8]) -> Result<Value, Failure> {
     }
 }
 
-/// `{envelopes, logs?}` → `{manifest}`: what a copy of her holds, counted
-/// and digested the same on every side. Pages are put in their canonical
-/// form first; log pages (`{audience, rows, payloads?}`) add `log`.
+/// `{envelopes, logs?, homes?, holder?}` → `{manifest}`: what a copy of
+/// her holds, counted and digested the same on every side. Pages are put
+/// in their canonical form first; log pages (`{audience, rows, payloads?}`)
+/// add `log`, a home's pages (`nodes.home_send`, only for a computer of
+/// the partner's) add `home`.
 pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -189,9 +191,13 @@ pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
         /// page of an audience it may not hold is refused.
         #[serde(default)]
         holder: Option<Holder>,
+        /// A home's pages, in the same frame: only for a computer of the
+        /// partner's.
+        #[serde(default)]
+        homes: Vec<Value>,
     }
     let req: In = input(raw)?;
-    let holder = match (&req.holder, req.logs.is_empty()) {
+    let holder = match (&req.holder, req.logs.is_empty() && req.homes.is_empty()) {
         (None, false) => return Err(refused("log pages need the holder the file is for")),
         (Some(holder), _) => {
             holder.check().map_err(refused)?;
@@ -210,6 +216,12 @@ pub(super) fn manifest(raw: &[u8]) -> Result<Value, Failure> {
             manifest.with_logs(&req.logs, |audience| {
                 holder.is_some_and(|holder| holder.holds(audience))
             })
+        })
+        .and_then(|manifest| {
+            manifest.with_home(
+                &req.homes,
+                holder.is_some_and(|holder| holder.core == Core::Pc),
+            )
         })
         .map_err(refused)?;
     Ok(json!({ "manifest": manifest }))

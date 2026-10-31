@@ -260,7 +260,15 @@ impl Side {
             .into_iter()
             .filter(|(id, _)| rows.iter().any(|row| &row.id == id))
             .collect();
-        serde_json::to_value(fold(FoldInput { rows, bodies }).unwrap()).unwrap()
+        serde_json::to_value(
+            fold(FoldInput {
+                rows,
+                bodies,
+                ledger: self.ledger.clone(),
+            })
+            .unwrap(),
+        )
+        .unwrap()
     }
 
     fn due(&self, audience: &str) -> Vec<Vec<Reason>> {
@@ -277,6 +285,7 @@ impl Side {
         queue(QueueInput {
             rows: self.of(audience),
             bodies,
+            ledger: self.ledger.clone(),
             max: 10,
         })
         .unwrap()
@@ -1432,24 +1441,22 @@ fn an_early_merge_from_elsewhere_never_keeps_a_retract_from_its_node() {
 }
 
 #[test]
-fn a_merge_the_fold_passes_by_names_nothing_and_takes_nothing_away() {
+fn a_merge_is_named_by_its_envelope_whatever_its_body_says() {
     let (mut mac, mut site, mut air) = three_sides();
     // The other Mac sends a merge of 「别的事」 whose envelope says 「发版」
-    // and whose body says the third: the fold passes it by (bad_body).
+    // and whose body says the third: the fold passes it by (bad_body), but
+    // its envelope names where 「别的事」 went, for what is reached.
     let (mut merge, body) = merge_of("a1", "dev_air", 1, T + 5, OTHER_KEY, THIRD_KEY);
     merge.to = Some(object(MINE, KEY));
     air.write(merge, Some(body));
     mac.write(row("m1", "dev_mac", 5, T + 6, MINE, KEY, "retract"), None);
     meet(&mut mac, &mut site, &mut air, false);
-    // No side but its writer names it: 「别的事」 stays whole and its own
-    // node, and so does the merge row (no name, so no reach).
+    // The retract of 「发版」 reaches 「别的事」 through the envelope: the
+    // server keeps none of it, the home keeps it whole.
+    assert!(!whole(&site, "r3") && !whole(&site, "a1"));
+    assert!(whole(&mac, "r3"));
     for side in [&site, &mac] {
-        assert!(whole(side, "r3") && whole(side, "a1"));
-        assert!(!side.ledger.iter().any(forget::is_name));
-        let folded = side.folded(MINE, false);
-        let other = node(&folded, OTHER_KEY);
-        assert_eq!(other["name"]["value"], "别的事", "{other}");
-        assert!(other.get("absorbedInto").is_none(), "{other}");
+        assert!(side.ledger.iter().any(forget::is_name));
     }
     // Before the retract, the fold says why it passed the merge by.
     let (_, mut site, mut air) = three_sides();
@@ -1458,6 +1465,7 @@ fn a_merge_the_fold_passes_by_names_nothing_and_takes_nothing_away() {
     air.write(merge, Some(body));
     site.sync_from(&air, MINE);
     let folded = site.folded(MINE, false);
+    assert!(node(&folded, OTHER_KEY).get("absorbedInto").is_none());
     assert!(
         folded["skipped"]
             .as_array()
@@ -1468,7 +1476,7 @@ fn a_merge_the_fold_passes_by_names_nothing_and_takes_nothing_away() {
 }
 
 #[test]
-fn a_home_shows_its_node_as_its_own_and_a_late_shared_merge_is_passed_by() {
+fn a_merge_written_after_a_retract_is_void_on_every_side() {
     let (mut mac, mut site, mut air) = three_sides();
     // The partner takes 「别的事」 back on the other Mac; the Mac, offline,
     // merges it into 「发版」 after, and its merge reaches the server first,
@@ -1484,7 +1492,7 @@ fn a_home_shows_its_node_as_its_own_and_a_late_shared_merge_is_passed_by() {
     site.sync_from(&air, MINE);
     mac.sync_from(&site, MINE);
     // The home kept the merge's body, but shows 「别的事」 as its own node:
-    // the merge came after the retract, and only a home reorganises it.
+    // the merge came after the retract, so it is void.
     assert!(whole(&air, "m1") && whole(&air, "r3"));
     let folded = air.folded(MINE, false);
     let other = node(&folded, OTHER_KEY);
@@ -1494,13 +1502,190 @@ fn a_home_shows_its_node_as_its_own_and_a_late_shared_merge_is_passed_by() {
         folded["skipped"]
             .as_array()
             .unwrap()
-            .contains(&json!({ "id": "m1", "why": "retracted" })),
+            .contains(&json!({ "id": "m1", "why": "void" })),
         "{folded}"
     );
     // Every other side keeps nothing of it.
     for side in [&site, &mac] {
         assert!(!whole(side, "m1") && !whole(side, "r3"));
     }
+}
+
+#[test]
+fn a_merge_into_a_retracted_node_after_its_retract_reaches_nothing_in_any_order() {
+    let mut servers = Vec::new();
+    for mac_first in [true, false] {
+        let (mut mac, mut site, mut air) = three_sides();
+        // The other Mac takes 「别的事」 back; the Mac, offline, merges 「发版」
+        // into it after. Were the merge to count, the retract would reach
+        // 「发版」 through it.
+        air.write(
+            row("a1", "dev_air", 1, T + 5, MINE, OTHER_KEY, "retract"),
+            None,
+        );
+        let (merge, body) = merge_of("m1", "dev_mac", 5, T + 6, KEY, OTHER_KEY);
+        mac.write(merge, Some(body));
+        meet(&mut mac, &mut site, &mut air, mac_first);
+        // 「发版」 stays whole everywhere, and the merge names nothing.
+        for side in [&site, &mac, &air] {
+            assert!(whole(side, "r1") && whole(side, "r2"), "{mac_first}");
+            let folded = side.folded(MINE, false);
+            let release = node(&folded, KEY);
+            assert!(release.get("absorbedInto").is_none(), "{release}");
+            assert!(
+                folded["skipped"]
+                    .as_array()
+                    .unwrap()
+                    .contains(&json!({ "id": "m1", "why": "void" })),
+                "{folded}"
+            );
+        }
+        servers.push(site.shared(MINE));
+    }
+    assert_eq!(servers[0], servers[1]);
+}
+
+#[test]
+fn a_home_loses_its_node_only_to_a_forget_of_a_node_it_keeps() {
+    let (mut mac, mut site, mut air) = three_sides();
+    // 「别的事」 gets a span, which a split moves to the third node; then it
+    // goes into 「发版」; then the Mac takes 「别的事」 back.
+    mac.write(
+        row("s1", "dev_mac", 5, T + 4, MINE, OTHER_KEY, "node.span"),
+        Some(span(MINE, "别的事的一段。")),
+    );
+    let mut split = row("s2", "dev_mac", 6, T + 5, MINE, OTHER_KEY, "node.split_off");
+    split.to = Some(object(MINE, THIRD_KEY));
+    split.takes = vec!["s1".into()];
+    mac.write(
+        split,
+        Some(
+            json!({ "version": 1, "sync": "shared", "saidBy": ["her"], "to": THIRD_KEY,
+                     "spans": ["s1"], "reason": "单独记", "because": ["span:s1"] }),
+        ),
+    );
+    let (merge, body) = merge_of("s3", "dev_mac", 7, T + 6, OTHER_KEY, KEY);
+    mac.write(merge, Some(body));
+    mac.write(
+        row("s4", "dev_mac", 8, T + 7, MINE, OTHER_KEY, "retract"),
+        None,
+    );
+    meet(&mut mac, &mut site, &mut air, true);
+    // The partner forgets 「发版」, which 「别的事」 went into, and the third
+    // node, which took its span: neither is kept on the Mac, so neither
+    // takes 「别的事」's rows off its home.
+    site.write(row("f1", "site", 10, T + 8, MINE, KEY, "forget"), None);
+    site.write(
+        row("f2", "site", 11, T + 9, MINE, THIRD_KEY, "forget"),
+        None,
+    );
+    mac.sync_from(&site, MINE);
+    for id in ["r3", "s1", "s2", "s3"] {
+        assert!(whole(&mac, id), "{id}");
+    }
+    assert!(!whole(&mac, "r1") && !whole(&mac, "r5"));
+    // A forget of 「别的事」 itself does.
+    site.write(
+        row("f3", "site", 12, T + 10, MINE, OTHER_KEY, "forget"),
+        None,
+    );
+    mac.sync_from(&site, MINE);
+    for id in ["r3", "s1", "s2", "s3"] {
+        assert!(!whole(&mac, id), "{id}");
+    }
+}
+
+#[test]
+fn a_merge_whose_body_is_withheld_still_carries_its_name() {
+    let (mut mac, mut site, mut air) = three_sides();
+    // The other Mac merges 「别的事」 into 「发版」 with a key in its reason:
+    // the body never leaves it, the row does, with its envelope.
+    let (merge, mut body) = merge_of("a1", "dev_air", 1, T + 5, OTHER_KEY, KEY);
+    body["reason"] = json!(format!("同一件事 {}", token()));
+    air.write(merge, Some(body));
+    meet(&mut mac, &mut site, &mut air, true);
+    assert!(!site.bodies.contains_key("a1") && !mac.bodies.contains_key("a1"));
+    // The Mac takes 「发版」 back: the server keeps nothing of 「别的事」.
+    mac.write(row("m1", "dev_mac", 5, T + 6, MINE, KEY, "retract"), None);
+    meet(&mut mac, &mut site, &mut air, true);
+    assert!(!whole(&site, "r3") && !whole(&air, "r3"));
+    assert!(whole(&mac, "r3"));
+}
+
+#[test]
+fn a_home_restored_onto_a_new_computer_is_its_home() {
+    use crate::home::{self, SendInput as HomeSend, TakeInput as HomeTake};
+    let (mut mac, mut site, mut air) = three_sides();
+    mac.write(
+        row("m1", "dev_mac", 5, T + 5, MINE, OTHER_KEY, "retract"),
+        None,
+    );
+    meet(&mut mac, &mut site, &mut air, true);
+    // The Mac's export carries what it keeps in a home page.
+    let page = home::send(HomeSend {
+        audience: MINE.into(),
+        rows: mac.of(MINE),
+        bodies: mac.bodies.clone(),
+        ledger: mac.ledger.clone(),
+        holder: mac.holder.clone(),
+    })
+    .unwrap();
+    let ids: Vec<&str> = page.rows.iter().map(|row| row.id.as_str()).collect();
+    assert!(ids.contains(&"r3") && ids.contains(&"m1"), "{ids:?}");
+    assert!(!ids.contains(&"r1"), "{ids:?}");
+    assert!(page.rows.iter().any(|row| row.kind == "retract.home"));
+    // A site or a server never writes or takes one.
+    let server = Holder {
+        core: Core::Server,
+        owner: "7".into(),
+    };
+    assert!(
+        home::send(HomeSend {
+            audience: MINE.into(),
+            rows: mac.of(MINE),
+            bodies: mac.bodies.clone(),
+            ledger: mac.ledger.clone(),
+            holder: server.clone(),
+        })
+        .is_err()
+    );
+    assert!(
+        home::take(HomeTake {
+            page: page.clone(),
+            holder: server,
+            ledger: Vec::new(),
+        })
+        .is_err()
+    );
+    // A new Mac takes the home page, then the log from the server: it is
+    // the home now, and keeps 「别的事」 whole.
+    let mut fresh = Side::named(Core::Pc, "dev_new");
+    let taken = home::take(HomeTake {
+        page: page.clone(),
+        holder: fresh.holder.clone(),
+        ledger: Vec::new(),
+    })
+    .unwrap();
+    fresh.rows = taken.rows;
+    fresh.bodies = taken.bodies;
+    fresh.ledger = taken.ledger;
+    fresh.sync_from(&site, MINE);
+    assert!(whole(&fresh, "r3"));
+    assert!(whole(&fresh, "r1"));
+    let folded = fresh.folded(MINE, false);
+    let other = node(&folded, OTHER_KEY);
+    assert_eq!(other["name"]["value"], "别的事", "{other}");
+    // A page with a row of a node no mark keeps is refused.
+    let mut stray = page;
+    stray.rows.retain(|row| !row.kind.starts_with("retract"));
+    assert!(
+        home::take(HomeTake {
+            page: stray,
+            holder: fresh.holder.clone(),
+            ledger: Vec::new(),
+        })
+        .is_err()
+    );
 }
 
 #[test]
@@ -1519,6 +1704,7 @@ fn upkeep_leaves_a_retracted_node_to_a_local_run_on_its_home() {
         node: Some(id(node)),
         candidates,
         inbox: Vec::new(),
+        ledger: mac.ledger.clone(),
     };
     // A shared run on another node is never shown it, so never merges into
     // it.
@@ -1543,6 +1729,27 @@ fn upkeep_leaves_a_retracted_node_to_a_local_run_on_its_home() {
             .iter()
             .all(|write| write.body["sync"] == json!({ "local": "dev_mac" }))
     );
+    // Its structure is frozen: a local run splits nothing off it and merges
+    // it into nothing, and names no node this side does not keep.
+    for output in [
+        r#"{"actions": [{"do": "split", "as": "new1", "name": "单独", "spans": ["s1"], "reason": "单独记", "because": ["s1"]}]}"#,
+        r#"{"actions": [{"do": "absorb", "into": "n2", "how": "merged", "reason": "同一件事", "because": ["s1"]}]}"#,
+    ] {
+        let read = crate::upkeep::read(ReadInput {
+            input: input(KEY, vec![id(OTHER_KEY)]),
+            run: "run2".into(),
+            sync: Sync::Local("dev_mac".into()),
+            output: output.into(),
+        })
+        .unwrap();
+        assert!(read.fallback.is_some(), "{output}");
+        assert!(
+            read.writes
+                .iter()
+                .all(|write| !matches!(write.kind.as_str(), "node.split_off" | "node.absorbed")),
+            "{output}"
+        );
+    }
 }
 
 /// A person's node written in her own audience anyway (a writer's bug): its

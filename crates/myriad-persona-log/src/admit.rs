@@ -111,21 +111,8 @@ pub struct Admitted {
 
 /// A batch checked. Refused as a whole when a retract is in the batch and
 /// no ledger is given: a home never loses its node to a call that did not
-/// say what it keeps. The names of the rows taken go on the ledger as their
-/// envelopes give them (`log.admit`: rows this side wrote, or a log it
-/// tidies); between sides `nodes.wire_take` names only what its fold
-/// accepts ([`admit_unnamed`]).
+/// say what it keeps.
 pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
-    admitting(input, true)
-}
-
-/// [`admit`], with none of the batch's names put on the ledger: the caller
-/// adds those it accepts, and stubs what they reach.
-pub fn admit_unnamed(input: AdmitInput) -> Result<Admitted, LogError> {
-    admitting(input, false)
-}
-
-fn admitting(input: AdmitInput, named: bool) -> Result<Admitted, LogError> {
     let AdmitInput {
         mut rows,
         now,
@@ -217,11 +204,7 @@ fn admitting(input: AdmitInput, named: bool) -> Result<Admitted, LogError> {
         }
         accepted.push(row);
     }
-    let shown = match named {
-        true => forget::ledger(&accepted),
-        false => forget::unnamed(&accepted),
-    };
-    let ledger = forget::joined(&ledger, &shown);
+    let ledger = forget::joined(&ledger, &forget::ledger(&accepted));
     let (accepted, _) = forget::absorb(accepted, &ledger, forget::Side::Here);
     Ok(Admitted {
         accepted,

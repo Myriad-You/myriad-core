@@ -215,6 +215,18 @@ fn log_pages_have_a_part_and_a_tally() {
     assert!(plain["manifest"].get("log").is_none());
     assert_eq!(logged["manifest"]["log"]["count"], 1);
     assert_ne!(plain["manifest"]["digest"], logged["manifest"]["digest"]);
+    let homed = ok(
+        "sync.manifest",
+        json!({ "envelopes": [], "logs": [page], "homes": [page], "holder": pc }),
+    );
+    assert_eq!(homed["manifest"]["home"]["count"], 1);
+    assert_ne!(homed["manifest"]["digest"], logged["manifest"]["digest"]);
+    let head = ok(
+        "sync.archive_part",
+        json!({ "part": { "part": "home", "bytes": 12 } }),
+    );
+    let read = ok("sync.archive_part", json!({ "bytes": head["head"] }));
+    assert_eq!(read["part"], json!({ "part": "home", "bytes": 12 }));
     for (input, why) in [
         (
             json!({ "envelopes": [], "logs": [page, page], "holder": pc }),
@@ -224,6 +236,14 @@ fn log_pages_have_a_part_and_a_tally() {
         (
             json!({ "envelopes": [], "logs": [page], "holder": { "core": "pc", "owner": "9" } }),
             "someone else's private talk, for the partner's file",
+        ),
+        (
+            json!({ "envelopes": [], "homes": [page], "holder": { "core": "server", "owner": "7" } }),
+            "a home's pages, for the server's file",
+        ),
+        (
+            json!({ "envelopes": [], "homes": [page] }),
+            "home pages, no holder",
         ),
     ] {
         let (status, _) = ffi("sync.manifest", &input);
