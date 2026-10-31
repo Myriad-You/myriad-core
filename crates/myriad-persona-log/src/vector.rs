@@ -164,8 +164,21 @@ pub fn answer_to(rows: &[Row], theirs: &Vector, holder: &Holder) -> Result<Answe
             not_held: true,
         });
     }
+    // As `nodes.wire_send` does: a row the other side may not hold whole
+    // goes as a stub, so its count has no gap.
+    let rows = answer(rows, theirs)?
+        .into_iter()
+        .filter_map(|row| {
+            if holder.holds_row(&row) {
+                Some(row)
+            } else {
+                // A forget has no stub: it is left out.
+                (!crate::forget::on_ledger(&row)).then(|| row.stub())
+            }
+        })
+        .collect();
     Ok(Answered {
-        rows: answer(rows, theirs)?,
+        rows,
         not_held: false,
     })
 }

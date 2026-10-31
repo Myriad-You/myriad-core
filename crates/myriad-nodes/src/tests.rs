@@ -186,6 +186,18 @@ fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
             json_of(&partner::file(&here, header.as_deref()).map_err(refused)?)
         }
         "partner.migrate" => json_of(&crate::migrate::migrate(input(raw)?)?),
+        "partner.page" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                #[serde(default)]
+                header: Option<String>,
+                audience: String,
+            }
+            let In { header, audience } = input(raw)?;
+            partner::page(header.as_deref(), &audience).map_err(refused)?;
+            json!({})
+        }
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -199,7 +211,7 @@ fn every_partner_case_answers_as_recorded() {
         .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
         .collect();
     files.sort();
-    assert_eq!(files.len(), 4, "{files:?}");
+    assert_eq!(files.len(), 5, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         let call = file["call"].as_str().unwrap().to_string();
@@ -368,6 +380,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         (
             "refused: a home page of another partner id's talk",
             "an audience this side may not hold",
+        ),
+        (
+            "refused: a home page row about the partner under local-owner",
+            "one this side may not hold",
         ),
         // nodes.wire_send to an older side
         ("refused: a peer of no ABI", "ABI is 1 or more"),

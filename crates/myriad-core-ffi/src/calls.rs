@@ -159,6 +159,7 @@ const CALLS: &[(&str, Call)] = &[
     ("partner.link", partner::link),
     ("partner.migrate", partner::migrate),
     ("partner.mint", partner::mint),
+    ("partner.page", partner::page),
     ("prompt.untrusted_block", speaking::untrusted_block),
     ("reach.as_text", reach::as_text),
     ("reach.judge_system", reach::judge_system),

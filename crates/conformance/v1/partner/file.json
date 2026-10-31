@@ -233,6 +233,41 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "header": "partner_0199d5c0a00022222222222222222222",
+        "here": {
+          "moving": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "refused: an empty side that is moving takes no file's id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "moving": "partner_0199d5c0900033333333333333333333"
+        }
+      },
+      "name": "refused: an empty side that is moving takes no file from before",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "header": "partner_0199d5c0a00022222222222222222222",
+        "here": {
+          "filed": true
+        }
+      },
+      "name": "refused: an empty side that took a file from before takes no other file's id",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

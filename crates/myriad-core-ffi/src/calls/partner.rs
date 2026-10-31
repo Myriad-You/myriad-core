@@ -66,6 +66,21 @@ pub(super) fn file(raw: &[u8]) -> Result<Value, Failure> {
     answer(&partner::file(&here, header.as_deref()).map_err(refused)?)
 }
 
+/// `{header?, audience}` → `{}`: whether a page of `audience` may be in a
+/// file whose header names the partner id `header` (none: no partner).
+pub(super) fn page(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        #[serde(default)]
+        header: Option<String>,
+        audience: String,
+    }
+    let In { header, audience } = quiet_input(raw)?;
+    partner::page(header.as_deref(), &audience).map_err(refused)?;
+    Ok(json!({}))
+}
+
 /// `{rows, bodies?, ledger, from, to}` → `{rows, bodies?, ledger, moved?,
 /// clashes?, unread?}`: `from` is `local-owner`, nothing else.
 pub(super) fn migrate(raw: &[u8]) -> Result<Value, Failure> {

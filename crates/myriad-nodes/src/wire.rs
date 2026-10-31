@@ -246,6 +246,15 @@ pub struct Sent {
     /// that is to go: nothing goes until it repins.
     #[serde(skip_serializing_if = "is_false")]
     pub too_old: bool,
+    /// Rows the other side may not hold whole (`Holder::holds_row`: about
+    /// the partner under an id it does not go by), sorted. Each goes as a
+    /// stub, so that side's count has no gap and nothing of it goes; a
+    /// forget or a retract has no stub and is left out, which leaves a gap
+    /// there that never closes. No side writes such a row once it gives
+    /// `log.ledger` its holder, and `partner.migrate` moves or refuses the
+    /// ones from before.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub held_back: Vec<String>,
 }
 
 /// The core ABI a row needs on the side that takes it: 2 for one with a
@@ -624,6 +633,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             batches: Vec::new(),
             not_held: true,
             too_old: false,
+            held_back: Vec::new(),
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
@@ -635,14 +645,24 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
     );
     away.extend(known_away);
-    // A row the other side would refuse (`Holder::holds_row`: about the
-    // partner under an id it does not go by) is never sent: it would be
-    // lacked, sent and refused again on every sync.
+    // A row the other side may not hold whole (`Holder::holds_row`: about
+    // the partner under an id it does not go by) goes as a stub: left out,
+    // it would leave a gap in that side's count that never closes, and
+    // every later row of its side would go again on every sync.
+    let mut held_back = Vec::new();
     let answered: Vec<Row> = vector::answer(&rows, &theirs)
         .map_err(|error| NodeError::new(error.to_string()))?
         .into_iter()
-        .filter(|row| holder.holds_row(row))
+        .filter_map(|row| {
+            if holder.holds_row(&row) {
+                return Some(row);
+            }
+            held_back.push(row.id.clone());
+            // A forget or a retract has no stub: it is left out.
+            (!forget::on_ledger(&row)).then(|| row.stub())
+        })
         .collect();
+    held_back.sort();
     let lacked: BTreeSet<&str> = answered.iter().map(|row| row.id.as_str()).collect();
     let asked: BTreeSet<&str> = ask.iter().map(String::as_str).collect();
     let mut again: Vec<Row> = rows
@@ -663,6 +683,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             batches: Vec::new(),
             not_held: false,
             too_old: true,
+            held_back: Vec::new(),
         });
     }
     let engine = base64::engine::general_purpose::STANDARD;
@@ -722,6 +743,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         batches,
         not_held: false,
         too_old: false,
+        held_back,
     })
 }
 
@@ -814,6 +836,11 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     // to: only for one of them is the sender's `person_elsewhere` taken.
     let mut keys: BTreeSet<String> = people.into_iter().collect();
     keys.insert(format!("person:{}", holder.owner));
+    // A partner id's partner was `local-owner` once: their node under it
+    // is theirs too.
+    if myriad_persona_log::partner::check(&holder.owner).is_ok() {
+        keys.insert(format!("person:{}", myriad_persona_log::partner::LEGACY));
+    }
     for body in shown.values() {
         strings(body, &mut keys);
     }

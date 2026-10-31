@@ -29,7 +29,8 @@
 //! it is, and the host moves any id of the partner's inside it itself.
 //!
 //! The host writes a move in one transaction where it can. Where it
-//! cannot, it sets `here.moving` before the first write and clears it after
+//! cannot, it sets `here.moving` to the id it moves to before the first
+//! write and clears it after
 //! the last; the id, `linked`, and clearing `filed` are saved last, so a
 //! move cut off anywhere is taken up again by the next link
 //! (`myriad_persona_log::partner::link`).
@@ -70,8 +71,11 @@ pub struct MigrateInput {
 
 /// Two rows that land on one place: the same side's same count in one
 /// audience. A side wrote under two of the partner's ids with one count,
-/// which moving cannot mend; the first in log order stays, and the later
-/// one (`id`) is left out of what is returned: rows, bodies and `moved`.
+/// which moving cannot mend. The row already under `to` stays (or, with
+/// none, the first in log order), and the other (`id`) is left out of what
+/// is returned: rows, bodies and `moved`. The host deletes it, or sets it
+/// aside out of the log: left there under `local-owner`, it keeps
+/// `partner.link` moving again forever (`Here::audiences`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Clash {
@@ -161,6 +165,26 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
     let by = Move { from, to };
     by.check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    // A row about another partner id is that partner's: no move makes it
+    // this one's.
+    let another = |id: &str| id != by.to && partner::check(id).is_ok();
+    if rows.iter().any(|row| {
+        row.subject.as_deref().is_some_and(another)
+            || row
+                .object
+                .split_once(':')
+                .is_some_and(|(kind, id)| partner::PERSON_OBJECTS.contains(&kind) && another(id))
+    }) {
+        return Err(NodeError::new(
+            "a row is about another partner id: it is not this partner's to move",
+        ));
+    }
+    // Rows already under `to`, before the move: on a clash, they stay.
+    let under_to: std::collections::BTreeSet<String> = rows
+        .iter()
+        .filter(|row| row.audience.strip_prefix("personal:") == Some(by.to.as_str()))
+        .map(|row| row.id.clone())
+        .collect();
     let mut moved = Vec::new();
     let mut unread = Vec::new();
     let mut out = Vec::new();
@@ -184,21 +208,32 @@ pub fn migrate(input: MigrateInput) -> Result<Migrated, NodeError> {
         out.push(new);
     }
     sort(&mut out);
-    let mut places: BTreeMap<(&str, &str, u64), &str> = BTreeMap::new();
-    let mut clashes = Vec::new();
+    // Each place's rows in log order; the one already under `to` stays,
+    // else the first.
+    let mut places: BTreeMap<(&str, &str, u64), Vec<&str>> = BTreeMap::new();
     for row in &out {
         let Some(dseq) = row.dseq else { continue };
-        let place = (row.audience.as_str(), row.origin.as_str(), dseq);
-        match places.get(&place) {
-            Some(other) if *other != row.id => clashes.push(Clash {
-                id: row.id.clone(),
-                with: other.to_string(),
-            }),
-            _ => {
-                places.insert(place, &row.id);
-            }
+        let ids = places
+            .entry((row.audience.as_str(), row.origin.as_str(), dseq))
+            .or_default();
+        if !ids.contains(&row.id.as_str()) {
+            ids.push(&row.id);
         }
     }
+    let mut clashes = Vec::new();
+    for ids in places.values().filter(|ids| ids.len() > 1) {
+        let stays = ids
+            .iter()
+            .find(|id| under_to.contains(**id))
+            .unwrap_or(&ids[0]);
+        for id in ids.iter().filter(|id| *id != stays) {
+            clashes.push(Clash {
+                id: id.to_string(),
+                with: stays.to_string(),
+            });
+        }
+    }
+    clashes.sort_by(|a, b| a.id.cmp(&b.id));
     let dropped: std::collections::BTreeSet<String> =
         clashes.iter().map(|clash| clash.id.clone()).collect();
     out.retain(|row| !dropped.contains(&row.id));

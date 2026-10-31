@@ -2230,6 +2230,41 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "page": {
+          "audience": "own:",
+          "payloads": [],
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000002-000000-dev_mac",
+              "id": "h2",
+              "kind": "affect.change",
+              "object": "affect:local-owner",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h2"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "name": "refused: a home page row about the partner under local-owner",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

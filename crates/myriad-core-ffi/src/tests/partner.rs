@@ -16,6 +16,7 @@ pub(super) const TESTED: &[&str] = &[
     "partner.link",
     "partner.migrate",
     "partner.mint",
+    "partner.page",
 ];
 
 #[test]

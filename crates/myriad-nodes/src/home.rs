@@ -153,6 +153,8 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
             mark(row) && view.home_of(&row.audience, &row.object)
                 || !row.forgotten && view.kept_home(row)
         })
+        // Nothing a computer of the partner's would refuse to take back.
+        .filter(|row| holder.holds_row(row))
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut kept);

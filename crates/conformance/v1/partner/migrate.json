@@ -544,18 +544,15 @@
         ],
         "to": "partner_0199d5c0900033333333333333333333"
       },
-      "name": "two rows that land on one place clash",
+      "name": "two rows that land on one place clash: the one already under the new id stays",
       "output": {
         "clashes": [
           {
-            "id": "x3",
-            "with": "m3"
+            "id": "m3",
+            "with": "x3"
           }
         ],
         "ledger": [],
-        "moved": [
-          "m3"
-        ],
         "rows": [
           {
             "audience": "personal:partner_0199d5c0900033333333333333333333",
@@ -563,7 +560,7 @@
             "dseq": 3,
             "epoch": 1,
             "hlc": "001760000000002-000000-dev_mac",
-            "id": "m3",
+            "id": "x3",
             "kind": "node.span",
             "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
             "origin": "dev_mac",
@@ -1505,6 +1502,60 @@
         "unread": [
           "m3"
         ]
+      }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000000009-000000-dev_mac",
+            "id": "a1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0a00022222222222222222222",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a row of hers about another partner id (it is not this partner's to move)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 8,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "f1",
+            "kind": "forget",
+            "object": "subject:partner_0199d5c0a00022222222222222222222",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a forget of everything about another partner id",
+      "output": {
+        "error": "bad_input"
       }
     }
   ],

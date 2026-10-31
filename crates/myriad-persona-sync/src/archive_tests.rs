@@ -503,3 +503,28 @@ fn a_page_of_a_partners_talk_is_only_in_a_file_that_names_that_partner() {
     // Anyone else's talk, and hers, are as they were.
     assert!(with_pages(&[page("own:")], &[], true, false, Some(P0)).is_ok());
 }
+
+/// The shared cases of `partner.page` (`conformance/v1/partner/page.json`):
+/// the archive seals a page by the same rule.
+#[test]
+fn a_page_is_sealed_by_the_same_rule_as_partner_page() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../conformance/v1/partner/page.json");
+    let file: serde_json::Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    for case in file["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let audience = case["input"]["audience"].as_str().unwrap();
+        let header = case["input"]["header"].as_str();
+        let refused = case["output"].get("error").is_some();
+        // A header partner that is no partner id: the header is refused.
+        if header.is_some_and(|partner| !partner.starts_with("partner_")) {
+            assert!(refused, "{name}");
+            continue;
+        }
+        let mut page = log_page(&["r1"]);
+        page["audience"] = audience.into();
+        page["rows"][0]["audience"] = audience.into();
+        let sealed = with_pages(&[page], &[], true, false, header);
+        assert_eq!(sealed.is_err(), refused, "{name}");
+    }
+}

@@ -1,0 +1,90 @@
+{
+  "call": "partner.page",
+  "cases": [
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333",
+        "header": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a page of the partner's talk in a file that names them",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a page of the partner's talk in a file that names no partner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333",
+        "header": "partner_0199d5c0a00022222222222222222222"
+      },
+      "name": "refused: a page of the partner's talk in a file that names another partner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:local-owner"
+      },
+      "name": "a page under local-owner in a file from before, that names no partner",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "personal:local-owner",
+        "header": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a page under local-owner in a file that names the partner",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "header": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "her own pages go in any file",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "own:"
+      },
+      "name": "her own pages go in a file from before",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "personal:9",
+        "header": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "someone else's talk with her is no partner's",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "group:g1"
+      },
+      "name": "a group's pages go in any file",
+      "output": {}
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "header": "local-owner"
+      },
+      "name": "refused: a header partner that is not a partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

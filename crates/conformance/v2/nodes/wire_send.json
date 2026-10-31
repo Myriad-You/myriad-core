@@ -3591,7 +3591,7 @@
         ],
         "theirs": {}
       },
-      "name": "rows the other side's holder would refuse are not sent: a forget about the partner under another id",
+      "name": "a forget about the partner under another id has no stub: it is left out and listed (heldBack)",
       "output": {
         "batches": [
           {
@@ -3611,6 +3611,10 @@
               }
             ]
           }
+        ],
+        "heldBack": [
+          "g2",
+          "g3"
         ]
       }
     },
@@ -3714,10 +3718,10 @@
             "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
             "origin": "dev_mac",
             "replicate": "shared",
-            "version": 1,
             "takes": [
               "x1"
-            ]
+            ],
+            "version": 1
           }
         ]
       },
@@ -3725,6 +3729,138 @@
       "output": {
         "batches": [],
         "tooOld": true
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "bodies": {},
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 2,
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a row of hers the other side may not hold whole goes as a stub, so its count has no gap (heldBack)",
+      "output": {
+        "batches": [
+          {
+            "audience": "own:",
+            "rows": [
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-dev_mac",
+                "id": "h1",
+                "kind": "affect.change",
+                "object": "affect:partner_0199d5c0b00044444444444444444444",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:h1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "forgotten": true,
+                "hlc": "001760000000002-000000-dev_mac",
+                "id": "h2",
+                "kind": "affect.change",
+                "object": "affect:local-owner",
+                "origin": "dev_mac",
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "own:",
+                "author": "her",
+                "dseq": 3,
+                "epoch": 1,
+                "hlc": "001760000000003-000000-dev_mac",
+                "id": "h3",
+                "kind": "affect.change",
+                "object": "affect:partner_0199d5c0b00044444444444444444444",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:h3"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ],
+            "withheld": [
+              {
+                "id": "h1",
+                "why": "no_body"
+              },
+              {
+                "id": "h3",
+                "why": "no_body"
+              }
+            ]
+          }
+        ],
+        "heldBack": [
+          "h2"
+        ]
       }
     }
   ],

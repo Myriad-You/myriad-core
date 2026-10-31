@@ -624,6 +624,10 @@ pub struct RecordInput {
     pub rows: Vec<Row>,
     #[serde(default)]
     pub ledger: Vec<Entry>,
+    /// This side: given, a row it may not hold ([`crate::Holder::holds_row`])
+    /// is refused, so none is ever written.
+    #[serde(default)]
+    pub holder: Option<crate::Holder>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -637,9 +641,21 @@ pub struct Recorded {
 /// another node), as `log.admit` does for the rows it takes. Its homes come
 /// only from here: no side sends a local row.
 pub fn record(input: RecordInput) -> Result<Recorded, LogError> {
+    if let Some(holder) = &input.holder {
+        holder.check()?;
+    }
     for row in &input.rows {
         row.check()
             .map_err(|_| LogError::new("a row's envelope is not whole"))?;
+        // A side never writes what it may not hold: about the partner
+        // under an id it does not go by, or of an audience not its own.
+        if input
+            .holder
+            .as_ref()
+            .is_some_and(|holder| !holder.holds_row(row))
+        {
+            return Err(LogError::new("a row this side may not hold"));
+        }
     }
     Ok(Recorded {
         ledger: joined(&input.ledger, &ledger(&input.rows)),

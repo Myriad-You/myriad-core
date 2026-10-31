@@ -25,11 +25,14 @@
 //!   link asks first ([`Linked::confirm`]; the coordinator's decision,
 //!   2026-10-31). A move cut off half way is taken up again: a side that
 //!   still holds `personal:local-owner`, or says it is moving
-//!   ([`Here::moving`]: set before the first write of a move, cleared after
-//!   the last), moves from it, whatever id it goes by already. A side that
+//!   ([`Here::moving`]: the id it moves to, set before the first write of a
+//!   move, cleared after the last), moves from it, whatever id it goes by
+//!   already; a link of another id than the one it is moving to is
+//!   refused. A side that
 //!   holds the talk of another partner id than the link's is refused: it
 //!   would go by two ids. A Mac that never linked stays `local-owner`.
-//! - **Files** ([`file`]) never change or add an id. A file is taken when
+//! - **Files** ([`file`]) never change a side's id: only an empty side that
+//!   never linked adopts one. A file is taken when
 //!   the partner id in its header is this side's. A side with no id yet
 //!   (still `local-owner`) that holds no row of a `personal:` audience or of
 //!   `own:` and never linked may take the file's id as its own (the
@@ -138,12 +141,13 @@ pub struct Here {
     /// `local-owner` has finished, or the side is started empty.
     #[serde(default, skip_serializing_if = "is_false")]
     pub filed: bool,
-    /// A move from `local-owner` is under way: set before its first write,
-    /// cleared after its last. While it is set, [`link`] moves again, so a
-    /// move cut off after the partner's talk but before her own rows or the
-    /// ledger is finished.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub moving: bool,
+    /// A move from `local-owner` is under way, to this id: set before its
+    /// first write, cleared after its last. While it is set, [`link`] moves
+    /// again, so a move cut off after the partner's talk but before her own
+    /// rows or the ledger is finished; a link of another id is refused, and
+    /// no file comes in ([`file`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub moving: Option<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -154,6 +158,9 @@ impl Here {
     fn check(&self) -> Result<(), LogError> {
         if let Some(id) = &self.id {
             check(id)?;
+        }
+        if let Some(to) = &self.moving {
+            check(to)?;
         }
         if self.linked && self.id.is_none() {
             return Err(LogError::new("a linked side has a partner id"));
@@ -224,9 +231,16 @@ pub fn link(here: &Here, theirs: &str) -> Result<Linked, LogError> {
             "this side holds another partner id's talk: start it empty to link",
         ));
     }
+    if here.moving.as_deref().is_some_and(|to| to != theirs) {
+        return Err(LogError::new(
+            "this side is moving to another partner id: finish that move first",
+        ));
+    }
     let from = match &here.id {
         None => Some(LEGACY.to_string()),
-        Some(id) if id == theirs => (here.unmoved() || here.moving).then(|| LEGACY.to_string()),
+        Some(id) if id == theirs => {
+            (here.unmoved() || here.moving.is_some()).then(|| LEGACY.to_string())
+        }
         Some(_) => {
             return Err(LogError::new(
                 "this side goes by another partner id: start it empty to link",
@@ -261,7 +275,10 @@ pub struct Filed {
 /// its pages under `local-owner`) may come in here, and under which id.
 pub fn file(here: &Here, header: Option<&str>) -> Result<Filed, LogError> {
     here.check()?;
-    let open = here.empty() && !here.linked && here.id.is_none();
+    // Only an empty side that never linked, is not moving and took no file
+    // from before adopts a file's id.
+    let open =
+        here.empty() && !here.linked && here.id.is_none() && here.moving.is_none() && !here.filed;
     let id = header.unwrap_or(LEGACY);
     if let Some(header) = header {
         check(header)?;
@@ -289,6 +306,32 @@ pub fn file(here: &Here, header: Option<&str>) -> Result<Filed, LogError> {
         adopt: id != mine,
         filed: header.is_none(),
     })
+}
+
+/// Whether a page of `audience` may be in a file whose header names the
+/// partner id `header` (none: no partner in it): a page of a partner id's
+/// private talk only in a file that names that id, and none of the talk
+/// under `local-owner` in a file that names one. A side that goes by an id
+/// writes it in its header. `sync::archive` checks the same as it seals and
+/// opens a file; a host that seals a file part by part asks this first.
+pub fn page(header: Option<&str>, audience: &str) -> Result<(), LogError> {
+    if let Some(header) = header {
+        check(header)?;
+    }
+    let Some(member) = audience.strip_prefix("personal:") else {
+        return Ok(());
+    };
+    if member == LEGACY && header.is_some() {
+        return Err(LogError::new(
+            "a file that names the partner holds no page of the talk under local-owner",
+        ));
+    }
+    if check(member).is_ok() && header != Some(member) {
+        return Err(LogError::new(
+            "a page of a partner's talk is only in a file whose header names that partner",
+        ));
+    }
+    Ok(())
 }
 
 /// One move of a side's partner id: from `local-owner` to the id the link
@@ -351,7 +394,7 @@ impl Move {
 
 /// Object types whose id is a person: `subject:<id>` (a forget of all
 /// about them), `affect:<id>` (her mood towards them).
-pub(crate) const PERSON_OBJECTS: [&str; 2] = [crate::kinds::SUBJECT, "affect"];
+pub const PERSON_OBJECTS: [&str; 2] = [crate::kinds::SUBJECT, "affect"];
 
 /// `row` moved: the partner's private audience under the new id, and the
 /// partner as subject and as an object's id. Rows of her own audience
@@ -404,7 +447,7 @@ mod tests {
             linked,
             audiences: audiences.iter().map(|one| one.to_string()).collect(),
             filed: false,
-            moving: false,
+            moving: None,
         }
     }
 
@@ -497,6 +540,15 @@ mod tests {
         let filed = here(None, false, &["personal:local-owner", "own:"]);
         assert!(file(&filed, None).is_err());
         assert!(file(&filed, Some(PF)).is_err());
+        // Nor does an empty side that is filed or moving.
+        let mut filed = here(None, false, &[]);
+        filed.filed = true;
+        let mut moving = here(None, false, &[]);
+        moving.moving = Some(P0.into());
+        for side in [&filed, &moving] {
+            assert!(file(side, None).is_err());
+            assert!(file(side, Some(PF)).is_err());
+        }
     }
 
     #[test]
@@ -505,9 +557,15 @@ mod tests {
         // rows or the ledger: no row of local-owner is left to say so, but
         // the side says it is moving.
         let mut cut = here(Some(P0), true, &[&format!("personal:{P0}"), "own:"]);
-        cut.moving = true;
+        cut.moving = Some(P0.into());
         assert_eq!(link(&cut, P0).unwrap().from.as_deref(), Some(LEGACY));
-        cut.moving = false;
+        // A link of another id than the one it is moving to is refused.
+        let mut other = cut.clone();
+        other.id = None;
+        other.linked = false;
+        other.audiences = vec!["personal:local-owner".into()];
+        assert!(link(&other, PF).is_err());
+        cut.moving = None;
         assert_eq!(link(&cut, P0).unwrap().from, None);
         // Rows moved, the id not saved yet: it moves again.
         let unsaved = here(None, false, &[&format!("personal:{P0}"), "own:"]);

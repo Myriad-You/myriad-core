@@ -202,7 +202,10 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             refused.push(refuse(&row, Reason::Local, None));
             continue;
         }
-        if !holder.holds_row(&row) {
+        // A stub of a row about the partner under another id is held: it
+        // keeps only its place, so this side's count has no gap.
+        let stub = row.forgotten && row.payload.is_none() && holder.holds(&row.audience);
+        if !holder.holds_row(&row) && !stub {
             refused.push(refuse(&row, Reason::NotHeld, None));
             continue;
         }

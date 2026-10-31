@@ -166,6 +166,7 @@ impl Side {
         self.ledger = forget::record(forget::RecordInput {
             rows: wrote.clone(),
             ledger: self.ledger.clone(),
+            holder: Some(self.holder.clone()),
         })
         .unwrap()
         .ledger;
@@ -2233,7 +2234,7 @@ mod partner_id {
                 linked,
                 audiences,
                 filed: false,
-                moving: false,
+                moving: None,
             }
         }
 
@@ -2460,21 +2461,28 @@ mod partner_id {
         let mut moved = Side::owned(Core::Pc, "dev_mac", partner::LEGACY);
         moved.link_to(false, P0);
         let site = Side::owned(Core::Server, "site", P0);
+        // It goes as a stub (`held_back`), so the other side's count has no
+        // gap, and nothing of it comes in whole.
         for side in [moved, site] {
             for from in [&unmoved, &stranger] {
                 let mut side = side.clone();
-                for batch in from.send_to(&side, "own:").batches {
+                let sent = from.send_to(&side, "own:");
+                assert_eq!(sent.held_back.len(), 1, "{}", side.origin);
+                for batch in sent.batches {
                     let taken = side.take(batch);
-                    assert!(taken.admitted.accepted.is_empty(), "{}", side.origin);
-                    assert!(
-                        taken
-                            .admitted
-                            .refused
-                            .iter()
-                            .all(|one| one.reason == myriad_persona_log::admit::Reason::NotHeld)
-                    );
+                    assert!(taken.admitted.refused.is_empty(), "{}", side.origin);
+                    assert!(taken.admitted.accepted.iter().all(|row| row.forgotten));
                 }
-                assert!(!side.rows.iter().any(|row| row.origin == from.origin));
+                assert!(
+                    !side
+                        .rows
+                        .iter()
+                        .any(|row| row.origin == from.origin && !row.forgotten)
+                );
+                assert_eq!(
+                    holdings(&side.of("own:")).unwrap().vector.get(&from.origin),
+                    Some(&1)
+                );
             }
         }
         // Her mood towards the partner under the one id comes in.

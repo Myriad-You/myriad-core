@@ -334,6 +334,66 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: given its holder, a row this side may not hold is never written",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "given its holder, a row this side may hold is written",
+      "output": {
+        "ledger": []
+      }
     }
   ],
   "version": 1

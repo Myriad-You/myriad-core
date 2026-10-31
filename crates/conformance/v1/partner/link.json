@@ -105,7 +105,7 @@
             "personal:local-owner",
             "personal:partner_0199d5c0900033333333333333333333"
           ],
-          "moving": true
+          "moving": "partner_0199d5c0900033333333333333333333"
         },
         "theirs": "partner_0199d5c0900033333333333333333333"
       },
@@ -170,7 +170,7 @@
           ],
           "id": "partner_0199d5c0900033333333333333333333",
           "linked": true,
-          "moving": true
+          "moving": "partner_0199d5c0900033333333333333333333"
         },
         "theirs": "partner_0199d5c0900033333333333333333333"
       },
@@ -187,7 +187,7 @@
             "personal:partner_0199d5c0900033333333333333333333",
             "own:"
           ],
-          "moving": true
+          "moving": "partner_0199d5c0900033333333333333333333"
         },
         "theirs": "partner_0199d5c0900033333333333333333333"
       },
@@ -206,7 +206,7 @@
             "own:"
           ],
           "filed": true,
-          "moving": true
+          "moving": "partner_0199d5c0900033333333333333333333"
         },
         "theirs": "partner_0199d5c0900033333333333333333333"
       },
@@ -245,6 +245,37 @@
         "theirs": "partner_0199d5c0900033333333333333333333"
       },
       "name": "refused: a side of the link's id that also holds another partner id's talk",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ],
+          "moving": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0a00022222222222222222222"
+      },
+      "name": "refused: a side moving to one id links to no other (finish that move first)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner"
+          ],
+          "moving": "local-owner"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a moving id that is not a partner id",
       "output": {
         "error": "bad_input"
       }
