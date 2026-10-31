@@ -65,6 +65,7 @@ pub mod fold;
 pub mod home;
 pub mod key;
 pub mod limits;
+pub mod migrate;
 pub mod place;
 pub mod queue;
 pub mod tags;

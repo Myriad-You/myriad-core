@@ -8,6 +8,8 @@ use serde_json::{Value, json};
 use super::{ffi, ok};
 use crate::STATUS_BAD_INPUT;
 
+const SITE: &str = "partner_0199d5c0a00022222222222222222222";
+
 pub(super) const TESTED: &[&str] = &[
     "sync.archive_key",
     "sync.archive_open",
@@ -218,12 +220,12 @@ fn log_pages_have_a_part_and_a_tally() {
     assert_eq!(read["part"], json!({ "part": "log", "bytes": 12 }));
     let row = json!({
         "version": 1, "id": "r1", "origin": "dev_mac", "author": "her", "epoch": 1, "dseq": 1,
-        "hlc": "001760000000000-000000-dev_mac", "audience": "personal:7", "object": "node:a",
+        "hlc": "001760000000000-000000-dev_mac", "audience": "personal:local-owner", "object": "node:a",
         "kind": "node.span", "payload": { "ref": "doc:r1" }, "replicate": "shared",
     });
-    let page = json!({ "audience": "personal:7", "rows": [row], "payloads": [{ "ref": "doc:r1", "data": "e30=" }] });
+    let page = json!({ "audience": "personal:local-owner", "rows": [row], "payloads": [{ "ref": "doc:r1", "data": "e30=" }] });
     let plain = ok("sync.manifest", json!({ "envelopes": [] }));
-    let pc = json!({ "core": "pc", "owner": "7" });
+    let pc = json!({ "core": "pc", "owner": "local-owner" });
     let logged = ok(
         "sync.manifest",
         json!({ "envelopes": [], "logs": [page], "holder": pc }),
@@ -247,7 +249,7 @@ fn log_pages_have_a_part_and_a_tally() {
         json!({ "bytes": head["head"], "holder": pc }),
     );
     assert_eq!(read["part"], json!({ "part": "home", "bytes": 12 }));
-    for holder in [json!(null), json!({ "core": "server", "owner": "7" })] {
+    for holder in [json!(null), json!({ "core": "server", "owner": SITE })] {
         let (status, out) = ffi(
             "sync.archive_part",
             &json!({ "bytes": head["head"], "holder": holder }),
@@ -277,11 +279,11 @@ fn log_pages_have_a_part_and_a_tally() {
         ),
         (json!({ "envelopes": [], "logs": [page] }), "no holder"),
         (
-            json!({ "envelopes": [], "logs": [page], "holder": { "core": "pc", "owner": "9" } }),
+            json!({ "envelopes": [], "logs": [page], "holder": { "core": "pc", "owner": SITE } }),
             "someone else's private talk, for the partner's file",
         ),
         (
-            json!({ "envelopes": [], "homes": [page], "holder": { "core": "server", "owner": "7" } }),
+            json!({ "envelopes": [], "homes": [page], "holder": { "core": "server", "owner": SITE } }),
             "a home's pages, for the server's file",
         ),
         (

@@ -2156,6 +2156,349 @@
           "x1"
         ]
       }
+    },
+    {
+      "input": {
+        "incoming": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0900033333333333333333333",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:a-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a stub held back under another id against the row moved to the one id: they differ, the whole row stays",
+      "output": {
+        "conflicts": [
+          {
+            "clash": "same_id_differs",
+            "id": "a-1"
+          }
+        ],
+        "duplicates": 0,
+        "log": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0900033333333333333333333",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:a-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "incoming": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0900033333333333333333333",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:a-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a stub held back under local-owner is filled by the row moved to this side's id",
+      "output": {
+        "duplicates": 1,
+        "filled": [
+          "a-1"
+        ],
+        "log": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0900033333333333333333333",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:a-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "incoming": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:x-1"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0900033333333333333333333",
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "personal:local-owner",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "local-owner",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a stub of the partner's talk held back under local-owner is filled by the row moved to this side's id",
+      "output": {
+        "duplicates": 1,
+        "filled": [
+          "x-1"
+        ],
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:x-1"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0900033333333333333333333",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "incoming": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:x-1"
+            },
+            "replicate": "shared",
+            "subject": "partner_0199d5c0900033333333333333333333",
+            "version": 1
+          }
+        ],
+        "ledger": [
+          {
+            "at": "001760000000001-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "target": "subject:partner_0199d5c0900033333333333333333333"
+          }
+        ],
+        "log": [
+          {
+            "audience": "personal:local-owner",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "local-owner",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a stub held back under local-owner and a forget of everything about the partner: the moved row stays a stub, nothing is filled",
+      "output": {
+        "duplicates": 1,
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "owner",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "x-1",
+            "kind": "memory.write",
+            "object": "memory:m-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "subject": "partner_0199d5c0900033333333333333333333",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "incoming": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0900033333333333333333333",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:a-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a stub held back under local-owner, without this side's holder: they differ, the stub stays",
+      "output": {
+        "conflicts": [
+          {
+            "clash": "same_id_differs",
+            "id": "a-1"
+          }
+        ],
+        "duplicates": 0,
+        "log": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "a-1",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
     }
   ],
   "version": 1

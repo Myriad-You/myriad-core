@@ -104,8 +104,9 @@ pub(super) fn home_owed(raw: &[u8]) -> Result<Value, Failure> {
     answer(&home::home_owed(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{page, holder, ledger, held?, origin?}` → `{rows, bodies?, filled?,
-/// withheld?, ledger, retract?}`: a home page taken onto this computer,
+/// `{page, holder, peer, ledger, held?, origin?}` → `{rows, bodies?,
+/// filled?, withheld?, ledger, retract?}`: a home page taken onto this
+/// computer (`peer` the file header's id, `local-owner` without one),
 /// which becomes the home (`retract`: [`home::owed`]);
 /// the rows are stored as its own, before the file's log pages, and each
 /// stub of `held` the page holds whole is `filled`. Each body is checked as
@@ -115,17 +116,21 @@ pub(super) fn home_take(raw: &[u8]) -> Result<Value, Failure> {
     answer(&home::take(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{audience, rows, bodies?, theirs?, ask?, holder, ledger, peerAbi,
-/// elsewhere?}` → `{batches, notHeld?, tooOld?}`: what to send another
-/// host core of one audience; a forgotten or retracted node goes as stubs
-/// only. `peerAbi` is the other side's ABI (2 when its hello listed
-/// `log2`, else 1): rows it cannot read are not sent to it (`tooOld`).
+/// `{audience, rows, bodies?, theirs?, ask?, holder, here, ledger, peerAbi,
+/// elsewhere?}` → `{batches, notHeld?, tooOld?, heldBack?}`: what to send
+/// another host core of one audience; a forgotten or retracted node goes as
+/// stubs only. `here` is the id this side goes by: a host core under
+/// another id is refused. `peerAbi` is the other side's ABI (2 when its
+/// hello listed `log2`, else 1): rows it cannot read are not sent to it
+/// (`tooOld`). `heldBack` lists rows that went as stubs or were left out,
+/// a host's fault.
 pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::send(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{batch, holder, now, known?, members?, ledger?, epochs?, held?,
-/// elsewhere?, people?}` → what `log.admit` answers, with `bodies?`,
+/// `{batch, holder, peer, now, known?, members?, ledger?, epochs?, held?,
+/// elsewhere?, people?}` (`peer` the id the sender goes by: one under
+/// another id is refused) → what `log.admit` answers, with `bodies?`,
 /// `withheld?`, `ask?` and `elsewhere?`. The ledger is required when the
 /// batch holds a retract; names come from the rows' envelopes.
 pub(super) fn wire_take(raw: &[u8]) -> Result<Value, Failure> {

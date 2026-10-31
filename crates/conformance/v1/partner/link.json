@@ -1,0 +1,303 @@
+{
+  "call": "partner.link",
+  "cases": [
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ]
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac still local-owner takes the site's id and moves from local-owner",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a Mac that took another id from a file is never moved to the link's (start it empty to link)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac that took this id from a file links with nothing to move",
+      "output": {
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a side linked before to the same id has nothing to do",
+      "output": {
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "id": "partner_0199d5c0a00022222222222222222222",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a side linked before to another id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {},
+        "theirs": "acct_7"
+      },
+      "name": "refused: the link's id is not a partner id (a raw account id)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a linked side with no id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "moving": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a move cut off half way moves again: rows under local-owner remain, and the id is not saved yet (it is saved last)",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ],
+          "filed": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a Mac that took a file from before while empty asks before it moves (confirm)",
+      "output": {
+        "confirm": true,
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {},
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "on no, the Mac started empty: nothing to ask",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333"
+          ],
+          "filed": true,
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "on yes, once moved: nothing left to ask",
+      "output": {
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333",
+            "own:"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true,
+          "moving": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a move cut off after the partner's talk, before her own rows or the ledger: still moving, so it moves again",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333",
+            "own:"
+          ],
+          "moving": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a move cut off before its id was saved, every row of the partner's talk moved: still moving, so it moves again",
+      "output": {
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "personal:partner_0199d5c0900033333333333333333333",
+            "own:"
+          ],
+          "filed": true,
+          "moving": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "a side that took a file from before and was cut off moving asks again (confirm): filed is kept until the move has finished",
+      "output": {
+        "confirm": true,
+        "from": "local-owner",
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "personal:partner_0199d5c0a00022222222222222222222"
+          ]
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a side holding another partner id's talk beside local-owner is never moved to the link's (start it empty)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333",
+            "personal:partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a side of the link's id that also holds another partner id's talk",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner",
+            "own:"
+          ],
+          "moving": "partner_0199d5c0900033333333333333333333"
+        },
+        "theirs": "partner_0199d5c0a00022222222222222222222"
+      },
+      "name": "refused: a side moving to one id links to no other (finish that move first)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:local-owner"
+          ],
+          "moving": "local-owner"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a moving id that is not a partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333",
+            "own:"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true,
+          "moving": "partner_0199d5c0a00022222222222222222222"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a side moving to another partner id than the one it goes by",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

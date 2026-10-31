@@ -192,10 +192,60 @@ pub struct ArchiveHeader {
     /// is for a computer of the partner's, and only one opens it.
     #[serde(default, skip_serializing_if = "is_false")]
     pub home: bool,
+    /// The writer's partner id: whose private talk its log pages hold. Only
+    /// in a file with log pages (version [`ARCHIVE_LOG_VERSION`]), so a
+    /// reader of version 1 never meets it. A side that goes by an id writes
+    /// it: a page of `personal:<partner id>` is only in a file that names
+    /// that id, and a file that names one holds no page of `local-owner`'s
+    /// talk (checked on sealing and on opening). An importer reads it before the
+    /// pages: a file is taken only when it is this side's id, or by a side
+    /// that holds nothing and never linked (`myriad_persona_log::partner::
+    /// file`). An id, not a credential; it never changes a side's id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partner: Option<String>,
+}
+
+/// Whether `id` is a partner id: `partner_` and 32 lowercase hex digits,
+/// minted no earlier than 2025 (`myriad_persona_log::partner::check`, which
+/// this crate cannot call).
+fn is_partner_id(id: &str) -> bool {
+    let digits = id.strip_prefix("partner_").unwrap_or("");
+    digits.len() == 32
+        && digits
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        && i64::from_str_radix(&digits[..12], 16).is_ok_and(|at| at >= 1_735_689_600_000)
 }
 
 fn is_false(value: &bool) -> bool {
     !*value
+}
+
+/// A page of a partner's private talk is only in a file whose header names
+/// that partner, and a file that names one holds no page under
+/// `local-owner`: a side that goes by an id writes it in its header.
+fn check_page_partner(header: &ArchiveHeader, page: &serde_json::Value) -> Result<(), SyncError> {
+    let Some(members) = page
+        .get("audience")
+        .and_then(serde_json::Value::as_str)
+        .and_then(|audience| audience.strip_prefix("personal:"))
+    else {
+        return Ok(());
+    };
+    // Each member of a talk of several, as of one.
+    for member in members.split(',') {
+        if member == "local-owner" && header.partner.is_some() {
+            return Err(SyncError::new(
+                "a file that names the partner holds no page of the talk under local-owner",
+            ));
+        }
+        if is_partner_id(member) && header.partner.as_deref() != Some(member) {
+            return Err(SyncError::new(
+                "a page of a partner's talk is only in a file whose header names that partner",
+            ));
+        }
+    }
+    Ok(())
 }
 
 /// What a header is made from, besides the frame's constants.
@@ -217,6 +267,9 @@ pub struct HeaderFields {
     /// partner's, and written as version [`ARCHIVE_LOG_VERSION`].
     #[serde(default, skip_serializing_if = "is_false")]
     pub home: bool,
+    /// The writer's partner id, for a file with log pages only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub partner: Option<String>,
 }
 
 impl ArchiveHeader {
@@ -245,6 +298,7 @@ impl ArchiveHeader {
             created_at: fields.created_at,
             digest: fields.digest,
             home: fields.home,
+            partner: fields.partner,
         };
         header.check()?;
         Ok(header)
@@ -289,6 +343,16 @@ impl ArchiveHeader {
         }
         check_node(&self.origin)?;
         check_sha256(&self.digest, "the header's digest")?;
+        if let Some(partner) = &self.partner {
+            if self.version != ARCHIVE_LOG_VERSION {
+                return Err(SyncError::new(
+                    "only a file with log pages names the partner",
+                ));
+            }
+            if !is_partner_id(partner) {
+                return Err(SyncError::new("the partner is a partner id"));
+            }
+        }
         Ok(())
     }
 
@@ -510,6 +574,11 @@ impl Sealer {
             return Err(SyncError::new(
                 "a home's pages are only in a file whose header says it is for a computer of the partner's",
             ));
+        }
+        if matches!(part, Part::Log { .. } | Part::Home { .. }) {
+            let page: serde_json::Value = serde_json::from_slice(payload)
+                .map_err(|_| SyncError::new("a log page is not JSON"))?;
+            check_page_partner(&self.header, &page)?;
         }
         if let Part::End { manifest } = part
             && manifest.digest != self.header.digest
@@ -1185,6 +1254,7 @@ pub fn check_parts(
                     return Err(SyncError::new("a log page is not canonical JSON"));
                 }
                 LogPage::read(&page)?;
+                check_page_partner(&header, &page)?;
                 match part {
                     Part::Home { .. } => homes.push(page),
                     _ => logs.push(page),

@@ -3,6 +3,11 @@
   "cases": [
     {
       "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -168,6 +173,11 @@
     },
     {
       "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -211,9 +221,10 @@
     },
     {
       "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "pc",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "rows": [
           {
@@ -271,9 +282,10 @@
     },
     {
       "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
         "holder": {
           "core": "server",
-          "owner": "o1"
+          "owner": "partner_0199d5c0b00044444444444444444444"
         },
         "rows": [
           {
@@ -361,6 +373,7 @@
     },
     {
       "input": {
+        "here": "o1",
         "holder": {
           "core": "child",
           "owner": "o1"
@@ -393,6 +406,7 @@
     },
     {
       "input": {
+        "here": "o1,o2",
         "holder": {
           "core": "pc",
           "owner": "o1,o2"
@@ -407,6 +421,11 @@
     },
     {
       "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -446,16 +465,21 @@
     },
     {
       "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
-            "audience": "personal:7",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 1,
             "epoch": 1,
             "hlc": "001760000000000-000000-dev_mac",
             "id": "a1",
             "kind": "node.created",
-            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "object": "node:9c336ff0dcd91a7736bea9c3a3eb8103",
             "origin": "dev_mac",
             "payload": {
               "ref": "doc:a1"
@@ -464,14 +488,14 @@
             "version": 1
           },
           {
-            "audience": "personal:7",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 2,
             "epoch": 1,
             "hlc": "001760000000001-000000-dev_mac",
             "id": "c1",
             "kind": "node.created",
-            "object": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "object": "node:6a89186a68c66094dcc95839120b1210",
             "origin": "dev_mac",
             "payload": {
               "ref": "doc:c1"
@@ -480,20 +504,20 @@
             "version": 1
           },
           {
-            "audience": "personal:7",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
             "author": "her",
             "dseq": 3,
             "epoch": 1,
             "hlc": "001760000000002-000000-dev_mac",
             "id": "m1",
             "kind": "node.absorbed",
-            "object": "node:02f468a7a632e9b482e97df534bd9690",
+            "object": "node:9c336ff0dcd91a7736bea9c3a3eb8103",
             "origin": "dev_mac",
             "payload": {
               "ref": "doc:m1"
             },
             "replicate": "shared",
-            "to": "node:87d9a364cb057cb2b7c35fa57c6b6a60",
+            "to": "node:6a89186a68c66094dcc95839120b1210",
             "version": 1
           }
         ],
@@ -506,6 +530,77 @@
     },
     {
       "input": {
+        "here": "partner_0199d5c0900033333333333333333333",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0900033333333333333333333"
+        },
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "l-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:l-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a PC that moved is given nothing of the talk under local-owner",
+      "output": {
+        "notHeld": true,
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0900033333333333333333333",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "l-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:l-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "the server is given nothing of another partner id's talk",
+      "output": {
+        "notHeld": true,
+        "rows": []
+      }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
         "rows": [
           {
             "audience": "personal:o1",
@@ -542,6 +637,312 @@
         "theirs": {}
       },
       "name": "refused: a forget that lists rows goes by nodes.wire_send",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "a row the other side may not hold whole goes as a stub, so its count has no gap",
+      "output": {
+        "heldBack": [
+          "h2"
+        ],
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "here": "local-owner",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: an answer from a side under local-owner to one under a partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0a00022222222222222222222",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: an answer from a side under another partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "local-owner"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: an answer from a side under a partner id to one under local-owner",
       "output": {
         "error": "bad_input"
       }

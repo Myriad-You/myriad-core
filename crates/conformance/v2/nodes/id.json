@@ -120,6 +120,76 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "personal:local-owner",
+        "key": "minted:release-week"
+      },
+      "name": "the partner's talk is made under one fixed name: local-owner",
+      "output": {
+        "id": "d4b1ea38210f4134d53501679d9055d0"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333",
+        "key": "minted:release-week"
+      },
+      "name": "the partner's talk is made under one fixed name: a partner id makes the same id",
+      "output": {
+        "id": "d4b1ea38210f4134d53501679d9055d0"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:local-owner",
+        "key": "person:local-owner"
+      },
+      "name": "关于你 under local-owner",
+      "output": {
+        "id": "4b50145fec289d687982b9ef9d33bbf7"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333",
+        "key": "person:partner_0199d5c0900033333333333333333333"
+      },
+      "name": "关于你 under the partner id is the same node",
+      "output": {
+        "id": "4b50145fec289d687982b9ef9d33bbf7"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333",
+        "key": "person:local-owner"
+      },
+      "name": "local-owner in the partner id's talk is 关于你 too",
+      "output": {
+        "id": "4b50145fec289d687982b9ef9d33bbf7"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0900033333333333333333333",
+        "key": "person:partner_0199d5c0a00022222222222222222222"
+      },
+      "name": "another partner id in the partner's talk is someone else",
+      "output": {
+        "id": "b818c688c9f3ff14b5063420c275ef13"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:9",
+        "key": "minted:release-week"
+      },
+      "name": "someone else's private talk is made under its own name",
+      "output": {
+        "id": "99bdc260143a67d4cd5af226154f4d46"
+      }
     }
   ],
   "version": 1

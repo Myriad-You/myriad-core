@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     Holder, LogError, Row,
     forget::{self, Entry},
+    partner,
     row::{Audience, Replicate, sort},
 };
 
@@ -33,7 +34,10 @@ pub struct AdmitInput {
     pub now: i64,
     /// The audience of every object this side already holds rows of (only
     /// the objects the batch touches are needed). An object never changes
-    /// audience.
+    /// audience within one partner's audiences ([`same_partner`]): node ids
+    /// are unique only per (account, audience), so the same id under
+    /// another partner's private talk is another account's node, and is
+    /// not counted.
     #[serde(default)]
     pub known: BTreeMap<String, String>,
     /// Who is in a group, for the groups this side knows; a subject outside
@@ -49,10 +53,44 @@ pub struct AdmitInput {
     /// rows this side holds there.
     #[serde(default)]
     pub epochs: Epochs,
-    /// This side, when it says what it is: a row of an audience it may not
-    /// hold is refused ([`crate::holder`]).
-    #[serde(default)]
-    pub holder: Option<Holder>,
+    /// This side: a row it may not hold is refused (`not_held`,
+    /// [`crate::Holder::holds_row`]).
+    pub holder: Holder,
+    /// The id the other side goes by, as its link names it: a batch from a
+    /// side under another id is refused whole ([`crate::partner::exchange`]).
+    pub peer: String,
+}
+
+/// The partner `audience` is of, on this side: the one member of a
+/// partner's private talk, or this side's own partner (her own audience, a
+/// group, someone else's private talk with her).
+fn partner_of<'a>(audience: &'a str, holder: &'a Holder) -> &'a str {
+    match Audience::parse(audience) {
+        Ok(Audience::Personal(member)) if partner::is_partners(member) => member,
+        _ => &holder.owner,
+    }
+}
+
+/// Whether an object known under `known` keeps a row of `audience` out: only
+/// when both are the same partner's. A partner's private talk is that
+/// partner's; her own audience and someone else's private talk with her are
+/// this side's partner's; a group may be any partner's, unless `members`
+/// lists who is in it and the partner is not: what this side does not know
+/// never loosens the check.
+fn same_partner(
+    known: &str,
+    audience: &str,
+    holder: &Holder,
+    members: &BTreeMap<String, BTreeSet<String>>,
+) -> bool {
+    let partner = partner_of(audience, holder);
+    match Audience::parse(known) {
+        Ok(Audience::Personal(member)) if partner::is_partners(member) => member == partner,
+        Ok(Audience::Group(_)) => members
+            .get(known)
+            .is_none_or(|group| group.is_empty() || group.contains(partner)),
+        _ => partner == holder.owner,
+    }
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -121,7 +159,10 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         ledger,
         mut epochs,
         holder,
+        peer,
     } = input;
+    holder.check()?;
+    crate::partner::exchange(&holder.owner, &peer)?;
     forget::given(ledger.as_deref(), &rows)?;
     let ledger = ledger.unwrap_or_default();
     let ahead = rows
@@ -158,10 +199,10 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             refused.push(refuse(&row, Reason::Local, None));
             continue;
         }
-        if holder
-            .as_ref()
-            .is_some_and(|holder| !holder.holds(&row.audience))
-        {
+        // A stub of a row about the partner under another id is held: it
+        // keeps only its place, so this side's count has no gap. Never a
+        // forget's.
+        if !holder.holds_row(&row) && !holder.holds_stub(&row) {
             refused.push(refuse(&row, Reason::NotHeld, None));
             continue;
         }
@@ -174,10 +215,9 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             refused.push(refuse(&row, Reason::EpochBack, None));
             continue;
         }
-        if known
-            .get(&row.object)
-            .is_some_and(|audience| *audience != row.audience)
-        {
+        if known.get(&row.object).is_some_and(|audience| {
+            *audience != row.audience && same_partner(audience, &row.audience, &holder, &members)
+        }) {
             refused.push(refuse(&row, Reason::AudienceChanged, None));
             continue;
         }

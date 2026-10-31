@@ -23,7 +23,9 @@
 //! own audience ([`Key::fits`]). Hers holds `her`, repositories and minted
 //! things.
 
-use myriad_persona_log::row::Audience;
+use std::borrow::Cow;
+
+use myriad_persona_log::{partner, row::Audience};
 use myriad_persona_sync::canonical::sha256_hex;
 use serde::{Deserialize, Serialize};
 
@@ -124,12 +126,22 @@ impl<'a> Key<'a> {
 
     /// Whether this is the partner's own node in their private audience
     /// (「关于你」): what is only about them, with no experience hung on it.
+    /// Every check of 「关于你」 asks this, and the id is made by the same
+    /// rule ([`made_id`]), so no key reaches that node past it.
     pub fn is_about_you(&self, audience: &str) -> bool {
         match (self, Audience::parse(audience)) {
-            (Self::Person(person), Ok(Audience::Personal(members))) => members == *person,
+            (Self::Person(person), Ok(Audience::Personal(members))) => is_member(person, members),
             _ => false,
         }
     }
+}
+
+/// Whether `person` is `member`, the one member of a private audience, as
+/// 「关于你」 reads it: that member; and in the partner's private talk any
+/// id the partner goes by there, the member or `local-owner`, which make
+/// one node.
+fn is_member(person: &str, member: &str) -> bool {
+    person == member || (partner::is_partners(member) && person == partner::LEGACY)
 }
 
 /// The node of `key` in `audience`.
@@ -147,8 +159,41 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
 
 /// The id `audience` and `key` make, unchecked: also a person's or a
 /// group's in her own audience, which no side may make but one may meet.
+///
+/// The partner's private talk is made under one fixed name whatever id the
+/// partner goes by (`local-owner`, or any `partner_…`;
+/// `myriad_persona_log::partner`), and so is their own node in it
+/// (「关于你」, `person:<that id>`): a node keeps its id when the partner's
+/// id moves, on every side, whatever bodies it holds. The fixed name is the
+/// one every Mac made its nodes under, so their ids stay as they were.
+///
+/// So a node id is unique only per account and audience: two accounts'
+/// partners make the same id for the same key in their private talk. A
+/// side that holds several accounts (the site) keys everything it stores
+/// by audience as well as by node id, and `log.admit` counts an object
+/// known under another audience only when both are one partner's
+/// (`myriad_persona_log::admit`, `known`).
 pub(crate) fn made_id(audience: &str, key: &str) -> String {
+    let (audience, key) = fixed(audience, key);
     sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string()
+}
+
+/// `audience` and `key` as a node id is made from them: the partner's
+/// private talk, and their own node in it, under the fixed name.
+fn fixed<'a>(audience: &'a str, key: &'a str) -> (Cow<'a, str>, Cow<'a, str>) {
+    let Ok(Audience::Personal(member)) = Audience::parse(audience) else {
+        return (Cow::Borrowed(audience), Cow::Borrowed(key));
+    };
+    if !partner::is_partners(member) {
+        return (Cow::Borrowed(audience), Cow::Borrowed(key));
+    }
+    let key = match key.strip_prefix("person:") {
+        Some(person) if is_member(person, member) => {
+            Cow::Owned(format!("person:{}", partner::LEGACY))
+        }
+        _ => Cow::Borrowed(key),
+    };
+    (Cow::Owned(format!("personal:{}", partner::LEGACY)), key)
 }
 
 /// The repository key of a remote: `repo:<host>/<path>`, lowercase, with
@@ -320,6 +365,26 @@ mod tests {
         assert!(Key::parse("person:7").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:9").unwrap().is_about_you("personal:7"));
         assert!(!Key::parse("person:7").unwrap().is_about_you("personal:7,9"));
+        // In the partner's talk, `local-owner` and the partner id are one
+        // node, and both are 「关于你」; another partner id is someone else.
+        let p0 = "personal:partner_0199d5c0900033333333333333333333";
+        for key in [
+            "person:local-owner",
+            "person:partner_0199d5c0900033333333333333333333",
+        ] {
+            assert!(Key::parse(key).unwrap().is_about_you(p0), "{key}");
+            assert_eq!(
+                node_id(p0, key).unwrap(),
+                node_id("personal:local-owner", "person:local-owner").unwrap()
+            );
+        }
+        let other = Key::parse("person:partner_0199d5c0a00011111111111111111111").unwrap();
+        assert!(!other.is_about_you(p0));
+        assert!(
+            !Key::parse("person:local-owner")
+                .unwrap()
+                .is_about_you("personal:7")
+        );
         assert!(Key::parse("minted:together-ab12").unwrap().is_together());
         assert!(!Key::parse("minted:ab12-together-").unwrap().is_together());
         assert!(!Key::parse("person:together-ab12").unwrap().is_together());

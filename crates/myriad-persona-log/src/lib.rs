@@ -37,6 +37,7 @@ pub mod holder;
 pub mod kinds;
 pub mod lease;
 pub mod merge;
+pub mod partner;
 pub mod payloads;
 pub mod row;
 pub mod vector;

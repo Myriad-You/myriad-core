@@ -145,6 +145,102 @@ fn every_conformance_case_answers_as_recorded() {
     }
 }
 
+/// `partner.*` (`crates/conformance/v1/partner/`): the partner's one id,
+/// minted, linked to, filed and moved to, as the shared core answers it.
+fn run_partner(call: &str, raw: Value) -> Result<Value, NodeError> {
+    use base64::Engine as _;
+    use myriad_persona_log::partner::{self, Here};
+    let refused = |error: myriad_persona_log::LogError| NodeError::new(error.to_string());
+    Ok(match call {
+        "partner.mint" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                at: i64,
+                random: String,
+            }
+            let In { at, random } = input(raw)?;
+            let random = base64::engine::general_purpose::STANDARD
+                .decode(random)
+                .map_err(|_| NodeError::new("random is base64"))?;
+            json!({ "id": partner::mint(at, &random).map_err(refused)? })
+        }
+        "partner.link" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                here: Here,
+                theirs: String,
+            }
+            let In { here, theirs } = input(raw)?;
+            json_of(&partner::link(&here, &theirs).map_err(refused)?)
+        }
+        "partner.file" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                here: Here,
+                #[serde(default)]
+                header: Option<String>,
+            }
+            let In { here, header } = input(raw)?;
+            json_of(&partner::file(&here, header.as_deref()).map_err(refused)?)
+        }
+        "partner.migrate" => json_of(&crate::migrate::migrate(input(raw)?)?),
+        "partner.page" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                #[serde(default)]
+                header: Option<String>,
+                audience: String,
+            }
+            let In { header, audience } = input(raw)?;
+            partner::page(header.as_deref(), &audience).map_err(refused)?;
+            json!({})
+        }
+        other => return Err(NodeError::new(format!("no call {other}"))),
+    })
+}
+
+#[test]
+fn every_partner_case_answers_as_recorded() {
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/partner");
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .unwrap_or_else(|e| panic!("{}: {e}", dir.display()))
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
+        .collect();
+    files.sort();
+    assert_eq!(files.len(), 5, "{files:?}");
+    for path in files {
+        let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        let call = file["call"].as_str().unwrap().to_string();
+        let mut changed = false;
+        for case in file["cases"].as_array_mut().unwrap() {
+            let name = case["name"].as_str().unwrap().to_string();
+            let got = run_partner(&call, case["input"].clone()).unwrap_or_else(|_| refused());
+            if blessing() {
+                changed |= case.get("output") != Some(&got);
+                case["output"] = got;
+                continue;
+            }
+            assert!(
+                same(&case["output"], &got),
+                "{} › {name}\nexpected {}\n     got {}",
+                path.display(),
+                case["output"],
+                got
+            );
+        }
+        if changed {
+            let mut text = serde_json::to_string_pretty(&file).unwrap();
+            text.push('\n');
+            std::fs::write(&path, text).unwrap();
+        }
+    }
+}
+
 /// The files only say `bad_input`; each refused case is refused for the
 /// reason its name gives, and no message holds a value from its input.
 #[test]
@@ -268,6 +364,35 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         // nodes.home_owed
         ("refused: an empty origin", "origin must be 1 to"),
+        // nodes.wire_send, nodes.wire_take: one id per exchange
+        (
+            "refused: a side under local-owner never sends to one under a partner id",
+            "the same id",
+        ),
+        (
+            "refused: a side never sends to one under another partner id",
+            "the same id",
+        ),
+        (
+            "refused: a batch from a side under another partner id",
+            "the same id",
+        ),
+        (
+            "refused: a side under a partner id never sends to one under local-owner",
+            "the same id",
+        ),
+        (
+            "refused: a batch from a side under local-owner, on a side under a partner id",
+            "the same id",
+        ),
+        (
+            "refused: a home page from a file under another partner id",
+            "the same id",
+        ),
+        (
+            "refused: a home page from a file without a partner, on a side under a partner id",
+            "the same id",
+        ),
         // nodes.home_send, nodes.home_take
         (
             "refused: a server never writes a home page",
@@ -284,6 +409,14 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         // nodes.retract
         ("refused: a node not in the rows", "not in the rows given"),
+        (
+            "refused: a home page of another partner id's talk",
+            "an audience this side may not hold",
+        ),
+        (
+            "refused: a home page row about the partner under local-owner",
+            "one this side may not hold",
+        ),
         // nodes.wire_send to an older side
         ("refused: a peer of no ABI", "ABI is 1 or more"),
     ];

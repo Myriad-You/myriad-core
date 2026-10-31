@@ -596,6 +596,7 @@ pub(crate) fn archive_sample() -> ArchiveSample {
             created_at: 1_760_000_000_123_456,
             digest: manifest.digest.clone(),
             logs: false,
+            partner: None,
             home: false,
         },
     )
@@ -709,6 +710,7 @@ fn the_golden_home_archive_opens_only_on_a_computer_of_the_partners() {
             digest: manifest.digest.clone(),
             logs: false,
             home: true,
+            partner: None,
         },
     )
     .unwrap();

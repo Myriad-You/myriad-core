@@ -22,7 +22,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{LogError, row::Audience};
+use crate::{LogError, Row, row::Audience};
 
 /// What kind of core a side is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -61,19 +61,76 @@ impl Holder {
                 "the holder's owner is one id: no comma, space or control character",
             ));
         }
+        // The server is the site's: its partner goes by the id it minted,
+        // never `local-owner` or an account id. A computer of the partner's
+        // goes by that id or, until it moves, `local-owner`.
+        match self.core {
+            Core::Server => crate::partner::check(&self.owner)
+                .map_err(|_| LogError::new("the server's owner is a partner id"))?,
+            Core::Pc if !crate::partner::is_partners(&self.owner) => {
+                return Err(LogError::new(
+                    "a computer's owner is a partner id or local-owner",
+                ));
+            }
+            _ => {}
+        }
         Ok(())
     }
 
     /// Whether this side may hold rows of `audience`: the server any; a PC
     /// the partner's own private audience (theirs alone) and hers; a child
-    /// core none.
+    /// core none. No side, the server included, holds the private talk of
+    /// an id a partner goes by (`local-owner`, a partner id) but its own
+    /// partner's: a computer that has not moved to the one id yet is
+    /// refused, not stored under ids its log was not made for
+    /// (`crate::partner`).
     pub fn holds(&self, audience: &str) -> bool {
         match (self.core, Audience::parse(audience)) {
             (_, Err(_)) | (Core::Child, _) => false,
+            // Nor a private audience of several people with one of those
+            // ids in it.
+            (_, Ok(Audience::Personal(members)))
+                if members
+                    .split(',')
+                    .any(|member| crate::partner::is_partners(member) && member != self.owner) =>
+            {
+                false
+            }
             (Core::Server, Ok(_)) | (Core::Pc, Ok(Audience::Own)) => true,
             (Core::Pc, Ok(Audience::Personal(members))) => members == self.owner,
             (Core::Pc, Ok(Audience::Group(_))) => false,
         }
+    }
+
+    /// Whether this side may hold `row`: one of an audience it holds, and,
+    /// in any audience, no object about the partner under an id this side
+    /// does not go by (`subject:` or `affect:` of `local-owner` or of
+    /// another partner id), and no such subject: a row an unmoved computer
+    /// wrote, or one about someone else's partner, is refused, not stored
+    /// beside the moved ones.
+    pub fn holds_row(&self, row: &Row) -> bool {
+        if !self.holds(&row.audience) {
+            return false;
+        }
+        let another = |id: &str| crate::partner::is_partners(id) && id != self.owner;
+        let object = row.object.split_once(':').is_some_and(|(kind, id)| {
+            crate::partner::PERSON_OBJECTS.contains(&kind) && another(id)
+        });
+        !object && !row.subject.as_deref().is_some_and(another)
+    }
+
+    /// Whether `row` is a stub this side keeps for its place though it may
+    /// not hold the row whole ([`Self::holds_row`]): one of an audience it
+    /// holds, never a forget or a retract (they have no stub: one about the
+    /// partner under another id would forget under it later, once moved).
+    /// Such a stub comes only of a host's fault: sides exchange rows only
+    /// under one id ([`crate::partner::exchange`]). The ledger clause is
+    /// defence in depth: `Row::check` refuses a forgotten forget already.
+    pub fn holds_stub(&self, row: &Row) -> bool {
+        row.forgotten
+            && row.payload.is_none()
+            && self.holds(&row.audience)
+            && !crate::forget::on_ledger(row)
     }
 }
 
@@ -81,24 +138,63 @@ impl Holder {
 mod tests {
     use super::*;
 
+    const ME: &str = "partner_0199d5c0800011111111111111111111";
+    const PF: &str = "partner_0199d5c0a00011111111111111111111";
+
     fn holder(core: Core) -> Holder {
         Holder {
             core,
-            owner: "7".into(),
+            owner: if core == Core::Server {
+                SITE.into()
+            } else {
+                ME.into()
+            },
         }
+    }
+
+    const SITE: &str = "partner_0199d5c0b00022222222222222222222";
+
+    #[test]
+    fn no_side_holds_another_partners_talk_or_an_unmoved_one() {
+        let p0 = "partner_0199d5c0900033333333333333333333";
+        for core in [Core::Server, Core::Pc] {
+            let side = Holder {
+                core,
+                owner: p0.into(),
+            };
+            assert!(side.holds(&format!("personal:{p0}")));
+            assert!(!side.holds("personal:local-owner"), "{core:?}");
+            assert!(!side.holds("personal:partner_0199d5c0a00011111111111111111111"));
+        }
+        let site = Holder {
+            core: Core::Server,
+            owner: p0.into(),
+        };
+        assert!(site.holds("personal:9"));
+        let unmoved = Holder {
+            core: Core::Pc,
+            owner: "local-owner".into(),
+        };
+        assert!(unmoved.holds("personal:local-owner"));
+        assert!(!unmoved.holds(&format!("personal:{p0}")));
     }
 
     #[test]
     fn a_pc_holds_the_partners_talk_and_hers_only() {
         let pc = holder(Core::Pc);
-        assert!(pc.holds("personal:7"));
+        assert!(pc.holds(&format!("personal:{ME}")));
         assert!(pc.holds("own:"));
         assert!(!pc.holds("personal:9"), "someone else's private talk");
         assert!(!pc.holds("personal:7,9"), "not the partner's alone");
         assert!(!pc.holds("group:g1"));
         assert!(!pc.holds("nonsense"));
         let server = holder(Core::Server);
-        for audience in ["personal:7", "personal:9", "own:", "group:g1"] {
+        for audience in [
+            &format!("personal:{SITE}"),
+            "personal:9",
+            "own:",
+            "group:g1",
+        ] {
             assert!(server.holds(audience), "{audience}");
             assert!(!holder(Core::Child).holds(audience), "{audience}");
         }
@@ -107,12 +203,83 @@ mod tests {
     #[test]
     fn an_owner_is_one_id() {
         assert!(holder(Core::Pc).check().is_ok());
-        for owner in ["", "7,9", "7\n"] {
+        assert!(holder(Core::Server).check().is_ok());
+        // The server's partner goes by the id the site minted.
+        for owner in ["local-owner", "acct_7", "7"] {
+            let server = Holder {
+                core: Core::Server,
+                owner: owner.into(),
+            };
+            assert!(server.check().is_err(), "{owner}");
+        }
+        // A computer's goes by it too, or by local-owner until it moves.
+        for owner in ["", "7,9", "7\n", "7", "acct_7"] {
             let bad = Holder {
                 core: Core::Pc,
                 owner: owner.into(),
             };
             assert!(bad.check().is_err(), "{owner:?}");
         }
+        for owner in ["local-owner", ME] {
+            let good = Holder {
+                core: Core::Pc,
+                owner: owner.into(),
+            };
+            assert!(good.check().is_ok(), "{owner:?}");
+        }
+    }
+
+    #[test]
+    fn no_private_audience_of_several_holds_another_partner_id_and_no_subject_names_one() {
+        for core in [Core::Pc, Core::Server] {
+            let side = holder(core);
+            assert!(!side.holds(&format!("personal:9,{PF}")), "{core:?}");
+            assert!(!side.holds("personal:9,local-owner"), "{core:?}");
+        }
+        let site = holder(Core::Server);
+        assert!(site.holds("personal:9,10"));
+        let row = |subject: &str| -> Row {
+            serde_json::from_value(serde_json::json!({
+                "version": 1, "id": "s1", "origin": "dev_mac", "author": "owner", "dseq": 1,
+                "hlc": "001760000000000-000000-dev_mac", "audience": "group:g1",
+                "object": "memory:m1", "kind": "memory.write", "subject": subject,
+                "replicate": "shared",
+            }))
+            .unwrap()
+        };
+        assert!(site.holds_row(&row("9")));
+        assert!(!site.holds_row(&row(PF)));
+        assert!(!site.holds_row(&row("local-owner")));
+    }
+
+    #[test]
+    fn a_stub_is_held_for_its_place_but_never_a_forgets() {
+        // Defence in depth: whatever `Row::check` says, a row on the ledger
+        // is never held as a stub, so a forget under another id never
+        // reaches the ledger to forget under this one after a move.
+        let side = holder(Core::Pc);
+        let row = |kind: &str, object: &str| -> Row {
+            serde_json::from_value(serde_json::json!({
+                "audience": "own:", "author": "owner", "dseq": 1,
+                "hlc": "001760000000000-000000-dev_mac", "id": "r1",
+                "kind": kind, "object": object, "origin": "dev_mac",
+                "replicate": "shared", "version": 1, "forgotten": true,
+            }))
+            .unwrap()
+        };
+        let mood = row("affect.change", "affect:local-owner");
+        assert!(!side.holds_row(&mood));
+        assert!(side.holds_stub(&mood));
+        let forget = row("forget", "subject:local-owner");
+        assert!(!side.holds_row(&forget));
+        assert!(!side.holds_stub(&forget));
+        // Nor a stub of an audience this side may not hold.
+        let mut theirs = mood.clone();
+        theirs.audience = format!("personal:{PF}");
+        assert!(!side.holds_stub(&theirs));
+        // Nor a row with its payload: that is no stub.
+        let mut whole = mood;
+        whole.payload = Some(serde_json::from_value(serde_json::json!({"ref": "doc:r1"})).unwrap());
+        assert!(!side.holds_stub(&whole));
     }
 }

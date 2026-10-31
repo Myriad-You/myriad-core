@@ -264,15 +264,17 @@ fn log_page(ids: &[&str]) -> serde_json::Value {
 /// The sample with log pages after its envelope page, sealed as a
 /// version 2 file (or, with `logs` false, wrongly as version 1).
 fn with_logs(pages: &[serde_json::Value], logs: bool) -> Result<Vec<u8>, crate::SyncError> {
-    with_pages(pages, &[], logs, false)
+    with_pages(pages, &[], logs, false, None)
 }
 
-/// The sample with log pages, then a home's pages, after its envelope page.
+/// The sample with log pages, then a home's pages, after its envelope page,
+/// its header naming `partner`.
 fn with_pages(
     pages: &[serde_json::Value],
     homes: &[serde_json::Value],
     logs: bool,
     home: bool,
+    partner: Option<&str>,
 ) -> Result<Vec<u8>, crate::SyncError> {
     let mut sample = archive_sample();
     let envelopes: Vec<Envelope> = sample
@@ -297,6 +299,7 @@ fn with_pages(
             created_at: sample.header.created_at,
             digest: manifest.digest.clone(),
             logs,
+            partner: partner.map(str::to_string),
             home,
         },
     )
@@ -356,7 +359,7 @@ fn a_file_with_log_pages_is_version_2_and_opens_them() {
 fn a_homes_pages_open_apart_and_only_a_computer_of_the_partners_holds_them() {
     let pages = [log_page(&["r1", "r2"])];
     let homes = [log_page(&["r1"])];
-    let file = with_pages(&pages, &homes, true, true).unwrap();
+    let file = with_pages(&pages, &homes, true, true, None).unwrap();
     let opened = open(SAMPLE_PASSPHRASE, &file, true).unwrap();
     assert!(opened.header.home);
     assert_eq!(opened.logs, pages);
@@ -384,7 +387,7 @@ fn a_homes_pages_open_apart_and_only_a_computer_of_the_partners_holds_them() {
     );
     // The header says the file holds them: not written without it, and a
     // file without it whose pages say otherwise is refused on opening.
-    let error = with_pages(&pages, &homes, true, false).unwrap_err();
+    let error = with_pages(&pages, &homes, true, false, None).unwrap_err();
     assert!(error.to_string().contains("header"), "{error}");
     let (header, _) = read_header(&file).unwrap();
     let mut parts = parts_of(&file);
@@ -440,4 +443,88 @@ fn a_log_page_with_a_stray_payload_or_of_an_audience_its_reader_may_not_hold_is_
             .with_logs(&[log_page(&["r1"])], |audience| audience == "personal:7")
             .is_ok()
     );
+}
+
+#[test]
+fn only_a_file_with_log_pages_names_the_partner() {
+    let fields = |logs: bool| HeaderFields {
+        lineage: None,
+        epoch: None,
+        origin: "dev_mac".into(),
+        created_at: 1_760_000_000_000_000,
+        digest: "0".repeat(64),
+        logs,
+        home: false,
+        partner: Some("partner_0199d5c0900033333333333333333333".into()),
+    };
+    let salt = [0x11; SALT_BYTES];
+    let nonce = [0x22; NONCE_PREFIX_BYTES];
+    let header = ArchiveHeader::new(&salt, &nonce, fields(true)).unwrap();
+    let line = String::from_utf8(header.line().unwrap()).unwrap();
+    assert!(
+        line.contains("\"partner\":\"partner_0199d5c0900033333333333333333333\""),
+        "{line}"
+    );
+    assert!(ArchiveHeader::new(&salt, &nonce, fields(false)).is_err());
+    let mut legacy = fields(true);
+    legacy.partner = Some("local-owner".into());
+    assert!(ArchiveHeader::new(&salt, &nonce, legacy).is_err());
+    // Without one, a header is the bytes it always was.
+    let mut plain = fields(true);
+    plain.partner = None;
+    let line = ArchiveHeader::new(&salt, &nonce, plain)
+        .unwrap()
+        .line()
+        .unwrap();
+    assert!(!String::from_utf8(line).unwrap().contains("partner"));
+}
+
+#[test]
+fn a_page_of_a_partners_talk_is_only_in_a_file_that_names_that_partner() {
+    const P0: &str = "partner_0199d5c0900033333333333333333333";
+    const PF: &str = "partner_0199d5c0a00022222222222222222222";
+    let page = |audience: &str| {
+        let mut page = log_page(&["r1"]);
+        page["audience"] = audience.into();
+        page["rows"][0]["audience"] = audience.into();
+        page
+    };
+    let mine = [page(&format!("personal:{P0}"))];
+    assert!(with_pages(&mine, &[], true, false, Some(P0)).is_ok());
+    for partner in [None, Some(PF)] {
+        let error = with_pages(&mine, &[], true, false, partner).unwrap_err();
+        assert!(error.to_string().contains("whose header names"), "{error}");
+    }
+    // A side that goes by an id holds nothing under local-owner to file.
+    let error =
+        with_pages(&[page("personal:local-owner")], &[], true, false, Some(P0)).unwrap_err();
+    assert!(error.to_string().contains("under local-owner"), "{error}");
+    assert!(with_pages(&[page("personal:local-owner")], &[], true, false, None).is_ok());
+    // Anyone else's talk, and hers, are as they were.
+    assert!(with_pages(&[page("own:")], &[], true, false, Some(P0)).is_ok());
+}
+
+/// The shared cases of `partner.page` (`conformance/v1/partner/page.json`):
+/// the archive seals a page by the same rule.
+#[test]
+fn a_page_is_sealed_by_the_same_rule_as_partner_page() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../conformance/v1/partner/page.json");
+    let file: serde_json::Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    for case in file["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let audience = case["input"]["audience"].as_str().unwrap();
+        let header = case["input"]["header"].as_str();
+        let refused = case["output"].get("error").is_some();
+        // A header partner that is no partner id: the header is refused.
+        if header.is_some_and(|partner| !partner.starts_with("partner_")) {
+            assert!(refused, "{name}");
+            continue;
+        }
+        let mut page = log_page(&["r1"]);
+        page["audience"] = audience.into();
+        page["rows"][0]["audience"] = audience.into();
+        let sealed = with_pages(&[page], &[], true, false, header);
+        assert_eq!(sealed.is_err(), refused, "{name}");
+    }
 }

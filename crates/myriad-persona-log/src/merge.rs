@@ -27,6 +27,12 @@ pub struct MergeInput {
     /// (empty when there is none): a later batch without the retract never
     /// stubs a row a home keeps.
     pub ledger: Vec<forget::Entry>,
+    /// This side, when it goes by a partner id: a stub it holds of a row
+    /// about the partner under `local-owner` (held back from a side that
+    /// had not moved, a host's fault) is filled by that row moved to this
+    /// id ([`crate::partner::row`]), as a move here would have made it.
+    #[serde(default)]
+    pub holder: Option<crate::Holder>,
 }
 
 /// Why an incoming row was not taken. Either means a side broke the format
@@ -62,7 +68,8 @@ pub struct Merged {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub stubbed: Vec<String>,
     /// Stubs held that an incoming whole row filled, on a home of their
-    /// node: store their payloads.
+    /// node, or that a row moved to this side's id filled (`holder`): store
+    /// their payloads. Never a row the ledger takes away here.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub filled: Vec<String>,
     /// Incoming rows already held.
@@ -76,7 +83,15 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         log,
         mut incoming,
         ledger,
+        holder,
     } = input;
+    // The move a held-back stub may have been made before.
+    let moved = holder
+        .filter(|holder| crate::partner::check(&holder.owner).is_ok())
+        .map(|holder| crate::partner::Move {
+            from: crate::partner::LEGACY.to_string(),
+            to: holder.owner,
+        });
     // A local row stays on the side that wrote it: one in `incoming` came
     // from elsewhere (it would make another side's home this one's).
     if incoming.iter().any(|row| row.replicate == Replicate::Local) {
@@ -125,6 +140,17 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
                 if !home {
                     by_id.insert(row.id.clone(), row);
                 }
+            } else if held.forgotten
+                && !crate::forget::on_ledger(&row)
+                && moved
+                    .as_ref()
+                    .is_some_and(|by| crate::partner::row(held, by).is_stub_of(&row))
+            {
+                // A stub held back under `local-owner`, and the same row
+                // moved to this side's id: it fills the stub.
+                duplicates += 1;
+                filled.push(row.id.clone());
+                by_id.insert(row.id.clone(), row);
             } else {
                 conflicts.push(Conflict {
                     id: row.id.clone(),
@@ -162,6 +188,9 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         .collect();
     stubbed.sort();
     added.sort();
+    // A stub filled above that the ledger takes away here is a stub again:
+    // its payload is not stored.
+    filled.retain(|id| forgotten.get(id.as_str()) == Some(&false));
     filled.sort();
     Ok(Merged {
         log,

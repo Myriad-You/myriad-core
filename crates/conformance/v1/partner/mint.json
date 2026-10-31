@@ -1,0 +1,67 @@
+{
+  "call": "partner.mint",
+  "cases": [
+    {
+      "input": {
+        "at": 1760227794944,
+        "random": "IiIiIiIiIiIiIg=="
+      },
+      "name": "a mint is partner_, the time in hex, then the random",
+      "output": {
+        "id": "partner_0199d5c0a00022222222222222222222"
+      }
+    },
+    {
+      "input": {
+        "at": 1760227790848,
+        "random": "MzMzMzMzMzMzMw=="
+      },
+      "name": "the site mints one id per account",
+      "output": {
+        "id": "partner_0199d5c0900033333333333333333333"
+      }
+    },
+    {
+      "input": {
+        "at": 1,
+        "random": "AAAAAAAAAAAA"
+      },
+      "name": "refused: nine random bytes",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "at": -1,
+        "random": "AAAAAAAAAAAAAA=="
+      },
+      "name": "refused: a time before 1970",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "at": 1700000000000,
+        "random": "AAAAAAAAAAAAAA=="
+      },
+      "name": "refused: a time before 2025",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "at": 1760227790848,
+        "random": "MzMzMzMzMzMzMw==",
+        "was": "local-owner"
+      },
+      "name": "refused: an id from before is not a mint (no was)",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

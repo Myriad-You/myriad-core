@@ -80,6 +80,11 @@ pub struct TakeInput {
     /// `filled`.
     #[serde(default)]
     pub held: Vec<Row>,
+    /// The id the file goes by: its header's partner id, `local-owner` for
+    /// a file without one. A page under another id than this side's is
+    /// refused, as a sync with such a side is
+    /// ([`myriad_persona_log::partner::exchange`]).
+    pub peer: String,
     /// The side this one writes as: a node it keeps already by a retract
     /// of its own is not listed in [`Taken::retract`] ([`owed`]).
     #[serde(default)]
@@ -228,6 +233,8 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
             mark(row) && view.home_of(&row.audience, &row.object)
                 || !row.forgotten && view.kept_home(row)
         })
+        // Nothing a computer of the partner's would refuse to take back.
+        .filter(|row| holder.holds_row(row))
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut kept);
@@ -278,9 +285,12 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         holder,
         ledger,
         held,
+        peer,
         origin,
     } = input;
     check_holder(&holder, &page.audience)?;
+    myriad_persona_log::partner::exchange(&holder.owner, &peer)
+        .map_err(|error| NodeError::new(error.to_string()))?;
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();
     for one in &page.payloads {
         if carried
@@ -301,6 +311,13 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         }
         row.check()
             .map_err(|_| NodeError::new("a row's envelope is not whole"))?;
+        // As from the wire: nothing about the partner under an id this side
+        // does not go by (`Holder::holds_row`).
+        if !holder.holds_row(row) {
+            return Err(NodeError::new(
+                "a row of a home page is one this side may not hold",
+            ));
+        }
     }
     let ledger = forget::joined(&ledger, &forget::ledger(&page.rows));
     let view = forget::View::new(&ledger);

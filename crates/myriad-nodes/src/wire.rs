@@ -218,6 +218,9 @@ pub struct SendInput {
     pub ask: Vec<String>,
     /// The other side.
     pub holder: Holder,
+    /// The id this side goes by: a side under another id gets nothing
+    /// ([`myriad_persona_log::partner::exchange`]).
+    pub here: String,
     /// The other side's core ABI (`meta.version` `abi`): 2 when its link's
     /// `hello` or `welcome` lists the `log2` capability, 1 when not. A side
     /// below 2 gets nothing that carries a merge's or a split's names or a
@@ -246,6 +249,16 @@ pub struct Sent {
     /// that is to go: nothing goes until it repins.
     #[serde(skip_serializing_if = "is_false")]
     pub too_old: bool,
+    /// Rows the other side may not hold whole (`Holder::holds_row`: about
+    /// the partner under an id it does not go by), sorted. Each goes as a
+    /// stub, so that side's count has no gap and nothing of it goes; a
+    /// forget or a retract has no stub and is left out, which leaves a gap
+    /// there that never closes. Sides exchange rows only under one id
+    /// (`here`), no side writes such a row once it gives `log.ledger` its
+    /// holder, and `partner.migrate` moves or refuses the ones from before:
+    /// such a row in a log is a host's fault, reported here.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub held_back: Vec<String>,
 }
 
 /// The core ABI a row needs on the side that takes it: 2 for one with a
@@ -269,6 +282,8 @@ pub struct TakeInput {
     pub batch: Batch,
     /// This side.
     pub holder: Holder,
+    /// The id the other side goes by, as for `log.admit`.
+    pub peer: String,
     /// This side's clock, as for `log.admit`.
     pub now: i64,
     #[serde(default)]
@@ -599,6 +614,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         theirs,
         ask,
         holder,
+        here,
         peer_abi,
         ledger,
         elsewhere: known_away,
@@ -606,6 +622,11 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     holder
         .check()
         .map_err(|error| NodeError::new(error.to_string()))?;
+    // A child core holds no log: it gets nothing, whatever id it names.
+    if holder.core != myriad_persona_log::Core::Child {
+        myriad_persona_log::partner::exchange(&here, &holder.owner)
+            .map_err(|error| NodeError::new(error.to_string()))?;
+    }
     if peer_abi == 0 {
         return Err(NodeError::new("the other side's ABI is 1 or more"));
     }
@@ -624,6 +645,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             batches: Vec::new(),
             not_held: true,
             too_old: false,
+            held_back: Vec::new(),
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
@@ -635,8 +657,24 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             .filter_map(|row| bodies.get(&row.id).map(|body| (row, body))),
     );
     away.extend(known_away);
-    let answered =
-        vector::answer(&rows, &theirs).map_err(|error| NodeError::new(error.to_string()))?;
+    // A row the other side may not hold whole (`Holder::holds_row`: about
+    // the partner under an id it does not go by) goes as a stub: left out,
+    // it would leave a gap in that side's count that never closes, and
+    // every later row of its side would go again on every sync.
+    let mut held_back = Vec::new();
+    let answered: Vec<Row> = vector::answer(&rows, &theirs)
+        .map_err(|error| NodeError::new(error.to_string()))?
+        .into_iter()
+        .filter_map(|row| {
+            if holder.holds_row(&row) {
+                return Some(row);
+            }
+            held_back.push(row.id.clone());
+            // A forget or a retract has no stub: it is left out.
+            (!forget::on_ledger(&row)).then(|| row.stub())
+        })
+        .collect();
+    held_back.sort();
     let lacked: BTreeSet<&str> = answered.iter().map(|row| row.id.as_str()).collect();
     let asked: BTreeSet<&str> = ask.iter().map(String::as_str).collect();
     let mut again: Vec<Row> = rows
@@ -644,6 +682,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         .filter(|row| asked.contains(row.id.as_str()) && !lacked.contains(row.id.as_str()))
         .filter(|row| row.replicate == Replicate::Shared && !row.forgotten)
         .filter(|row| row.payload.is_some())
+        .filter(|row| holder.holds_row(row))
         .cloned()
         .collect();
     myriad_persona_log::row::sort(&mut again);
@@ -656,6 +695,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             batches: Vec::new(),
             not_held: false,
             too_old: true,
+            held_back: Vec::new(),
         });
     }
     let engine = base64::engine::general_purpose::STANDARD;
@@ -715,6 +755,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         batches,
         not_held: false,
         too_old: false,
+        held_back,
     })
 }
 
@@ -723,6 +764,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     let TakeInput {
         batch,
         holder,
+        peer,
         now,
         known,
         members,
@@ -807,6 +849,11 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
     // to: only for one of them is the sender's `person_elsewhere` taken.
     let mut keys: BTreeSet<String> = people.into_iter().collect();
     keys.insert(format!("person:{}", holder.owner));
+    // A partner id's partner was `local-owner` once: their node under it
+    // is theirs too.
+    if myriad_persona_log::partner::check(&holder.owner).is_ok() {
+        keys.insert(format!("person:{}", myriad_persona_log::partner::LEGACY));
+    }
     for body in shown.values() {
         strings(body, &mut keys);
     }
@@ -824,7 +871,8 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         members,
         ledger,
         epochs,
-        holder: Some(holder),
+        holder,
+        peer,
     })
     .map_err(|error| NodeError::new(error.to_string()))?;
     admitted.refused.extend(astray);

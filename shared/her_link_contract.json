@@ -80,6 +80,7 @@
     "moments",
     "nodes",
     "images",
+    "partner",
     "log2"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
@@ -128,14 +129,14 @@
       "delivery": "handshake",
       "required": ["protocol", "role", "surface"],
       "optional": ["capabilities", "app", "lineage", "hostEpoch"],
-      "description": "The first frame, within helloTimeoutMs of the upgrade. role is child for a child end. role host is the device she lives on (her host lease names it, H3e): it is welcomed only while it holds the lease at the hostEpoch it says, and then only hears what becomes of her there (host.freeze, host.thaw, host.moved); otherwise the link closes with host_moved, and it lets its copy of her go. host while the site has no lease closes with host_is_site. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. log2 says this end's shared core is ABI 2 or later (it reads her log's merge, split and retract rows, MYRIAD_CORE_ABI_VERSION): an end sends those rows only to a side that listed it (nodes.wire_send peerAbi). app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time); the host does not act on them yet."
+      "description": "The first frame, within helloTimeoutMs of the upgrade. role is child for a child end. role host is the device she lives on (her host lease names it, H3e): it is welcomed only while it holds the lease at the hostEpoch it says, and then only hears what becomes of her there (host.freeze, host.thaw, host.moved); otherwise the link closes with host_moved, and it lets its copy of her go. host while the site has no lease closes with host_is_site. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. log2 says this end's shared core is ABI 2 or later (it reads her log's merge, split and retract rows, MYRIAD_CORE_ABI_VERSION): an end sends those rows only to a side that listed it (nodes.wire_send peerAbi). app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time); the host does not act on them yet. An end lists the capability partner when its core knows the welcome's partner field."
     },
     "welcome": {
       "from": "host",
       "delivery": "handshake",
       "required": ["protocol", "role", "host", "deviceId", "heartbeatMs", "capabilities", "turns", "serverTime"],
-      "optional": ["deviceName", "lineage", "hostEpoch"],
-      "description": "The answer to hello. host is where she lives (site; app on the link of the device she lives on, whose welcome has role site and no turns, and lists as capabilities what the site itself can do, so that device learns the site's core reads log2 rows: without it, it sends with peerAbi 1). lineage is her birth and hostEpoch her host lease's epoch, which only goes up: a child that later hears a higher epoch knows she moved in between. Both are null while the site has no her. deviceId and deviceName are this device as the site knows it. capabilities is the child's list as accepted; on the link of the device she lives on, the site's own list (log2 when the site's core is ABI 2 or later). turns is this device's recent turns the host still has: [{turnId, runId, sessionId?, lastSequence, completed}], newest first, so a child can tell what to resume. serverTime is milliseconds since the epoch. After welcome the host sends mood, when her persona is on."
+      "optional": ["deviceName", "lineage", "hostEpoch", "partner"],
+      "description": "The answer to hello. host is where she lives (site; app on the link of the device she lives on, whose welcome has role site and no turns, and lists as capabilities what the site itself can do, so that device learns the site's core reads log2 rows: without it, it sends with peerAbi 1). lineage is her birth and hostEpoch her host lease's epoch, which only goes up: a child that later hears a higher epoch knows she moved in between. Both are null while the site has no her. deviceId and deviceName are this device as the site knows it. capabilities is the child's list as accepted; on the link of the device she lives on, the site's own list (log2 when the site's core is ABI 2 or later). turns is this device's recent turns the host still has: [{turnId, runId, sessionId?, lastSequence, completed}], newest first, so a child can tell what to resume. serverTime is milliseconds since the epoch. After welcome the host sends mood, when her persona is on. partner is the partner's one id, which the site minted for this account (partner.mint; an id, not a credential), sent only when the hello listed the capability partner (which says the device knows the field, not that it has moved). The site passes this id as peer for every device of the account, and the device passes it as peer for the site: it is the site's holder's owner, so a device still on local-owner exchanges no rows with the site in either direction until it has moved (partner::exchange, in the device's own core). A device takes it only from here, and only from a welcome whose host is site (partner.link; a welcome on the link of the device she lives on, host app, never carries it and is never read for it): before its first sync on this link a device still on local-owner moves what it held under local-owner to it (partner.migrate; after asking the partner when it took a file from before while empty, confirm, and saying in that prompt that the file's memories in her own audience, own:, come into this account with it), and takes a cut-off move up again. It writes the move in one transaction where it can; otherwise it sets here.moving to the id before its first write and saves the id and linked, clearing filed and moving, in its last, so partner.link answers from: local-owner again until the move is whole. A device that goes by another id, linked before or taken from a file, or holds another partner id's private talk, refuses it and may be started empty to link."
     },
     "input": {
       "from": "child",
@@ -701,14 +702,14 @@
       "peer.hello": {
         "from": "device",
         "delivery": "handshake",
-        "required": ["protocol", "deviceId", "nonce"],
-        "description": "LAN only, the dialer's first frame: who it says it is and 32 random bytes (base64)."
+        "required": ["protocol", "deviceId", "nonce", "partner"],
+        "description": "LAN only, the dialer's first frame: who it says it is and 32 random bytes (base64). partner is the id it goes by (its holder's owner: a partner id, or local-owner until it has moved): the listener passes it as peer to nodes.wire_take and log.admit, and answers with nodes.wire_send and log.answer only when it is the listener's own id (partner::exchange). Devices under two ids exchange no rows."
       },
       "peer.welcome": {
         "from": "device",
         "delivery": "handshake",
-        "required": ["protocol", "deviceId", "nonce", "certHash", "proof"],
-        "description": "LAN only, the listener's answer: who it is, its own nonce, the sha256 of its TLS certificate (hex), and proof: its Ed25519 signature (base64) over the canonical JSON {dialer, dialerNonce, listener, listenerNonce, certHash, purpose: 'myriad-link-lan/2 listener'}. The dialer checks it against peer.keys and that certHash is the certificate it is talking to."
+        "required": ["protocol", "deviceId", "nonce", "certHash", "proof", "partner"],
+        "description": "LAN only, the listener's answer: who it is, its own nonce, the sha256 of its TLS certificate (hex), and proof: its Ed25519 signature (base64) over the canonical JSON {dialer, dialerNonce, listener, listenerNonce, certHash, purpose: 'myriad-link-lan/2 listener'}. The dialer checks it against peer.keys and that certHash is the certificate it is talking to. partner is the listener's id, as in peer.hello: the dialer passes it as peer, and exchanges rows only when it is its own id."
       },
       "peer.proof": {
         "from": "device",

@@ -19,8 +19,9 @@ use crate::{
     vector::{answer, holdings, missing},
 };
 
-/// The conformance files' directory: `log/` is version 2 (merge, split
-/// and retract rows name what they reach), `lease/` still version 1.
+/// The conformance files' directory: `log/` is version 2 (a holder on every
+/// `log.admit` and `log.answer`; merge, split and retract rows name what
+/// they reach), `lease/` still version 1.
 pub(crate) fn conformance() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
 }
@@ -65,8 +66,8 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
     struct Answer {
         rows: Vec<Row>,
         theirs: Vector,
-        #[serde(default)]
-        holder: Option<crate::Holder>,
+        holder: crate::Holder,
+        here: String,
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -97,8 +98,9 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
                 rows,
                 theirs,
                 holder,
+                here,
             } = input(raw)?;
-            json_of(&crate::vector::answer_to(&rows, &theirs, holder.as_ref())?)
+            json_of(&crate::vector::answer_to(&rows, &theirs, &holder, &here)?)
         }
         "log.admit" => json_of(&admit(input::<AdmitInput>(raw)?)?),
         "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
@@ -409,6 +411,7 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
         let mut held: Vec<Row> = Vec::new();
         for one in order {
             held = merge(MergeInput {
+                holder: None,
                 ledger: Vec::new(),
                 log: held,
                 incoming: vec![one],
@@ -438,12 +441,14 @@ fn merging_is_a_union_in_any_order() {
         owner(row("b2", "site", 2, 250, "memory:x", "memory.write")),
     ];
     let ab = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: a.clone(),
         incoming: b.clone(),
     })
     .unwrap();
     let ba = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: b.clone(),
         incoming: a.clone(),
@@ -453,6 +458,7 @@ fn merging_is_a_union_in_any_order() {
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
     let again = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: ab.log.clone(),
         incoming: b,
@@ -499,11 +505,16 @@ fn what_one_side_answers_fills_the_other() {
         members: Default::default(),
         ledger: None,
         epochs: Default::default(),
-        holder: None,
+        holder: crate::Holder {
+            core: crate::Core::Server,
+            owner: "partner_0199d5c0b00044444444444444444444".into(),
+        },
+        peer: "partner_0199d5c0b00044444444444444444444".into(),
     })
     .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: site,
         incoming: admitted.accepted,
