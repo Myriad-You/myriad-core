@@ -25,7 +25,10 @@
       "name": "a node this side is a home of by a page taken onto it is owed a retract",
       "output": {
         "retract": [
-          "node:20f18911b98aa0b65728234cef5d20ac"
+          {
+            "audience": "personal:o1",
+            "node": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
         ]
       }
     },
@@ -123,7 +126,10 @@
       "name": "a node gone with a forgotten node it went into is still owed: its kept rows stay",
       "output": {
         "retract": [
-          "node:20f18911b98aa0b65728234cef5d20ac"
+          {
+            "audience": "personal:o1",
+            "node": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
         ]
       }
     },
@@ -155,6 +161,73 @@
       "name": "refused: an empty origin",
       "output": {
         "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "a home mark with no retract on the ledger owes nothing: no side knows the node as taken back",
+      "output": {
+        "retract": []
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000002-000000-dev_mac",
+            "audience": "personal:o1",
+            "kind": "home",
+            "target": "node:20f18911b98aa0b65728234cef5d20ac"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:2bc730215ab09ccce40c435fab541176"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "kind": "home",
+            "target": "node:2bc730215ab09ccce40c435fab541176"
+          }
+        ],
+        "origin": "dev_new"
+      },
+      "name": "every audience's nodes are owed, sorted by audience then node",
+      "output": {
+        "retract": [
+          {
+            "audience": "own:",
+            "node": "node:2bc730215ab09ccce40c435fab541176"
+          },
+          {
+            "audience": "personal:o1",
+            "node": "node:20f18911b98aa0b65728234cef5d20ac"
+          }
+        ]
       }
     }
   ],

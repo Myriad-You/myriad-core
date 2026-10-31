@@ -2667,6 +2667,104 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:2bc730215ab09ccce40c435fab541176"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "kind": "home",
+            "target": "node:2bc730215ab09ccce40c435fab541176"
+          }
+        ],
+        "origin": "dev_new",
+        "page": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            },
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOnBhcnRuZXJfMDE5OWQ1YzBiMDAwNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQiLCJzYWlkQnkiOlsiaGVyIiwicGFydG5lciJdLCJzeW5jIjoic2hhcmVkIiwidGV4dCI6IuS8meS8tOivtOWRqOS6lOWPkeeJiOOAgiIsInZlcnNpb24iOjF9",
+              "ref": "doc:c2"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4h",
+              "kind": "retract.home",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "local",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "retract",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        }
+      },
+      "name": "a restored home is told only of the page's audience, whatever else its ledger owes",
+      "output": null
     }
   ],
   "version": 1

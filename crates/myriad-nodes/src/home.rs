@@ -107,10 +107,19 @@ pub struct Taken {
     /// This side's ledger with the page's marks: this side is now a home of
     /// the nodes it took.
     pub ledger: Vec<Entry>,
-    /// What this side owes now ([`owed`] of `ledger`): the nodes
-    /// (`node:<id>`) it is a home of and has written no retract of.
+    /// What this side owes now in the page's audience ([`owed`] of
+    /// `ledger`): the nodes it is a home of and has written no retract of.
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub retract: Vec<String>,
+    pub retract: Vec<OwedNode>,
+}
+
+/// A node a side owes its own retract of.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OwedNode {
+    pub audience: String,
+    /// `node:<id>`: the object of the retract to write.
+    pub node: String,
 }
 
 /// `nodes.home_owed`: what a side owes as a home, from its ledger alone, so
@@ -127,14 +136,15 @@ pub struct OwedInput {
 #[serde(rename_all = "camelCase")]
 pub struct Owed {
     /// See [`owed`].
-    pub retract: Vec<String>,
+    pub retract: Vec<OwedNode>,
 }
 
-/// The nodes (`node:<id>`, sorted) this side is a home of (a `home` entry)
-/// whose retract it has not written itself (`origin` not among its
-/// `homes`), as on a computer a home page was taken onto; a node a forget
-/// names itself is left out (it takes all a home keeps of it). Without an
-/// origin, every such node.
+/// The nodes (sorted) this side is a home of (a `home` entry) whose
+/// retract it has not written itself (`origin` not among its `homes`), as
+/// on a computer a home page was taken onto. Left out: a node a forget
+/// names itself (it takes all a home keeps of it), and one with a `home`
+/// entry but no retract at all on the ledger (no side knows it as taken
+/// back: there is nothing to join). Without an origin, every such node.
 ///
 /// For each, this side writes its own shared `retract`, with no list
 /// (`takes` empty), and its `retract.home`, through `log.ledger`, and sends
@@ -143,22 +153,23 @@ pub struct Owed {
 /// was merged or split into the node since), and this side is then a home
 /// every side knows, so a forget the partner presses here lists rows that
 /// count on every home ([`myriad_persona_log::forget`]).
-pub fn owed(ledger: &[Entry], origin: Option<&str>) -> Vec<String> {
+pub fn owed(ledger: &[Entry], origin: Option<&str>) -> Vec<OwedNode> {
     let view = forget::View::new(ledger);
-    let owed: BTreeSet<&str> = ledger
+    let owed: BTreeSet<OwedNode> = ledger
         .iter()
         .filter(|entry| entry.kind == forget::Kind::Home)
         .filter(|entry| !view.forgets_directly(&entry.audience, &entry.target))
         .filter(|entry| {
-            !origin.is_some_and(|origin| {
-                view.homes(&entry.audience, &entry.target)
-                    .iter()
-                    .any(|home| home == origin)
-            })
+            let homes = view.homes(&entry.audience, &entry.target);
+            !homes.is_empty()
+                && !origin.is_some_and(|origin| homes.iter().any(|home| home == origin))
         })
-        .map(|entry| entry.target.as_str())
+        .map(|entry| OwedNode {
+            audience: entry.audience.clone(),
+            node: entry.target.clone(),
+        })
         .collect();
-    owed.into_iter().map(str::to_string).collect()
+    owed.into_iter().collect()
 }
 
 /// `nodes.home_owed`.
@@ -397,7 +408,11 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         .collect::<BTreeSet<_>>()
         .into_iter()
         .collect();
-    let retract = owed(&ledger, origin.as_deref());
+    // What this page made this side a home of: its audience alone.
+    let retract = owed(&ledger, origin.as_deref())
+        .into_iter()
+        .filter(|one| one.audience == page.audience)
+        .collect();
     Ok(Taken {
         rows,
         bodies,
