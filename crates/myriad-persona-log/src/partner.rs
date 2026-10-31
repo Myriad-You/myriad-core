@@ -19,7 +19,9 @@
 //!   from `local-owner`. A Mac that goes by another id, linked or taken
 //!   from a file, is refused: what it holds may be another account's
 //!   partner's (a file of theirs taken onto an empty Mac), and no link moves
-//!   it. The host offers to start that Mac empty before linking. A Mac
+//!   it. On a child's link the host offers to start that Mac empty before
+//!   linking; the device she lives on is never started empty (that would
+//!   let her go): it keeps her, does not move her back, and says why. A Mac
 //!   that took a file from before (no partner in its header) while empty
 //!   holds talk that may be someone else's under `local-owner` too: its
 //!   link asks first ([`Linked::confirm`]; the coordinator's decision,
@@ -243,8 +245,10 @@ pub struct Linked {
     pub from: Option<String>,
     /// Ask the partner before moving: this side took a file from before
     /// while empty, so what it holds under `local-owner` may be another
-    /// account's partner's. On yes, move as `from` says; on no, start this
-    /// side empty and link again.
+    /// account's partner's. On yes, move as `from` says; on no, on a
+    /// child's link, start this side empty and link again. The device she
+    /// lives on is never started empty: it keeps her and does not move her
+    /// back.
     #[serde(skip_serializing_if = "is_false")]
     pub confirm: bool,
 }
@@ -255,13 +259,14 @@ pub struct Linked {
 /// nothing to do, but a move it did not finish (rows left under
 /// `local-owner`, or [`Here::moving`] still set); a side that goes by
 /// another (linked, or taken from a file), or holds another partner id's
-/// talk, is refused, and may be started empty to link.
+/// talk, is refused: on a child's link it may be started empty to link,
+/// never the device she lives on.
 pub fn link(here: &Here, theirs: &str) -> Result<Linked, LogError> {
     here.check()?;
     check(theirs)?;
     if here.holds_another(theirs) {
         return Err(LogError::new(
-            "this side holds another partner id's talk: start it empty to link",
+            "this side holds another partner id's talk: it cannot take this one",
         ));
     }
     if here.moving.as_deref().is_some_and(|to| to != theirs) {
@@ -276,7 +281,7 @@ pub fn link(here: &Here, theirs: &str) -> Result<Linked, LogError> {
         }
         Some(_) => {
             return Err(LogError::new(
-                "this side goes by another partner id: start it empty to link",
+                "this side goes by another partner id: it cannot take this one",
             ));
         }
     };
