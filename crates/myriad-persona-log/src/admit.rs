@@ -71,8 +71,9 @@ fn partner_of<'a>(audience: &'a str, holder: &'a Holder) -> &'a str {
 /// Whether an object known under `known` keeps a row of `audience` out: only
 /// when both are the same partner's. A partner's private talk is that
 /// partner's; her own audience and someone else's private talk with her are
-/// this side's partner's; a group is a partner's only when `members` says
-/// the partner is in it (a group not listed counts for no one).
+/// this side's partner's; a group may be any partner's, unless `members`
+/// lists who is in it and the partner is not: what this side does not know
+/// never loosens the check.
 fn same_partner(
     known: &str,
     audience: &str,
@@ -84,7 +85,7 @@ fn same_partner(
         Ok(Audience::Personal(member)) if partner::is_partners(member) => member == partner,
         Ok(Audience::Group(_)) => members
             .get(known)
-            .is_some_and(|group| group.contains(partner)),
+            .is_none_or(|group| group.is_empty() || group.contains(partner)),
         _ => partner == holder.owner,
     }
 }

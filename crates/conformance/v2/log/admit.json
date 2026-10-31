@@ -2097,7 +2097,99 @@
           }
         ]
       },
-      "name": "a group the side cannot tell the partner is in counts for no one",
+      "name": "refused: a group whose members are not given may be the partner's (audience_changed)",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "id": "k-5",
+            "reason": "audience_changed"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "group:g1"
+        },
+        "members": {
+          "group:g1": []
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-6",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-6"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "refused: a group whose members list is empty may be the partner's (audience_changed)",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "id": "k-6",
+            "reason": "audience_changed"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:a": "group:g1"
+        },
+        "members": {
+          "group:g1": [
+            "9"
+          ]
+        },
+        "now": 1760000000000000,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k-7",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:k-7"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a group whose members are given and leave the partner out is someone else's",
       "output": {
         "accepted": [
           {
@@ -2106,12 +2198,12 @@
             "dseq": 1,
             "epoch": 1,
             "hlc": "001760000000000-000000-dev_mac",
-            "id": "k-5",
+            "id": "k-7",
             "kind": "node.noted",
             "object": "node:a",
             "origin": "dev_mac",
             "payload": {
-              "ref": "blob:k-5"
+              "ref": "blob:k-7"
             },
             "replicate": "shared",
             "version": 1
