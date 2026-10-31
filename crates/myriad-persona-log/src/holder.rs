@@ -124,7 +124,8 @@ impl Holder {
     /// holds, never a forget or a retract (they have no stub: one about the
     /// partner under another id would forget under it later, once moved).
     /// Such a stub comes only of a host's fault: sides exchange rows only
-    /// under one id ([`crate::partner::exchange`]).
+    /// under one id ([`crate::partner::exchange`]). The ledger clause is
+    /// defence in depth: `Row::check` refuses a forgotten forget already.
     pub fn holds_stub(&self, row: &Row) -> bool {
         row.forgotten
             && row.payload.is_none()
@@ -249,5 +250,36 @@ mod tests {
         assert!(site.holds_row(&row("9")));
         assert!(!site.holds_row(&row(PF)));
         assert!(!site.holds_row(&row("local-owner")));
+    }
+
+    #[test]
+    fn a_stub_is_held_for_its_place_but_never_a_forgets() {
+        // Defence in depth: whatever `Row::check` says, a row on the ledger
+        // is never held as a stub, so a forget under another id never
+        // reaches the ledger to forget under this one after a move.
+        let side = holder(Core::Pc);
+        let row = |kind: &str, object: &str| -> Row {
+            serde_json::from_value(serde_json::json!({
+                "audience": "own:", "author": "owner", "dseq": 1,
+                "hlc": "001760000000000-000000-dev_mac", "id": "r1",
+                "kind": kind, "object": object, "origin": "dev_mac",
+                "replicate": "shared", "version": 1, "forgotten": true,
+            }))
+            .unwrap()
+        };
+        let mood = row("affect.change", "affect:local-owner");
+        assert!(!side.holds_row(&mood));
+        assert!(side.holds_stub(&mood));
+        let forget = row("forget", "subject:local-owner");
+        assert!(!side.holds_row(&forget));
+        assert!(!side.holds_stub(&forget));
+        // Nor a stub of an audience this side may not hold.
+        let mut theirs = mood.clone();
+        theirs.audience = format!("personal:{PF}");
+        assert!(!side.holds_stub(&theirs));
+        // Nor a row with its payload: that is no stub.
+        let mut whole = mood;
+        whole.payload = Some(serde_json::from_value(serde_json::json!({"ref": "doc:r1"})).unwrap());
+        assert!(!side.holds_stub(&whole));
     }
 }

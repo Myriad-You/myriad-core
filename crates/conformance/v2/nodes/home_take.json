@@ -77,7 +77,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a home page taken onto a new computer: it keeps the node, the marks on its ledger",
       "output": {
@@ -121,7 +122,10 @@
           }
         ],
         "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
         ],
         "rows": [
           {
@@ -265,7 +269,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a node forgotten here since comes in as stubs",
       "output": {
@@ -422,7 +427,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "refused: a server never takes a home page",
       "output": {
@@ -482,7 +488,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "refused: a row of a node no mark keeps",
       "output": {
@@ -565,7 +572,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body that is not its canonical bytes is withheld",
       "output": {
@@ -599,7 +607,10 @@
           }
         ],
         "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
         ],
         "rows": [
           {
@@ -778,7 +789,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a stub this side holds already is filled",
       "output": {
@@ -826,7 +838,10 @@
           }
         ],
         "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
         ],
         "rows": [
           {
@@ -963,7 +978,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0900033333333333333333333"
       },
       "name": "refused: a home page of another partner id's talk",
       "output": {
@@ -1045,7 +1061,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a kept body tagged for its device comes in from a home page",
       "output": {
@@ -1090,7 +1107,10 @@
           }
         ],
         "retract": [
-          "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          }
         ],
         "rows": [
           {
@@ -1226,7 +1246,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body with a local path in a home page is not taken (local_ref)",
       "output": {
@@ -1260,7 +1281,10 @@
           }
         ],
         "retract": [
-          "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          }
         ],
         "rows": [
           {
@@ -1403,7 +1427,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a span tagged with an audience its row's may not hold is not taken (audience_tag)",
       "output": {
@@ -1437,7 +1462,10 @@
           }
         ],
         "retract": [
-          "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          }
         ],
         "rows": [
           {
@@ -1580,7 +1608,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a person's node in her own audience in a home page: no body is taken (person_elsewhere)",
       "output": {
@@ -1602,7 +1631,10 @@
           }
         ],
         "retract": [
-          "node:9ddc297b2aed54affc184c6b2070d5ce"
+          {
+            "audience": "own:",
+            "node": "node:9ddc297b2aed54affc184c6b2070d5ce"
+          }
         ],
         "rows": [
           {
@@ -1749,7 +1781,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a body larger than its shape allows in a home page is not taken",
       "output": {
@@ -1783,7 +1816,10 @@
           }
         ],
         "retract": [
-          "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:9c336ff0dcd91a7736bea9c3a3eb8103"
+          }
         ],
         "rows": [
           {
@@ -1974,7 +2010,8 @@
               "why": "secret"
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "two homes: a row held whole that the page brings without its body stays as held",
       "output": {
@@ -2008,7 +2045,10 @@
           }
         ],
         "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
         ],
         "rows": [
           {
@@ -2182,7 +2222,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a home taking its own file back: a row it holds whole, its body not in the page, stays as held",
       "output": {
@@ -2216,7 +2257,10 @@
           }
         ],
         "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
         ],
         "rows": [
           {
@@ -2289,7 +2333,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "refused: a home page row about the partner under local-owner",
       "output": {
@@ -2373,7 +2418,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a restored home is told to write its own retract of each node it keeps now",
       "output": {
@@ -2417,7 +2463,10 @@
           }
         ],
         "retract": [
-          "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
         ],
         "rows": [
           {
@@ -2565,7 +2614,8 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a restored home that wrote its own retract of a node already is not told to again",
       "output": {
@@ -2761,10 +2811,297 @@
               "version": 1
             }
           ]
-        }
+        },
+        "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a restored home is told only of the page's audience, whatever else its ledger owes",
-      "output": null
+      "output": {
+        "bodies": {
+          "c1": {
+            "key": "minted:release",
+            "kind": "task",
+            "name": "发版",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "c2": {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴说周五发版。",
+            "version": 1
+          }
+        },
+        "ledger": [
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:2bc730215ab09ccce40c435fab541176"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "own:",
+            "kind": "home",
+            "target": "node:2bc730215ab09ccce40c435fab541176"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          },
+          {
+            "at": "001760000000003-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "kind": "home",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
+        ],
+        "retract": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "node": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "node.created",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "c2",
+            "kind": "node.span",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4h",
+            "kind": "retract.home",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "c4",
+            "kind": "retract",
+            "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "page": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            },
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOnBhcnRuZXJfMDE5OWQ1YzBiMDAwNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQiLCJzYWlkQnkiOlsiaGVyIiwicGFydG5lciJdLCJzeW5jIjoic2hhcmVkIiwidGV4dCI6IuS8meS8tOivtOWRqOS6lOWPkeeJiOOAgiIsInZlcnNpb24iOjF9",
+              "ref": "doc:c2"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4h",
+              "kind": "retract.home",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "local",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "retract",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        },
+        "peer": "partner_0199d5c0a00022222222222222222222"
+      },
+      "name": "refused: a home page from a file under another partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "page": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "payloads": [
+            {
+              "data": "eyJrZXkiOiJtaW50ZWQ6cmVsZWFzZSIsImtpbmQiOiJ0YXNrIiwibmFtZSI6IuWPkeeJiCIsInNhaWRCeSI6WyJoZXIiXSwic3luYyI6InNoYXJlZCIsInZlcnNpb24iOjF9",
+              "ref": "doc:c1"
+            },
+            {
+              "data": "eyJhdWRpZW5jZSI6InBlcnNvbmFsOnBhcnRuZXJfMDE5OWQ1YzBiMDAwNDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQiLCJzYWlkQnkiOlsiaGVyIiwicGFydG5lciJdLCJzeW5jIjoic2hhcmVkIiwidGV4dCI6IuS8meS8tOivtOWRqOS6lOWPkeeJiOOAgiIsInZlcnNpb24iOjF9",
+              "ref": "doc:c2"
+            }
+          ],
+          "rows": [
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000000-000000-dev_mac",
+              "id": "c1",
+              "kind": "node.created",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "c2",
+              "kind": "node.span",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:c2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4h",
+              "kind": "retract.home",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "local",
+              "version": 1
+            },
+            {
+              "audience": "personal:partner_0199d5c0b00044444444444444444444",
+              "author": "owner",
+              "dseq": 4,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "c4",
+              "kind": "retract",
+              "object": "node:2f7ad76812703f2f55a3e866fd3f02e9",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        },
+        "peer": "local-owner"
+      },
+      "name": "refused: a home page from a file without a partner, on a side under a partner id",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

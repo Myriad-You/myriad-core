@@ -1557,6 +1557,71 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:9,partner_0199d5c0a00022222222222222222222",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000000009-000000-dev_mac",
+            "id": "a1",
+            "kind": "affect.change",
+            "object": "affect:9",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a row of a talk of several with another partner id in it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "own:",
+            "target": "affect:partner_0199d5c0a00022222222222222222222"
+          }
+        ],
+        "rows": [],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a ledger entry about another partner id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "from": "local-owner",
+        "ledger": [
+          {
+            "at": "001760000000005-000000-dev_mac",
+            "audience": "personal:partner_0199d5c0a00022222222222222222222",
+            "target": "node:2f7ad76812703f2f55a3e866fd3f02e9"
+          }
+        ],
+        "rows": [],
+        "to": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a ledger entry of another partner id's talk",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

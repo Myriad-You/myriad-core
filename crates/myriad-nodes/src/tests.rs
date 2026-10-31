@@ -367,15 +367,31 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         // nodes.wire_send, nodes.wire_take: one id per exchange
         (
             "refused: a side under local-owner never sends to one under a partner id",
-            "goes by the same id",
+            "the same id",
         ),
         (
             "refused: a side never sends to one under another partner id",
-            "goes by the same id",
+            "the same id",
         ),
         (
             "refused: a batch from a side under another partner id",
-            "goes by the same id",
+            "the same id",
+        ),
+        (
+            "refused: a side under a partner id never sends to one under local-owner",
+            "the same id",
+        ),
+        (
+            "refused: a batch from a side under local-owner, on a side under a partner id",
+            "the same id",
+        ),
+        (
+            "refused: a home page from a file under another partner id",
+            "the same id",
+        ),
+        (
+            "refused: a home page from a file without a partner, on a side under a partner id",
+            "the same id",
         ),
         // nodes.home_send, nodes.home_take
         (

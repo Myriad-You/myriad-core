@@ -80,6 +80,11 @@ pub struct TakeInput {
     /// `filled`.
     #[serde(default)]
     pub held: Vec<Row>,
+    /// The id the file goes by: its header's partner id, `local-owner` for
+    /// a file without one. A page under another id than this side's is
+    /// refused, as a sync with such a side is
+    /// ([`myriad_persona_log::partner::exchange`]).
+    pub peer: String,
     /// The side this one writes as: a node it keeps already by a retract
     /// of its own is not listed in [`Taken::retract`] ([`owed`]).
     #[serde(default)]
@@ -280,9 +285,12 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         holder,
         ledger,
         held,
+        peer,
         origin,
     } = input;
     check_holder(&holder, &page.audience)?;
+    myriad_persona_log::partner::exchange(&holder.owner, &peer)
+        .map_err(|error| NodeError::new(error.to_string()))?;
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();
     for one in &page.payloads {
         if carried

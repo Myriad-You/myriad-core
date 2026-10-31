@@ -702,14 +702,14 @@
       "peer.hello": {
         "from": "device",
         "delivery": "handshake",
-        "required": ["protocol", "deviceId", "nonce"],
-        "description": "LAN only, the dialer's first frame: who it says it is and 32 random bytes (base64)."
+        "required": ["protocol", "deviceId", "nonce", "partner"],
+        "description": "LAN only, the dialer's first frame: who it says it is and 32 random bytes (base64). partner is the id it goes by (its holder's owner: a partner id, or local-owner until it has moved): the listener passes it as peer to nodes.wire_take and log.admit, and answers with nodes.wire_send and log.answer only when it is the listener's own id (partner::exchange). Devices under two ids exchange no rows."
       },
       "peer.welcome": {
         "from": "device",
         "delivery": "handshake",
-        "required": ["protocol", "deviceId", "nonce", "certHash", "proof"],
-        "description": "LAN only, the listener's answer: who it is, its own nonce, the sha256 of its TLS certificate (hex), and proof: its Ed25519 signature (base64) over the canonical JSON {dialer, dialerNonce, listener, listenerNonce, certHash, purpose: 'myriad-link-lan/2 listener'}. The dialer checks it against peer.keys and that certHash is the certificate it is talking to."
+        "required": ["protocol", "deviceId", "nonce", "certHash", "proof", "partner"],
+        "description": "LAN only, the listener's answer: who it is, its own nonce, the sha256 of its TLS certificate (hex), and proof: its Ed25519 signature (base64) over the canonical JSON {dialer, dialerNonce, listener, listenerNonce, certHash, purpose: 'myriad-link-lan/2 listener'}. The dialer checks it against peer.keys and that certHash is the certificate it is talking to. partner is the listener's id, as in peer.hello: the dialer passes it as peer, and exchanges rows only when it is its own id."
       },
       "peer.proof": {
         "from": "device",

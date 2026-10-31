@@ -92,12 +92,12 @@ pub fn is_partners(member: &str) -> bool {
 pub fn exchange(here: &str, peer: &str) -> Result<(), LogError> {
     if !is_partners(peer) {
         return Err(LogError::new(
-            "the other side goes by a partner id or local-owner",
+            "the other side must go by a partner id or local-owner",
         ));
     }
     if here != peer {
         return Err(LogError::new(
-            "a side exchanges rows only with a side that goes by the same id",
+            "both sides must go by the same id to exchange rows",
         ));
     }
     Ok(())
@@ -186,11 +186,16 @@ impl Here {
         if self.linked && self.id.is_none() {
             return Err(LogError::new("a linked side has a partner id"));
         }
+        // A move goes to the one id a side goes by. Until it ends, the side
+        // goes by `local-owner` (its holder's owner is the last thing a
+        // move writes, whatever `id` says), so it exchanges rows with no
+        // side under the new id before it has moved them all: the exchange
+        // calls see only holders' ids, so this rests on that write order.
         if let (Some(id), Some(to)) = (&self.id, &self.moving)
             && id != to
         {
             return Err(LogError::new(
-                "a side moves only to the partner id it goes by",
+                "a side must move to the partner id it goes by",
             ));
         }
         Ok(())

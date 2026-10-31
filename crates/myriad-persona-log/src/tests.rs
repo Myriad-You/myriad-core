@@ -411,6 +411,7 @@ fn a_forgotten_object_never_reads_back_in_any_order() {
         let mut held: Vec<Row> = Vec::new();
         for one in order {
             held = merge(MergeInput {
+                holder: None,
                 ledger: Vec::new(),
                 log: held,
                 incoming: vec![one],
@@ -440,12 +441,14 @@ fn merging_is_a_union_in_any_order() {
         owner(row("b2", "site", 2, 250, "memory:x", "memory.write")),
     ];
     let ab = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: a.clone(),
         incoming: b.clone(),
     })
     .unwrap();
     let ba = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: b.clone(),
         incoming: a.clone(),
@@ -455,6 +458,7 @@ fn merging_is_a_union_in_any_order() {
     assert_eq!(ab.duplicates, 1);
     assert!(ab.conflicts.is_empty());
     let again = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: ab.log.clone(),
         incoming: b,
@@ -510,6 +514,7 @@ fn what_one_side_answers_fills_the_other() {
     .unwrap();
     assert!(admitted.refused.is_empty());
     site = merge(MergeInput {
+        holder: None,
         ledger: Vec::new(),
         log: site,
         incoming: admitted.accepted,

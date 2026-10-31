@@ -882,6 +882,70 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "local-owner"
+        },
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "h1",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "h2",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "h3",
+            "kind": "affect.change",
+            "object": "affect:partner_0199d5c0b00044444444444444444444",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: an answer from a side under a partner id to one under local-owner",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

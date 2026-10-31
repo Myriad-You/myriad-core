@@ -773,7 +773,8 @@
         "body": {
           "protocol": 2,
           "deviceId": "dev_phone",
-          "nonce": "Z2uLuEznJn3VIN7KSBHI8QpT5jY1LwaYf0L+QlrO3YA="
+          "nonce": "Z2uLuEznJn3VIN7KSBHI8QpT5jY1LwaYf0L+QlrO3YA=",
+          "partner": "partner_0199d5c0b00044444444444444444444"
         }
       },
       {
@@ -787,7 +788,8 @@
           "deviceId": "dev_mac",
           "nonce": "BICpPS6bCUuJ4I4Bl2CJrBgZOvgCxmtjHMjS3BuujIg=",
           "certHash": "06298432e8066b29e2223bcc23aa9504b56ae508fabf3435508869b9c3190e22",
-          "proof": "sqpBPGT5t3nOZP7YIeHXZ5gEZaHDAGizCT1U/luzxCCyqkE8ZPm3ec5k/tgh4ddnmARlocMAaLMJPVT+W7PEIA=="
+          "proof": "sqpBPGT5t3nOZP7YIeHXZ5gEZaHDAGizCT1U/luzxCCyqkE8ZPm3ec5k/tgh4ddnmARlocMAaLMJPVT+W7PEIA==",
+          "partner": "partner_0199d5c0b00044444444444444444444"
         }
       },
       {

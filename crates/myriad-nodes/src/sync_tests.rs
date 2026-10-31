@@ -174,6 +174,7 @@ impl Side {
         self.rows.extend(wrote);
         if forget {
             let merged = merge(MergeInput {
+                holder: None,
                 ledger: self.ledger.clone(),
                 log: self.rows.clone(),
                 incoming: Vec::new(),
@@ -235,30 +236,44 @@ impl Side {
         .unwrap()
     }
 
-    /// Takes a batch in and merges it, as a host core does.
+    /// Takes a batch in and merges it, as a host core does, from a side
+    /// that goes by the id every [`Side::named`] goes by.
     fn take(&mut self, batch: Batch) -> crate::wire::Taken {
-        self.take_held(batch, Vec::new())
+        self.take_from(ME, batch)
+    }
+
+    /// The same, from a side that goes by `peer`: its link's id, or a
+    /// file's header id (`local-owner` for a file without one).
+    fn take_from(&mut self, peer: &str, batch: Batch) -> crate::wire::Taken {
+        self.try_take(peer, batch, Vec::new()).unwrap()
     }
 
     /// The same, for a batch that brings rows this side asked again for.
     fn take_held(&mut self, batch: Batch, held: Vec<Row>) -> crate::wire::Taken {
+        self.try_take(ME, batch, held).unwrap()
+    }
+
+    fn try_take(
+        &mut self,
+        peer: &str,
+        batch: Batch,
+        held: Vec<Row>,
+    ) -> Result<crate::wire::Taken, crate::NodeError> {
         let taken = take(TakeInput {
             people: self.people.clone(),
             elsewhere: Vec::new(),
             batch,
             holder: self.holder.clone(),
-            // The sender goes by the same id: sides under two ids never
-            // sync (`partner::exchange`).
-            peer: self.holder.owner.clone(),
+            peer: peer.into(),
             now: NOW,
             known: BTreeMap::new(),
             members: BTreeMap::new(),
             ledger: Some(self.ledger.clone()),
             epochs: BTreeMap::new(),
             held,
-        })
-        .unwrap();
+        })?;
         let merged = merge(MergeInput {
+            holder: Some(self.holder.clone()),
             ledger: taken.admitted.ledger.clone(),
             log: self.rows.clone(),
             incoming: taken.admitted.accepted.clone(),
@@ -275,12 +290,12 @@ impl Side {
         }
         self.bodies.extend(taken.bodies.clone());
         self.ledger = taken.admitted.ledger.clone();
-        taken
+        Ok(taken)
     }
 
     fn sync_from(&mut self, from: &Side, audience: &str) {
         for batch in from.send_to(self, audience).batches {
-            self.take(batch);
+            self.take_from(&from.holder.owner, batch);
         }
     }
 
@@ -1806,6 +1821,8 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
     let take_as = |page: Batch, holder: Holder, held: Vec<Row>| {
         home::take(HomeTake {
             page,
+            // The file's header names the id its writer went by.
+            peer: holder.owner.clone(),
             holder,
             ledger: Vec::new(),
             held,
@@ -2527,7 +2544,7 @@ mod partner_id {
         let sent = faulty.send_to(&site, "own:");
         assert_eq!(sent.held_back, ["f1"]);
         for batch in sent.batches {
-            let taken = site.take(batch);
+            let taken = site.take_from(&faulty.holder.owner, batch);
             assert!(taken.admitted.refused.is_empty());
             assert!(taken.admitted.accepted.iter().all(|row| row.forgotten));
         }
@@ -2567,11 +2584,11 @@ mod partner_id {
             assert!(partner::file(&side.here(true), None).is_err());
             assert!(partner::file(&side.here(true), Some(PF)).is_err());
             assert!(partner::file(&side.here(true), Some(P0)).is_ok());
-            for batch in [&legacy, &foreign] {
+            // Taken all the same, under its header's id: refused whole.
+            for (header, batch) in [(partner::LEGACY, &legacy), (PF, &foreign)] {
                 let mut side = side.clone();
-                let taken = side.take(batch.clone());
-                assert!(taken.admitted.accepted.is_empty(), "{}", side.origin);
-                assert!(taken.bodies.is_empty());
+                let taken = side.try_take(header, batch.clone(), Vec::new());
+                assert!(taken.is_err(), "{}", side.origin);
             }
         }
         // A Mac that holds anything and never linked takes no other Mac's
@@ -2591,7 +2608,7 @@ mod partner_id {
         assert!(filed.adopt);
         empty.holder.owner = filed.id;
         for batch in writer.send_to(&empty, &private(PF)).batches {
-            let taken = empty.take(batch);
+            let taken = empty.take_from(PF, batch);
             assert!(taken.admitted.refused.is_empty());
         }
         // Alice links it to her account: refused, so Bob's talk is never

@@ -3688,6 +3688,82 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "batch": {
+          "audience": "own:",
+          "rows": [
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000001-000000-dev_mac",
+              "id": "h1",
+              "kind": "affect.change",
+              "object": "affect:partner_0199d5c0b00044444444444444444444",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "forgotten": true,
+              "hlc": "001760000000002-000000-dev_mac",
+              "id": "h2",
+              "kind": "affect.change",
+              "object": "affect:local-owner",
+              "origin": "dev_mac",
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "own:",
+              "author": "her",
+              "dseq": 3,
+              "epoch": 1,
+              "hlc": "001760000000003-000000-dev_mac",
+              "id": "h3",
+              "kind": "affect.change",
+              "object": "affect:partner_0199d5c0b00044444444444444444444",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "doc:h3"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ],
+          "withheld": [
+            {
+              "id": "h1",
+              "why": "no_body"
+            },
+            {
+              "id": "h3",
+              "why": "no_body"
+            }
+          ]
+        },
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "local-owner"
+      },
+      "name": "refused: a batch from a side under local-owner, on a side under a partner id",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

@@ -279,6 +279,24 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0900033333333333333333333",
+            "own:"
+          ],
+          "id": "partner_0199d5c0900033333333333333333333",
+          "linked": true,
+          "moving": "partner_0199d5c0a00022222222222222222222"
+        },
+        "theirs": "partner_0199d5c0900033333333333333333333"
+      },
+      "name": "refused: a side moving to another partner id than the one it goes by",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1
