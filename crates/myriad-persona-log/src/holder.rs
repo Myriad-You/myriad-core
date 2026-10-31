@@ -22,7 +22,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{LogError, row::Audience};
+use crate::{LogError, Row, row::Audience};
 
 /// What kind of core a side is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -83,6 +83,25 @@ impl Holder {
             (Core::Pc, Ok(Audience::Personal(members))) => members == self.owner,
             (Core::Pc, Ok(Audience::Group(_))) => false,
         }
+    }
+
+    /// Whether this side may hold `row`: one of an audience it holds, and,
+    /// in her own audience, no object about the partner under an id this
+    /// side does not go by (`subject:` or `affect:` of `local-owner` or of
+    /// another partner id): a row an unmoved computer wrote, or one about
+    /// someone else's partner, is refused, not stored beside the moved ones.
+    pub fn holds_row(&self, row: &Row) -> bool {
+        if !self.holds(&row.audience) {
+            return false;
+        }
+        if !matches!(Audience::parse(&row.audience), Ok(Audience::Own)) {
+            return true;
+        }
+        !row.object.split_once(':').is_some_and(|(kind, id)| {
+            crate::partner::PERSON_OBJECTS.contains(&kind)
+                && crate::partner::is_partners(id)
+                && id != self.owner
+        })
     }
 }
 

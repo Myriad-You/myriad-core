@@ -60,7 +60,7 @@ pub(super) fn missing(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "missing": vector::missing(&mine, &theirs) }))
 }
 
-/// `{rows, theirs, holder?}` → `{rows, notHeld?}`: what to send a side
+/// `{rows, theirs, holder}` → `{rows, notHeld?}`: what to send a side
 /// holding `theirs`; nothing to a side that may not hold the audience.
 pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
@@ -68,15 +68,14 @@ pub(super) fn send(raw: &[u8]) -> Result<Value, Failure> {
     struct In {
         rows: Vec<Row>,
         theirs: Vector,
-        #[serde(default)]
-        holder: Option<Holder>,
+        holder: Holder,
     }
     let In {
         rows,
         theirs,
         holder,
     } = input(raw)?;
-    answer(&vector::answer_to(&rows, &theirs, holder.as_ref()).map_err(refused)?)
+    answer(&vector::answer_to(&rows, &theirs, &holder).map_err(refused)?)
 }
 
 /// A retract in the batch needs this side's ledger, so a home never loses

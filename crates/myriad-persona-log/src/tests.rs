@@ -1,4 +1,4 @@
-//! The shared conformance files in `crates/conformance/v1/` (log and lease
+//! The shared conformance files in `crates/conformance/` (`v2/log`, `v1/lease`
 //! cases) run here through the crate, and through the C entry point in
 //! `myriad-core-ffi`; another platform runs the same files through its own
 //! runtime. Below them, the properties the files only sample: forgetting in
@@ -19,9 +19,15 @@ use crate::{
     vector::{answer, holdings, missing},
 };
 
-/// The conformance files' directory.
+/// The conformance files' directory: `log/` is version 2 (a holder on every
+/// `log.admit` and `log.answer`), `lease/` still version 1.
 pub(crate) fn conformance() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
+}
+
+/// Where an area's case files are.
+fn area_dir(area: &str) -> &'static str {
+    if area == "log" { "v2/log" } else { "v1/lease" }
 }
 
 fn blessing() -> bool {
@@ -59,8 +65,7 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
     struct Answer {
         rows: Vec<Row>,
         theirs: Vector,
-        #[serde(default)]
-        holder: Option<crate::Holder>,
+        holder: crate::Holder,
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -92,7 +97,7 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
                 theirs,
                 holder,
             } = input(raw)?;
-            json_of(&crate::vector::answer_to(&rows, &theirs, holder.as_ref())?)
+            json_of(&crate::vector::answer_to(&rows, &theirs, &holder)?)
         }
         "log.admit" => json_of(&admit(input::<AdmitInput>(raw)?)?),
         "log.merge" => json_of(&merge(input::<MergeInput>(raw)?)?),
@@ -198,7 +203,7 @@ fn same(one: &Value, other: &Value) -> bool {
 pub(crate) fn case_files() -> Vec<PathBuf> {
     let mut files = Vec::new();
     for area in ["log", "lease"] {
-        let dir = conformance().join(area);
+        let dir = conformance().join(area_dir(area));
         for entry in std::fs::read_dir(&dir).unwrap_or_else(|e| panic!("{}: {e}", dir.display())) {
             let path = entry.unwrap().path();
             if path.extension().is_some_and(|ext| ext == "json") {
@@ -270,9 +275,10 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ("takes out of order", "takes is sorted"),
         ("a retract's home shared", "is local"),
     ];
-    let file: Value =
-        serde_json::from_slice(&std::fs::read(conformance().join("log/canonical.json")).unwrap())
-            .unwrap();
+    let file: Value = serde_json::from_slice(
+        &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),
+    )
+    .unwrap();
     let mut seen = 0;
     for case in file["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
@@ -477,7 +483,10 @@ fn what_one_side_answers_fills_the_other() {
         members: Default::default(),
         ledger: None,
         epochs: Default::default(),
-        holder: None,
+        holder: crate::Holder {
+            core: crate::Core::Server,
+            owner: "o1".into(),
+        },
     })
     .unwrap();
     assert!(admitted.refused.is_empty());

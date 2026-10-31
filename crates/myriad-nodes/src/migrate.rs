@@ -1,17 +1,21 @@
 //! Moving her nodes to the partner's one id (`myriad_persona_log::partner`).
 //!
-//! A side that links for the first time (or that took an id from a file
-//! while empty, then links) moves once, before its first sync on the link:
+//! A side still on `local-owner` that links for the first time moves once,
+//! before its first sync on the link:
 //! its rows (`partner::row`), its ledger (`partner::entry`: audiences, and
 //! forgets of all about the partner, so nothing forgotten comes back), and
 //! the bodies that name the partner: the audience tag of a span or an
-//! entry, a `person:<from>` key (made, related to, gone into), who knows
-//! and whose progress. Every side moves a body to the same bytes.
+//! entry, who knows and whose progress, and, in the partner's private talk
+//! only, a `person:<from>` key (made, related to, gone into). Every side
+//! moves a body to the same bytes.
 //!
 //! **A node keeps its id.** The id of a node in the partner's private talk
 //! is not made from the partner's id (`crate::key`), so moving relabels the
 //! audience and nothing else: every row keeps its object, and the names in
-//! envelopes (`to`, `takes`) and on the ledger stay true. A move is only
+//! envelopes (`to`, `takes`) and on the ledger stay true. A key moves only
+//! in the partner's private talk, where `person:<from>` and `person:<to>`
+//! make the same node id; in her own audience a person key's id is made
+//! from the key itself, so it stays as written. A move is only
 //! from `local-owner` or a partner id: rows under a site's account id
 //! cannot be moved (their node ids are made from it), so a site holding any
 //! has to say so rather than move them. A private audience of several
@@ -44,7 +48,8 @@ pub struct MigrateInput {
     pub bodies: BTreeMap<String, Value>,
     /// This side's ledger.
     pub ledger: Vec<Entry>,
-    /// The id it went by: `local-owner`, or one it took from a file.
+    /// The id it went by: `local-owner` (`partner::link` moves from nothing
+    /// else).
     pub from: String,
     /// The id the link gave.
     pub to: String,
@@ -96,10 +101,11 @@ fn body(row: &Row, value: &Value, by: &Move) -> Option<Value> {
     }
     let mut body = Body::read(&row.kind, value).ok()?;
     let before = body.clone();
+    let keys = by.is_ours(&row.audience);
     match &mut body {
-        Body::Created(created) => created.key = key(&created.key, by),
-        Body::Related(related) => related.to = key(&related.to, by),
-        Body::Absorbed(absorbed) => absorbed.into = key(&absorbed.into, by),
+        Body::Created(created) if keys => created.key = key(&created.key, by),
+        Body::Related(related) if keys => related.to = key(&related.to, by),
+        Body::Absorbed(absorbed) if keys => absorbed.into = key(&absorbed.into, by),
         Body::Span(span) => span.audience = by.audience(&span.audience),
         Body::Entry(entry) => entry.audience = by.audience(&entry.audience),
         Body::Revised(revised) => {

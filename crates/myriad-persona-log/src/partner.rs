@@ -14,18 +14,25 @@
 //!   the core reads neither. A Mac never mints one.
 //! - **How a Mac gets it** ([`link`]): only over the authenticated link to
 //!   the partner's account (the site's welcome). Before its first sync on
-//!   that link the Mac moves what it held under `local-owner` (or under an
-//!   id it took from a file while empty) to it: rows, bodies and its ledger
-//!   (`myriad_nodes::migrate`). A Mac that never linked stays `local-owner`.
-//!   A Mac linked once never takes another id.
+//!   that link a Mac still on `local-owner` moves what it held to it: rows,
+//!   bodies and its ledger (`myriad_nodes::migrate`). A Mac that goes by
+//!   another id, linked or taken from a file, is refused: what it holds may
+//!   be another account's partner's (a file of theirs taken onto an empty
+//!   Mac), and no link moves it. The host offers to start that Mac empty
+//!   before linking. A Mac that never linked stays `local-owner`.
 //! - **Files** ([`file`]) never change or add an id. A file is taken when
-//!   the partner id in its header is this side's. A side that holds no row
-//!   of a `personal:` audience or of `own:` and never linked may take the
-//!   file's id as its own (the partner's decision, 2026-10-30: 空的 Mac
-//!   直接认文件); a file with no partner in its header (its pages under
-//!   `local-owner`) only onto such a side, as it is. Anything else is
-//!   refused. So a Mac that holds anything and never linked cannot take
-//!   another unlinked Mac's file: link both, or import onto an empty Mac.
+//!   the partner id in its header is this side's. A side with no id yet
+//!   (still `local-owner`) that holds no row of a `personal:` audience or of
+//!   `own:` and never linked may take the file's id as its own (the
+//!   partner's decision, 2026-10-30: 空的 Mac 直接认文件); a file with no
+//!   partner in its header (its pages under `local-owner`) only onto such a
+//!   side, as it is. Anything else is refused: a side that took an id never
+//!   takes another file's, and a side with an id never takes pages under
+//!   `local-owner`. So a Mac that holds anything and never linked cannot
+//!   take another unlinked Mac's file: link both, or import onto an empty
+//!   Mac. The header's id is in the clear: it guards against a mix-up (the
+//!   wrong file, the wrong Mac), not against anyone; it authenticates
+//!   nothing.
 //! - **Nobody else's partner talk** (`crate::Holder::holds`): no side, the
 //!   server included, holds a private audience of `local-owner` or of a
 //!   partner id but its own partner's.
@@ -157,18 +164,19 @@ pub struct Linked {
 }
 
 /// The site's id for the partner, as it comes over the authenticated link:
-/// a side still `local-owner`, or with an id it only took from a file,
-/// takes it and moves; a side linked before keeps its own and refuses
-/// another.
+/// a side still `local-owner` takes it and moves; a side that already goes
+/// by it has nothing to do; a side that goes by another (linked, or taken
+/// from a file) is refused, and may be started empty to link.
 pub fn link(here: &Here, theirs: &str) -> Result<Linked, LogError> {
     here.check()?;
     check(theirs)?;
     let from = match &here.id {
         None => Some(LEGACY.to_string()),
         Some(id) if id == theirs => None,
-        Some(id) if !here.linked => Some(id.clone()),
         Some(_) => {
-            return Err(LogError::new("this side is linked to another partner id"));
+            return Err(LogError::new(
+                "this side goes by another partner id: start it empty to link",
+            ));
         }
     };
     Ok(Linked {
@@ -193,7 +201,7 @@ pub struct Filed {
 /// its pages under `local-owner`) may come in here, and under which id.
 pub fn file(here: &Here, header: Option<&str>) -> Result<Filed, LogError> {
     here.check()?;
-    let open = here.empty() && !here.linked;
+    let open = here.empty() && !here.linked && here.id.is_none();
     let id = header.unwrap_or(LEGACY);
     if let Some(header) = header {
         check(header)?;
@@ -216,9 +224,8 @@ pub fn file(here: &Here, header: Option<&str>) -> Result<Filed, LogError> {
     })
 }
 
-/// One move of a side's partner id: from the id it went by
-/// (`local-owner`, or a partner id taken from a file) to the one the link
-/// gave.
+/// One move of a side's partner id: from `local-owner` to the id the link
+/// gave (or, between partner ids, a move the caller makes on purpose).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Move {
@@ -276,7 +283,7 @@ impl Move {
 
 /// Object types whose id is a person: `subject:<id>` (a forget of all
 /// about them), `affect:<id>` (her mood towards them).
-const PERSON_OBJECTS: [&str; 2] = [crate::kinds::SUBJECT, "affect"];
+pub(crate) const PERSON_OBJECTS: [&str; 2] = [crate::kinds::SUBJECT, "affect"];
 
 /// `row` moved: the partner's private audience under the new id, and the
 /// partner as subject and as an object's id. Rows of her own audience
@@ -358,9 +365,10 @@ mod tests {
             (fresh.id.as_str(), fresh.from.as_deref()),
             (P0, Some(LEGACY))
         );
-        // One that took a file's id while empty gives it up for the link's.
-        let filed = link(&here(Some(PF), false, &["personal:x"]), P0).unwrap();
-        assert_eq!(filed.from.as_deref(), Some(PF));
+        // One that took another id from a file is refused: what it holds may
+        // be another account's partner's. One that took this id is linked.
+        assert!(link(&here(Some(PF), false, &[&format!("personal:{PF}")]), P0).is_err());
+        assert_eq!(link(&here(Some(P0), false, &[]), P0).unwrap().from, None);
         // Linked before: the same id is nothing to do, another is refused.
         assert_eq!(link(&here(Some(P0), true, &[]), P0).unwrap().from, None);
         assert!(link(&here(Some(PF), true, &[]), P0).is_err());
@@ -406,6 +414,12 @@ mod tests {
         );
         assert!(file(&here(Some(P0), true, &[]), Some(PF)).is_err());
         assert!(file(&here(Some(P0), true, &[]), None).is_err());
+        // A side that took an id, even with nothing under it yet, never takes
+        // another file's, nor pages under local-owner.
+        let adopted = here(Some(PF), false, &[]);
+        assert!(file(&adopted, Some(P0)).is_err());
+        assert!(file(&adopted, None).is_err());
+        assert!(!file(&adopted, Some(PF)).unwrap().adopt);
     }
 
     #[test]

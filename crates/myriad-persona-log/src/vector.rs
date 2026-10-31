@@ -139,22 +139,16 @@ fn is_false(value: &bool) -> bool {
     !*value
 }
 
-/// [`answer`], for a side that is `holder` when it is known: a side that
-/// may not hold the audience gets nothing ([`crate::holder`]).
-pub fn answer_to(
-    rows: &[Row],
-    theirs: &Vector,
-    holder: Option<&Holder>,
-) -> Result<Answered, LogError> {
-    if let Some(holder) = holder {
-        holder.check()?;
-        one_audience(rows)?;
-        if rows.first().is_some_and(|row| !holder.holds(&row.audience)) {
-            return Ok(Answered {
-                rows: Vec::new(),
-                not_held: true,
-            });
-        }
+/// [`answer`], for the side that is `holder`: a side that may not hold the
+/// audience gets nothing ([`crate::holder`]).
+pub fn answer_to(rows: &[Row], theirs: &Vector, holder: &Holder) -> Result<Answered, LogError> {
+    holder.check()?;
+    one_audience(rows)?;
+    if rows.first().is_some_and(|row| !holder.holds(&row.audience)) {
+        return Ok(Answered {
+            rows: Vec::new(),
+            not_held: true,
+        });
     }
     Ok(Answered {
         rows: answer(rows, theirs)?,

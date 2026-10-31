@@ -35,7 +35,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - 时间是 Unix 微秒（`i64`）。她的时区是 IANA 名（`Asia/Shanghai`）或固定偏移（`+08:00`）。用名字，是因为夏令时会挪动一天的边界，而且各平台要拿同一个名字。
 - 浮点按位一致：`serde_json` 开了 `float_roundtrip`，平台侧用最短往返表示编码即可。
 
-现在是 `ABI_VERSION` 2（2026-10-31 起：`nodes.fold`、`nodes.wire_send` 的 `ledger` 必填，并入、拆出的行必须在信封里带 `to`（拆出还要 `takes`），没有的拒收；钉第 1 版的端照 `crates/conformance/v1/nodes` 对照）。
+现在是 `ABI_VERSION` 2（2026-10-31 起：`nodes.fold`、`nodes.wire_send` 的 `ledger` 必填，并入、拆出的行必须在信封里带 `to`（拆出还要 `takes`），没有的拒收；`log.admit`、`log.answer` 的 `holder` 必填；钉第 1 版的端照 `crates/conformance/v1/nodes`、`v1/log` 对照）。
 
 `meta.version` 返回 `abi`（`ABI_VERSION`）、`upstreamCommit`（构建时的 `MYRIAD_CORE_UPSTREAM_COMMIT`，没设为 `unknown`）和全部调用名。调用表在 `src/calls.rs` 的 `CALLS`。
 
@@ -75,7 +75,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **第 2 版的几类只在搬家和导出时出现。** `conversation`（站长的一场私聊连同每一句，含「没听完」标记和句子里的站点图片）、`proactive_line`、`intention`、`owner_state`、`pace`、`present`、`wearing`、`field_history` 是第 2 版加的。首次比对的 pull 只发前 13 类（`Kind::COMPARED`），`sync.compare` 也只读它们。
 - **导出文件 `myriad.her-archive`。** 第一行是明文头（规范 JSON），之后是分块的 XChaCha20-Poly1305：nonce 为头里的 19 字节前缀 + 块序号（u32 大端）+ 最后一块标记，头这一行是每块的附加数据。截断、换块、改头都打不开，口令错和文件坏说的是同一句话。流里依次是信封页、日志页（只在第 2 版）、它们引用的文件（rig 是 `manifest.json` 加 `atlas.png`）、清单。导出文件总是加密。盐和 nonce 前缀由调用方从系统随机源取来传入，核心不读随机数。黄金文件在 `fixtures/archive/`。
-- **文件头里的伙伴（第 2 版文件）。** 有日志页的文件头可以带 `partner`：写文件那一端的伙伴 id（字符串，`sync.archive_seal` 的 `fields.partner`；只有第 2 版能带，第 1 版头里有它就拒绝）。导入的一端先读头，用它问 `partner.file`：是这一端的 id 就收；这一端空着、从没连过，就认它；头里没有 `partner` 的旧文件只有这样的一端能照原样收；别的一律拒绝。收的时候 `nodes.wire_take` 的 `holder.owner` 就是回答的 `id`。它是 id，不是凭据，谁看过头都能抄，所以文件从不改变或增加一端的 id。
+- **文件头里的伙伴（第 2 版文件）。** 有日志页的文件头可以带 `partner`：写文件那一端的伙伴 id（字符串，`sync.archive_seal` 的 `fields.partner`；只有第 2 版能带，第 1 版头里有它就拒绝）。导入的一端先读头，用它问 `partner.file`：是这一端的 id 就收；这一端空着、从没连过，就认它；头里没有 `partner` 的旧文件只有这样的一端能照原样收；别的一律拒绝。收的时候 `nodes.wire_take` 的 `holder.owner` 就是回答的 `id`。它是 id，不是凭据，谁看过头都能抄：头里的 id 只防拿错（错的文件、错的 Mac），不认证任何人，所以文件从不改变或增加一端的 id。
 - **日志页（第 2 版文件）。** 她的节点和节点日志进导出文件，用的是端和端之间同样的一批：一个受众的行和它们的载荷 `{audience, rows, payloads?}`（`nodes.wire_send` 的一批，`log.rows` 帧的正文），规范 JSON，段的头是 `{"part": "log", "bytes": n}`。有日志页的文件头写 `version: 2`（`sync.archive_seal` 的 `fields` 给 `logs: true`）；没有的照旧写第 1 版，只读第 1 版的一端照样打开。这一层只查页的外形（规范 JSON、同一个受众、整份文件里每行 id 只出现一次、每个载荷都有本页的行指向它）；写第 1 版头的文件里放日志页，封装时就拒绝（`Sealer::part`），读的一端也照样拒收。写文件时清单按读文件的一端（`holder`）查每页的受众，所以给伙伴的文件里不会有群的日志或别人的私聊；页里的行和 body 应当就是给这一端的 `nodes.wire_send` 的输出。导入的一端把每一页当作从文件来源那一端收到的一批，经 `nodes.wire_take` 做所有检查（受众、桩、载荷），再合并。所以站点导入时不用再拒收节点，Mac 专属附件里的节点和节点日志可以搬进来（见「她的节点」›「在端之间」）。家留着的节点在日志页里只有桩，它的整行另放在家页里（`{"part": "home"}`，只给伙伴的电脑，见「她的日志」›「家自己的备份」）。
 
 - **不透明的人设键。** 人设里本端不认识的键（站点的 `displayName`、`draftSource`，以及以后别的端加的键）是 `opaque` 类：原样存下，原样传回（值和 `rev` 都不动），按单值合并。比对不列它们：不用这个键的一端谈不上和别人不同。
@@ -140,8 +140,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `lease.move` | `{lease, request, now, issued, holderLastSeen?, holderPlace?, ownerPlace?, stopAfter?}` → `{granted: Grant}` 或 `{refused: 理由}`；`request` 是 `{handover: {from, epoch, to, through?}}`、`{takeover: {server}}` 或 `{force: {to}}`；`issued` 是服务端给新一份的 rev，必须晚于现在这份 |
 | `lease.newer` | `{a, b}` → `{newer: "a" \| "b"}` |
 | `lease.behind` | `{through?, from, held}` → `{behind}`：新执笔的那一端开始想之前还在等什么。`through` 是交出那份的 `{受众: dseq}`，`from` 是交出的那一端，`held` 是这一端每个受众的版本向量 `{受众: {端: dseq}}`；`behind` 是还没补到的受众和要补到的数，空的就是补齐了、可以想。接管和「让她来这里」没有 `through`，不用等 |
-| `log.admit` | `{rows, now, known?, members?, ledger?, epochs?, holder?}` → `{accepted, refused?, clockAhead?, ledger, epochs}`；批里有撤回时必须给 `ledger`；给了 `holder`（这一端）时，它不能存的受众的行拒收（`not_held`）。`holder` 是可选的：不给就不查谁能存（一端整理自己的行时也用它，站点已有的调用也不给）；端和端之间收行用 `nodes.wire_take`，那里必填 |
-| `log.answer` | `{rows, theirs, holder?}` → `{rows, notHeld?}`：一个受众里对方（持有这个受众的 `theirs`）缺的行，`forget` 在前；行跨了受众是 `bad_input`；给了 `holder`（对方）而对方不能存这个受众时什么都不给，`notHeld: true`。`holder` 可选的道理同 `log.admit`；发给另一端用 `nodes.wire_send`，那里必填 |
+| `log.admit` | `{rows, now, known?, members?, ledger?, epochs?, holder}` → `{accepted, refused?, clockAhead?, ledger, epochs}`：查的是别的端来的一批；批里有撤回时必须给 `ledger`；`holder`（这一端）必填（ABI 2 起），它不能存的行拒收（`not_held`，`Holder::holds_row`：它不能存的受众，和她自己的受众里以别的伙伴 id 或 `local-owner` 为 id 的 `subject:`、`affect:` 对象）；这一端自己写的行走 `log.ledger`，不过 `log.admit` |
+| `log.answer` | `{rows, theirs, holder}` → `{rows, notHeld?}`：一个受众里对方（持有这个受众的 `theirs`）缺的行，`forget` 在前；行跨了受众是 `bad_input`；`holder`（对方）必填（ABI 2 起），对方不能存这个受众时什么都不给，`notHeld: true` |
 | `log.canonical` | `{row}` → `{row, canonical, digest}`；信封不对就是 `bad_input` |
 | `log.clock_next` | `{last?, now, offset, node}` → `{rev, poisoned}`：`now` 是本机时间，`offset` 加上它是服务端的时间 |
 | `log.clock_observe` | `{last?, seen, now, offset, node}` → `{last}`：`seen` 最多把物理部分推到上限 |
@@ -174,14 +174,14 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **形状**：`partner_` 加 32 个小写十六进制数字：前 12 个是生成它的时间（Unix 毫秒，不早于 2025 年），后 20 个是随机数（80 位）。它是 id，不是凭据，不开任何东西。
 - **谁生成**（`partner.mint`）：站点，每个账号一次（不是账号 id 本身）。时间和 10 个随机字节由调用方给，核心不读时钟和随机源。Mac 从不生成。
-- **Mac 怎么拿到**（`partner.link`）：只从连到伙伴自己账号的认证连接（站点的 `welcome` 里的 `partner`）。还是 `local-owner` 的 Mac，或者空的时候从文件认了一个 id、还没连过的 Mac，拿到站点的 id 就在这条连接上第一次同步以前迁一次（`from` 是原来的 id）；连过的 Mac 拿到同一个 id 什么都不做，拿到别的 id 拒绝。没连过的 Mac 就一直是 `local-owner`。没有别名表、没有比大小、没有 `others`。
-- **文件**（`partner.file`）从不改变或增加 id。文件头里的伙伴 id 就是这一端的 id 时收；这一端 `personal:` 和 `own:` 里一行都没有、也从没连过（核心按调用方给的 `here` 查：`audiences` 是这一端有行的每个受众，`linked` 是 id 是否从连接来的）时，可以把文件的 id 认作自己的（`adopt`，伙伴 2026-10-30 定：「空的 Mac 直接认文件」）；头里没有伙伴的旧文件（页在 `local-owner` 下）也只有这样的一端能照原样收。别的一律拒绝。回答的 `id` 就是收这个文件的页时 `nodes.wire_take` 的 `holder.owner`。**限制**（协调人定，伙伴回来可以改）：有东西、没连过的 Mac 收不了另一台没连过的 Mac 的文件；要在两台 Mac 之间搬，要么两台都连上，要么导入到一台空的 Mac 上。
-- **谁也不存别人的伙伴私聊**（`Holder::holds`）：哪一端（服务端也是）都不存 `personal:local-owner` 或 `personal:<伙伴 id>`，除非那就是它自己的伙伴（`holder.owner`）。所以没迁的旧 Mac 发来的 `local-owner` 一批被拒收（`not_held`），不会按同样的节点 id 存进站点；`#674` 还没上线，这样可以。服务端的 `holder.owner` 是这个账号的伙伴 id，一个账号一份日志。
+- **Mac 怎么拿到**（`partner.link`）：只从连到伙伴自己账号的认证连接（站点的 `welcome` 里的 `partner`）。还是 `local-owner` 的 Mac 拿到站点的 id，就在这条连接上第一次同步以前迁一次（`from` 是 `local-owner`）；已经是这个 id 的（连过的，或从文件认的就是它）什么都不做；是别的 id 的一律拒绝，连过的、从文件认的都一样：从文件认的 id 下可能是别的账号的伙伴的东西（Bob 的导出导进了 Alice 空的 Mac），哪一次连接都不把它迁进另一个账号。原生要做的：这时提出把这台 Mac 清空（从空的开始）再连。没连过的 Mac 就一直是 `local-owner`。没有别名表、没有比大小、没有 `others`。
+- **文件**（`partner.file`）从不改变或增加 id。文件头里的伙伴 id 就是这一端的 id 时收；这一端还没有 id（还是 `local-owner`）、`personal:` 和 `own:` 里一行都没有、也从没连过（核心按调用方给的 `here` 查：`audiences` 是这一端有行的每个受众，`linked` 是 id 是否从连接来的）时，可以把文件的 id 认作自己的（`adopt`，伙伴 2026-10-30 定：「空的 Mac 直接认文件」）；头里没有伙伴的旧文件（页在 `local-owner` 下）也只有这样的一端能照原样收。别的一律拒绝：认过一个 id 的一端不会再被别的文件换掉 id，有 id 的一端也不收 `local-owner` 下的页。回答的 `id` 就是收这个文件的页时 `nodes.wire_take` 的 `holder.owner`。**限制**（协调人定，伙伴回来可以改）：有东西、没连过的 Mac 收不了另一台没连过的 Mac 的文件；要在两台 Mac 之间搬，要么两台都连上，要么导入到一台空的 Mac 上。
+- **谁也不存别人的伙伴私聊**（`Holder::holds`）：哪一端（服务端也是）都不存 `personal:local-owner` 或 `personal:<伙伴 id>`，除非那就是它自己的伙伴（`holder.owner`）。所以没迁的旧 Mac 发来的 `local-owner` 一批被拒收（`not_held`），不会按同样的节点 id 存进站点；`#674` 还没上线，这样可以。服务端的 `holder.owner` 是这个账号的伙伴 id，一个账号一份日志。她自己的受众（`own:`）里也一样：对象是 `subject:` 或 `affect:` 而 id 是 `local-owner` 或别的伙伴 id 的行（没迁的 Mac 写的她对伙伴的心情，别人伙伴的），每一端收的时候都拒收（`not_held`，`Holder::holds_row`）。
 - **怎么带过去**：「她的连接」协议 1 的 `welcome` 多一个可选的 `partner`（站点的伙伴 id，字符串）。认识这个字段的一端在 `hello` 的 `capabilities` 里列 `partner`；站点只在 `hello` 列了它时才放，所以旧的一端收不到它。`hello` 不带 id。导出文件见「同步」›「文件头里的伙伴」。
-- **迁移**（`partner.migrate`，纯函数）：受众 `personal:<from>` 改成 `personal:<to>`，主体是 `from` 的改成 `to`，以人为 id 的对象（`subject:<from>`、`affect:<from>`）也改，伙伴私聊和她自己的受众里都改；行的 id、`origin`、`dseq`、`hlc` 都不动，所以同一行在每一端迁出来都是同样的字节。**账也一起迁**：给这一端的账，回答迁过的账，受众和以人为 id 的目标一样改，所以迁移以前「忘掉关于伙伴的全部」在迁移以后照样够到新 id 下的行。body 里提到伙伴的地方：片段和条目的受众标签、`person:<from>` 的键（`node.created` 的 `key`、`node.related` 的 `to`、`node.absorbed` 的 `into`）、谁知道、谁的进度，迁完重新给出规范字节。别的受众（群、别人的私聊）一行不动。同一端在同一受众里的同一个 `dseq` 落到两行上是 `clashes`，迁移补不了，留日志顺序先的那一行。`from` 只能是 `local-owner` 或伙伴 id：站点账号 id 下的行迁不了（它们的节点 id 是按账号 id 算的），所以不会悄悄迁成对不上的节点。站点的节点按账号加受众存；`#674` 还没上线，站点应当没有要迁的节点行（`uncertain`：站点要确认）。调用方按受众存的东西（`known`、`epochs`、执笔权的 `through`、版本向量、下一个 `dseq`）用 `personal:<to>` 改键，计数接着原来的往下数。
+- **迁移**（`partner.migrate`，纯函数）：受众 `personal:<from>` 改成 `personal:<to>`，主体是 `from` 的改成 `to`，以人为 id 的对象（`subject:<from>`、`affect:<from>`）也改，伙伴私聊和她自己的受众里都改；行的 id、`origin`、`dseq`、`hlc` 都不动，所以同一行在每一端迁出来都是同样的字节。**账也一起迁**：给这一端的账，回答迁过的账，受众和以人为 id 的目标一样改，所以迁移以前「忘掉关于伙伴的全部」在迁移以后照样够到新 id 下的行。body 里提到伙伴的地方：片段和条目的受众标签、伙伴私聊里 `person:<from>` 的键（`node.created` 的 `key`、`node.related` 的 `to`、`node.absorbed` 的 `into`；她自己的受众里人的键算出的 id 就按键本身，改了就指到别的节点，所以不改）、谁知道、谁的进度，迁完重新给出规范字节。别的受众（群、别人的私聊）一行不动。同一端在同一受众里的同一个 `dseq` 落到两行上是 `clashes`，迁移补不了，留日志顺序先的那一行。`from` 只能是 `local-owner` 或伙伴 id：站点账号 id 下的行迁不了（它们的节点 id 是按账号 id 算的），所以不会悄悄迁成对不上的节点。**站点要确认**（`uncertain`）：`personal:<账号 id>` 下一行都没有（不只是节点行），`own:` 里没有以账号 id 为 id 的对象（`subject:<账号 id>`、`affect:<账号 id>`），账里也没有这样的目标。有的话要另有一条认可过的迁法，不在这一版里。调用方按受众存的东西（`known`、`epochs`、执笔权的 `through`、版本向量、下一个 `dseq`）用 `personal:<to>` 改键，计数接着原来的往下数。
 - **节点的 id 不随伙伴的 id 变。** 伙伴私聊（`personal:<一个人>`，这个人是 `local-owner` 或任何 `partner_…`）里的节点 id 用一个固定的名字算：受众按 `personal:local-owner`（`myriad_nodes::key`）。这就是每台 Mac 一直用的那个，所以已有的 id 都不变，迁移只改受众的标签：每一行的对象、信封里的 `to`、`takes`，账里的节点都照旧成立。几个人的 `personal:a,b` 照受众本身算，也不迁。
 - **「关于你」只有一个**：伙伴私聊里 `person:<这个私聊的伙伴 id>` 和 `person:local-owner` 都是「关于你」，算出同一个节点（键按 `person:local-owner`），`Key::is_about_you` 和算 id 用的是同一条规则，所以每个查「关于你」的地方（折叠、整理、名字的检查）都认得两个写法。别的伙伴 id 是别人。
-- `sync_tests.rs` 对过：两台 Mac 从 `local-owner` 连上站点迁过去，按两种顺序同步，三端都只折出一个节点、id 就是原来的那个，迁移以前写的并入和拆出照样折得出来；迁移以前忘掉她对伙伴的心情，迁移以后站点那边的同样的行进来就是桩；陌生人的旧文件页和别的伙伴 id 的页，在有东西的 Mac 上、在站点上都不收；空的 Mac 认了文件的 id、再连上站点，站点的 id 赢，文件的页迁过去。
+- `sync_tests.rs` 对过：两台 Mac 从 `local-owner` 连上站点迁过去，按两种顺序同步，三端都只折出一个节点、id 就是原来的那个，迁移以前写的并入和拆出照样折得出来；迁移以前忘掉她对伙伴的心情，迁移以后站点那边的同样的行进来就是桩；迁移以前「忘掉关于伙伴的全部」（`subject:`），迁移以后站点那边的行进来也是桩；陌生人的旧文件页和别的伙伴 id 的页，在有东西的 Mac 上、在站点上都不收；她自己的受众里以 `local-owner` 或别的伙伴 id 为 id 的心情行，迁过的 Mac 和站点都不收；空的 Mac 认了 Bob 文件的 id，再连 Alice 的账号被拒，Bob 的东西不会迁进 Alice 的账号，清空以后再连什么都不迁。
 
 | 调用 | 输入 → 输出 |
 | --- | --- |
@@ -392,7 +392,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 一致性对照（`crates/conformance/`）
 
-两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。其余的还在 `v1/`。
+两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也一样：`v2/log`（`log.admit`、`log.answer` 的 `holder` 必填），`v1/log` 是 ABI 1 时的样子。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
 - `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。

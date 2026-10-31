@@ -49,10 +49,9 @@ pub struct AdmitInput {
     /// rows this side holds there.
     #[serde(default)]
     pub epochs: Epochs,
-    /// This side, when it says what it is: a row of an audience it may not
-    /// hold is refused ([`crate::holder`]).
-    #[serde(default)]
-    pub holder: Option<Holder>,
+    /// This side: a row it may not hold is refused (`not_held`,
+    /// [`crate::Holder::holds_row`]).
+    pub holder: Holder,
 }
 
 /// Audience → side → the highest epoch of that side's her rows held there.
@@ -122,6 +121,7 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         mut epochs,
         holder,
     } = input;
+    holder.check()?;
     forget::given(ledger.as_deref(), &rows)?;
     let ledger = ledger.unwrap_or_default();
     let ahead = rows
@@ -158,10 +158,7 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             refused.push(refuse(&row, Reason::Local, None));
             continue;
         }
-        if holder
-            .as_ref()
-            .is_some_and(|holder| !holder.holds(&row.audience))
-        {
+        if !holder.holds_row(&row) {
             refused.push(refuse(&row, Reason::NotHeld, None));
             continue;
         }

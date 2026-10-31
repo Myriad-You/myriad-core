@@ -770,7 +770,7 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         members,
         ledger,
         epochs,
-        holder: Some(holder),
+        holder,
     })
     .map_err(|error| NodeError::new(error.to_string()))?;
     admitted.refused.extend(astray);

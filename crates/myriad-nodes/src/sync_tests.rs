@@ -2083,6 +2083,86 @@ mod partner_id {
     }
 
     #[test]
+    fn a_forget_of_everything_about_the_partner_holds_across_the_move() {
+        // The Mac forgot all about the partner in their talk while still
+        // `local-owner`; the site holds a memory of them under its id.
+        let mut mac = Side::owned(Core::Pc, "dev_mac", partner::LEGACY);
+        let mut forget = row(
+            "f1",
+            "dev_mac",
+            1,
+            T,
+            &private(partner::LEGACY),
+            KEY,
+            "forget",
+        );
+        forget.object = format!("subject:{}", partner::LEGACY);
+        mac.write(forget, None);
+        let mut site = Side::owned(Core::Server, "site", P0);
+        let mut memory = row("s1", "site", 1, T + 5, &private(P0), KEY, "memory.write");
+        memory.object = "memory:m1".into();
+        memory.subject = Some(P0.into());
+        site.write(memory, None);
+        // The move takes the forget to the one id: the site's memory comes
+        // in a stub, and the site, taking the forget, stubs its own.
+        mac.link_to(false, P0);
+        assert!(
+            mac.ledger
+                .iter()
+                .any(|entry| entry.target == format!("subject:{P0}"))
+        );
+        mac.sync_from(&site, &private(P0));
+        assert!(mac.rows.iter().any(|row| row.id == "s1" && row.forgotten));
+        site.sync_from(&mac, &private(P0));
+        assert!(site.rows.iter().any(|row| row.id == "s1" && row.forgotten));
+    }
+
+    #[test]
+    fn a_row_of_hers_about_the_partner_under_another_id_is_refused() {
+        // A Mac that has not moved still writes her mood towards
+        // `local-owner`; another writes it towards someone else's partner.
+        let mut unmoved = Side::owned(Core::Pc, "dev_old", partner::LEGACY);
+        unmoved.write(
+            about_partner("u1", "dev_old", 1, T, partner::LEGACY, "affect.change"),
+            None,
+        );
+        let mut stranger = Side::owned(Core::Pc, "dev_x", PF);
+        stranger.write(
+            about_partner("x1", "dev_x", 1, T, PF, "affect.change"),
+            None,
+        );
+        let mut moved = Side::owned(Core::Pc, "dev_mac", partner::LEGACY);
+        moved.link_to(false, P0);
+        let site = Side::owned(Core::Server, "site", P0);
+        for side in [moved, site] {
+            for from in [&unmoved, &stranger] {
+                let mut side = side.clone();
+                for batch in from.send_to(&side, "own:").batches {
+                    let taken = side.take(batch);
+                    assert!(taken.admitted.accepted.is_empty(), "{}", side.origin);
+                    assert!(
+                        taken
+                            .admitted
+                            .refused
+                            .iter()
+                            .all(|one| one.reason == myriad_persona_log::admit::Reason::NotHeld)
+                    );
+                }
+                assert!(!side.rows.iter().any(|row| row.origin == from.origin));
+            }
+        }
+        // Her mood towards the partner under the one id comes in.
+        let mut mine = Side::owned(Core::Pc, "dev_b", P0);
+        mine.write(
+            about_partner("b1", "dev_b", 1, T, P0, "affect.change"),
+            None,
+        );
+        let mut site = Side::owned(Core::Server, "site", P0);
+        site.sync_from(&mine, "own:");
+        assert!(site.rows.iter().any(|row| row.id == "b1"));
+    }
+
+    #[test]
     fn no_side_takes_talk_under_an_id_that_is_not_its_partners() {
         // A stranger's pages: from before (local-owner, no header partner),
         // and under another partner id.
@@ -2117,8 +2197,9 @@ mod partner_id {
     }
 
     #[test]
-    fn an_empty_mac_takes_a_files_id_then_the_links_and_the_pages_move() {
-        // Another Mac's file, under its id.
+    fn an_empty_mac_that_took_a_files_id_never_moves_it_to_another_account() {
+        // Bob's file, under his id, goes onto Alice's empty Mac, which takes
+        // its id.
         let writer = mac("dev_a", T, PF);
         let mut empty = Side::owned(Core::Pc, "dev_new", partner::LEGACY);
         let filed = partner::file(&empty.here(false), Some(PF)).unwrap();
@@ -2128,19 +2209,25 @@ mod partner_id {
             let taken = empty.take(batch);
             assert!(taken.admitted.refused.is_empty());
         }
-        // Then it links: the site's id wins, and the file's pages move.
-        let mut site = Side::owned(Core::Server, "site", P0);
-        empty.link_to(false, P0);
-        assert!(empty.rows.iter().all(|row| row.audience == private(P0)));
-        site.sync_from(&empty, &private(P0));
-        let nodes = site.by_key(&private(P0));
+        // Alice links it to her account: refused, so Bob's talk is never
+        // relabelled into hers. Nor does another file's id replace his.
+        assert!(partner::link(&empty.here(false), P0).is_err());
+        assert!(partner::file(&empty.here(false), Some(P0)).is_err());
+        assert!(empty.rows.iter().all(|row| row.audience == private(PF)));
+        // Started empty, the Mac links to her account with nothing to move.
+        let mut fresh = Side::owned(Core::Pc, "dev_new", partner::LEGACY);
+        fresh.link_to(false, P0);
+        assert!(fresh.rows.is_empty() && fresh.holder.owner == P0);
+        // Bob's own account links the Mac that holds his file: the same id,
+        // nothing to move, and his nodes keep their ids.
+        let mut bobs = empty.clone();
+        bobs.link_to(false, PF);
+        let mut site = Side::owned(Core::Server, "site", PF);
+        site.sync_from(&bobs, &private(PF));
+        let nodes = site.by_key(&private(PF));
         assert_eq!(nodes[KEY]["id"], node_id(&private(PF), KEY).unwrap());
-        assert_eq!(
-            nodes[OTHER_KEY]["absorbedInto"]["into"],
-            node_id(&private(P0), KEY).unwrap()
-        );
         // Linked now, it takes no other id.
-        assert!(partner::link(&empty.here(true), PF).is_err());
-        assert!(partner::file(&empty.here(true), Some(PF)).is_err());
+        assert!(partner::link(&bobs.here(true), P0).is_err());
+        assert!(partner::file(&bobs.here(true), Some(P0)).is_err());
     }
 }

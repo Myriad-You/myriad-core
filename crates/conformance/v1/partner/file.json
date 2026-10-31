@@ -146,6 +146,44 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "header": "partner_0199d5c0900033333333333333333333",
+        "here": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: a side that took an id, holding nothing yet, takes no other file's id",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "here": {
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "refused: a side that took an id takes no file from before (its pages under local-owner)",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "header": "partner_0199d5c0a00022222222222222222222",
+        "here": {
+          "audiences": [
+            "personal:partner_0199d5c0a00022222222222222222222"
+          ],
+          "id": "partner_0199d5c0a00022222222222222222222"
+        }
+      },
+      "name": "a side that took an id takes another file of that id",
+      "output": {
+        "id": "partner_0199d5c0a00022222222222222222222"
+      }
     }
   ],
   "version": 1
