@@ -998,6 +998,23 @@ fn pending_choice_accepts_number_or_label_not_other_text() {
 }
 
 #[test]
+fn a_choice_named_by_a_number_is_that_one() {
+    let mut prompt = choice_prompt();
+    prompt.options = ["2", "4"]
+        .map(|count| PendingOption {
+            value: count.into(),
+            label: count.into(),
+        })
+        .to_vec();
+    for (said, meant) in [("2", "2"), ("4", "4"), ("1", "2")] {
+        match decide_pending_reply(&prompt, said, 0) {
+            PendingDecision::Resume { answer, .. } => assert_eq!(answer, meant, "{said}"),
+            other => panic!("{said}: {other:?}"),
+        }
+    }
+}
+
+#[test]
 fn pending_confirmation_never_defaults_to_yes() {
     let prompt = PendingPrompt {
         id: "c1id".into(),

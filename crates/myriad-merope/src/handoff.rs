@@ -129,10 +129,12 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
                     None => {}
                 }
                 text.replace_range(start..after + close + CLOSE.len(), "");
+                // Back to the opening before it: taking it out may have
+                // closed one around it (`[[[[stop #1]]work: …]]`). The
+                // line it stood on, if it goes, has no opening on it.
+                let back = text[..start].rfind(OPEN).unwrap_or(0);
                 without_blank_line(&mut text, start);
-                // From the top again: taking it out may have closed one
-                // around it (`[[[[stop #1]]work: …]]`).
-                from = 0;
+                from = back;
             }
         }
     }
@@ -495,29 +497,81 @@ pub fn labelled(number: u32, asked: &str, others_unfinished: bool, content: &str
 }
 
 /// Her answer to a piece's choice question, as the choice: she may write
-/// `2（19:00）` or `订 19:00 的`; a leading choice number, or the one choice
-/// named in it, is what she means. Anything else stays as she wrote it.
+/// `2`, `2（19:00）`, `2号` or `订 19:00 的`. A number standing on its own
+/// and the one choice she names must agree; a no anywhere in it, two
+/// choices named, or a number and a name that disagree stay as she wrote
+/// it, to be asked again: asked twice, never chosen wrong.
 pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     let text = text.trim();
     if options.is_empty() {
         return text.to_string();
     }
-    let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
-    let after = text[digits.len()..].trim_start();
-    // `19点`, `1 点`, `2:30`, `3时`: a time, not a choice; `2号` is one,
-    // unless the choices are days (`2号`, `11月5号`): then it names one.
-    let a_day = after.starts_with('号')
-        && options
-            .iter()
-            .any(|option| option.value.contains('号') || option.label.contains('号'));
-    if !digits.starts_with('0')
-        && let Ok(number) = digits.parse::<usize>()
-        && (1..=options.len()).contains(&number)
-        && !after.starts_with([':', '：', '.', '点', '时'])
-        && !a_day
-    {
-        return number.to_string();
+    let named = named_choice(options, text);
+    let numbered = numbered_choice(options, text);
+    if says_no(options, text) {
+        return text.to_string();
     }
+    let chosen = match (numbered, named) {
+        (Some((number, _)), Some(name)) if number == name => Some(number),
+        // `2号` among days names the day: its number is part of the name.
+        (Some((_, Some(token))), Some(name)) if names(&options[name - 1], &token) => Some(name),
+        (Some(_), Some(_)) => None,
+        (Some((number, _)), None) => Some(number),
+        (None, Some(name)) => Some(name),
+        (None, None) => None,
+    };
+    match chosen {
+        // Choices that are numbers themselves (`2`, `4`) go by name, so
+        // the number of one is not read as another's name.
+        Some(number) if options.iter().any(is_a_number) => options[number - 1].value.clone(),
+        Some(number) => number.to_string(),
+        None => text.to_string(),
+    }
+}
+
+fn is_a_number(option: &PendingOption) -> bool {
+    [&option.value, &option.label]
+        .into_iter()
+        .any(|name| !name.trim().is_empty() && name.trim().chars().all(|ch| ch.is_ascii_digit()))
+}
+
+/// A choice number standing on its own at the head of `text`: plain digits
+/// (not `+1`, `01`), then nothing, punctuation, a bracket, or `号`/`项`
+/// (with that token, `2号`). `19点`, `1 点`, `2:30`, `3时`, `2个`, `2晚`
+/// are not one; nor is `2号` when the choices are days.
+fn numbered_choice(options: &[PendingOption], text: &str) -> Option<(usize, Option<String>)> {
+    let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
+    if digits.is_empty() || digits.starts_with('0') {
+        return None;
+    }
+    let number = digits.parse::<usize>().ok()?;
+    if !(1..=options.len()).contains(&number) {
+        return None;
+    }
+    let rest = &text[digits.len()..];
+    let after = rest.trim_start();
+    if after.starts_with([':', '：', '.', '点', '时']) {
+        return None;
+    }
+    let Some(next) = rest.chars().next() else {
+        return Some((number, None));
+    };
+    if next.is_whitespace() || "（(【[，,。!！?？、;；".contains(next) {
+        return Some((number, None));
+    }
+    let days = options
+        .iter()
+        .any(|option| option.value.contains('号') || option.label.contains('号'));
+    match next {
+        '号' if days => None,
+        '号' | '项' => Some((number, Some(format!("{digits}{next}")))),
+        _ => None,
+    }
+}
+
+/// The one choice `text` names, if one: `9:00` inside `19:00` is the
+/// longer one said, not both.
+fn named_choice(options: &[PendingOption], text: &str) -> Option<usize> {
     let said: Vec<Vec<(usize, usize)>> = options
         .iter()
         .map(|option| {
@@ -527,7 +581,6 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
                 .collect()
         })
         .collect();
-    // `9:00` inside `19:00` is the longer one said, not both.
     let inside_another = |of: usize, (from, to): (usize, usize)| {
         said.iter().enumerate().any(|(other, spans)| {
             other != of
@@ -543,20 +596,47 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
         .map(|(index, _)| index + 1)
         .collect();
     match named.as_slice() {
-        [number] => number.to_string(),
-        _ => text.to_string(),
+        [number] => Some(*number),
+        _ => None,
     }
 }
 
-/// Where `text` names a choice: it says it, and not right after a no
-/// (`不订了` does not name `订`). An empty name names nothing.
+/// Whether a choice's own name says `token`.
+fn names(option: &PendingOption, token: &str) -> bool {
+    [&option.value, &option.label]
+        .into_iter()
+        .any(|name| !name.trim().is_empty() && name.contains(token))
+}
+
+/// A no anywhere in it, outside the choices' own names (`不要` may be one):
+/// `东京不行`, `除了东京`, `not Tokyo`, `2不行，换1吧`.
+fn says_no(options: &[PendingOption], text: &str) -> bool {
+    let mut rest = text.to_lowercase();
+    let mut names: Vec<String> = options
+        .iter()
+        .flat_map(|option| [option.value.trim(), option.label.trim()])
+        .filter(|name| !name.is_empty())
+        .map(str::to_lowercase)
+        .collect();
+    // Longer names first, so a short one inside it is not left behind.
+    names.sort_by_key(|name| std::cmp::Reverse(name.len()));
+    for name in &names {
+        rest = rest.replace(name.as_str(), " ");
+    }
+    rest.contains(['不', '没', '别', '非'])
+        || ["除了", "算了"].iter().any(|word| rest.contains(word))
+        || rest
+            .split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '\'')
+            .any(|word| matches!(word, "no" | "not" | "don't" | "dont" | "except" | "neither"))
+}
+
+/// Where `text` says a choice's name. An empty name names nothing.
 fn named_at(text: &str, name: &str) -> Vec<(usize, usize)> {
     let name = name.trim();
     if name.is_empty() {
         return Vec::new();
     }
     text.match_indices(name)
-        .filter(|(at, _)| !text[..*at].ends_with(['不', '没', '别', '非']))
         .map(|(at, _)| (at, at + name.len()))
         .collect()
 }

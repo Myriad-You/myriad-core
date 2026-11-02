@@ -504,6 +504,32 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     assert_eq!(her_choice(&days(["2号", "3号"]), "2号"), "1");
     assert_eq!(her_choice(&days(["11月2号", "11月5号"]), "2号"), "2号");
     assert_eq!(her_choice(&days(["11月2号", "11月5号"]), "2"), "2");
+    // A count or a unit with the number is not its number: it names one,
+    // or none.
+    assert_eq!(her_choice(&days(["2晚", "3晚"]), "2晚"), "1");
+    assert_eq!(her_choice(&days(["2张", "4张"]), "2张"), "1");
+    assert_eq!(
+        her_choice(&days(["2 tickets", "4 tickets"]), "2 tickets"),
+        "2 tickets"
+    );
+    assert_eq!(her_choice(&days(["11月2日", "11月5日"]), "2日"), "2日");
+    assert_eq!(her_choice(&days(["Nov 2nd", "Nov 5th"]), "2nd"), "2nd");
+    assert_eq!(her_choice(&options, "2个都行"), "2个都行");
+    // A no anywhere in it is asked again.
+    assert_eq!(her_choice(&options, "2不行，换1吧"), "2不行，换1吧");
+    let cities = days(["东京", "大阪"]);
+    assert_eq!(her_choice(&cities, "东京不行"), "东京不行");
+    assert_eq!(her_choice(&cities, "除了东京都可以"), "除了东京都可以");
+    assert_eq!(her_choice(&cities, "大阪吧"), "2");
+    assert_eq!(her_choice(&cities, "1（东京）"), "1");
+    assert_eq!(her_choice(&cities, "1（大阪）"), "1（大阪）");
+    let english = days(["Tokyo", "Osaka"]);
+    assert_eq!(her_choice(&english, "not Tokyo"), "not Tokyo");
+    assert_eq!(her_choice(&english, "Tokyo, please"), "1");
+    // Choices that are numbers go by name.
+    let counts = days(["2", "4"]);
+    assert_eq!(her_choice(&counts, "4"), "4");
+    assert_eq!(her_choice(&counts, "就 2 吧"), "2");
     let book = [("yes", "订"), ("no", "不要")]
         .map(|(value, label)| PendingOption {
             value: value.into(),

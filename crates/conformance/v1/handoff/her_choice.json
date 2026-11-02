@@ -364,6 +364,82 @@
       "output": {
         "choice": "01"
       }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2晚",
+            "value": "2晚"
+          },
+          {
+            "label": "3晚",
+            "value": "3晚"
+          }
+        ],
+        "text": "2晚"
+      },
+      "name": "a unit with the number names the choice, not its number",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "东京",
+            "value": "东京"
+          },
+          {
+            "label": "大阪",
+            "value": "大阪"
+          }
+        ],
+        "text": "东京不行"
+      },
+      "name": "a no anywhere in it is asked again",
+      "output": {
+        "choice": "东京不行"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "东京",
+            "value": "东京"
+          },
+          {
+            "label": "大阪",
+            "value": "大阪"
+          }
+        ],
+        "text": "1（大阪）"
+      },
+      "name": "a number and a name that disagree are asked again",
+      "output": {
+        "choice": "1（大阪）"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2",
+            "value": "2"
+          },
+          {
+            "label": "4",
+            "value": "4"
+          }
+        ],
+        "text": "4"
+      },
+      "name": "choices that are numbers go by name",
+      "output": {
+        "choice": "4"
+      }
     }
   ],
   "version": 1

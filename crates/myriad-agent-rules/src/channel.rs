@@ -1328,15 +1328,18 @@ fn parse_yes_no(text: &str) -> Option<bool> {
     }
 }
 
+/// A choice by its name, then by its number: with choices `2` and `4`,
+/// `2` is the one named 2.
 fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
-    if let Some(index) = parse_option_index(text, prompt.options.len()) {
-        return Some(prompt.options[index].value.clone());
-    }
     let needle = normalize_choice(text);
-    prompt.options.iter().find_map(|option| {
+    let named = prompt.options.iter().find_map(|option| {
         let label = normalize_choice(&option.label);
         let value = normalize_choice(&option.value);
         (needle == label || needle == value).then(|| option.value.clone())
+    });
+    named.or_else(|| {
+        parse_option_index(text, prompt.options.len())
+            .map(|index| prompt.options[index].value.clone())
     })
 }
 
