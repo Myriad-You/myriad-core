@@ -998,6 +998,59 @@ fn pending_choice_accepts_number_or_label_not_other_text() {
 }
 
 #[test]
+fn a_choice_is_its_words_or_its_number_alone() {
+    let mut prompt = choice_prompt();
+    for (said, meant) in [
+        ("2", Some("hangzhou")),
+        ("杭州", Some("hangzhou")),
+        ("2.", Some("hangzhou")),
+    ] {
+        match (decide_pending_reply(&prompt, said, 0), meant) {
+            (PendingDecision::Resume { answer, .. }, Some(meant)) => {
+                assert_eq!(answer, meant, "{said}")
+            }
+            (other, _) => panic!("{said}: {other:?}"),
+        }
+    }
+    for said in ["+1", "01", "２", "去杭州吧", "杭州不行", "2 号"] {
+        assert!(
+            matches!(
+                decide_pending_reply(&prompt, said, 0),
+                PendingDecision::Reask { .. }
+            ),
+            "{said}"
+        );
+    }
+    // A number that is in a choice's name is that name, not a number.
+    prompt.options = ["2", "4"]
+        .map(|count| PendingOption {
+            value: count.into(),
+            label: count.into(),
+        })
+        .to_vec();
+    for (said, meant) in [("2", "2"), ("4", "4")] {
+        match decide_pending_reply(&prompt, said, 0) {
+            PendingDecision::Resume { answer, .. } => assert_eq!(answer, meant, "{said}"),
+            other => panic!("{said}: {other:?}"),
+        }
+    }
+    match decide_pending_reply(&prompt, "1", 0) {
+        PendingDecision::Resume { answer, .. } => assert_eq!(answer, "2"),
+        other => panic!("{other:?}"),
+    }
+    prompt.options = ["2号", "3号"]
+        .map(|day| PendingOption {
+            value: day.into(),
+            label: day.into(),
+        })
+        .to_vec();
+    assert!(matches!(
+        decide_pending_reply(&prompt, "2", 0),
+        PendingDecision::Reask { .. }
+    ));
+}
+
+#[test]
 fn pending_confirmation_never_defaults_to_yes() {
     let prompt = PendingPrompt {
         id: "c1id".into(),

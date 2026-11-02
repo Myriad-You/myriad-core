@@ -15,7 +15,7 @@
 //! `labelled`). Running the pieces, keeping them, timing and delivery stay
 //! with each end.
 
-use myriad_agent_rules::channel::PendingOption;
+use myriad_agent_rules::channel::{PendingOption, number_is_in_a_name};
 use serde::{Deserialize, Serialize};
 
 const OPEN: &str = "[[";
@@ -118,8 +118,10 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
             break;
         };
         match parse(&text[after..after + close]) {
-            None => from = after,
-            Some(None) if !wrong_too => from = after,
+            // Not hers: read on from the next character, so an opening
+            // that overlaps this one (`[[[stop #1]]`) is read too.
+            None => from = start + 1,
+            Some(None) if !wrong_too => from = start + 1,
             Some(line) => {
                 // The same new piece twice in one reply is one piece; what
                 // she tells a piece goes each time, in order.
@@ -129,7 +131,12 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
                     None => {}
                 }
                 text.replace_range(start..after + close + CLOSE.len(), "");
-                from = without_blank_line(&mut text, start);
+                // Back to the opening before it: taking it out may have
+                // closed one around it (`[[[[stop #1]]work: …]]`). The
+                // line it stood on, if it goes, has no opening on it.
+                let back = text[..start].rfind(OPEN).unwrap_or(0);
+                without_blank_line(&mut text, start);
+                from = back;
             }
         }
     }
@@ -138,16 +145,15 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
 
 /// After a line of hers is taken out at `at`: the line it stood on goes too
 /// when nothing but spaces is left on it, with its line break (the one
-/// before it, on the last line). Where to read on from.
-fn without_blank_line(text: &mut String, at: usize) -> usize {
+/// before it, on the last line).
+fn without_blank_line(text: &mut String, at: usize) {
     let begins = text[..at].rfind('\n').map_or(0, |found| found + 1);
     let ends = text[at..].find('\n').map_or(text.len(), |found| at + found);
     if !text[begins..ends].trim().is_empty() {
-        return at;
+        return;
     }
     if ends < text.len() {
         text.replace_range(begins..=ends, "");
-        begins
     } else if begins > 0 {
         let breaks = if text[..begins - 1].ends_with('\r') {
             2
@@ -155,10 +161,8 @@ fn without_blank_line(text: &mut String, at: usize) -> usize {
             1
         };
         text.replace_range(begins - breaks..ends, "");
-        text.len()
     } else {
         text.clear();
-        0
     }
 }
 
@@ -494,65 +498,57 @@ pub fn labelled(number: u32, asked: &str, others_unfinished: bool, content: &str
     }
 }
 
-/// Her answer to a piece's choice question, as the choice: she may write
-/// `2（19:00）` or `订 19:00 的`; a leading choice number, or the one choice
-/// named in it, is what she means. Anything else stays as she wrote it.
+/// Her answer to a piece's choice question, as the choice. Only two
+/// things are one: the choice's number alone (`2`), or its words alone,
+/// as listed (`19:00`, `19:00。`). Anything else stays as she wrote it, to
+/// be asked again or read by the helper: guessing a choice from other
+/// words chose wrong too often, and asking twice is better.
 pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     let text = text.trim();
-    if options.is_empty() {
-        return text.to_string();
-    }
-    let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
-    // `19点`, `1 点`, `2:30`, `3时`: a time, not a choice; `2号` is one.
-    if let Ok(number) = digits.parse::<usize>()
-        && (1..=options.len()).contains(&number)
-        && !text[digits.len()..]
-            .trim_start()
-            .starts_with([':', '：', '.', '点', '时'])
-    {
-        return number.to_string();
-    }
-    let said: Vec<Vec<(usize, usize)>> = options
-        .iter()
-        .map(|option| {
-            [&option.value, &option.label]
-                .into_iter()
-                .flat_map(|name| named_at(text, name))
-                .collect()
-        })
-        .collect();
-    // `9:00` inside `19:00` is the longer one said, not both.
-    let inside_another = |of: usize, (from, to): (usize, usize)| {
-        said.iter().enumerate().any(|(other, spans)| {
-            other != of
-                && spans
-                    .iter()
-                    .any(|&(start, end)| start <= from && to <= end && end - start > to - from)
-        })
-    };
-    let named: Vec<usize> = said
-        .iter()
-        .enumerate()
-        .filter(|(of, spans)| spans.iter().any(|&span| !inside_another(*of, span)))
-        .map(|(index, _)| index + 1)
-        .collect();
-    match named.as_slice() {
-        [number] => number.to_string(),
-        _ => text.to_string(),
+    match choice_named(options, text).or_else(|| choice_numbered(options, text)) {
+        // Its number, unless that number is in a choice's name too (`2`
+        // among `2` and `4`): then its name, so neither is read as the
+        // other.
+        Some(index) => {
+            let number = (index + 1).to_string();
+            if number_is_in_a_name(options, &number) {
+                options[index].value.clone()
+            } else {
+                number
+            }
+        }
+        None => text.to_string(),
     }
 }
 
-/// Where `text` names a choice: it says it, and not right after a no
-/// (`不订了` does not name `订`). An empty name names nothing.
-fn named_at(text: &str, name: &str) -> Vec<(usize, usize)> {
-    let name = name.trim();
-    if name.is_empty() {
-        return Vec::new();
+/// The choice whose own words `text` is, ignoring case and a full stop at
+/// the end (not a question mark: `东京？` asks).
+fn choice_named(options: &[PendingOption], text: &str) -> Option<usize> {
+    let said = text
+        .trim_end_matches(['。', '.', '!', '！', '~', '～'])
+        .trim();
+    if said.is_empty() {
+        return None;
     }
-    text.match_indices(name)
-        .filter(|(at, _)| !text[..*at].ends_with(['不', '没', '别', '非']))
-        .map(|(at, _)| (at, at + name.len()))
-        .collect()
+    options.iter().position(|option| {
+        [&option.value, &option.label].into_iter().any(|name| {
+            let name = name.trim();
+            !name.is_empty() && name.to_lowercase() == said.to_lowercase()
+        })
+    })
+}
+
+/// The choice `text` is the number of: plain digits and nothing else (not
+/// `+1`, `01`, `2 号`), in range, and not also a number in a choice's name
+/// (with `2号` and `3号` listed, `2` could be either).
+fn choice_numbered(options: &[PendingOption], text: &str) -> Option<usize> {
+    let plain =
+        !text.is_empty() && !text.starts_with('0') && text.chars().all(|ch| ch.is_ascii_digit());
+    if !plain || number_is_in_a_name(options, text) {
+        return None;
+    }
+    let number: usize = text.parse().ok()?;
+    (1..=options.len()).contains(&number).then(|| number - 1)
 }
 
 /// The next piece's number: one past the highest, from 1. None when the
@@ -657,14 +653,14 @@ Different things they ask for are different pieces, each with its own [[work: �
 When they said several things since your last reply, take every one of them, not only the last. \
 When what they say now is for one of them (more to go on, a change of mind, or the answer to its question), put [[work #N: their words, or the answer]] on its own last line instead of a new one: it goes into that piece, nothing is started over, and a piece that is done, or was {cut_off}, picks up again where it ended. \
 Numbers are given by {numbers_by}: use #N only for a piece listed below, never for a new one. \
-When a piece is waiting on a question with numbered choices, answer with the number of the choice they mean. \
+When a piece is waiting on a question with numbered choices, answer with only the number of the choice they mean, or only that choice's words exactly as listed; anything else is not taken as a choice and the question is asked again. \
 When they want one of them stopped, put [[stop #N]]: only that one stops. \
 If you cannot tell which one they mean, ask them in a few words, with no line."
         ),
     ];
     if waiting > 1 {
         out.push(format!(
-            "{waiting} pieces are waiting for their answer: if what they said answers one, say which with [[work #N: the answer]], giving the number of the choice when its question has numbered choices; if you cannot tell which, ask."
+            "{waiting} pieces are waiting for their answer: if what they said answers one, say which with [[work #N: the answer]], giving only the number of the choice, or only its words as listed, when its question has numbered choices; if you cannot tell which, ask."
         ));
     }
     if !lines.is_empty() {

@@ -472,61 +472,86 @@ fn what_a_piece_sends_says_which_when_another_is_not_done() {
 
 #[test]
 fn her_answer_to_a_choice_is_the_choice_she_means() {
-    let options = ["18:00", "19:00"]
-        .map(|time| PendingOption {
-            value: time.into(),
-            label: time.into(),
-        })
-        .to_vec();
-    assert_eq!(her_choice(&options, "2（19:00）"), "2");
-    assert_eq!(her_choice(&options, "订 19:00 的"), "2");
-    assert_eq!(her_choice(&options, "19:00，选项2"), "2");
-    assert_eq!(her_choice(&options, "1"), "1");
-    // A time is not a choice number; two choices named is not one.
-    assert_eq!(her_choice(&options, "19点"), "19点");
-    assert_eq!(her_choice(&options, "18:00 或 19:00"), "18:00 或 19:00");
-    assert_eq!(her_choice(&[], " 随便 "), "随便");
-    assert_eq!(her_choice(&options, "1 点"), "1 点");
-    assert_eq!(her_choice(&options, "1时"), "1时");
-    assert_eq!(her_choice(&options, "2号"), "2");
-    let book = [("yes", "订"), ("no", "不要")]
-        .map(|(value, label)| PendingOption {
-            value: value.into(),
-            label: label.into(),
-        })
-        .to_vec();
-    // Saying no to one is not choosing it.
-    assert_eq!(her_choice(&book, "不订了"), "不订了");
-    assert_eq!(her_choice(&book, "那就订吧"), "1");
+    let choices = |names: &[(&str, &str)]| -> Vec<PendingOption> {
+        names
+            .iter()
+            .map(|(value, label)| PendingOption {
+                value: (*value).into(),
+                label: (*label).into(),
+            })
+            .collect()
+    };
+    let same =
+        |names: &[&str]| choices(&names.iter().map(|name| (*name, *name)).collect::<Vec<_>>());
+    let times = same(&["18:00", "19:00"]);
+    // Its number alone, or its words alone, as listed.
+    assert_eq!(her_choice(&times, "2"), "2");
+    assert_eq!(her_choice(&times, "19:00"), "2");
+    assert_eq!(her_choice(&times, "19:00。"), "2");
+    let cities = same(&["东京", "大阪"]);
+    assert_eq!(her_choice(&cities, " 2 "), "2");
+    assert_eq!(her_choice(&cities, "东京"), "1");
+    let book = choices(&[("yes", "订"), ("no", "不要")]);
+    assert_eq!(her_choice(&book, "订"), "1");
     assert_eq!(her_choice(&book, "不要"), "2");
-    // An empty value names nothing.
-    let blank = [("", "18:00"), ("", "19:00")]
-        .map(|(value, label)| PendingOption {
-            value: value.into(),
-            label: label.into(),
-        })
-        .to_vec();
-    assert_eq!(her_choice(&blank, "19:00 吧"), "2");
+    assert_eq!(her_choice(&book, "No"), "2");
+    // Anything else stays as she wrote it, to be asked again.
+    for said in [
+        "2（19:00）",
+        "订 19:00 的",
+        "19点",
+        "1 点",
+        "3",
+        "01",
+        "+1",
+        "２",
+        "18:00 或 19:00",
+        "随便",
+        "2不行，换1吧",
+        "2个都行",
+    ] {
+        assert_eq!(her_choice(&times, said), said);
+    }
+    for said in ["不订了", "那就订吧", "这是什么意思"] {
+        assert_eq!(her_choice(&book, said), said);
+    }
+    for said in ["东京不行", "除了东京都可以", "东京取消吧", "东京？"] {
+        assert_eq!(her_choice(&cities, said), said);
+    }
+    let english = same(&["Tokyo", "Osaka"]);
+    for said in ["not Tokyo", "Tokyo won't work", "Actually let me think"] {
+        assert_eq!(her_choice(&english, said), said);
+    }
+    assert_eq!(her_choice(&english, "tokyo"), "1");
     assert_eq!(
-        her_choice(
-            &[PendingOption {
-                value: "".into(),
-                label: "".into()
-            }],
-            "还没决定"
-        ),
-        "还没决定"
+        her_choice(&same(&["A", "B"]), "Actually let me think"),
+        "Actually let me think"
     );
-    // `9:00` inside `19:00` is the longer one said; both said is not one.
-    let clock = ["9:00", "19:00"]
-        .map(|time| PendingOption {
-            value: time.into(),
-            label: time.into(),
-        })
-        .to_vec();
-    assert_eq!(her_choice(&clock, "订 19:00 的"), "2");
-    assert_eq!(her_choice(&clock, "9:00 吧"), "1");
-    assert_eq!(her_choice(&clock, "9:00 还是 19:00"), "9:00 还是 19:00");
+    // A number that is also in a choice's name is not a choice number;
+    // a choice whose number is in another's name comes back by name.
+    let days = same(&["2号", "3号"]);
+    assert_eq!(her_choice(&days, "2号"), "1");
+    assert_eq!(her_choice(&days, "3号"), "3号");
+    for said in ["2", "2 号", "2　号", "02号"] {
+        assert_eq!(her_choice(&days, said), said);
+    }
+    for (names, said) in [
+        (["2张", "4张"], "2 张"),
+        (["2晚", "3晚"], "2 晚"),
+        (["11月2号", "11月5号"], "2号"),
+        (["11月2号", "11月5号"], "2"),
+    ] {
+        assert_eq!(her_choice(&same(&names), said), said);
+    }
+    let counts = same(&["2", "4"]);
+    assert_eq!(her_choice(&counts, "4"), "4");
+    assert_eq!(her_choice(&counts, "2"), "1");
+    assert_eq!(her_choice(&same(&["3", "4"]), "2"), "2");
+    // An empty name names nothing; no choices, nothing to choose.
+    let blank = choices(&[("", "早场"), ("", "")]);
+    assert_eq!(her_choice(&blank, "早场"), "1");
+    assert_eq!(her_choice(&blank, ""), "");
+    assert_eq!(her_choice(&[], " 随便 "), "随便");
 }
 
 #[test]
@@ -570,4 +595,22 @@ fn a_helpers_result_keeps_all_but_her_lines_that_say_something() {
         "[[Work log]]\n```\na\n\n\nb\n```\n[[work 买菜]]\n结果 \n"
     );
     assert_eq!(result_text("[[workers]]"), "[[workers]]");
+}
+
+#[test]
+fn a_line_inside_another_does_not_leave_one_behind() {
+    let nested = "[[[[stop #1]]work: 再订一张]]";
+    assert!(!result_text(nested).contains("[[work"));
+    let (spoken, handed) = split(nested);
+    assert!(!spoken.contains("[[work"), "{spoken}");
+    assert_eq!(handed, vec![HandOff::Stop { work: 1 }, new("再订一张")]);
+    // An odd one over: the stop is still hers, and no line is left whole.
+    let odd = "[[[stop #1]]work: 再订一张]]";
+    assert!(!result_text(odd).contains("[[work"));
+    let (spoken, handed) = split(odd);
+    assert!(
+        !spoken.contains("[[work") && !spoken.contains("stop"),
+        "{spoken}"
+    );
+    assert_eq!(handed, vec![HandOff::Stop { work: 1 }]);
 }

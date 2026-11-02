@@ -18,6 +18,24 @@
       "output": {
         "text": "[[workers]] [[stopwatch]]"
       }
+    },
+    {
+      "input": {
+        "text": "[[[[stop #1]]work: 再订一张]]"
+      },
+      "name": "a line inside another does not leave one behind",
+      "output": {
+        "text": ""
+      }
+    },
+    {
+      "input": {
+        "text": "[[[stop #1]]work: X]]"
+      },
+      "name": "an odd opening over hers leaves no line of hers whole",
+      "output": {
+        "text": "[work: X]]"
+      }
     }
   ],
   "version": 1

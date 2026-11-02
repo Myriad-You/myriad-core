@@ -1328,15 +1328,32 @@ fn parse_yes_no(text: &str) -> Option<bool> {
     }
 }
 
+/// Whether `number` (plain digits) is also a number in a choice's own
+/// name, as a whole (`2` in `2号`, `11月2号`, `2`; not in `20:00`): then
+/// it could be read as that name, and is not taken as a choice number.
+pub fn number_is_in_a_name(options: &[PendingOption], number: &str) -> bool {
+    options.iter().any(|option| {
+        [&option.label, &option.value].into_iter().any(|name| {
+            name.split(|ch: char| !ch.is_ascii_digit())
+                .any(|run| !run.is_empty() && run.trim_start_matches('0') == number)
+        })
+    })
+}
+
+/// A choice by its own words, or by its number alone when that number is
+/// not also in a choice's name (with `2号` and `3号` listed, `2` could be
+/// either; with `14:00` and `20:00`, `2` is the second). Nothing else.
 fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
-    if let Some(index) = parse_option_index(text, prompt.options.len()) {
-        return Some(prompt.options[index].value.clone());
-    }
     let needle = normalize_choice(text);
-    prompt.options.iter().find_map(|option| {
+    let named = prompt.options.iter().find_map(|option| {
         let label = normalize_choice(&option.label);
         let value = normalize_choice(&option.value);
-        (needle == label || needle == value).then(|| option.value.clone())
+        (!needle.is_empty() && (needle == label || needle == value)).then(|| option.value.clone())
+    });
+    named.or_else(|| {
+        let index = parse_option_index(text, prompt.options.len())?;
+        (!number_is_in_a_name(&prompt.options, &(index + 1).to_string()))
+            .then(|| prompt.options[index].value.clone())
     })
 }
 
@@ -1358,8 +1375,16 @@ fn match_many_options(prompt: &PendingPrompt, text: &str) -> Option<String> {
     (!values.is_empty()).then_some(values.join(","))
 }
 
+/// Plain digits, with at most a full stop or bracket after: not `+1`,
+/// `01`, `2 号`.
 fn parse_option_index(text: &str, count: usize) -> Option<usize> {
     let cleaned = text.trim().trim_end_matches(['.', '、', ')', '）']);
+    if cleaned.is_empty()
+        || cleaned.starts_with('0')
+        || !cleaned.chars().all(|ch| ch.is_ascii_digit())
+    {
+        return None;
+    }
     let index: usize = cleaned.parse().ok()?;
     (index >= 1 && index <= count).then_some(index - 1)
 }

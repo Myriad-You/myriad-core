@@ -17,7 +17,7 @@
       },
       "name": "a leading choice number",
       "output": {
-        "choice": "2"
+        "choice": "2（19:00）"
       }
     },
     {
@@ -36,7 +36,7 @@
       },
       "name": "the one choice named",
       "output": {
-        "choice": "2"
+        "choice": "订 19:00 的"
       }
     },
     {
@@ -55,7 +55,7 @@
       },
       "name": "named with its number after",
       "output": {
-        "choice": "2"
+        "choice": "19:00，选项2"
       }
     },
     {
@@ -160,7 +160,7 @@
       },
       "name": "by its label",
       "output": {
-        "choice": "1"
+        "choice": "那就订吧"
       }
     },
     {
@@ -236,7 +236,7 @@
       },
       "name": "an empty value names nothing",
       "output": {
-        "choice": "2"
+        "choice": "19:00 吧"
       }
     },
     {
@@ -255,7 +255,7 @@
       },
       "name": "the longer one said, not the one inside it",
       "output": {
-        "choice": "2"
+        "choice": "订 19:00 的"
       }
     },
     {
@@ -304,6 +304,348 @@
         "text": "2号"
       },
       "name": "2号 is the second choice; 1时 is a time",
+      "output": {
+        "choice": "2号"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2号",
+            "value": "2号"
+          },
+          {
+            "label": "3号",
+            "value": "3号"
+          }
+        ],
+        "text": "2号"
+      },
+      "name": "when the choices are days, 2号 names the one it says",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "11月2号",
+            "value": "11月2号"
+          },
+          {
+            "label": "11月5号",
+            "value": "11月5号"
+          }
+        ],
+        "text": "2号"
+      },
+      "name": "a day it does not name is not a number either",
+      "output": {
+        "choice": "2号"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "01"
+      },
+      "name": "a number with a sign or a leading zero is not a choice",
+      "output": {
+        "choice": "01"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2晚",
+            "value": "2晚"
+          },
+          {
+            "label": "3晚",
+            "value": "3晚"
+          }
+        ],
+        "text": "2晚"
+      },
+      "name": "a unit with the number names the choice, not its number",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "东京",
+            "value": "东京"
+          },
+          {
+            "label": "大阪",
+            "value": "大阪"
+          }
+        ],
+        "text": "东京不行"
+      },
+      "name": "a no anywhere in it is asked again",
+      "output": {
+        "choice": "东京不行"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "东京",
+            "value": "东京"
+          },
+          {
+            "label": "大阪",
+            "value": "大阪"
+          }
+        ],
+        "text": "1（大阪）"
+      },
+      "name": "a number and a name that disagree are asked again",
+      "output": {
+        "choice": "1（大阪）"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2",
+            "value": "2"
+          },
+          {
+            "label": "4",
+            "value": "4"
+          }
+        ],
+        "text": "4"
+      },
+      "name": "choices that are numbers go by name",
+      "output": {
+        "choice": "4"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2号",
+            "value": "2号"
+          },
+          {
+            "label": "3号",
+            "value": "3号"
+          }
+        ],
+        "text": "2 号"
+      },
+      "name": "a space between the number and its unit is not the choice",
+      "output": {
+        "choice": "2 号"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2张",
+            "value": "2张"
+          },
+          {
+            "label": "4张",
+            "value": "4张"
+          }
+        ],
+        "text": "2　张"
+      },
+      "name": "a full-width space either",
+      "output": {
+        "choice": "2　张"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2号",
+            "value": "2号"
+          },
+          {
+            "label": "3号",
+            "value": "3号"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "a number alone when names begin with numbers could be either",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "+1"
+      },
+      "name": "a sign before the number is not a choice",
+      "output": {
+        "choice": "+1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "是",
+            "value": "yes"
+          },
+          {
+            "label": "否",
+            "value": "no"
+          }
+        ],
+        "text": "这是什么意思"
+      },
+      "name": "words that only contain a choice are not it",
+      "output": {
+        "choice": "这是什么意思"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "A",
+            "value": "A"
+          },
+          {
+            "label": "B",
+            "value": "B"
+          }
+        ],
+        "text": "Actually let me think"
+      },
+      "name": "a letter inside a word is not a choice",
+      "output": {
+        "choice": "Actually let me think"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "东京",
+            "value": "东京"
+          },
+          {
+            "label": "大阪",
+            "value": "大阪"
+          }
+        ],
+        "text": "东京？"
+      },
+      "name": "a question about a choice is not choosing it",
+      "output": {
+        "choice": "东京？"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "东京",
+            "value": "东京"
+          },
+          {
+            "label": "大阪",
+            "value": "大阪"
+          }
+        ],
+        "text": "东京取消吧"
+      },
+      "name": "calling one off is not choosing it",
+      "output": {
+        "choice": "东京取消吧"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "Tokyo",
+            "value": "Tokyo"
+          },
+          {
+            "label": "Osaka",
+            "value": "Osaka"
+          }
+        ],
+        "text": "Tokyo won't work"
+      },
+      "name": "saying one will not work is not choosing it",
+      "output": {
+        "choice": "Tokyo won't work"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "19:00。"
+      },
+      "name": "its words alone, with a full stop",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "14:00",
+            "value": "14:00"
+          },
+          {
+            "label": "20:00",
+            "value": "20:00"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "a number not in any name is the choice, even among times",
       "output": {
         "choice": "2"
       }
