@@ -1,0 +1,24 @@
+{
+  "call": "handoff.result_text",
+  "cases": [
+    {
+      "input": {
+        "text": "[[Work log]]\n```\na\n\n\nb\n```\n[[stop #2]]\n[[work 买菜]]\n结果 [[work: 再查]]\n"
+      },
+      "name": "only her lines that say something go",
+      "output": {
+        "text": "[[Work log]]\n```\na\n\n\nb\n```\n[[work 买菜]]\n结果 \n"
+      }
+    },
+    {
+      "input": {
+        "text": "[[workers]] [[stopwatch]]"
+      },
+      "name": "a word that only begins like hers stays",
+      "output": {
+        "text": "[[workers]] [[stopwatch]]"
+      }
+    }
+  ],
+  "version": 1
+}

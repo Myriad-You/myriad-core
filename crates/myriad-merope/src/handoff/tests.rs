@@ -117,6 +117,11 @@ fn a_line_for_one_piece_goes_to_that_piece() {
     );
     // A piece without a number is not one; it says nothing.
     assert_eq!(split("嗯[[stop]][[work #x: 查]]"), ("嗯".into(), vec![]));
+    // A word that only begins like hers is not hers.
+    assert_eq!(
+        split("[[workers]]\n[[stopwatch]] [[work 买菜]]"),
+        ("[[workers]]\n[[stopwatch]]".into(), vec![])
+    );
     // Another kind of line is left where it is.
     assert_eq!(
         split("好呀[[sticker: 开心]]\n[[work: 查]]"),
@@ -482,6 +487,8 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     assert_eq!(her_choice(&options, "18:00 或 19:00"), "18:00 或 19:00");
     assert_eq!(her_choice(&[], " 随便 "), "随便");
     assert_eq!(her_choice(&options, "1 点"), "1 点");
+    assert_eq!(her_choice(&options, "1时"), "1时");
+    assert_eq!(her_choice(&options, "2号"), "2");
     let book = [("yes", "订"), ("no", "不要")]
         .map(|(value, label)| PendingOption {
             value: value.into(),
@@ -552,4 +559,15 @@ fn how_it_ended_is_one_line() {
     let line = ended_line(&long, false);
     assert_eq!(line.chars().count(), ENDED_LINE_CHARS + 1);
     assert!(line.ends_with('…'));
+}
+
+#[test]
+fn a_helpers_result_keeps_all_but_her_lines_that_say_something() {
+    let result =
+        "[[Work log]]\n```\na\n\n\nb\n```\n[[stop #2]]\n[[work 买菜]]\n结果 [[work: 再查]]\n";
+    assert_eq!(
+        result_text(result),
+        "[[Work log]]\n```\na\n\n\nb\n```\n[[work 买菜]]\n结果 \n"
+    );
+    assert_eq!(result_text("[[workers]]"), "[[workers]]");
 }

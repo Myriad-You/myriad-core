@@ -46,12 +46,17 @@ pub enum HandOff {
     Stop { work: u32 },
 }
 
-/// What follows `word` at the head of `inner`, in any case.
+/// What follows `word` at the head of `inner`, in any case, when `word`
+/// is a word there: `[[workers]]` or `[[stopwatch]]` is not hers.
 fn lead<'a>(inner: &'a str, word: &str) -> Option<&'a str> {
     inner
         .get(..word.len())
         .filter(|head| head.eq_ignore_ascii_case(word))
         .map(|_| &inner[word.len()..])
+        .filter(|rest| {
+            rest.is_empty()
+                || rest.starts_with(|next: char| next.is_whitespace() || "#＃:：".contains(next))
+        })
 }
 
 /// `work: …`, `work #2: …`, `stop #2`, as she writes them inside `[[ ]]`.
@@ -88,6 +93,21 @@ fn parse(inner: &str) -> Option<Option<HandOff>> {
 /// unsaid; a line left with nothing but spaces goes with them. Lines that
 /// are not hers (a sticker, an outfit) stay for whoever reads them.
 pub fn split(raw: &str) -> (String, Vec<HandOff>) {
+    let (text, handed) = take_out(raw, true);
+    (text.trim_end().to_string(), handed)
+}
+
+/// A helper's result as she is to read it: lines of hers that say
+/// something (a piece to start, to tell, to stop) are taken out, a line
+/// left with nothing but spaces with them. Anything else stays as written,
+/// `[[Work log]]` and blank lines in code too: it is not her reply.
+pub fn result_text(raw: &str) -> String {
+    take_out(raw, false).0
+}
+
+/// Her lines out of `raw`, and what they say; `wrong_too` takes out those
+/// of hers that say nothing as well.
+fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
     let mut text = raw.to_string();
     let mut handed = Vec::new();
     let mut from = 0;
@@ -99,6 +119,7 @@ pub fn split(raw: &str) -> (String, Vec<HandOff>) {
         };
         match parse(&text[after..after + close]) {
             None => from = after,
+            Some(None) if !wrong_too => from = after,
             Some(line) => {
                 // The same new piece twice in one reply is one piece; what
                 // she tells a piece goes each time, in order.
@@ -112,7 +133,7 @@ pub fn split(raw: &str) -> (String, Vec<HandOff>) {
             }
         }
     }
-    (text.trim_end().to_string(), handed)
+    (text, handed)
 }
 
 /// After a line of hers is taken out at `at`: the line it stood on goes too
@@ -482,12 +503,12 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
         return text.to_string();
     }
     let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
-    // `19点`, `1 点`, `2:30`: a time or a count, not a choice.
+    // `19点`, `1 点`, `2:30`, `3时`: a time, not a choice; `2号` is one.
     if let Ok(number) = digits.parse::<usize>()
         && (1..=options.len()).contains(&number)
         && !text[digits.len()..]
             .trim_start()
-            .starts_with([':', '：', '.', '点', '时', '号'])
+            .starts_with([':', '：', '.', '点', '时'])
     {
         return number.to_string();
     }
