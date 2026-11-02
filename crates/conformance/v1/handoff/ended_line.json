@@ -1,0 +1,66 @@
+{
+  "call": "handoff.ended_line",
+  "cases": [
+    {
+      "input": {
+        "failed": false,
+        "text": "\n## 明天晴\n\n最高 21 度"
+      },
+      "name": "the lines run together",
+      "output": {
+        "line": "明天晴 最高 21 度"
+      }
+    },
+    {
+      "input": {
+        "failed": false,
+        "text": "助手列的是：\n\n1. 整理桌面\n2. 散步"
+      },
+      "name": "what it leads into comes along",
+      "output": {
+        "line": "助手列的是： 1. 整理桌面 2. 散步"
+      }
+    },
+    {
+      "input": {
+        "failed": false,
+        "text": ""
+      },
+      "name": "nothing said is done",
+      "output": {
+        "line": "办完了。"
+      }
+    },
+    {
+      "input": {
+        "failed": true,
+        "text": "没有权限"
+      },
+      "name": "failed says so",
+      "output": {
+        "line": "没办成：没有权限"
+      }
+    },
+    {
+      "input": {
+        "failed": true,
+        "text": "  "
+      },
+      "name": "failed with nothing said",
+      "output": {
+        "line": "没办成。"
+      }
+    },
+    {
+      "input": {
+        "failed": false,
+        "text": "很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很"
+      },
+      "name": "a long one is cut",
+      "output": {
+        "line": "很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很…"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,1343 @@
+{
+  "call": "handoff.act",
+  "cases": [
+    {
+      "input": {
+        "handOff": {
+          "kind": "new",
+          "text": "查"
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "new starts one",
+      "output": {
+        "act": {
+          "act": "start",
+          "text": "查"
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "改成周六",
+          "work": 1
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "more for one under way",
+      "output": {
+        "act": {
+          "act": "steer",
+          "text": "改成周六",
+          "work": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "是",
+          "work": 2
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "the answer to the one waiting",
+      "output": {
+        "act": {
+          "act": "answer",
+          "text": "是",
+          "work": 2
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "再查一次",
+          "work": 3
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "one done goes on",
+      "output": {
+        "act": {
+          "act": "continue",
+          "text": "再查一次",
+          "work": 3
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "接着办",
+          "work": 4
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "one stopped stays stopped",
+      "output": {
+        "act": {
+          "act": "nothing"
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "接着办",
+          "work": 5
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "one cut off is picked up",
+      "output": {
+        "act": {
+          "act": "pickUp",
+          "text": "接着办",
+          "work": 5
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "再试一次",
+          "work": 6
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "one failed goes on",
+      "output": {
+        "act": {
+          "act": "continue",
+          "text": "再试一次",
+          "work": 6
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "顺便",
+          "work": 7
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "more for one starting",
+      "output": {
+        "act": {
+          "act": "steer",
+          "text": "顺便",
+          "work": 7
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "顺便",
+          "work": 8
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "more for one waiting on its card",
+      "output": {
+        "act": {
+          "act": "steer",
+          "text": "顺便",
+          "work": 8
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "to",
+          "text": "嗯",
+          "work": 9
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "no such piece",
+      "output": {
+        "act": {
+          "act": "nothing"
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "stop",
+          "work": 1
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "stop one under way",
+      "output": {
+        "act": {
+          "act": "stop",
+          "work": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "stop",
+          "work": 2
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "stop one waiting",
+      "output": {
+        "act": {
+          "act": "stop",
+          "work": 2
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "stop",
+          "work": 5
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "stop one cut off",
+      "output": {
+        "act": {
+          "act": "stop",
+          "work": 5
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "stop",
+          "work": 3
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "stop one done is nothing",
+      "output": {
+        "act": {
+          "act": "nothing"
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "stop",
+          "work": 4
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "stop one stopped is nothing",
+      "output": {
+        "act": {
+          "act": "nothing"
+        }
+      }
+    },
+    {
+      "input": {
+        "handOff": {
+          "kind": "pause",
+          "work": 1
+        },
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "state": "starting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "bad input",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

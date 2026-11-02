@@ -1,0 +1,140 @@
+{
+  "call": "handoff.shown",
+  "cases": [
+    {
+      "input": {
+        "now": 172800000000,
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 172790000000
+          },
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 172791000000
+          },
+          {
+            "asked": "第4件",
+            "number": 4,
+            "standing": {
+              "state": "done"
+            },
+            "startedAt": 172792000000
+          },
+          {
+            "asked": "第5件",
+            "number": 5,
+            "standing": {
+              "state": "failed"
+            },
+            "startedAt": 172793000000
+          },
+          {
+            "asked": "第6件",
+            "number": 6,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第7件",
+            "number": 7,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第8件",
+            "number": 8,
+            "standing": {
+              "by": "restart",
+              "state": "cutOff"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "every unfinished and the last three over within a day",
+      "output": {
+        "numbers": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 172800000000,
+        "pieces": [
+          {
+            "asked": "第3件",
+            "number": 3,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "state": "stopped"
+            },
+            "startedAt": 172795000000
+          }
+        ]
+      },
+      "name": "in the order handed off",
+      "output": {
+        "numbers": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 0,
+        "pieces": []
+      },
+      "name": "none",
+      "output": {
+        "numbers": []
+      }
+    }
+  ],
+  "version": 1
+}

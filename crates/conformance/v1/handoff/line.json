@@ -1,0 +1,285 @@
+{
+  "call": "handoff.line",
+  "cases": [
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "查明天东京天气",
+          "number": 2,
+          "standing": {
+            "progress": 60,
+            "state": "doing"
+          },
+          "startedAt": 10600000000
+        }
+      },
+      "name": "doing with progress",
+      "output": {
+        "line": "#2「查明天东京天气」在办，已办 3 分钟（60%）"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "查明天东京天气",
+          "number": 2,
+          "standing": {
+            "state": "doing",
+            "steps": 4
+          },
+          "startedAt": 10600000000
+        }
+      },
+      "name": "doing with steps",
+      "output": {
+        "line": "#2「查明天东京天气」在办，已办 3 分钟，第 4 步"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "查天气",
+          "number": 2,
+          "standing": {
+            "state": "doing"
+          },
+          "startedAt": 10770000000
+        }
+      },
+      "name": "doing under a minute",
+      "output": {
+        "line": "#2「查天气」在办，已办 不到 1 分钟"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "查天气",
+          "number": 2,
+          "standing": {
+            "state": "doing"
+          },
+          "startedAt": 3300000000
+        }
+      },
+      "name": "doing for hours",
+      "output": {
+        "line": "#2「查天气」在办，已办 2 小时 5 分钟"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "查天气",
+          "number": 2,
+          "standing": {
+            "state": "doing"
+          }
+        }
+      },
+      "name": "doing with no start",
+      "output": {
+        "line": "#2「查天气」在办"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "订周五的餐厅",
+          "number": 3,
+          "standing": {
+            "question": "要几点？\n\n1. 18:00\n2. 19:00",
+            "state": "waiting"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "waiting reads its question on one line",
+      "output": {
+        "line": "#3「订周五的餐厅」在等对方回答：要几点？ 1. 18:00 2. 19:00"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第1件",
+          "number": 1,
+          "standing": {
+            "result": "周报整理好了",
+            "state": "done"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "done with a result",
+      "output": {
+        "line": "#1「第1件」办完了：周报整理好了"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第1件",
+          "number": 1,
+          "standing": {
+            "state": "done"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "done without one",
+      "output": {
+        "line": "#1「第1件」办完了"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第1件",
+          "number": 1,
+          "standing": {
+            "result": "好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好",
+            "state": "done"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "a long result is read back in part",
+      "output": {
+        "line": "#1「第1件」办完了：好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好好"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第9件",
+          "number": 9,
+          "standing": {
+            "state": "failed",
+            "why": "没有权限"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "failed",
+      "output": {
+        "line": "#9「第9件」没办成：没有权限"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第4件",
+          "number": 4,
+          "standing": {
+            "state": "stopped"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "stopped",
+      "output": {
+        "line": "#4「第4件」被叫停了"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第5件",
+          "number": 5,
+          "standing": {
+            "by": "restart",
+            "state": "cutOff"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "cut off by a restart",
+      "output": {
+        "line": "#5「第5件」被打断了（重启），还没办完"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第6件",
+          "number": 6,
+          "standing": {
+            "by": "appQuit",
+            "state": "cutOff"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "cut off when the app quit",
+      "output": {
+        "line": "#6「第6件」被打断了（应用退出），还没办完"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第7件",
+          "number": 7,
+          "standing": {
+            "state": "starting"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "starting",
+      "output": {
+        "line": "#7「第7件」刚交出去，还没开始"
+      }
+    },
+    {
+      "input": {
+        "now": 10800000000,
+        "piece": {
+          "asked": "第8件",
+          "number": 8,
+          "standing": {
+            "state": "confirming"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "confirming",
+      "output": {
+        "line": "#8「第8件」在等对方在卡片上确认"
+      }
+    },
+    {
+      "input": {
+        "now": 0,
+        "piece": {
+          "asked": "第1件",
+          "number": 1,
+          "standing": {
+            "state": "sleeping"
+          },
+          "startedAt": 0
+        }
+      },
+      "name": "bad input",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

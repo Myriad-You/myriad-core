@@ -23,6 +23,7 @@ mod chat;
 mod filter;
 mod grants;
 mod group;
+mod handoff;
 mod link;
 mod log;
 mod memory;
@@ -90,6 +91,18 @@ const CALLS: &[(&str, Call)] = &[
     ("group.merge_ledger", group::merge_ledger),
     ("group.offer", group::offer),
     ("group.step", group::step),
+    ("handoff.act", handoff::act),
+    ("handoff.ended_line", handoff::ended_line),
+    ("handoff.her_choice", handoff::her_choice),
+    ("handoff.labelled", handoff::labelled),
+    ("handoff.line", handoff::line),
+    ("handoff.next_number", handoff::next_number),
+    ("handoff.route", handoff::route),
+    ("handoff.section", handoff::section),
+    ("handoff.shown", handoff::shown),
+    ("handoff.split", handoff::split),
+    ("handoff.stands", handoff::stands),
+    ("handoff.work_input", handoff::work_input),
     ("lease.behind", log::lease_behind),
     ("lease.here", log::lease_here),
     ("lease.move", log::lease_move),

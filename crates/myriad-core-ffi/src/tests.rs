@@ -12,6 +12,7 @@ mod games;
 mod grants;
 mod group;
 mod habits;
+mod handoff;
 mod link;
 mod log;
 mod mood;
@@ -113,6 +114,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(grants::TESTED.iter().copied())
     .chain(group::TESTED.iter().copied())
     .chain(habits::TESTED.iter().copied())
+    .chain(handoff::TESTED.iter().copied())
     .chain(link::TESTED.iter().copied())
     .chain(log::TESTED.iter().copied())
     .chain(mood::TESTED.iter().copied())

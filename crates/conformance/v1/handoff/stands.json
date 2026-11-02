@@ -1,0 +1,90 @@
+{
+  "call": "handoff.stands",
+  "cases": [
+    {
+      "input": {},
+      "name": "nothing known is done",
+      "output": {
+        "standing": {
+          "result": null,
+          "state": "done"
+        }
+      }
+    },
+    {
+      "input": {
+        "progress": 40,
+        "underWay": true
+      },
+      "name": "under way",
+      "output": {
+        "standing": {
+          "progress": 40,
+          "state": "doing",
+          "steps": null
+        }
+      }
+    },
+    {
+      "input": {
+        "underWay": true,
+        "unheardQuestion": true
+      },
+      "name": "a restart left a question nobody saw",
+      "output": {
+        "standing": {
+          "by": "restart",
+          "state": "cutOff"
+        }
+      }
+    },
+    {
+      "input": {
+        "question": "要几点？",
+        "unheardQuestion": true
+      },
+      "name": "a question they saw comes first",
+      "output": {
+        "standing": {
+          "question": "要几点？",
+          "state": "waiting"
+        }
+      }
+    },
+    {
+      "input": {
+        "question": "要几点？",
+        "stopped": true,
+        "underWay": true
+      },
+      "name": "a stop wins",
+      "output": {
+        "standing": {
+          "state": "stopped"
+        }
+      }
+    },
+    {
+      "input": {
+        "result": "周报整理好了"
+      },
+      "name": "over with what came of it",
+      "output": {
+        "standing": {
+          "result": "周报整理好了",
+          "state": "done"
+        }
+      }
+    },
+    {
+      "input": {
+        "stoped": true
+      },
+      "name": "bad input",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
