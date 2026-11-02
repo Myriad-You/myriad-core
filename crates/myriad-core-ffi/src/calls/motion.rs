@@ -11,7 +11,7 @@ use myriad_merope::sources::Thing;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::input;
+use super::quiet_input;
 use crate::Failure;
 
 /// The questions about the moment and the moment as the model reads it; a
@@ -25,7 +25,7 @@ pub(super) fn asked(raw: &[u8]) -> Result<Value, Failure> {
         persona: Option<String>,
         direct: bool,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let state = req.moment.round_rig_state();
     if motion::face_is_hidden(state.as_ref()) {
         return Ok(json!({ "hidden": true }));
@@ -47,7 +47,7 @@ pub(super) fn chat_prompt(raw: &[u8]) -> Result<Value, Failure> {
     struct In {
         questions: Value,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!({
         "system": questions::chat_system_prompt(&req.questions),
         "schema": questions::chat_schema(&req.questions),
@@ -63,7 +63,7 @@ pub(super) fn plan(raw: &[u8]) -> Result<Value, Failure> {
         answers: Value,
         direct: bool,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let state = req.moment.round_rig_state();
     Ok(json!({ "plan": questions::plan(&req.answers, &req.moment, state.as_ref(), req.direct) }))
 }
@@ -79,7 +79,7 @@ pub(super) fn direction(raw: &[u8]) -> Result<Value, Failure> {
         answer: Option<String>,
         fallback_to_local: bool,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let direction = motion::direction(&req.moment, req.answer.as_deref(), req.fallback_to_local);
     Ok(json!({
         "outcome": direction.outcome.as_str(),
@@ -95,7 +95,7 @@ pub(super) fn floor(raw: &[u8]) -> Result<Value, Failure> {
     struct In {
         moment: Moment,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!({ "directive": motion::local_directive(&req.moment) }))
 }
 
@@ -108,7 +108,7 @@ pub(super) fn standing_floor(raw: &[u8]) -> Result<Value, Failure> {
         moment: Moment,
         way: String,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!({ "directive": motion::standing_floor(&req.moment, &req.way) }))
 }
 
@@ -124,7 +124,7 @@ pub(super) fn standing_doing(raw: &[u8]) -> Result<Value, Failure> {
         lazing: Option<String>,
         together: bool,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let doing = match (&req.thing, &req.lazing) {
         (Some(thing), None) => Doing::Thing(thing),
         (None, Some(kind)) => Doing::Lazing(kind),
@@ -143,7 +143,7 @@ pub(super) fn standing_acting(raw: &[u8]) -> Result<Value, Failure> {
     struct In {
         directive: PerformanceDirective,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     Ok(json!({ "acting": standing::is_acting(&req.directive) }))
 }
 
@@ -156,9 +156,9 @@ pub(super) fn way(raw: &[u8]) -> Result<Value, Failure> {
         moment: Moment,
         answers: Value,
     }
-    let req: In = input(raw)?;
+    let req: In = quiet_input(raw)?;
     let state = req.moment.round_rig_state();
-    let way = way::change(&req.answers, state.as_ref()).map(|(from, to)| {
+    let way = way::change(&req.answers, &req.moment, state.as_ref()).map(|(from, to)| {
         let (way_state, way_questions) = way::questions(&from, &to, &req.moment, state.as_ref());
         json!({ "from": from, "to": to, "state": way_state, "questions": way_questions })
     });
@@ -173,7 +173,7 @@ pub(super) fn lay_way(raw: &[u8]) -> Result<Value, Failure> {
         plan: Value,
         answers: Value,
     }
-    let mut req: In = input(raw)?;
+    let mut req: In = quiet_input(raw)?;
     way::lay(&mut req.plan, &req.answers);
     Ok(json!({ "plan": req.plan }))
 }

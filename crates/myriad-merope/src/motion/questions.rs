@@ -365,7 +365,7 @@ pub fn plan_from_answers(
     state: Option<&RigStateSummary>,
 ) -> Value {
     let sure = |key: &str| super::control::sure(answers, key);
-    let own = answers["own"]["noul"].as_f64().unwrap_or(1.0) >= OWN;
+    let own = control::is_own(answers, context);
     let feeling = if own {
         sure("feeling").unwrap_or("calm")
     } else {

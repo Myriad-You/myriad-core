@@ -7,17 +7,23 @@
 use crate::{MAX_FACES_PASSED, PLAIN_FACE, RigStateSummary};
 use serde_json::{Map, Value, json};
 
-use super::control::{look_means, offered_faces, sure};
+use super::control::{is_own, look_means, offered_faces, sure, taken_face};
 use super::{Moment, MotionPhase};
 
 /// The change of look the answers make, from the one she holds: each a
-/// preset's name, or her ordinary face. None when the look stays.
-pub fn change(answers: &Value, state: Option<&RigStateSummary>) -> Option<(String, String)> {
+/// preset's name, or her ordinary face. None when the look stays. The new
+/// look is the one the plan takes (`control::lay_face`): someone else's
+/// feeling she quotes, or a name the contract does not know, leaves her
+/// ordinary face.
+pub fn change(
+    answers: &Value,
+    context: &Moment,
+    state: Option<&RigStateSummary>,
+) -> Option<(String, String)> {
     let from = state
         .and_then(|state| state.face.clone())
         .unwrap_or_else(|| PLAIN_FACE.into());
-    let to = sure(answers, "face")
-        .filter(|face| *face != "none")
+    let to = taken_face(answers, is_own(answers, context))
         .unwrap_or(PLAIN_FACE)
         .to_owned();
     (from != to).then_some((from, to))
@@ -116,34 +122,77 @@ mod tests {
         json!({"choice": choice, "confidence": confidence})
     }
 
+    fn moment(phase: &str) -> Moment {
+        serde_json::from_value(json!({"phase": phase,
+            "mood": {"before": 70.0, "after": 70.0, "bandBefore": "calm", "bandAfter": "calm",
+                "delta": 0.0, "cause": "test", "revision": 1},
+            "activity": "thinking", "userText": "tell me about that", "motionStyle": "even"}))
+        .unwrap()
+    }
+
     #[test]
     fn only_a_new_look_asks_the_way_there() {
         let drowsy = state(Some("drowsy"));
+        let context = moment("reaction");
         let excited = json!({"face": answer("excited", 0.9)});
         assert_eq!(
-            change(&excited, Some(&drowsy)),
+            change(&excited, &context, Some(&drowsy)),
             Some(("drowsy".into(), "excited".into()))
         );
         assert_eq!(
-            change(&json!({"face": answer("drowsy", 0.9)}), Some(&drowsy)),
+            change(
+                &json!({"face": answer("drowsy", 0.9)}),
+                &context,
+                Some(&drowsy)
+            ),
             None
         );
         // No look chosen is her ordinary face; from it to it is no change.
         assert_eq!(
-            change(&json!({"face": answer("none", 0.9)}), Some(&drowsy)),
+            change(
+                &json!({"face": answer("none", 0.9)}),
+                &context,
+                Some(&drowsy)
+            ),
             Some(("drowsy".into(), PLAIN_FACE.into()))
         );
-        assert_eq!(change(&json!({}), Some(&state(None))), None);
+        assert_eq!(change(&json!({}), &context, Some(&state(None))), None);
+    }
+
+    #[test]
+    fn the_way_goes_to_the_look_the_plan_takes() {
+        let drowsy = state(Some("drowsy"));
+        // Someone else's delight she quotes is not a look she takes (`lay_face`):
+        // her face goes to her ordinary one, not through looks to theirs.
+        let quoted = json!({"own": {"noul": 0.05}, "face": answer("excited", 0.9)});
+        assert_eq!(
+            change(&quoted, &moment("delivery"), Some(&drowsy)),
+            Some(("drowsy".into(), PLAIN_FACE.into()))
+        );
+        assert_eq!(
+            change(&quoted, &moment("delivery"), Some(&state(None))),
+            None
+        );
+        // Standing acting is always hers.
+        assert_eq!(
+            change(&quoted, &moment("presence"), Some(&drowsy)),
+            Some(("drowsy".into(), "excited".into()))
+        );
+        // A look the contract does not know is no look at all.
+        let unknown = json!({"face": answer("cackling", 0.9)});
+        assert_eq!(
+            change(&unknown, &moment("delivery"), Some(&drowsy)),
+            Some(("drowsy".into(), PLAIN_FACE.into()))
+        );
+        // The plan agrees: the same answers name no face in it.
+        let plan = super::super::control::control_plan(&quoted, &moment("delivery"), Some(&drowsy));
+        assert!(plan["baseline"]["face"].is_null());
     }
 
     #[test]
     fn the_way_there_is_asked_of_this_change_without_its_own_ends() {
         let drowsy = state(Some("drowsy"));
-        let mut context: Moment = serde_json::from_value(json!({"phase": "reaction",
-            "mood": {"before": 70.0, "after": 70.0, "bandBefore": "calm", "bandAfter": "calm",
-                "delta": 0.0, "cause": "test", "revision": 1},
-            "activity": "thinking", "userText": "tell me about that", "motionStyle": "even"}))
-        .unwrap();
+        let mut context = moment("reaction");
         context.user_text = "醒醒！你中奖了！".into();
         context.response_text = Some("诶？！真的吗？！".into());
         let (asked_state, asked) = questions("drowsy", "excited", &context, Some(&drowsy));

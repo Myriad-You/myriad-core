@@ -288,38 +288,7 @@
       },
       "name": "delivery shy, head only, direct false, answers 0",
       "output": {
-        "way": {
-          "from": "plain",
-          "questions": {
-            "first": {
-              "criteria": {
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "Someone said: 「你今天特别可爱。」. She answers: 「才、才没有呢……不过，谢谢你这么说。」. Her face changes from her ordinary face to half-lidded eyes, smile, chin up: pleased with herself. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
-              "type": "choice"
-            },
-            "then": {
-              "criteria": {
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "If it passes through one, does it pass through a second after that, before half-lidded eyes, smile, chin up: pleased with herself? Rarely.",
-              "type": "choice"
-            }
-          },
-          "state": {
-            "her face now": "her ordinary face",
-            "her new face": "half-lidded eyes, smile, chin up: pleased with herself"
-          },
-          "to": "smug"
-        }
+        "way": null
       }
     },
     {
@@ -1962,52 +1931,7 @@
       },
       "name": "delivery asked face, bust speaking, direct true, answers 0",
       "output": {
-        "way": {
-          "from": "plain",
-          "questions": {
-            "first": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "Someone said: 「做一下狂笑」. She answers: 「好啊，看我的！」. Her face changes from her ordinary face to half-lidded eyes, smile, chin up: pleased with herself. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
-              "type": "choice"
-            },
-            "then": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "If it passes through one, does it pass through a second after that, before half-lidded eyes, smile, chin up: pleased with herself? Rarely.",
-              "type": "choice"
-            }
-          },
-          "state": {
-            "her face now": "her ordinary face",
-            "her new face": "half-lidded eyes, smile, chin up: pleased with herself"
-          },
-          "to": "smug"
-        }
+        "way": null
       }
     },
     {
@@ -2456,52 +2380,7 @@
       },
       "name": "delivery long, bust speaking, direct false, answers 1",
       "output": {
-        "way": {
-          "from": "plain",
-          "questions": {
-            "first": {
-              "criteria": {
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "Someone said: 「怎么了？」. She answers: 「还有点难受。不过我愿意慢慢说。其实可以先把原因说清楚。你觉得呢？嗯……也许吧！好。」. Her face changes from her ordinary face to eyes closed in a smile (^ ^), content and happy. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
-              "type": "choice"
-            },
-            "then": {
-              "criteria": {
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "If it passes through one, does it pass through a second after that, before eyes closed in a smile (^ ^), content and happy? Rarely.",
-              "type": "choice"
-            }
-          },
-          "state": {
-            "her face now": "her ordinary face",
-            "her new face": "eyes closed in a smile (^ ^), content and happy"
-          },
-          "to": "content"
-        }
+        "way": null
       }
     },
     {
@@ -3889,52 +3768,7 @@
       },
       "name": "delivery repeat, face hidden, direct true, answers 0",
       "output": {
-        "way": {
-          "from": "plain",
-          "questions": {
-            "first": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "Someone said: 「笑一个」. She answers: 「哈哈。哈哈。好」. Her face changes from her ordinary face to eyes narrowed, leaning in: concentrating. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
-              "type": "choice"
-            },
-            "then": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "If it passes through one, does it pass through a second after that, before eyes narrowed, leaning in: concentrating? Rarely.",
-              "type": "choice"
-            }
-          },
-          "state": {
-            "her face now": "her ordinary face",
-            "her new face": "eyes narrowed, leaning in: concentrating"
-          },
-          "to": "focused"
-        }
+        "way": null
       }
     },
     {
@@ -4398,52 +4232,7 @@
       },
       "name": "reaction, bust speaking, direct true, answers 1",
       "output": {
-        "way": {
-          "from": "plain",
-          "questions": {
-            "first": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "Someone said: 「醒醒！你中奖了！」. Her face changes from her ordinary face to soft smiling eyes, gentle smile, head tilted: tender. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
-              "type": "choice"
-            },
-            "then": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "shy": "eyes down and away, head lowered, small smile: shy",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "If it passes through one, does it pass through a second after that, before soft smiling eyes, gentle smile, head tilted: tender? Rarely.",
-              "type": "choice"
-            }
-          },
-          "state": {
-            "her face now": "her ordinary face",
-            "her new face": "soft smiling eyes, gentle smile, head tilted: tender"
-          },
-          "to": "tender"
-        }
+        "way": null
       }
     },
     {
@@ -4729,52 +4518,7 @@
       },
       "name": "proactive, bust speaking, direct false, answers 1",
       "output": {
-        "way": {
-          "from": "plain",
-          "questions": {
-            "first": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "She speaks up: 「你今天的照片拍得真好看！」. Her face changes from her ordinary face to eyes down and away, head lowered, small smile: shy. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
-              "type": "choice"
-            },
-            "then": {
-              "criteria": {
-                "content": "eyes closed in a smile (^ ^), content and happy",
-                "downcast": "eyes lowered under half-closed lids, on something in front of her",
-                "dreamy": "eyes raised and soft, head up: lost in a daydream",
-                "drowsy": "lids heavy, head drooping: sleepy",
-                "focused": "eyes narrowed, leaning in: concentrating",
-                "none": "nothing (more) in between: straight on",
-                "pout": "head turned away, side-eye, mouth pulled down: pouting",
-                "smug": "half-lidded eyes, smile, chin up: pleased with herself",
-                "surprised": "eyes wide, mouth open: caught by surprise",
-                "teasing": "one eye narrowed, sly smile: teasing",
-                "tender": "soft smiling eyes, gentle smile, head tilted: tender",
-                "worried": "eyes down and aside, mouth turned down: worried, troubled"
-              },
-              "instructions": "If it passes through one, does it pass through a second after that, before eyes down and away, head lowered, small smile: shy? Rarely.",
-              "type": "choice"
-            }
-          },
-          "state": {
-            "her face now": "her ordinary face",
-            "her new face": "eyes down and away, head lowered, small smile: shy"
-          },
-          "to": "shy"
-        }
+        "way": null
       }
     },
     {
@@ -6875,9 +6619,9 @@
                 "dreamy": "eyes raised and soft, head up: lost in a daydream",
                 "drowsy": "lids heavy, head drooping: sleepy",
                 "excited": "eyes wide and bright, big smile, sparkles beside her: excited, delighted",
+                "focused": "eyes narrowed, leaning in: concentrating",
                 "humming": "eyes closed in a smile, music notes beside her: humming along, enjoying a song",
                 "none": "nothing (more) in between: straight on",
-                "plain": "her ordinary face: calming down, collecting herself",
                 "pout": "head turned away, side-eye, mouth pulled down: pouting",
                 "puzzled": "head tilted, eyes up and aside, a question mark beside her: puzzled, wondering",
                 "shy": "eyes down and away, head lowered, small smile: shy",
@@ -6888,7 +6632,7 @@
                 "tender": "soft smiling eyes, gentle smile, head tilted: tender",
                 "worried": "eyes down and aside, mouth turned down: worried, troubled"
               },
-              "instructions": "Someone said: 「帮我整理一下」. She answers: 「抱歉，没弄成……」. Her face changes from eyes closed in a smile (^ ^), content and happy to eyes narrowed, leaning in: concentrating. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
+              "instructions": "Someone said: 「帮我整理一下」. She answers: 「抱歉，没弄成……」. Her face changes from eyes closed in a smile (^ ^), content and happy to her ordinary face. Does it pass through another look on the way, as real faces sometimes do: dozing to delight through waking up surprised, tears to laughter through a wet smile, sulking to shyness through calming down, joy to sorrow through a moment of shock? Most changes go straight.",
               "type": "choice"
             },
             "then": {
@@ -6898,9 +6642,9 @@
                 "dreamy": "eyes raised and soft, head up: lost in a daydream",
                 "drowsy": "lids heavy, head drooping: sleepy",
                 "excited": "eyes wide and bright, big smile, sparkles beside her: excited, delighted",
+                "focused": "eyes narrowed, leaning in: concentrating",
                 "humming": "eyes closed in a smile, music notes beside her: humming along, enjoying a song",
                 "none": "nothing (more) in between: straight on",
-                "plain": "her ordinary face: calming down, collecting herself",
                 "pout": "head turned away, side-eye, mouth pulled down: pouting",
                 "puzzled": "head tilted, eyes up and aside, a question mark beside her: puzzled, wondering",
                 "shy": "eyes down and away, head lowered, small smile: shy",
@@ -6911,15 +6655,15 @@
                 "tender": "soft smiling eyes, gentle smile, head tilted: tender",
                 "worried": "eyes down and aside, mouth turned down: worried, troubled"
               },
-              "instructions": "If it passes through one, does it pass through a second after that, before eyes narrowed, leaning in: concentrating? Rarely.",
+              "instructions": "If it passes through one, does it pass through a second after that, before her ordinary face? Rarely.",
               "type": "choice"
             }
           },
           "state": {
             "her face now": "eyes closed in a smile (^ ^), content and happy",
-            "her new face": "eyes narrowed, leaning in: concentrating"
+            "her new face": "her ordinary face"
           },
-          "to": "focused"
+          "to": "plain"
         }
       }
     },

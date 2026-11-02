@@ -2,7 +2,9 @@
 //! (`crates/conformance/v1/motion/`) through the crate, as the site backend
 //! calls it. `myriad-core-ffi` runs the same files through the C entry
 //! point. The outputs were recorded from the site backend's director before
-//! its judgments moved here (2026-11-02); nothing here rewrites them.
+//! its judgments moved here (2026-11-02). `MYRIAD_CONFORMANCE_BLESS=1`
+//! rewrites the files whose outputs a change written up with its reason
+//! moved, and only those.
 
 use std::path::PathBuf;
 
@@ -78,7 +80,7 @@ fn run(call: &str, input: &Value) -> Value {
         "motion.way" => {
             let moment = moment(input);
             let state = moment.round_rig_state();
-            let way = way::change(&input["answers"], state.as_ref()).map(|(from, to)| {
+            let way = way::change(&input["answers"], &moment, state.as_ref()).map(|(from, to)| {
                 let (way_state, way_questions) =
                     way::questions(&from, &to, &moment, state.as_ref());
                 json!({ "from": from, "to": to, "state": way_state, "questions": way_questions })
@@ -103,20 +105,26 @@ fn every_motion_case_answers_through_the_crate() {
         .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
         .collect();
     files.sort();
+    let bless = std::env::var_os("MYRIAD_CONFORMANCE_BLESS").is_some();
     let mut cases = 0;
     for path in files {
-        let file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
-        let call = file["call"].as_str().unwrap();
-        for case in file["cases"].as_array().unwrap() {
-            // Values compare as JSON: the same keys, the same numbers to the bit.
-            assert_eq!(
-                run(call, &case["input"]),
-                case["output"],
-                "{} › {}",
-                path.display(),
-                case["name"]
-            );
+        let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        let call = file["call"].as_str().unwrap().to_owned();
+        let mut moved = false;
+        for case in file["cases"].as_array_mut().unwrap() {
+            let got = run(&call, &case["input"]);
             cases += 1;
+            if bless {
+                moved |= got != case["output"];
+                case["output"] = got;
+                continue;
+            }
+            // Values compare as JSON: the same keys, the same numbers to the bit.
+            assert_eq!(got, case["output"], "{} › {}", path.display(), case["name"]);
+        }
+        if moved {
+            let text = serde_json::to_string_pretty(&file).unwrap() + "\n";
+            std::fs::write(&path, text).unwrap();
         }
     }
     assert!(cases >= 300, "{cases}");
