@@ -288,6 +288,25 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "2号"
+      },
+      "name": "2号 is the second choice; 1时 is a time",
+      "output": {
+        "choice": "2"
+      }
     }
   ],
   "version": 1

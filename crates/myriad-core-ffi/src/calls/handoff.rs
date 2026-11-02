@@ -54,6 +54,16 @@ pub(super) fn split(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "spoken": spoken, "handOffs": hand_offs }))
 }
 
+pub(super) fn result_text(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        text: String,
+    }
+    let req: In = input(raw)?;
+    Ok(json!({ "text": handoff::result_text(&req.text) }))
+}
+
 pub(super) fn stands(raw: &[u8]) -> Result<Value, Failure> {
     let facts: Facts = input(raw)?;
     Ok(json!({ "standing": handoff::stands(&facts) }))

@@ -259,6 +259,16 @@
         ],
         "spoken": "好的\r\n明天告诉你"
       }
+    },
+    {
+      "input": {
+        "reply": "[[workers]]\n[[stopwatch]] [[Work log]]"
+      },
+      "name": "a word that only begins like hers is not hers",
+      "output": {
+        "handOffs": [],
+        "spoken": "[[workers]]\n[[stopwatch]]"
+      }
     }
   ],
   "version": 1

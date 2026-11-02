@@ -98,6 +98,7 @@ const CALLS: &[(&str, Call)] = &[
     ("handoff.labelled", handoff::labelled),
     ("handoff.line", handoff::line),
     ("handoff.next_number", handoff::next_number),
+    ("handoff.result_text", handoff::result_text),
     ("handoff.route", handoff::route),
     ("handoff.section", handoff::section),
     ("handoff.shown", handoff::shown),

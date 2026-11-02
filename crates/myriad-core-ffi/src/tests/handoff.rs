@@ -20,6 +20,7 @@ pub(super) const TESTED: &[&str] = &[
     "handoff.labelled",
     "handoff.line",
     "handoff.next_number",
+    "handoff.result_text",
     "handoff.route",
     "handoff.section",
     "handoff.shown",
