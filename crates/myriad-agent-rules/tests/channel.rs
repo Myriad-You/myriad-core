@@ -25,18 +25,18 @@ use myriad_agent_rules::channel::{
     feishu_dm_capabilities, feishu_identity_keys, feishu_photo_messages, feishu_reply_markup,
     feishu_text_from_content, feishu_token_needs_refresh, feishu_worker_intent,
     format_channel_result, format_pairing_code, format_pending_prompt, ingest_c2c_text,
-    ingest_channel_text, next_passive_seq, outbound_idempotency_key, pairing_bind_reply,
-    pairing_bind_reply_for, panel_entry_reply, parse_access_token_response, parse_channel_command,
-    parse_discord_channel_type, parse_feishu_api_code, parse_feishu_card_callback,
-    parse_feishu_event_envelope, parse_feishu_message_receive, parse_feishu_tenant_token,
-    parse_feishu_ws_endpoint, parse_gateway_url_response, parse_qq_c2c_images, parse_qq_file_info,
-    parse_telegram_bot_identity, parse_telegram_callback, parse_telegram_file_path,
-    parse_telegram_ok_payload, parse_telegram_private_inbounds, parse_telegram_private_texts,
-    pending_prompt_from_model_json, plan_delivery, qq_c2c_capabilities, qq_token_needs_refresh,
-    session_key, should_deliver_sequence, split_channel_text, task_started_reply,
-    telegram_callback_action, telegram_dm_capabilities, telegram_inline_keyboard,
-    telegram_max_update_id, telegram_reply_markup, telegram_retry_after, telegram_worker_intent,
-    truncate_feishu_text, truncate_telegram_text, worker_intent,
+    ingest_channel_text, next_passive_seq, number_is_in_a_name, outbound_idempotency_key,
+    pairing_bind_reply, pairing_bind_reply_for, panel_entry_reply, parse_access_token_response,
+    parse_channel_command, parse_discord_channel_type, parse_feishu_api_code,
+    parse_feishu_card_callback, parse_feishu_event_envelope, parse_feishu_message_receive,
+    parse_feishu_tenant_token, parse_feishu_ws_endpoint, parse_gateway_url_response,
+    parse_qq_c2c_images, parse_qq_file_info, parse_telegram_bot_identity, parse_telegram_callback,
+    parse_telegram_file_path, parse_telegram_ok_payload, parse_telegram_private_inbounds,
+    parse_telegram_private_texts, pending_prompt_from_model_json, plan_delivery,
+    qq_c2c_capabilities, qq_token_needs_refresh, session_key, should_deliver_sequence,
+    split_channel_text, task_started_reply, telegram_callback_action, telegram_dm_capabilities,
+    telegram_inline_keyboard, telegram_max_update_id, telegram_reply_markup, telegram_retry_after,
+    telegram_worker_intent, truncate_feishu_text, truncate_telegram_text, worker_intent,
 };
 
 fn text(msg_id: &str, openid: &str, content: &str) -> InboundC2cText {
@@ -1004,6 +1004,9 @@ fn a_choice_is_its_words_or_its_number_alone() {
         ("2", Some("hangzhou")),
         ("杭州", Some("hangzhou")),
         ("2.", Some("hangzhou")),
+        ("2、", Some("hangzhou")),
+        ("2）", Some("hangzhou")),
+        ("2。", Some("hangzhou")),
     ] {
         match (decide_pending_reply(&prompt, said, 0), meant) {
             (PendingDecision::Resume { answer, .. }, Some(meant)) => {
@@ -1012,7 +1015,16 @@ fn a_choice_is_its_words_or_its_number_alone() {
             (other, _) => panic!("{said}: {other:?}"),
         }
     }
-    for said in ["+1", "01", "２", "去杭州吧", "杭州不行", "2 号"] {
+    for said in [
+        "+1",
+        "01",
+        "２",
+        "去杭州吧",
+        "杭州不行",
+        "2 号",
+        "2..",
+        "(2)",
+    ] {
         assert!(
             matches!(
                 decide_pending_reply(&prompt, said, 0),
@@ -1048,6 +1060,69 @@ fn a_choice_is_its_words_or_its_number_alone() {
         decide_pending_reply(&prompt, "2", 0),
         PendingDecision::Reask { .. }
     ));
+    // However the name writes it: full width, Chinese numerals.
+    for (names, said) in [
+        (["周二", "周三"], "2"),
+        (["两张", "四张"], "2"),
+        (["２号", "３号"], "2"),
+        (["二楼", "一楼"], "1"),
+    ] {
+        prompt.options = names
+            .map(|name| PendingOption {
+                value: name.into(),
+                label: name.into(),
+            })
+            .to_vec();
+        assert!(
+            matches!(
+                decide_pending_reply(&prompt, said, 0),
+                PendingDecision::Reask { .. }
+            ),
+            "{names:?} {said}"
+        );
+    }
+}
+
+#[test]
+fn a_number_in_a_name_is_read_whole_however_written() {
+    let named = |names: &[&str], number: &str| {
+        let options: Vec<PendingOption> = names
+            .iter()
+            .map(|name| PendingOption {
+                value: name.to_string(),
+                label: name.to_string(),
+            })
+            .collect();
+        number_is_in_a_name(&options, number)
+    };
+    for (name, number) in [
+        ("2号", "2"),
+        ("11月2号", "2"),
+        ("02号", "2"),
+        ("２号", "2"),
+        ("周二", "2"),
+        ("两张", "2"),
+        ("十二月", "12"),
+        ("十月", "10"),
+        ("二十三号", "23"),
+        ("一百零五", "105"),
+        ("二〇二六年", "2026"),
+        ("一两天", "1"),
+        ("一两天", "2"),
+        ("第１２排", "12"),
+    ] {
+        assert!(named(&[name], number), "{name} {number}");
+    }
+    for (name, number) in [
+        ("20:00", "2"),
+        ("十二月", "2"),
+        ("二十号", "2"),
+        ("一百零五", "5"),
+        ("第１２排", "2"),
+        ("东京", "2"),
+    ] {
+        assert!(!named(&[name], number), "{name} {number}");
+    }
 }
 
 #[test]

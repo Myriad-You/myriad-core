@@ -1329,20 +1329,133 @@ fn parse_yes_no(text: &str) -> Option<bool> {
 }
 
 /// Whether `number` (plain digits) is also a number in a choice's own
-/// name, as a whole (`2` in `2号`, `11月2号`, `2`; not in `20:00`): then
-/// it could be read as that name, and is not taken as a choice number.
+/// name, as a whole, however it is written there: `2` in `2号`,
+/// `11月2号`, `2`, `２号`, `周二`, `两张`; not in `20:00` or `十二月`.
+/// Then it could be read as that name, and is not taken as a choice
+/// number.
 pub fn number_is_in_a_name(options: &[PendingOption], number: &str) -> bool {
+    let Ok(number) = number.parse::<u64>() else {
+        return false;
+    };
     options.iter().any(|option| {
-        [&option.label, &option.value].into_iter().any(|name| {
-            name.split(|ch: char| !ch.is_ascii_digit())
-                .any(|run| !run.is_empty() && run.trim_start_matches('0') == number)
-        })
+        [&option.label, &option.value]
+            .into_iter()
+            .any(|name| numbers_in(name).contains(&number))
     })
 }
 
-/// A choice by its own words, or by its number alone when that number is
-/// not also in a choice's name (with `2号` and `3号` listed, `2` could be
-/// either; with `14:00` and `20:00`, `2` is the second). Nothing else.
+/// The numbers written in `name`: digit runs (ASCII or full width) and
+/// Chinese numeral runs, each read as a whole (`十二` is 12, `二〇二六`
+/// 2026). A Chinese run without `十百千` may also be a count of a few
+/// (`一两天`), so each of its digits counts too.
+fn numbers_in(name: &str) -> Vec<u64> {
+    let mut numbers = Vec::new();
+    let mut digits = String::new();
+    let mut chinese = Vec::new();
+    for ch in name.chars().chain(['\0']) {
+        match digit_value(ch) {
+            Some(value) => {
+                read_chinese(&mut chinese, &mut numbers);
+                digits.push(char::from(b'0' + value as u8));
+                continue;
+            }
+            None if chinese_numeral(ch).is_some() => {
+                if let Ok(value) = digits.parse() {
+                    numbers.push(value);
+                }
+                digits.clear();
+                chinese.push(ch);
+                continue;
+            }
+            None => {}
+        }
+        if let Ok(value) = digits.parse() {
+            numbers.push(value);
+        }
+        digits.clear();
+        read_chinese(&mut chinese, &mut numbers);
+    }
+    numbers
+}
+
+fn digit_value(ch: char) -> Option<u64> {
+    match ch {
+        '0'..='9' => Some(ch as u64 - '0' as u64),
+        '０'..='９' => Some(ch as u64 - '０' as u64),
+        _ => None,
+    }
+}
+
+/// A Chinese numeral: a digit, or a unit (`十百千`, as 10, 100, 1000).
+fn chinese_numeral(ch: char) -> Option<(u64, bool)> {
+    let digit = match ch {
+        '〇' | '零' => 0,
+        '一' => 1,
+        '二' | '两' | '俩' => 2,
+        '三' => 3,
+        '四' => 4,
+        '五' => 5,
+        '六' => 6,
+        '七' => 7,
+        '八' => 8,
+        '九' => 9,
+        '十' => return Some((10, true)),
+        '百' => return Some((100, true)),
+        '千' => return Some((1000, true)),
+        _ => return None,
+    };
+    Some((digit, false))
+}
+
+fn read_chinese(run: &mut Vec<char>, numbers: &mut Vec<u64>) {
+    if run.is_empty() {
+        return;
+    }
+    let parts: Vec<(u64, bool)> = run.drain(..).filter_map(chinese_numeral).collect();
+    if parts.iter().any(|&(_, unit)| unit) {
+        // `二十三`, `十二`, `一百零五`: units read in place.
+        let mut total = 0u64;
+        let mut pending: Option<u64> = None;
+        for (value, unit) in parts {
+            if unit {
+                total = total.saturating_add(pending.unwrap_or(1).saturating_mul(value));
+                pending = None;
+            } else if value != 0 {
+                pending = Some(value);
+            }
+        }
+        numbers.push(total.saturating_add(pending.unwrap_or(0)));
+    } else {
+        let mut whole = 0u64;
+        for &(digit, _) in &parts {
+            whole = whole.saturating_mul(10).saturating_add(digit);
+            numbers.push(digit);
+        }
+        numbers.push(whole);
+    }
+}
+
+/// The choice `text` is the number of: plain ASCII digits (not `+1`,
+/// `01`, `２`, `2 号`), with at most one full stop, `、` or closing
+/// bracket after (`2.`, `2、`, `2)`), in range, and not also a number in
+/// a choice's name (with `2号` and `3号` listed, `2` could be either; with
+/// `14:00` and `20:00`, `2` is the second).
+pub fn choice_by_number(options: &[PendingOption], text: &str) -> Option<usize> {
+    let text = text.trim();
+    let digits = text
+        .strip_suffix(['.', '。', '、', ')', '）'])
+        .unwrap_or(text);
+    if digits.is_empty() || digits.starts_with('0') || !digits.chars().all(|ch| ch.is_ascii_digit())
+    {
+        return None;
+    }
+    let number: usize = digits.parse().ok()?;
+    ((1..=options.len()).contains(&number) && !number_is_in_a_name(options, digits))
+        .then(|| number - 1)
+}
+
+/// A choice by its own words, or by its number alone (`choice_by_number`).
+/// Nothing else.
 fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
     let needle = normalize_choice(text);
     let named = prompt.options.iter().find_map(|option| {
@@ -1351,9 +1464,7 @@ fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
         (!needle.is_empty() && (needle == label || needle == value)).then(|| option.value.clone())
     });
     named.or_else(|| {
-        let index = parse_option_index(text, prompt.options.len())?;
-        (!number_is_in_a_name(&prompt.options, &(index + 1).to_string()))
-            .then(|| prompt.options[index].value.clone())
+        choice_by_number(&prompt.options, text).map(|index| prompt.options[index].value.clone())
     })
 }
 
@@ -1373,20 +1484,6 @@ fn match_many_options(prompt: &PendingPrompt, text: &str) -> Option<String> {
         }
     }
     (!values.is_empty()).then_some(values.join(","))
-}
-
-/// Plain digits, with at most a full stop or bracket after: not `+1`,
-/// `01`, `2 号`.
-fn parse_option_index(text: &str, count: usize) -> Option<usize> {
-    let cleaned = text.trim().trim_end_matches(['.', '、', ')', '）']);
-    if cleaned.is_empty()
-        || cleaned.starts_with('0')
-        || !cleaned.chars().all(|ch| ch.is_ascii_digit())
-    {
-        return None;
-    }
-    let index: usize = cleaned.parse().ok()?;
-    (index >= 1 && index <= count).then_some(index - 1)
 }
 
 fn normalize_choice(text: &str) -> String {

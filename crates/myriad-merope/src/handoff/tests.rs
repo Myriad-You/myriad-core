@@ -543,6 +543,29 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     ] {
         assert_eq!(her_choice(&same(&names), said), said);
     }
+    // However the name writes it: full width, Chinese numerals.
+    for (names, said) in [
+        (["周二", "周三"], "2"),
+        (["两张", "四张"], "2"),
+        (["２号", "３号"], "2"),
+        (["二楼", "一楼"], "1"),
+        (["十二月", "一月"], "1"),
+        (["一两天", "三五天"], "2"),
+    ] {
+        assert_eq!(her_choice(&same(&names), said), said, "{names:?}");
+    }
+    assert_eq!(her_choice(&same(&["周二", "周三"]), "周三"), "周三");
+    assert_eq!(her_choice(&same(&["二楼", "一楼"]), "二楼"), "二楼");
+    assert_eq!(her_choice(&same(&["十二月", "十一月"]), "2"), "2");
+    assert_eq!(her_choice(&same(&["二十号", "三十号"]), "2"), "2");
+    assert_eq!(her_choice(&same(&["二十三号", "二十四号"]), "2"), "2");
+    // A full stop, `、` or closing bracket after the number, once.
+    for said in ["2.", "2。", "2、", "2)", "2）"] {
+        assert_eq!(her_choice(&times, said), "2", "{said}");
+    }
+    for said in ["2..", "2.)", "(2)", "2，"] {
+        assert_eq!(her_choice(&times, said), said);
+    }
     let counts = same(&["2", "4"]);
     assert_eq!(her_choice(&counts, "4"), "4");
     assert_eq!(her_choice(&counts, "2"), "1");

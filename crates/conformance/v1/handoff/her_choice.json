@@ -649,6 +649,196 @@
       "output": {
         "choice": "2"
       }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "周二",
+            "value": "周二"
+          },
+          {
+            "label": "周三",
+            "value": "周三"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "a number a Chinese name writes",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "两张",
+            "value": "两张"
+          },
+          {
+            "label": "四张",
+            "value": "四张"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "two written 两",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "２号",
+            "value": "２号"
+          },
+          {
+            "label": "３号",
+            "value": "３号"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "a full-width number in a name",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "二楼",
+            "value": "二楼"
+          },
+          {
+            "label": "一楼",
+            "value": "一楼"
+          }
+        ],
+        "text": "1"
+      },
+      "name": "one written 一",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "十二月",
+            "value": "十二月"
+          },
+          {
+            "label": "一月",
+            "value": "一月"
+          }
+        ],
+        "text": "1"
+      },
+      "name": "a Chinese number read whole",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "十二月",
+            "value": "十二月"
+          },
+          {
+            "label": "十一月",
+            "value": "十一月"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "not a part of a Chinese number",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "2."
+      },
+      "name": "the number with a full stop",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "2、"
+      },
+      "name": "the number with a 、",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "2）"
+      },
+      "name": "the number with a closing bracket",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "2.."
+      },
+      "name": "more than one mark after the number",
+      "output": {
+        "choice": "2.."
+      }
     }
   ],
   "version": 1
