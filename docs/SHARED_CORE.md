@@ -400,15 +400,15 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 | 调用 | 输入 → 输出 |
 | --- | --- |
-| `handoff.split` | `{reply}` → `{spoken, handOffs}`：她的标记从回复里拿掉，按写的先后给出 `{kind: "new", text}`、`{kind: "to", work, text}`、`{kind: "stop", work}`。`work`、`stop` 不分大小写，后面只能紧跟空白、`#`、`＃`、`:`、`：` 或直接结束，`[[workers]]`、`[[stopwatch]]` 不是她的标记、原样留着；写坏的自家标记直接去掉、不说出来；拿掉标记后那一行只剩空白（含 CRLF）就连同那一行去掉；同一回复里同样的新件只算一件，给某一件的话（`to`）照写的次数和先后都给出。别人的标记（贴纸、换装）留在原处；没写完的标记留给流式显示扣住；指令最多 500 字 |
-| `handoff.result_text` | `{text}` → `{text}`：帮手的结果拿给她读之前，只拿掉她的标记里读得出意思的（新件、给某一件的话、叫停），只剩空白的那一行跟着去掉；写错的（`[[work 买菜]]`、`[[Work log]]`）和别的内容一字不动，代码块里的空行也不合并 |
+| `handoff.split` | `{reply}` → `{spoken, handOffs}`：她的标记从回复里拿掉，按写的先后给出 `{kind: "new", text}`、`{kind: "to", work, text}`、`{kind: "stop", work}`。`work`、`stop` 不分大小写，后面只能紧跟空白、`#`、`＃`、`:`、`：` 或直接结束，`[[workers]]`、`[[stopwatch]]` 不是她的标记、原样留着；写坏的自家标记直接去掉、不说出来；拿掉标记后那一行只剩空白（含 CRLF）就连同那一行去掉；同一回复里同样的新件只算一件，给某一件的话（`to`）照写的次数和先后都给出。拿掉一个标记后从头再找，套在另一个里面的（`[[[[stop #1]]work: …]]`）也拿得干净；别人的标记（贴纸、换装）留在原处；没写完的标记留给流式显示扣住；指令最多 500 字 |
+| `handoff.result_text` | `{text}` → `{text}`：帮手的结果拿给她读之前，只拿掉她的标记里读得出意思的（新件、给某一件的话、叫停），只剩空白的那一行跟着去掉；写错的（`[[work 买菜]]`、`[[Work log]]`）和别的内容一字不动，代码块里的空行也不合并。这只是这一步的输出：各端再拼进她读的对话时（站点会把连续空行并成「 / 」）不归这里管 |
 | `handoff.stands` | `{stopped?, question?, unheardQuestion?, underWay?, progress?, result?, begun?}` → `{standing}`：叫停优先；对方看过的问题先于重启留下、谁也没看过的问题（那件算 `cutOff`，`by: "restart"`）；`begun` 是 `yes`（默认）、`notYet`（刚交出去，运行在路上：`starting`）、`never`（运行从没开始：`failed`，`why` 是「没能开始」），由各端按自己的计时判断 |
 | `handoff.line` | `{piece, now}` → `{line}`：她看到的一行，`#2「查明天东京天气」在办，已办 3 分钟（60%）` 这类 |
 | `handoff.shown` | `{pieces, now}` → `{numbers}`：她看得到哪几件：没办完的全部，加上一天内结束的最近 3 件（按 `endedAt`，没有时退回 `startedAt`），按编号 |
 | `handoff.route` | `{pieces}` → `{route}`：只有一件在等回答时对方下一句就是它的回答（`{to: "answer", work}`），否则由她判断（`{to: "her"}`）；等卡片确认的不算 |
 | `handoff.act` | `{handOff, pieces}` → `{act}`：`start`、`answer`（在等回答）、`steer`（在办、刚交出去、等卡片确认）、`continue`（办完了、没办成）、`pickUp`（被打断）、`stop`（没办完的）、`nothing`（叫停的、不存在的） |
 | `handoff.labelled` | `{number, asked, othersUnfinished, content}` → `{text}`：有别的件没办完时前面加 `【#N 前 12 字…】` |
-| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号（开头的序号，或只点名一个选项）。序号后面跟着「点、时、:、.」（空格隔开也算）是时间或数量，不是序号；「2号」是选第 2 项；紧跟在「不、没、别、非」后面的不算点名（「不订了」不是选「订」）；空的选项名谁也不点；点名被另一个选项更长的点名完全包住的不算（选项 `9:00`、`19:00`，「订 19:00 的」是第 2 项）。选项只收 `value`、`label` 两个字段 |
+| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号（开头的序号，或只点名一个选项）。序号只认不带符号、不带前导零的数字（`+1`、`01` 不算）；后面跟着「点、时、:、.」（空格隔开也算）是时间或数量，不是序号；「2号」是选第 2 项，但选项名里有「号」（日期）时「2号」按名字点，点不中就原样留着；紧跟在「不、没、别、非」后面的不算点名（「不订了」不是选「订」）；空的选项名谁也不点；点名被另一个选项更长的点名完全包住的不算（选项 `9:00`、`19:00`，「订 19:00 的」是第 2 项）。选项只收 `value`、`label` 两个字段 |
 | `handoff.next_number` | `{numbers}` → `{number}`：最大的加一，从 1 起；已经到 u32 上限时 `bad_input` |
 | `handoff.work_input` | `{instruction, theirWords}` → `{input}`：交给助手的话，附上对方原话（只作参考） |
 | `handoff.ended_line` | `{text, failed}` → `{line}`：一件办完时她在对话里说的那句，结果各行去掉引用、标题、列表记号后连成一行截 80 字；`-` 后面跟空白才是列表记号，`-5°C` 的负号留着 |

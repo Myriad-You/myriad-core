@@ -489,6 +489,21 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     assert_eq!(her_choice(&options, "1 点"), "1 点");
     assert_eq!(her_choice(&options, "1时"), "1时");
     assert_eq!(her_choice(&options, "2号"), "2");
+    // Only plain digits are a number.
+    assert_eq!(her_choice(&options, "01"), "01");
+    assert_eq!(her_choice(&options, "+1"), "+1");
+    // When the choices are days, `2号` names one, or none.
+    let days = |names: [&str; 2]| {
+        names
+            .map(|name| PendingOption {
+                value: name.into(),
+                label: name.into(),
+            })
+            .to_vec()
+    };
+    assert_eq!(her_choice(&days(["2号", "3号"]), "2号"), "1");
+    assert_eq!(her_choice(&days(["11月2号", "11月5号"]), "2号"), "2号");
+    assert_eq!(her_choice(&days(["11月2号", "11月5号"]), "2"), "2");
     let book = [("yes", "订"), ("no", "不要")]
         .map(|(value, label)| PendingOption {
             value: value.into(),
@@ -570,4 +585,13 @@ fn a_helpers_result_keeps_all_but_her_lines_that_say_something() {
         "[[Work log]]\n```\na\n\n\nb\n```\n[[work 买菜]]\n结果 \n"
     );
     assert_eq!(result_text("[[workers]]"), "[[workers]]");
+}
+
+#[test]
+fn a_line_inside_another_does_not_leave_one_behind() {
+    let nested = "[[[[stop #1]]work: 再订一张]]";
+    assert!(!result_text(nested).contains("[[work"));
+    let (spoken, handed) = split(nested);
+    assert!(!spoken.contains("[[work"), "{spoken}");
+    assert_eq!(handed, vec![HandOff::Stop { work: 1 }, new("再订一张")]);
 }

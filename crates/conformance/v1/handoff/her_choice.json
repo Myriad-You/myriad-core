@@ -307,6 +307,63 @@
       "output": {
         "choice": "2"
       }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "2号",
+            "value": "2号"
+          },
+          {
+            "label": "3号",
+            "value": "3号"
+          }
+        ],
+        "text": "2号"
+      },
+      "name": "when the choices are days, 2号 names the one it says",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "11月2号",
+            "value": "11月2号"
+          },
+          {
+            "label": "11月5号",
+            "value": "11月5号"
+          }
+        ],
+        "text": "2号"
+      },
+      "name": "a day it does not name is not a number either",
+      "output": {
+        "choice": "2号"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "01"
+      },
+      "name": "a number with a sign or a leading zero is not a choice",
+      "output": {
+        "choice": "01"
+      }
     }
   ],
   "version": 1

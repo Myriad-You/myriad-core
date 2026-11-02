@@ -129,7 +129,10 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
                     None => {}
                 }
                 text.replace_range(start..after + close + CLOSE.len(), "");
-                from = without_blank_line(&mut text, start);
+                without_blank_line(&mut text, start);
+                // From the top again: taking it out may have closed one
+                // around it (`[[[[stop #1]]work: …]]`).
+                from = 0;
             }
         }
     }
@@ -138,16 +141,15 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
 
 /// After a line of hers is taken out at `at`: the line it stood on goes too
 /// when nothing but spaces is left on it, with its line break (the one
-/// before it, on the last line). Where to read on from.
-fn without_blank_line(text: &mut String, at: usize) -> usize {
+/// before it, on the last line).
+fn without_blank_line(text: &mut String, at: usize) {
     let begins = text[..at].rfind('\n').map_or(0, |found| found + 1);
     let ends = text[at..].find('\n').map_or(text.len(), |found| at + found);
     if !text[begins..ends].trim().is_empty() {
-        return at;
+        return;
     }
     if ends < text.len() {
         text.replace_range(begins..=ends, "");
-        begins
     } else if begins > 0 {
         let breaks = if text[..begins - 1].ends_with('\r') {
             2
@@ -155,10 +157,8 @@ fn without_blank_line(text: &mut String, at: usize) -> usize {
             1
         };
         text.replace_range(begins - breaks..ends, "");
-        text.len()
     } else {
         text.clear();
-        0
     }
 }
 
@@ -503,12 +503,18 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
         return text.to_string();
     }
     let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
-    // `19点`, `1 点`, `2:30`, `3时`: a time, not a choice; `2号` is one.
-    if let Ok(number) = digits.parse::<usize>()
+    let after = text[digits.len()..].trim_start();
+    // `19点`, `1 点`, `2:30`, `3时`: a time, not a choice; `2号` is one,
+    // unless the choices are days (`2号`, `11月5号`): then it names one.
+    let a_day = after.starts_with('号')
+        && options
+            .iter()
+            .any(|option| option.value.contains('号') || option.label.contains('号'));
+    if !digits.starts_with('0')
+        && let Ok(number) = digits.parse::<usize>()
         && (1..=options.len()).contains(&number)
-        && !text[digits.len()..]
-            .trim_start()
-            .starts_with([':', '：', '.', '点', '时'])
+        && !after.starts_with([':', '：', '.', '点', '时'])
+        && !a_day
     {
         return number.to_string();
     }

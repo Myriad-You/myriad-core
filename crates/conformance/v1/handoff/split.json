@@ -269,6 +269,25 @@
         "handOffs": [],
         "spoken": "[[workers]]\n[[stopwatch]]"
       }
+    },
+    {
+      "input": {
+        "reply": "[[[[stop #1]]work: 再订一张]]"
+      },
+      "name": "a line inside another does not leave one behind",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "stop",
+            "work": 1
+          },
+          {
+            "kind": "new",
+            "text": "再订一张"
+          }
+        ],
+        "spoken": ""
+      }
     }
   ],
   "version": 1
