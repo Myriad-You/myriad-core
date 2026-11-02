@@ -118,8 +118,10 @@ fn take_out(raw: &str, wrong_too: bool) -> (String, Vec<HandOff>) {
             break;
         };
         match parse(&text[after..after + close]) {
-            None => from = after,
-            Some(None) if !wrong_too => from = after,
+            // Not hers: read on from the next character, so an opening
+            // that overlaps this one (`[[[stop #1]]`) is read too.
+            None => from = start + 1,
+            Some(None) if !wrong_too => from = start + 1,
             Some(line) => {
                 // The same new piece twice in one reply is one piece; what
                 // she tells a piece goes each time, in order.
@@ -496,149 +498,59 @@ pub fn labelled(number: u32, asked: &str, others_unfinished: bool, content: &str
     }
 }
 
-/// Her answer to a piece's choice question, as the choice: she may write
-/// `2`, `2（19:00）`, `2号` or `订 19:00 的`. A number standing on its own
-/// and the one choice she names must agree; a no anywhere in it, two
-/// choices named, or a number and a name that disagree stay as she wrote
-/// it, to be asked again: asked twice, never chosen wrong.
+/// Her answer to a piece's choice question, as the choice. Only two
+/// things are one: the choice's number alone (`2`), or its words alone,
+/// as listed (`19:00`, `19:00。`). Anything else stays as she wrote it, to
+/// be asked again or read by the helper: guessing a choice from other
+/// words chose wrong too often, and asking twice is better.
 pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     let text = text.trim();
-    if options.is_empty() {
-        return text.to_string();
-    }
-    let named = named_choice(options, text);
-    let numbered = numbered_choice(options, text);
-    if says_no(options, text) {
-        return text.to_string();
-    }
-    let chosen = match (numbered, named) {
-        (Some((number, _)), Some(name)) if number == name => Some(number),
-        // `2号` among days names the day: its number is part of the name.
-        (Some((_, Some(token))), Some(name)) if names(&options[name - 1], &token) => Some(name),
-        (Some(_), Some(_)) => None,
-        (Some((number, _)), None) => Some(number),
-        (None, Some(name)) => Some(name),
-        (None, None) => None,
-    };
+    let chosen = choice_named(options, text).or_else(|| choice_numbered(options, text));
     match chosen {
-        // Choices that are numbers themselves (`2`, `4`) go by name, so
-        // the number of one is not read as another's name.
-        Some(number) if options.iter().any(is_a_number) => options[number - 1].value.clone(),
-        Some(number) => number.to_string(),
+        // Choices whose names begin with a number (`2号`, `4`) go by
+        // name, so no number is read as another's name.
+        Some(index) if names_begin_with_a_number(options) => options[index].value.clone(),
+        Some(index) => (index + 1).to_string(),
         None => text.to_string(),
     }
 }
 
-fn is_a_number(option: &PendingOption) -> bool {
-    [&option.value, &option.label]
-        .into_iter()
-        .any(|name| !name.trim().is_empty() && name.trim().chars().all(|ch| ch.is_ascii_digit()))
-}
-
-/// A choice number standing on its own at the head of `text`: plain digits
-/// (not `+1`, `01`), then nothing, punctuation, a bracket, or `号`/`项`
-/// (with that token, `2号`). `19点`, `1 点`, `2:30`, `3时`, `2个`, `2晚`
-/// are not one; nor is `2号` when the choices are days.
-fn numbered_choice(options: &[PendingOption], text: &str) -> Option<(usize, Option<String>)> {
-    let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
-    if digits.is_empty() || digits.starts_with('0') {
+/// The choice whose own words `text` is, ignoring case and a full stop at
+/// the end (not a question mark: `东京？` asks).
+fn choice_named(options: &[PendingOption], text: &str) -> Option<usize> {
+    let said = text
+        .trim_end_matches(['。', '.', '!', '！', '~', '～'])
+        .trim();
+    if said.is_empty() {
         return None;
     }
-    let number = digits.parse::<usize>().ok()?;
-    if !(1..=options.len()).contains(&number) {
-        return None;
-    }
-    let rest = &text[digits.len()..];
-    let after = rest.trim_start();
-    if after.starts_with([':', '：', '.', '点', '时']) {
-        return None;
-    }
-    let Some(next) = rest.chars().next() else {
-        return Some((number, None));
-    };
-    if next.is_whitespace() || "（(【[，,。!！?？、;；".contains(next) {
-        return Some((number, None));
-    }
-    let days = options
-        .iter()
-        .any(|option| option.value.contains('号') || option.label.contains('号'));
-    match next {
-        '号' if days => None,
-        '号' | '项' => Some((number, Some(format!("{digits}{next}")))),
-        _ => None,
-    }
-}
-
-/// The one choice `text` names, if one: `9:00` inside `19:00` is the
-/// longer one said, not both.
-fn named_choice(options: &[PendingOption], text: &str) -> Option<usize> {
-    let said: Vec<Vec<(usize, usize)>> = options
-        .iter()
-        .map(|option| {
-            [&option.value, &option.label]
-                .into_iter()
-                .flat_map(|name| named_at(text, name))
-                .collect()
+    options.iter().position(|option| {
+        [&option.value, &option.label].into_iter().any(|name| {
+            let name = name.trim();
+            !name.is_empty() && name.to_lowercase() == said.to_lowercase()
         })
-        .collect();
-    let inside_another = |of: usize, (from, to): (usize, usize)| {
-        said.iter().enumerate().any(|(other, spans)| {
-            other != of
-                && spans
-                    .iter()
-                    .any(|&(start, end)| start <= from && to <= end && end - start > to - from)
-        })
-    };
-    let named: Vec<usize> = said
-        .iter()
-        .enumerate()
-        .filter(|(of, spans)| spans.iter().any(|&span| !inside_another(*of, span)))
-        .map(|(index, _)| index + 1)
-        .collect();
-    match named.as_slice() {
-        [number] => Some(*number),
-        _ => None,
-    }
+    })
 }
 
-/// Whether a choice's own name says `token`.
-fn names(option: &PendingOption, token: &str) -> bool {
-    [&option.value, &option.label]
-        .into_iter()
-        .any(|name| !name.trim().is_empty() && name.contains(token))
+/// The choice `text` is the number of: plain digits and nothing else (not
+/// `+1`, `01`, `2 号`), in range, when no choice's name begins with a
+/// number (with `2号` and `3号` listed, `2` could be either).
+fn choice_numbered(options: &[PendingOption], text: &str) -> Option<usize> {
+    let plain =
+        !text.is_empty() && !text.starts_with('0') && text.chars().all(|ch| ch.is_ascii_digit());
+    if !plain || names_begin_with_a_number(options) {
+        return None;
+    }
+    let number: usize = text.parse().ok()?;
+    (1..=options.len()).contains(&number).then(|| number - 1)
 }
 
-/// A no anywhere in it, outside the choices' own names (`不要` may be one):
-/// `东京不行`, `除了东京`, `not Tokyo`, `2不行，换1吧`.
-fn says_no(options: &[PendingOption], text: &str) -> bool {
-    let mut rest = text.to_lowercase();
-    let mut names: Vec<String> = options
-        .iter()
-        .flat_map(|option| [option.value.trim(), option.label.trim()])
-        .filter(|name| !name.is_empty())
-        .map(str::to_lowercase)
-        .collect();
-    // Longer names first, so a short one inside it is not left behind.
-    names.sort_by_key(|name| std::cmp::Reverse(name.len()));
-    for name in &names {
-        rest = rest.replace(name.as_str(), " ");
-    }
-    rest.contains(['不', '没', '别', '非'])
-        || ["除了", "算了"].iter().any(|word| rest.contains(word))
-        || rest
-            .split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '\'')
-            .any(|word| matches!(word, "no" | "not" | "don't" | "dont" | "except" | "neither"))
-}
-
-/// Where `text` says a choice's name. An empty name names nothing.
-fn named_at(text: &str, name: &str) -> Vec<(usize, usize)> {
-    let name = name.trim();
-    if name.is_empty() {
-        return Vec::new();
-    }
-    text.match_indices(name)
-        .map(|(at, _)| (at, at + name.len()))
-        .collect()
+fn names_begin_with_a_number(options: &[PendingOption]) -> bool {
+    options.iter().any(|option| {
+        [&option.value, &option.label]
+            .into_iter()
+            .any(|name| name.trim().starts_with(|ch: char| ch.is_ascii_digit()))
+    })
 }
 
 /// The next piece's number: one past the highest, from 1. None when the
@@ -743,14 +655,14 @@ Different things they ask for are different pieces, each with its own [[work: �
 When they said several things since your last reply, take every one of them, not only the last. \
 When what they say now is for one of them (more to go on, a change of mind, or the answer to its question), put [[work #N: their words, or the answer]] on its own last line instead of a new one: it goes into that piece, nothing is started over, and a piece that is done, or was {cut_off}, picks up again where it ended. \
 Numbers are given by {numbers_by}: use #N only for a piece listed below, never for a new one. \
-When a piece is waiting on a question with numbered choices, answer with the number of the choice they mean. \
+When a piece is waiting on a question with numbered choices, answer with only the number of the choice they mean, or only that choice's words exactly as listed; anything else is not taken as a choice and the question is asked again. \
 When they want one of them stopped, put [[stop #N]]: only that one stops. \
 If you cannot tell which one they mean, ask them in a few words, with no line."
         ),
     ];
     if waiting > 1 {
         out.push(format!(
-            "{waiting} pieces are waiting for their answer: if what they said answers one, say which with [[work #N: the answer]], giving the number of the choice when its question has numbered choices; if you cannot tell which, ask."
+            "{waiting} pieces are waiting for their answer: if what they said answers one, say which with [[work #N: the answer]], giving only the number of the choice, or only its words as listed, when its question has numbered choices; if you cannot tell which, ask."
         ));
     }
     if !lines.is_empty() {

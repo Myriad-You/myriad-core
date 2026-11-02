@@ -27,6 +27,15 @@
       "output": {
         "text": ""
       }
+    },
+    {
+      "input": {
+        "text": "[[[stop #1]]work: X]]"
+      },
+      "name": "an odd opening over hers leaves no line of hers whole",
+      "output": {
+        "text": "[work: X]]"
+      }
     }
   ],
   "version": 1

@@ -1328,17 +1328,25 @@ fn parse_yes_no(text: &str) -> Option<bool> {
     }
 }
 
-/// A choice by its name, then by its number: with choices `2` and `4`,
-/// `2` is the one named 2.
+/// A choice by its own words, or by its number alone when no choice's
+/// name begins with a number (with `2号` and `3号` listed, `2` could be
+/// either; with `2` and `4`, `2` is the one named 2). Nothing else.
 fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
     let needle = normalize_choice(text);
     let named = prompt.options.iter().find_map(|option| {
         let label = normalize_choice(&option.label);
         let value = normalize_choice(&option.value);
-        (needle == label || needle == value).then(|| option.value.clone())
+        (!needle.is_empty() && (needle == label || needle == value)).then(|| option.value.clone())
+    });
+    let numbered_names = prompt.options.iter().any(|option| {
+        [&option.label, &option.value]
+            .into_iter()
+            .any(|name| name.trim().starts_with(|ch: char| ch.is_ascii_digit()))
     });
     named.or_else(|| {
-        parse_option_index(text, prompt.options.len())
+        (!numbered_names)
+            .then(|| parse_option_index(text, prompt.options.len()))
+            .flatten()
             .map(|index| prompt.options[index].value.clone())
     })
 }
@@ -1361,8 +1369,16 @@ fn match_many_options(prompt: &PendingPrompt, text: &str) -> Option<String> {
     (!values.is_empty()).then_some(values.join(","))
 }
 
+/// Plain digits, with at most a full stop or bracket after: not `+1`,
+/// `01`, `2 号`.
 fn parse_option_index(text: &str, count: usize) -> Option<usize> {
     let cleaned = text.trim().trim_end_matches(['.', '、', ')', '）']);
+    if cleaned.is_empty()
+        || cleaned.starts_with('0')
+        || !cleaned.chars().all(|ch| ch.is_ascii_digit())
+    {
+        return None;
+    }
     let index: usize = cleaned.parse().ok()?;
     (index >= 1 && index <= count).then_some(index - 1)
 }

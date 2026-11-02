@@ -288,6 +288,21 @@
         ],
         "spoken": ""
       }
+    },
+    {
+      "input": {
+        "reply": "[[[stop #1]]work: X]]"
+      },
+      "name": "an odd opening over hers still lets hers be read",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "stop",
+            "work": 1
+          }
+        ],
+        "spoken": "[work: X]]"
+      }
     }
   ],
   "version": 1

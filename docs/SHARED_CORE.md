@@ -408,7 +408,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `handoff.route` | `{pieces}` → `{route}`：只有一件在等回答时对方下一句就是它的回答（`{to: "answer", work}`），否则由她判断（`{to: "her"}`）；等卡片确认的不算 |
 | `handoff.act` | `{handOff, pieces}` → `{act}`：`start`、`answer`（在等回答）、`steer`（在办、刚交出去、等卡片确认）、`continue`（办完了、没办成）、`pickUp`（被打断）、`stop`（没办完的）、`nothing`（叫停的、不存在的） |
 | `handoff.labelled` | `{number, asked, othersUnfinished, content}` → `{text}`：有别的件没办完时前面加 `【#N 前 12 字…】` |
-| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号。开头单独站着的序号（只认不带符号、不带前导零的数字，后面什么都没有，或是标点、括号、「号」「项」）和她点名的那一项（`9:00` 被 `19:00` 包住时只算 `19:00`）要对得上；两者不一致、点名了两项、或句子里有否定（不、没、别、非、除了、算了、no、not 等，选项自己名字里的除外，如选项「不要」），就原样留着，由各端重问：宁可问两次，不选错。「19点」「1 点」「2:30」「3时」「2个」「2晚」不是序号；选项名里有「号」（日期）时「2号」也不是序号，按名字点（「2号」对「2号 / 3号」是第 1 项）。空的选项名谁也不点。选项本身是数字（`2`、`4`）时，回答的是那一项的 `value`，不是序号 |
+| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号。只认两种：整个回答只有一个序号（纯 ASCII 数字，不带符号、不带前导零，前后只有空白，在选项范围内），或整个回答去掉句末的句号、感叹号后和某个选项的 `value` 或 `label` 完全相同（不分大小写；问号不去，「东京？」是在问）。任何选项名以数字开头（「2号」「11月2号」「2晚」「2」）时不按序号认，只按名字，且回答那一项的 `value`，不是序号。其余一律原样留着，由各端重问或交给帮手：从别的写法猜选项会选错，宁可问两次。选项只收 `value`、`label` 两个字段，多余字段 `bad_input`；空的选项名谁也不点 |
 | `handoff.next_number` | `{numbers}` → `{number}`：最大的加一，从 1 起；已经到 u32 上限时 `bad_input` |
 | `handoff.work_input` | `{instruction, theirWords}` → `{input}`：交给助手的话，附上对方原话（只作参考） |
 | `handoff.ended_line` | `{text, failed}` → `{line}`：一件办完时她在对话里说的那句，结果各行去掉引用、标题、列表记号后连成一行截 80 字；`-` 后面跟空白才是列表记号，`-5°C` 的负号留着 |
