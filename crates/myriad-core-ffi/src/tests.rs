@@ -16,6 +16,7 @@ mod handoff;
 mod link;
 mod log;
 mod mood;
+mod motion;
 mod nodes;
 mod own;
 mod partner;
@@ -118,6 +119,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(link::TESTED.iter().copied())
     .chain(log::TESTED.iter().copied())
     .chain(mood::TESTED.iter().copied())
+    .chain(motion::TESTED.iter().copied())
     .chain(nodes::TESTED.iter().copied())
     .chain(own::TESTED.iter().copied())
     .chain(partner::TESTED.iter().copied())

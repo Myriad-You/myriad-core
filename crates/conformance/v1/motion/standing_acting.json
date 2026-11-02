@@ -1,0 +1,97 @@
+{
+  "call": "motion.standing_acting",
+  "cases": [
+    {
+      "input": {
+        "directive": {
+          "moodRevision": 4,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 300,
+              "move": {
+                "amount": 0.35,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      },
+      "name": "a score alone",
+      "output": {
+        "acting": true
+      }
+    },
+    {
+      "input": {
+        "directive": {
+          "moodRevision": 4,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6,
+              "expression": "steady",
+              "motionEnergy": 1.0,
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      },
+      "name": "a standing look alone",
+      "output": {
+        "acting": true
+      }
+    },
+    {
+      "input": {
+        "directive": {
+          "moodRevision": 4,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 100,
+                "fadeOutMs": 200,
+                "intensity": 1.0,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0
+              }
+            ]
+          }
+        }
+      },
+      "name": "cues alone",
+      "output": {
+        "acting": false
+      }
+    },
+    {
+      "input": {
+        "directive": {
+          "moodRevision": 4,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "cues": []
+          }
+        }
+      },
+      "name": "nothing",
+      "output": {
+        "acting": false
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,6977 @@
+{
+  "call": "motion.standing_floor",
+  "cases": [
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence reading, no rig, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 16164,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence reading, no rig, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 434,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5841,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 10742,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15463,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence reading, no rig, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 9429,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence reading, no rig, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8076,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 14122,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence reading, no rig, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8694,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence reading, no rig, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence reading, bust speaking, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeVertical": -0.6499999761581421,
+                  "headNod": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 434,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 784,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 3827,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 4177,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 6819,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 7169,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 10032,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 10382,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 13621,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 13971,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16164,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 16835,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 17185,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence reading, bust speaking, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeSmile": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 434,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5841,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 10742,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15463,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence reading, bust speaking, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 434,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 7628,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 9429,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15458,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence reading, bust speaking, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 434,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 4327,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 7198,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 8076,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 10309,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 13263,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 14122,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 16796,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence reading, bust speaking, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeOpenLeft": 0.6499999761581421,
+                  "eyeOpenRight": 0.6499999761581421,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8694,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 17330,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "blink",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence reading, bust speaking, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence reading, head only, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 16164,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence reading, head only, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 434,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5841,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 10742,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15463,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence reading, head only, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 9429,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence reading, head only, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8076,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 14122,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence reading, head only, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8694,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence reading, head only, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "steady",
+              "motionEnergy": 0.949999988079071,
+              "pose": {
+                "holdMs": 0,
+                "targets": {},
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence reading, page hidden, reading",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence reading, page hidden, listening",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence reading, page hidden, daydreaming",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence reading, page hidden, looking-about",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence reading, page hidden, resting",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence reading, page hidden, unknown",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence listening, bust speaking, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeVertical": -0.6499999761581421,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 1066,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 3322,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 3672,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 6377,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 6727,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 9826,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 10176,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 12764,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 13114,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 15842,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 16192,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16284,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence listening, bust speaking, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeSmile": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5754,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 11338,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 16088,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence listening, bust speaking, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 6669,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 14646,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence listening, bust speaking, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 3618,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6436,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6983,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 9517,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 13797,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 15613,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 17986,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence listening, bust speaking, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeOpenLeft": 0.6499999761581421,
+                  "eyeOpenRight": 0.6499999761581421,
+                  "gazeVertical": -0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 7453,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 17477,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "blink",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence listening, bust speaking, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence listening, mouth only, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence listening, mouth only, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence listening, mouth only, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence listening, mouth only, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence listening, mouth only, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence listening, mouth only, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence listening, everything singing, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeVertical": -0.6499999761581421,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 1066,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 3322,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 3672,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 6377,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 6727,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 9826,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 10176,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 12764,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 13114,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 15842,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 16192,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16284,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence listening, everything singing, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeSmile": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5754,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 11338,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 16088,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence listening, everything singing, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 6669,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 14646,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence listening, everything singing, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 716,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 3618,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6436,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6983,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 9517,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 13797,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 15613,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 17986,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence listening, everything singing, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeOpenLeft": 0.6499999761581421,
+                  "eyeOpenRight": 0.6499999761581421,
+                  "gazeVertical": -0.3499999940395355,
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 7453,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 17477,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "blink",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence listening, everything singing, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "mouthSmile": 0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence lazing, bust speaking, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeVertical": -0.6499999761581421,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 1036,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 4019,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 4369,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 7185,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 7535,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 9893,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 10243,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 12667,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 13017,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16153,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 16503,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16856,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence lazing, bust speaking, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeSmile": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5221,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 11384,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 16030,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence lazing, bust speaking, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 7756,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 12182,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 13326,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence lazing, bust speaking, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 4269,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6239,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 7968,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 10968,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 14740,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 15469,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 18534,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence lazing, bust speaking, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeOpenLeft": 0.6499999761581421,
+                  "eyeOpenRight": 0.6499999761581421,
+                  "gazeVertical": -0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8570,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15070,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "blink",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence lazing, bust speaking, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence lazing, drowsy with accents, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeVertical": -0.6499999761581421,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 1036,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 4019,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 4369,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 7185,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 7535,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 9893,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 10243,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 12667,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 13017,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16153,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 16503,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16856,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence lazing, drowsy with accents, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeSmile": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5221,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 11384,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 16030,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence lazing, drowsy with accents, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 7756,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 12182,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 13326,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence lazing, drowsy with accents, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 4269,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6239,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 7968,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 10968,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 14740,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 15469,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 18534,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence lazing, drowsy with accents, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeOpenLeft": 0.6499999761581421,
+                  "eyeOpenRight": 0.6499999761581421,
+                  "gazeVertical": -0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8570,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15070,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "blink",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence lazing, drowsy with accents, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence lazing, maniac speaking, reading",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeVertical": -0.6499999761581421,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 1036,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 4019,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 4369,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 7185,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 7535,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 9893,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 10243,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 12667,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 13017,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16153,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355
+                },
+                "transitionMs": 200
+              }
+            },
+            {
+              "atMs": 16503,
+              "pose": {
+                "holdMs": 300,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355
+                },
+                "transitionMs": 2000
+              }
+            },
+            {
+              "atMs": 16856,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence lazing, maniac speaking, listening",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeSmile": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 5221,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 11384,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 16030,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 2,
+                "kind": "nod",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence lazing, maniac speaking, daydreaming",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 7756,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": -0.3499999940395355,
+                  "gazeVertical": 0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            },
+            {
+              "atMs": 12182,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 13326,
+              "pose": {
+                "holdMs": 3500,
+                "targets": {
+                  "gazeHorizontal": 0.3499999940395355,
+                  "gazeVertical": -0.3499999940395355
+                },
+                "transitionMs": 1500
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence lazing, maniac speaking, looking-about",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 686,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 4269,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 6239,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": 0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 7968,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 10968,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "right",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 14740,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "down-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            },
+            {
+              "atMs": 15469,
+              "pose": {
+                "holdMs": 2500,
+                "targets": {
+                  "headTurn": -0.3499999940395355
+                },
+                "transitionMs": 900
+              }
+            },
+            {
+              "atMs": 18534,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "direction": "up-left",
+                "kind": "glance",
+                "tempo": 1.0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence lazing, maniac speaking, resting",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "eyeOpenLeft": 0.6499999761581421,
+                  "eyeOpenRight": 0.6499999761581421,
+                  "gazeVertical": -0.3499999940395355,
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          },
+          "score": [
+            {
+              "atMs": 8570,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "sigh",
+                "tempo": 0.75
+              }
+            },
+            {
+              "atMs": 15070,
+              "move": {
+                "amount": 0.3499999940395355,
+                "count": 1,
+                "kind": "blink",
+                "tempo": 0.75
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence lazing, maniac speaking, unknown",
+      "output": {
+        "directive": {
+          "loopMs": 20000,
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "subdued",
+              "motionEnergy": 0.800000011920929,
+              "pose": {
+                "holdMs": 0,
+                "targets": {
+                  "headNod": -0.3499999940395355,
+                  "mouthSmile": -0.3499999940395355
+                },
+                "transitionMs": 800
+              },
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "reading"
+      },
+      "name": "presence lazing, face hidden, reading",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "listening"
+      },
+      "name": "presence lazing, face hidden, listening",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "daydreaming"
+      },
+      "name": "presence lazing, face hidden, daydreaming",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "looking-about"
+      },
+      "name": "presence lazing, face hidden, looking-about",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "resting"
+      },
+      "name": "presence lazing, face hidden, resting",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        },
+        "way": "unknown"
+      },
+      "name": "presence lazing, face hidden, unknown",
+      "output": {
+        "directive": null
+      }
+    }
+  ],
+  "version": 1
+}

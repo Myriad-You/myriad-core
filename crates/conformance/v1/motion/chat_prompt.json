@@ -1,0 +1,4256 @@
+{
+  "call": "motion.chat_prompt",
+  "cases": [
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "不过": "as she says 「不过」",
+              "才、才没有呢": "as she says 「才、才没有呢」",
+              "谢谢你这么说": "as she says 「谢谢你这么说」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "cry": "a crying face",
+              "dizzy": "dizzy, seeing stars",
+              "lovestruck": "lovestruck, heart eyes",
+              "maniac": "laughing like a maniac",
+              "none": "they asked for none of these, or her reply does not go along",
+              "silly": "a silly, dopey face",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "bounce": "delight, eagerness",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「才、才没有呢……」",
+            "type": "choice"
+          },
+          "say1": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「不过，谢谢你这么说。」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery shy, no rig",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "不过",
+                    "才、才没有呢",
+                    "谢谢你这么说"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "cry",
+                    "dizzy",
+                    "lovestruck",
+                    "maniac",
+                    "none",
+                    "silly",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "drowsy",
+                    "none",
+                    "pout",
+                    "smug",
+                    "surprised",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "bounce",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say1": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "say1",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - 不过: as she says 「不过」\n  - 才、才没有呢: as she says 「才、才没有呢」\n  - 谢谢你这么说: as she says 「谢谢你这么说」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - cry: a crying face\n  - dizzy: dizzy, seeing stars\n  - lovestruck: lovestruck, heart eyes\n  - maniac: laughing like a maniac\n  - none: they asked for none of these, or her reply does not go along\n  - silly: a silly, dopey face\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - drowsy: lids heavy, head drooping: sleepy\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - bounce: delight, eagerness\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「才、才没有呢……」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay1: How she says 「不过，谢谢你这么说。」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "不过": "as she says 「不过」",
+              "才、才没有呢": "as she says 「才、才没有呢」",
+              "谢谢你这么说": "as she says 「谢谢你这么说」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "none": "they asked for none of these, or her reply does not go along",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "beat": "a hand beat for emphasis while explaining",
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「才、才没有呢……」",
+            "type": "choice"
+          },
+          "say1": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「不过，谢谢你这么说。」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery shy, page hidden",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "不过",
+                    "才、才没有呢",
+                    "谢谢你这么说"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "none",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "focused",
+                    "none",
+                    "pout",
+                    "shy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "beat",
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say1": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "say1",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - 不过: as she says 「不过」\n  - 才、才没有呢: as she says 「才、才没有呢」\n  - 谢谢你这么说: as she says 「谢谢你这么说」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - none: they asked for none of these, or her reply does not go along\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - focused: eyes narrowed, leaning in: concentrating\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - shy: eyes down and away, head lowered, small smile: shy\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - beat: a hand beat for emphasis while explaining\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「才、才没有呢……」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay1: How she says 「不过，谢谢你这么说。」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "你是想把迟到也冻住吗": "as she says 「你是想把迟到也冻住吗」",
+              "哈哈哈哈": "as she says 「哈哈哈哈」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "cry": "a crying face",
+              "dizzy": "dizzy, seeing stars",
+              "lovestruck": "lovestruck, heart eyes",
+              "maniac": "laughing like a maniac",
+              "none": "they asked for none of these, or her reply does not go along",
+              "silly": "a silly, dopey face",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "blushing": "eyes down and away, small smile, cheeks blushing: shy, flustered",
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "excited": "eyes wide and bright, big smile, sparkles beside her: excited, delighted",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "humming": "eyes closed in a smile, music notes beside her: humming along, enjoying a song",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "puzzled": "head tilted, eyes up and aside, a question mark beside her: puzzled, wondering",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "sleepy": "lids heavy, head drooping, \"Z z z\" beside her: sleepy, dozing off",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "beat": "a hand beat for emphasis while explaining",
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「哈哈哈哈！」",
+            "type": "choice"
+          },
+          "say1": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「你是想把迟到也冻住吗？」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: eyes closed in a smile (^ ^), content and happy. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery laugh, everything singing",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "你是想把迟到也冻住吗",
+                    "哈哈哈哈"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "cry",
+                    "dizzy",
+                    "lovestruck",
+                    "maniac",
+                    "none",
+                    "silly",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "blushing",
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "excited",
+                    "focused",
+                    "humming",
+                    "none",
+                    "pout",
+                    "puzzled",
+                    "shy",
+                    "sleepy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "beat",
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say1": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "say1",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - 你是想把迟到也冻住吗: as she says 「你是想把迟到也冻住吗」\n  - 哈哈哈哈: as she says 「哈哈哈哈」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - cry: a crying face\n  - dizzy: dizzy, seeing stars\n  - lovestruck: lovestruck, heart eyes\n  - maniac: laughing like a maniac\n  - none: they asked for none of these, or her reply does not go along\n  - silly: a silly, dopey face\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - blushing: eyes down and away, small smile, cheeks blushing: shy, flustered\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - excited: eyes wide and bright, big smile, sparkles beside her: excited, delighted\n  - focused: eyes narrowed, leaning in: concentrating\n  - humming: eyes closed in a smile, music notes beside her: humming along, enjoying a song\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - puzzled: head tilted, eyes up and aside, a question mark beside her: puzzled, wondering\n  - shy: eyes down and away, head lowered, small smile: shy\n  - sleepy: lids heavy, head drooping, \"Z z z\" beside her: sleepy, dozing off\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - beat: a hand beat for emphasis while explaining\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「哈哈哈哈！」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay1: How she says 「你是想把迟到也冻住吗？」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: eyes closed in a smile (^ ^), content and happy. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "”这是小说角色的台词": "as she says 「”这是小说角色的台词」",
+              "她说：“哈哈": "as she says 「她说：“哈哈」",
+              "我太开心了": "as she says 「我太开心了」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "none": "they asked for none of these, or her reply does not go along",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "excited": "eyes wide and bright, big smile, sparkles beside her: excited, delighted",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "humming": "eyes closed in a smile, music notes beside her: humming along, enjoying a song",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「她说：“哈哈，我太开心了！”」",
+            "type": "choice"
+          },
+          "say1": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「这是小说角色的台词。」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: lids heavy, head drooping: sleepy. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery quote, drowsy with accents",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "”这是小说角色的台词",
+                    "她说：“哈哈",
+                    "我太开心了"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "none",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "excited",
+                    "focused",
+                    "humming",
+                    "none",
+                    "pout",
+                    "shy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say1": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "say1",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - ”这是小说角色的台词: as she says 「”这是小说角色的台词」\n  - 她说：“哈哈: as she says 「她说：“哈哈」\n  - 我太开心了: as she says 「我太开心了」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - none: they asked for none of these, or her reply does not go along\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - excited: eyes wide and bright, big smile, sparkles beside her: excited, delighted\n  - focused: eyes narrowed, leaning in: concentrating\n  - humming: eyes closed in a smile, music notes beside her: humming along, enjoying a song\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - shy: eyes down and away, head lowered, small smile: shy\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「她说：“哈哈，我太开心了！”」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay1: How she says 「这是小说角色的台词。」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: lids heavy, head drooping: sleepy. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "好啊": "as she says 「好啊」",
+              "看我的": "as she says 「看我的」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "cry": "a crying face",
+              "dizzy": "dizzy, seeing stars",
+              "lovestruck": "lovestruck, heart eyes",
+              "maniac": "laughing like a maniac",
+              "none": "they asked for none of these, or her reply does not go along",
+              "silly": "a silly, dopey face",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "bounce": "delight, eagerness",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「好啊，看我的！」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery asked face, no rig",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "好啊",
+                    "看我的"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "cry",
+                    "dizzy",
+                    "lovestruck",
+                    "maniac",
+                    "none",
+                    "silly",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "drowsy",
+                    "none",
+                    "pout",
+                    "smug",
+                    "surprised",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "bounce",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - 好啊: as she says 「好啊」\n  - 看我的: as she says 「看我的」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - cry: a crying face\n  - dizzy: dizzy, seeing stars\n  - lovestruck: lovestruck, heart eyes\n  - maniac: laughing like a maniac\n  - none: they asked for none of these, or her reply does not go along\n  - silly: a silly, dopey face\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - drowsy: lids heavy, head drooping: sleepy\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - bounce: delight, eagerness\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「好啊，看我的！」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "好啊": "as she says 「好啊」",
+              "看我的": "as she says 「看我的」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "none": "they asked for none of these, or her reply does not go along",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "beat": "a hand beat for emphasis while explaining",
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「好啊，看我的！」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery asked face, page hidden",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "好啊",
+                    "看我的"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "none",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "focused",
+                    "none",
+                    "pout",
+                    "shy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "beat",
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - 好啊: as she says 「好啊」\n  - 看我的: as she says 「看我的」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - none: they asked for none of these, or her reply does not go along\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - focused: eyes narrowed, leaning in: concentrating\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - shy: eyes down and away, head lowered, small smile: shy\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - beat: a hand beat for emphasis while explaining\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「好啊，看我的！」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "anchor": {
+            "criteria": {
+              "不过我愿意慢慢说": "as she says 「不过我愿意慢慢说」",
+              "也许吧": "as she says 「也许吧」",
+              "你觉得呢": "as she says 「你觉得呢」",
+              "其实可以先把原因说清楚": "as she says 「其实可以先把原因说清楚」",
+              "还有点难受": "as she says 「还有点难受」"
+            },
+            "instructions": "On which words of her reply does that movement land?",
+            "type": "choice"
+          },
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "cry": "a crying face",
+              "dizzy": "dizzy, seeing stars",
+              "lovestruck": "lovestruck, heart eyes",
+              "maniac": "laughing like a maniac",
+              "none": "they asked for none of these, or her reply does not go along",
+              "silly": "a silly, dopey face",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "blushing": "eyes down and away, small smile, cheeks blushing: shy, flustered",
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "excited": "eyes wide and bright, big smile, sparkles beside her: excited, delighted",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "humming": "eyes closed in a smile, music notes beside her: humming along, enjoying a song",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "puzzled": "head tilted, eyes up and aside, a question mark beside her: puzzled, wondering",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "sleepy": "lids heavy, head drooping, \"Z z z\" beside her: sleepy, dozing off",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "beat": "a hand beat for emphasis while explaining",
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "say0": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「还有点难受。」",
+            "type": "choice"
+          },
+          "say1": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「不过我愿意慢慢说。」",
+            "type": "choice"
+          },
+          "say2": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「其实可以先把原因说清楚。」",
+            "type": "choice"
+          },
+          "say3": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「你觉得呢？」",
+            "type": "choice"
+          },
+          "say4": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「嗯……」",
+            "type": "choice"
+          },
+          "say5": {
+            "criteria": {
+              "ask": "a real question or a guess put to them",
+              "check-in": "checking how they take it",
+              "explain": "a turn of thought, earnest explaining",
+              "hesitate": "hesitating or puzzling it out, unsure",
+              "laugh": "she is actually laughing",
+              "none": "none of these, said plainly",
+              "tease": "ribbing them fondly, a joke or rhetorical jab at their expense"
+            },
+            "instructions": "How she says 「也许吧！」",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: eyes closed in a smile (^ ^), content and happy. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery long, everything singing",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "anchor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "不过我愿意慢慢说",
+                    "也许吧",
+                    "你觉得呢",
+                    "其实可以先把原因说清楚",
+                    "还有点难受"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "cry",
+                    "dizzy",
+                    "lovestruck",
+                    "maniac",
+                    "none",
+                    "silly",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "blushing",
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "excited",
+                    "focused",
+                    "humming",
+                    "none",
+                    "pout",
+                    "puzzled",
+                    "shy",
+                    "sleepy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "beat",
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say0": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say1": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say2": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say3": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say4": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "say5": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ask",
+                    "check-in",
+                    "explain",
+                    "hesitate",
+                    "laugh",
+                    "none",
+                    "tease"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "anchor",
+            "askedFor",
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "say0",
+            "say1",
+            "say2",
+            "say3",
+            "say4",
+            "say5",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nanchor: On which words of her reply does that movement land?\n  - 不过我愿意慢慢说: as she says 「不过我愿意慢慢说」\n  - 也许吧: as she says 「也许吧」\n  - 你觉得呢: as she says 「你觉得呢」\n  - 其实可以先把原因说清楚: as she says 「其实可以先把原因说清楚」\n  - 还有点难受: as she says 「还有点难受」\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - cry: a crying face\n  - dizzy: dizzy, seeing stars\n  - lovestruck: lovestruck, heart eyes\n  - maniac: laughing like a maniac\n  - none: they asked for none of these, or her reply does not go along\n  - silly: a silly, dopey face\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - blushing: eyes down and away, small smile, cheeks blushing: shy, flustered\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - excited: eyes wide and bright, big smile, sparkles beside her: excited, delighted\n  - focused: eyes narrowed, leaning in: concentrating\n  - humming: eyes closed in a smile, music notes beside her: humming along, enjoying a song\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - puzzled: head tilted, eyes up and aside, a question mark beside her: puzzled, wondering\n  - shy: eyes down and away, head lowered, small smile: shy\n  - sleepy: lids heavy, head drooping, \"Z z z\" beside her: sleepy, dozing off\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - beat: a hand beat for emphasis while explaining\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nsay0: How she says 「还有点难受。」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay1: How she says 「不过我愿意慢慢说。」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay2: How she says 「其实可以先把原因说清楚。」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay3: How she says 「你觉得呢？」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay4: How she says 「嗯……」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nsay5: How she says 「也许吧！」\n  - ask: a real question or a guess put to them\n  - check-in: checking how they take it\n  - explain: a turn of thought, earnest explaining\n  - hesitate: hesitating or puzzling it out, unsure\n  - laugh: she is actually laughing\n  - none: none of these, said plainly\n  - tease: ribbing them fondly, a joke or rhetorical jab at their expense\n\nshift: Her face now: eyes closed in a smile (^ ^), content and happy. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "askedFor": {
+            "criteria": {
+              "angry": "an angry face",
+              "none": "they asked for none of these, or her reply does not go along",
+              "speechless": "a speechless, done-with-this face",
+              "think": "a thinking face"
+            },
+            "instructions": "Did they ask her to make one of these faces, and does her reply go along with making it?",
+            "type": "choice"
+          },
+          "face": {
+            "criteria": {
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "excited": "eyes wide and bright, big smile, sparkles beside her: excited, delighted",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "humming": "eyes closed in a smile, music notes beside her: humming along, enjoying a song",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: lids heavy, head drooping: sleepy. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "delivery repeat, drowsy with accents",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "askedFor": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "angry",
+                    "none",
+                    "speechless",
+                    "think"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "excited",
+                    "focused",
+                    "humming",
+                    "none",
+                    "pout",
+                    "shy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "askedFor",
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\naskedFor: Did they ask her to make one of these faces, and does her reply go along with making it?\n  - angry: an angry face\n  - none: they asked for none of these, or her reply does not go along\n  - speechless: a speechless, done-with-this face\n  - think: a thinking face\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - excited: eyes wide and bright, big smile, sparkles beside her: excited, delighted\n  - focused: eyes narrowed, leaning in: concentrating\n  - humming: eyes closed in a smile, music notes beside her: humming along, enjoying a song\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - shy: eyes down and away, head lowered, small smile: shy\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nshift: Her face now: lids heavy, head drooping: sleepy. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "face": {
+            "criteria": {
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "bounce": "delight, eagerness",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "reaction, no rig",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "drowsy",
+                    "none",
+                    "pout",
+                    "smug",
+                    "surprised",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "bounce",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "face",
+            "feeling",
+            "gesture",
+            "own",
+            "posture",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - drowsy: lids heavy, head drooping: sleepy\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - bounce: delight, eagerness\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nshift: Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    },
+    {
+      "input": {
+        "questions": {
+          "face": {
+            "criteria": {
+              "content": "eyes closed in a smile (^ ^), content and happy",
+              "downcast": "eyes lowered under half-closed lids, on something in front of her",
+              "dreamy": "eyes raised and soft, head up: lost in a daydream",
+              "drowsy": "lids heavy, head drooping: sleepy",
+              "focused": "eyes narrowed, leaning in: concentrating",
+              "none": "none of these: her face as the other answers make it",
+              "pout": "head turned away, side-eye, mouth pulled down: pouting",
+              "shy": "eyes down and away, head lowered, small smile: shy",
+              "smug": "half-lidded eyes, smile, chin up: pleased with herself",
+              "surprised": "eyes wide, mouth open: caught by surprise",
+              "teasing": "one eye narrowed, sly smile: teasing",
+              "tender": "soft smiling eyes, gentle smile, head tilted: tender",
+              "worried": "eyes down and aside, mouth turned down: worried, troubled"
+            },
+            "instructions": "Which of these whole looks her face takes while she says it, if any.",
+            "type": "choice"
+          },
+          "feeling": {
+            "criteria": {
+              "amused": "finds it funny, laughing",
+              "calm": "even, nothing stirred",
+              "curious": "interested, wants to know more",
+              "excited": "eager, lit up",
+              "low": "sad or worn",
+              "puzzled": "honestly unsure, guessing",
+              "shy": "flustered by praise or attention",
+              "sulky": "playfully put out",
+              "warm": "fond, glad of them"
+            },
+            "instructions": "What she herself feels as she says this (not what she reports of others).",
+            "type": "choice"
+          },
+          "gaze": {
+            "criteria": {
+              "aside": "aside, avoiding their eyes",
+              "away-thinking": "off to the side, thinking",
+              "down": "lowered",
+              "listener": "on the person"
+            },
+            "instructions": "Where her eyes mostly are while she says it.",
+            "type": "choice"
+          },
+          "gesture": {
+            "criteria": {
+              "beat": "a hand beat for emphasis while explaining",
+              "bounce": "delight, eagerness",
+              "glance": "a quick look away and back, checking or avoiding",
+              "nod": "agreement, acknowledgement",
+              "none": "nothing beyond her ordinary talking",
+              "shake": "refusal, disbelief, 'no no'",
+              "shrug": "who knows, casual dismissal",
+              "sigh": "tired, relieved, exasperated"
+            },
+            "instructions": "The one movement that goes and comes back by itself that best carries this, if any.",
+            "type": "choice"
+          },
+          "own": {
+            "criteria": {
+              "false": "quoting or describing someone else, or a story",
+              "true": "her own feeling, in her own words"
+            },
+            "instructions": "Is she showing her own feeling, rather than quoting or describing someone else's?",
+            "type": "noul"
+          },
+          "posture": {
+            "criteria": {
+              "closed": "drawn in, guarded",
+              "leaning-in": "leaning in, engaged",
+              "neutral": "at ease",
+              "open": "open, turned towards them"
+            },
+            "instructions": "How she holds herself through it.",
+            "type": "choice"
+          },
+          "shift": {
+            "criteria": {
+              "ease": "settles into the new look naturally: eyes first, the head after",
+              "pause": "goes still for a beat, then changes: taken aback, it sinks in first",
+              "slow": "drifts into it slowly, half reluctant; the head lags behind the eyes",
+              "snap": "snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted"
+            },
+            "instructions": "Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.",
+            "type": "choice"
+          },
+          "tilt": {
+            "criteria": [
+              "no tilt",
+              "slight tilt, small yet plainly seen",
+              "clear tilt, as in puzzlement or curiosity",
+              "strong tilt, as far as it goes"
+            ],
+            "instructions": "How far her head tilts to one side while she says it.",
+            "type": "score"
+          }
+        }
+      },
+      "name": "reaction, page hidden",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "face": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "content",
+                    "downcast",
+                    "dreamy",
+                    "drowsy",
+                    "focused",
+                    "none",
+                    "pout",
+                    "shy",
+                    "smug",
+                    "surprised",
+                    "teasing",
+                    "tender",
+                    "worried"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "feeling": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "amused",
+                    "calm",
+                    "curious",
+                    "excited",
+                    "low",
+                    "puzzled",
+                    "shy",
+                    "sulky",
+                    "warm"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gaze": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "aside",
+                    "away-thinking",
+                    "down",
+                    "listener"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "gesture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "beat",
+                    "bounce",
+                    "glance",
+                    "nod",
+                    "none",
+                    "shake",
+                    "shrug",
+                    "sigh"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "own": {
+              "additionalProperties": false,
+              "properties": {
+                "noul": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "noul"
+              ],
+              "type": "object"
+            },
+            "posture": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "closed",
+                    "leaning-in",
+                    "neutral",
+                    "open"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "shift": {
+              "additionalProperties": false,
+              "properties": {
+                "choice": {
+                  "enum": [
+                    "ease",
+                    "pause",
+                    "slow",
+                    "snap"
+                  ],
+                  "type": "string"
+                },
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "choice",
+                "confidence"
+              ],
+              "type": "object"
+            },
+            "tilt": {
+              "additionalProperties": false,
+              "properties": {
+                "confidence": {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                "score": {
+                  "maximum": 3,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              },
+              "required": [
+                "score",
+                "confidence"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "face",
+            "feeling",
+            "gaze",
+            "gesture",
+            "own",
+            "posture",
+            "shift",
+            "tilt"
+          ],
+          "type": "object"
+        },
+        "system": "You judge how a character acts at one moment of a chat: the input says who she is, what they said, what she replies and her mood. Answer every question below about her, as JSON. `confidence` is how sure you are, from 0 to 1: low when the moment does not show it plainly; what she does not show cannot be wrong. For a yes/no question, `noul` is the probability that the answer is true. For a scale, `score` runs from 0 (its first level) to the number of its last level.\n\nface: Which of these whole looks her face takes while she says it, if any.\n  - content: eyes closed in a smile (^ ^), content and happy\n  - downcast: eyes lowered under half-closed lids, on something in front of her\n  - dreamy: eyes raised and soft, head up: lost in a daydream\n  - drowsy: lids heavy, head drooping: sleepy\n  - focused: eyes narrowed, leaning in: concentrating\n  - none: none of these: her face as the other answers make it\n  - pout: head turned away, side-eye, mouth pulled down: pouting\n  - shy: eyes down and away, head lowered, small smile: shy\n  - smug: half-lidded eyes, smile, chin up: pleased with herself\n  - surprised: eyes wide, mouth open: caught by surprise\n  - teasing: one eye narrowed, sly smile: teasing\n  - tender: soft smiling eyes, gentle smile, head tilted: tender\n  - worried: eyes down and aside, mouth turned down: worried, troubled\n\nfeeling: What she herself feels as she says this (not what she reports of others).\n  - amused: finds it funny, laughing\n  - calm: even, nothing stirred\n  - curious: interested, wants to know more\n  - excited: eager, lit up\n  - low: sad or worn\n  - puzzled: honestly unsure, guessing\n  - shy: flustered by praise or attention\n  - sulky: playfully put out\n  - warm: fond, glad of them\n\ngaze: Where her eyes mostly are while she says it.\n  - aside: aside, avoiding their eyes\n  - away-thinking: off to the side, thinking\n  - down: lowered\n  - listener: on the person\n\ngesture: The one movement that goes and comes back by itself that best carries this, if any.\n  - beat: a hand beat for emphasis while explaining\n  - bounce: delight, eagerness\n  - glance: a quick look away and back, checking or avoiding\n  - nod: agreement, acknowledgement\n  - none: nothing beyond her ordinary talking\n  - shake: refusal, disbelief, 'no no'\n  - shrug: who knows, casual dismissal\n  - sigh: tired, relieved, exasperated\n\nown: Is she showing her own feeling, rather than quoting or describing someone else's?\n  - false: quoting or describing someone else, or a story\n  - true: her own feeling, in her own words\n\nposture: How she holds herself through it.\n  - closed: drawn in, guarded\n  - leaning-in: leaning in, engaged\n  - neutral: at ease\n  - open: open, turned towards them\n\nshift: Her face now: her ordinary face. If her look changes while she says it, how she gets from this one to the next.\n  - ease: settles into the new look naturally: eyes first, the head after\n  - pause: goes still for a beat, then changes: taken aback, it sinks in first\n  - slow: drifts into it slowly, half reluctant; the head lags behind the eyes\n  - snap: snaps out of what she was in, at once, with a small start: woken up, caught off guard, suddenly delighted\n\ntilt: How far her head tilts to one side while she says it.\n  0: no tilt\n  1: slight tilt, small yet plainly seen\n  2: clear tilt, as in puzzlement or curiosity\n  3: strong tilt, as far as it goes\n"
+      }
+    }
+  ],
+  "version": 1
+}

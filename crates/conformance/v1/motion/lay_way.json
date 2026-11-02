@@ -1,0 +1,5236 @@
+{
+  "call": "motion.lay_way",
+  "cases": [
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "pout",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "none",
+            "confidence": 0.7
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "drowsy",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "headNod": "-clear",
+                "headTilt": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "pause"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "check-in",
+              "text": "才、才没有呢……"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery shy, no rig, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "drowsy",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "headNod": "-clear",
+                "headTilt": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "pause"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "check-in",
+              "text": "才、才没有呢……"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "drowsy",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "drowsy",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "slight",
+                "headTilt": "-slight",
+                "headTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "才、才没有呢……"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "clear",
+                "kind": "shrug"
+              },
+              "text": "不过，谢谢你这么说。"
+            }
+          ]
+        }
+      },
+      "name": "delivery shy, no rig, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "slight",
+                "headTilt": "-slight",
+                "headTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "drowsy"
+            ]
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "才、才没有呢……"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "clear",
+                "kind": "shrug"
+              },
+              "text": "不过，谢谢你这么说。"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "surprised",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "drowsy",
+            "confidence": 0.2
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "slight",
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "nod"
+              },
+              "text": "不过"
+            }
+          ]
+        }
+      },
+      "name": "delivery shy, head only, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "slight",
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null,
+            "via": [
+              "surprised"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "nod"
+              },
+              "text": "不过"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "none",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "dreamy",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "ask",
+              "text": "才、才没有呢……"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery shy, page hidden, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "ask",
+              "text": "才、才没有呢……"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "smug",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "tender",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "content",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "slight",
+                "browTiltLeft": "-slight",
+                "browTiltRight": "strong",
+                "chestSway": "slight",
+                "eyeOpenLeft": "-strong",
+                "eyeOpenRight": "-strong",
+                "eyeSmile": "clear",
+                "headTilt": "clear",
+                "headTurn": "clear",
+                "leftArmSwing": "-clear",
+                "mouthNarrow": "clear",
+                "mouthOpen": "strong",
+                "mouthSmile": "clear",
+                "rightArmRaise": "-slight",
+                "speechless": "slight",
+                "torsoLean": "-slight",
+                "torsoPitch": "-strong",
+                "torsoRise": "-strong",
+                "torsoTurn": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "slow"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "explain",
+              "text": "哈哈哈哈！"
+            },
+            {
+              "intent": "explain",
+              "text": "你是想把迟到也冻住吗？"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "nod"
+              },
+              "text": "哈哈哈哈！"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "shake"
+              },
+              "text": "你是想把迟到也冻住吗？"
+            }
+          ]
+        }
+      },
+      "name": "delivery laugh, bust speaking, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "content",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "slight",
+                "browTiltLeft": "-slight",
+                "browTiltRight": "strong",
+                "chestSway": "slight",
+                "eyeOpenLeft": "-strong",
+                "eyeOpenRight": "-strong",
+                "eyeSmile": "clear",
+                "headTilt": "clear",
+                "headTurn": "clear",
+                "leftArmSwing": "-clear",
+                "mouthNarrow": "clear",
+                "mouthOpen": "strong",
+                "mouthSmile": "clear",
+                "rightArmRaise": "-slight",
+                "speechless": "slight",
+                "torsoLean": "-slight",
+                "torsoPitch": "-strong",
+                "torsoRise": "-strong",
+                "torsoTurn": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "slow",
+            "via": [
+              "smug",
+              "tender"
+            ]
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "explain",
+              "text": "哈哈哈哈！"
+            },
+            {
+              "intent": "explain",
+              "text": "你是想把迟到也冻住吗？"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "nod"
+              },
+              "text": "哈哈哈哈！"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "shake"
+              },
+              "text": "你是想把迟到也冻住吗？"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "puzzled",
+            "confidence": 0.2
+          },
+          "then": {
+            "choice": "teasing",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browTiltRight": "-strong",
+                "eyeOpenRight": "-clear",
+                "headNod": "slight",
+                "headTilt": "-clear",
+                "leftArmRaise": "slight",
+                "leftArmSwing": "-strong",
+                "lovestruck": "strong",
+                "mouthOpen": "clear",
+                "mouthSmile": "clear",
+                "rightArmSwing": "strong",
+                "sleepZ": "strong",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "shrug"
+              },
+              "text": "你是想把迟到也冻住吗？"
+            }
+          ]
+        }
+      },
+      "name": "delivery laugh, everything singing, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browTiltRight": "-strong",
+                "eyeOpenRight": "-clear",
+                "headNod": "slight",
+                "headTilt": "-clear",
+                "leftArmRaise": "slight",
+                "leftArmSwing": "-strong",
+                "lovestruck": "strong",
+                "mouthOpen": "clear",
+                "mouthSmile": "clear",
+                "rightArmSwing": "strong",
+                "sleepZ": "strong",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "shrug"
+              },
+              "text": "你是想把迟到也冻住吗？"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "dreamy",
+            "confidence": 0.29
+          },
+          "then": {
+            "choice": "shy",
+            "confidence": 0.05
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "pout",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "gazeHorizontal": "-clear",
+                "headNod": "-slight",
+                "headTilt": "strong",
+                "headTurn": "clear",
+                "mouthRound": "slight",
+                "mouthSmile": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery quote, bust speaking, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "pout",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "gazeHorizontal": "-clear",
+                "headNod": "-slight",
+                "headTilt": "strong",
+                "headTurn": "clear",
+                "mouthRound": "slight",
+                "mouthSmile": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "downcast",
+            "confidence": 0.29
+          },
+          "then": {
+            "choice": "focused",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {},
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "她说：“哈哈，我太开心了！”"
+            },
+            {
+              "intent": "check-in",
+              "text": "这是小说角色的台词。"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery quote, drowsy with accents, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {},
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "她说：“哈哈，我太开心了！”"
+            },
+            {
+              "intent": "check-in",
+              "text": "这是小说角色的台词。"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "tender",
+            "confidence": 0.45
+          },
+          "then": {
+            "choice": "none",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": "speechless",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "strong",
+                "gazeVertical": "-strong",
+                "headNod": "-slight",
+                "torsoLean": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "speechless",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery quote, drowsy with accents, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "speechless",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "strong",
+                "gazeVertical": "-strong",
+                "headNod": "-slight",
+                "torsoLean": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap",
+            "via": [
+              "tender"
+            ]
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "speechless",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "focused",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "pout",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "warm",
+            "face": "surprised",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltLeft": "clear",
+                "chestSway": "clear",
+                "eyeOpenRight": "-strong",
+                "eyeWide": "strong",
+                "gazeHorizontal": "-strong",
+                "hairSway": "strong",
+                "headNod": "slight",
+                "headTilt": "strong",
+                "headTurn": "-slight",
+                "mouthNarrow": "clear",
+                "mouthOpen": "clear",
+                "mouthSmile": "-clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "slow"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "clear",
+                "kind": "bounce"
+              },
+              "text": "她说：“哈哈，我太开心了！”"
+            },
+            {
+              "move": {
+                "amount": "clear",
+                "kind": "wink"
+              },
+              "text": "这是小说角色的台词。"
+            }
+          ]
+        }
+      },
+      "name": "delivery quote, maniac speaking, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "warm",
+            "face": "surprised",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltLeft": "clear",
+                "chestSway": "clear",
+                "eyeOpenRight": "-strong",
+                "eyeWide": "strong",
+                "gazeHorizontal": "-strong",
+                "hairSway": "strong",
+                "headNod": "slight",
+                "headTilt": "strong",
+                "headTurn": "-slight",
+                "mouthNarrow": "clear",
+                "mouthOpen": "clear",
+                "mouthSmile": "-clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "slow"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "clear",
+                "kind": "bounce"
+              },
+              "text": "她说：“哈哈，我太开心了！”"
+            },
+            {
+              "move": {
+                "amount": "clear",
+                "kind": "wink"
+              },
+              "text": "这是小说角色的台词。"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "surprised",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "surprised",
+            "confidence": 0.05
+          }
+        },
+        "plan": {
+          "askedFor": "think",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "teasing",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "slight",
+                "eyeOpenLeft": "-clear",
+                "gazeHorizontal": "slight",
+                "headTilt": "slight",
+                "mouthSmile": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "think",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery quote, face hidden, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "think",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "teasing",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "slight",
+                "eyeOpenLeft": "-clear",
+                "gazeHorizontal": "slight",
+                "headTilt": "slight",
+                "mouthSmile": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "surprised"
+            ]
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "think",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "她说：“哈哈，我太开心了！”"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "content",
+            "confidence": 0.95
+          },
+          "then": {
+            "choice": "downcast",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-clear",
+                "headNod": "-clear",
+                "headTilt": "slight",
+                "torsoPitch": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery asked face, bust speaking, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-clear",
+                "headNod": "-clear",
+                "headTilt": "slight",
+                "torsoPitch": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": "snap",
+            "via": [
+              "content",
+              "downcast"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "worried",
+            "confidence": 0.29
+          },
+          "then": {
+            "choice": "worried",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": "think",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "surprised",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "eyeWide": "strong",
+                "gazeHorizontal": "-clear",
+                "headNod": "slight",
+                "mouthOpen": "clear",
+                "mouthSmile": "slight",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "think",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery asked face, bust speaking, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": "think",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "surprised",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "eyeWide": "strong",
+                "gazeHorizontal": "-clear",
+                "headNod": "slight",
+                "mouthOpen": "clear",
+                "mouthSmile": "slight",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "think",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "dreamy",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "dreamy",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "torsoLean": "-slight",
+                "torsoPitch": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery asked face, bust speaking, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "torsoLean": "-slight",
+                "torsoPitch": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap",
+            "via": [
+              "dreamy"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "shy",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "content",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": "think",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "dreamy",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "chestSway": "slight",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "strong",
+                "eyeWide": "slight",
+                "gazeHorizontal": "slight",
+                "gazeVertical": "clear",
+                "hairSway": "clear",
+                "headNod": "slight",
+                "headTilt": "slight",
+                "mouthNarrow": "slight",
+                "mouthRound": "strong",
+                "mouthSeal": "strong",
+                "mouthSmile": "slight",
+                "mouthWide": "slight",
+                "rightArmRaise": "-clear",
+                "rightArmSwing": "-clear",
+                "speechless": "slight",
+                "torsoLean": "-strong",
+                "torsoPitch": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "think",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery asked face, page hidden, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": "think",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "dreamy",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "chestSway": "slight",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "strong",
+                "eyeWide": "slight",
+                "gazeHorizontal": "slight",
+                "gazeVertical": "clear",
+                "hairSway": "clear",
+                "headNod": "slight",
+                "headTilt": "slight",
+                "mouthNarrow": "slight",
+                "mouthRound": "strong",
+                "mouthSeal": "strong",
+                "mouthSmile": "slight",
+                "mouthWide": "slight",
+                "rightArmRaise": "-clear",
+                "rightArmSwing": "-clear",
+                "speechless": "slight",
+                "torsoLean": "-strong",
+                "torsoPitch": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": null,
+            "via": [
+              "shy",
+              "content"
+            ]
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "think",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "focused",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "pout",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "slow"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "explain",
+              "text": "还有点难受。"
+            },
+            {
+              "intent": "none",
+              "text": "你觉得呢？"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "delivery long, everything singing, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "slow",
+            "via": [
+              "focused",
+              "pout"
+            ]
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "explain",
+              "text": "还有点难受。"
+            },
+            {
+              "intent": "none",
+              "text": "你觉得呢？"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "plain",
+            "confidence": 0.45
+          },
+          "then": {
+            "choice": "shy",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": "cry",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "focused",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "blush": "strong",
+                "browLift": "-clear",
+                "chestSway": "strong",
+                "cry": "clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeWide": "slight",
+                "headNod": "-slight",
+                "headTurn": "strong",
+                "leftArmRaise": "strong",
+                "leftArmSwing": "-clear",
+                "lovestruck": "strong",
+                "mouthNarrow": "clear",
+                "mouthOpen": "strong",
+                "mouthRound": "slight",
+                "mouthSeal": "slight",
+                "mouthSmile": "-slight",
+                "questionMark": "strong",
+                "rightArmSwing": "slight",
+                "silly": "strong",
+                "torsoPitch": "clear",
+                "torsoRise": "-slight",
+                "torsoTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "cry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "tease",
+              "text": "还有点难受。"
+            },
+            {
+              "intent": "laugh",
+              "text": "不过我愿意慢慢说。"
+            },
+            {
+              "intent": "hesitate",
+              "text": "你觉得呢？"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "shake"
+              },
+              "text": "还有点难受。"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "nod"
+              },
+              "text": "其实可以先把原因说清楚。"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "nod"
+              },
+              "text": "你觉得呢？"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "beat"
+              },
+              "text": "也许吧！"
+            }
+          ]
+        }
+      },
+      "name": "delivery long, everything singing, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "cry",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "focused",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "blush": "strong",
+                "browLift": "-clear",
+                "chestSway": "strong",
+                "cry": "clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeWide": "slight",
+                "headNod": "-slight",
+                "headTurn": "strong",
+                "leftArmRaise": "strong",
+                "leftArmSwing": "-clear",
+                "lovestruck": "strong",
+                "mouthNarrow": "clear",
+                "mouthOpen": "strong",
+                "mouthRound": "slight",
+                "mouthSeal": "slight",
+                "mouthSmile": "-slight",
+                "questionMark": "strong",
+                "rightArmSwing": "slight",
+                "silly": "strong",
+                "torsoPitch": "clear",
+                "torsoRise": "-slight",
+                "torsoTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null,
+            "via": [
+              "plain"
+            ]
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "cry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "tease",
+              "text": "还有点难受。"
+            },
+            {
+              "intent": "laugh",
+              "text": "不过我愿意慢慢说。"
+            },
+            {
+              "intent": "hesitate",
+              "text": "你觉得呢？"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "shake"
+              },
+              "text": "还有点难受。"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "nod"
+              },
+              "text": "其实可以先把原因说清楚。"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "nod"
+              },
+              "text": "你觉得呢？"
+            },
+            {
+              "move": {
+                "amount": "strong",
+                "kind": "beat"
+              },
+              "text": "也许吧！"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "none",
+            "confidence": 0.45
+          },
+          "then": {
+            "choice": "tender",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "worried",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "clear",
+                "browTiltLeft": "clear",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "mouthSmile": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "pause"
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "shrug"
+              },
+              "text": "哈哈"
+            }
+          ]
+        }
+      },
+      "name": "delivery repeat, bust speaking, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "worried",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "clear",
+                "browTiltLeft": "clear",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "mouthSmile": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "pause"
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "shrug"
+              },
+              "text": "哈哈"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "shy",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "pout",
+            "confidence": 0.7
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "content",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "clear",
+                "browLift": "slight",
+                "eyeOpenLeft": "-strong",
+                "eyeOpenRight": "-strong",
+                "eyeSmile": "clear",
+                "headTilt": "-strong",
+                "leftArmRaise": "strong",
+                "mouthNarrow": "clear",
+                "mouthOpen": "slight",
+                "mouthSeal": "strong",
+                "mouthSmile": "clear",
+                "mouthWide": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery repeat, bust speaking, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "content",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "clear",
+                "browLift": "slight",
+                "eyeOpenLeft": "-strong",
+                "eyeOpenRight": "-strong",
+                "eyeSmile": "clear",
+                "headTilt": "-strong",
+                "leftArmRaise": "strong",
+                "mouthNarrow": "clear",
+                "mouthOpen": "slight",
+                "mouthSeal": "strong",
+                "mouthSmile": "clear",
+                "mouthWide": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap",
+            "via": [
+              "shy",
+              "pout"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "humming",
+            "confidence": 0.2
+          },
+          "then": {
+            "choice": "none",
+            "confidence": 0.05
+          }
+        },
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery repeat, drowsy with accents, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headTilt": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "surprised",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "focused",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headTilt": "slight",
+                "headTurn": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "slow"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery repeat, drowsy with accents, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headTilt": "slight",
+                "headTurn": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "slow",
+            "via": [
+              "surprised"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "none",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "worried",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "clear",
+                "browTiltLeft": "clear",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "mouthSmile": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery repeat, face hidden, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "worried",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "clear",
+                "browTiltLeft": "clear",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "mouthSmile": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "worried",
+            "confidence": 0.7
+          }
+        },
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "clear",
+                "gazeVertical": "slight",
+                "headNod": "-slight",
+                "leftArmRaise": "slight",
+                "leftArmSwing": "strong",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery repeat, face hidden, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "clear",
+                "gazeVertical": "slight",
+                "headNod": "-slight",
+                "leftArmRaise": "slight",
+                "leftArmSwing": "strong",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "worried"
+            ]
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "then": {
+            "choice": "none",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "subdued",
+            "face": "teasing",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "strong",
+                "browLift": "slight",
+                "eyeOpenLeft": "-clear",
+                "eyeOpenRight": "-clear",
+                "gazeHorizontal": "slight",
+                "headTilt": "slight",
+                "leftArmSwing": "-clear",
+                "mouthSeal": "slight",
+                "mouthSmile": "clear",
+                "mouthWide": "clear",
+                "rightArmSwing": "strong",
+                "torsoLean": "strong",
+                "torsoPitch": "slight",
+                "torsoRise": "strong",
+                "torsoTurn": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "delivery repeat, face hidden, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "subdued",
+            "face": "teasing",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "strong",
+                "browLift": "slight",
+                "eyeOpenLeft": "-clear",
+                "eyeOpenRight": "-clear",
+                "gazeHorizontal": "slight",
+                "headTilt": "slight",
+                "leftArmSwing": "-clear",
+                "mouthSeal": "slight",
+                "mouthSmile": "clear",
+                "mouthWide": "clear",
+                "rightArmSwing": "strong",
+                "torsoLean": "strong",
+                "torsoPitch": "slight",
+                "torsoRise": "strong",
+                "torsoTurn": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "none",
+            "confidence": 0.29
+          },
+          "then": {
+            "choice": "focused",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-slight",
+                "headNod": "strong",
+                "headTilt": "slight",
+                "rightArmSwing": "-clear",
+                "torsoLean": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "ease"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "reaction, bust speaking, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-slight",
+                "headNod": "strong",
+                "headTilt": "slight",
+                "rightArmSwing": "-clear",
+                "torsoLean": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "ease"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "none",
+            "confidence": 0.95
+          },
+          "then": {
+            "choice": "smug",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "subdued",
+            "face": "worried",
+            "motionEnergy": 0.8,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "clear",
+                "browTiltLeft": "clear",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "mouthSmile": "-clear",
+                "torsoPitch": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "atMs": 300,
+              "move": {
+                "amount": "slight",
+                "kind": "sigh"
+              }
+            }
+          ]
+        }
+      },
+      "name": "reaction, page hidden, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "subdued",
+            "face": "worried",
+            "motionEnergy": 0.8,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "clear",
+                "browTiltLeft": "clear",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-slight",
+                "headNod": "-slight",
+                "headTilt": "-slight",
+                "mouthSmile": "-clear",
+                "torsoPitch": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "atMs": 300,
+              "move": {
+                "amount": "slight",
+                "kind": "sigh"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "content",
+            "confidence": 0.45
+          },
+          "then": {
+            "choice": "focused",
+            "confidence": 0.7
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "headNod": "-slight",
+                "headTilt": "clear",
+                "headTurn": "slight",
+                "torsoPitch": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "你今天的照片拍得真好看！"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "proactive, bust speaking, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "headNod": "-slight",
+                "headTilt": "clear",
+                "headTurn": "slight",
+                "torsoPitch": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null,
+            "via": [
+              "content",
+              "focused"
+            ]
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "none",
+              "text": "你今天的照片拍得真好看！"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "worried",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "tender",
+            "confidence": 0.2
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {},
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "shrug"
+              },
+              "text": "你今天的照片拍得真好看"
+            }
+          ]
+        }
+      },
+      "name": "proactive, everything singing, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {},
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": null,
+            "via": [
+              "worried"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "shrug"
+              },
+              "text": "你今天的照片拍得真好看"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "puzzled",
+            "confidence": 0.2
+          },
+          "then": {
+            "choice": "plain",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "warm",
+            "face": "teasing",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "blush": "slight",
+                "browLift": "slight",
+                "browTiltLeft": "-clear",
+                "chestSway": "clear",
+                "eyeOpenLeft": "-clear",
+                "eyeSmile": "slight",
+                "gazeHorizontal": "slight",
+                "hairSway": "clear",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "leftArmRaise": "strong",
+                "leftArmSwing": "-slight",
+                "mouthNarrow": "slight",
+                "mouthSeal": "slight",
+                "mouthSmile": "clear",
+                "musicNotes": "strong",
+                "rightArmSwing": "-strong",
+                "torsoRise": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "你今天的照片拍得真好看！"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "proactive, everything singing, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "warm",
+            "face": "teasing",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "blush": "slight",
+                "browLift": "slight",
+                "browTiltLeft": "-clear",
+                "chestSway": "clear",
+                "eyeOpenLeft": "-clear",
+                "eyeSmile": "slight",
+                "gazeHorizontal": "slight",
+                "hairSway": "clear",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "leftArmRaise": "strong",
+                "leftArmSwing": "-slight",
+                "mouthNarrow": "slight",
+                "mouthSeal": "slight",
+                "mouthSmile": "clear",
+                "musicNotes": "strong",
+                "rightArmSwing": "-strong",
+                "torsoRise": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "你今天的照片拍得真好看！"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "content",
+            "confidence": 0.2
+          },
+          "then": {
+            "choice": "pout",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "excited",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeSmile": "slight",
+                "eyeWide": "clear",
+                "gazeHorizontal": "slight",
+                "gazeVertical": "slight",
+                "headTilt": "strong",
+                "mouthSmile": "clear",
+                "sparkles": "strong",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "atMs": 300,
+              "move": {
+                "amount": "slight",
+                "kind": "nod"
+              }
+            }
+          ]
+        }
+      },
+      "name": "proactive unsaid, drowsy with accents, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "excited",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeSmile": "slight",
+                "eyeWide": "clear",
+                "gazeHorizontal": "slight",
+                "gazeVertical": "slight",
+                "headTilt": "strong",
+                "mouthSmile": "clear",
+                "sparkles": "strong",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "atMs": 300,
+              "move": {
+                "amount": "slight",
+                "kind": "nod"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "content",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "shy",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "headTurn": "slight",
+                "mouthSmile": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "proactive unsaid, drowsy with accents, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "shy",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "headTurn": "slight",
+                "mouthSmile": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null,
+            "via": [
+              "content"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "focused",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "pout",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "subdued",
+            "face": "tender",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "strong",
+                "browLift": "-slight",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "clear",
+                "hairSway": "clear",
+                "headTilt": "slight",
+                "mouthNarrow": "clear",
+                "mouthOpen": "clear",
+                "mouthSeal": "slight",
+                "mouthSmile": "clear",
+                "sparkles": "strong",
+                "speechless": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "ease"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "proactive unsaid, drowsy with accents, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "subdued",
+            "face": "tender",
+            "motionEnergy": "high",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "strong",
+                "browLift": "-slight",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "clear",
+                "hairSway": "clear",
+                "headTilt": "slight",
+                "mouthNarrow": "clear",
+                "mouthOpen": "clear",
+                "mouthSeal": "slight",
+                "mouthSmile": "clear",
+                "sparkles": "strong",
+                "speechless": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "ease",
+            "via": [
+              "focused",
+              "pout"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "surprised",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "worried",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "pout",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "headNod": "-slight",
+                "headTilt": "clear",
+                "headTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "pause"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "ask",
+              "text": "弄好啦～你看看？"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "outcome done, no rig, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "pout",
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "headNod": "-slight",
+                "headTilt": "clear",
+                "headTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "pause"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "ask",
+              "text": "弄好啦～你看看？"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "worried",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "dreamy",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": "speechless",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "slight",
+                "headTilt": "clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "speechless",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "tease",
+              "text": "弄好啦～你看看？"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "shrug"
+              },
+              "text": "弄好啦～你看看"
+            }
+          ]
+        }
+      },
+      "name": "outcome done, bust speaking, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": "speechless",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "slight",
+                "headTilt": "clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "worried",
+              "dreamy"
+            ]
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "speechless",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "tease",
+              "text": "弄好啦～你看看？"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "shrug"
+              },
+              "text": "弄好啦～你看看"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "surprised",
+            "confidence": 0.29
+          },
+          "then": {
+            "choice": "drowsy",
+            "confidence": 0.2
+          }
+        },
+        "plan": {
+          "askedFor": "speechless",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "pout",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "headNod": "-slight",
+                "headTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "speechless",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "outcome done, head only, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": "speechless",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "pout",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "headNod": "-slight",
+                "headTurn": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 100,
+              "fadeOutMs": 220,
+              "intensity": "strong",
+              "intent": "speechless",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "content",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "smug",
+            "confidence": 0.2
+          }
+        },
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "shy",
+            "motionEnergy": 1.1,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "slight",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "headNod": "-slight",
+                "headTurn": "slight",
+                "mouthSmile": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "laugh",
+              "text": "弄好啦～你看看？"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "outcome done, page hidden, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": "angry",
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": "shy",
+            "motionEnergy": 1.1,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "slight",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "headNod": "-slight",
+                "headTurn": "slight",
+                "mouthSmile": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [
+            {
+              "atMs": 0,
+              "fadeInMs": 180,
+              "fadeOutMs": 420,
+              "intensity": "strong",
+              "intent": "angry",
+              "interrupt": "replace",
+              "tempo": "usual"
+            }
+          ],
+          "phrases": [
+            {
+              "intent": "laugh",
+              "text": "弄好啦～你看看？"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "smug",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "tender",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-strong",
+                "gazeVertical": "slight",
+                "headTurn": "slight",
+                "torsoLean": "slight",
+                "torsoPitch": "-strong",
+                "torsoTurn": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "ease"
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "抱歉，没弄成……"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "startle"
+              },
+              "text": "抱歉，没弄成……"
+            }
+          ]
+        }
+      },
+      "name": "outcome failed, bust speaking, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "-strong",
+                "gazeVertical": "slight",
+                "headTurn": "slight",
+                "torsoLean": "slight",
+                "torsoPitch": "-strong",
+                "torsoTurn": "-slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "ease",
+            "via": [
+              "smug"
+            ]
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "抱歉，没弄成……"
+            }
+          ],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "startle"
+              },
+              "text": "抱歉，没弄成……"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "teasing",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "smug",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "-clear",
+                "headTilt": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "ease"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "nod"
+              },
+              "text": "抱歉"
+            }
+          ]
+        }
+      },
+      "name": "outcome failed, everything singing, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": 0.95,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "-clear",
+                "headTilt": "slight"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "ease"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": [
+            {
+              "move": {
+                "amount": "slight",
+                "kind": "nod"
+              },
+              "text": "抱歉"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "drowsy",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "shy",
+            "confidence": 0.95
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "-slight",
+                "headTilt": "-strong",
+                "headTurn": "clear",
+                "leftArmSwing": "slight",
+                "rightArmSwing": "-clear",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "抱歉，没弄成……"
+            }
+          ],
+          "score": []
+        }
+      },
+      "name": "outcome failed, everything singing, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "headNod": "-slight",
+                "headTilt": "-strong",
+                "headTurn": "clear",
+                "leftArmSwing": "slight",
+                "rightArmSwing": "-clear",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [
+            {
+              "intent": "hesitate",
+              "text": "抱歉，没弄成……"
+            }
+          ],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "dreamy",
+            "confidence": 0.95
+          },
+          "then": {
+            "choice": "surprised",
+            "confidence": 0.3
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "warm",
+            "face": "focused",
+            "motionEnergy": 0.9,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "slight",
+                "gazeVertical": "slight",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "mouthSmile": "-slight",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "pause"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "mood, bust speaking, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "warm",
+            "face": "focused",
+            "motionEnergy": 0.9,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "slight",
+                "gazeVertical": "slight",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "mouthSmile": "-slight",
+                "torsoPitch": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "closed",
+            "shift": "pause",
+            "via": [
+              "dreamy",
+              "surprised"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "humming",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "excited",
+            "confidence": 0.2
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "strong",
+                "headNod": "slight",
+                "headTurn": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "mood, drowsy with accents, direct true, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "gazeHorizontal": "strong",
+                "headNod": "slight",
+                "headTurn": "-strong"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": "snap"
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "excited",
+            "confidence": 0.45
+          },
+          "then": {
+            "choice": "worried",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "smug",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "clear",
+                "browLift": "slight",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeVertical": "clear",
+                "hairSway": "slight",
+                "headNod": "slight",
+                "headTilt": "-slight",
+                "mouthOpen": "clear",
+                "mouthSeal": "clear",
+                "mouthSmile": "clear",
+                "sparkles": "strong",
+                "speechless": "strong",
+                "torsoRise": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "mood, drowsy with accents, direct true, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": "usual",
+            "expression": "steady",
+            "face": "smug",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "clear",
+                "browLift": "slight",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeVertical": "clear",
+                "hairSway": "slight",
+                "headNod": "slight",
+                "headTilt": "-slight",
+                "mouthOpen": "clear",
+                "mouthSeal": "clear",
+                "mouthSmile": "clear",
+                "sparkles": "strong",
+                "speechless": "strong",
+                "torsoRise": "-clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "excited"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "teasing",
+            "confidence": 0.45
+          },
+          "then": {
+            "choice": "drowsy",
+            "confidence": 0.7
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "warm",
+            "face": "tender",
+            "motionEnergy": 1.1,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "clear",
+                "gazeHorizontal": "clear",
+                "headTilt": "slight",
+                "mouthSmile": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "mood, face hidden, direct false, answers 0",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "warm",
+            "face": "tender",
+            "motionEnergy": 1.1,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "clear",
+                "gazeHorizontal": "clear",
+                "headTilt": "slight",
+                "mouthSmile": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "open",
+            "shift": null,
+            "via": [
+              "teasing",
+              "drowsy"
+            ]
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "then": {
+            "choice": "focused",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "tense",
+            "face": "tender",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "clear",
+                "gazeHorizontal": "clear",
+                "headTilt": "slight",
+                "headTurn": "clear",
+                "mouthSmile": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      },
+      "name": "mood, face hidden, direct false, answers 1",
+      "output": {
+        "plan": {
+          "askedFor": null,
+          "baseline": {
+            "attention": 0.85,
+            "expression": "tense",
+            "face": "tender",
+            "motionEnergy": 1.0,
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "eyeSmile": "clear",
+                "gazeHorizontal": "clear",
+                "headTilt": "slight",
+                "headTurn": "clear",
+                "mouthSmile": "clear"
+              },
+              "transitionMs": 350
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "phrases": [],
+          "score": []
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "tender",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "pout",
+            "confidence": 0.05
+          }
+        },
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": "shy",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "slight",
+                "browTiltLeft": "-strong",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "hairSway": "strong",
+                "headNod": "-slight",
+                "headTurn": "slight",
+                "leftArmRaise": "-clear",
+                "leftArmSwing": "-clear",
+                "mouthOpen": "slight",
+                "mouthSmile": "slight",
+                "mouthWide": "strong",
+                "rightArmSwing": "strong",
+                "speechless": "strong",
+                "torsoTurn": "clear"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": "ease"
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 882,
+              "pose": {
+                "holdMs": 2514,
+                "targets": {
+                  "gazeHorizontal": "slight",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 3996,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 8213,
+              "pose": {
+                "holdMs": 2021,
+                "targets": {
+                  "gazeHorizontal": "slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 8413,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 10634,
+              "pose": {
+                "holdMs": 3881,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 14915,
+              "pose": {
+                "holdMs": 2415,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 15115,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 17730,
+              "pose": {
+                "holdMs": 1870,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 17930,
+              "move": {
+                "amount": "slight",
+                "kind": "nod",
+                "tempo": "slow"
+              }
+            }
+          ]
+        }
+      },
+      "name": "presence reading, bust speaking, direct false, answers 1",
+      "output": {
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": "shy",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "slight",
+                "browTiltLeft": "-strong",
+                "eyeOpenLeft": "-slight",
+                "eyeOpenRight": "-slight",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "-clear",
+                "hairSway": "strong",
+                "headNod": "-slight",
+                "headTurn": "slight",
+                "leftArmRaise": "-clear",
+                "leftArmSwing": "-clear",
+                "mouthOpen": "slight",
+                "mouthSmile": "slight",
+                "mouthWide": "strong",
+                "rightArmSwing": "strong",
+                "speechless": "strong",
+                "torsoTurn": "clear"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": "ease",
+            "via": [
+              "tender"
+            ]
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 882,
+              "pose": {
+                "holdMs": 2514,
+                "targets": {
+                  "gazeHorizontal": "slight",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 3996,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 8213,
+              "pose": {
+                "holdMs": 2021,
+                "targets": {
+                  "gazeHorizontal": "slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 8413,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 10634,
+              "pose": {
+                "holdMs": 3881,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 14915,
+              "pose": {
+                "holdMs": 2415,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 15115,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 17730,
+              "pose": {
+                "holdMs": 1870,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 17930,
+              "move": {
+                "amount": "slight",
+                "kind": "nod",
+                "tempo": "slow"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "dreamy",
+            "confidence": 0.3
+          },
+          "then": {
+            "choice": "tender",
+            "confidence": 0.7
+          }
+        },
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "withdrawn",
+            "face": "surprised",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltLeft": "strong",
+                "browTiltRight": "strong",
+                "chestSway": "clear",
+                "eyeWide": "strong",
+                "headNod": "slight",
+                "headTurn": "-clear",
+                "mouthOpen": "clear",
+                "mouthWide": "slight",
+                "rightArmSwing": "-clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 882,
+              "pose": {
+                "holdMs": 2514,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 3796,
+              "pose": {
+                "holdMs": 4017,
+                "targets": {
+                  "gazeHorizontal": 0.0,
+                  "gazeVertical": "slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 8213,
+              "pose": {
+                "holdMs": 2021,
+                "targets": {
+                  "gazeHorizontal": "-slight",
+                  "gazeVertical": "strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10634,
+              "pose": {
+                "holdMs": 3881,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10834,
+              "move": {
+                "amount": "slight",
+                "kind": "shake",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 14915,
+              "pose": {
+                "holdMs": 2415,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 17730,
+              "pose": {
+                "holdMs": 1870,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            }
+          ]
+        }
+      },
+      "name": "presence reading, page hidden, direct false, answers 1",
+      "output": {
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "withdrawn",
+            "face": "surprised",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltLeft": "strong",
+                "browTiltRight": "strong",
+                "chestSway": "clear",
+                "eyeWide": "strong",
+                "headNod": "slight",
+                "headTurn": "-clear",
+                "mouthOpen": "clear",
+                "mouthWide": "slight",
+                "rightArmSwing": "-clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "dreamy",
+              "tender"
+            ]
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 882,
+              "pose": {
+                "holdMs": 2514,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 3796,
+              "pose": {
+                "holdMs": 4017,
+                "targets": {
+                  "gazeHorizontal": 0.0,
+                  "gazeVertical": "slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 8213,
+              "pose": {
+                "holdMs": 2021,
+                "targets": {
+                  "gazeHorizontal": "-slight",
+                  "gazeVertical": "strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10634,
+              "pose": {
+                "holdMs": 3881,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10834,
+              "move": {
+                "amount": "slight",
+                "kind": "shake",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 14915,
+              "pose": {
+                "holdMs": 2415,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 17730,
+              "pose": {
+                "holdMs": 1870,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "content",
+            "confidence": 0.7
+          },
+          "then": {
+            "choice": "teasing",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "warm",
+            "face": "pout",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "eyeSmile": "clear",
+                "eyeWide": "slight",
+                "gazeHorizontal": "-clear",
+                "gazeVertical": "clear",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "headTurn": "clear",
+                "leftArmRaise": "-strong",
+                "leftArmSwing": "-strong",
+                "mouthOpen": "strong",
+                "mouthRound": "slight",
+                "mouthSmile": "-clear",
+                "mouthWide": "clear",
+                "torsoTurn": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 578,
+              "pose": {
+                "holdMs": 4066,
+                "targets": {
+                  "gazeHorizontal": 0.0,
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 5044,
+              "pose": {
+                "holdMs": 1435,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 6879,
+              "pose": {
+                "holdMs": 3470,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 7079,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 10749,
+              "pose": {
+                "holdMs": 2191,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 13340,
+              "pose": {
+                "holdMs": 4965,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 18705,
+              "pose": {
+                "holdMs": 895,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 18905,
+              "move": {
+                "amount": "slight",
+                "kind": "beat",
+                "tempo": "slow"
+              }
+            }
+          ]
+        }
+      },
+      "name": "presence listening, bust speaking, direct false, answers 0",
+      "output": {
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "warm",
+            "face": "pout",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "-slight",
+                "eyeSmile": "clear",
+                "eyeWide": "slight",
+                "gazeHorizontal": "-clear",
+                "gazeVertical": "clear",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "headTurn": "clear",
+                "leftArmRaise": "-strong",
+                "leftArmSwing": "-strong",
+                "mouthOpen": "strong",
+                "mouthRound": "slight",
+                "mouthSmile": "-clear",
+                "mouthWide": "clear",
+                "torsoTurn": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": null,
+            "via": [
+              "content"
+            ]
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 578,
+              "pose": {
+                "holdMs": 4066,
+                "targets": {
+                  "gazeHorizontal": 0.0,
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 5044,
+              "pose": {
+                "holdMs": 1435,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 6879,
+              "pose": {
+                "holdMs": 3470,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 7079,
+              "move": {
+                "amount": "slight",
+                "kind": "bounce",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 10749,
+              "pose": {
+                "holdMs": 2191,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 13340,
+              "pose": {
+                "holdMs": 4965,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 18705,
+              "pose": {
+                "holdMs": 895,
+                "targets": {
+                  "gazeHorizontal": "clear",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 18905,
+              "move": {
+                "amount": "slight",
+                "kind": "beat",
+                "tempo": "slow"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "worried",
+            "confidence": 0.2
+          },
+          "then": {
+            "choice": "smug",
+            "confidence": 0.2
+          }
+        },
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltRight": "-strong",
+                "eyeOpenRight": "-clear",
+                "eyeWide": "clear",
+                "headTurn": "clear",
+                "mouthOpen": "slight",
+                "mouthRound": "clear",
+                "mouthSeal": "slight",
+                "mouthWide": "strong",
+                "rightArmRaise": "slight",
+                "rightArmSwing": "-strong",
+                "silly": "strong",
+                "sleepZ": "strong",
+                "torsoLean": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 578,
+              "pose": {
+                "holdMs": 4066,
+                "targets": {
+                  "gazeHorizontal": 0.0,
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 5044,
+              "pose": {
+                "holdMs": 1435,
+                "targets": {
+                  "gazeHorizontal": "-clear",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 6879,
+              "pose": {
+                "holdMs": 3470,
+                "targets": {
+                  "gazeHorizontal": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10749,
+              "pose": {
+                "holdMs": 2191,
+                "targets": {
+                  "gazeHorizontal": "-clear",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 13340,
+              "pose": {
+                "holdMs": 4965,
+                "targets": {
+                  "gazeHorizontal": "-slight",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 13540,
+              "move": {
+                "amount": "slight",
+                "kind": "shrug",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 18705,
+              "pose": {
+                "holdMs": 895,
+                "targets": {
+                  "gazeHorizontal": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 18905,
+              "move": {
+                "amount": "slight",
+                "kind": "glance",
+                "tempo": "slow"
+              }
+            }
+          ]
+        }
+      },
+      "name": "presence listening, everything singing, direct false, answers 1",
+      "output": {
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "low",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltRight": "-strong",
+                "eyeOpenRight": "-clear",
+                "eyeWide": "clear",
+                "headTurn": "clear",
+                "mouthOpen": "slight",
+                "mouthRound": "clear",
+                "mouthSeal": "slight",
+                "mouthWide": "strong",
+                "rightArmRaise": "slight",
+                "rightArmSwing": "-strong",
+                "silly": "strong",
+                "sleepZ": "strong",
+                "torsoLean": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": null
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 578,
+              "pose": {
+                "holdMs": 4066,
+                "targets": {
+                  "gazeHorizontal": 0.0,
+                  "gazeVertical": "clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 5044,
+              "pose": {
+                "holdMs": 1435,
+                "targets": {
+                  "gazeHorizontal": "-clear",
+                  "gazeVertical": 0.0
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 6879,
+              "pose": {
+                "holdMs": 3470,
+                "targets": {
+                  "gazeHorizontal": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10749,
+              "pose": {
+                "holdMs": 2191,
+                "targets": {
+                  "gazeHorizontal": "-clear",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 13340,
+              "pose": {
+                "holdMs": 4965,
+                "targets": {
+                  "gazeHorizontal": "-slight",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 13540,
+              "move": {
+                "amount": "slight",
+                "kind": "shrug",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 18705,
+              "pose": {
+                "holdMs": 895,
+                "targets": {
+                  "gazeHorizontal": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 18905,
+              "move": {
+                "amount": "slight",
+                "kind": "glance",
+                "tempo": "slow"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "first": {
+            "choice": "focused",
+            "confidence": 0.05
+          },
+          "then": {
+            "choice": "focused",
+            "confidence": 0.45
+          }
+        },
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltLeft": "clear",
+                "chestSway": "clear",
+                "eyeSmile": "clear",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "strong",
+                "hairSway": "strong",
+                "musicNotes": "strong",
+                "torsoLean": "-clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "closed",
+            "shift": null
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 170,
+              "pose": {
+                "holdMs": 2847,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 3417,
+              "pose": {
+                "holdMs": 3657,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10745,
+              "pose": {
+                "holdMs": 3769,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 14914,
+              "pose": {
+                "holdMs": 2061,
+                "targets": {
+                  "gazeHorizontal": "slight",
+                  "gazeVertical": "-clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 15114,
+              "move": {
+                "amount": "slight",
+                "kind": "wink",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 17375,
+              "pose": {
+                "holdMs": 2225,
+                "targets": {
+                  "gazeHorizontal": "slight",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            }
+          ]
+        }
+      },
+      "name": "presence lazing, drowsy with accents, direct false, answers 0",
+      "output": {
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": null,
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "browLift": "strong",
+                "browTiltLeft": "clear",
+                "chestSway": "clear",
+                "eyeSmile": "clear",
+                "gazeHorizontal": "clear",
+                "gazeVertical": "strong",
+                "hairSway": "strong",
+                "musicNotes": "strong",
+                "torsoLean": "-clear",
+                "torsoRise": "slight"
+              },
+              "transitionMs": 800
+            },
+            "posture": "closed",
+            "shift": null
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": [
+            {
+              "atMs": 170,
+              "pose": {
+                "holdMs": 2847,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 3417,
+              "pose": {
+                "holdMs": 3657,
+                "targets": {
+                  "gazeHorizontal": "-strong",
+                  "gazeVertical": "-strong"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 10745,
+              "pose": {
+                "holdMs": 3769,
+                "targets": {
+                  "gazeHorizontal": "strong",
+                  "gazeVertical": "slight"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 14914,
+              "pose": {
+                "holdMs": 2061,
+                "targets": {
+                  "gazeHorizontal": "slight",
+                  "gazeVertical": "-clear"
+                },
+                "transitionMs": 600
+              }
+            },
+            {
+              "atMs": 15114,
+              "move": {
+                "amount": "slight",
+                "kind": "wink",
+                "tempo": "slow"
+              }
+            },
+            {
+              "atMs": 17375,
+              "pose": {
+                "holdMs": 2225,
+                "targets": {
+                  "gazeHorizontal": "slight",
+                  "gazeVertical": "-slight"
+                },
+                "transitionMs": 600
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "answers": {
+          "then": {
+            "choice": "shy",
+            "confidence": 0.29
+          }
+        },
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": "downcast",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "clear",
+                "browLift": "-slight",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-clear",
+                "eyeOpenRight": "-clear",
+                "eyeSmile": "slight",
+                "eyeWide": "clear",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-clear",
+                "hairSway": "strong",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "headTurn": "clear",
+                "mouthSmile": "slight",
+                "mouthWide": "slight",
+                "torsoRise": "clear"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": "slow"
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": []
+        }
+      },
+      "name": "presence lazing, drowsy with accents, direct true, answers 1",
+      "output": {
+        "plan": {
+          "baseline": {
+            "attention": "loose",
+            "expression": "steady",
+            "face": "downcast",
+            "motionEnergy": "usual",
+            "pose": {
+              "holdMs": 0,
+              "targets": {
+                "angry": "clear",
+                "browLift": "-slight",
+                "browTiltRight": "-clear",
+                "eyeOpenLeft": "-clear",
+                "eyeOpenRight": "-clear",
+                "eyeSmile": "slight",
+                "eyeWide": "clear",
+                "gazeHorizontal": "-slight",
+                "gazeVertical": "-clear",
+                "hairSway": "strong",
+                "headNod": "-slight",
+                "headTilt": "slight",
+                "headTurn": "clear",
+                "mouthSmile": "slight",
+                "mouthWide": "slight",
+                "torsoRise": "clear"
+              },
+              "transitionMs": 800
+            },
+            "posture": "neutral",
+            "shift": "slow"
+          },
+          "cues": [],
+          "loopMs": 20000,
+          "score": []
+        }
+      }
+    }
+  ],
+  "version": 1
+}

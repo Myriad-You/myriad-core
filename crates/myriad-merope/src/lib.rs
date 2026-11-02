@@ -32,6 +32,7 @@ pub mod making;
 pub mod making_sense;
 pub mod group_reading;
 pub mod memes;
+pub mod motion;
 pub mod life;
 mod onboarding;
 pub mod other_groups;
