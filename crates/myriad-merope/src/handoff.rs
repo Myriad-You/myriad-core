@@ -15,7 +15,7 @@
 //! `labelled`). Running the pieces, keeping them, timing and delivery stay
 //! with each end.
 
-use myriad_agent_rules::channel::{PendingOption, number_is_in_a_name};
+use myriad_agent_rules::channel::{PendingOption, choice_by_number, number_is_in_a_name};
 use serde::{Deserialize, Serialize};
 
 const OPEN: &str = "[[";
@@ -499,13 +499,13 @@ pub fn labelled(number: u32, asked: &str, others_unfinished: bool, content: &str
 }
 
 /// Her answer to a piece's choice question, as the choice. Only two
-/// things are one: the choice's number alone (`2`), or its words alone,
-/// as listed (`19:00`, `19:00。`). Anything else stays as she wrote it, to
+/// things are one: the choice's number alone (`2`, `2.`), or its words
+/// alone, as listed (`19:00`, `19:00。`). Anything else stays as she wrote it, to
 /// be asked again or read by the helper: guessing a choice from other
 /// words chose wrong too often, and asking twice is better.
 pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     let text = text.trim();
-    match choice_named(options, text).or_else(|| choice_numbered(options, text)) {
+    match choice_named(options, text).or_else(|| choice_by_number(options, text)) {
         // Its number, unless that number is in a choice's name too (`2`
         // among `2` and `4`): then its name, so neither is read as the
         // other.
@@ -536,19 +536,6 @@ fn choice_named(options: &[PendingOption], text: &str) -> Option<usize> {
             !name.is_empty() && name.to_lowercase() == said.to_lowercase()
         })
     })
-}
-
-/// The choice `text` is the number of: plain digits and nothing else (not
-/// `+1`, `01`, `2 号`), in range, and not also a number in a choice's name
-/// (with `2号` and `3号` listed, `2` could be either).
-fn choice_numbered(options: &[PendingOption], text: &str) -> Option<usize> {
-    let plain =
-        !text.is_empty() && !text.starts_with('0') && text.chars().all(|ch| ch.is_ascii_digit());
-    if !plain || number_is_in_a_name(options, text) {
-        return None;
-    }
-    let number: usize = text.parse().ok()?;
-    (1..=options.len()).contains(&number).then(|| number - 1)
 }
 
 /// The next piece's number: one past the highest, from 1. None when the
