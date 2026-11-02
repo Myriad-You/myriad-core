@@ -7,7 +7,7 @@ use myriad_merope::handoff::{self, Facts, HandOff, Host, Piece, Standing};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::input;
+use super::quiet_input as input;
 use crate::Failure;
 
 fn secs(micros: i64) -> i64 {
@@ -121,14 +121,29 @@ pub(super) fn labelled(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 pub(super) fn her_choice(raw: &[u8]) -> Result<Value, Failure> {
+    /// A choice as a call takes it: nothing but these two.
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct OptionIn {
+        value: String,
+        label: String,
+    }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
-        options: Vec<PendingOption>,
+        options: Vec<OptionIn>,
         text: String,
     }
     let req: In = input(raw)?;
-    Ok(json!({ "choice": handoff::her_choice(&req.options, &req.text) }))
+    let options: Vec<PendingOption> = req
+        .options
+        .into_iter()
+        .map(|option| PendingOption {
+            value: option.value,
+            label: option.label,
+        })
+        .collect();
+    Ok(json!({ "choice": handoff::her_choice(&options, &req.text) }))
 }
 
 pub(super) fn next_number(raw: &[u8]) -> Result<Value, Failure> {
@@ -138,7 +153,9 @@ pub(super) fn next_number(raw: &[u8]) -> Result<Value, Failure> {
         numbers: Vec<u32>,
     }
     let req: In = input(raw)?;
-    Ok(json!({ "number": handoff::next_number(req.numbers) }))
+    let number = handoff::next_number(req.numbers)
+        .ok_or_else(|| Failure::BadInput("piece numbers have run out".into()))?;
+    Ok(json!({ "number": number }))
 }
 
 pub(super) fn work_input(raw: &[u8]) -> Result<Value, Failure> {

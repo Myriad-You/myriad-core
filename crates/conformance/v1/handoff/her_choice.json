@@ -238,6 +238,56 @@
       "output": {
         "choice": "2"
       }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "9:00",
+            "value": "9:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "订 19:00 的"
+      },
+      "name": "the longer one said, not the one inside it",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "",
+            "value": ""
+          }
+        ],
+        "text": "还没决定"
+      },
+      "name": "an empty choice names nothing",
+      "output": {
+        "choice": "还没决定"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "extra": 1,
+            "label": "x",
+            "value": "1"
+          }
+        ],
+        "text": "1"
+      },
+      "name": "a choice with a field it does not have",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

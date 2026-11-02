@@ -203,6 +203,62 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "reply": "[[work #1: 按价格]][[work #1: 按距离]][[work #1: 按价格]]"
+      },
+      "name": "what she tells a piece goes each time",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "to",
+            "text": "按价格",
+            "work": 1
+          },
+          {
+            "kind": "to",
+            "text": "按距离",
+            "work": 1
+          },
+          {
+            "kind": "to",
+            "text": "按价格",
+            "work": 1
+          }
+        ],
+        "spoken": ""
+      }
+    },
+    {
+      "input": {
+        "reply": "好的\n  [[work: 查天气]]  \n明天告诉你"
+      },
+      "name": "a line with only spaces around her line goes",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查天气"
+          }
+        ],
+        "spoken": "好的\n明天告诉你"
+      }
+    },
+    {
+      "input": {
+        "reply": "好的\r\n[[work: 查天气]]\r\n明天告诉你"
+      },
+      "name": "CRLF lines go the same way",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查天气"
+          }
+        ],
+        "spoken": "好的\r\n明天告诉你"
+      }
     }
   ],
   "version": 1

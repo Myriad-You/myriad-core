@@ -88,8 +88,33 @@ fn a_line_for_one_piece_goes_to_that_piece() {
         split("好的\n[[work: 查天气]]\n明天告诉你"),
         ("好的\n明天告诉你".into(), vec![new("查天气")])
     );
+    // With spaces around it, or CRLF, the line still goes.
+    assert_eq!(
+        split("好的\n  [[work: 查天气]]  \n明天告诉你").0,
+        "好的\n明天告诉你"
+    );
+    assert_eq!(
+        split("好的\r\n[[work: 查天气]]\r\n明天告诉你").0,
+        "好的\r\n明天告诉你"
+    );
+    assert_eq!(split("好的\r\n[[work: 查天气]] ").0, "好的");
+    assert_eq!(split(" [[work: 查天气]] ").0, "");
+    // A line with words, or another kind of line, on it stays.
+    assert_eq!(
+        split("好的\n先这样 [[work: 查天气]]\n明天").0,
+        "好的\n先这样 \n明天"
+    );
     // The same new piece twice in one reply is one.
     assert_eq!(split("[[work: 查]][[work: 查]]").1, vec![new("查")]);
+    // What she tells a piece goes each time: the last word is the last.
+    let to = |text: &str| HandOff::To {
+        work: 1,
+        text: text.into(),
+    };
+    assert_eq!(
+        split("[[work #1: 按价格]][[work #1: 按距离]][[work #1: 按价格]]").1,
+        vec![to("按价格"), to("按距离"), to("按价格")]
+    );
     // A piece without a number is not one; it says nothing.
     assert_eq!(split("嗯[[stop]][[work #x: 查]]"), ("嗯".into(), vec![]));
     // Another kind of line is left where it is.
@@ -205,8 +230,9 @@ fn a_piece_stands_as_what_is_known_of_it() {
 
 #[test]
 fn the_next_number_is_one_past_the_highest() {
-    assert_eq!(next_number([]), 1);
-    assert_eq!(next_number([1, 3, 2]), 4);
+    assert_eq!(next_number([]), Some(1));
+    assert_eq!(next_number([1, 3, 2]), Some(4));
+    assert_eq!(next_number([u32::MAX]), None);
 }
 
 #[test]
@@ -474,6 +500,26 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
         })
         .to_vec();
     assert_eq!(her_choice(&blank, "19:00 吧"), "2");
+    assert_eq!(
+        her_choice(
+            &[PendingOption {
+                value: "".into(),
+                label: "".into()
+            }],
+            "还没决定"
+        ),
+        "还没决定"
+    );
+    // `9:00` inside `19:00` is the longer one said; both said is not one.
+    let clock = ["9:00", "19:00"]
+        .map(|time| PendingOption {
+            value: time.into(),
+            label: time.into(),
+        })
+        .to_vec();
+    assert_eq!(her_choice(&clock, "订 19:00 的"), "2");
+    assert_eq!(her_choice(&clock, "9:00 吧"), "1");
+    assert_eq!(her_choice(&clock, "9:00 还是 19:00"), "9:00 还是 19:00");
 }
 
 #[test]
@@ -496,6 +542,9 @@ fn how_it_ended_is_one_line() {
         ended_line("助手列的是：\n\n1. 整理桌面\n2. 散步", false),
         "助手列的是： 1. 整理桌面 2. 散步"
     );
+    // A minus sign is not a bullet; a rule is nothing.
+    assert_eq!(ended_line("- -5°C\n---\n-12.5%", false), "-5°C -12.5%");
+    assert_eq!(ended_line("#3 号桌\n> * 已订", false), "#3 号桌 已订");
     assert_eq!(ended_line("", false), "办完了。");
     assert_eq!(ended_line("没有权限", true), "没办成：没有权限");
     assert_eq!(ended_line("  ", true), "没办成。");

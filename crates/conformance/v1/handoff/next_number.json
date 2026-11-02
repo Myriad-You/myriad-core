@@ -22,6 +22,17 @@
       "output": {
         "number": 4
       }
+    },
+    {
+      "input": {
+        "numbers": [
+          4294967295
+        ]
+      },
+      "name": "no number past the last one",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

@@ -85,8 +85,8 @@ fn parse(inner: &str) -> Option<Option<HandOff>> {
 
 /// Take her hand-off lines out of a reply: the text without them, and what
 /// they say, in the order she wrote them. One of hers written wrong goes
-/// unsaid; one on a line of its own goes with that line. Lines that are not
-/// hers (a sticker, an outfit) stay for whoever reads them.
+/// unsaid; a line left with nothing but spaces goes with them. Lines that
+/// are not hers (a sticker, an outfit) stay for whoever reads them.
 pub fn split(raw: &str) -> (String, Vec<HandOff>) {
     let mut text = raw.to_string();
     let mut handed = Vec::new();
@@ -100,23 +100,45 @@ pub fn split(raw: &str) -> (String, Vec<HandOff>) {
         match parse(&text[after..after + close]) {
             None => from = after,
             Some(line) => {
-                // The same new piece twice in one reply is one piece.
-                if let Some(line) = line.filter(|line| !handed.contains(line)) {
-                    handed.push(line);
+                // The same new piece twice in one reply is one piece; what
+                // she tells a piece goes each time, in order.
+                match line {
+                    Some(new @ HandOff::New { .. }) if handed.contains(&new) => {}
+                    Some(line) => handed.push(line),
+                    None => {}
                 }
                 text.replace_range(start..after + close + CLOSE.len(), "");
-                from = start;
-                let line_begins = start == 0 || text[..start].ends_with('\n');
-                if line_begins && text[start..].starts_with('\n') {
-                    text.remove(start);
-                } else if start == text.len() && text.ends_with('\n') {
-                    text.pop();
-                    from = text.len();
-                }
+                from = without_blank_line(&mut text, start);
             }
         }
     }
     (text.trim_end().to_string(), handed)
+}
+
+/// After a line of hers is taken out at `at`: the line it stood on goes too
+/// when nothing but spaces is left on it, with its line break (the one
+/// before it, on the last line). Where to read on from.
+fn without_blank_line(text: &mut String, at: usize) -> usize {
+    let begins = text[..at].rfind('\n').map_or(0, |found| found + 1);
+    let ends = text[at..].find('\n').map_or(text.len(), |found| at + found);
+    if !text[begins..ends].trim().is_empty() {
+        return at;
+    }
+    if ends < text.len() {
+        text.replace_range(begins..=ends, "");
+        begins
+    } else if begins > 0 {
+        let breaks = if text[..begins - 1].ends_with('\r') {
+            2
+        } else {
+            1
+        };
+        text.replace_range(begins - breaks..ends, "");
+        text.len()
+    } else {
+        text.clear();
+        0
+    }
 }
 
 /// What stopped a piece short, with nothing going on until it is picked up.
@@ -469,10 +491,28 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     {
         return number.to_string();
     }
-    let named: Vec<usize> = options
+    let said: Vec<Vec<(usize, usize)>> = options
+        .iter()
+        .map(|option| {
+            [&option.value, &option.label]
+                .into_iter()
+                .flat_map(|name| named_at(text, name))
+                .collect()
+        })
+        .collect();
+    // `9:00` inside `19:00` is the longer one said, not both.
+    let inside_another = |of: usize, (from, to): (usize, usize)| {
+        said.iter().enumerate().any(|(other, spans)| {
+            other != of
+                && spans
+                    .iter()
+                    .any(|&(start, end)| start <= from && to <= end && end - start > to - from)
+        })
+    };
+    let named: Vec<usize> = said
         .iter()
         .enumerate()
-        .filter(|(_, option)| names(text, &option.value) || names(text, &option.label))
+        .filter(|(of, spans)| spans.iter().any(|&span| !inside_another(*of, span)))
         .map(|(index, _)| index + 1)
         .collect();
     match named.as_slice() {
@@ -481,19 +521,23 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     }
 }
 
-/// Whether `text` names a choice: it says it, and not right after a no
+/// Where `text` names a choice: it says it, and not right after a no
 /// (`不订了` does not name `订`). An empty name names nothing.
-fn names(text: &str, name: &str) -> bool {
+fn named_at(text: &str, name: &str) -> Vec<(usize, usize)> {
     let name = name.trim();
-    !name.is_empty()
-        && text
-            .match_indices(name)
-            .any(|(at, _)| !text[..at].ends_with(['不', '没', '别', '非']))
+    if name.is_empty() {
+        return Vec::new();
+    }
+    text.match_indices(name)
+        .filter(|(at, _)| !text[..*at].ends_with(['不', '没', '别', '非']))
+        .map(|(at, _)| (at, at + name.len()))
+        .collect()
 }
 
-/// The next piece's number: one past the highest, from 1.
-pub fn next_number(numbers: impl IntoIterator<Item = u32>) -> u32 {
-    numbers.into_iter().max().unwrap_or(0) + 1
+/// The next piece's number: one past the highest, from 1. None when the
+/// numbers have run out.
+pub fn next_number(numbers: impl IntoIterator<Item = u32>) -> Option<u32> {
+    numbers.into_iter().max().unwrap_or(0).checked_add(1)
 }
 
 /// What the helper is asked: her instruction, with their own words.
@@ -514,7 +558,7 @@ pub fn work_input(instruction: &str, their_words: &str) -> String {
 pub fn ended_line(text: &str, failed: bool) -> String {
     let all = text
         .lines()
-        .map(|line| line.trim().trim_start_matches(['#', '>', '-', '*']).trim())
+        .map(bare)
         .filter(|line| !line.is_empty())
         .collect::<Vec<_>>()
         .join(" ");
@@ -527,6 +571,28 @@ pub fn ended_line(text: &str, failed: bool) -> String {
         (true, false) => format!("没办成：{short}"),
         (false, true) => "办完了。".into(),
         (false, false) => short,
+    }
+}
+
+/// A line of a result without its Markdown marks: quote, heading, bullet. A
+/// minus sign stays (`-5°C`); a rule (`---`) is nothing.
+fn bare(line: &str) -> &str {
+    let line = line.trim().trim_start_matches('>').trim_start();
+    if line
+        .chars()
+        .all(|mark| matches!(mark, '-' | '*' | '_' | ' '))
+    {
+        return "";
+    }
+    let heading = line.trim_start_matches('#');
+    let line = if heading.len() < line.len() && heading.starts_with(char::is_whitespace) {
+        heading.trim_start()
+    } else {
+        line
+    };
+    match line.strip_prefix(['-', '*']) {
+        Some(item) if item.starts_with(char::is_whitespace) => item.trim(),
+        _ => line,
     }
 }
 

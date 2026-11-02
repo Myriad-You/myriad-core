@@ -184,7 +184,31 @@ fn a_wrong_shape_is_bad_input() {
             "handoff.act",
             json!({ "handOff": { "kind": "new" }, "pieces": [] }),
         ),
+        (
+            "handoff.her_choice",
+            json!({ "options": [{ "value": "1", "label": "x", "extra": 1 }], "text": "1" }),
+        ),
+        ("handoff.next_number", json!({ "numbers": [u32::MAX] })),
     ] {
         assert_eq!(ffi(call, &input).0, STATUS_BAD_INPUT, "{call}");
+    }
+}
+
+#[test]
+fn what_was_sent_is_never_said_back() {
+    for (call, input) in [
+        ("handoff.split", json!({ "reply": ["订 帝国酒店 的房间"] })),
+        (
+            "handoff.section",
+            json!({ "host": "帝国酒店", "lines": [], "waiting": 0 }),
+        ),
+        (
+            "handoff.act",
+            json!({ "handOff": { "kind": "帝国酒店" }, "pieces": [] }),
+        ),
+    ] {
+        let (status, out) = ffi(call, &input);
+        assert_eq!(status, STATUS_BAD_INPUT, "{call}");
+        assert!(!out.to_string().contains("帝国酒店"), "{call}: {out}");
     }
 }
