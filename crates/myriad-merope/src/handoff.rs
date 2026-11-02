@@ -28,7 +28,9 @@ pub const LABEL_CHARS: usize = 12;
 pub const RESULT_CHARS: usize = 200;
 /// What of a result goes in her line when a run ends.
 pub const ENDED_LINE_CHARS: usize = 80;
-/// Pieces that are over she still sees, and for how long after they began.
+/// Why a piece whose run never began did not get done.
+pub const NEVER_BEGAN: &str = "没能开始";
+/// Pieces that are over she still sees, and for how long after they ended.
 pub const DONE_SHOWN: usize = 3;
 pub const DONE_FOR_SECS: i64 = 24 * 60 * 60;
 
@@ -44,8 +46,17 @@ pub enum HandOff {
     Stop { work: u32 },
 }
 
+/// What follows `word` at the head of `inner`, in any case.
+fn lead<'a>(inner: &'a str, word: &str) -> Option<&'a str> {
+    inner
+        .get(..word.len())
+        .filter(|head| head.eq_ignore_ascii_case(word))
+        .map(|_| &inner[word.len()..])
+}
+
 /// `work: …`, `work #2: …`, `stop #2`, as she writes them inside `[[ ]]`.
-/// `None` is someone else's line; `Some(None)` is hers but says nothing.
+/// `None` is someone else's line; `Some(None)` is hers but says nothing,
+/// written wrong or left empty.
 fn parse(inner: &str) -> Option<Option<HandOff>> {
     let inner = inner.trim();
     let number = |rest: &str| -> Option<u32> {
@@ -55,11 +66,13 @@ fn parse(inner: &str) -> Option<Option<HandOff>> {
             .parse()
             .ok()
     };
-    if let Some(rest) = inner.strip_prefix("stop") {
+    if let Some(rest) = lead(inner, "stop") {
         return Some(number(rest).map(|work| HandOff::Stop { work }));
     }
-    let rest = inner.strip_prefix("work")?;
-    let (head, text) = rest.split_once([':', '：'])?;
+    let rest = lead(inner, "work")?;
+    let Some((head, text)) = rest.split_once([':', '：']) else {
+        return Some(None);
+    };
     let text: String = text.trim().chars().take(MAX_INSTRUCTION_CHARS).collect();
     if text.is_empty() {
         return Some(None);
@@ -71,8 +84,9 @@ fn parse(inner: &str) -> Option<Option<HandOff>> {
 }
 
 /// Take her hand-off lines out of a reply: the text without them, and what
-/// they say, in the order she wrote them. Lines that are not hers (a
-/// sticker, an outfit) stay for whoever reads them.
+/// they say, in the order she wrote them. One of hers written wrong goes
+/// unsaid; a line left with nothing but spaces goes with them. Lines that
+/// are not hers (a sticker, an outfit) stay for whoever reads them.
 pub fn split(raw: &str) -> (String, Vec<HandOff>) {
     let mut text = raw.to_string();
     let mut handed = Vec::new();
@@ -86,13 +100,45 @@ pub fn split(raw: &str) -> (String, Vec<HandOff>) {
         match parse(&text[after..after + close]) {
             None => from = after,
             Some(line) => {
-                handed.extend(line);
+                // The same new piece twice in one reply is one piece; what
+                // she tells a piece goes each time, in order.
+                match line {
+                    Some(new @ HandOff::New { .. }) if handed.contains(&new) => {}
+                    Some(line) => handed.push(line),
+                    None => {}
+                }
                 text.replace_range(start..after + close + CLOSE.len(), "");
-                from = start;
+                from = without_blank_line(&mut text, start);
             }
         }
     }
     (text.trim_end().to_string(), handed)
+}
+
+/// After a line of hers is taken out at `at`: the line it stood on goes too
+/// when nothing but spaces is left on it, with its line break (the one
+/// before it, on the last line). Where to read on from.
+fn without_blank_line(text: &mut String, at: usize) -> usize {
+    let begins = text[..at].rfind('\n').map_or(0, |found| found + 1);
+    let ends = text[at..].find('\n').map_or(text.len(), |found| at + found);
+    if !text[begins..ends].trim().is_empty() {
+        return at;
+    }
+    if ends < text.len() {
+        text.replace_range(begins..=ends, "");
+        begins
+    } else if begins > 0 {
+        let breaks = if text[..begins - 1].ends_with('\r') {
+            2
+        } else {
+            1
+        };
+        text.replace_range(begins - breaks..ends, "");
+        text.len()
+    } else {
+        text.clear();
+        0
+    }
 }
 
 /// What stopped a piece short, with nothing going on until it is picked up.
@@ -148,6 +194,9 @@ pub struct Piece {
     /// When it was handed off, Unix seconds.
     #[serde(default)]
     pub started_at: Option<i64>,
+    /// When its last run ended, Unix seconds, for one that is over.
+    #[serde(default)]
+    pub ended_at: Option<i64>,
     pub standing: Standing,
 }
 
@@ -163,6 +212,19 @@ impl Piece {
                 | Standing::CutOff { .. }
         )
     }
+}
+
+/// Whether a piece's run ever began.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Begun {
+    #[default]
+    Yes,
+    /// Handed off a moment ago; its run is on its way.
+    NotYet,
+    /// Handed off, and its run never began: it did not start, or what was
+    /// starting it stopped first.
+    Never,
 }
 
 /// What an end knows of a piece; `stands` reads it as one standing.
@@ -187,10 +249,13 @@ pub struct Facts {
     /// What came of it, when it is over.
     #[serde(default)]
     pub result: Option<String>,
+    #[serde(default)]
+    pub begun: Begun,
 }
 
 /// How a piece stands, from what is known of it. A stop wins; a question
-/// they saw comes before one left by a restart.
+/// they saw comes before one left by a restart; one whose run never began
+/// did not get done.
 pub fn stands(facts: &Facts) -> Standing {
     if facts.stopped {
         Standing::Stopped
@@ -206,6 +271,12 @@ pub fn stands(facts: &Facts) -> Standing {
         Standing::Doing {
             progress: facts.progress,
             steps: None,
+        }
+    } else if facts.begun == Begun::NotYet {
+        Standing::Starting
+    } else if facts.begun == Begun::Never {
+        Standing::Failed {
+            why: Some(NEVER_BEGAN.into()),
         }
     } else {
         Standing::Done {
@@ -228,7 +299,12 @@ fn took(seconds: i64) -> String {
 }
 
 fn read_back(text: &str) -> String {
-    one_line(text).chars().take(RESULT_CHARS).collect()
+    let all = one_line(text);
+    let mut short: String = all.chars().take(RESULT_CHARS).collect();
+    if all.chars().count() > RESULT_CHARS {
+        short.push('…');
+    }
+    short
 }
 
 /// A piece as she sees it, on one line. `now` is Unix seconds.
@@ -253,7 +329,7 @@ pub fn line(piece: &Piece, now: i64) -> String {
         Standing::Starting => format!("{head}刚交出去，还没开始"),
         Standing::Confirming => format!("{head}在等对方在卡片上确认"),
         Standing::Waiting { question } => {
-            format!("{head}在等对方回答：{}", one_line(question))
+            format!("{head}在等对方回答：{}", read_back(question))
         }
         Standing::CutOff {
             by: CutOffBy::Restart,
@@ -271,18 +347,26 @@ pub fn line(piece: &Piece, now: i64) -> String {
     }
 }
 
-/// Which pieces she sees: every unfinished one, and the latest few that are
-/// over and began within a day, so she knows how they came back. In the
-/// order handed off.
+/// Which pieces she sees: every unfinished one, and the few that ended last
+/// within a day, so she knows how they came back: one begun long ago that
+/// just came back is the one she most needs. Where its end is not known,
+/// its start stands in. In the order handed off.
 pub fn shown(mut pieces: Vec<Piece>, now: i64) -> Vec<Piece> {
     pieces.sort_by_key(|piece| piece.number);
-    let mut over: Vec<u32> = pieces
+    let mut over: Vec<(i64, u32)> = pieces
         .iter()
         .filter(|piece| !piece.unfinished())
-        .filter(|piece| piece.started_at.is_some_and(|at| now - at < DONE_FOR_SECS))
-        .map(|piece| piece.number)
+        .filter_map(|piece| {
+            let at = piece.ended_at.or(piece.started_at)?;
+            (now - at < DONE_FOR_SECS).then_some((at, piece.number))
+        })
         .collect();
-    over = over.split_off(over.len().saturating_sub(DONE_SHOWN));
+    over.sort();
+    let over: Vec<u32> = over
+        .split_off(over.len().saturating_sub(DONE_SHOWN))
+        .into_iter()
+        .map(|(_, number)| number)
+        .collect();
     pieces
         .into_iter()
         .filter(|piece| piece.unfinished() || over.contains(&piece.number))
@@ -398,19 +482,37 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
         return text.to_string();
     }
     let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
+    // `19点`, `1 点`, `2:30`: a time or a count, not a choice.
     if let Ok(number) = digits.parse::<usize>()
         && (1..=options.len()).contains(&number)
-        && !text[digits.len()..].starts_with([':', '：', '.', '点'])
+        && !text[digits.len()..]
+            .trim_start()
+            .starts_with([':', '：', '.', '点', '时', '号'])
     {
         return number.to_string();
     }
-    let named: Vec<usize> = options
+    let said: Vec<Vec<(usize, usize)>> = options
+        .iter()
+        .map(|option| {
+            [&option.value, &option.label]
+                .into_iter()
+                .flat_map(|name| named_at(text, name))
+                .collect()
+        })
+        .collect();
+    // `9:00` inside `19:00` is the longer one said, not both.
+    let inside_another = |of: usize, (from, to): (usize, usize)| {
+        said.iter().enumerate().any(|(other, spans)| {
+            other != of
+                && spans
+                    .iter()
+                    .any(|&(start, end)| start <= from && to <= end && end - start > to - from)
+        })
+    };
+    let named: Vec<usize> = said
         .iter()
         .enumerate()
-        .filter(|(_, option)| {
-            text.contains(option.value.as_str())
-                || (!option.label.trim().is_empty() && text.contains(option.label.as_str()))
-        })
+        .filter(|(of, spans)| spans.iter().any(|&span| !inside_another(*of, span)))
         .map(|(index, _)| index + 1)
         .collect();
     match named.as_slice() {
@@ -419,9 +521,23 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     }
 }
 
-/// The next piece's number: one past the highest, from 1.
-pub fn next_number(numbers: impl IntoIterator<Item = u32>) -> u32 {
-    numbers.into_iter().max().unwrap_or(0) + 1
+/// Where `text` names a choice: it says it, and not right after a no
+/// (`不订了` does not name `订`). An empty name names nothing.
+fn named_at(text: &str, name: &str) -> Vec<(usize, usize)> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Vec::new();
+    }
+    text.match_indices(name)
+        .filter(|(at, _)| !text[..*at].ends_with(['不', '没', '别', '非']))
+        .map(|(at, _)| (at, at + name.len()))
+        .collect()
+}
+
+/// The next piece's number: one past the highest, from 1. None when the
+/// numbers have run out.
+pub fn next_number(numbers: impl IntoIterator<Item = u32>) -> Option<u32> {
+    numbers.into_iter().max().unwrap_or(0).checked_add(1)
 }
 
 /// What the helper is asked: her instruction, with their own words.
@@ -442,7 +558,7 @@ pub fn work_input(instruction: &str, their_words: &str) -> String {
 pub fn ended_line(text: &str, failed: bool) -> String {
     let all = text
         .lines()
-        .map(|line| line.trim().trim_start_matches(['#', '>', '-', '*']).trim())
+        .map(bare)
         .filter(|line| !line.is_empty())
         .collect::<Vec<_>>()
         .join(" ");
@@ -455,6 +571,28 @@ pub fn ended_line(text: &str, failed: bool) -> String {
         (true, false) => format!("没办成：{short}"),
         (false, true) => "办完了。".into(),
         (false, false) => short,
+    }
+}
+
+/// A line of a result without its Markdown marks: quote, heading, bullet. A
+/// minus sign stays (`-5°C`); a rule (`---`) is nothing.
+fn bare(line: &str) -> &str {
+    let line = line.trim().trim_start_matches('>').trim_start();
+    if line
+        .chars()
+        .all(|mark| matches!(mark, '-' | '*' | '_' | ' '))
+    {
+        return "";
+    }
+    let heading = line.trim_start_matches('#');
+    let line = if heading.len() < line.len() && heading.starts_with(char::is_whitespace) {
+        heading.trim_start()
+    } else {
+        line
+    };
+    match line.strip_prefix(['-', '*']) {
+        Some(item) if item.starts_with(char::is_whitespace) => item.trim(),
+        _ => line,
     }
 }
 

@@ -78,6 +78,43 @@
     },
     {
       "input": {
+        "begun": "notYet"
+      },
+      "name": "handed off a moment ago",
+      "output": {
+        "standing": {
+          "state": "starting"
+        }
+      }
+    },
+    {
+      "input": {
+        "begun": "never"
+      },
+      "name": "its run never began",
+      "output": {
+        "standing": {
+          "state": "failed",
+          "why": "没能开始"
+        }
+      }
+    },
+    {
+      "input": {
+        "begun": "never",
+        "underWay": true
+      },
+      "name": "under way wins over never began",
+      "output": {
+        "standing": {
+          "progress": null,
+          "state": "doing",
+          "steps": null
+        }
+      }
+    },
+    {
+      "input": {
         "stoped": true
       },
       "name": "bad input",

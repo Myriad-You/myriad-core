@@ -162,6 +162,132 @@
       "output": {
         "choice": "1"
       }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "1 点"
+      },
+      "name": "a time with a space is not a choice number",
+      "output": {
+        "choice": "1 点"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "订",
+            "value": "yes"
+          },
+          {
+            "label": "不要",
+            "value": "no"
+          }
+        ],
+        "text": "不订了"
+      },
+      "name": "saying no to one is not choosing it",
+      "output": {
+        "choice": "不订了"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "订",
+            "value": "yes"
+          },
+          {
+            "label": "不要",
+            "value": "no"
+          }
+        ],
+        "text": "不要"
+      },
+      "name": "the one that is a no",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": ""
+          },
+          {
+            "label": "19:00",
+            "value": ""
+          }
+        ],
+        "text": "19:00 吧"
+      },
+      "name": "an empty value names nothing",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "9:00",
+            "value": "9:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "订 19:00 的"
+      },
+      "name": "the longer one said, not the one inside it",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "",
+            "value": ""
+          }
+        ],
+        "text": "还没决定"
+      },
+      "name": "an empty choice names nothing",
+      "output": {
+        "choice": "还没决定"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "extra": 1,
+            "label": "x",
+            "value": "1"
+          }
+        ],
+        "text": "1"
+      },
+      "name": "a choice with a field it does not have",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

@@ -9,6 +9,7 @@ fn piece(number: u32, standing: Standing) -> Piece {
         number,
         asked: format!("第{number}件"),
         started_at: Some(0),
+        ended_at: None,
         standing,
     }
 }
@@ -76,6 +77,43 @@ fn a_line_for_one_piece_goes_to_that_piece() {
             },
             HandOff::Stop { work: 4 }
         ]
+    );
+    // Hers written wrong goes unsaid, whatever the case.
+    assert_eq!(
+        split("好[[work 订餐厅]][[Work: 查]]"),
+        ("好".into(), vec![new("查")])
+    );
+    // One on a line of its own goes with that line.
+    assert_eq!(
+        split("好的\n[[work: 查天气]]\n明天告诉你"),
+        ("好的\n明天告诉你".into(), vec![new("查天气")])
+    );
+    // With spaces around it, or CRLF, the line still goes.
+    assert_eq!(
+        split("好的\n  [[work: 查天气]]  \n明天告诉你").0,
+        "好的\n明天告诉你"
+    );
+    assert_eq!(
+        split("好的\r\n[[work: 查天气]]\r\n明天告诉你").0,
+        "好的\r\n明天告诉你"
+    );
+    assert_eq!(split("好的\r\n[[work: 查天气]] ").0, "好的");
+    assert_eq!(split(" [[work: 查天气]] ").0, "");
+    // A line with words, or another kind of line, on it stays.
+    assert_eq!(
+        split("好的\n先这样 [[work: 查天气]]\n明天").0,
+        "好的\n先这样 \n明天"
+    );
+    // The same new piece twice in one reply is one.
+    assert_eq!(split("[[work: 查]][[work: 查]]").1, vec![new("查")]);
+    // What she tells a piece goes each time: the last word is the last.
+    let to = |text: &str| HandOff::To {
+        work: 1,
+        text: text.into(),
+    };
+    assert_eq!(
+        split("[[work #1: 按价格]][[work #1: 按距离]][[work #1: 按价格]]").1,
+        vec![to("按价格"), to("按距离"), to("按价格")]
     );
     // A piece without a number is not one; it says nothing.
     assert_eq!(split("嗯[[stop]][[work #x: 查]]"), ("嗯".into(), vec![]));
@@ -170,12 +208,31 @@ fn a_piece_stands_as_what_is_known_of_it() {
         }),
         Standing::Stopped
     );
+    // Its run never began: not done, whatever was said in its session.
+    assert_eq!(facts(|f| f.begun = Begun::NotYet), Standing::Starting);
+    assert_eq!(
+        facts(|f| f.begun = Begun::Never),
+        Standing::Failed {
+            why: Some(NEVER_BEGAN.into())
+        }
+    );
+    assert_eq!(
+        facts(|f| {
+            f.begun = Begun::Never;
+            f.under_way = true;
+        }),
+        Standing::Doing {
+            progress: None,
+            steps: None
+        }
+    );
 }
 
 #[test]
 fn the_next_number_is_one_past_the_highest() {
-    assert_eq!(next_number([]), 1);
-    assert_eq!(next_number([1, 3, 2]), 4);
+    assert_eq!(next_number([]), Some(1));
+    assert_eq!(next_number([1, 3, 2]), Some(4));
+    assert_eq!(next_number([u32::MAX]), None);
 }
 
 #[test]
@@ -300,6 +357,11 @@ fn she_sees_each_piece_on_a_line() {
         line(&asking, now),
         "#3「订周五的餐厅」在等对方回答：要几点？ 1. 18:00 2. 19:00"
     );
+    let long = Standing::Waiting {
+        question: "问".repeat(RESULT_CHARS + 5),
+    };
+    let asked = line(&piece(3, long), now);
+    assert!(asked.ends_with('…'));
     let back = piece(
         1,
         Standing::Done {
@@ -369,6 +431,30 @@ fn she_sees_every_unfinished_piece_and_the_last_few_over() {
 }
 
 #[test]
+fn one_that_just_came_back_is_seen_however_long_ago_it_began() {
+    let now = 10 * DONE_FOR_SECS;
+    let over = |number, started: i64, ended: Option<i64>| Piece {
+        started_at: Some(started),
+        ended_at: ended,
+        ..piece(number, Standing::Done { result: None })
+    };
+    let pieces = vec![
+        // Begun two days ago, back a minute ago.
+        over(1, now - 2 * DONE_FOR_SECS, Some(now - 60)),
+        over(2, now - 500, Some(now - 400)),
+        over(3, now - 300, Some(now - 200)),
+        over(4, now - 100, Some(now - 90)),
+        // Back more than a day ago.
+        over(5, now - 3 * DONE_FOR_SECS, Some(now - 2 * DONE_FOR_SECS)),
+    ];
+    let shown: Vec<u32> = shown(pieces, now)
+        .iter()
+        .map(|piece| piece.number)
+        .collect();
+    assert_eq!(shown, [1, 3, 4]);
+}
+
+#[test]
 fn what_a_piece_sends_says_which_when_another_is_not_done() {
     assert_eq!(
         label(2, "查一下明天东京的天气怎么样"),
@@ -395,6 +481,45 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     assert_eq!(her_choice(&options, "19点"), "19点");
     assert_eq!(her_choice(&options, "18:00 或 19:00"), "18:00 或 19:00");
     assert_eq!(her_choice(&[], " 随便 "), "随便");
+    assert_eq!(her_choice(&options, "1 点"), "1 点");
+    let book = [("yes", "订"), ("no", "不要")]
+        .map(|(value, label)| PendingOption {
+            value: value.into(),
+            label: label.into(),
+        })
+        .to_vec();
+    // Saying no to one is not choosing it.
+    assert_eq!(her_choice(&book, "不订了"), "不订了");
+    assert_eq!(her_choice(&book, "那就订吧"), "1");
+    assert_eq!(her_choice(&book, "不要"), "2");
+    // An empty value names nothing.
+    let blank = [("", "18:00"), ("", "19:00")]
+        .map(|(value, label)| PendingOption {
+            value: value.into(),
+            label: label.into(),
+        })
+        .to_vec();
+    assert_eq!(her_choice(&blank, "19:00 吧"), "2");
+    assert_eq!(
+        her_choice(
+            &[PendingOption {
+                value: "".into(),
+                label: "".into()
+            }],
+            "还没决定"
+        ),
+        "还没决定"
+    );
+    // `9:00` inside `19:00` is the longer one said; both said is not one.
+    let clock = ["9:00", "19:00"]
+        .map(|time| PendingOption {
+            value: time.into(),
+            label: time.into(),
+        })
+        .to_vec();
+    assert_eq!(her_choice(&clock, "订 19:00 的"), "2");
+    assert_eq!(her_choice(&clock, "9:00 吧"), "1");
+    assert_eq!(her_choice(&clock, "9:00 还是 19:00"), "9:00 还是 19:00");
 }
 
 #[test]
@@ -417,6 +542,9 @@ fn how_it_ended_is_one_line() {
         ended_line("助手列的是：\n\n1. 整理桌面\n2. 散步", false),
         "助手列的是： 1. 整理桌面 2. 散步"
     );
+    // A minus sign is not a bullet; a rule is nothing.
+    assert_eq!(ended_line("- -5°C\n---\n-12.5%", false), "-5°C -12.5%");
+    assert_eq!(ended_line("#3 号桌\n> * 已订", false), "#3 号桌 已订");
     assert_eq!(ended_line("", false), "办完了。");
     assert_eq!(ended_line("没有权限", true), "没办成：没有权限");
     assert_eq!(ended_line("  ", true), "没办成。");
