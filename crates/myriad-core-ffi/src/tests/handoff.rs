@@ -82,6 +82,7 @@ fn piece(number: u32, standing: Standing) -> Piece {
         number,
         asked: format!("第{number}件"),
         started_at: Some(60),
+        ended_at: None,
         standing,
     }
 }

@@ -28,7 +28,9 @@ pub const LABEL_CHARS: usize = 12;
 pub const RESULT_CHARS: usize = 200;
 /// What of a result goes in her line when a run ends.
 pub const ENDED_LINE_CHARS: usize = 80;
-/// Pieces that are over she still sees, and for how long after they began.
+/// Why a piece whose run never began did not get done.
+pub const NEVER_BEGAN: &str = "没能开始";
+/// Pieces that are over she still sees, and for how long after they ended.
 pub const DONE_SHOWN: usize = 3;
 pub const DONE_FOR_SECS: i64 = 24 * 60 * 60;
 
@@ -44,8 +46,17 @@ pub enum HandOff {
     Stop { work: u32 },
 }
 
+/// What follows `word` at the head of `inner`, in any case.
+fn lead<'a>(inner: &'a str, word: &str) -> Option<&'a str> {
+    inner
+        .get(..word.len())
+        .filter(|head| head.eq_ignore_ascii_case(word))
+        .map(|_| &inner[word.len()..])
+}
+
 /// `work: …`, `work #2: …`, `stop #2`, as she writes them inside `[[ ]]`.
-/// `None` is someone else's line; `Some(None)` is hers but says nothing.
+/// `None` is someone else's line; `Some(None)` is hers but says nothing,
+/// written wrong or left empty.
 fn parse(inner: &str) -> Option<Option<HandOff>> {
     let inner = inner.trim();
     let number = |rest: &str| -> Option<u32> {
@@ -55,11 +66,13 @@ fn parse(inner: &str) -> Option<Option<HandOff>> {
             .parse()
             .ok()
     };
-    if let Some(rest) = inner.strip_prefix("stop") {
+    if let Some(rest) = lead(inner, "stop") {
         return Some(number(rest).map(|work| HandOff::Stop { work }));
     }
-    let rest = inner.strip_prefix("work")?;
-    let (head, text) = rest.split_once([':', '：'])?;
+    let rest = lead(inner, "work")?;
+    let Some((head, text)) = rest.split_once([':', '：']) else {
+        return Some(None);
+    };
     let text: String = text.trim().chars().take(MAX_INSTRUCTION_CHARS).collect();
     if text.is_empty() {
         return Some(None);
@@ -71,8 +84,9 @@ fn parse(inner: &str) -> Option<Option<HandOff>> {
 }
 
 /// Take her hand-off lines out of a reply: the text without them, and what
-/// they say, in the order she wrote them. Lines that are not hers (a
-/// sticker, an outfit) stay for whoever reads them.
+/// they say, in the order she wrote them. One of hers written wrong goes
+/// unsaid; one on a line of its own goes with that line. Lines that are not
+/// hers (a sticker, an outfit) stay for whoever reads them.
 pub fn split(raw: &str) -> (String, Vec<HandOff>) {
     let mut text = raw.to_string();
     let mut handed = Vec::new();
@@ -86,9 +100,19 @@ pub fn split(raw: &str) -> (String, Vec<HandOff>) {
         match parse(&text[after..after + close]) {
             None => from = after,
             Some(line) => {
-                handed.extend(line);
+                // The same new piece twice in one reply is one piece.
+                if let Some(line) = line.filter(|line| !handed.contains(line)) {
+                    handed.push(line);
+                }
                 text.replace_range(start..after + close + CLOSE.len(), "");
                 from = start;
+                let line_begins = start == 0 || text[..start].ends_with('\n');
+                if line_begins && text[start..].starts_with('\n') {
+                    text.remove(start);
+                } else if start == text.len() && text.ends_with('\n') {
+                    text.pop();
+                    from = text.len();
+                }
             }
         }
     }
@@ -148,6 +172,9 @@ pub struct Piece {
     /// When it was handed off, Unix seconds.
     #[serde(default)]
     pub started_at: Option<i64>,
+    /// When its last run ended, Unix seconds, for one that is over.
+    #[serde(default)]
+    pub ended_at: Option<i64>,
     pub standing: Standing,
 }
 
@@ -163,6 +190,19 @@ impl Piece {
                 | Standing::CutOff { .. }
         )
     }
+}
+
+/// Whether a piece's run ever began.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Begun {
+    #[default]
+    Yes,
+    /// Handed off a moment ago; its run is on its way.
+    NotYet,
+    /// Handed off, and its run never began: it did not start, or what was
+    /// starting it stopped first.
+    Never,
 }
 
 /// What an end knows of a piece; `stands` reads it as one standing.
@@ -187,10 +227,13 @@ pub struct Facts {
     /// What came of it, when it is over.
     #[serde(default)]
     pub result: Option<String>,
+    #[serde(default)]
+    pub begun: Begun,
 }
 
 /// How a piece stands, from what is known of it. A stop wins; a question
-/// they saw comes before one left by a restart.
+/// they saw comes before one left by a restart; one whose run never began
+/// did not get done.
 pub fn stands(facts: &Facts) -> Standing {
     if facts.stopped {
         Standing::Stopped
@@ -206,6 +249,12 @@ pub fn stands(facts: &Facts) -> Standing {
         Standing::Doing {
             progress: facts.progress,
             steps: None,
+        }
+    } else if facts.begun == Begun::NotYet {
+        Standing::Starting
+    } else if facts.begun == Begun::Never {
+        Standing::Failed {
+            why: Some(NEVER_BEGAN.into()),
         }
     } else {
         Standing::Done {
@@ -228,7 +277,12 @@ fn took(seconds: i64) -> String {
 }
 
 fn read_back(text: &str) -> String {
-    one_line(text).chars().take(RESULT_CHARS).collect()
+    let all = one_line(text);
+    let mut short: String = all.chars().take(RESULT_CHARS).collect();
+    if all.chars().count() > RESULT_CHARS {
+        short.push('…');
+    }
+    short
 }
 
 /// A piece as she sees it, on one line. `now` is Unix seconds.
@@ -253,7 +307,7 @@ pub fn line(piece: &Piece, now: i64) -> String {
         Standing::Starting => format!("{head}刚交出去，还没开始"),
         Standing::Confirming => format!("{head}在等对方在卡片上确认"),
         Standing::Waiting { question } => {
-            format!("{head}在等对方回答：{}", one_line(question))
+            format!("{head}在等对方回答：{}", read_back(question))
         }
         Standing::CutOff {
             by: CutOffBy::Restart,
@@ -271,18 +325,26 @@ pub fn line(piece: &Piece, now: i64) -> String {
     }
 }
 
-/// Which pieces she sees: every unfinished one, and the latest few that are
-/// over and began within a day, so she knows how they came back. In the
-/// order handed off.
+/// Which pieces she sees: every unfinished one, and the few that ended last
+/// within a day, so she knows how they came back: one begun long ago that
+/// just came back is the one she most needs. Where its end is not known,
+/// its start stands in. In the order handed off.
 pub fn shown(mut pieces: Vec<Piece>, now: i64) -> Vec<Piece> {
     pieces.sort_by_key(|piece| piece.number);
-    let mut over: Vec<u32> = pieces
+    let mut over: Vec<(i64, u32)> = pieces
         .iter()
         .filter(|piece| !piece.unfinished())
-        .filter(|piece| piece.started_at.is_some_and(|at| now - at < DONE_FOR_SECS))
-        .map(|piece| piece.number)
+        .filter_map(|piece| {
+            let at = piece.ended_at.or(piece.started_at)?;
+            (now - at < DONE_FOR_SECS).then_some((at, piece.number))
+        })
         .collect();
-    over = over.split_off(over.len().saturating_sub(DONE_SHOWN));
+    over.sort();
+    let over: Vec<u32> = over
+        .split_off(over.len().saturating_sub(DONE_SHOWN))
+        .into_iter()
+        .map(|(_, number)| number)
+        .collect();
     pieces
         .into_iter()
         .filter(|piece| piece.unfinished() || over.contains(&piece.number))
@@ -398,25 +460,35 @@ pub fn her_choice(options: &[PendingOption], text: &str) -> String {
         return text.to_string();
     }
     let digits: String = text.chars().take_while(char::is_ascii_digit).collect();
+    // `19点`, `1 点`, `2:30`: a time or a count, not a choice.
     if let Ok(number) = digits.parse::<usize>()
         && (1..=options.len()).contains(&number)
-        && !text[digits.len()..].starts_with([':', '：', '.', '点'])
+        && !text[digits.len()..]
+            .trim_start()
+            .starts_with([':', '：', '.', '点', '时', '号'])
     {
         return number.to_string();
     }
     let named: Vec<usize> = options
         .iter()
         .enumerate()
-        .filter(|(_, option)| {
-            text.contains(option.value.as_str())
-                || (!option.label.trim().is_empty() && text.contains(option.label.as_str()))
-        })
+        .filter(|(_, option)| names(text, &option.value) || names(text, &option.label))
         .map(|(index, _)| index + 1)
         .collect();
     match named.as_slice() {
         [number] => number.to_string(),
         _ => text.to_string(),
     }
+}
+
+/// Whether `text` names a choice: it says it, and not right after a no
+/// (`不订了` does not name `订`). An empty name names nothing.
+fn names(text: &str, name: &str) -> bool {
+    let name = name.trim();
+    !name.is_empty()
+        && text
+            .match_indices(name)
+            .any(|(at, _)| !text[..at].ends_with(['不', '没', '别', '非']))
 }
 
 /// The next piece's number: one past the highest, from 1.

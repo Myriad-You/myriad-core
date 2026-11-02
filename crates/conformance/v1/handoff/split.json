@@ -152,6 +152,51 @@
     },
     {
       "input": {
+        "reply": "好[[work 订餐厅]][[Work: 查]]"
+      },
+      "name": "hers written wrong goes unsaid",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查"
+          }
+        ],
+        "spoken": "好"
+      }
+    },
+    {
+      "input": {
+        "reply": "好的\n[[work: 查天气]]\n明天告诉你"
+      },
+      "name": "one on a line of its own goes with that line",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查天气"
+          }
+        ],
+        "spoken": "好的\n明天告诉你"
+      }
+    },
+    {
+      "input": {
+        "reply": "好\n[[work: 查天气]]\n[[work: 查天气]]"
+      },
+      "name": "the same new piece twice is one",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查天气"
+          }
+        ],
+        "spoken": "好"
+      }
+    },
+    {
+      "input": {
         "text": "x"
       },
       "name": "bad input",

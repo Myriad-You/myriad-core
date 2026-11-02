@@ -14,7 +14,7 @@ fn secs(micros: i64) -> i64 {
     micros.div_euclid(1_000_000)
 }
 
-/// A piece as a call takes it: `startedAt` in microseconds.
+/// A piece as a call takes it: `startedAt` and `endedAt` in microseconds.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct PieceIn {
@@ -22,6 +22,8 @@ struct PieceIn {
     asked: String,
     #[serde(default)]
     started_at: Option<i64>,
+    #[serde(default)]
+    ended_at: Option<i64>,
     standing: Standing,
 }
 
@@ -31,6 +33,7 @@ impl PieceIn {
             number: self.number,
             asked: self.asked,
             started_at: self.started_at.map(secs),
+            ended_at: self.ended_at.map(secs),
             standing: self.standing,
         }
     }

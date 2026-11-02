@@ -400,20 +400,21 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 | 调用 | 输入 → 输出 |
 | --- | --- |
-| `handoff.split` | `{reply}` → `{spoken, handOffs}`：她的标记从回复里拿掉，按写的先后给出 `{kind: "new", text}`、`{kind: "to", work, text}`、`{kind: "stop", work}`。别人的标记（贴纸、换装）留在原处；没写完的标记留给流式显示扣住；指令最多 500 字 |
-| `handoff.stands` | `{stopped?, question?, unheardQuestion?, underWay?, progress?, result?}` → `{standing}`：叫停优先；对方看过的问题先于重启留下、谁也没看过的问题（那件算 `cutOff`，`by: "restart"`） |
+| `handoff.split` | `{reply}` → `{spoken, handOffs}`：她的标记从回复里拿掉，按写的先后给出 `{kind: "new", text}`、`{kind: "to", work, text}`、`{kind: "stop", work}`。`work`、`stop` 不分大小写；写坏的自家标记直接去掉、不说出来；单占一行的标记连同那一行去掉；同一回复里同样的新件只算一件。别人的标记（贴纸、换装）留在原处；没写完的标记留给流式显示扣住；指令最多 500 字 |
+| `handoff.stands` | `{stopped?, question?, unheardQuestion?, underWay?, progress?, result?, begun?}` → `{standing}`：叫停优先；对方看过的问题先于重启留下、谁也没看过的问题（那件算 `cutOff`，`by: "restart"`）；`begun` 是 `yes`（默认）、`notYet`（刚交出去，运行在路上：`starting`）、`never`（运行从没开始：`failed`，`why` 是「没能开始」），由各端按自己的计时判断 |
 | `handoff.line` | `{piece, now}` → `{line}`：她看到的一行，`#2「查明天东京天气」在办，已办 3 分钟（60%）` 这类 |
-| `handoff.shown` | `{pieces, now}` → `{numbers}`：她看得到哪几件：没办完的全部，加上开始不到一天、已经结束的最近 3 件，按编号 |
+| `handoff.shown` | `{pieces, now}` → `{numbers}`：她看得到哪几件：没办完的全部，加上一天内结束的最近 3 件（按 `endedAt`，没有时退回 `startedAt`），按编号 |
 | `handoff.route` | `{pieces}` → `{route}`：只有一件在等回答时对方下一句就是它的回答（`{to: "answer", work}`），否则由她判断（`{to: "her"}`）；等卡片确认的不算 |
 | `handoff.act` | `{handOff, pieces}` → `{act}`：`start`、`answer`（在等回答）、`steer`（在办、刚交出去、等卡片确认）、`continue`（办完了、没办成）、`pickUp`（被打断）、`stop`（没办完的）、`nothing`（叫停的、不存在的） |
 | `handoff.labelled` | `{number, asked, othersUnfinished, content}` → `{text}`：有别的件没办完时前面加 `【#N 前 12 字…】` |
-| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号（开头的序号，或只点名一个选项） |
+| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号（开头的序号，或只点名一个选项）。序号后面跟着「点、时、号、:」（空格隔开也算）是时间或数量，不是序号；紧跟在「不、没、别、非」后面的不算点名（「不订了」不是选「订」）；空的选项名谁也不点 |
 | `handoff.next_number` | `{numbers}` → `{number}` |
 | `handoff.work_input` | `{instruction, theirWords}` → `{input}`：交给助手的话，附上对方原话（只作参考） |
 | `handoff.ended_line` | `{text, failed}` → `{line}`：一件办完时她在对话里说的那句，结果各行连成一行截 80 字 |
 | `handoff.section` | `{host: "site" \| "mac", lines, waiting, answered?}` → `{section}`：她的说明，`lines` 是 `shown` 各件的 `line` |
 
-- 时间照全库的约定是微秒；规则按整秒算（向下取整）。
+- 时间照全库的约定是微秒；规则按整秒算（向下取整）。`piece` 是 `{number, asked, startedAt?, endedAt?, standing}`。
+- 她读回的问题、结果、原因都压成一行，超过 200 字截断并加「…」。
 - `standing` 是 `{state, …}`：`doing`（`progress` 百分比、`steps` 步数，可缺）、`starting`、`confirming`、`waiting`（`question`）、`cutOff`（`by`: `restart`、`appQuit`）、`done`（`result`）、`failed`（`why`）、`stopped`。站点现在用到 `doing`、`waiting`、`cutOff`、`done`、`stopped`；其余照原生的说法加进来，给经 FFI 的端用。
 - 一致性对照在 `crates/conformance/v1/handoff/`，经 C 入口跑；`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi handoff` 照 crate 重写 `output`，只随一次写明理由的改动用。
 
