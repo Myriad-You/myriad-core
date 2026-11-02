@@ -1328,9 +1328,21 @@ fn parse_yes_no(text: &str) -> Option<bool> {
     }
 }
 
-/// A choice by its own words, or by its number alone when no choice's
-/// name begins with a number (with `2号` and `3号` listed, `2` could be
-/// either; with `2` and `4`, `2` is the one named 2). Nothing else.
+/// Whether `number` (plain digits) is also a number in a choice's own
+/// name, as a whole (`2` in `2号`, `11月2号`, `2`; not in `20:00`): then
+/// it could be read as that name, and is not taken as a choice number.
+pub fn number_is_in_a_name(options: &[PendingOption], number: &str) -> bool {
+    options.iter().any(|option| {
+        [&option.label, &option.value].into_iter().any(|name| {
+            name.split(|ch: char| !ch.is_ascii_digit())
+                .any(|run| !run.is_empty() && run.trim_start_matches('0') == number)
+        })
+    })
+}
+
+/// A choice by its own words, or by its number alone when that number is
+/// not also in a choice's name (with `2号` and `3号` listed, `2` could be
+/// either; with `14:00` and `20:00`, `2` is the second). Nothing else.
 fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
     let needle = normalize_choice(text);
     let named = prompt.options.iter().find_map(|option| {
@@ -1338,16 +1350,10 @@ fn match_one_option(prompt: &PendingPrompt, text: &str) -> Option<String> {
         let value = normalize_choice(&option.value);
         (!needle.is_empty() && (needle == label || needle == value)).then(|| option.value.clone())
     });
-    let numbered_names = prompt.options.iter().any(|option| {
-        [&option.label, &option.value]
-            .into_iter()
-            .any(|name| name.trim().starts_with(|ch: char| ch.is_ascii_digit()))
-    });
     named.or_else(|| {
-        (!numbered_names)
-            .then(|| parse_option_index(text, prompt.options.len()))
-            .flatten()
-            .map(|index| prompt.options[index].value.clone())
+        let index = parse_option_index(text, prompt.options.len())?;
+        (!number_is_in_a_name(&prompt.options, &(index + 1).to_string()))
+            .then(|| prompt.options[index].value.clone())
     })
 }
 

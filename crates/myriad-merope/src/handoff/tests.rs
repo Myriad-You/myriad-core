@@ -484,10 +484,10 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     let same =
         |names: &[&str]| choices(&names.iter().map(|name| (*name, *name)).collect::<Vec<_>>());
     let times = same(&["18:00", "19:00"]);
-    // Its number alone, or its words alone, as listed; times begin with a
-    // number, so they go by name and come back as it.
-    assert_eq!(her_choice(&times, "19:00"), "19:00");
-    assert_eq!(her_choice(&times, "19:00。"), "19:00");
+    // Its number alone, or its words alone, as listed.
+    assert_eq!(her_choice(&times, "2"), "2");
+    assert_eq!(her_choice(&times, "19:00"), "2");
+    assert_eq!(her_choice(&times, "19:00。"), "2");
     let cities = same(&["东京", "大阪"]);
     assert_eq!(her_choice(&cities, " 2 "), "2");
     assert_eq!(her_choice(&cities, "东京"), "1");
@@ -527,9 +527,10 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
         her_choice(&same(&["A", "B"]), "Actually let me think"),
         "Actually let me think"
     );
-    // Names that begin with a number go by name, never by number.
+    // A number that is also in a choice's name is not a choice number;
+    // a choice whose number is in another's name comes back by name.
     let days = same(&["2号", "3号"]);
-    assert_eq!(her_choice(&days, "2号"), "2号");
+    assert_eq!(her_choice(&days, "2号"), "1");
     assert_eq!(her_choice(&days, "3号"), "3号");
     for said in ["2", "2 号", "2　号", "02号"] {
         assert_eq!(her_choice(&days, said), said);
@@ -544,8 +545,8 @@ fn her_answer_to_a_choice_is_the_choice_she_means() {
     }
     let counts = same(&["2", "4"]);
     assert_eq!(her_choice(&counts, "4"), "4");
-    assert_eq!(her_choice(&counts, "2"), "2");
-    assert_eq!(her_choice(&counts, "1"), "1");
+    assert_eq!(her_choice(&counts, "2"), "1");
+    assert_eq!(her_choice(&same(&["3", "4"]), "2"), "2");
     // An empty name names nothing; no choices, nothing to choose.
     let blank = choices(&[("", "早场"), ("", "")]);
     assert_eq!(her_choice(&blank, "早场"), "1");

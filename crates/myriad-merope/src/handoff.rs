@@ -15,7 +15,7 @@
 //! `labelled`). Running the pieces, keeping them, timing and delivery stay
 //! with each end.
 
-use myriad_agent_rules::channel::PendingOption;
+use myriad_agent_rules::channel::{PendingOption, number_is_in_a_name};
 use serde::{Deserialize, Serialize};
 
 const OPEN: &str = "[[";
@@ -505,12 +505,18 @@ pub fn labelled(number: u32, asked: &str, others_unfinished: bool, content: &str
 /// words chose wrong too often, and asking twice is better.
 pub fn her_choice(options: &[PendingOption], text: &str) -> String {
     let text = text.trim();
-    let chosen = choice_named(options, text).or_else(|| choice_numbered(options, text));
-    match chosen {
-        // Choices whose names begin with a number (`2号`, `4`) go by
-        // name, so no number is read as another's name.
-        Some(index) if names_begin_with_a_number(options) => options[index].value.clone(),
-        Some(index) => (index + 1).to_string(),
+    match choice_named(options, text).or_else(|| choice_numbered(options, text)) {
+        // Its number, unless that number is in a choice's name too (`2`
+        // among `2` and `4`): then its name, so neither is read as the
+        // other.
+        Some(index) => {
+            let number = (index + 1).to_string();
+            if number_is_in_a_name(options, &number) {
+                options[index].value.clone()
+            } else {
+                number
+            }
+        }
         None => text.to_string(),
     }
 }
@@ -533,24 +539,16 @@ fn choice_named(options: &[PendingOption], text: &str) -> Option<usize> {
 }
 
 /// The choice `text` is the number of: plain digits and nothing else (not
-/// `+1`, `01`, `2 号`), in range, when no choice's name begins with a
-/// number (with `2号` and `3号` listed, `2` could be either).
+/// `+1`, `01`, `2 号`), in range, and not also a number in a choice's name
+/// (with `2号` and `3号` listed, `2` could be either).
 fn choice_numbered(options: &[PendingOption], text: &str) -> Option<usize> {
     let plain =
         !text.is_empty() && !text.starts_with('0') && text.chars().all(|ch| ch.is_ascii_digit());
-    if !plain || names_begin_with_a_number(options) {
+    if !plain || number_is_in_a_name(options, text) {
         return None;
     }
     let number: usize = text.parse().ok()?;
     (1..=options.len()).contains(&number).then(|| number - 1)
-}
-
-fn names_begin_with_a_number(options: &[PendingOption]) -> bool {
-    options.iter().any(|option| {
-        [&option.value, &option.label]
-            .into_iter()
-            .any(|name| name.trim().starts_with(|ch: char| ch.is_ascii_digit()))
-    })
 }
 
 /// The next piece's number: one past the highest, from 1. None when the

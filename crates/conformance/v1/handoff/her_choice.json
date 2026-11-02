@@ -324,7 +324,7 @@
       },
       "name": "when the choices are days, 2号 names the one it says",
       "output": {
-        "choice": "2号"
+        "choice": "1"
       }
     },
     {
@@ -381,7 +381,7 @@
       },
       "name": "a unit with the number names the choice, not its number",
       "output": {
-        "choice": "2晚"
+        "choice": "1"
       }
     },
     {
@@ -628,7 +628,26 @@
       },
       "name": "its words alone, with a full stop",
       "output": {
-        "choice": "19:00"
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "14:00",
+            "value": "14:00"
+          },
+          {
+            "label": "20:00",
+            "value": "20:00"
+          }
+        ],
+        "text": "2"
+      },
+      "name": "a number not in any name is the choice, even among times",
+      "output": {
+        "choice": "2"
       }
     }
   ],

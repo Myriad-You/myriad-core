@@ -1021,7 +1021,7 @@ fn a_choice_is_its_words_or_its_number_alone() {
             "{said}"
         );
     }
-    // With names that begin with a number, only the names are choices.
+    // A number that is in a choice's name is that name, not a number.
     prompt.options = ["2", "4"]
         .map(|count| PendingOption {
             value: count.into(),
@@ -1034,8 +1034,18 @@ fn a_choice_is_its_words_or_its_number_alone() {
             other => panic!("{said}: {other:?}"),
         }
     }
+    match decide_pending_reply(&prompt, "1", 0) {
+        PendingDecision::Resume { answer, .. } => assert_eq!(answer, "2"),
+        other => panic!("{other:?}"),
+    }
+    prompt.options = ["2号", "3号"]
+        .map(|day| PendingOption {
+            value: day.into(),
+            label: day.into(),
+        })
+        .to_vec();
     assert!(matches!(
-        decide_pending_reply(&prompt, "1", 0),
+        decide_pending_reply(&prompt, "2", 0),
         PendingDecision::Reask { .. }
     ));
 }
