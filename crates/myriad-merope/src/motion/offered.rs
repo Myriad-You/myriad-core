@@ -27,8 +27,9 @@ pub fn offered_score_moves(state: Option<&RigStateSummary>) -> Vec<&'static str>
 }
 
 /// Whether a plan holds up as directed: the parser keeps all of it, it names
-/// at most two cues and every phrase lands on `response`, and it plays
-/// something (the semantic eval's check of a director's answer).
+/// at most two cues, every phrase and every beat of its score lands on
+/// `response`, and it plays something, a score alone included (the semantic
+/// eval's check of a director's answer).
 pub fn semantic_valid(raw: &str, response: &str) -> bool {
     let Some(decision) = parse_motion_decision(raw) else {
         return false;
@@ -46,10 +47,12 @@ pub fn semantic_valid(raw: &str, response: &str) -> bool {
         return false;
     };
     let phrases = grounded_speech_phrases(&value["phrases"], Some(response));
+    let score = grounded_score(&value["score"], Some(response), None);
     plan == unfiltered
         && plan.cues.len() <= 2
         && phrases.len() == value["phrases"].as_array().map_or(0, Vec::len)
-        && (!plan_is_empty(&plan) || !phrases.is_empty())
+        && score.len() == value["score"].as_array().map_or(0, Vec::len)
+        && (!plan_is_empty(&plan) || !phrases.is_empty() || !score.is_empty())
 }
 
 #[cfg(test)]
@@ -77,6 +80,28 @@ mod tests {
         assert!(
             !semantic_valid(&unknown, "嗯，好。"),
             "an unknown tier is not half acted"
+        );
+    }
+
+    #[test]
+    fn a_score_counts_only_when_every_beat_lands() {
+        let nod = r#"{"score":[{"atMs":300,"move":{"kind":"nod","count":2}}]}"#;
+        assert!(semantic_valid(nod, "嗯，好。"), "a score alone is acted");
+        let on_words = r#"{"score":[{"text":"好","move":{"kind":"nod"}}]}"#;
+        assert!(semantic_valid(on_words, "嗯，好。"));
+        assert!(
+            !semantic_valid(on_words, "不行。"),
+            "a beat on words the reply does not say"
+        );
+        let baseline = r#"{"baseline":{"expression":"steady","posture":"neutral","motionEnergy":1,"attention":1},"cues":[]"#;
+        let with = |score: &str| format!("{baseline},\"score\":{score}}}");
+        assert!(semantic_valid(
+            &with(r#"[{"atMs":0,"move":{"kind":"nod"}}]"#),
+            "嗯。"
+        ));
+        assert!(
+            !semantic_valid(&with(r#"[{"atMs":0,"move":{"kind":"moonwalk"}}]"#), "嗯。"),
+            "a beat the score cannot play"
         );
     }
 

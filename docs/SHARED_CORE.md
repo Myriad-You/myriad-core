@@ -431,7 +431,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `motion.asked` | `{moment, persona?, direct}` → `{hidden: false, state, questions}`，或脸没人看得见时 `{hidden: true}`（什么都不问）：`direct` 为真是给只答题的模型的一套（每个部位一题），否则是给聊天模型的较短的一套；`presence` 问站立演出 |
 | `motion.chat_prompt` | `{questions}` → `{system, schema}`：同一套题交给聊天模型时的系统提示和答案的 JSON Schema |
 | `motion.plan` | `{moment, answers, direct}` → `{plan}`：答案（每题 `{choice, confidence}`、`{noul}` 或 `{score, confidence}`）照导演写计划的样子拼成计划；把握不够（低于 0.3）的不演 |
-| `motion.way` | `{moment, answers}` → `{way: {from, to, state, questions} \| null}`：答案换了脸时，再问一句路上经过哪张脸；没换是 `null` |
+| `motion.way` | `{moment, answers}` → `{way: {from, to, state, questions} \| null}`：答案换了脸时，再问一句路上经过哪张脸；没换是 `null`。新脸是计划真正换上的那张（`motion.plan` 的 `baseline.face`）：转述别人的感受、或契约里没有的脸名，都回她平常的脸 |
 | `motion.lay_way` | `{plan, answers}` → `{plan}`：把那一句的答案（经过的脸，最多两张）放进计划的 `baseline.via` |
 | `motion.direction` | `{moment, answer?, fallbackToLocal}` → `{outcome, dropped, directive}`：导演的回答（`motion.plan` 的计划写成文字；没回答、出错或超时就不给）变成她要演的。`outcome` 是 `hidden`、`continued`（导演说接着演，什么都不发，也不重放兜底）、`director`、`floor`（导演没有可用的回答，`fallbackToLocal` 为真时演兜底）、`unplayable`（这张脸演不出）、`none`（没回答又不要兜底：兜底已经在演了）；`dropped` 是回答来了但不是合法的计划 |
 | `motion.floor` | `{moment}` → `{directive}`：兜底动作，只看她的状态，不读文字；回合一开始先演 |
@@ -440,7 +440,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `motion.standing_acting` | `{directive}` → `{acting}`：导演给的站立演出算不算演了什么（有谱或有站姿） |
 
 - **一轮的顺序**（站点 `merope/motion.rs` 的 `direct_motion_inner`）：`motion.floor` 先演；`motion.asked` 拿题，`hidden` 就停；问模型（聊天模型先用 `motion.chat_prompt`）；`motion.plan`；`motion.way` 有题就在剩下的时间里再问一次，答上来用 `motion.lay_way`；`motion.direction` 交出要演的。站立演出另用 `motion.standing_doing` 拼出 `activity`，导演没答出来时用 `motion.standing_floor`，过一会儿再问。
-- **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。
+- **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。只随一次写明理由的改动改，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test motion_conformance` 只重写输出变了的文件。2026-11-02 改过一次：转述别人时 `motion.way` 不再朝计划没换上的脸问路（录下的 `way.json` 里这类用例随之改写）。
 
 ## 一致性对照（`crates/conformance/`）
 

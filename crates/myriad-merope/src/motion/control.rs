@@ -231,17 +231,37 @@ pub(super) fn lay_face(
     state: Option<&RigStateSummary>,
     own: bool,
 ) -> Option<&'static str> {
-    let face = sure(answers, "face").filter(|face| *face != "none")?;
+    let (name, look) = named_look(answers)?;
     let controls = offered_body_controls(state);
-    let (name, _, look) = crate::PERFORMANCE_FACE_PRESETS
-        .iter()
-        .find(|(name, _, _)| *name == face)?;
     for (control, tier) in look.iter() {
         if controls.contains(control) && (own || is_bearing(control)) {
             targets.insert((*control).to_owned(), json!(tier));
         }
     }
-    own.then_some(*name)
+    own.then_some(name)
+}
+
+/// The whole look the answers name, when the contract knows it.
+fn named_look(answers: &Value) -> Option<(&'static str, &'static [(&'static str, &'static str)])> {
+    let face = sure(answers, "face").filter(|face| *face != "none")?;
+    crate::PERFORMANCE_FACE_PRESETS
+        .iter()
+        .find(|(name, _, _)| *name == face)
+        .map(|(name, _, look)| (*name, *look))
+}
+
+/// The look the plan names (`lay_face`): the one the answers choose, when
+/// it is hers to wear.
+pub(super) fn taken_face(answers: &Value, own: bool) -> Option<&'static str> {
+    own.then(|| named_look(answers).map(|(name, _)| name))
+        .flatten()
+}
+
+/// Whether what she shows is her own feeling: the director is sure enough
+/// it is not someone else's she quotes. Her standing acting is always hers.
+pub(super) fn is_own(answers: &Value, context: &Moment) -> bool {
+    context.phase == super::MotionPhase::Presence
+        || answers["own"]["noul"].as_f64().unwrap_or(1.0) >= OWN
 }
 
 /// The standing targets the answers give, control by control; with `own`
@@ -281,7 +301,7 @@ pub(super) fn control_plan(
     state: Option<&RigStateSummary>,
 ) -> Value {
     let sure = |key: &str| sure(answers, key);
-    let own = answers["own"]["noul"].as_f64().unwrap_or(1.0) >= OWN;
+    let own = is_own(answers, context);
     let mut targets = answered_targets(answers, state, own);
     let face = lay_face(&mut targets, answers, state, own);
     let energy = sure("energy").unwrap_or("usual");

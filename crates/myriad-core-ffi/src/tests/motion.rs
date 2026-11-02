@@ -87,4 +87,12 @@ fn a_plan_goes_back_in_as_the_directors_answer() {
         &json!({"moment": moment, "fallbackToLocal": false, "userId": 1}),
     );
     assert_eq!(status, STATUS_BAD_INPUT, "an unknown field is refused");
+    let mut odd = moment.clone();
+    odd["phase"] = json!("a-phase-named-after-a-secret");
+    let (status, out) = ffi("motion.floor", &json!({"moment": odd}));
+    assert_eq!(status, STATUS_BAD_INPUT);
+    assert!(
+        !out.to_string().contains("secret"),
+        "a refusal quotes no value of the input: {out}"
+    );
 }
