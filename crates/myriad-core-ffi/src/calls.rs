@@ -27,6 +27,7 @@ mod handoff;
 mod link;
 mod log;
 mod memory;
+mod motion;
 mod nodes;
 mod outfit;
 mod own;
@@ -145,6 +146,16 @@ const CALLS: &[(&str, Call)] = &[
     ("memory.score_all", memory::score_all),
     ("memory.spread", memory::spread),
     ("meta.version", version),
+    ("motion.asked", motion::asked),
+    ("motion.chat_prompt", motion::chat_prompt),
+    ("motion.direction", motion::direction),
+    ("motion.floor", motion::floor),
+    ("motion.lay_way", motion::lay_way),
+    ("motion.plan", motion::plan),
+    ("motion.standing_acting", motion::standing_acting),
+    ("motion.standing_doing", motion::standing_doing),
+    ("motion.standing_floor", motion::standing_floor),
+    ("motion.way", motion::way),
     ("nodes.body", nodes::body),
     ("nodes.fold", nodes::fold),
     ("nodes.home_owed", nodes::home_owed),

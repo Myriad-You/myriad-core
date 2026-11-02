@@ -417,12 +417,34 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - `standing` 是 `{state, …}`：`doing`（`progress` 百分比、`steps` 步数，可缺）、`starting`、`confirming`、`waiting`（`question`）、`cutOff`（`by`: `restart`、`appQuit`）、`done`（`result`）、`failed`（`why`）、`stopped`。站点现在用到 `doing`、`waiting`、`cutOff`、`done`、`stopped`；其余照原生的说法加进来，给经 FFI 的端用。
 - 一致性对照在 `crates/conformance/v1/handoff/`，经 C 入口跑；`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi handoff` 照 crate 重写 `output`，只随一次写明理由的改动用。
 
+## 她的演出（`motion.*`）
+
+动作导演的判断：问判断模型哪些题、它的答案怎么读、怎么校验、怎么落到各个部位，兜底动作，没人和她说话时她在做的事怎么演。规则在 `myriad_merope::motion`，2026-11-02 从站点后端的 `merope/motion*`、`motion_local.rs`、`standing.rs` 只挪不改地搬来（`questions`、`control`、`way`、`presence`、`floor`、`standing`）。问模型（只答题的模型走它自己的接口，聊天模型走结构化输出）、超时和预算、读人设、记账、发事件、按她在做的事保留一份方向和过一会儿再问，都留在各端。
+
+`moment` 是她此刻的样子：`{phase, mood, activity, userText?, responseText?, previousPhrases?, taskSuccess?, rigState?, motionStyle}`。`phase` 是 `reaction`、`delivery`、`outcome`、`proactive`、`mood`、`presence`（没人和她说话）；`mood` 是 `affect.transition` 的输出；`rigState` 是整份 `RigStateSummary`（不再经 `sanitize_rig_state`）；`motionStyle` 是这一轮定下的动作风格（`round_motion_style`）。题目按这一轮的风格套到 `rigState` 上之后的样子出。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `motion.asked` | `{moment, persona?, direct}` → `{hidden: false, state, questions}`，或脸没人看得见时 `{hidden: true}`（什么都不问）：`direct` 为真是给只答题的模型的一套（每个部位一题），否则是给聊天模型的较短的一套；`presence` 问站立演出 |
+| `motion.chat_prompt` | `{questions}` → `{system, schema}`：同一套题交给聊天模型时的系统提示和答案的 JSON Schema |
+| `motion.plan` | `{moment, answers, direct}` → `{plan}`：答案（每题 `{choice, confidence}`、`{noul}` 或 `{score, confidence}`）照导演写计划的样子拼成计划；把握不够（低于 0.3）的不演 |
+| `motion.way` | `{moment, answers}` → `{way: {from, to, state, questions} \| null}`：答案换了脸时，再问一句路上经过哪张脸；没换是 `null` |
+| `motion.lay_way` | `{plan, answers}` → `{plan}`：把那一句的答案（经过的脸，最多两张）放进计划的 `baseline.via` |
+| `motion.direction` | `{moment, answer?, fallbackToLocal}` → `{outcome, dropped, directive}`：导演的回答（`motion.plan` 的计划写成文字；没回答、出错或超时就不给）变成她要演的。`outcome` 是 `hidden`、`continued`（导演说接着演，什么都不发，也不重放兜底）、`director`、`floor`（导演没有可用的回答，`fallbackToLocal` 为真时演兜底）、`unplayable`（这张脸演不出）、`none`（没回答又不要兜底：兜底已经在演了）；`dropped` 是回答来了但不是合法的计划 |
+| `motion.floor` | `{moment}` → `{directive}`：兜底动作，只看她的状态，不读文字；回合一开始先演 |
+| `motion.standing_doing` | `{thing?, lazing?, together}`（`thing`、`lazing` 恰好给一个）→ `{way, activity}`：她在做的事（`sources::Thing`，或闲着的那一种）告诉导演时的说法，和导演联系不上时按哪一类演（`presence::WAYS`）；`together` 是有人和她一起听 |
+| `motion.standing_floor` | `{moment, way}` → `{directive}`：导演联系不上时的站立演出，按 `way` 用固定规则演，循环 20 秒 |
+| `motion.standing_acting` | `{directive}` → `{acting}`：导演给的站立演出算不算演了什么（有谱或有站姿） |
+
+- **一轮的顺序**（站点 `merope/motion.rs` 的 `direct_motion_inner`）：`motion.floor` 先演；`motion.asked` 拿题，`hidden` 就停；问模型（聊天模型先用 `motion.chat_prompt`）；`motion.plan`；`motion.way` 有题就在剩下的时间里再问一次，答上来用 `motion.lay_way`；`motion.direction` 交出要演的。站立演出另用 `motion.standing_doing` 拼出 `activity`，导演没答出来时用 `motion.standing_floor`，过一会儿再问。
+- **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v1/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。

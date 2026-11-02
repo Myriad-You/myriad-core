@@ -1,0 +1,3956 @@
+{
+  "call": "motion.floor",
+  "cases": [
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "才、才没有呢……不过，谢谢你这么说。",
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": "你今天特别可爱。"
+        }
+      },
+      "name": "delivery shy, no rig",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "才、才没有呢……不过，谢谢你这么说。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "你今天特别可爱。"
+        }
+      },
+      "name": "delivery shy, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "才、才没有呢……不过，谢谢你这么说。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "你今天特别可爱。"
+        }
+      },
+      "name": "delivery shy, head only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "才、才没有呢……不过，谢谢你这么说。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "你今天特别可爱。"
+        }
+      },
+      "name": "delivery shy, page hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_praise",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈哈哈！你是想把迟到也冻住吗？",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "我今天迟到了三次"
+        }
+      },
+      "name": "delivery laugh, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "warm",
+              "motionEnergy": 1.3440001010894775,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 1.1548000574111938,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.203200101852417
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_praise",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈哈哈！你是想把迟到也冻住吗？",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "我今天迟到了三次"
+        }
+      },
+      "name": "delivery laugh, mouth only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "warm",
+              "motionEnergy": 1.3440001010894775,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_praise",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈哈哈！你是想把迟到也冻住吗？",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "我今天迟到了三次"
+        }
+      },
+      "name": "delivery laugh, everything singing",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "warm",
+              "motionEnergy": 1.3440001010894775,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 1.1548000574111938,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.203200101852417
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "她说：“哈哈，我太开心了！”这是小说角色的台词。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "这句什么意思"
+        }
+      },
+      "name": "delivery quote, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "她说：“哈哈，我太开心了！”这是小说角色的台词。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "这句什么意思"
+        }
+      },
+      "name": "delivery quote, drowsy with accents",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "她说：“哈哈，我太开心了！”这是小说角色的台词。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "这句什么意思"
+        }
+      },
+      "name": "delivery quote, maniac speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "她说：“哈哈，我太开心了！”这是小说角色的台词。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "这句什么意思"
+        }
+      },
+      "name": "delivery quote, face hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "好啊，看我的！",
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": "做一下狂笑"
+        }
+      },
+      "name": "delivery asked face, no rig",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "好啊，看我的！",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "做一下狂笑"
+        }
+      },
+      "name": "delivery asked face, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "好啊，看我的！",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "做一下狂笑"
+        }
+      },
+      "name": "delivery asked face, head only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.9549999833106995,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0700000524520874
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "好啊，看我的！",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "做一下狂笑"
+        }
+      },
+      "name": "delivery asked face, page hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 48.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": -12.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "delivery",
+          "previousPhrases": [
+            {
+              "intent": "hesitate",
+              "text": "也许可以试试。"
+            }
+          ],
+          "responseText": "还有点难受。不过我愿意慢慢说。其实可以先把原因说清楚。你觉得呢？嗯……也许吧！好。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "怎么了？"
+        }
+      },
+      "name": "delivery long, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "withdrawn",
+              "motionEnergy": 0.5520000457763672,
+              "posture": "closed"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.7984000444412231,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 0.9656000137329102
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 48.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": -12.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "delivery",
+          "previousPhrases": [
+            {
+              "intent": "hesitate",
+              "text": "也许可以试试。"
+            }
+          ],
+          "responseText": "还有点难受。不过我愿意慢慢说。其实可以先把原因说清楚。你觉得呢？嗯……也许吧！好。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "怎么了？"
+        }
+      },
+      "name": "delivery long, mouth only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "withdrawn",
+              "motionEnergy": 0.5520000457763672,
+              "posture": "closed"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 48.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": -12.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "delivery",
+          "previousPhrases": [
+            {
+              "intent": "hesitate",
+              "text": "也许可以试试。"
+            }
+          ],
+          "responseText": "还有点难受。不过我愿意慢慢说。其实可以先把原因说清楚。你觉得呢？嗯……也许吧！好。",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "怎么了？"
+        }
+      },
+      "name": "delivery long, everything singing",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "withdrawn",
+              "motionEnergy": 0.5520000457763672,
+              "posture": "closed"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.7984000444412231,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 0.9656000137329102
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 63.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "high",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 3.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈。哈哈。好",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "笑一个"
+        }
+      },
+      "name": "delivery repeat, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 1.003600001335144,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.1024000644683838
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 63.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "high",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 3.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈。哈哈。好",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "笑一个"
+        }
+      },
+      "name": "delivery repeat, drowsy with accents",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 1.003600001335144,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.1024000644683838
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 63.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "high",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 3.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈。哈哈。好",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "笑一个"
+        }
+      },
+      "name": "delivery repeat, maniac speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "delivery",
+          "plan": {
+            "baseline": {
+              "attention": 0.7200000286102295,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 1.003600001335144,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.1024000644683838
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 63.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "high",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 3.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "delivery",
+          "previousPhrases": [],
+          "responseText": "哈哈。哈哈。好",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "笑一个"
+        }
+      },
+      "name": "delivery repeat, face hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "thinking",
+          "mood": {
+            "after": 51.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "tense",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_scold",
+            "delta": -9.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "reaction",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": "醒醒！你中奖了！"
+        }
+      },
+      "name": "reaction, no rig",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "reaction",
+          "plan": {
+            "baseline": {
+              "attention": 0.8999999761581421,
+              "expression": "tense",
+              "motionEnergy": 0.9449999332427979,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 115,
+                "fadeOutMs": 500,
+                "intensity": 0.9752500057220459,
+                "intent": "speechless",
+                "interrupt": "if-lower",
+                "tempo": 1.0835000276565552
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "thinking",
+          "mood": {
+            "after": 51.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "tense",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_scold",
+            "delta": -9.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "reaction",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "醒醒！你中奖了！"
+        }
+      },
+      "name": "reaction, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "reaction",
+          "plan": {
+            "baseline": {
+              "attention": 0.8999999761581421,
+              "expression": "tense",
+              "motionEnergy": 0.9449999332427979,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 115,
+                "fadeOutMs": 500,
+                "intensity": 0.9752500057220459,
+                "intent": "speechless",
+                "interrupt": "if-lower",
+                "tempo": 1.0835000276565552
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "thinking",
+          "mood": {
+            "after": 51.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "tense",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_scold",
+            "delta": -9.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "reaction",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "醒醒！你中奖了！"
+        }
+      },
+      "name": "reaction, head only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "reaction",
+          "plan": {
+            "baseline": {
+              "attention": 0.8999999761581421,
+              "expression": "tense",
+              "motionEnergy": 0.9449999332427979,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 115,
+                "fadeOutMs": 500,
+                "intensity": 0.9752500057220459,
+                "intent": "speechless",
+                "interrupt": "if-lower",
+                "tempo": 1.0835000276565552
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "thinking",
+          "mood": {
+            "after": 51.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "tense",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_scold",
+            "delta": -9.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "reaction",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "醒醒！你中奖了！"
+        }
+      },
+      "name": "reaction, page hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about what she noticed: a new photo",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": "你今天的照片拍得真好看！",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "proactive, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "proactive",
+          "plan": {
+            "baseline": {
+              "attention": 0.550000011920929,
+              "expression": "steady",
+              "motionEnergy": 1.2000000476837158,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 110,
+                "fadeOutMs": 380,
+                "intensity": 1.090000033378601,
+                "intent": "notify",
+                "interrupt": "if-lower",
+                "tempo": 1.1600000858306885
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about what she noticed: a new photo",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": "你今天的照片拍得真好看！",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "proactive, mouth only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "proactive",
+          "plan": {
+            "baseline": {
+              "attention": 0.550000011920929,
+              "expression": "steady",
+              "motionEnergy": 1.2000000476837158,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about what she noticed: a new photo",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": "你今天的照片拍得真好看！",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "proactive, everything singing",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "proactive",
+          "plan": {
+            "baseline": {
+              "attention": 0.550000011920929,
+              "expression": "steady",
+              "motionEnergy": 1.2000000476837158,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 110,
+                "fadeOutMs": 380,
+                "intensity": 1.090000033378601,
+                "intent": "notify",
+                "interrupt": "if-lower",
+                "tempo": 1.1600000858306885
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about a song",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "low",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "  "
+        }
+      },
+      "name": "proactive unsaid, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "proactive",
+          "plan": {
+            "baseline": {
+              "attention": 0.550000011920929,
+              "expression": "subdued",
+              "motionEnergy": 0.828000009059906,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 110,
+                "fadeOutMs": 380,
+                "intensity": 0.9226000308990479,
+                "intent": "notify",
+                "interrupt": "if-lower",
+                "tempo": 1.0484000444412231
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about a song",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "low",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "  "
+        }
+      },
+      "name": "proactive unsaid, drowsy with accents",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "proactive",
+          "plan": {
+            "baseline": {
+              "attention": 0.550000011920929,
+              "expression": "subdued",
+              "motionEnergy": 0.828000009059906,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 110,
+                "fadeOutMs": 380,
+                "intensity": 0.9226000308990479,
+                "intent": "notify",
+                "interrupt": "if-lower",
+                "tempo": 1.0484000444412231
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about a song",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "low",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": "  "
+        }
+      },
+      "name": "proactive unsaid, maniac speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "proactive",
+          "plan": {
+            "baseline": {
+              "attention": 0.550000011920929,
+              "expression": "subdued",
+              "motionEnergy": 0.828000009059906,
+              "posture": "neutral"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 110,
+                "fadeOutMs": 380,
+                "intensity": 0.9226000308990479,
+                "intent": "notify",
+                "interrupt": "if-lower",
+                "tempo": 1.0484000444412231
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "speaking up about a song",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "low",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "proactive",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": "  "
+        }
+      },
+      "name": "proactive unsaid, face hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "弄好啦～你看看？",
+          "rigState": null,
+          "taskSuccess": true,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome done, no rig",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "outcome",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 105,
+                "fadeOutMs": 460,
+                "intensity": 1.003600001335144,
+                "intent": "delight",
+                "interrupt": "if-lower",
+                "tempo": 1.1024000644683838
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "弄好啦～你看看？",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": true,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome done, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "outcome",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 105,
+                "fadeOutMs": 460,
+                "intensity": 1.003600001335144,
+                "intent": "delight",
+                "interrupt": "if-lower",
+                "tempo": 1.1024000644683838
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "弄好啦～你看看？",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": true,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome done, head only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "outcome",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 105,
+                "fadeOutMs": 460,
+                "intensity": 1.003600001335144,
+                "intent": "delight",
+                "interrupt": "if-lower",
+                "tempo": 1.1024000644683838
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "弄好啦～你看看？",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": true,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome done, page hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 40.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "floor",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": -20.0,
+            "revision": 7
+          },
+          "motionStyle": "nonsense",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "抱歉，没弄成……",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": false,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome failed, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "nonsense",
+          "phase": "outcome",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "withdrawn",
+              "motionEnergy": 0.7649999856948853,
+              "posture": "closed"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.8942500352859497,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0295000076293945
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 40.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "floor",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": -20.0,
+            "revision": 7
+          },
+          "motionStyle": "nonsense",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "抱歉，没弄成……",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": false,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome failed, mouth only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "nonsense",
+          "phase": "outcome",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "withdrawn",
+              "motionEnergy": 0.7649999856948853,
+              "posture": "closed"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "talking",
+          "mood": {
+            "after": 40.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "floor",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "task",
+            "delta": -20.0,
+            "revision": 7
+          },
+          "motionStyle": "nonsense",
+          "phase": "outcome",
+          "previousPhrases": [],
+          "responseText": "抱歉，没弄成……",
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": false,
+          "userText": "帮我整理一下"
+        }
+      },
+      "name": "outcome failed, everything singing",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "nonsense",
+          "phase": "outcome",
+          "plan": {
+            "baseline": {
+              "attention": 0.6000000238418579,
+              "expression": "withdrawn",
+              "motionEnergy": 0.7649999856948853,
+              "posture": "closed"
+            },
+            "cues": [
+              {
+                "atMs": 0,
+                "fadeInMs": 135,
+                "fadeOutMs": 400,
+                "intensity": 0.8942500352859497,
+                "intent": "respond",
+                "interrupt": "if-lower",
+                "tempo": 1.0295000076293945
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "idle",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "mood",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "mood, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "mood",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "idle",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "mood",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "mood, drowsy with accents",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "mood",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "idle",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "mood",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "mood, maniac speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "mood",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "warm",
+              "motionEnergy": 1.0080000162124634,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "idle",
+          "mood": {
+            "after": 72.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "drift",
+            "delta": 12.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "mood",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "mood, face hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": null,
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence reading, no rig",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence reading, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence reading, head only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "even",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "steady",
+              "motionEnergy": 0.8999999761581421,
+              "posture": "neutral"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "reading 小王子",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "calm",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "user_utterance",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "even",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": false,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence reading, page hidden",
+      "output": {
+        "directive": null
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence listening, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "warm",
+              "motionEnergy": 1.3440001010894775,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "mouth-shapes"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence listening, mouth only",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "warm",
+              "motionEnergy": 1.3440001010894775,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "listening to 夜に駆ける by YOASOBI, and the person who has her face open is listening along with her",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "excited",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "open",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "blink",
+              "independent-eyes",
+              "dizzy-eye",
+              "squeeze-eye",
+              "cry-eye",
+              "silly-eye",
+              "lovestruck",
+              "cry-mouth",
+              "maniac-mouth",
+              "silly-mouth",
+              "mouth-shapes",
+              "head-body",
+              "torso-volume",
+              "left-arm",
+              "right-arm",
+              "music-notes",
+              "question-mark",
+              "sleep-z",
+              "sparkles",
+              "blush"
+            ],
+            "expression": "warm",
+            "face": "content",
+            "faceVisible": true,
+            "motionStyle": "open",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": true,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence listening, everything singing",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "open",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "warm",
+              "motionEnergy": 1.3440001010894775,
+              "posture": "open"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence lazing, bust speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "subdued",
+              "motionEnergy": 0.5520000457763672,
+              "posture": "closed"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "sparkles",
+              "music-notes"
+            ],
+            "expression": "steady",
+            "face": "drowsy",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence lazing, drowsy with accents",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "subdued",
+              "motionEnergy": 0.5520000457763672,
+              "posture": "closed"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "independent-eyes",
+              "mouth-shapes",
+              "maniac-mouth"
+            ],
+            "expression": "steady",
+            "faceVisible": true,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": true
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence lazing, maniac speaking",
+      "output": {
+        "directive": {
+          "moodRevision": 7,
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "plan": {
+            "baseline": {
+              "attention": 0.4000000059604645,
+              "expression": "subdued",
+              "motionEnergy": 0.5520000457763672,
+              "posture": "closed"
+            },
+            "cues": []
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "moment": {
+          "activity": "lazing about, daydreaming",
+          "mood": {
+            "after": 60.0,
+            "arousalAfter": 52.5,
+            "arousalBefore": 48.0,
+            "bandAfter": "sad",
+            "bandBefore": "calm",
+            "before": 60.0,
+            "cause": "standing",
+            "delta": 0.0,
+            "revision": 7
+          },
+          "motionStyle": "restrained",
+          "phase": "presence",
+          "previousPhrases": [],
+          "responseText": null,
+          "rigState": {
+            "acting": {
+              "phase": "idle",
+              "remainingMs": 0
+            },
+            "activeBehaviors": [],
+            "capabilities": [
+              "head-body",
+              "torso-volume",
+              "independent-eyes",
+              "mouth-shapes",
+              "left-arm",
+              "right-arm"
+            ],
+            "expression": "steady",
+            "faceVisible": false,
+            "motionStyle": "even",
+            "musicPlaying": false,
+            "owners": {
+              "expression": "idle",
+              "gaze": "idle",
+              "headBody": "idle",
+              "mouth": "idle"
+            },
+            "pageVisible": true,
+            "posture": "neutral",
+            "recentIntents": [],
+            "singing": false,
+            "speaking": false
+          },
+          "taskSuccess": null,
+          "userText": ""
+        }
+      },
+      "name": "presence lazing, face hidden",
+      "output": {
+        "directive": null
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,189 @@
+{
+  "call": "motion.standing_doing",
+  "cases": [
+    {
+      "input": {
+        "thing": {
+          "album": "",
+          "artist": "YOASOBI",
+          "cover": "",
+          "durationMs": 261000,
+          "id": "1",
+          "kind": "song",
+          "name": "夜に駆ける",
+          "source": "netease"
+        },
+        "together": false
+      },
+      "name": "a song",
+      "output": {
+        "activity": "listening to the song 「夜に駆ける」 by YOASOBI",
+        "way": "listening"
+      }
+    },
+    {
+      "input": {
+        "thing": {
+          "album": "",
+          "artist": "YOASOBI",
+          "cover": "",
+          "durationMs": 261000,
+          "id": "1",
+          "kind": "song",
+          "name": "夜に駆ける",
+          "source": "netease"
+        },
+        "together": true
+      },
+      "name": "a song listened to together",
+      "output": {
+        "activity": "listening to the song 「夜に駆ける」 by YOASOBI, and the person who has her face open is listening along with her",
+        "way": "listening"
+      }
+    },
+    {
+      "input": {
+        "thing": {
+          "album": "",
+          "artist": "",
+          "cover": "",
+          "durationMs": 261000,
+          "id": "1",
+          "kind": "song",
+          "name": "夜に駆ける",
+          "source": "netease"
+        },
+        "together": false
+      },
+      "name": "a song with no artist",
+      "output": {
+        "activity": "listening to the song 「夜に駆ける」",
+        "way": "listening"
+      }
+    },
+    {
+      "input": {
+        "thing": {
+          "itemId": 3,
+          "kind": "note",
+          "title": "小王子"
+        },
+        "together": false
+      },
+      "name": "a note",
+      "output": {
+        "activity": "reading 「小王子」, a note on this site",
+        "way": "reading"
+      }
+    },
+    {
+      "input": {
+        "thing": {
+          "author": "刘慈欣",
+          "index": 1,
+          "kind": "chapter",
+          "serial": "s1",
+          "title": "三体",
+          "total": 3
+        },
+        "together": false
+      },
+      "name": "a part of a book",
+      "output": {
+        "activity": "reading part 2 of 3 of 「三体」 by 刘慈欣",
+        "way": "reading"
+      }
+    },
+    {
+      "input": {
+        "thing": {
+          "author": "刘慈欣",
+          "index": 0,
+          "kind": "chapter",
+          "serial": "s1",
+          "title": "三体",
+          "total": 0
+        },
+        "together": true
+      },
+      "name": "a book not yet opened",
+      "output": {
+        "activity": "reading 「三体」 by 刘慈欣, a book not yet opened, and the person who has her face open is listening along with her",
+        "way": "reading"
+      }
+    },
+    {
+      "input": {
+        "thing": {
+          "kind": "inquiry",
+          "question": "猫为什么喜欢纸箱",
+          "questionId": "q1"
+        },
+        "together": false
+      },
+      "name": "a question of her own",
+      "output": {
+        "activity": "finding out 「猫为什么喜欢纸箱」",
+        "way": "looking-about"
+      }
+    },
+    {
+      "input": {
+        "lazing": "wander_the_site",
+        "together": false
+      },
+      "name": "wandering the site",
+      "output": {
+        "activity": "wandering around the site aimlessly",
+        "way": "looking-about"
+      }
+    },
+    {
+      "input": {
+        "lazing": "reread_old_chats",
+        "together": true
+      },
+      "name": "rereading old chats",
+      "output": {
+        "activity": "idly rereading old conversations, and the person who has her face open is listening along with her",
+        "way": "reading"
+      }
+    },
+    {
+      "input": {
+        "lazing": "daydream",
+        "together": false
+      },
+      "name": "lazing of another kind",
+      "output": {
+        "activity": "lazing about, daydreaming",
+        "way": "daydreaming"
+      }
+    },
+    {
+      "input": {
+        "lazing": "daydream",
+        "thing": {
+          "itemId": 3,
+          "kind": "note",
+          "title": "小王子"
+        },
+        "together": false
+      },
+      "name": "both a thing and lazing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "together": false
+      },
+      "name": "neither",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
