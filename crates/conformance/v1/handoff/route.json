@@ -1,0 +1,135 @@
+{
+  "call": "handoff.route",
+  "cases": [
+    {
+      "input": {
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "none waiting is hers",
+      "output": {
+        "route": {
+          "to": "her"
+        }
+      }
+    },
+    {
+      "input": {
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "doing"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "the one waiting takes it",
+      "output": {
+        "route": {
+          "to": "answer",
+          "work": 2
+        }
+      }
+    },
+    {
+      "input": {
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "two waiting are hers to place",
+      "output": {
+        "route": {
+          "to": "her"
+        }
+      }
+    },
+    {
+      "input": {
+        "pieces": [
+          {
+            "asked": "第1件",
+            "number": 1,
+            "standing": {
+              "state": "confirming"
+            },
+            "startedAt": 0
+          },
+          {
+            "asked": "第2件",
+            "number": 2,
+            "standing": {
+              "question": "要几点？\n\n1. 18:00\n2. 19:00",
+              "state": "waiting"
+            },
+            "startedAt": 0
+          }
+        ]
+      },
+      "name": "a card to confirm is not answered in chat",
+      "output": {
+        "route": {
+          "to": "answer",
+          "work": 2
+        }
+      }
+    },
+    {
+      "input": {
+        "pieces": []
+      },
+      "name": "none at all",
+      "output": {
+        "route": {
+          "to": "her"
+        }
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,164 @@
+{
+  "call": "handoff.split",
+  "cases": [
+    {
+      "input": {
+        "reply": "好，我让助手去查。\n[[work: 查一下明天东京的天气]]"
+      },
+      "name": "a new piece on its own last line",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查一下明天东京的天气"
+          }
+        ],
+        "spoken": "好，我让助手去查。"
+      }
+    },
+    {
+      "input": {
+        "reply": "今天好累"
+      },
+      "name": "plain talk hands nothing off",
+      "output": {
+        "handOffs": [],
+        "spoken": "今天好累"
+      }
+    },
+    {
+      "input": {
+        "reply": "嗯[[work:   ]]"
+      },
+      "name": "an empty line says nothing",
+      "output": {
+        "handOffs": [],
+        "spoken": "嗯"
+      }
+    },
+    {
+      "input": {
+        "reply": "嗯[[work: 查"
+      },
+      "name": "an unfinished line is left for the stream",
+      "output": {
+        "handOffs": [],
+        "spoken": "嗯[[work: 查"
+      }
+    },
+    {
+      "input": {
+        "reply": "好，改成周六。\n[[work #2: 改成周六，原话：还是周六吧]]\n[[stop #1]]"
+      },
+      "name": "a line for one piece and a stop",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "to",
+            "text": "改成周六，原话：还是周六吧",
+            "work": 2
+          },
+          {
+            "kind": "stop",
+            "work": 1
+          }
+        ],
+        "spoken": "好，改成周六。"
+      }
+    },
+    {
+      "input": {
+        "reply": "[[work 3：是]][[stop＃4]]"
+      },
+      "name": "written loosely it is still hers",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "to",
+            "text": "是",
+            "work": 3
+          },
+          {
+            "kind": "stop",
+            "work": 4
+          }
+        ],
+        "spoken": ""
+      }
+    },
+    {
+      "input": {
+        "reply": "嗯[[stop]][[work #x: 查]]"
+      },
+      "name": "no number is no piece",
+      "output": {
+        "handOffs": [],
+        "spoken": "嗯"
+      }
+    },
+    {
+      "input": {
+        "reply": "好呀[[sticker: 开心]]\n[[work: 查]]"
+      },
+      "name": "another kind of line stays",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查"
+          }
+        ],
+        "spoken": "好呀[[sticker: 开心]]"
+      }
+    },
+    {
+      "input": {
+        "reply": "好的\n[[work: 查天气]]\n[[work: 订餐厅]]\n[[work #1: 改成周六]]"
+      },
+      "name": "several in the order written",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查天气"
+          },
+          {
+            "kind": "new",
+            "text": "订餐厅"
+          },
+          {
+            "kind": "to",
+            "text": "改成周六",
+            "work": 1
+          }
+        ],
+        "spoken": "好的"
+      }
+    },
+    {
+      "input": {
+        "reply": "[[work: 查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查]]"
+      },
+      "name": "an instruction is cut at 500 characters",
+      "output": {
+        "handOffs": [
+          {
+            "kind": "new",
+            "text": "查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查查"
+          }
+        ],
+        "spoken": ""
+      }
+    },
+    {
+      "input": {
+        "text": "x"
+      },
+      "name": "bad input",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

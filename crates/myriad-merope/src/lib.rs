@@ -20,6 +20,7 @@ pub mod draft;
 pub mod elsewhere;
 pub mod explore;
 pub mod group;
+pub mod handoff;
 pub mod heard;
 pub mod hosting;
 pub mod inner;

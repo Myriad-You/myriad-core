@@ -1,0 +1,168 @@
+{
+  "call": "handoff.her_choice",
+  "cases": [
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "2（19:00）"
+      },
+      "name": "a leading choice number",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "订 19:00 的"
+      },
+      "name": "the one choice named",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "19:00，选项2"
+      },
+      "name": "named with its number after",
+      "output": {
+        "choice": "2"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "1"
+      },
+      "name": "just the number",
+      "output": {
+        "choice": "1"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "19点"
+      },
+      "name": "a time is not a choice number",
+      "output": {
+        "choice": "19点"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "18:00 或 19:00"
+      },
+      "name": "two named is not one",
+      "output": {
+        "choice": "18:00 或 19:00"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "18:00",
+            "value": "18:00"
+          },
+          {
+            "label": "19:00",
+            "value": "19:00"
+          }
+        ],
+        "text": "3"
+      },
+      "name": "a number past the choices",
+      "output": {
+        "choice": "3"
+      }
+    },
+    {
+      "input": {
+        "options": [],
+        "text": " 随便 "
+      },
+      "name": "free text stays as written",
+      "output": {
+        "choice": "随便"
+      }
+    },
+    {
+      "input": {
+        "options": [
+          {
+            "label": "订",
+            "value": "yes"
+          },
+          {
+            "label": "不要",
+            "value": "no"
+          }
+        ],
+        "text": "那就订吧"
+      },
+      "name": "by its label",
+      "output": {
+        "choice": "1"
+      }
+    }
+  ],
+  "version": 1
+}

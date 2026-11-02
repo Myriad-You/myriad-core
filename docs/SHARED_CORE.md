@@ -394,12 +394,35 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **被撤回的节点的整理**：不是家的一端，被撤回的节点只剩 `retracted`，排不进整理。家里，它的整理（`upkeep_input` 回答 `local`）只写 `local` 行；`upkeep_read` 给 shared 的 `sync` 就拒绝；家里 `local` 的整理只给、只认这一端留着的节点，也不建节点（`create`、`split` 是 `not_allowed`：它建的节点只有 `local` 行、没有撤回，shared 的整理以后用它、或把别的并进它，就指到别的端没有的节点）。别的节点的 shared 整理不把它作为邻居、候选给出来，所以不选它作并入的目标（偏好，不是规则：别的端写了照样算数）。家里 shared 的整理把一个节点并进别处时，也不把它和被撤回的节点之间的关系带过去（带过去的那一行是 shared 的，会点名家留着的节点）。shared 的整理也看不到任何撤回够到的段和条目，不管折叠把它显示在哪（拆到没被撤回的节点里，或撤回以后它的节点被并进别处）：家留着的东西不进 shared 的文字；`local` 的整理照样看得到。结构不冻结：家里的整理也可以把它并进别处（写成 `local` 行），只是不拆它。`sync_tests.rs` 对过：撤回只够到它的节点和它列出的（一个节点离线时被两端并进两处、一段被拆了又拆、一个时钟写得早的并入，两种顺序服务端都一样）；撤回以后并进它的节点不够到，折进它、只是在别的端不显示；body 被扣下、折叠跳过的并入照信封让忘掉够到，撤回不经过它；一端先撤回、另一端后来把别的节点并进它再忘掉它，两种顺序每一端都一样；家留着的行不因为经过并入、拆出的忘掉而丢，只有直接忘掉那个节点才丢；经过并入够到的忘掉不写成行；不给 ABI 1 的一端发它读不懂的行；超过 256 行的清单分成几行撤回；家拆出去的部分在别处被忘掉，家留着的段和拆分不进 `stubbed`；shared 的整理看不到撤回够到的段（拆走的、撤回以后并走的两种）；在家里忘掉拆出的部分或并进去的节点，忘掉列出家留着的行并拿走它们，别处的忘掉拿不走、`reached` 也不列；别的端上被列出的并入成了桩，照样把没列出的段放在被撤回的节点里不显示。
 - **谁能存什么**按 `myriad_persona_log::holder`（「她的日志」）：电脑只收伙伴私聊和她自己的，群和别人的私聊只在服务端，子机核心不存。
 
+## 交办（`handoff.*`）
+
+她在聊天里以自己的身份说话；要办事时在回复末尾单占一行写 `[[work: …]]` 交给助手。交出去的每一件按对话编号（`#1`、`#2`……），几件可以同时办；之后给某一件的话写 `[[work #N: …]]`，`[[stop #N]]` 只停那一件。规则在 `myriad_merope::handoff`，取自站点 2026-11-02 的 `delegate.rs`、`channel_work/works.rs`、`agent/panel_work.rs`（只挪不改）；跑各件、存各件、计时和投递仍各端自己写。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `handoff.split` | `{reply}` → `{spoken, handOffs}`：她的标记从回复里拿掉，按写的先后给出 `{kind: "new", text}`、`{kind: "to", work, text}`、`{kind: "stop", work}`。别人的标记（贴纸、换装）留在原处；没写完的标记留给流式显示扣住；指令最多 500 字 |
+| `handoff.stands` | `{stopped?, question?, unheardQuestion?, underWay?, progress?, result?}` → `{standing}`：叫停优先；对方看过的问题先于重启留下、谁也没看过的问题（那件算 `cutOff`，`by: "restart"`） |
+| `handoff.line` | `{piece, now}` → `{line}`：她看到的一行，`#2「查明天东京天气」在办，已办 3 分钟（60%）` 这类 |
+| `handoff.shown` | `{pieces, now}` → `{numbers}`：她看得到哪几件：没办完的全部，加上开始不到一天、已经结束的最近 3 件，按编号 |
+| `handoff.route` | `{pieces}` → `{route}`：只有一件在等回答时对方下一句就是它的回答（`{to: "answer", work}`），否则由她判断（`{to: "her"}`）；等卡片确认的不算 |
+| `handoff.act` | `{handOff, pieces}` → `{act}`：`start`、`answer`（在等回答）、`steer`（在办、刚交出去、等卡片确认）、`continue`（办完了、没办成）、`pickUp`（被打断）、`stop`（没办完的）、`nothing`（叫停的、不存在的） |
+| `handoff.labelled` | `{number, asked, othersUnfinished, content}` → `{text}`：有别的件没办完时前面加 `【#N 前 12 字…】` |
+| `handoff.her_choice` | `{options, text}` → `{choice}`：她给选择题的回答换成选项序号（开头的序号，或只点名一个选项） |
+| `handoff.next_number` | `{numbers}` → `{number}` |
+| `handoff.work_input` | `{instruction, theirWords}` → `{input}`：交给助手的话，附上对方原话（只作参考） |
+| `handoff.ended_line` | `{text, failed}` → `{line}`：一件办完时她在对话里说的那句，结果各行连成一行截 80 字 |
+| `handoff.section` | `{host: "site" \| "mac", lines, waiting, answered?}` → `{section}`：她的说明，`lines` 是 `shown` 各件的 `line` |
+
+- 时间照全库的约定是微秒；规则按整秒算（向下取整）。
+- `standing` 是 `{state, …}`：`doing`（`progress` 百分比、`steps` 步数，可缺）、`starting`、`confirming`、`waiting`（`question`）、`cutOff`（`by`: `restart`、`appQuit`）、`done`（`result`）、`failed`（`why`）、`stopped`。站点现在用到 `doing`、`waiting`、`cutOff`、`done`、`stopped`；其余照原生的说法加进来，给经 FFI 的端用。
+- 一致性对照在 `crates/conformance/v1/handoff/`，经 C 入口跑；`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi handoff` 照 crate 重写 `output`，只随一次写明理由的改动用。
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v1/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。

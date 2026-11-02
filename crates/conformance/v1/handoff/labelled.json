@@ -1,0 +1,54 @@
+{
+  "call": "handoff.labelled",
+  "cases": [
+    {
+      "input": {
+        "asked": "查天气",
+        "content": "晴",
+        "number": 1,
+        "othersUnfinished": false
+      },
+      "name": "alone it is as it is",
+      "output": {
+        "text": "晴"
+      }
+    },
+    {
+      "input": {
+        "asked": "查天气",
+        "content": "晴",
+        "number": 1,
+        "othersUnfinished": true
+      },
+      "name": "with another not done it says which",
+      "output": {
+        "text": "【#1 查天气】\n晴"
+      }
+    },
+    {
+      "input": {
+        "asked": "查一下明天东京的天气怎么样",
+        "content": "晴",
+        "number": 2,
+        "othersUnfinished": true
+      },
+      "name": "a long request is shortened",
+      "output": {
+        "text": "【#2 查一下明天东京的天气怎么…】\n晴"
+      }
+    },
+    {
+      "input": {
+        "asked": "订餐厅\n两个人",
+        "content": "订好了",
+        "number": 3,
+        "othersUnfinished": true
+      },
+      "name": "a request on several lines reads as one",
+      "output": {
+        "text": "【#3 订餐厅 两个人】\n订好了"
+      }
+    }
+  ],
+  "version": 1
+}

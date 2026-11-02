@@ -1,0 +1,36 @@
+{
+  "call": "handoff.work_input",
+  "cases": [
+    {
+      "input": {
+        "instruction": "查一下明天东京的天气",
+        "theirWords": "明天东京会下雨吗？帮我看看"
+      },
+      "name": "their words come along",
+      "output": {
+        "input": "查一下明天东京的天气\n\n（对方原话，只作参考，这一件只办上面这一条：明天东京会下雨吗？帮我看看）"
+      }
+    },
+    {
+      "input": {
+        "instruction": "帮我看看",
+        "theirWords": "帮我看看"
+      },
+      "name": "not when the instruction has them",
+      "output": {
+        "input": "帮我看看"
+      }
+    },
+    {
+      "input": {
+        "instruction": "查天气",
+        "theirWords": "  "
+      },
+      "name": "not when there are none",
+      "output": {
+        "input": "查天气"
+      }
+    }
+  ],
+  "version": 1
+}
