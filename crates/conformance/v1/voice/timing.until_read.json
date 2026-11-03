@@ -1,0 +1,63 @@
+{
+  "call": "timing.until_read",
+  "cases": [
+    {
+      "input": {
+        "at": {
+          "kind": "inTalk"
+        },
+        "text": "周六几点集合",
+        "u1": 0.3,
+        "u2": 0.7
+      },
+      "name": "in talk",
+      "output": {
+        "seconds": 4.499890320080006
+      }
+    },
+    {
+      "input": {
+        "at": {
+          "kind": "free"
+        },
+        "text": "在吗",
+        "u1": 0.5,
+        "u2": 0.25
+      },
+      "name": "free",
+      "output": {
+        "seconds": 20.25
+      }
+    },
+    {
+      "input": {
+        "at": {
+          "freeIn": 2.0,
+          "kind": "busy"
+        },
+        "text": "在吗",
+        "u1": 0.9,
+        "u2": 0.0
+      },
+      "name": "busy, seen when she is done",
+      "output": {
+        "seconds": 7.25
+      }
+    },
+    {
+      "input": {
+        "at": {
+          "kind": "asleep",
+          "wakesIn": 3600.0
+        },
+        "text": "早",
+        "u1": 0.5,
+        "u2": 0.5
+      },
+      "name": "asleep",
+      "output": {
+        "seconds": 3766.6386791992236
+      }
+    }
+  ]
+}

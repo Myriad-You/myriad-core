@@ -442,12 +442,37 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **一轮的顺序**（站点 `merope/motion.rs` 的 `direct_motion_inner`）：`motion.floor` 先演；`motion.asked` 拿题，`hidden` 就停；问模型（聊天模型先用 `motion.chat_prompt`）；`motion.plan`；`motion.way` 有题就在剩下的时间里再问一次，答上来用 `motion.lay_way`；`motion.direction` 交出要演的。站立演出另用 `motion.standing_doing` 拼出 `activity`，导演没答出来时用 `motion.standing_floor`，过一会儿再问。
 - **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。只随一次写明理由的改动改，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test motion_conformance` 只重写输出变了的文件。2026-11-02 改过一次：转述别人时 `motion.way` 不再朝计划没换上的脸问路（录下的 `way.json` 里这类用例随之改写）。
 
+## 她怎么说（`speaking.soul`、`persona.flatten`、`sending.*`、`draft.*`、写法提示）
+
+她在哪一端说话都是同一个人：soul 只在核心拼一处，她的性格文字只在核心扁平化一处，一条回复发出去成几条、每条打多久的字也只在核心算一处。随机数都由调用方传进来；问模型、发消息、显示正在输入、等多久都留在各端。2026-11-03 从站点后端（`merope/mod.rs` 的 `resolve_speaking_soul`、`merope/timing.rs`、`merope/draft.rs`、`merope/onboarding_prompts.rs`、`channel_work/chat.rs` 的拆条）、站点前端（`onboardingTypes.ts` 的 `flattenPersona`）和原生（`ChatReplyLimit.swift`、`SpeakingRules.flattened`）搬来。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `speaking.home` | `{at: "site", name}` 或 `{at: "mac"}` → `{home: {place, line?}}`：她住在哪。站点传站名（`speaking::site_name` 取的），Mac 传 `mac`；子机不调它，原样传主机给它的 `home` |
+| `speaking.soul` | `{name, personality, home}` → `{text}`：她说话时的 soul（名字、按 `home.place` 写的人设契约、性格、`home.line`）；名字和性格都空是 `null`。住在站点时和站点原来拼的（`format_persona` 加空行加 `site_line`）逐字节相同 |
+| `speaking.contract_at` | `{place}` → `{text}`：住在 `place` 时的人设契约；`this site` 就是 `speaking.contract` |
+| `persona.flatten` | `{fields: {summary, temperament, likes, drives, socialStyle, speechStyle}, language}` → `{text}`：人设字段变成一段性格文字，标签按她的语言（`persona.language`，没有的按英文），和站点设置页的扁平化逐字节相同 |
+| `sending.goes_out` | `{reply, room?, rolls: {split, typing}}` → `{messages: [{text, typingSeconds}], stopped}`：一条回复发出去的几条（长度上限和复读截断、拆条、照那里的人打字去掉句号和感叹号），每条打字要几秒；`room` 是 `talk_shape::Shape`（没有就按聊天软件里常见的），`typing` 每条一个，缺的按中间值。第一条的打字时间各端减去她想的那段时间 |
+| `sending.limit_take` | `{used, piece, raw}` → `{used, stop, kept}`：流式回复每来一段问一次；`stop` 是 `length`（超过 8192 个估算 token，`kept` 是说到的全部）或 `loop`（`kept` 是第一圈），`null` 就接着收 |
+| `timing.where_she_is` | `{inTalk, maySleep, wakesIn?, freeIn?}` → `{at}`：消息来时她在哪（`inTalk`、`free`、`busy` 带 `freeIn`、`asleep` 带 `wakesIn`）；`wakesIn` 用 `timing.asleep_at` 算 |
+| `timing.until_read` | `{at, text, u1, u2}` → `{seconds}`：她看到并读完这条要几秒 |
+| `timing.typing` | `{text, u}` → `{seconds}`：打这条要几秒（按字符数，不按字节或字形簇） |
+| `draft.ask` | `{said, draft, came: [{who, text}]}` → `{ask: null \| {system, input, schemaName, schema, withinSeconds}}`：她写的时候对方又说了，发前再看一眼要问的；什么都没来就是 `null`，照发 |
+| `draft.send` | `{answer?}` → `{send}`：她的回答（超时就不给）读成发不发；读不出或没回答都照发 |
+| `bits.ask` | `{soul, group}` → `{system, schemaName, schema}`：夜里回想一天的对话时写梗、印象（`us`、`lands`）的提示 |
+| `self_story.ask` | `{soul, records, tally, before}` → `{system, input, schemaName, schema}`：每周写自述的提示；`records` 是 `[{id, row, line, missed}]`，`before` 是上次的 `[{text, restsOn}]` |
+| `self_story.checked` | `{answer, records, tally, before}` → `{claims}`：她写的自述里守了约定的那些，一条都不算数时是 `null` |
+| `onboarding.tags_system`、`onboarding.name_system`、`onboarding.persona_system`、`onboarding.import_system`、`onboarding.visual_design_system`、`onboarding.observe_portrait_system` | 人设生成各步的系统提示：`name_system` 要 `{nameStyle}`，`observe_portrait_system` 要 `{language, gender}`，其余 `{}`；→ `{text}` |
+
+- **一致性对照** `crates/conformance/v1/voice/`：每个调用一份。`persona.flatten` 的输出和站点前端的 `flattenPersona` 对过，`speaking.soul` 住在站点时和站点拼的对过；其余照规则写、经 C 入口录下。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi voice` 重写输出，只随一次写明理由的改动用。
+- **先加后删**：`speaking.persona`、`speaking.contract`（契约写死「this site」）留到各端都换成 `speaking.soul` 再删。
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份；`voice/`：她怎么说（soul、性格文字、回复怎么发出去、看到和打字的时间、发前再看、写法提示），每个调用一份。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v1/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。

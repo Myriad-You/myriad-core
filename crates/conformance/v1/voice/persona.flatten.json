@@ -1,0 +1,223 @@
+{
+  "call": "persona.flatten",
+  "cases": [
+    {
+      "input": {
+        "fields": {
+          "drives": [
+            "把答应的事做完"
+          ],
+          "likes": [
+            "听人讲下雨天的事",
+            "陪人打牌"
+          ],
+          "socialStyle": "先听，再接话。",
+          "speechStyle": "﻿句子短，先回答再问。",
+          "summary": "  她说话很短，熟了以后会开玩笑。　",
+          "temperament": [
+            "想到就试",
+            "沉得住气",
+            " 嘴硬心软 "
+          ]
+        },
+        "language": "zh-CN"
+      },
+      "name": "zh-CN, every field",
+      "output": {
+        "text": "气质：想到就试、沉得住气、 嘴硬心软 \n喜好：听人讲下雨天的事、陪人打牌\n驱动力：把答应的事做完\n社交：先听，再接话。\n表达：句子短，先回答再问。\n\n她说话很短，熟了以后会开玩笑。"
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [
+            "把答应的事做完"
+          ],
+          "likes": [
+            "听人讲下雨天的事",
+            "陪人打牌"
+          ],
+          "socialStyle": "先听，再接话。",
+          "speechStyle": "﻿句子短，先回答再问。",
+          "summary": "  她说话很短，熟了以后会开玩笑。　",
+          "temperament": [
+            "想到就试",
+            "沉得住气",
+            " 嘴硬心软 "
+          ]
+        },
+        "language": "zh-TW"
+      },
+      "name": "zh-TW labels",
+      "output": {
+        "text": "氣質：想到就试、沉得住气、 嘴硬心软 \n喜好：听人讲下雨天的事、陪人打牌\n驅動力：把答应的事做完\n社交：先听，再接话。\n表達：句子短，先回答再问。\n\n她说话很短，熟了以后会开玩笑。"
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [
+            "Card games, with friends"
+          ],
+          "socialStyle": "Listens first.",
+          "speechStyle": "",
+          "summary": "Keeps it short.",
+          "temperament": [
+            "Tries things first, then plans",
+            "Keeps a cool head"
+          ]
+        },
+        "language": "en-US"
+      },
+      "name": "en-US joins traits with semicolons",
+      "output": {
+        "text": "Temperament：Tries things first, then plans; Keeps a cool head\nLikes：Card games, with friends\nSocial：Listens first.\n\nKeeps it short."
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [],
+          "socialStyle": "",
+          "speechStyle": "短く話す。",
+          "summary": "",
+          "temperament": [
+            "納得するまで聞く"
+          ]
+        },
+        "language": "ja-JP"
+      },
+      "name": "ja-JP",
+      "output": {
+        "text": "気質：納得するまで聞く\n話し方：短く話す。"
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [
+            "산책 이야기 듣기"
+          ],
+          "socialStyle": "",
+          "speechStyle": "",
+          "summary": "말이 짧다.",
+          "temperament": []
+        },
+        "language": "ko-KR"
+      },
+      "name": "ko-KR",
+      "output": {
+        "text": "좋아하는 것：산책 이야기 듣기\n\n말이 짧다."
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [],
+          "socialStyle": "",
+          "speechStyle": "",
+          "summary": "",
+          "temperament": [
+            "neugierig",
+            "ruhig"
+          ]
+        },
+        "language": "de-DE"
+      },
+      "name": "de-DE keeps the site's joiner",
+      "output": {
+        "text": "Temperament：neugierig、ruhig"
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [
+            "finir ce qui est promis"
+          ],
+          "likes": [],
+          "socialStyle": "Écoute d'abord.",
+          "speechStyle": "",
+          "summary": "",
+          "temperament": []
+        },
+        "language": "fr-FR"
+      },
+      "name": "fr-FR",
+      "output": {
+        "text": "Motivation：finir ce qui est promis\nSocial：Écoute d'abord."
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [],
+          "socialStyle": "",
+          "speechStyle": "",
+          "summary": "",
+          "temperament": [
+            "想到就试"
+          ]
+        },
+        "language": "es-ES"
+      },
+      "name": "a language with no labels reads in English",
+      "output": {
+        "text": "Temperament：想到就试"
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [],
+          "socialStyle": "",
+          "speechStyle": "",
+          "summary": "只有一段。",
+          "temperament": []
+        },
+        "language": "zh-CN"
+      },
+      "name": "only a summary",
+      "output": {
+        "text": "只有一段。"
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "drives": [],
+          "likes": [],
+          "socialStyle": "  ",
+          "speechStyle": "　",
+          "summary": "",
+          "temperament": []
+        },
+        "language": "zh-CN"
+      },
+      "name": "blank fields are left out",
+      "output": {
+        "text": ""
+      }
+    },
+    {
+      "input": {
+        "fields": {
+          "likes": [
+            "陪人打牌"
+          ]
+        },
+        "language": "zh-CN"
+      },
+      "name": "missing fields count as empty",
+      "output": {
+        "text": "喜好：陪人打牌"
+      }
+    }
+  ]
+}

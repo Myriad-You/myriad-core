@@ -1,0 +1,42 @@
+{
+  "call": "speaking.home",
+  "cases": [
+    {
+      "input": {
+        "at": "site",
+        "name": "星海"
+      },
+      "name": "the site by its name",
+      "output": {
+        "home": {
+          "line": "The site you live on is called 星海: when people say 星海, they mean it.",
+          "place": "this site"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": "site",
+        "name": "Myriad"
+      },
+      "name": "the site with no title of its own",
+      "output": {
+        "home": {
+          "line": "The site you live on is called Myriad: when people say Myriad, they mean it.",
+          "place": "this site"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": "mac"
+      },
+      "name": "her Mac",
+      "output": {
+        "home": {
+          "place": "this Mac"
+        }
+      }
+    }
+  ]
+}

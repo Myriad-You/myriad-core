@@ -1,0 +1,50 @@
+{
+  "call": "onboarding.name_system",
+  "cases": [
+    {
+      "input": {
+        "nameStyle": "chinese"
+      },
+      "name": "chinese",
+      "output": {
+        "text": "Return ONLY {\"name\":\"...\",\"meaning\":\"...\"}.\n`meaning` is one short clause in request `language` stating what the name says.\nchinese: 2–4 Simplified Han. The characters are the meaning. No Latin.\ngenderPresentation tints the name. Differ from avoidName. Not a famous person or existing game/anime character.\nA new `rollId` means a different name, not the same token respelled.\n"
+      }
+    },
+    {
+      "input": {
+        "nameStyle": "japanese"
+      },
+      "name": "japanese",
+      "output": {
+        "text": "Return ONLY {\"name\":\"...\",\"meaning\":\"...\"}.\n`meaning` is one short clause in request `language` stating what the name says.\njapanese: 2–5 kanji and/or kana. The token is the meaning. No Latin.\ngenderPresentation tints the name. Differ from avoidName. Not a famous person or existing game/anime character.\nA new `rollId` means a different name, not the same token respelled.\n"
+      }
+    },
+    {
+      "input": {
+        "nameStyle": "european"
+      },
+      "name": "european",
+      "output": {
+        "text": "Return ONLY {\"name\":\"...\",\"meaning\":\"...\"}.\n`meaning` is one short clause in request `language` stating what the name says.\neuropean: one ASCII given name, 3–16 letters, with a sayable gloss.\ngenderPresentation tints the name. Differ from avoidName. Not a famous person or existing game/anime character.\nA new `rollId` means a different name, not the same token respelled.\n"
+      }
+    },
+    {
+      "input": {
+        "nameStyle": "mythic"
+      },
+      "name": "mythic",
+      "output": {
+        "text": "Return ONLY {\"name\":\"...\",\"meaning\":\"...\"}.\n`meaning` is one short clause in request `language` stating what the name says.\nmythic: one ASCII given name in a classical-myth register, 3–16 letters, with a sayable gloss.\ngenderPresentation tints the name. Differ from avoidName. Not a famous person or existing game/anime character.\nA new `rollId` means a different name, not the same token respelled.\n"
+      }
+    },
+    {
+      "input": {
+        "nameStyle": "x"
+      },
+      "name": "an unknown style is chinese",
+      "output": {
+        "text": "Return ONLY {\"name\":\"...\",\"meaning\":\"...\"}.\n`meaning` is one short clause in request `language` stating what the name says.\nchinese: 2–4 Simplified Han. The characters are the meaning. No Latin.\ngenderPresentation tints the name. Differ from avoidName. Not a famous person or existing game/anime character.\nA new `rollId` means a different name, not the same token respelled.\n"
+      }
+    }
+  ]
+}
