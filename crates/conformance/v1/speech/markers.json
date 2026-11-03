@@ -1,0 +1,144 @@
+{
+  "call": "speech.markers",
+  "cases": [
+    {
+      "input": {},
+      "name": "the table",
+      "output": {
+        "markers": [
+          {
+            "actedOn": [
+              "app"
+            ],
+            "forms": [
+              "[[ask: question]]"
+            ],
+            "means": "the helper needs their answer to go on",
+            "name": "ask",
+            "readBy": [],
+            "whose": "helper"
+          },
+          {
+            "actedOn": [
+              "site"
+            ],
+            "forms": [
+              "[[game:soup]]",
+              "[[game:undercover]]",
+              "[[game:werewolf]]",
+              "[[game:avalon]]",
+              "[[game:jubensha]]"
+            ],
+            "means": "she starts hosting that game; it follows her words",
+            "name": "game",
+            "readBy": [
+              "soup::split_start",
+              "hosting::split_seat_game"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "site",
+              "app"
+            ],
+            "forms": [
+              "[[music:play]]",
+              "[[music:pause]]",
+              "[[music:toggle]]",
+              "[[music:next]]",
+              "[[music:prev]]",
+              "[[music:join]]",
+              "[[music:share N]]"
+            ],
+            "means": "what she does with the music playing between them",
+            "name": "music",
+            "readBy": [
+              "chat_music::split_chat_music_directive"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "app"
+            ],
+            "forms": [
+              "[[stance:disagree|about|view]]",
+              "[[stance:turned N worked]]",
+              "[[stance:turned N failed]]",
+              "[[stance:persuaded N]]",
+              "[[stance:owned N]]"
+            ],
+            "means": "where she stands on something they disagree about",
+            "name": "stance",
+            "readBy": [],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "site"
+            ],
+            "forms": [
+              "[[sticker:N]]",
+              "[[sticker:new|what it shows|what it means]]"
+            ],
+            "means": "she sends one of her stickers, or makes a new one",
+            "name": "sticker",
+            "readBy": [
+              "stickers::split_sticker_directive"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "site",
+              "app"
+            ],
+            "forms": [
+              "[[stop #N]]"
+            ],
+            "means": "stop piece N of the work she handed off, and only it",
+            "name": "stop",
+            "readBy": [
+              "handoff::split"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "site",
+              "app"
+            ],
+            "forms": [
+              "[[wear:outfit]]",
+              "⟦wear:outfit⟧"
+            ],
+            "means": "she changes into that outfit",
+            "name": "wear",
+            "readBy": [
+              "split_chat_wear_directive"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "site",
+              "app"
+            ],
+            "forms": [
+              "[[work: what to do]]",
+              "[[work #N: more for it]]"
+            ],
+            "means": "she hands a piece of work off, or passes their words on to piece N",
+            "name": "work",
+            "readBy": [
+              "handoff::split"
+            ],
+            "whose": "her"
+          }
+        ]
+      }
+    }
+  ],
+  "version": 1
+}

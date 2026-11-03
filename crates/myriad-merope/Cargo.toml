@@ -11,6 +11,8 @@ license = "AGPL-3.0-only"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 earcutr = "0.5"
 myriad-agent-rules = { path = "../myriad-agent-rules" }
+# The secret scan her waiting lines pass before a model sees them.
+myriad-perception-filter = { path = "../myriad-perception-filter" }
 scraper = "0.29"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -27,6 +29,8 @@ test-games = []
 serde_json = "1"
 
 [dev-dependencies]
+# Her zone by name, for the speech conformance cases.
+chrono-tz = "0.10"
 # The group trajectories (fixtures/group, recorded locally, not in the
 # repository) are compared after a trip through
 # JSON: read numbers back to the exact bits they were written from.

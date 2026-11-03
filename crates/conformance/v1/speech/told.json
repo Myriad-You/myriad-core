@@ -1,0 +1,567 @@
+{
+  "call": "speech.told",
+  "cases": [
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793661600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "早呀",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "groupName": "猫猫群",
+            "place": "group",
+            "source": "event",
+            "text": "群里也说一声",
+            "thing": "event:e-1",
+            "to": {
+              "group": "telegram:-100123",
+              "members": [
+                "1",
+                "2"
+              ],
+              "venue": "group"
+            }
+          },
+          {
+            "at": 1793685000000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "嗯",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "私聊别人",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "2"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "none",
+            "place": "web",
+            "source": "event",
+            "text": "没送出去",
+            "thing": "event:e-9",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "text": "嗯",
+        "thing": "event:e-1",
+        "to": {
+          "members": [
+            "1"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "verbatim, same thing, elsewhere, unasked lately",
+      "output": {
+        "elsewhere": [
+          {
+            "at": 1793685300000000,
+            "venue": "private"
+          },
+          {
+            "at": 1793684400000000,
+            "group": "telegram:-100123",
+            "name": "猫猫群",
+            "venue": "group"
+          }
+        ],
+        "sameThingAt": 1793683800000000,
+        "unaskedLately": 1,
+        "verbatim": true
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793661600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "早呀",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "groupName": "猫猫群",
+            "place": "group",
+            "source": "event",
+            "text": "群里也说一声",
+            "thing": "event:e-1",
+            "to": {
+              "group": "telegram:-100123",
+              "members": [
+                "1",
+                "2"
+              ],
+              "venue": "group"
+            }
+          },
+          {
+            "at": 1793685000000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "嗯",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "私聊别人",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "2"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "none",
+            "place": "web",
+            "source": "event",
+            "text": "没送出去",
+            "thing": "event:e-9",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "thing": "event:e-1",
+        "to": {
+          "group": "telegram:-100123",
+          "members": [
+            "1",
+            "2"
+          ],
+          "venue": "group"
+        }
+      },
+      "name": "a group learns only that a private talk heard it",
+      "output": {
+        "elsewhere": [
+          {
+            "at": 1793685300000000,
+            "venue": "private"
+          },
+          {
+            "at": 1793683800000000,
+            "venue": "private"
+          }
+        ],
+        "sameThingAt": 1793684400000000,
+        "unaskedLately": 1,
+        "verbatim": false
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793661600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "早呀",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "groupName": "猫猫群",
+            "place": "group",
+            "source": "event",
+            "text": "群里也说一声",
+            "thing": "event:e-1",
+            "to": {
+              "group": "telegram:-100123",
+              "members": [
+                "1",
+                "2"
+              ],
+              "venue": "group"
+            }
+          },
+          {
+            "at": 1793685000000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "嗯",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "私聊别人",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "2"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "none",
+            "place": "web",
+            "source": "event",
+            "text": "没送出去",
+            "thing": "event:e-9",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "text": "没送出去",
+        "thing": "event:e-9",
+        "to": {
+          "members": [
+            "1"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "a line that was not sent is not said",
+      "output": {
+        "unaskedLately": 1,
+        "verbatim": false
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793661600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "早呀",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "groupName": "猫猫群",
+            "place": "group",
+            "source": "event",
+            "text": "群里也说一声",
+            "thing": "event:e-1",
+            "to": {
+              "group": "telegram:-100123",
+              "members": [
+                "1",
+                "2"
+              ],
+              "venue": "group"
+            }
+          },
+          {
+            "at": 1793685000000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "嗯",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "私聊别人",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "2"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "none",
+            "place": "web",
+            "source": "event",
+            "text": "没送出去",
+            "thing": "event:e-9",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "to": {
+          "members": [
+            "1"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "no thing, no text",
+      "output": {
+        "unaskedLately": 1,
+        "verbatim": false
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685420000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "大家好",
+            "to": {
+              "members": [
+                "1",
+                "2"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "text": "大家好",
+        "to": {
+          "members": [
+            "2",
+            "1"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "a private talk with the same people in another order",
+      "output": {
+        "unaskedLately": 1,
+        "verbatim": true
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793682000000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "a",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682060000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "b",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "to": {
+          "members": [
+            "1"
+          ],
+          "venue": "private"
+        }
+      },
+      "name": "an hour ago is out of the window",
+      "output": {
+        "unaskedLately": 1,
+        "verbatim": false
+      }
+    },
+    {
+      "input": {
+        "ledger": [],
+        "now": 1793685600000000,
+        "to": {
+          "venue": "group"
+        }
+      },
+      "name": "bad audience",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

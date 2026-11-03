@@ -478,7 +478,7 @@ fn judge(texts: &[&str], ids: &[&str], whole: &Value) -> Result<(), Why> {
 /// The fields each payload shape names (`myriad_persona_log::payloads`).
 /// On the wire a payload holds no other: a field the core does not know is
 /// one it cannot check.
-const PAYLOAD_FIELDS: [(&str, &[&str]); 7] = [
+const PAYLOAD_FIELDS: [(&str, &[&str]); 8] = [
     ("segment.open", &["at", "place"]),
     ("segment.line", &["at", "text", "line", "replyTo"]),
     ("segment.close", &["at"]),
@@ -489,11 +489,28 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 7] = [
         "affect.change",
         &["at", "valence", "arousal", "band", "cause"],
     ),
+    (
+        "speech.said",
+        &[
+            "at",
+            "text",
+            "place",
+            "source",
+            "called",
+            "thing",
+            "exit",
+            "extent",
+            "heard",
+            "interrupted",
+            "line",
+            "groupName",
+        ],
+    ),
 ];
 
 /// The payload fields that are ids, not words: held to the path rule and
 /// the known-key rule, not the random-run one.
-const PAYLOAD_IDS: [&str; 4] = ["line", "replyTo", "replaces", "by"];
+const PAYLOAD_IDS: [&str; 5] = ["line", "replyTo", "replaces", "by", "thing"];
 
 /// A payload of a shaped kind checked: its shape, no field it does not
 /// name, then its words and ids.
@@ -1055,6 +1072,23 @@ mod tests {
                     arousal: 50.0,
                     band: "warm".into(),
                     cause: "chat".into(),
+                }),
+            ),
+            (
+                "speech.said",
+                serde_json::to_value(SpeechSaid {
+                    at: 1,
+                    text: "早".into(),
+                    place: "app".into(),
+                    source: "event".into(),
+                    called: false,
+                    thing: Some("event:e-1".into()),
+                    exit: "voice".into(),
+                    extent: "full".into(),
+                    heard: Some(1),
+                    interrupted: true,
+                    line: Some("m_1".into()),
+                    group_name: Some("猫猫群".into()),
                 }),
             ),
         ];

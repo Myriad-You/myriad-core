@@ -39,6 +39,7 @@ mod reminder;
 mod serial;
 mod soup;
 mod speaking;
+mod speech;
 mod style;
 mod sync;
 mod timing;
@@ -312,6 +313,14 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.taste_section", own::taste_section),
     ("speaking.us_section", own::us_section),
     ("speaking.views_section", own::views_section),
+    ("speech.admit", speech::admit),
+    ("speech.choice_parse", speech::choice_parse),
+    ("speech.choice_prompt", speech::choice_prompt),
+    ("speech.markers", speech::markers),
+    ("speech.said_from_rows", speech::said_from_rows),
+    ("speech.strip_markers", speech::strip_markers),
+    ("speech.texts", speech::texts),
+    ("speech.told", speech::told),
     ("stickers.section", chat_app::sticker_section),
     ("style.distance", style::distance),
     ("style.noticed", style::noticed),

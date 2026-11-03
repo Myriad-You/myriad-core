@@ -60,6 +60,7 @@ pub mod sore;
 pub mod soup;
 pub mod sources;
 pub mod speaking;
+pub mod speech;
 mod score;
 mod speech_plan;
 mod sticker_avatar;
