@@ -6,7 +6,7 @@ use myriad_agent_rules::memory::audience::{self, Venue};
 use serde::{Deserialize, Serialize};
 
 use super::ledger::{said_to, told};
-use super::{Elsewhere, HOUR, MINUTE, Wish, speakable};
+use super::{Elsewhere, HOUR, MINUTE, Source, Wish, speakable};
 use crate::{speaking, timing};
 
 /// How far back the fuse counts.
@@ -189,7 +189,8 @@ where
 
 /// What she is told when whether to speak is hers to judge: why she wants
 /// to, what she said to them unasked lately and whether they answered, how
-/// long since they talked, where else she said the same thing, her night,
+/// long since they talked, whether she already greeted them today (when she
+/// wants to greet them), where else she said the same thing, her night,
 /// what she is doing, a touch. These were the gates; now she weighs them.
 /// English, like the rest of what she is asked; one fact a line.
 pub fn facts<Z: TimeZone>(input: &Admit, zone: &Z) -> Vec<String>
@@ -228,6 +229,34 @@ where
             "What you said to {them} unasked lately, latest first:\n{}",
             lately.join("\n")
         ));
+    }
+
+    // Wanting to greet them: whether she already did today, when, and how.
+    // Today is her day (from when she got up, so past midnight while she is
+    // still up is today) or the date on the clock (so their coming before
+    // she got up is today too). Lately's lines may have scrolled past it,
+    // and a greeting is the one line a day has once.
+    if wish.source == Source::Greeting {
+        let day = |at: i64| {
+            let at = DateTime::<Utc>::from_timestamp_micros(at).unwrap_or_default();
+            (
+                timing::her_date_at(at, zone),
+                at.with_timezone(zone).date_naive(),
+            )
+        };
+        let (her_today, date_today) = day(now);
+        if let Some(greeted) = said_to(&input.ledger, &wish.to).into_iter().find(|said| {
+            let (her_day, date) = day(said.at);
+            said.source == Some(Source::Greeting)
+                && said.at <= now
+                && (her_day == her_today || date == date_today)
+        }) {
+            facts.push(format!(
+                "You already greeted {them} today, at {}: \"{}\"",
+                clock(greeted.at, zone),
+                greeted.text.trim()
+            ));
+        }
     }
 
     let told = told(&input.ledger, &wish.to, wish.thing.as_deref(), None, now);
