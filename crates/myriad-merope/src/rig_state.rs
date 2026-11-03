@@ -68,6 +68,14 @@ pub const RIG_STATE_CAPABILITIES: &[&str] = &[
     "sleep-z",
     "sparkles",
     "blush",
+    "left-hand-wave",
+    "left-hand-point",
+    "left-hand-chest",
+    "left-hand-chin",
+    "right-hand-wave",
+    "right-hand-point",
+    "right-hand-chest",
+    "right-hand-chin",
 ];
 /// Capabilities that are a drawn layer beside her face: a package imported
 /// before they existed lacks them, so a look that needs one is not offered.

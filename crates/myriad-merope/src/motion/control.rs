@@ -72,6 +72,7 @@ fn is_bearing(control: &str) -> bool {
         || control.starts_with("gaze")
         || control.starts_with("torso")
         || control.contains("Arm")
+        || control.contains("Hand")
 }
 
 /// Her face, bearing and every control this face has, `when` she is at it
@@ -106,7 +107,9 @@ fn ask_bearing(questions: &mut Map<String, Value>, state: Option<&RigStateSummar
             .find(|c| c.0 == control)
             .map(|c| c.4)
             .unwrap_or_default();
-        let hint = if control.contains("Arm") {
+        let hint = if control.contains("Hand") {
+            " A drawn gesture of that hand: strong when the moment is plainly that gesture, otherwise rest. At most one per hand."
+        } else if control.contains("Arm") {
             " People use their hands: arms open when explaining or welcoming, draw in when shy or hurt, lift when excited."
         } else if control.starts_with("eye") {
             " The eyes carry most of a face: lids half down when content, drowsy or reading, wide when struck, smiling when amused."

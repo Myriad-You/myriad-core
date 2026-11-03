@@ -51,7 +51,15 @@
     "questionMark": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "question-mark", "description": "A question mark drawn beside her head: puzzled, wondering."},
     "sleepZ": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "sleep-z", "description": "A drawn \"Z z z\" beside her head: sleepy, dozing."},
     "sparkles": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "sparkles", "description": "Sparkles drawn beside her head: excited, delighted, a bright idea."},
-    "blush": {"min": 0, "max": 1, "capability": "blush", "description": "Drawn blush across her cheeks: shy, flustered, touched."}
+    "blush": {"min": 0, "max": 1, "capability": "blush", "description": "Drawn blush across her cheeks: shy, flustered, touched."},
+    "leftHandWave": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "left-hand-wave", "description": "Image-left hand raised and waving: hello, goodbye, catching someone's eye. A drawn gesture: one per hand, raised from below and put down the same way."},
+    "leftHandPoint": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "left-hand-point", "description": "Image-left hand raised, one finger up: a point to make, an idea, \"wait\" or \"listen\". A drawn gesture: one per hand, raised from below and put down the same way."},
+    "leftHandChest": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "left-hand-chest", "description": "Image-left hand laid on her chest: sincere, touched, meaning herself. A drawn gesture: one per hand, raised from below and put down the same way."},
+    "leftHandChin": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "left-hand-chin", "description": "Image-left hand at her chin: thinking it over, curious, weighing something. A drawn gesture: one per hand, raised from below and put down the same way."},
+    "rightHandWave": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "right-hand-wave", "description": "Image-right hand raised and waving: hello, goodbye, catching someone's eye. A drawn gesture: one per hand, raised from below and put down the same way."},
+    "rightHandPoint": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "right-hand-point", "description": "Image-right hand raised, one finger up: a point to make, an idea, \"wait\" or \"listen\". A drawn gesture: one per hand, raised from below and put down the same way."},
+    "rightHandChest": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "right-hand-chest", "description": "Image-right hand laid on her chest: sincere, touched, meaning herself. A drawn gesture: one per hand, raised from below and put down the same way."},
+    "rightHandChin": {"min": 0, "max": 1, "tiers": {"strong": 1}, "capability": "right-hand-chin", "description": "Image-right hand at her chin: thinking it over, curious, weighing something. A drawn gesture: one per hand, raised from below and put down the same way."}
   },
   "faceShifts": {
     "ease": {"description": "settles into the new look naturally: eyes first, the head after", "durationMs": 520, "staggerMs": 60, "pauseMs": 0, "passMs": 360, "damping": 0.72, "anticipation": 0.04, "arc": 0.18},
