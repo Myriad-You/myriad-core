@@ -176,16 +176,7 @@ pub(crate) fn answer_step(cx: &mut Cx, a: &mut Answering, answer: Option<Answer>
             member_replied(cx, a, next)
         }
         (AnswerStage::StrangerLedger, Some(Answer::LedgerRead { stored })) => {
-            let differs = differs(cx.group, &a.noted, stored.as_ref());
-            a.sections = [
-                a.room
-                    .as_ref()
-                    .map(|room| crate::talk_shape::describe(room, "How people type here")),
-                differs,
-            ]
-            .into_iter()
-            .flatten()
-            .collect();
+            a.differs = differs(cx.group, &a.noted, stored.as_ref());
             a.stage = AnswerStage::StrangerSensing;
             match start_sensing(cx, a) {
                 Sensed::Wait(awaiting) => Next::Wait(awaiting),
@@ -198,7 +189,8 @@ pub(crate) fn answer_step(cx: &mut Cx, a: &mut Answering, answer: Option<Answer>
         },
         (AnswerStage::StrangerTyping, Some(Answer::Typed)) => {
             a.stage = AnswerStage::StrangerTurning;
-            let (replying, replied) = reply_start(cx, a);
+            let differs = a.differs.take();
+            let (replying, replied) = reply_start(cx, a, differs);
             a.replying = Some(Box::new(replying));
             stranger_replied(cx, a, replied)
         }
@@ -426,7 +418,7 @@ fn sensed_stranger(cx: &mut Cx, a: &mut Answering, section: Option<String>) -> N
     if unread_chime(a) {
         return Next::Done(false);
     }
-    a.sections.extend(section);
+    a.making_sense = section;
     a.stage = AnswerStage::StrangerTyping;
     let to = a.message.target();
     Next::Wait(cx.effect(|id| Effect::Typing { id, to }))
