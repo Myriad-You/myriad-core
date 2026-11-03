@@ -933,7 +933,7 @@ mod tests {
             turn(&["*伸了个懒腰* 好困"]),
             turn(&["As an AI, I can't"]),
             turn(&["我等了(大概)三个小时(其实是2个)"]),
-            turn(&["他在拍照吗\n\nAh, the question is who he is."]),
+            turn(&["猫跑哪去了\n\nSo the question is where the cat went."]),
             turn(&["好"]),
         ]);
         assert_eq!(measures.ai_flavored, Some(0.625));

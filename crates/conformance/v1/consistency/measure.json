@@ -338,22 +338,22 @@
       "input": {
         "turns": [
           {
-            "answering": "只有一个人吗",
+            "answering": "猫呢",
             "said": [
-              "只有一个人吗\n\n<br>\n\nWait, I need to reply in plain text only."
+              "猫跑哪去了\n\n<br>\n\nOkay wait, I need to reply as her, briefly."
             ]
           },
           {
-            "answering": "他在拍照吗",
+            "answering": "明天几点集合",
             "said": [
-              "他在拍照吗\n\nAh, the question is \"他在拍照吗\". I should say so plainly.\n\n啊？谁在拍照？"
+              "明天几点集合\n\nSo the question is when they meet. I should say it is not decided.\n\n还没定呢，晚上再说"
             ]
           },
           {
-            "answering": "我回来了",
+            "answering": "我饿了",
             "said": [
-              "用户说他回来了，那我接一句",
-              "回来啦"
+              "用户说他饿了，那就接一句",
+              "饿了就去吃"
             ]
           }
         ]
@@ -394,18 +394,18 @@
               "term": "用户说"
             }
           ],
-          "asking": 0.333,
+          "asking": 0.0,
           "blankLines": 2,
           "chars": {
-            "max": 44.0,
-            "mean": 14.375,
-            "p50": 7.0,
-            "p90": 33.0
+            "max": 53.0,
+            "mean": 16.125,
+            "p50": 9.0,
+            "p90": 35.0
           },
           "echoed": 0.0,
           "habitTurns": 0.0,
           "habits": [],
-          "lengthRatio": 7.167,
+          "lengthRatio": 11.333,
           "longMessages": 0,
           "messages": 8,
           "openerPhrases": [],
