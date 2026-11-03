@@ -20,6 +20,7 @@ use crate::Failure;
 mod affect;
 mod archive;
 mod chat;
+mod consistency;
 mod filter;
 mod grants;
 mod group;
@@ -62,6 +63,10 @@ const CALLS: &[(&str, Call)] = &[
     ("chat.history_text", chat::history_text),
     ("chat.pause_text", chat::pause_text),
     ("chat.safe_content", chat::safe_content),
+    ("consistency.apart", consistency::apart),
+    ("consistency.measure", consistency::measure),
+    ("consistency.prompt_diff", consistency::prompt_diff),
+    ("consistency.prompt_segments", consistency::prompt_segments),
     ("contrast.describe", style::describe),
     ("contrast.overused", style::overused),
     ("contrast.pieces", style::pieces),

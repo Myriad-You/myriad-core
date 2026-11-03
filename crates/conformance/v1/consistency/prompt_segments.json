@@ -1,0 +1,109 @@
+{
+  "call": "consistency.prompt_segments",
+  "cases": [
+    {
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "text": "You are Merope.\n\nShe likes rain.\n\n\n\n## Mood\nCalm.\n\nRecent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在\n</untrusted_chat_transcript>\n\nReply as yourself. Use the addressee's language."
+          },
+          {
+            "role": "user",
+            "text": "在吗"
+          }
+        ]
+      },
+      "name": "paragraphs, headings and a fenced block kept whole",
+      "output": {
+        "segments": [
+          {
+            "key": "You are Merope.",
+            "role": "system",
+            "text": "You are Merope."
+          },
+          {
+            "key": "She likes rain.",
+            "role": "system",
+            "text": "She likes rain."
+          },
+          {
+            "key": "Mood",
+            "role": "system",
+            "text": "## Mood\nCalm."
+          },
+          {
+            "key": "Recent lines, oldest fir… <untrusted_chat_transcript>",
+            "role": "system",
+            "text": "Recent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在\n</untrusted_chat_transcript>"
+          },
+          {
+            "key": "Reply as yourself. Use t…",
+            "role": "system",
+            "text": "Reply as yourself. Use the addressee's language."
+          },
+          {
+            "key": "在吗",
+            "role": "user",
+            "text": "在吗"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "text": "Before.\n\n<untrusted_memory>\nnotice\na\n\nb"
+          },
+          {
+            "role": "user",
+            "text": "在吗"
+          }
+        ]
+      },
+      "name": "an unclosed fence runs to the end of its message",
+      "output": {
+        "segments": [
+          {
+            "key": "Before.",
+            "role": "system",
+            "text": "Before."
+          },
+          {
+            "key": "<untrusted_memory>",
+            "role": "system",
+            "text": "<untrusted_memory>\nnotice\na\n\nb"
+          },
+          {
+            "key": "在吗",
+            "role": "user",
+            "text": "在吗"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "text": "This first line is much longer than twenty-four characters.\nAnd more."
+          }
+        ]
+      },
+      "name": "a long first line is cut for its key",
+      "output": {
+        "segments": [
+          {
+            "key": "This first line is much …",
+            "role": "system",
+            "text": "This first line is much longer than twenty-four characters.\nAnd more."
+          }
+        ]
+      }
+    }
+  ],
+  "version": 1
+}

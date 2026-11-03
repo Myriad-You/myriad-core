@@ -442,12 +442,27 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **一轮的顺序**（站点 `merope/motion.rs` 的 `direct_motion_inner`）：`motion.floor` 先演；`motion.asked` 拿题，`hidden` 就停；问模型（聊天模型先用 `motion.chat_prompt`）；`motion.plan`；`motion.way` 有题就在剩下的时间里再问一次，答上来用 `motion.lay_way`；`motion.direction` 交出要演的。站立演出另用 `motion.standing_doing` 拼出 `activity`，导演没答出来时用 `motion.standing_floor`，过一会儿再问。
 - **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。只随一次写明理由的改动改，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test motion_conformance` 只重写输出变了的文件。2026-11-02 改过一次：转述别人时 `motion.way` 不再朝计划没换上的脸问路（录下的 `way.json` 里这类用例随之改写）。
 
+## 她是不是同一个人（`consistency.*`）
+
+两端算不算同一个她，两样都过才算（统一说话设计的决定 12）：同一场景交给两端，拼出的整份提示一样；同一批真实对话在两端各回放一遍，她回复的风格指标在容差内。「像不像人」这类短时判断不当证据。规则在 `myriad_merope::consistency`，只出计数和短语，不出她的原话。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `consistency.measure` | `{turns: [{said, answering?, opens?}]}` → `{measures}`：一个地方她的回复的指标。`said` 是她这一轮存下的消息，每条先过 `chat_safe_content`，一行算一条；`answering` 是她这轮接的话（对方这轮的几行），`opens` 表示她这轮是隔了一段（聊天记录里标了停顿）之后的招呼。指标：`turns`、`messages`；`perTurn`（每轮条数）、`chars`（每条字数，不数空白）各给 `{mean, p50, p90, max}`；`lengthRatio`（她这轮字数比对方的，中位数）；`asking`（以问句收尾的轮）；`habits`（出现在至少 30% 轮里的 3–6 字短语，最多 5 个）和 `habitTurns`（带其中任一的轮）；`openers`、`openerPhrases`（至少一半招呼里有的短语）、`openerReuse`（用了这些短语或和更早一次招呼第一行相同的招呼）；`repeated`（至少 4 个字、一字不差说过的消息，只比字母和数字）；`echoed`（这一轮的相邻字对至少 60% 在她上一轮里）；`aiFlavored`、`aiHits`（AI 味：`AI_FLAVORED` 词表的 `assistant` 助手腔、`rounded` 总结腔、`comfort` 套话安慰，加 `stage`：`*…*` 或在消息头尾、最多 12 个字的括号动作）；`blankLines`（带空行的存储消息）、`longMessages`（超过 100 字的消息）。比例都是 0..1、保留三位小数，没有可算的就是 `null` |
+| `consistency.apart` | `{left, right}`（两份 `measures`）→ `{apart: [{measure, left, right}]}`：两端差出容差的指标。任一边不到 20 轮只回 `turns`；容差是起步值（`TOLERANCE`），两端对过足够多次、知道噪声后再收紧 |
+| `consistency.prompt_segments` | `{messages: [{role, text}]}` → `{segments: [{role, key, text}]}`：整份提示按空行切段，`<untrusted_…>` 围起来的块整段不切；`key` 是段的标题（`## …`）、围栏的标签，或开头 24 个字 |
+| `consistency.prompt_diff` | `{left, right}`（两份整份提示录制）→ `{diff: {sameScene, sameInput, same, differ}}`：两端同一场景的提示逐段比。按两边文字相同的最长段序列对齐（一端把对话写进一整段、另一端逐条发消息也对得上），文字相同、角色不同的记 `role`；两段共有段之间 `key` 相同的算 `changed`，其余是只在 `left` 或 `right`；`differ` 按位置排，带两边的段号和原文。录制版本不是 1 的拒收 |
+
+**整份提示录制**（`PromptRecording`，版本 1）：`{version: 1, scene, end, core?, input, messages: [{role, text}]}`。`scene` 是各端共用的场景名（`private/greeting-after-days`），`end` 是哪一端（`site`、`native`），`core` 是那一端钉的核心提交，`input` 是场景交给那一端的全部输入（她是谁、几点和时区、心情、到此为止的对话、最新一句，形状随场景定，按 JSON 比），`messages` 是发给模型的消息原样。各端在发给模型之前最后一处拿到整份提示的地方录下它；切段由核心做，各端不自己标段。录制文件留在各端本机，不进仓库。
+
+- **一致性对照** `crates/conformance/v1/consistency/`：每个调用一份，输出是规则进来时（2026-11-03）照规则写的；`myriad-merope` 的 `tests/consistency_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test consistency_conformance` 只随一次写明理由的改动用。
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份。`consistency/`：她是不是同一个人，每个 `consistency.*` 调用一份。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v1/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
