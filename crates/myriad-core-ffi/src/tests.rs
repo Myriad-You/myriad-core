@@ -21,6 +21,7 @@ mod nodes;
 mod own;
 mod partner;
 mod recall;
+mod speech;
 mod sync;
 
 /// Through the C ABI, as a platform calls it: status and decoded JSON.
@@ -124,6 +125,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(own::TESTED.iter().copied())
     .chain(partner::TESTED.iter().copied())
     .chain(recall::TESTED.iter().copied())
+    .chain(speech::TESTED.iter().copied())
     .chain(sync::TESTED.iter().copied())
     .collect();
     let names = call_names();

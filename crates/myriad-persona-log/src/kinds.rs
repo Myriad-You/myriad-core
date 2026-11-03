@@ -126,6 +126,11 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("segment.close", Some("segment"), Rule::Event),
     ("segment.line", Some("segment"), Rule::Event),
     ("segment.open", Some("segment"), Rule::Event),
+    // One line she said and how far it got, wherever it was said: the
+    // ledger of what she said (`myriad_merope::speech`). Not a
+    // `segment.line`: a line she says first, or in a group, need not be in
+    // a stretch of talk.
+    ("speech.said", Some("speech"), Rule::Event),
 ];
 
 /// The object type a forget names to forget everything about a subject in
@@ -171,5 +176,7 @@ mod tests {
         assert_eq!(rule("retract.home"), Some(Rule::Home));
         assert_eq!(names("node.split_off"), Names::Split);
         assert_eq!(names("node.span"), Names::None);
+        assert_eq!(rule("speech.said"), Some(Rule::Event));
+        assert_eq!(object_type("speech.said"), Some("speech"));
     }
 }

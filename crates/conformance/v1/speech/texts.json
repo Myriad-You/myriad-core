@@ -1,0 +1,40 @@
+{
+  "call": "speech.texts",
+  "cases": [
+    {
+      "input": {},
+      "name": "the numbers",
+      "output": {
+        "choiceLineChars": 400,
+        "choiceSchema": {
+          "additionalProperties": false,
+          "properties": {
+            "let_go": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "say": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "say",
+            "let_go"
+          ],
+          "type": "object"
+        },
+        "choiceSchemaName": "speech_choice",
+        "choiceTimeoutSeconds": 8,
+        "fusePerHour": 60,
+        "fuseWindowSeconds": 3600,
+        "latelyShown": 3
+      }
+    }
+  ],
+  "version": 1
+}

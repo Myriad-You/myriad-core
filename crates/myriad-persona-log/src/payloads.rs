@@ -21,9 +21,11 @@
 //! | `memory.retire` | `memory:<id>` | [`MemoryRetire`] |
 //! | `memory.restore` | `memory:<id>` | [`MemoryRestore`] |
 //! | `affect.change` | `affect:<subject>` | [`AffectChange`] |
+//! | `speech.said` | `speech:<id>` | [`SpeechSaid`] |
 //!
 //! Who said a line, or wrote a memory, is the row's `author` (the owner or
-//! her); who a memory or a mood is about is its `subject`.
+//! her); who a memory or a mood is about is its `subject`, and who she said
+//! a `speech.said` line to is its `audience` and `subject`.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -113,6 +115,48 @@ pub struct AffectChange {
     pub cause: String,
 }
 
+/// One line she said, wherever and however it came to be said, and how far
+/// it got: a row of the ledger of what she said (`myriad_merope::speech`).
+/// Who it was said to is the row's audience (and subject, in private).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpeechSaid {
+    pub at: i64,
+    /// Her words as they went out.
+    pub text: String,
+    /// Where it was said, as `segment.open` names it: `web`, `app`, `group`
+    /// or another surface.
+    pub place: String,
+    /// Why she said it: the wish's source (`event`, `reach`, `wander`,
+    /// `reply`, ... as `myriad_merope::speech::Source` names them).
+    pub source: String,
+    /// Whether she was called on (a reply, an @, a touch, her turn in a
+    /// game), rather than speaking unasked.
+    pub called: bool,
+    /// The thing it was about, by its key: the same key is the same thing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub thing: Option<String>,
+    /// The way out it took on the side that said it: `face`, `voice`,
+    /// `notice`, `im`, ... a side names its own.
+    pub exit: String,
+    /// How much of it went out: `full`, `gist`, `marker` (only her mark
+    /// lit), `notice` (only a notification), or `none` (not sent).
+    pub extent: String,
+    /// How many of its characters were heard, when a voice said it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heard: Option<u32>,
+    /// Whether it was cut off partway.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub interrupted: bool,
+    /// The writing side's own id for the line (a message id), when it has
+    /// one, as in `segment.line`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<String>,
+}
+
+/// How much of a said line went out, the words [`SpeechSaid::extent`] takes.
+pub const SPEECH_EXTENTS: [&str; 5] = ["full", "gist", "marker", "notice", "none"];
+
 fn read<T: for<'de> Deserialize<'de>>(kind: &str, value: &Value) -> Result<T, LogError> {
     serde_json::from_value(value.clone())
         .map_err(|_| LogError::new(format!("a {kind} payload is not of its shape")))
@@ -179,6 +223,18 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
             check_scale(change.valence)?;
             check_scale(change.arousal)?;
         }
+        "speech.said" => {
+            let said: SpeechSaid = read(kind, payload)?;
+            check_text(kind, &said.text)?;
+            if said.place.is_empty() || said.source.is_empty() || said.exit.is_empty() {
+                return Err(LogError::new(
+                    "a speech.said payload has no place, source or exit",
+                ));
+            }
+            if !SPEECH_EXTENTS.contains(&said.extent.as_str()) {
+                return Err(LogError::new("a speech.said payload has no known extent"));
+            }
+        }
         _ => return Ok(false),
     }
     Ok(true)
@@ -212,6 +268,11 @@ mod tests {
                 "affect.change",
                 json!({"at": 7, "valence": 62.5, "arousal": 40.0, "band": "warm", "cause": "chat"}),
             ),
+            (
+                "speech.said",
+                json!({"at": 8, "text": "早", "place": "app", "source": "event", "called": false,
+                    "thing": "event:e-1", "exit": "voice", "extent": "full", "heard": 1, "later": 1}),
+            ),
         ];
         for (kind, payload) in cases {
             assert_eq!(check(kind, &payload), Ok(true), "{kind}");
@@ -233,6 +294,16 @@ mod tests {
             (
                 "affect.change",
                 json!({"at": 7, "valence": 120.0, "arousal": 40.0, "band": "x", "cause": "y"}),
+            ),
+            (
+                "speech.said",
+                json!({"at": 8, "text": "早", "place": "app", "source": "event", "called": false,
+                    "exit": "voice", "extent": "half"}),
+            ),
+            (
+                "speech.said",
+                json!({"at": 8, "text": "早", "place": "", "source": "event", "called": false,
+                    "exit": "voice", "extent": "full"}),
             ),
         ] {
             assert!(check(kind, &payload).is_err(), "{kind} {payload}");

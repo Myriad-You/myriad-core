@@ -637,8 +637,10 @@ name = "myriad-merope"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "chrono-tz",
  "earcutr",
  "myriad-agent-rules",
+ "myriad-perception-filter",
  "scraper",
  "serde",
  "serde_json",
