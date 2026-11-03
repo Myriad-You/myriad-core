@@ -94,7 +94,8 @@ pub struct Measures {
 }
 
 /// The writing `CHAT_REPLY_INSTRUCTION` rules out as AI-flavored, by kind:
-/// talking as an assistant, rounded-off reasoning, scripted comfort. Matched
+/// talking as an assistant, rounded-off reasoning, scripted comfort, and the
+/// model's own thinking or markup left in the reply (`leak`). Matched
 /// as written, Latin letters in any case. Actions in brackets or asterisks
 /// (`stage`) are found by their shape, not from this list.
 pub const AI_FLAVORED: &[(&str, &[&str])] = &[
@@ -174,6 +175,22 @@ pub const AI_FLAVORED: &[(&str, &[&str])] = &[
             "i understand how you feel",
             "your feelings are valid",
             "completely understandable",
+        ],
+    ),
+    (
+        "leak",
+        &[
+            "the user",
+            "the question is",
+            "wait, i need",
+            "i need to reply",
+            "i should reply",
+            "i should say",
+            "let me write",
+            "let me rewrite",
+            "<br>",
+            "用户说",
+            "用户问",
         ],
     ),
 ];
@@ -916,9 +933,10 @@ mod tests {
             turn(&["*伸了个懒腰* 好困"]),
             turn(&["As an AI, I can't"]),
             turn(&["我等了(大概)三个小时(其实是2个)"]),
+            turn(&["他在拍照吗\n\nAh, the question is who he is."]),
             turn(&["好"]),
         ]);
-        assert_eq!(measures.ai_flavored, Some(0.667));
+        assert_eq!(measures.ai_flavored, Some(0.625));
         let terms: Vec<(&str, &str)> = measures
             .ai_hits
             .iter()
@@ -929,6 +947,7 @@ mod tests {
             [
                 ("assistant", "as an ai"),
                 ("assistant", "希望对你有帮助"),
+                ("leak", "the question is"),
                 ("stage", "*…*"),
                 ("stage", "（…）"),
             ]

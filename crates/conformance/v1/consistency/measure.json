@@ -338,6 +338,94 @@
       "input": {
         "turns": [
           {
+            "answering": "只有一个人吗",
+            "said": [
+              "只有一个人吗\n\n<br>\n\nWait, I need to reply in plain text only."
+            ]
+          },
+          {
+            "answering": "他在拍照吗",
+            "said": [
+              "他在拍照吗\n\nAh, the question is \"他在拍照吗\". I should say so plainly.\n\n啊？谁在拍照？"
+            ]
+          },
+          {
+            "answering": "我回来了",
+            "said": [
+              "用户说他回来了，那我接一句",
+              "回来啦"
+            ]
+          }
+        ]
+      },
+      "name": "the model's thinking and markup left in a reply",
+      "output": {
+        "measures": {
+          "aiFlavored": 0.5,
+          "aiHits": [
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "<br>"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "i need to reply"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "i should say"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "the question is"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "wait, i need"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "用户说"
+            }
+          ],
+          "asking": 0.333,
+          "blankLines": 2,
+          "chars": {
+            "max": 44.0,
+            "mean": 14.375,
+            "p50": 7.0,
+            "p90": 33.0
+          },
+          "echoed": 0.0,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 7.167,
+          "longMessages": 0,
+          "messages": 8,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 0,
+          "perTurn": {
+            "max": 3.0,
+            "mean": 2.667,
+            "p50": 3.0,
+            "p90": 3.0
+          },
+          "repeated": 0.0,
+          "turns": 3
+        }
+      }
+    },
+    {
+      "input": {
+        "turns": [
+          {
             "said": [
               "好"
             ],
