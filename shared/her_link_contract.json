@@ -549,7 +549,8 @@
       "lease": "Where her mind is: asking, yielding, granting, every device told of the epoch, a self-stop reported, a takeover told.",
       "log": "Her log between host cores: version vectors, batched rows, the first full sync.",
       "peer": "Device identities: published, confirmed by the owner, and proven on the LAN.",
-      "group": "A group's new messages lent to her mind on a PC to think with (the group's log stays on the server), and what she says there, sent out by the server."
+      "group": "A group's new messages lent to her mind on a PC to think with (the group's log stays on the server), and what she says there, sent out by the server.",
+      "chat": "A private chat's new messages on a chat app, lent to her mind on a PC to think with (someone else's talk stays on the server), and what she says there, sent out by the server."
     },
     "frames": {
       "fact.up": {
@@ -740,6 +741,30 @@
         "required": ["sayId", "sent"],
         "optional": ["code"],
         "description": "The answer to group.say: sayId is its id, sent whether the line went out. code, when it did not, is why, from errorCodes (not_holder, group_unknown) or unavailable when the platform would not take it; the mind does not say it again on its own."
+      },
+      "chat.lend": {
+        "from": "server",
+        "delivery": "reliable",
+        "required": ["chat", "messages"],
+        "optional": ["name", "recent"],
+        "maxItems": {"messages": 64, "recent": 64},
+        "idempotency": "id is made by the server once per lend, the same on every resend.",
+        "description": "To the core her mind is on, when that is a PC: new messages someone sent her in a private chat on a chat app the server reaches (a bot), lent for her to think with, as group.lend lends a group's. chat is that talk's audience (personal:<id>, id the one she talks with as her log names them), name what they are called there. messages are the new ones and recent the ones just before them, oldest first, each {id, text, at, mine?}: id the platform's message id as text, at milliseconds since the epoch, mine true for a line she said there (recent only). When the one she talks with is not the partner (chat is not the PC's own holder's personal audience), it is talk the PC does not hold: it keeps none of it on disk and lets it go when she is done or the lease moves, and what she knows of them is that audience's log, which the mind reads with log.vector as the holder; only the server keeps it. When it is the partner, it is the partner's own talk, which the PC holds and keeps as it keeps that talk's rows. Sent only while that PC holds the lease; a lend not acked when the lease moves is the server's again."
+      },
+      "chat.say": {
+        "from": "mind",
+        "delivery": "reliable",
+        "required": ["chat", "text"],
+        "optional": ["replyTo", "lend"],
+        "idempotency": "id is made by the mind once per line, the same on every resend.",
+        "description": "Her mind on a PC says text in a private chat: the server sends it there as her, the way it sends her own lines. replyTo is the message id she answers, lend the chat.lend it comes from. Her line and what she noted are hers to write: the mind writes them as rows of the chat's audience at its epoch and sends them with log.rows, and the server keeps them; when the one she talks with is not the partner, the PC keeps neither on disk (it writes them for the server, then lets them go). Taken only from the holder (not_holder otherwise); answered with chat.said."
+      },
+      "chat.said": {
+        "from": "server",
+        "delivery": "answer",
+        "required": ["sayId", "sent"],
+        "optional": ["code"],
+        "description": "The answer to chat.say: sayId is its id, sent whether the line went out. code, when it did not, is why, from errorCodes (not_holder, chat_unknown) or unavailable when the platform would not take it; the mind does not say it again on its own."
       }
     },
     "errorCodes": {
@@ -754,6 +779,7 @@
       "not_holder": "A lease frame from a core that does not hold the epoch it names.",
       "stale_epoch": "A lease frame for an epoch that no longer stands.",
       "group_unknown": "A group frame naming a group the server does not keep, or one she is not in.",
+      "chat_unknown": "A chat frame naming a private chat the server does not keep, or one no chat app reaches now.",
       "clock_ahead": "log.rows refused whole: a row's clock more than five minutes ahead. Carries serverTime; the sender measures its offset, repairs its unsynced rows and sends again."
     },
     "closeCodes": {
