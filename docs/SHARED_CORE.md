@@ -442,6 +442,25 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **一轮的顺序**（站点 `merope/motion.rs` 的 `direct_motion_inner`）：`motion.floor` 先演；`motion.asked` 拿题，`hidden` 就停；问模型（聊天模型先用 `motion.chat_prompt`）；`motion.plan`；`motion.way` 有题就在剩下的时间里再问一次，答上来用 `motion.lay_way`；`motion.direction` 交出要演的。站立演出另用 `motion.standing_doing` 拼出 `activity`，导演没答出来时用 `motion.standing_floor`，过一会儿再问。
 - **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。只随一次写明理由的改动改，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test motion_conformance` 只重写输出变了的文件。2026-11-02 改过一次：转述别人时 `motion.way` 不再朝计划没换上的脸问路（录下的 `way.json` 里这类用例随之改写）。
 
+## 聊天软件里的她（`speaking.chat_app_section`、`talk_shape.*`、`channel.as_messages`、`timing.typing`、`memes.*`、`stickers.section`）
+
+她在聊天软件里的说话习惯，站点的 bot 一直这样说（`channel_work/chat.rs`、`chat_stream.rs` 的 `channel_chat` 一支）；登记出来是为了别的端照同一套说。规则在 `myriad_merope::{speaking, talk_shape, timing, memes, stickers}` 和 `myriad_agent_rules::channel`，调用只做 JSON 转换（`calls/chat_app.rs`）。`Shape` 是 `talk_shape::Shape` 的 camelCase JSON：`{turns, messages, perTurn, single, charsMedian, charsP90, endMark, bang, laughEnd}`。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `speaking.chat_app_section` | `{}` → `{text}`：「## In a chat app」一节 |
+| `talk_shape.room_of` | `{lines: [[说话人, 秒, 原话]]}`（旧的在前，不含她的）→ `{room: Shape \| null}`：不到 `ROOM_AT_LEAST`（8）条是 `null` |
+| `talk_shape.usual` | `{}` → `{room}`：`CHAT_APP_USUAL`，人还没说够时照它 |
+| `talk_shape.describe` | `{room, title}` → `{text}`：他们怎么打字，照实说 |
+| `channel.as_messages` | `{text}` → `{messages}`：她的回复一行一条，空行去掉，超过 `CHAT_MESSAGES`（5）条的并进最后一条 |
+| `talk_shape.messages_this_turn` | `{written, roll}` → `{most}`：这一轮最多发几条；`roll` 是 [0, 1) 的均匀数，由端给 |
+| `talk_shape.goes_out_as` | `{lines, most, room?}` → `{messages}`：每条照那里的人的打法（句号、感叹号），超出 `most` 的接在最后一条后面；没有 `room` 照 `CHAT_APP_USUAL` |
+| `timing.typing` | `{chars, roll}` → `{seconds}`：手机上打这么多字要几秒（最多 15） |
+| `memes.read_kept` | `{line}` → `{known: {term, meaning} \| null}`：她记下的一行（`memes::kept_line`）读回来 |
+| `memes.section` | `{talk, kept}` → `{text}`：`kept` 是她自己 source 为 `meme` 的那些行，读回后挑出 `talk` 里用到的（`known_in`），拼成「Words and memes you know」一节；一个也没有是 `null`。站点 `memes::section_for`、群的 `glance` 也是这三步 |
+| `stickers.section` | `{meanings, leftThisMonth}` → `{text}`：这一轮能发的贴纸（编号从 1）和这个月还能做几张；都没有是 `null` |
+
+- **一轮怎么发**（站点 `channel_work/chat.rs`；`sending.goes_out` 一次做完这几步，另加长度上限和复读截断）：`channel.as_messages` 拆行 → `talk_shape.messages_this_turn` 掷这轮发几条 → `talk_shape.goes_out_as` 照对方的打法（`room_of`，不够时 `usual`）→ 每条先显示正在输入 `timing.typing` 秒再发。
 ## 她怎么说（`speaking.soul`、`persona.flatten`、`sending.*`、`draft.*`、写法提示）
 
 她在哪一端说话都是同一个人：soul 只在核心拼一处，她的性格文字只在核心扁平化一处，一条回复发出去成几条、每条打多久的字也只在核心算一处。随机数都由调用方传进来；问模型、发消息、显示正在输入、等多久都留在各端。2026-11-03 从站点后端（`merope/mod.rs` 的 `resolve_speaking_soul`、`merope/timing.rs`、`merope/draft.rs`、`merope/onboarding_prompts.rs`、`channel_work/chat.rs` 的拆条）、站点前端（`onboardingTypes.ts` 的 `flattenPersona`）和原生（`ChatReplyLimit.swift`、`SpeakingRules.flattened`）搬来。
@@ -452,11 +471,10 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `speaking.soul` | `{name, personality, home}` → `{text}`：她说话时的 soul（名字、按 `home.place` 写的人设契约、性格、`home.line`）；名字和性格都空是 `null`。住在站点时和站点原来拼的（`format_persona` 加空行加 `site_line`）逐字节相同 |
 | `speaking.contract_at` | `{place}` → `{text}`：住在 `place` 时的人设契约；`this site` 就是 `speaking.contract` |
 | `persona.flatten` | `{fields: {summary, temperament, likes, drives, socialStyle, speechStyle}, language}` → `{text}`：人设字段变成一段性格文字，标签按她的语言（`persona.language`，没有的按英文），和站点设置页的扁平化逐字节相同 |
-| `sending.goes_out` | `{reply, room?, rolls: {split, typing}}` → `{messages: [{text, typingSeconds}], stopped}`：一条回复发出去的几条（长度上限和复读截断、拆条、照那里的人打字去掉句号和感叹号），每条打字要几秒；`room` 是 `talk_shape::Shape`（没有就按聊天软件里常见的），`typing` 每条一个，缺的按中间值。第一条的打字时间各端减去她想的那段时间 |
+| `sending.goes_out` | `{reply, room?, rolls: {split, typing}}` → `{messages: [{text, typingSeconds}], stopped}`：一条回复发出去的几条（长度上限和复读截断、拆条、照那里的人打字去掉句号和感叹号），每条打字要几秒（和 `timing.typing` 同一条规则）；`room` 是 `talk_shape::Shape`（没有就按聊天软件里常见的），`typing` 每条一个，缺的按中间值。第一条的打字时间各端减去她想的那段时间 |
 | `sending.limit_take` | `{used, piece, raw}` → `{used, stop, kept}`：流式回复每来一段问一次；`stop` 是 `length`（超过 8192 个估算 token，`kept` 是说到的全部）或 `loop`（`kept` 是第一圈），`null` 就接着收 |
 | `timing.where_she_is` | `{inTalk, maySleep, wakesIn?, freeIn?}` → `{at}`：消息来时她在哪（`inTalk`、`free`、`busy` 带 `freeIn`、`asleep` 带 `wakesIn`）；`wakesIn` 用 `timing.asleep_at` 算 |
-| `timing.until_read` | `{at, text, u1, u2}` → `{seconds}`：她看到并读完这条要几秒 |
-| `timing.typing` | `{text, u}` → `{seconds}`：打这条要几秒（按字符数，不按字节或字形簇） |
+| `timing.until_read` | `{at, text, u1, u2}` → `{seconds}`：她看到并读完这条要几秒（按 `text` 的字符数） |
 | `draft.ask` | `{said, draft, came: [{who, text}]}` → `{ask: null \| {system, input, schemaName, schema, withinSeconds}}`：她写的时候对方又说了，发前再看一眼要问的；什么都没来就是 `null`，照发 |
 | `draft.send` | `{answer?}` → `{send}`：她的回答（超时就不给）读成发不发；读不出或没回答都照发 |
 | `bits.ask` | `{soul, group}` → `{system, schemaName, schema}`：夜里回想一天的对话时写梗、印象（`us`、`lands`）的提示 |

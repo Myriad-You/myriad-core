@@ -1,9 +1,9 @@
 //! How she says it, the same on every end: her soul and where she lives
 //! (`myriad_merope::speaking::soul`), her personality from its fields
 //! (`personality`), what goes out of a reply (`sending`), when she sees a
-//! message and how long typing takes (`timing`), the look before it goes
-//! (`draft`), and the prompts she writes her bits, her story and a new
-//! persona with (`bits`, `self_story`, `onboarding_prompts`).
+//! message (`timing`), the look before it goes (`draft`), and the prompts
+//! she writes her bits, her story and a new persona with (`bits`,
+//! `self_story`, `onboarding_prompts`).
 
 use myriad_merope::{
     bits, draft, onboarding_prompts, personality, self_story, sending,
@@ -189,17 +189,6 @@ pub(super) fn until_read(raw: &[u8]) -> Result<Value, Failure> {
     let req: In = input(raw)?;
     let seconds = timing::until_read(req.at.into(), req.text.chars().count(), req.u1, req.u2);
     Ok(json!({ "seconds": seconds }))
-}
-
-pub(super) fn typing(raw: &[u8]) -> Result<Value, Failure> {
-    #[derive(Deserialize)]
-    #[serde(deny_unknown_fields)]
-    struct In {
-        text: String,
-        u: f64,
-    }
-    let req: In = input(raw)?;
-    Ok(json!({ "seconds": timing::typing(req.text.chars().count(), req.u) }))
 }
 
 pub(super) fn draft_ask(raw: &[u8]) -> Result<Value, Failure> {

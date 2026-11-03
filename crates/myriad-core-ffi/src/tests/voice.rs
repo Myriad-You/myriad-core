@@ -32,7 +32,6 @@ pub(super) const TESTED: &[&str] = &[
     "speaking.contract_at",
     "speaking.home",
     "speaking.soul",
-    "timing.typing",
     "timing.until_read",
     "timing.where_she_is",
 ];
