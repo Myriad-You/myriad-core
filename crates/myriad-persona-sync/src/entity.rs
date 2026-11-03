@@ -24,8 +24,22 @@ use crate::{
 /// The envelope's fixed `format`.
 pub const FORMAT: &str = "myriad.her";
 /// Bumped only for a change an older side cannot read; a new optional
-/// field does not bump it.
-pub const FORMAT_VERSION: u32 = 2;
+/// field does not bump it. 3 added `speech_said`.
+pub const FORMAT_VERSION: u32 = 3;
+/// The versions this side reads: what it writes, and 2, which is 3 without
+/// `speech_said` (a file exported before it still comes back).
+pub const READ_FORMAT_VERSIONS: [u32; 2] = [2, FORMAT_VERSION];
+
+/// Whether this side reads `myriad.her` version `version`; why not, when
+/// not, as an older side would be told.
+pub fn check_format_version(version: u32) -> Result<(), SyncError> {
+    if READ_FORMAT_VERSIONS.contains(&version) {
+        return Ok(());
+    }
+    Err(SyncError::new(format!(
+        "format version {version} is not one this side reads (2, {FORMAT_VERSION})"
+    )))
+}
 /// The one person a synced memory can be with.
 pub const OWNER: &str = "owner";
 /// Longest entity id.
@@ -57,8 +71,8 @@ pub struct Envelope {
 /// the rest (since format version 2) cross only when she moves or is
 /// exported whole: what she said with the owner, what she proposed, her
 /// pace and what she is doing now, which set each end wears, her state
-/// toward the owner, the history of her persona's fields and the ledger of
-/// what she said to the owner.
+/// toward the owner, the history of her persona's fields and (since format
+/// version 3) the ledger of what she said to the owner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
@@ -309,12 +323,7 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
     if envelope.format != FORMAT {
         return Err(SyncError::new(format!("format is {FORMAT:?}")));
     }
-    if envelope.format_version != FORMAT_VERSION {
-        return Err(SyncError::new(format!(
-            "format version {} is not one this side reads ({FORMAT_VERSION})",
-            envelope.format_version
-        )));
-    }
+    check_format_version(envelope.format_version)?;
     check_node(&envelope.origin)?;
     if let Some(model) = &mut envelope.embedding_model {
         model.model = model.model.trim().to_string();
@@ -333,6 +342,14 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
         .any(|pair| (pair[0].kind, &pair[0].id) == (pair[1].kind, &pair[1].id))
     {
         return Err(SyncError::new("an entity is listed twice"));
+    }
+    if envelope.format_version < 3
+        && envelope
+            .entities
+            .iter()
+            .any(|entity| entity.kind == Kind::SpeechSaid)
+    {
+        return Err(SyncError::new("format version 2 has no speech_said"));
     }
     for asset in &mut envelope.assets {
         asset.check()?;

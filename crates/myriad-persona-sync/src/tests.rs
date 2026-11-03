@@ -657,6 +657,65 @@ impl ArchiveSample {
     }
 }
 
+/// What a side wrote in format version 2, before `speech_said`, still
+/// reads: the envelope and the export file exactly as they were then
+/// (`fixtures/v2/`, never blessed).
+#[test]
+fn a_version_2_envelope_and_export_file_still_read() {
+    let raw = std::fs::read(fixtures().join("v2/envelope.json")).unwrap();
+    let envelope: Envelope = serde_json::from_slice(&raw).unwrap();
+    assert_eq!(envelope.format_version, 2);
+    let read = entity::canonicalize_envelope(envelope).unwrap();
+    assert_eq!(
+        canonical_bytes(&serde_json::to_value(&read).unwrap()),
+        raw.strip_suffix(b"\n").unwrap_or(&raw)
+    );
+    let file = std::fs::read(fixtures().join("v2/her.her-archive")).unwrap();
+    let opened = archive::open(SAMPLE_PASSPHRASE, &file, false).unwrap();
+    assert_eq!(opened.header.format_version, 2);
+    assert_eq!(opened.envelopes[0].format_version, 2);
+    assert!(
+        opened.envelopes[0]
+            .entities
+            .iter()
+            .all(|entity| entity.kind != Kind::SpeechSaid)
+    );
+}
+
+/// This side writes version 3, the first with `speech_said`: a version 2
+/// envelope that holds one is refused, and a version this side does not
+/// know is refused by its number, in an envelope and in a file's header.
+#[test]
+fn speech_said_comes_in_version_3_and_an_unknown_version_is_refused_by_number() {
+    let raw = std::fs::read(fixtures().join("envelope.json")).unwrap();
+    let envelope: Envelope = serde_json::from_slice(&raw).unwrap();
+    assert_eq!(envelope.format_version, 3);
+    assert!(
+        envelope
+            .entities
+            .iter()
+            .any(|entity| entity.kind == Kind::SpeechSaid)
+    );
+    assert!(entity::canonicalize_envelope(envelope.clone()).is_ok());
+    let mut old = envelope.clone();
+    old.format_version = 2;
+    let error = entity::canonicalize_envelope(old).unwrap_err().to_string();
+    assert!(error.contains("no speech_said"), "{error}");
+    let mut next = envelope;
+    next.format_version = 4;
+    let error = entity::canonicalize_envelope(next).unwrap_err().to_string();
+    assert!(error.contains("format version 4"), "{error}");
+
+    let file = std::fs::read(fixtures().join("archive/her.her-archive")).unwrap();
+    let mut header = archive::open(SAMPLE_PASSPHRASE, &file, false)
+        .unwrap()
+        .header;
+    assert_eq!(header.format_version, 3);
+    header.format_version = 4;
+    let error = header.check().unwrap_err().to_string();
+    assert!(error.contains("format version 4"), "{error}");
+}
+
 /// The golden archive is what the crate seals from its inputs, and opens
 /// back to them: another platform seals the same inputs through the core
 /// and must write the same bytes.

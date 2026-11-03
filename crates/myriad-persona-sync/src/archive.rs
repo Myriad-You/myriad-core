@@ -315,12 +315,7 @@ impl ArchiveHeader {
                 self.version
             )));
         }
-        if self.format_version != FORMAT_VERSION {
-            return Err(SyncError::new(format!(
-                "format version {} is not one this side reads ({FORMAT_VERSION})",
-                self.format_version
-            )));
-        }
+        crate::entity::check_format_version(self.format_version)?;
         self.kdf.check()?;
         if self.cipher != CIPHER {
             return Err(SyncError::new(format!("the cipher is {CIPHER}")));
