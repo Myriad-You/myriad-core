@@ -171,7 +171,7 @@ pub(crate) fn start_answer(
         making_sense: None,
         room: None,
         noted: Pieces::default(),
-        sections: Vec::new(),
+        differs: None,
         reply: String::new(),
         sticker: None,
         deliver: None,
