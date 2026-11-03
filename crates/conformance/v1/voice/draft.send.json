@@ -1,0 +1,39 @@
+{
+  "call": "draft.send",
+  "cases": [
+    {
+      "input": {
+        "answer": "{\"send\":false}"
+      },
+      "name": "held back",
+      "output": {
+        "send": false
+      }
+    },
+    {
+      "input": {
+        "answer": "```json\n{\"send\":true}\n```"
+      },
+      "name": "fenced",
+      "output": {
+        "send": true
+      }
+    },
+    {
+      "input": {
+        "answer": "send it"
+      },
+      "name": "unreadable: it goes",
+      "output": {
+        "send": true
+      }
+    },
+    {
+      "input": {},
+      "name": "no answer in time: it goes",
+      "output": {
+        "send": true
+      }
+    }
+  ]
+}

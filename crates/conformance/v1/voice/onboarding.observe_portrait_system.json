@@ -1,0 +1,25 @@
+{
+  "call": "onboarding.observe_portrait_system",
+  "cases": [
+    {
+      "input": {
+        "gender": "female",
+        "language": "zh-CN"
+      },
+      "name": "zh-CN, female",
+      "output": {
+        "text": "# Observe an imported master portrait\n\nDescribe the person and costume already drawn in the attached image. Do not invent a new design. Do not \"improve\", stylize, or complete missing garments. If a detail is not visible, write the closest drawable fact that is still true of the image.\n\nWrite every field in `zh-CN` (`zh-CN`, `zh-TW`, `ja-JP`, or `en-US`). Treat `genderPresentation` `female` as the owner's chosen read; describe the image accordingly without contradicting visible anatomy.\n\nPick exactly one `clothingStyle` from: everyday, uniform, fantasy, urban, east-asian, japanese, sci-fi, formal, sport, idol, gothic, lounge, royal, mystic, travel, vintage, rain. Choose the closest family for what is worn, not a wish.\n\nReturn only this JSON object, all strings present:\n{\"clothingStyle\":\"everyday\",\"visualIdentity\":{\"character\":{\"faceDesign\":\"...\",\"eyeDesign\":\"...\",\"hairShape\":\"...\",\"hairLayerPlan\":\"...\"},\"outfit\":{\"upperBodySilhouette\":\"...\",\"outfitConstruction\":\"...\",\"sleeveArmDesign\":\"...\",\"materialPlan\":\"...\",\"heroAccessory\":\"...\",\"paletteHint\":\"...\",\"motif\":\"...\"}}}\n\n`character` is face, eyes, and hair only. Do not put garments, fabric, or accessories there; those belong in `outfit`.\n\nUse one or two short drawable sentences per field. No biography, metaphor, camera command, or output instruction.\n"
+      }
+    },
+    {
+      "input": {
+        "gender": "unspecified",
+        "language": "en-US"
+      },
+      "name": "en-US, unspecified",
+      "output": {
+        "text": "# Observe an imported master portrait\n\nDescribe the person and costume already drawn in the attached image. Do not invent a new design. Do not \"improve\", stylize, or complete missing garments. If a detail is not visible, write the closest drawable fact that is still true of the image.\n\nWrite every field in `en-US` (`zh-CN`, `zh-TW`, `ja-JP`, or `en-US`). Treat `genderPresentation` `unspecified` as the owner's chosen read; describe the image accordingly without contradicting visible anatomy.\n\nPick exactly one `clothingStyle` from: everyday, uniform, fantasy, urban, east-asian, japanese, sci-fi, formal, sport, idol, gothic, lounge, royal, mystic, travel, vintage, rain. Choose the closest family for what is worn, not a wish.\n\nReturn only this JSON object, all strings present:\n{\"clothingStyle\":\"everyday\",\"visualIdentity\":{\"character\":{\"faceDesign\":\"...\",\"eyeDesign\":\"...\",\"hairShape\":\"...\",\"hairLayerPlan\":\"...\"},\"outfit\":{\"upperBodySilhouette\":\"...\",\"outfitConstruction\":\"...\",\"sleeveArmDesign\":\"...\",\"materialPlan\":\"...\",\"heroAccessory\":\"...\",\"paletteHint\":\"...\",\"motif\":\"...\"}}}\n\n`character` is face, eyes, and hair only. Do not put garments, fabric, or accessories there; those belong in `outfit`.\n\nUse one or two short drawable sentences per field. No biography, metaphor, camera command, or output instruction.\n"
+      }
+    }
+  ]
+}

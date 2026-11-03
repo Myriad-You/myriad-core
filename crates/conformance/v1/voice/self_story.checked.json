@@ -1,0 +1,157 @@
+{
+  "call": "self_story.checked",
+  "cases": [
+    {
+      "input": {
+        "answer": "{\"claims\":[{\"text\":\"《晴天》的副歌我没听进去，读完的那本 3 章小说倒是记得。\",\"cites\":[\"r1\",\"r2\"],\"continues\":null}]}",
+        "before": [
+          {
+            "restsOn": [
+              "m0"
+            ],
+            "text": "我喜欢慢歌。"
+          }
+        ],
+        "records": [
+          {
+            "id": "r1",
+            "line": "听了《晴天》，副歌那段没听进去。",
+            "missed": true,
+            "row": "m1"
+          },
+          {
+            "id": "r2",
+            "line": "读完了一本 3 章的小说。",
+            "missed": false,
+            "row": "m2"
+          }
+        ],
+        "tally": {
+          "books": 1,
+          "songs": 1
+        }
+      },
+      "name": "a claim resting on the miss is kept",
+      "output": {
+        "claims": [
+          {
+            "restsOn": [
+              "m1",
+              "m2"
+            ],
+            "text": "《晴天》的副歌我没听进去，读完的那本 3 章小说倒是记得。"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "answer": "{\"claims\":[{\"text\":\"我读完了一本小说。\",\"cites\":[\"r2\"],\"continues\":null}]}",
+        "before": [
+          {
+            "restsOn": [
+              "m0"
+            ],
+            "text": "我喜欢慢歌。"
+          }
+        ],
+        "records": [
+          {
+            "id": "r1",
+            "line": "听了《晴天》，副歌那段没听进去。",
+            "missed": true,
+            "row": "m1"
+          },
+          {
+            "id": "r2",
+            "line": "读完了一本 3 章的小说。",
+            "missed": false,
+            "row": "m2"
+          }
+        ],
+        "tally": {}
+      },
+      "name": "misses and no claim on one: nothing",
+      "output": {
+        "claims": null
+      }
+    },
+    {
+      "input": {
+        "answer": "{\"claims\":[{\"text\":\"我还是喜欢慢歌。\",\"cites\":[],\"continues\":\"b1\"},{\"text\":\"《晴天》没听进去。\",\"cites\":[\"r1\"],\"continues\":null}]}",
+        "before": [
+          {
+            "restsOn": [
+              "m0"
+            ],
+            "text": "我喜欢慢歌。"
+          }
+        ],
+        "records": [
+          {
+            "id": "r1",
+            "line": "听了《晴天》，副歌那段没听进去。",
+            "missed": true,
+            "row": "m1"
+          },
+          {
+            "id": "r2",
+            "line": "读完了一本 3 章的小说。",
+            "missed": false,
+            "row": "m2"
+          }
+        ],
+        "tally": {}
+      },
+      "name": "carrying on last time's",
+      "output": {
+        "claims": [
+          {
+            "restsOn": [
+              "m0"
+            ],
+            "text": "我还是喜欢慢歌。"
+          },
+          {
+            "restsOn": [
+              "m1"
+            ],
+            "text": "《晴天》没听进去。"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "answer": "no",
+        "before": [
+          {
+            "restsOn": [
+              "m0"
+            ],
+            "text": "我喜欢慢歌。"
+          }
+        ],
+        "records": [
+          {
+            "id": "r1",
+            "line": "听了《晴天》，副歌那段没听进去。",
+            "missed": true,
+            "row": "m1"
+          },
+          {
+            "id": "r2",
+            "line": "读完了一本 3 章的小说。",
+            "missed": false,
+            "row": "m2"
+          }
+        ],
+        "tally": {}
+      },
+      "name": "unreadable",
+      "output": {
+        "claims": null
+      }
+    }
+  ]
+}

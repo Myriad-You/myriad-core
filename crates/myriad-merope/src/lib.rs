@@ -80,6 +80,9 @@ pub mod wants;
 mod visual_contract;
 mod visual_design;
 mod visual_prompt;
+pub mod onboarding_prompts;
+pub mod personality;
+pub mod sending;
 
 pub use anime25d_contract::replace_anime25d_pose_corrections;
 pub use onboarding::{MAX_ONBOARDING_TAG_CHARS, MAX_ONBOARDING_TAGS, sanitize_onboarding_tags};

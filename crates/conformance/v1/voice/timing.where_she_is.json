@@ -1,0 +1,73 @@
+{
+  "call": "timing.where_she_is",
+  "cases": [
+    {
+      "input": {
+        "freeIn": 60.0,
+        "inTalk": true,
+        "maySleep": true,
+        "wakesIn": 600.0
+      },
+      "name": "talking keeps her up",
+      "output": {
+        "at": {
+          "kind": "inTalk"
+        }
+      }
+    },
+    {
+      "input": {
+        "inTalk": false,
+        "maySleep": true,
+        "wakesIn": 600.0
+      },
+      "name": "asleep",
+      "output": {
+        "at": {
+          "kind": "asleep",
+          "wakesIn": 600.0
+        }
+      }
+    },
+    {
+      "input": {
+        "freeIn": 60.0,
+        "inTalk": false,
+        "maySleep": false,
+        "wakesIn": 600.0
+      },
+      "name": "not asleep where she may not sleep",
+      "output": {
+        "at": {
+          "freeIn": 60.0,
+          "kind": "busy"
+        }
+      }
+    },
+    {
+      "input": {
+        "freeIn": -3.0,
+        "inTalk": false,
+        "maySleep": true
+      },
+      "name": "free once it is done",
+      "output": {
+        "at": {
+          "kind": "free"
+        }
+      }
+    },
+    {
+      "input": {
+        "inTalk": false,
+        "maySleep": true
+      },
+      "name": "free",
+      "output": {
+        "at": {
+          "kind": "free"
+        }
+      }
+    }
+  ]
+}

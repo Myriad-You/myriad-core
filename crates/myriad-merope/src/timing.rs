@@ -55,6 +55,35 @@ pub fn seen_after(at: Where, u1: f64, u2: f64) -> f64 {
     }
 }
 
+/// What she is doing as a message comes: talking there just now (which
+/// keeps her up past her bedtime, as talk does), asleep where she may sleep
+/// (`wakes_in`: seconds until she wakes, when she is asleep now, see
+/// [`asleep_at`]), in the middle of something of her own (`free_in`:
+/// seconds until it is done), or free.
+pub fn where_she_is(
+    in_talk: bool,
+    may_sleep: bool,
+    wakes_in: Option<f64>,
+    free_in: Option<f64>,
+) -> Where {
+    if in_talk {
+        return Where::InTalk;
+    }
+    if may_sleep && let Some(wakes_in) = wakes_in {
+        return Where::Asleep { wakes_in };
+    }
+    match free_in.filter(|seconds| *seconds > 0.0) {
+        Some(free_in) => Where::Busy { free_in },
+        None => Where::Free,
+    }
+}
+
+/// Seconds until she has seen a message of `chars` characters and read it
+/// (`u1`, `u2` uniform in [0, 1), as for [`seen_after`]).
+pub fn until_read(at: Where, chars: usize, u1: f64, u2: f64) -> f64 {
+    seen_after(at, u1, u2) + reading(chars)
+}
+
 /// Seconds to read a message of `chars` characters. Silent reading runs
 /// about 240 words a minute (Brysbaert 2019); for Chinese characters, a
 /// guess of 8 a second.
@@ -192,6 +221,28 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn talk_keeps_her_up_and_what_she_is_doing_says_when_she_reads() {
+        assert_eq!(
+            where_she_is(true, true, Some(600.0), Some(60.0)),
+            Where::InTalk
+        );
+        assert_eq!(
+            where_she_is(false, true, Some(600.0), None),
+            Where::Asleep { wakes_in: 600.0 }
+        );
+        // Where she may not sleep, a night of hers does not keep her away.
+        assert_eq!(
+            where_she_is(false, false, Some(600.0), Some(60.0)),
+            Where::Busy { free_in: 60.0 }
+        );
+        assert_eq!(where_she_is(false, false, None, Some(-3.0)), Where::Free);
+        assert_eq!(
+            until_read(Where::InTalk, 16, 0.3, 0.7),
+            seen_after(Where::InTalk, 0.3, 0.7) + 2.0
+        );
+    }
 
     #[test]
     fn her_day_runs_from_getting_up_to_going_to_bed() {

@@ -25,6 +25,7 @@ mod prompts;
 mod recall;
 mod speech;
 mod sync;
+mod voice;
 
 /// Through the C ABI, as a platform calls it: status and decoded JSON.
 fn ffi(name: &str, input: &Value) -> (i32, Value) {
@@ -131,6 +132,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(recall::TESTED.iter().copied())
     .chain(speech::TESTED.iter().copied())
     .chain(sync::TESTED.iter().copied())
+    .chain(voice::TESTED.iter().copied())
     .collect();
     let names = call_names();
     assert!(
