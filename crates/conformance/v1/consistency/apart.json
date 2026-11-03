@@ -1,0 +1,526 @@
+{
+  "call": "consistency.apart",
+  "cases": [
+    {
+      "input": {
+        "left": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 13
+        },
+        "right": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        }
+      },
+      "name": "too few turns compare only the count",
+      "output": {
+        "apart": [
+          {
+            "left": 13.0,
+            "measure": "turns",
+            "right": 30.0
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        },
+        "right": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        }
+      },
+      "name": "the same measures are not apart",
+      "output": {
+        "apart": []
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        },
+        "right": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.127,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 9.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        }
+      },
+      "name": "within the tolerances is not apart",
+      "output": {
+        "apart": []
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        },
+        "right": {
+          "aiFlavored": 0.3,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 60.0,
+            "mean": 24.0,
+            "p50": 22.0,
+            "p90": 40.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        }
+      },
+      "name": "longer messages, more AI flavor, no greetings on one side",
+      "output": {
+        "apart": [
+          {
+            "left": 7.0,
+            "measure": "chars.p50",
+            "right": 22.0
+          },
+          {
+            "left": 9.0,
+            "measure": "chars.p90",
+            "right": 40.0
+          },
+          {
+            "left": 0.0,
+            "measure": "openerReuse",
+            "right": null
+          },
+          {
+            "left": 0.167,
+            "measure": "aiFlavored",
+            "right": 0.3
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 18,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "turns": 30
+        },
+        "right": {
+          "turns": 30
+        }
+      },
+      "name": "a measures object missing a field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

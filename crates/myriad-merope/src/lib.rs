@@ -11,6 +11,7 @@ pub mod chat_days;
 pub mod chat_history;
 pub mod chat_music;
 pub mod chat_remember;
+pub mod consistency;
 pub mod contrast;
 pub mod cues;
 pub mod curiosity;

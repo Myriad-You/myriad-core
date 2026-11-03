@@ -1,0 +1,349 @@
+{
+  "call": "consistency.prompt_diff",
+  "cases": [
+    {
+      "input": {
+        "left": {
+          "end": "site",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\n## Mood\nCalm.\n\nRecent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在\n</untrusted_chat_transcript>\n\nReply as yourself. Use the addressee's language."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        },
+        "right": {
+          "end": "native",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\n## Mood\nCalm.\n\nRecent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在\n</untrusted_chat_transcript>\n\nReply as yourself. Use the addressee's language."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        }
+      },
+      "name": "the same prompt on both",
+      "output": {
+        "diff": {
+          "differ": [],
+          "same": 6,
+          "sameInput": true,
+          "sameScene": true
+        }
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "end": "site",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\n## Mood\nCalm.\n\n## How you have been talking here\n5 of your last 6 replies here ended by asking them something.\n\nReply as yourself. Use the addressee's language."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        },
+        "right": {
+          "end": "native",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\n## Mood\nLow.\n\nReply as yourself. Use the addressee's language.\n\n## Now\nIt is night."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        }
+      },
+      "name": "a changed section, one only on the left, one only on the right",
+      "output": {
+        "diff": {
+          "differ": [
+            {
+              "key": "Mood",
+              "kind": "changed",
+              "left": "## Mood\nCalm.",
+              "leftAt": 2,
+              "right": "## Mood\nLow.",
+              "rightAt": 2,
+              "role": "system"
+            },
+            {
+              "key": "How you have been talking here",
+              "kind": "left",
+              "left": "## How you have been talking here\n5 of your last 6 replies here ended by asking them something.",
+              "leftAt": 3,
+              "role": "system"
+            },
+            {
+              "key": "Now",
+              "kind": "right",
+              "right": "## Now\nIt is night.",
+              "rightAt": 4,
+              "role": "system"
+            }
+          ],
+          "same": 4,
+          "sameInput": true,
+          "sameScene": true
+        }
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "end": "site",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\nRecent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在\n</untrusted_chat_transcript>\n\nReply as yourself. Use the addressee's language."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        },
+        "right": {
+          "end": "native",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\nRecent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在呀\n</untrusted_chat_transcript>\n\nReply as yourself. Use the addressee's language."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        }
+      },
+      "name": "a line inside the fenced transcript differs",
+      "output": {
+        "diff": {
+          "differ": [
+            {
+              "key": "Recent lines, oldest fir… <untrusted_chat_transcript>",
+              "kind": "changed",
+              "left": "Recent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在\n</untrusted_chat_transcript>",
+              "leftAt": 2,
+              "right": "Recent lines, oldest first:\n<untrusted_chat_transcript>\nnotice\nuser: 在吗\n\nassistant: 在呀\n</untrusted_chat_transcript>",
+              "rightAt": 2,
+              "role": "system"
+            }
+          ],
+          "same": 4,
+          "sameInput": true,
+          "sameScene": true
+        }
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "end": "site",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain.\n\nReply as yourself. Use the addressee's language."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        },
+        "right": {
+          "end": "native",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain."
+            },
+            {
+              "role": "user",
+              "text": "Reply as yourself. Use the addressee's language.\n\n在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        }
+      },
+      "name": "the same text sent in another role",
+      "output": {
+        "diff": {
+          "differ": [
+            {
+              "key": "Reply as yourself. Use t…",
+              "kind": "role",
+              "leftAt": 2,
+              "rightAt": 2,
+              "role": "system → user"
+            }
+          ],
+          "same": 3,
+          "sameInput": true,
+          "sameScene": true
+        }
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "end": "site",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        },
+        "right": {
+          "end": "native",
+          "input": {
+            "latest": "在不在",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/late-night",
+          "version": 1
+        }
+      },
+      "name": "another scene and input: told, still compared",
+      "output": {
+        "diff": {
+          "differ": [],
+          "same": 3,
+          "sameInput": false,
+          "sameScene": false
+        }
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "end": "site",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 1
+        },
+        "right": {
+          "end": "native",
+          "input": {
+            "latest": "在吗",
+            "zone": "Asia/Shanghai"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "text": "You are Merope.\n\nShe likes rain."
+            },
+            {
+              "role": "user",
+              "text": "在吗"
+            }
+          ],
+          "scene": "private/greeting",
+          "version": 2
+        }
+      },
+      "name": "another recording version is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

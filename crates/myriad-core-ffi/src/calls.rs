@@ -21,6 +21,7 @@ mod affect;
 mod archive;
 mod chat;
 mod chat_app;
+mod consistency;
 mod filter;
 mod grants;
 mod group;
@@ -83,6 +84,10 @@ const CALLS: &[(&str, Call)] = &[
         "chat_remember.settle_system",
         prompts::remember_settle_system,
     ),
+    ("consistency.apart", consistency::apart),
+    ("consistency.measure", consistency::measure),
+    ("consistency.prompt_diff", consistency::prompt_diff),
+    ("consistency.prompt_segments", consistency::prompt_segments),
     ("contrast.describe", style::describe),
     ("contrast.overused", style::overused),
     ("contrast.pieces", style::pieces),

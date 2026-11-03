@@ -1,0 +1,443 @@
+{
+  "call": "consistency.measure",
+  "cases": [
+    {
+      "input": {
+        "turns": []
+      },
+      "name": "nothing said",
+      "output": {
+        "measures": {
+          "aiFlavored": null,
+          "aiHits": [],
+          "asking": null,
+          "blankLines": 0,
+          "chars": null,
+          "echoed": null,
+          "habitTurns": null,
+          "habits": [],
+          "lengthRatio": null,
+          "longMessages": 0,
+          "messages": 0,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 0,
+          "perTurn": null,
+          "repeated": null,
+          "turns": 0
+        }
+      }
+    },
+    {
+      "input": {
+        "turns": [
+          {
+            "answering": "在吗",
+            "said": [
+              "在呀\n刚把衣服收进来"
+            ]
+          },
+          {
+            "answering": "今天怎么样",
+            "said": [
+              "还行吧，下午有点困"
+            ]
+          },
+          {
+            "answering": "我昨晚三点才睡",
+            "said": [
+              "哈哈哈\n你又熬夜了？"
+            ]
+          },
+          {
+            "answering": "我回来了",
+            "opens": true,
+            "said": [
+              "回来啦\n今天好冷"
+            ]
+          },
+          {
+            "answering": "那我先去洗澡",
+            "said": [
+              "嗯嗯"
+            ]
+          },
+          {
+            "answering": "在吗",
+            "opens": true,
+            "said": [
+              "回来啦～吃了吗"
+            ]
+          },
+          {
+            "answering": "那个你还记得吗",
+            "said": [
+              "（歪头）你说哪个"
+            ]
+          },
+          {
+            "answering": "谢谢",
+            "said": [
+              "希望对你有帮助！\n有什么可以帮你的随时告诉我"
+            ]
+          },
+          {
+            "answering": "在干嘛",
+            "said": [
+              "我刚刚在看那部电影",
+              "你看过没"
+            ]
+          },
+          {
+            "answering": "什么电影",
+            "said": [
+              "刚刚在看那部电影呢"
+            ]
+          },
+          {
+            "answering": "出门记得穿外套",
+            "said": [
+              "好\n[[wear:coat]]"
+            ]
+          },
+          {
+            "answering": "早",
+            "said": [
+              "今天也好困啊"
+            ]
+          },
+          {
+            "answering": "早上好",
+            "said": [
+              "今天也好困啊！"
+            ]
+          },
+          {
+            "answering": "我回来啦",
+            "opens": true,
+            "said": [
+              "回来啦！今天去哪了"
+            ]
+          }
+        ]
+      },
+      "name": "a private talk with habits, greetings, repeats and AI-flavored lines",
+      "output": {
+        "measures": {
+          "aiFlavored": 0.158,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.071,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.158,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.182,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 19,
+          "openerPhrases": [
+            {
+              "phrase": "回来啦",
+              "share": 1.0
+            }
+          ],
+          "openerReuse": 1.0,
+          "openers": 3,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.357,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.071,
+          "turns": 14
+        }
+      }
+    },
+    {
+      "input": {
+        "turns": [
+          {
+            "answering": "哈哈",
+            "said": [
+              "嗯0"
+            ]
+          },
+          {
+            "answering": "哈哈",
+            "said": [
+              "嗯1"
+            ]
+          },
+          {
+            "answering": "哈哈",
+            "said": [
+              "嗯2"
+            ]
+          },
+          {
+            "answering": "我把锅烧糊了",
+            "said": [
+              "笑死",
+              "你是真的会"
+            ]
+          },
+          {
+            "answering": "讲讲",
+            "said": [
+              "第一段\n\n第二段"
+            ]
+          },
+          {
+            "answering": "展开说说",
+            "said": [
+              "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+            ]
+          }
+        ]
+      },
+      "name": "chat-app turns of several messages, a blank line and a block",
+      "output": {
+        "measures": {
+          "aiFlavored": 0.0,
+          "aiHits": [],
+          "asking": 0.0,
+          "blankLines": 1,
+          "chars": {
+            "max": 120.0,
+            "mean": 17.375,
+            "p50": 3.0,
+            "p90": 5.0
+          },
+          "echoed": 0.0,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 1.167,
+          "longMessages": 1,
+          "messages": 8,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 0,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.333,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.0,
+          "turns": 6
+        }
+      }
+    },
+    {
+      "input": {
+        "turns": [
+          {
+            "said": [
+              "As an AI language model, I hope this helps."
+            ]
+          },
+          {
+            "said": [
+              "*stretches* Overall, fine."
+            ]
+          },
+          {
+            "said": [
+              "ok"
+            ]
+          }
+        ]
+      },
+      "name": "English assistant talk and asterisk actions",
+      "output": {
+        "measures": {
+          "aiFlavored": 0.667,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "as an ai"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "hope this helps"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "language model"
+            },
+            {
+              "kind": "rounded",
+              "messages": 1,
+              "term": "overall,"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "*…*"
+            }
+          ],
+          "asking": 0.0,
+          "blankLines": 0,
+          "chars": {
+            "max": 35.0,
+            "mean": 20.333,
+            "p50": 24.0,
+            "p90": 35.0
+          },
+          "echoed": 0.0,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": null,
+          "longMessages": 0,
+          "messages": 3,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 0,
+          "perTurn": {
+            "max": 1.0,
+            "mean": 1.0,
+            "p50": 1.0,
+            "p90": 1.0
+          },
+          "repeated": 0.0,
+          "turns": 3
+        }
+      }
+    },
+    {
+      "input": {
+        "turns": [
+          {
+            "answering": "猫呢",
+            "said": [
+              "猫跑哪去了\n\n<br>\n\nOkay wait, I need to reply as her, briefly."
+            ]
+          },
+          {
+            "answering": "明天几点集合",
+            "said": [
+              "明天几点集合\n\nSo the question is when they meet. I should say it is not decided.\n\n还没定呢，晚上再说"
+            ]
+          },
+          {
+            "answering": "我饿了",
+            "said": [
+              "用户说他饿了，那就接一句",
+              "饿了就去吃"
+            ]
+          }
+        ]
+      },
+      "name": "the model's thinking and markup left in a reply",
+      "output": {
+        "measures": {
+          "aiFlavored": 0.5,
+          "aiHits": [
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "<br>"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "i need to reply"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "i should say"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "the question is"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "wait, i need"
+            },
+            {
+              "kind": "leak",
+              "messages": 1,
+              "term": "用户说"
+            }
+          ],
+          "asking": 0.0,
+          "blankLines": 2,
+          "chars": {
+            "max": 53.0,
+            "mean": 16.125,
+            "p50": 9.0,
+            "p90": 35.0
+          },
+          "echoed": 0.0,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 11.333,
+          "longMessages": 0,
+          "messages": 8,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 0,
+          "perTurn": {
+            "max": 3.0,
+            "mean": 2.667,
+            "p50": 3.0,
+            "p90": 3.0
+          },
+          "repeated": 0.0,
+          "turns": 3
+        }
+      }
+    },
+    {
+      "input": {
+        "turns": [
+          {
+            "said": [
+              "好"
+            ],
+            "venue": "group"
+          }
+        ]
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
