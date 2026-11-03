@@ -91,6 +91,28 @@ pub enum Source {
 }
 
 impl Source {
+    /// Every source, in the order above.
+    pub const ALL: [Source; 18] = [
+        Self::Event,
+        Self::Greeting,
+        Self::Reach,
+        Self::Wander,
+        Self::Share,
+        Self::WorkDone,
+        Self::FirstLine,
+        Self::Screen,
+        Self::OtherAi,
+        Self::LiveLull,
+        Self::GameRemark,
+        Self::GroupInterject,
+        Self::GroupShare,
+        Self::GroupFirst,
+        Self::Reply,
+        Self::GroupAt,
+        Self::Touch,
+        Self::GameTurn,
+    ];
+
     /// Why she wants to speak, as she is told it.
     pub fn why(self) -> &'static str {
         match self {
@@ -173,6 +195,10 @@ pub enum Extent {
     Marker,
     /// Not sent.
     None,
+    /// A word a newer side wrote that this one does not know: read as not
+    /// reached.
+    #[serde(other)]
+    Unknown,
 }
 
 impl Extent {
@@ -183,35 +209,100 @@ impl Extent {
     }
 }
 
-/// One line she said: a row of the ledger, as a side reads it back from
-/// her log (`speech.said`: the row's audience is `to`, its payload the
-/// rest). Sides give the rows that bear on a wish; a side holds only the
-/// audiences it may (a group's lines stay on the server).
+/// One line she said: a row of the ledger. Its fields are the `speech.said`
+/// payload's (`myriad_persona_log::payloads::SpeechSaid`) with two
+/// differences: `at` is in microseconds like every time here, where the log
+/// keeps milliseconds; and `to` is who it was said to, from the row's
+/// audience and subject. [`Said::from_row`] makes one from a row, so a side
+/// passes its rows as they are.
+///
+/// Read leniently, for the log is append-only and a newer side may write
+/// more: a field it does not know is ignored, a source it does not know
+/// reads as none, an extent it does not know as not reached. One odd row
+/// never fails the rest.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct Said {
     pub at: i64,
     /// Who it was said to.
     pub to: Audience<String>,
     /// Her words.
     pub text: String,
-    pub source: Source,
+    /// Where: `web`, `app`, `group`, or another surface.
+    pub place: String,
+    /// Why she said it; `None` when the row names a source this side does
+    /// not know.
+    #[serde(
+        default,
+        deserialize_with = "lenient_source",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub source: Option<Source>,
     pub called: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub thing: Option<String>,
-    /// Where: `web`, `app`, `group`, or another surface.
-    pub place: String,
+    /// The way out it took on the side that said it.
+    #[serde(default)]
+    pub exit: String,
     pub extent: Extent,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub heard: Option<u32>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub interrupted: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<String>,
     /// The group's name, when it was said in one: what she is told of it
     /// elsewhere.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group_name: Option<String>,
 }
 
+fn lenient_source<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<Source>, D::Error> {
+    let raw = serde_json::Value::deserialize(deserializer)?;
+    Ok(serde_json::from_value(raw).ok())
+}
+
 impl Said {
     /// Whether it counts as said: its words reached them.
     pub fn reached(&self) -> bool {
         self.extent.reached()
+    }
+
+    /// The line a `speech.said` row holds: its audience (`personal:<owner>`
+    /// or `group:<id>`), its subject (who, in private; the owner when the
+    /// row names none) and its payload as the log keeps it. `None` for a
+    /// row that is not a line said to anyone (her own audience, a payload
+    /// off its shape): a side skips it and reads the rest.
+    pub fn from_row(
+        audience: &str,
+        subject: Option<&str>,
+        payload: &serde_json::Value,
+    ) -> Option<Said> {
+        let to = if let Some(owner) = audience.strip_prefix("personal:") {
+            let who = subject.filter(|who| !who.is_empty()).unwrap_or(owner);
+            if who.is_empty() {
+                return None;
+            }
+            Audience {
+                members: vec![who.to_string()],
+                venue: Venue::Private,
+            }
+        } else {
+            let group = audience
+                .strip_prefix("group:")
+                .filter(|group| !group.is_empty())?;
+            Audience {
+                members: Vec::new(),
+                venue: Venue::Group(group.to_string()),
+            }
+        };
+        let mut fields = payload.as_object()?.clone();
+        let millis = fields.get("at")?.as_i64()?;
+        fields.insert("at".into(), millis.checked_mul(1000)?.into());
+        fields.insert("to".into(), serde_json::to_value(&to).ok()?);
+        serde_json::from_value(serde_json::Value::Object(fields)).ok()
     }
 }
 

@@ -166,7 +166,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `memory.retire` | `memory:<id>` | `{at, why, by?}`：`by` 是现在说着这件事的那条 |
 | `memory.restore` | `memory:<id>` | `{at}` |
 | `affect.change` | `affect:<subject>` | `{at, valence, arousal, band, cause}`：变化之后的心情，0 到 100；`cause` 是类别，不是原话 |
-| `speech.said` | `speech:<id>` | `{at, text, place, source, called, thing?, exit, extent, heard?, interrupted?, line?}`：她说过的一句和送到了多少（「说过的话」账，`speech.*`）；对谁是行的受众和 `subject`。`source` 是想说的话的来源，`exit` 是那一端走的出口，`extent` 是 `full`、`gist`、`marker`、`notice`、`none` |
+| `speech.said` | `speech:<id>` | `{at, text, place, source, called, thing?, exit, extent, heard?, interrupted?, line?, groupName?}`：她说过的一句和送到了多少（「说过的话」账，`speech.*`）；对谁是行的受众和 `subject`。`source` 只收 `SPEECH_SOURCES` 里的（就是 `myriad_merope::speech::Source` 的名字，写入时校验：日志只追加，错的词写进去就永远在），`exit` 是那一端走的出口，`extent` 是 `full`、`gist`、`marker`、`notice`、`none`，`groupName` 是群里的行当时的群名 |
 
 节点（`node.*`）和判过的事（`case.*`）的载荷随节点的规则一起进来，不在这张表里。
 
@@ -447,11 +447,12 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 她想说的每一句，不论哪一端、哪条路径，都是同一种「想说的话」；该不该说由核心一处判断，从哪说、说到什么程度（出口、仲裁、打断）留在各端；说出去的结果记进「说过的话」账（她日志里的 `speech.said`），所有判断都读这本账。规则在 `myriad_merope::speech`，2026-11-03 按「统一说话」的设计加进来。
 
-想说的话 `wish` 是 `{to, source, seed, seedFrom, thing?, inPerson?, keepsUntil?, called?, needs?, at, text?}`：`to` 是给谁、`seedFrom` 是它的材料在哪听来的（都是 `audience.admits` 的听众形状）；`source` 是 `event`、`greeting`、`reach`、`wander`、`share`、`work_done`、`first_line`、`screen`、`other_ai`、`live_lull`、`game_remark`、`group_interject`、`group_share`、`group_first`（没被叫到），`reply`、`group_at`、`touch`、`game_turn`（被叫到）；`thing` 是这件事的键（同一个键算同一件，什么让它算新的写进键里）；`inPerson` 是只当面；`keepsUntil` 是能等到什么时候（不给就是现在或不说）；`called` 是被叫到；`needs` 是它要做的事要的授予（提议办事不算）；`text` 是写好的台词，写好后再受理一次。账里一行 `Said` 是 `{at, to, text, source, called, thing?, place, extent, groupName?}`。
+想说的话 `wish` 是 `{to, source, seed, seedFrom, thing?, inPerson?, keepsUntil?, called?, needs?, at, text?}`：`to` 是给谁、`seedFrom` 是它的材料在哪听来的（都是 `audience.admits` 的听众形状）；`source` 是 `event`、`greeting`、`reach`、`wander`、`share`、`work_done`、`first_line`、`screen`、`other_ai`、`live_lull`、`game_remark`、`group_interject`、`group_share`、`group_first`（没被叫到），`reply`、`group_at`、`touch`、`game_turn`（被叫到）；`thing` 是这件事的键（同一个键算同一件，什么让它算新的写进键里）；`inPerson` 是只当面；`keepsUntil` 是能等到什么时候（不给就是现在或不说）；`called` 是被叫到；`needs` 是它要做的事要的授予（提议办事不算）；`text` 是写好的台词，写好后再受理一次。账里一行 `Said` 就是 `speech.said` 的载荷加上 `to`（从行的受众和 `subject` 来），只有 `at` 换成微秒；端不用自己拼，`speech.said_from_rows` 把日志行原样转过来。`Said` 读得宽：不认识的字段忽略，不认识的 `source` 读成没有，不认识的 `extent` 算没送到，一行怪的不会让整批失败。
 
 | 调用 | 输入 → 输出 |
 | --- | --- |
 | `speech.admit` | `{wish, ledger?, granted?, dnd?, theyOpened?, present?, now, lastTalkAt?, theyWroteAt?, doing?, touchedAt?, zone}` → `{outcome: "say"}`、`{outcome: "ask", facts}`、`{outcome: "wait", until}` 或 `{outcome: "refused", why, …}`。被叫到的只过受众和授予，然后 `say`。没被叫到的过四条硬规则：勿扰（`theyOpened` 除外）、受众、授予（`granted` 是授予层，不是声明或批准）、一字不差/同一件（账里对同一受众的上一句、同一受众已说过同一个 `thing`；只算送到了的行）；再过保险丝（同一受众 1 小时内主动 60 句就拒，`why: "fuse"`，各端当错误报）、过期（`stale`）、只当面而对方不在（能等就 `wait`，否则 `notThere`）；其余都是 `ask`，`facts` 是交给她判断的事实（英文，一条一行）：为什么想说、上次聊是多久前、最近主动说过的几句和对方回没回、这件事在别处说过（只给「私聊里」或群名，不给原话）、现在是不是她的夜里、手上在办的事、刚被摸过 |
+| `speech.said_from_rows` | `{rows: [{audience, subject?, payload}]}` → `{ledger, skipped}`：`speech.said` 的行（受众 `personal:<主人>` 或 `group:<群>`，私聊的 `subject` 不给就是主人，载荷照日志存的样子）转成账；她自己的受众、载荷不成形的行跳过，`skipped` 是它们的下标 |
 | `speech.told` | `{ledger, to, thing?, text?, now}` → `{verbatim, sameThingAt?, elsewhere?, unaskedLately}`：账的查询；`elsewhere` 是 `{venue: "private", at}` 或 `{venue: "group", at, group, name?}`，最近的在前 |
 | `speech.choice_prompt` | `{soul, lives, atPause?, hands, heldBy?, scene?, pause?, reactions?, now}` → `{system, input}`：几句都在等同一个人时，一次挑一句的提示；`lives` 是她住在哪（`on their Mac`），`hands` 是 `{id, source, line, raisedAt}`，`heldBy` 是 `her_speaking`、`they_speaking`、`they_typing`；输入里的文字先过密钥扫描。从原生 `Arbiter/SpeechChoice.swift` 搬来 |
 | `speech.choice_parse` | `{raw, hands}` → `{choice: {say?, letGo} \| null}`：只留等着的那几句的 id（大小写不同的 UUID 算同一个）；超过 64 KiB、不是 JSON、没有 `let_go` 是 `null` |

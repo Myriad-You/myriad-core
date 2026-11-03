@@ -105,6 +105,31 @@ fn run(call: &str, input: &Value) -> Result<Value, Value> {
             Ok(json!({ "choice": choice::parse(raw, &hands) }))
         }
         "speech.markers" => Ok(json!({ "markers": markers::MARKERS })),
+        "speech.said_from_rows" => {
+            let rows = input["rows"]
+                .as_array()
+                .ok_or_else(|| json!({ "error": "bad_input" }))?;
+            let mut ledger = Vec::new();
+            let mut skipped = Vec::new();
+            for (at, row) in rows.iter().enumerate() {
+                let known = ["audience", "subject", "payload"];
+                if row
+                    .as_object()
+                    .is_none_or(|row| row.keys().any(|key| !known.contains(&key.as_str())))
+                {
+                    return Err(json!({ "error": "bad_input" }));
+                }
+                match Said::from_row(
+                    row["audience"].as_str().unwrap(),
+                    row["subject"].as_str(),
+                    &row["payload"],
+                ) {
+                    Some(said) => ledger.push(said),
+                    None => skipped.push(at),
+                }
+            }
+            Ok(json!({ "ledger": ledger, "skipped": skipped }))
+        }
         "speech.strip_markers" => {
             let (text, held) = markers::shown(input["text"].as_str().unwrap());
             Ok(json!({ "text": text, "held": held }))

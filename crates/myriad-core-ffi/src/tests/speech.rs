@@ -6,6 +6,8 @@
 
 use std::path::PathBuf;
 
+use myriad_merope::speech::{Extent, Source};
+use myriad_persona_log::payloads::{SPEECH_EXTENTS, SPEECH_SOURCES};
 use myriad_persona_sync::canonical::canonical_bytes;
 use serde_json::{Value, json};
 
@@ -17,6 +19,7 @@ pub(super) const TESTED: &[&str] = &[
     "speech.choice_parse",
     "speech.choice_prompt",
     "speech.markers",
+    "speech.said_from_rows",
     "speech.strip_markers",
     "speech.texts",
     "speech.told",
@@ -86,4 +89,26 @@ fn a_wish_with_a_fixed_offset_reads_her_night_the_same() {
         &json!({"wish": wish, "now": late, "zone": "Asia/Shanghai", "extra": 1}),
     );
     assert_eq!(status, STATUS_BAD_INPUT);
+}
+
+/// The log refuses a source or an extent the core does not know, and the
+/// core reads every one the log takes: the two lists are one.
+#[test]
+fn the_log_takes_the_sources_and_extents_the_core_knows() {
+    let mut sources: Vec<String> = Source::ALL
+        .iter()
+        .map(|source| {
+            serde_json::to_value(source)
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    sources.sort();
+    assert_eq!(sources, SPEECH_SOURCES);
+    for extent in SPEECH_EXTENTS {
+        let read: Extent = serde_json::from_value(json!(extent)).unwrap();
+        assert_ne!(read, Extent::Unknown, "{extent}");
+    }
 }

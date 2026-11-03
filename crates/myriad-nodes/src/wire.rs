@@ -503,6 +503,7 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 8] = [
             "heard",
             "interrupted",
             "line",
+            "groupName",
         ],
     ),
 ];
@@ -1087,6 +1088,7 @@ mod tests {
                     heard: Some(1),
                     interrupted: true,
                     line: Some("m_1".into()),
+                    group_name: Some("猫猫群".into()),
                 }),
             ),
         ];

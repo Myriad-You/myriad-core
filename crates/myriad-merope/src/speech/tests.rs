@@ -44,11 +44,15 @@ fn said(to: Audience<String>, minutes_ago: i64, text: &str, thing: Option<&str>)
         at: NOW - minutes_ago * MINUTE,
         to,
         text: text.into(),
-        source: Source::Event,
+        source: Some(Source::Event),
         called: false,
         thing: thing.map(str::to_string),
         place: "web".into(),
+        exit: "face".into(),
         extent: Extent::Full,
+        heard: None,
+        interrupted: false,
+        line: None,
         group_name: None,
     }
 }
@@ -286,4 +290,34 @@ fn her_choice_keeps_only_hands_that_are_up() {
     assert_eq!(input["hands"][0]["raised"], "2 minutes ago");
     assert_eq!(input["hands"][1]["raised"], "2 hours ago");
     assert_eq!(input["held_by"], json!(["they were typing to you"]));
+}
+
+#[test]
+fn a_row_of_her_log_is_a_line_of_the_ledger() {
+    let payload = json!({
+        "at": NOW / 1000, "text": "群里说一声", "place": "group", "source": "group_share",
+        "called": false, "thing": "share:s-1", "exit": "im", "extent": "full",
+        "heard": 3, "interrupted": true, "line": "m_9", "groupName": "猫猫群",
+    });
+    let said = Said::from_row("group:telegram:-1", None, &payload).unwrap();
+    assert_eq!(said.at, NOW);
+    assert!(same_audience(&said.to, &group("telegram:-1")));
+    assert_eq!(said.group_name.as_deref(), Some("猫猫群"));
+    assert_eq!(said.source, Some(Source::GroupShare));
+
+    let partner = Said::from_row("personal:1", None, &payload).unwrap();
+    assert_eq!(partner.to, private("1"));
+    let theirs = Said::from_row("personal:1", Some("2"), &payload).unwrap();
+    assert_eq!(theirs.to, private("2"));
+    assert_eq!(Said::from_row("own:", None, &payload), None);
+    assert_eq!(Said::from_row("personal:1", None, &json!({"at": 1})), None);
+
+    // A newer side's words: kept, read as what this side knows.
+    let mut newer = payload.clone();
+    newer["source"] = json!("daydream");
+    newer["extent"] = json!("hologram");
+    newer["mood"] = json!("warm");
+    let newer = Said::from_row("personal:1", None, &newer).unwrap();
+    assert_eq!(newer.source, None);
+    assert!(!newer.reached());
 }

@@ -3461,6 +3461,74 @@
           "told, not a gate"
         ]
       }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "hologram",
+            "mood": "warm",
+            "place": "web",
+            "source": "daydream",
+            "text": "新端写的一句",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a row from a newer side does not fail the rest",
+      "output": {
+        "at": 1793684400000000,
+        "outcome": "refused",
+        "why": "sameThing"
+      },
+      "today": {
+        "by": "same_thing",
+        "verdict": "refused",
+        "where": [
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:129"
+        ]
+      }
     }
   ],
   "version": 1

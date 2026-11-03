@@ -77,6 +77,32 @@ pub(super) fn admit(raw: &[u8]) -> Result<Value, Failure> {
     answer(&on_zone!(zone, |zone| speech::admit(&admit, &zone)))
 }
 
+pub(super) fn said_from_rows(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Row {
+        audience: String,
+        #[serde(default)]
+        subject: Option<String>,
+        payload: Value,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        rows: Vec<Row>,
+    }
+    let req: In = input(raw)?;
+    let mut ledger = Vec::new();
+    let mut skipped = Vec::new();
+    for (at, row) in req.rows.iter().enumerate() {
+        match Said::from_row(&row.audience, row.subject.as_deref(), &row.payload) {
+            Some(said) => ledger.push(said),
+            None => skipped.push(at),
+        }
+    }
+    Ok(json!({ "ledger": ledger, "skipped": skipped }))
+}
+
 pub(super) fn told(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]

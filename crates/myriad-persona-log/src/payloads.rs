@@ -127,8 +127,8 @@ pub struct SpeechSaid {
     /// Where it was said, as `segment.open` names it: `web`, `app`, `group`
     /// or another surface.
     pub place: String,
-    /// Why she said it: the wish's source (`event`, `reach`, `wander`,
-    /// `reply`, ... as `myriad_merope::speech::Source` names them).
+    /// Why she said it: one of [`SPEECH_SOURCES`], the names
+    /// `myriad_merope::speech::Source` goes by.
     pub source: String,
     /// Whether she was called on (a reply, an @, a touch, her turn in a
     /// game), rather than speaking unasked.
@@ -152,10 +152,39 @@ pub struct SpeechSaid {
     /// one, as in `segment.line`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub line: Option<String>,
+    /// The group's name as it was when she said it there: what she is told
+    /// of it when the same thing comes up elsewhere. Only on a group's row.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub group_name: Option<String>,
 }
 
 /// How much of a said line went out, the words [`SpeechSaid::extent`] takes.
 pub const SPEECH_EXTENTS: [&str; 5] = ["full", "gist", "marker", "notice", "none"];
+
+/// Why she said a line, the words [`SpeechSaid::source`] takes: the names
+/// of `myriad_merope::speech::Source`, sorted (`myriad-core-ffi`'s tests
+/// hold the two to each other). A row is append-only, so a word not here
+/// is refused when written, not found out when read.
+pub const SPEECH_SOURCES: [&str; 18] = [
+    "event",
+    "first_line",
+    "game_remark",
+    "game_turn",
+    "greeting",
+    "group_at",
+    "group_first",
+    "group_interject",
+    "group_share",
+    "live_lull",
+    "other_ai",
+    "reach",
+    "reply",
+    "screen",
+    "share",
+    "touch",
+    "wander",
+    "work_done",
+];
 
 fn read<T: for<'de> Deserialize<'de>>(kind: &str, value: &Value) -> Result<T, LogError> {
     serde_json::from_value(value.clone())
@@ -226,10 +255,11 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
         "speech.said" => {
             let said: SpeechSaid = read(kind, payload)?;
             check_text(kind, &said.text)?;
-            if said.place.is_empty() || said.source.is_empty() || said.exit.is_empty() {
-                return Err(LogError::new(
-                    "a speech.said payload has no place, source or exit",
-                ));
+            if said.place.is_empty() || said.exit.is_empty() {
+                return Err(LogError::new("a speech.said payload has no place or exit"));
+            }
+            if !SPEECH_SOURCES.contains(&said.source.as_str()) {
+                return Err(LogError::new("a speech.said payload has no known source"));
             }
             if !SPEECH_EXTENTS.contains(&said.extent.as_str()) {
                 return Err(LogError::new("a speech.said payload has no known extent"));
@@ -273,11 +303,21 @@ mod tests {
                 json!({"at": 8, "text": "早", "place": "app", "source": "event", "called": false,
                     "thing": "event:e-1", "exit": "voice", "extent": "full", "heard": 1, "later": 1}),
             ),
+            (
+                "speech.said",
+                json!({"at": 9, "text": "群里说一声", "place": "group", "source": "group_share",
+                    "called": false, "exit": "im", "extent": "full", "groupName": "猫猫群"}),
+            ),
         ];
         for (kind, payload) in cases {
             assert_eq!(check(kind, &payload), Ok(true), "{kind}");
         }
         assert_eq!(check("node.noted", &json!({"anything": 1})), Ok(false));
+    }
+
+    #[test]
+    fn speech_sources_are_sorted_and_unique() {
+        assert!(SPEECH_SOURCES.windows(2).all(|pair| pair[0] < pair[1]));
     }
 
     #[test]
@@ -303,6 +343,11 @@ mod tests {
             (
                 "speech.said",
                 json!({"at": 8, "text": "早", "place": "", "source": "event", "called": false,
+                    "exit": "voice", "extent": "full"}),
+            ),
+            (
+                "speech.said",
+                json!({"at": 8, "text": "早", "place": "app", "source": "daydream", "called": false,
                     "exit": "voice", "extent": "full"}),
             ),
         ] {
