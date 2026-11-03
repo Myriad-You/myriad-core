@@ -321,3 +321,51 @@ fn a_row_of_her_log_is_a_line_of_the_ledger() {
     assert_eq!(newer.source, None);
     assert!(!newer.reached());
 }
+
+#[test]
+fn a_greeting_is_told_whether_she_already_greeted_them_today() {
+    let greeted = |minutes_ago: i64| {
+        let mut said = said(private("1"), minutes_ago, "早呀，今天来得挺早。", None);
+        said.source = Some(Source::Greeting);
+        said
+    };
+    let greeting = |ledger: Vec<Said>| {
+        let mut asked = input(wish(Source::Greeting));
+        asked.ledger = ledger;
+        let Admission::Ask { facts } = admit(&asked, &zone()) else {
+            panic!("hers to judge");
+        };
+        facts
+            .into_iter()
+            .find(|fact| fact.starts_with("You already greeted"))
+    };
+    // 14:00 at +08:00; greeted at 09:00 today, after she got up.
+    assert_eq!(
+        greeting(vec![
+            said(private("1"), 30, "看到你订的票了", None),
+            greeted(300)
+        ])
+        .as_deref(),
+        Some("You already greeted them today, at 09:00: \"早呀，今天来得挺早。\"")
+    );
+    // Yesterday's greeting, another person's, or one that never reached
+    // them is not today's.
+    assert_eq!(greeting(vec![greeted(26 * 60)]), None);
+    let mut elsewhere = greeted(300);
+    elsewhere.to = private("2");
+    assert_eq!(greeting(vec![elsewhere]), None);
+    let mut unsent = greeted(300);
+    unsent.extent = Extent::None;
+    assert_eq!(greeting(vec![unsent]), None);
+    // Only when she wants to greet them.
+    let mut event = input(wish(Source::Event));
+    event.ledger = vec![greeted(300)];
+    let Admission::Ask { facts } = admit(&event, &zone()) else {
+        panic!("hers to judge");
+    };
+    assert!(
+        !facts
+            .iter()
+            .any(|fact| fact.starts_with("You already greeted"))
+    );
+}
