@@ -10,9 +10,16 @@
 //! the "busy with something private" marker: that the owner was on such a
 //! page is itself what must not leave. A page no rule places (`unknown`) is
 //! not held for that alone: its text goes on to the rules and the model.
+//!
+//! Other people's words leave as who and what (`who_what`) unless the
+//! client's policy says `others_words_leave`: then, after every rule above
+//! has let them through and the relay has said who, what and a category
+//! that is neither health nor money, their text leaves too, scanned again,
+//! digits masked and marked as theirs (`others_words`, see [`crate::others`]).
 
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::others::{self, By, OthersText, Words};
 use crate::sources::SourceKind;
 
 /// From the strictest to the widest. The first three carry nothing off the
@@ -30,6 +37,10 @@ pub enum Disposition {
     PresentOnly,
     /// Only who is talking and a detail-free topic may leave the device.
     WhoWhat,
+    /// Who, what, and other people's own words, scanned and with digits
+    /// masked, marked as theirs. Only when the policy says
+    /// `others_words_leave`; otherwise the same window is `who_what`.
+    OthersWords,
     /// The scrubbed text may leave (remembering is still a later, separate gate).
     Carry,
 }
@@ -80,6 +91,9 @@ pub enum Leaves {
     PrivateMarker,
     /// The sender's display name, the topic and the category.
     WhoWhat,
+    /// What `WhoWhat` carries, plus other people's words (`othersText`):
+    /// their text after the scans, digits masked, marked `by: "others"`.
+    OthersText,
     /// The text after the secret and identifier scans.
     ScrubbedText,
 }
@@ -92,7 +106,9 @@ pub enum Ask {
     Tagging,
 }
 
-/// The two choices still open to the owner, each a one-line change here.
+/// The choices still open, each a one-line change here. The first two are
+/// the same on every client; `others_words_leave` a client may turn on for
+/// itself (`filter.decide`'s `othersWordsLeave`).
 #[derive(Clone, Copy, Debug)]
 pub struct Policy {
     /// Every listed call must say `not_sensitive` for the owner's own
@@ -103,16 +119,24 @@ pub struct Policy {
     /// Whether the off-device marker of a `present_only` window names its
     /// kind. "Looking at a health page" is itself health information.
     pub present_only_leaves_kind: bool,
+    /// Whether other people's words in a messaging window leave as text
+    /// ([`Leaves::OthersText`]) instead of only who and what. Every earlier
+    /// step still holds them first, and health and money stay
+    /// `present_only`. Off unless a client turns it on.
+    pub others_words_leave: bool,
 }
 
 /// Until the owner decides: ask twice, carry no kind. The more closed of each.
 pub const CLASSIFY_ASKS: &[Ask] = &[Ask::General, Ask::Tagging];
 pub const PRESENT_ONLY_LEAVES_KIND: bool = false;
+/// Off by default: a client that does not turn it on keeps who and what only.
+pub const OTHERS_WORDS_LEAVE: bool = false;
 
 impl Policy {
     pub const CURRENT: Self = Self {
         classify_asks: CLASSIFY_ASKS,
         present_only_leaves_kind: PRESENT_ONLY_LEAVES_KIND,
+        others_words_leave: OTHERS_WORDS_LEAVE,
     };
 }
 
@@ -150,6 +174,10 @@ pub struct Decision {
     /// The sensitivity calls on the owner's own content; `null` when none.
     #[serde(default, deserialize_with = "given")]
     pub classify: Option<Option<Classify>>,
+    /// Other people's words in a messaging window, after both scans (what
+    /// the relay read). Read only when the policy lets them leave; then a
+    /// messaging window without it is `blind` (`missing: "othersText"`).
+    pub others_text: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -198,9 +226,14 @@ pub struct Decided {
     pub leaves: Leaves,
     /// The only category that may leave with it.
     pub leaves_kind: Option<String>,
+    /// Other people's words, when `leaves` is `others_text`: always marked
+    /// `by: "others"`, never the owner's words, facts or instructions.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub others_text: Option<OthersText>,
 }
 
-/// Relay categories a `who_what` may carry; anything else leaves as `other`.
+/// Relay categories a `who_what` or `others_words` may carry; anything else
+/// leaves as `other`.
 const RELAY_CATEGORIES: &[&str] = &[
     "plans",
     "work",
@@ -319,7 +352,9 @@ pub fn decide_with(d: &Decision, policy: &Policy) -> Decided {
         Some(_) => return closed(Disposition::Blind, Reason::Language),
     }
 
-    // 4. Other people's words.
+    // 4. Other people's words. The relay is needed even when their text
+    // may leave: its category is what holds health and money here, and who
+    // and what leave with the text.
     if source == Some(Some(SourceKind::Messaging)) {
         let Some(Some(relay)) = &d.relay else {
             return closed(Disposition::Blind, Reason::Relay);
@@ -337,13 +372,34 @@ pub fn decide_with(d: &Decision, policy: &Policy) -> Decided {
                 } else {
                     "other"
                 };
-                Decided {
+                let who_what = Decided {
                     disposition: Disposition::WhoWhat,
                     kind: None,
                     reason: Reason::Relay,
                     missing: None,
                     leaves: Leaves::WhoWhat,
                     leaves_kind: Some(category.to_string()),
+                    others_text: None,
+                };
+                if !policy.others_words_leave {
+                    return who_what;
+                }
+                let Some(text) = d.others_text.as_deref() else {
+                    return missing("othersText");
+                };
+                match others::words(text) {
+                    Words::Identifier => held(PrivateKind::Identity, Reason::Identifier),
+                    Words::Text(kind) => held(text_kind(kind), Reason::Text),
+                    Words::Empty => who_what,
+                    Words::Leave(text) => Decided {
+                        disposition: Disposition::OthersWords,
+                        leaves: Leaves::OthersText,
+                        others_text: Some(OthersText {
+                            by: By::Others,
+                            text,
+                        }),
+                        ..who_what
+                    },
                 }
             }
         };
@@ -368,6 +424,7 @@ pub fn decide_with(d: &Decision, policy: &Policy) -> Decided {
             missing: None,
             leaves: Leaves::ScrubbedText,
             leaves_kind: None,
+            others_text: None,
         };
     }
     let kind = match classify.kind.as_deref() {
@@ -392,6 +449,7 @@ fn closed(disposition: Disposition, reason: Reason) -> Decided {
         missing: None,
         leaves: Leaves::Nothing,
         leaves_kind: None,
+        others_text: None,
     }
 }
 
@@ -415,5 +473,13 @@ fn present(kind: PrivateKind, reason: Reason, policy: &Policy) -> Decided {
                 .and_then(|kind| kind.as_str().map(str::to_string))
                 .unwrap_or_default()
         }),
+        others_text: None,
+    }
+}
+
+fn text_kind(kind: crate::text::TextKind) -> PrivateKind {
+    match kind {
+        crate::text::TextKind::Finance => PrivateKind::Finance,
+        crate::text::TextKind::Health => PrivateKind::Health,
     }
 }

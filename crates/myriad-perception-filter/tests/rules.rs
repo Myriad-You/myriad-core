@@ -4,9 +4,9 @@
 mod synthetic;
 
 use myriad_perception_filter::{
-    Ask, Classify, Decision, Disposition, IdentifierKind, Leaves, PageKind, Policy, Private,
+    Ask, By, Classify, Decision, Disposition, IdentifierKind, Leaves, PageKind, Policy, Private,
     PrivateKind, Reason, Relay, RelayCheck, SecretKind, Sources, Window, Withheld, check_relay,
-    decide, decide_with, identifiers, page, secrets, text, text_hits, window,
+    decide, decide_with, identifiers, others, page, secrets, text, text_hits, window,
 };
 
 fn seen(title: &str) -> Window {
@@ -335,6 +335,7 @@ fn open() -> Decision {
             tagging: Some("not_sensitive".into()),
             kind: None,
         })),
+        others_text: None,
     }
 }
 
@@ -456,6 +457,172 @@ fn other_peoples_words_leave_only_as_who_and_what() {
     assert_eq!(relayed("ok", "health").kind, Some(PrivateKind::Health));
     assert_eq!(relayed("ok", "money").kind, Some(PrivateKind::Finance));
     assert_eq!(relayed("ok", "money").leaves, Leaves::PrivateMarker);
+}
+
+fn messaging(category: &str, text: Option<&str>) -> Decision {
+    Decision {
+        source: Some(Some("messaging".into())),
+        relay: Some(Some(Relay {
+            result: "ok".into(),
+            category: Some(category.into()),
+        })),
+        classify: Some(None),
+        others_text: text.map(str::to_string),
+        ..open()
+    }
+}
+
+const LEAVE: Policy = Policy {
+    others_words_leave: true,
+    ..Policy::CURRENT
+};
+
+#[test]
+fn others_words_stay_who_and_what_unless_the_policy_says() {
+    const { assert!(!Policy::CURRENT.others_words_leave) };
+    let text = "阿杰: 验证码 482913，明天 3 点见";
+    let decided = decide(&messaging("plans", Some(text)));
+    assert_eq!(
+        (decided.disposition, decided.leaves, decided.others_text),
+        (Disposition::WhoWhat, Leaves::WhoWhat, None)
+    );
+    // The text given or not, the default answer is the same.
+    assert_eq!(
+        decide(&messaging("plans", None)),
+        decide(&messaging("plans", Some(text)))
+    );
+}
+
+#[test]
+fn with_the_policy_others_words_leave_scanned_masked_and_theirs() {
+    let key = ["gh", "p_", "Zq8RkT3vNw7YbXc2Lm5Pd9Hs4Jf6Ga1Ke0Ut"].concat();
+    let text = format!("阿杰: 验证码 482913，明天 3 点见\n小周: token {key} 电话 +65 9123 4567");
+    let decided = decide_with(&messaging("plans", Some(&text)), &LEAVE);
+    assert_eq!(decided.disposition, Disposition::OthersWords);
+    assert_eq!(decided.leaves, Leaves::OthersText);
+    assert_eq!(decided.reason, Reason::Relay);
+    assert_eq!(decided.leaves_kind.as_deref(), Some("plans"));
+    let words = decided.others_text.expect("others' words");
+    assert_eq!(words.by, By::Others);
+    assert_eq!(
+        words.text,
+        format!(
+            "阿杰: 验证码 {m}，明天 3 点见\n小周: token {s} 电话 +{m}",
+            m = others::MARK,
+            s = secrets::MARK
+        )
+    );
+    assert!(!words.text.contains(&key));
+    let out = serde_json::to_value(decide_with(&messaging("plans", Some(&text)), &LEAVE)).unwrap();
+    assert_eq!(out["othersText"]["by"], "others");
+    assert_eq!(out["leaves"], "others_text");
+    assert_eq!(out["disposition"], "others_words");
+}
+
+#[test]
+fn with_the_policy_every_earlier_rule_still_holds() {
+    let text = Some("明天下午见");
+    // Health and money from the relay stay on this device.
+    let health = decide_with(&messaging("health", text), &LEAVE);
+    assert_eq!(
+        (
+            health.disposition,
+            health.kind,
+            health.leaves,
+            health.others_text
+        ),
+        (
+            Disposition::PresentOnly,
+            Some(PrivateKind::Health),
+            Leaves::PrivateMarker,
+            None
+        )
+    );
+    assert_eq!(
+        decide_with(&messaging("money", text), &LEAVE).kind,
+        Some(PrivateKind::Finance)
+    );
+    // A relay that failed: nothing.
+    for result in ["error", "rejected"] {
+        let mut d = messaging("plans", text);
+        d.relay = Some(Some(Relay {
+            result: result.into(),
+            category: Some("plans".into()),
+        }));
+        let decided = decide_with(&d, &LEAVE);
+        assert_eq!(
+            (decided.disposition, decided.reason, decided.leaves),
+            (Disposition::Blind, Reason::Relay, Leaves::Nothing)
+        );
+    }
+    // The client's identifier scan and text rules come first.
+    let d = Decision {
+        identifiers: Some(vec!["card".into()]),
+        ..messaging("plans", text)
+    };
+    assert_eq!(decide_with(&d, &LEAVE).reason, Reason::Identifier);
+    let d = Decision {
+        text_hits: Some(vec!["health".into()]),
+        ..messaging("plans", text)
+    };
+    assert_eq!(decide_with(&d, &LEAVE).reason, Reason::Text);
+    // What the client missed, the core's own scans catch in the words.
+    let card = decide_with(
+        &messaging("plans", Some("卡号 4111 1111 1111 1111 你先垫一下")),
+        &LEAVE,
+    );
+    assert_eq!(
+        (card.disposition, card.kind, card.others_text),
+        (Disposition::PresentOnly, Some(PrivateKind::Identity), None)
+    );
+    let pay = decide_with(&messaging("plans", Some("这个月工资到手 8,500 元")), &LEAVE);
+    assert_eq!(
+        (pay.kind, pay.reason),
+        (Some(PrivateKind::Finance), Reason::Text)
+    );
+    // A sensitive page leaves nothing at all.
+    let d = Decision {
+        page: Some("sensitive".into()),
+        ..messaging("plans", text)
+    };
+    assert_eq!(decide_with(&d, &LEAVE).leaves, Leaves::Nothing);
+    // Turned on but no words given: closed.
+    let none = decide_with(&messaging("plans", None), &LEAVE);
+    assert_eq!(
+        (none.disposition, none.missing),
+        (Disposition::Blind, Some("othersText"))
+    );
+}
+
+/// No group or direct-message distinction exists: the same words leave the
+/// same way from a group window and a one-to-one window.
+#[test]
+fn group_and_direct_windows_are_one_kind() {
+    let group = "小周: 周五老地方\n阿杰: 订好了，包间 302\n小林: 我晚点到";
+    let direct = "订好了，包间 302";
+    for text in [group, direct] {
+        let decided = decide_with(&messaging("plans", Some(text)), &LEAVE);
+        assert_eq!(decided.disposition, Disposition::OthersWords, "{text}");
+        assert!(decided.others_text.unwrap().text.contains(others::MARK));
+    }
+}
+
+#[test]
+fn digit_runs_are_masked_as_the_relay_counts_them() {
+    for (text, masked) in [
+        ("12 点", "12 点"),
+        ("123", "[数字已抹去]"),
+        ("1 2 3 走", "[数字已抹去] 走"),
+        ("2026-11-03 见", "[数字已抹去] 见"),
+        ("¥3,280.00。", "¥[数字已抹去]。"),
+        ("房间１２０８号", "房间[数字已抹去]号"),
+        ("第 1 和 2 条", "第 1 和 2 条"),
+        ("v1.2", "v1.2"),
+        ("code 7731.", "code [数字已抹去]."),
+        ("三五七", "三五七"),
+    ] {
+        assert_eq!(others::mask_digits(text), masked, "{text}");
+    }
 }
 
 #[test]

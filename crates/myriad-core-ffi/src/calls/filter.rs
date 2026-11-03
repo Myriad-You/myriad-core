@@ -9,17 +9,25 @@
 //! answers with what it found, because that is its job.
 
 use myriad_perception_filter::{
-    self as filter, CLASSIFY_ASKS, Decision, PRESENT_ONLY_LEAVES_KIND, RULES, RelayCheck, SHAPE,
-    Sources, Window, decide, identifiers, secrets, window,
+    self as filter, CLASSIFY_ASKS, Decision, OTHERS_WORDS_LEAVE, PRESENT_ONLY_LEAVES_KIND, Policy,
+    RULES, RelayCheck, SHAPE, Sources, Window, decide_with, identifiers, others, secrets, window,
 };
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_json::{Value, json};
 
 use crate::Failure;
 
+fn unfit() -> Failure {
+    Failure::BadInput(format!("input does not fit filter shape {SHAPE}"))
+}
+
 /// The input without its `shape`, refused when the shape is not this core's.
 fn shaped<T: DeserializeOwned>(raw: &[u8]) -> Result<T, Failure> {
-    let unfit = || Failure::BadInput(format!("input does not fit filter shape {SHAPE}"));
+    fit(unshaped(raw)?)
+}
+
+/// The input object without its `shape`.
+fn unshaped(raw: &[u8]) -> Result<Value, Failure> {
     let mut value: Value = serde_json::from_slice(raw).map_err(|_| unfit())?;
     let object = value.as_object_mut().ok_or_else(unfit)?;
     if let Some(shape) = object.remove("shape")
@@ -29,6 +37,10 @@ fn shaped<T: DeserializeOwned>(raw: &[u8]) -> Result<T, Failure> {
             "this core speaks filter shape {SHAPE} only"
         )));
     }
+    Ok(value)
+}
+
+fn fit<T: DeserializeOwned>(value: Value) -> Result<T, Failure> {
     serde_json::from_value(value).map_err(|error| {
         let message = error.to_string();
         // Field names are the client's own words; values may be secrets.
@@ -206,19 +218,37 @@ pub(super) fn check_relay(raw: &[u8]) -> Result<Value, Failure> {
     )
 }
 
-/// Every step's result → `{rules, disposition, kind?, reason, missing?,
-/// leaves, leavesKind}`. A missing input or an unknown value is the closed
+/// Every step's result, plus the client's `othersWordsLeave` (default
+/// `filter.lists`' `othersWordsLeave`, off) → `{rules, disposition, kind?,
+/// reason, missing?, leaves, leavesKind, othersText?}`. With it on, a
+/// messaging window that would be `who_what` is `others_words` and carries
+/// `othersText: {by: "others", text}`; give the others' words as
+/// `othersText` then. A missing input or an unknown value is the closed
 /// answer, not a refusal.
 pub(super) fn decide_call(raw: &[u8]) -> Result<Value, Failure> {
-    let req: Decision = shaped(raw)?;
-    let mut out = serde_json::to_value(decide(&req)).unwrap_or_default();
+    let mut input = unshaped(raw)?;
+    let others_words_leave = match input
+        .as_object_mut()
+        .and_then(|object| object.remove("othersWordsLeave"))
+    {
+        None | Some(Value::Null) => OTHERS_WORDS_LEAVE,
+        Some(Value::Bool(on)) => on,
+        Some(_) => return Err(unfit()),
+    };
+    let req: Decision = fit(input)?;
+    let policy = Policy {
+        others_words_leave,
+        ..Policy::CURRENT
+    };
+    let mut out = serde_json::to_value(decide_with(&req, &policy)).unwrap_or_default();
     out["rules"] = json!(RULES);
     answer(out)
 }
 
 /// `{}` → what the client needs before any call: the apps whose windows are
 /// never captured, which sensitivity calls to make, whether a `present_only`
-/// marker names its kind, the title cap and the marks.
+/// marker names its kind, whether other people's words leave when a client
+/// does not say (`othersWordsLeave`), the title cap and the marks.
 pub(super) fn lists(raw: &[u8]) -> Result<Value, Failure> {
     let _: super::Nothing = shaped(raw)?;
     answer(json!({
@@ -226,7 +256,12 @@ pub(super) fn lists(raw: &[u8]) -> Result<Value, Failure> {
         "captureExcluded": Sources::built_in().capture_excluded,
         "classifyAsks": CLASSIFY_ASKS,
         "presentOnlyLeavesKind": PRESENT_ONLY_LEAVES_KIND,
+        "othersWordsLeave": OTHERS_WORDS_LEAVE,
         "titleLimit": filter::window::TITLE_LIMIT,
-        "marks": { "secret": secrets::MARK, "identifier": identifiers::MARK },
+        "marks": {
+            "secret": secrets::MARK,
+            "identifier": identifiers::MARK,
+            "digits": others::MARK,
+        },
     }))
 }
