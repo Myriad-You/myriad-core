@@ -1,0 +1,106 @@
+{
+  "call": "speech.strip_markers",
+  "cases": [
+    {
+      "input": {
+        "text": "好，我去查\n[[work: 查明天杭州的天气]]"
+      },
+      "name": "a work mark on its own line goes with its line",
+      "output": {
+        "held": false,
+        "text": "好，我去查"
+      }
+    },
+    {
+      "input": {
+        "text": "[[wear:睡衣]]换好了[[music:next]] [[sticker:2]]\n[[stop #1]]\n[[game:soup]]\n[[stance:persuaded 2]]\n[[ask: 几点？]]"
+      },
+      "name": "every kind of mark",
+      "output": {
+        "held": false,
+        "text": "换好了"
+      }
+    },
+    {
+      "input": {
+        "text": "⟦wear:睡衣⟧换好啦"
+      },
+      "name": "the Mac's wear brackets",
+      "output": {
+        "held": false,
+        "text": "换好啦"
+      }
+    },
+    {
+      "input": {
+        "text": "[[workers]] 和 [[见过]] 都不是"
+      },
+      "name": "brackets that are no mark stay",
+      "output": {
+        "held": false,
+        "text": "[[workers]] 和 [[见过]] 都不是"
+      }
+    },
+    {
+      "input": {
+        "text": "第一段\n\n第二段"
+      },
+      "name": "blank lines she wrote stay",
+      "output": {
+        "held": false,
+        "text": "第一段\n\n第二段"
+      }
+    },
+    {
+      "input": {
+        "text": "好呀\n[[mus"
+      },
+      "name": "a mark still being written is held",
+      "output": {
+        "held": true,
+        "text": "好呀"
+      }
+    },
+    {
+      "input": {
+        "text": "好呀 [[music:next"
+      },
+      "name": "a whole open mark is held",
+      "output": {
+        "held": true,
+        "text": "好呀"
+      }
+    },
+    {
+      "input": {
+        "text": "看这个 ["
+      },
+      "name": "a lone bracket at the end is held",
+      "output": {
+        "held": true,
+        "text": "看这个"
+      }
+    },
+    {
+      "input": {
+        "text": "我觉得 [[见"
+      },
+      "name": "an open bracket that is no mark is not held",
+      "output": {
+        "held": false,
+        "text": "我觉得 [[见"
+      }
+    },
+    {
+      "input": {
+        "text": "好\n[[work: 第一行\n第二行]]"
+      },
+      "name": "a mark split across lines",
+      "output": {
+        "held": false,
+        "text": "好"
+      }
+    }
+  ],
+  "version": 1
+}

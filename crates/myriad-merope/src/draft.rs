@@ -11,6 +11,23 @@ use serde_json::json;
 
 pub const SCHEMA_NAME: &str = "merope_draft_still";
 
+/// Someone is waiting on her answer: how long the look may take, in
+/// seconds; a quick look, not a second thought.
+pub const LOOK_WITHIN_SECONDS: u64 = 8;
+
+/// Whether she looks again before it goes: only when something came while
+/// she wrote it.
+pub fn asks<T>(came: &[T]) -> bool {
+    !came.is_empty()
+}
+
+/// Whether it goes, from her answer (`answer`: the model's raw answer, none
+/// when it did not come in time): when no answer came or it cannot be
+/// read, it goes, as it would have before she looked.
+pub fn send(answer: Option<&str>) -> bool {
+    answer.and_then(parse).unwrap_or(true)
+}
+
 pub fn system() -> String {
     "You are about to send draft as your answer to said (empty when you were about to say something first). While you were writing it, came arrived, oldest first, from those named. \
 Judge as this personality would, by the talk as it now is: if it still fits, send it as it is (send: true); if what came changes things (it was answered already, they took it back or moved on, they added something your draft gets wrong), hold it back (send: false), and you will answer everything together in a moment. \
@@ -65,5 +82,8 @@ mod tests {
         assert_eq!(parse("send it"), None);
         assert!(system().contains("hold it back"));
         assert_eq!(schema()["required"][0], "send");
+        assert!(!asks::<(String, String)>(&[]));
+        assert!(!send(Some(r#"{"send":false}"#)));
+        assert!(send(Some("send it")) && send(None));
     }
 }

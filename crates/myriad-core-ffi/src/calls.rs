@@ -40,10 +40,12 @@ mod reminder;
 mod serial;
 mod soup;
 mod speaking;
+mod speech;
 mod style;
 mod sync;
 mod timing;
 mod vitals;
+mod voice;
 
 type Call = fn(&[u8]) -> Result<Value, Failure>;
 
@@ -61,6 +63,7 @@ const CALLS: &[(&str, Call)] = &[
     ("affect.transition", affect::transition),
     ("affect.user_utterance", affect::user_utterance),
     ("audience.admits", memory::admits),
+    ("bits.ask", voice::bits_ask),
     ("channel.as_messages", chat_app::as_messages),
     ("chat.history_lines", chat::history_lines),
     ("chat.history_text", chat::history_text),
@@ -95,6 +98,8 @@ const CALLS: &[(&str, Call)] = &[
     ("diary.should_write_chat", memory::should_write_chat_diary),
     ("doing.choice_system", prompts::doing_choice_system),
     ("doing.digest_system", prompts::doing_digest_system),
+    ("draft.ask", voice::draft_ask),
+    ("draft.send", voice::draft_send),
     ("explore.compare_system", prompts::explore_compare_system),
     ("explore.step_system", prompts::explore_step_system),
     ("explore.think_system", prompts::explore_think_system),
@@ -212,6 +217,18 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.upkeep_read", nodes::upkeep_read),
     ("nodes.wire_send", nodes::wire_send),
     ("nodes.wire_take", nodes::wire_take),
+    ("onboarding.import_system", voice::onboarding_import),
+    ("onboarding.name_system", voice::onboarding_name),
+    (
+        "onboarding.observe_portrait_system",
+        voice::onboarding_observe_portrait,
+    ),
+    ("onboarding.persona_system", voice::onboarding_persona),
+    ("onboarding.tags_system", voice::onboarding_tags),
+    (
+        "onboarding.visual_design_system",
+        voice::onboarding_visual_design,
+    ),
     ("others.first_words_view", reach::first_words_view),
     ("outfit.after_reply", outfit::after_reply),
     ("outfit.hold_wear", outfit::hold_wear),
@@ -227,6 +244,7 @@ const CALLS: &[(&str, Call)] = &[
     ("partner.migrate", partner::migrate),
     ("partner.mint", partner::mint),
     ("partner.page", partner::page),
+    ("persona.flatten", voice::flatten),
     ("prompt.untrusted_block", speaking::untrusted_block),
     ("reach.as_text", reach::as_text),
     ("reach.judge_system", reach::judge_system),
@@ -239,6 +257,10 @@ const CALLS: &[(&str, Call)] = &[
     ("reach.wrote_before", reach::wrote_before),
     ("remembering.system", prompts::remembering_system),
     ("reminder.due", reminder::due),
+    ("self_story.ask", voice::self_story_ask),
+    ("self_story.checked", voice::self_story_checked),
+    ("sending.goes_out", voice::goes_out),
+    ("sending.limit_take", voice::limit_take),
     ("serial.advance", serial::advance),
     ("serial.clean_aozora", serial::clean_aozora),
     ("serial.clean_gutenberg", serial::clean_gutenberg),
@@ -286,6 +308,7 @@ const CALLS: &[(&str, Call)] = &[
     ),
     ("speaking.chat_app_section", chat_app::chat_app_section),
     ("speaking.contract", speaking::contract),
+    ("speaking.contract_at", voice::contract_at),
     ("speaking.curious_section", speaking::curious_section),
     ("speaking.doing_section", own::doing_section),
     ("speaking.emotion_section", speaking::emotion_section),
@@ -294,6 +317,7 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.group_section", speaking::group_section),
     ("speaking.guest_section", speaking::guest_section),
     ("speaking.habits_section", speaking::habits_section),
+    ("speaking.home", voice::home),
     ("speaking.inner_moment_section", own::inner_moment_section),
     ("speaking.lands_section", own::lands_section),
     ("speaking.mood_section", speaking::mood_section),
@@ -314,9 +338,18 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.share_links_section", prompts::share_links_section),
     ("speaking.share_section", prompts::share_section),
     ("speaking.since_section", speaking::since_section),
+    ("speaking.soul", voice::soul),
     ("speaking.taste_section", own::taste_section),
     ("speaking.us_section", own::us_section),
     ("speaking.views_section", own::views_section),
+    ("speech.admit", speech::admit),
+    ("speech.choice_parse", speech::choice_parse),
+    ("speech.choice_prompt", speech::choice_prompt),
+    ("speech.markers", speech::markers),
+    ("speech.said_from_rows", speech::said_from_rows),
+    ("speech.strip_markers", speech::strip_markers),
+    ("speech.texts", speech::texts),
+    ("speech.told", speech::told),
     ("stickers.section", chat_app::sticker_section),
     ("style.distance", style::distance),
     ("style.noticed", style::noticed),
@@ -356,6 +389,8 @@ const CALLS: &[(&str, Call)] = &[
     ("timing.past_bedtime_at", timing::past_bedtime_at),
     ("timing.sleep", timing::sleep),
     ("timing.typing", chat_app::typing),
+    ("timing.until_read", voice::until_read),
+    ("timing.where_she_is", voice::where_she_is),
     ("views.system", prompts::views_system),
     ("vitals.alerts", vitals::alerts),
     ("vitals.ends_asking", vitals::ends_asking),

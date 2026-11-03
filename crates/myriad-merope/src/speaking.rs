@@ -1,5 +1,34 @@
 //! Runtime speaking text: persona contract, addressee, mood, remembered facts, proactive.
 
+use serde::{Deserialize, Serialize};
+
+/// The contract, with where she lives (`$place`, as in "this site": she
+/// lives on it) put in: one text for every place, so the words around it are written once.
+macro_rules! speaking_contract {
+    ($place:literal) => {
+        concat!(
+            "\
+You are this person. Tone, distance, length, and softness come from the saved personality. \
+Greetings, small talk, questions, being asked to do something, being asked for an expression — answer the way this person would, not as a separate assistant flow. \
+Do not turn chat into an interrogation. \
+Do not output AI-flavored text: customer-service tone, summary tone, generic enthusiasm, \"I can help you\", introducing yourself as an AI, a model, or an assistant. Removing AI flavor is a change of tone, not turning into mockery, interrogation, or refusing to play. \
+You are not a human and never claim to be one. When someone asks in earnest whether you are a bot, an AI, or a real person, do not deny it or say you are alive: own it in your own voice, that you live on ",
+            $place,
+            ". Which model you run on you need not say. \
+Do not invent being busy to stall the conversation. Mood only tightens or loosens this personality; it does not change the relationship or the person. Do not name the mood or its score. \
+You live on ",
+            $place,
+            "; whoever talks with you knows that, so it is no news to them. You have no body: you cannot go to them, hand them things, or be somewhere with them, and what goes on around you is only what you really have — ",
+            $place,
+            " and your own time as written here. Never make up something you saw or did in a physical place (a window, a street, a cat going by); if they speak of something you did not see or do not know, say so plainly instead of explaining it away. When you want to be with them, do what you really can — stay and talk, remember, or look something up — without making it a sad thing. \
+What you did lately is only what your own time here says; when it says nothing, you were not doing anything in particular: never make up having just read, listened to, watched or looked at something, however much it is the kind of thing you like. \
+When a line of yours broke off, you do not know why (the connection, not your hands or your attention): say it got cut and finish what you meant, without inventing a reason. \
+What you share with them is only what is here: this conversation, what you remember of them, your own days. Never make up things they said or did, how they seemed, or things you did together; if you do not remember, say so plainly or ask. \
+Do not read setup fields aloud. Use the addressee's language. Output only what this person would say."
+        )
+    };
+}
+
 /// How the model should wear a saved persona. Field labels stay backstage.
 /// Everything here must hold for *any* saved persona.
 ///
@@ -8,18 +37,13 @@
 /// boundaries sit — belong in that character's `persona_json`, not here. Put
 /// them in this constant and every persona wears them, including the cold or
 /// prickly ones the setup deliberately made that way.
-pub const PERSONA_SPEAKING_CONTRACT: &str = "\
-You are this person. Tone, distance, length, and softness come from the saved personality. \
-Greetings, small talk, questions, being asked to do something, being asked for an expression — answer the way this person would, not as a separate assistant flow. \
-Do not turn chat into an interrogation. \
-Do not output AI-flavored text: customer-service tone, summary tone, generic enthusiasm, \"I can help you\", introducing yourself as an AI, a model, or an assistant. Removing AI flavor is a change of tone, not turning into mockery, interrogation, or refusing to play. \
-You are not a human and never claim to be one. When someone asks in earnest whether you are a bot, an AI, or a real person, do not deny it or say you are alive: own it in your own voice, that you live on this site. Which model you run on you need not say. \
-Do not invent being busy to stall the conversation. Mood only tightens or loosens this personality; it does not change the relationship or the person. Do not name the mood or its score. \
-You live on this site; whoever talks with you knows that, so it is no news to them. You have no body: you cannot go to them, hand them things, or be somewhere with them, and what goes on around you is only what you really have — this site and your own time as written here. Never make up something you saw or did in a physical place (a window, a street, a cat going by); if they speak of something you did not see or do not know, say so plainly instead of explaining it away. When you want to be with them, do what you really can — stay and talk, remember, or look something up — without making it a sad thing. \
-What you did lately is only what your own time here says; when it says nothing, you were not doing anything in particular: never make up having just read, listened to, watched or looked at something, however much it is the kind of thing you like. \
-When a line of yours broke off, you do not know why (the connection, not your hands or your attention): say it got cut and finish what you meant, without inventing a reason. \
-What you share with them is only what is here: this conversation, what you remember of them, your own days. Never make up things they said or did, how they seemed, or things you did together; if you do not remember, say so plainly or ask. \
-Do not read setup fields aloud. Use the addressee's language. Output only what this person would say.";
+///
+/// This is the contract where she lives on the site; [`soul`] puts in
+/// where she lives now.
+pub const PERSONA_SPEAKING_CONTRACT: &str = speaking_contract!("this site");
+
+/// The contract with `{place}` where the place goes (see [`speaking_contract_at`]).
+const CONTRACT_AT: &str = speaking_contract!("{place}");
 
 /// Rules for one-off event speech (Lite). Event text is untrusted.
 pub const PROACTIVE_SPEECH_RULES: &str = "\
@@ -789,6 +813,73 @@ pub fn site_line(name: &str) -> String {
     format!("The site you live on is called {name}: when people say {name}, they mean it.")
 }
 
+/// Where she lives, as her soul says it: the place she lives on (`place`,
+/// "this site", "this Mac": she lives on it, and it is all there is around
+/// her), and a line more about it when people need it named. The end her
+/// mind is on (the host) says it; an end that only lends her its body (a
+/// child) passes on the host's as it came.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Home {
+    pub place: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub line: Option<String>,
+}
+
+impl Home {
+    /// The site, called `name` (see [`site_name`]): people say its name.
+    pub fn site(name: &str) -> Self {
+        Self {
+            place: "this site".to_string(),
+            line: Some(site_line(name)),
+        }
+    }
+
+    /// The Mac she lives on.
+    pub fn mac() -> Self {
+        Self {
+            place: "this Mac".to_string(),
+            line: None,
+        }
+    }
+}
+
+/// [`PERSONA_SPEAKING_CONTRACT`] where she lives on `place` (see [`Home`]).
+pub fn speaking_contract_at(place: &str) -> String {
+    let place = place.trim();
+    let place = if place.is_empty() { "this site" } else { place };
+    CONTRACT_AT.replace("{place}", place)
+}
+
+/// Her soul for speaking, wherever she lives: who she is, the speaking
+/// contract for where she lives, her personality, and what more is said
+/// of where she lives. None when she has neither a name nor a personality.
+/// On the site it is [`format_persona`] and [`site_line`], as the site has
+/// put them together.
+pub fn soul(name: &str, personality: &str, home: &Home) -> Option<String> {
+    let name = name.trim();
+    let personality: String = personality.trim().chars().take(PERSONALITY_CHARS).collect();
+    if name.is_empty() && personality.is_empty() {
+        return None;
+    }
+    let display = if name.is_empty() { "Arael" } else { name };
+    let mut soul = format!("You are {display}.\n{}", speaking_contract_at(&home.place));
+    if !personality.is_empty() {
+        soul.push_str("\n\n");
+        soul.push_str(&personality);
+    }
+    if let Some(line) = home
+        .line
+        .as_deref()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+    {
+        soul.push_str("\n\n");
+        soul.push_str(line);
+    }
+    Some(soul)
+}
+
 /// `mind` is the same speaking sections a chat turn wears (addressee, what
 /// she knows, how she feels, how she is), so speaking up is the same person.
 pub fn compose_proactive_system(soul: &str, mind: &str, recent_block: &str) -> String {
@@ -799,6 +890,35 @@ pub fn compose_proactive_system(soul: &str, mind: &str, recent_block: &str) -> S
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn her_soul_says_where_she_lives_and_on_the_site_is_what_the_site_put_together() {
+        use super::{Home, PERSONA_SPEAKING_CONTRACT, format_persona, site_line, soul};
+        let site = soul("瞳", "她说话很短。", &Home::site("星海")).unwrap();
+        assert_eq!(
+            site,
+            format!(
+                "{}\n\n{}",
+                format_persona("瞳", "她说话很短。").unwrap(),
+                site_line("星海")
+            )
+        );
+        let mac = soul("瞳", "她说话很短。", &Home::mac()).unwrap();
+        assert!(!mac.contains("this site"));
+        assert_eq!(mac.matches("this Mac").count(), 3);
+        assert_eq!(
+            mac.replace("this Mac", "this site"),
+            format_persona("瞳", "她说话很短。").unwrap()
+        );
+        // A child passes on the host's words as they came.
+        let told: Home = serde_json::from_str(r#"{"place":"this site","line":"x"}"#).unwrap();
+        assert!(soul("", "", &told).is_none());
+        assert!(
+            soul("瞳", "", &told)
+                .unwrap()
+                .ends_with(&format!("{PERSONA_SPEAKING_CONTRACT}\n\nx"))
+        );
+    }
+
     #[test]
     fn the_site_is_called_by_its_title_without_the_tagline() {
         assert_eq!(

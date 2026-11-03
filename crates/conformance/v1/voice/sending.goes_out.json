@@ -1,0 +1,264 @@
+{
+  "call": "sending.goes_out",
+  "cases": [
+    {
+      "input": {
+        "reply": "刚吃完饭。",
+        "rolls": {
+          "split": 0.5,
+          "typing": [
+            0.25
+          ]
+        }
+      },
+      "name": "one line, no room yet: no full stop",
+      "output": {
+        "messages": [
+          {
+            "text": "刚吃完饭",
+            "typingSeconds": 2.8049999999999997
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "在呢。\n刚吃完饭！你呢？",
+        "rolls": {
+          "split": 0.9,
+          "typing": [
+            0.0,
+            1.0
+          ]
+        }
+      },
+      "name": "two lines go as two",
+      "output": {
+        "messages": [
+          {
+            "text": "在呢",
+            "typingSeconds": 1.3299999999999998
+          },
+          {
+            "text": "刚吃完饭 你呢？",
+            "typingSeconds": 7.929999999999999
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "在呢。\n刚吃完饭！\n你呢？",
+        "rolls": {
+          "split": 0.0,
+          "typing": [
+            0.5
+          ]
+        }
+      },
+      "name": "three lines, a low roll: one message",
+      "output": {
+        "messages": [
+          {
+            "text": "在呢 刚吃完饭 你呢？",
+            "typingSeconds": 8.2
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "在呢。\n刚吃完饭！\n你呢？",
+        "rolls": {
+          "split": 0.99,
+          "typing": [
+            0.1,
+            0.2,
+            0.3
+          ]
+        }
+      },
+      "name": "three lines, a high roll: three",
+      "output": {
+        "messages": [
+          {
+            "text": "在呢",
+            "typingSeconds": 1.444
+          },
+          {
+            "text": "刚吃完饭",
+            "typingSeconds": 2.7059999999999995
+          },
+          {
+            "text": "你呢？",
+            "typingSeconds": 2.2879999999999994
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "一\n二\n三\n四\n五\n六\n七",
+        "rolls": {
+          "split": 0.99,
+          "typing": []
+        }
+      },
+      "name": "seven lines: the rest run on in the fifth",
+      "output": {
+        "messages": [
+          {
+            "text": "一",
+            "typingSeconds": 1.2
+          },
+          {
+            "text": "二",
+            "typingSeconds": 1.2
+          },
+          {
+            "text": "三",
+            "typingSeconds": 1.2
+          },
+          {
+            "text": "四 五\n六\n七",
+            "typingSeconds": 5.3999999999999995
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "好的。\n明天见！",
+        "rolls": {
+          "split": 0.9,
+          "typing": [
+            0.5,
+            0.5
+          ]
+        },
+        "room": {
+          "bang": 0.3,
+          "charsMedian": 7,
+          "charsP90": 15,
+          "endMark": 0.6,
+          "laughEnd": 0.1,
+          "messages": 26,
+          "perTurn": 1.3,
+          "single": 0.77,
+          "turns": 20
+        }
+      },
+      "name": "where people end lines in marks, she does too",
+      "output": {
+        "messages": [
+          {
+            "text": "好的。",
+            "typingSeconds": 2.5999999999999996
+          },
+          {
+            "text": "明天见！",
+            "typingSeconds": 3.3
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "真的吗！！\n太好了。",
+        "rolls": {
+          "split": 0.9,
+          "typing": [
+            0.5,
+            0.5
+          ]
+        },
+        "room": {
+          "bang": 0.0,
+          "charsMedian": 7,
+          "charsP90": 15,
+          "endMark": 0.03,
+          "laughEnd": 0.0,
+          "messages": 26,
+          "perTurn": 1.3,
+          "single": 0.77,
+          "turns": 20
+        }
+      },
+      "name": "a quiet room",
+      "output": {
+        "messages": [
+          {
+            "text": "真的吗",
+            "typingSeconds": 2.5999999999999996
+          },
+          {
+            "text": "太好了",
+            "typingSeconds": 2.5999999999999996
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": "我觉得这首歌挺好听的，哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈",
+        "rolls": {
+          "split": 0.5,
+          "typing": [
+            0.5
+          ]
+        }
+      },
+      "name": "a loop keeps its first time round",
+      "output": {
+        "messages": [
+          {
+            "text": "我觉得这首歌挺好听的，哈",
+            "typingSeconds": 8.899999999999999
+          }
+        ],
+        "stopped": "loop"
+      }
+    },
+    {
+      "input": {
+        "reply": "这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这",
+        "rolls": {
+          "split": 0.5,
+          "typing": [
+            1.0
+          ]
+        }
+      },
+      "name": "a long line types at most fifteen seconds",
+      "output": {
+        "messages": [
+          {
+            "text": "这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这这",
+            "typingSeconds": 15.0
+          }
+        ],
+        "stopped": null
+      }
+    },
+    {
+      "input": {
+        "reply": " \n ",
+        "rolls": {
+          "split": 0.5
+        }
+      },
+      "name": "nothing to send",
+      "output": {
+        "messages": [],
+        "stopped": null
+      }
+    }
+  ]
+}

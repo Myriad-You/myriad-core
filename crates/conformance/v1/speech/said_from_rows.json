@@ -1,0 +1,280 @@
+{
+  "call": "speech.said_from_rows",
+  "cases": [
+    {
+      "input": {
+        "rows": [
+          {
+            "audience": "personal:1",
+            "payload": {
+              "at": 1793685600000,
+              "called": false,
+              "exit": "voice",
+              "extent": "full",
+              "heard": 4,
+              "interrupted": true,
+              "line": "m_1",
+              "place": "app",
+              "source": "event",
+              "text": "票出好了",
+              "thing": "event:e-1"
+            }
+          },
+          {
+            "audience": "group:telegram:-100123",
+            "payload": {
+              "at": 1793685540000,
+              "called": false,
+              "exit": "im",
+              "extent": "full",
+              "groupName": "猫猫群",
+              "place": "group",
+              "source": "group_share",
+              "text": "这首歌好好听",
+              "thing": "share:song-9"
+            }
+          },
+          {
+            "audience": "personal:1",
+            "payload": {
+              "at": 1793685600000,
+              "called": false,
+              "exit": "voice",
+              "extent": "full",
+              "heard": 4,
+              "interrupted": true,
+              "line": "m_1",
+              "place": "app",
+              "source": "event",
+              "text": "对他说的",
+              "thing": "event:e-1"
+            },
+            "subject": "2"
+          }
+        ]
+      },
+      "name": "the partner's private row, a group's row, someone's private row",
+      "output": {
+        "ledger": [
+          {
+            "at": 1793685600000000,
+            "called": false,
+            "exit": "voice",
+            "extent": "full",
+            "heard": 4,
+            "interrupted": true,
+            "line": "m_1",
+            "place": "app",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "exit": "im",
+            "extent": "full",
+            "groupName": "猫猫群",
+            "place": "group",
+            "source": "group_share",
+            "text": "这首歌好好听",
+            "thing": "share:song-9",
+            "to": {
+              "group": "telegram:-100123",
+              "members": [],
+              "venue": "group"
+            }
+          },
+          {
+            "at": 1793685600000000,
+            "called": false,
+            "exit": "voice",
+            "extent": "full",
+            "heard": 4,
+            "interrupted": true,
+            "line": "m_1",
+            "place": "app",
+            "source": "event",
+            "text": "对他说的",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "2"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "skipped": []
+      }
+    },
+    {
+      "input": {
+        "rows": [
+          {
+            "audience": "personal:1",
+            "payload": {
+              "at": 1793685600000,
+              "called": false,
+              "exit": "voice",
+              "extent": "hologram",
+              "heard": 4,
+              "interrupted": true,
+              "line": "m_1",
+              "mood": "warm",
+              "place": "app",
+              "source": "daydream",
+              "text": "票出好了",
+              "thing": "event:e-1"
+            }
+          }
+        ]
+      },
+      "name": "a newer side's words are kept and read as what this side knows",
+      "output": {
+        "ledger": [
+          {
+            "at": 1793685600000000,
+            "called": false,
+            "exit": "voice",
+            "extent": "unknown",
+            "heard": 4,
+            "interrupted": true,
+            "line": "m_1",
+            "place": "app",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "skipped": []
+      }
+    },
+    {
+      "input": {
+        "rows": [
+          {
+            "audience": "own:",
+            "payload": {
+              "at": 1793685600000,
+              "called": false,
+              "exit": "voice",
+              "extent": "full",
+              "heard": 4,
+              "interrupted": true,
+              "line": "m_1",
+              "place": "app",
+              "source": "event",
+              "text": "票出好了",
+              "thing": "event:e-1"
+            }
+          },
+          {
+            "audience": "personal:1",
+            "payload": {
+              "at": 1
+            }
+          },
+          {
+            "audience": "personal:1",
+            "payload": {
+              "at": 1793685600000,
+              "called": false,
+              "exit": "voice",
+              "extent": "full",
+              "heard": 4,
+              "interrupted": true,
+              "line": "m_1",
+              "place": "app",
+              "source": "event",
+              "text": "票出好了",
+              "thing": "event:e-1"
+            }
+          },
+          {
+            "audience": "group:",
+            "payload": {
+              "at": 1793685540000,
+              "called": false,
+              "exit": "im",
+              "extent": "full",
+              "groupName": "猫猫群",
+              "place": "group",
+              "source": "group_share",
+              "text": "这首歌好好听",
+              "thing": "share:song-9"
+            }
+          }
+        ]
+      },
+      "name": "rows that are no line said to anyone are skipped, the rest read",
+      "output": {
+        "ledger": [
+          {
+            "at": 1793685600000000,
+            "called": false,
+            "exit": "voice",
+            "extent": "full",
+            "heard": 4,
+            "interrupted": true,
+            "line": "m_1",
+            "place": "app",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "skipped": [
+          0,
+          1,
+          3
+        ]
+      }
+    },
+    {
+      "input": {
+        "rows": [
+          {
+            "audience": "personal:1",
+            "kind": "speech.said",
+            "payload": {
+              "at": 1793685600000,
+              "called": false,
+              "exit": "voice",
+              "extent": "full",
+              "heard": 4,
+              "interrupted": true,
+              "line": "m_1",
+              "place": "app",
+              "source": "event",
+              "text": "票出好了",
+              "thing": "event:e-1"
+            }
+          }
+        ]
+      },
+      "name": "a row with a field the call does not take is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

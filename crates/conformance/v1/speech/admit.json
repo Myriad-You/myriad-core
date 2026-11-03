@@ -1,0 +1,3535 @@
+{
+  "call": "speech.admit",
+  "cases": [
+    {
+      "input": {
+        "dnd": true,
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "do-not-disturb refuses speaking unasked",
+      "output": {
+        "outcome": "refused",
+        "why": "doNotDisturb"
+      },
+      "today": {
+        "by": "do_not_disturb",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/mod.rs:442 effective_do_not_disturb, gates.rs:122",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:128"
+        ]
+      }
+    },
+    {
+      "input": {
+        "dnd": true,
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "keepsUntil": 1793686500000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "do-not-disturb refuses even what could wait",
+      "output": {
+        "outcome": "refused",
+        "why": "doNotDisturb"
+      },
+      "today": {
+        "by": "do_not_disturb",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/gates.rs:122 (the intent is dropped, not kept)",
+          "app Sources/MyriadCore/Consciousness/ConsciousnessRules.swift:163"
+        ]
+      }
+    },
+    {
+      "input": {
+        "dnd": true,
+        "now": 1793685600000000,
+        "present": true,
+        "theyOpened": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "do-not-disturb lets her answer what they opened themselves",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "owner_opened",
+        "verdict": "spoken",
+        "where": [
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:128"
+        ]
+      }
+    },
+    {
+      "input": {
+        "dnd": true,
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "called": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          },
+          "source": "reply",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a reply is said under do-not-disturb",
+      "output": {
+        "outcome": "say"
+      },
+      "today": {
+        "by": "called",
+        "verdict": "spoken",
+        "where": [
+          "site backend/src/services/agent/merope/chat replies never pass the proactive gates",
+          "app Sources/MyriadCore/Arbiter/SpeechArbiterRules.swift:147"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          },
+          "source": "group_share",
+          "thing": "event:e-1",
+          "to": {
+            "group": "telegram:-100123",
+            "members": [
+              "1",
+              "2"
+            ],
+            "venue": "group"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a private thing does not go into a group",
+      "output": {
+        "outcome": "refused",
+        "why": "audience"
+      },
+      "today": {
+        "by": "audience",
+        "verdict": "refused",
+        "where": [
+          "core crates/myriad-agent-rules/src/memory/audience.rs:60",
+          "site backend/src/services/agent/merope/threads.rs:149"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "group": "onebot:42",
+            "members": [
+              "3"
+            ],
+            "venue": "group"
+          },
+          "source": "group_interject",
+          "thing": "event:e-1",
+          "to": {
+            "group": "telegram:-100123",
+            "members": [
+              "1",
+              "2"
+            ],
+            "venue": "group"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "one group's thing does not go into another",
+      "output": {
+        "outcome": "refused",
+        "why": "audience"
+      },
+      "today": {
+        "by": "audience",
+        "verdict": "refused",
+        "where": [
+          "core crates/myriad-agent-rules/src/memory/audience.rs:60"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "group": "telegram:-100123",
+            "members": [
+              "1",
+              "2"
+            ],
+            "venue": "group"
+          },
+          "source": "share",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a group's thing does not go into a private talk",
+      "output": {
+        "outcome": "refused",
+        "why": "audience"
+      },
+      "today": {
+        "by": "audience",
+        "verdict": "refused",
+        "where": [
+          "core crates/myriad-agent-rules/src/memory/audience.rs:60",
+          "site backend/src/services/agent/merope/curiosity.rs:224"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "group_share",
+          "thing": "event:e-1",
+          "to": {
+            "group": "telegram:-100123",
+            "members": [
+              "1",
+              "2"
+            ],
+            "venue": "group"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "her own thing goes anywhere",
+      "output": {
+        "facts": [
+          "Why you want to speak: you want to tell the group what you are doing."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "audience",
+        "verdict": "spoken",
+        "where": [
+          "core crates/myriad-agent-rules/src/memory/audience.rs:60"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "called": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          },
+          "source": "group_at",
+          "to": {
+            "group": "telegram:-100123",
+            "members": [
+              "1",
+              "2"
+            ],
+            "venue": "group"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a reply in a group cannot carry a private thing",
+      "output": {
+        "outcome": "refused",
+        "why": "audience"
+      },
+      "today": {
+        "by": "audience",
+        "verdict": "refused",
+        "where": [
+          "core crates/myriad-agent-rules/src/memory/audience.rs:60"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "venue": "own"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "nobody to speak to",
+      "output": {
+        "outcome": "refused",
+        "why": "audience"
+      },
+      "today": {
+        "by": "audience",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/mod.rs:104 is_logged_in_addressee",
+          "app Sources/MyriadCore/Consciousness/ConsciousnessRules.swift:167"
+        ]
+      }
+    },
+    {
+      "input": {
+        "granted": [
+          "memory.read"
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "needs": [
+            "work.run",
+            "memory.read"
+          ],
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "what it would do is not granted",
+      "output": {
+        "missing": [
+          "work.run"
+        ],
+        "outcome": "refused",
+        "why": "notGranted"
+      },
+      "today": {
+        "by": "grant",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/../consciousness/engine.rs:224",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:103"
+        ]
+      }
+    },
+    {
+      "input": {
+        "granted": [
+          "memory.read",
+          "work.run"
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "needs": [
+            "memory.read"
+          ],
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "granted, it is hers to judge",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "grant",
+        "verdict": "spoken",
+        "where": [
+          "site backend/src/services/agent/merope/../consciousness/engine.rs:224"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "called": true,
+          "needs": [
+            "work.run"
+          ],
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          },
+          "source": "reply",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "called on still needs the grant",
+      "output": {
+        "missing": [
+          "work.run"
+        ],
+        "outcome": "refused",
+        "why": "notGranted"
+      },
+      "today": {
+        "by": "grant",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/../consciousness/engine.rs:276"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了，明早八点的车",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "text": " 票出好了，明早八点的车 ",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "word for word the last line she said them",
+      "output": {
+        "outcome": "refused",
+        "why": "verbatim"
+      },
+      "today": {
+        "by": "verbatim",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:146",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:140"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793667600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了，明早八点的车",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "晚安",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "text": "票出好了，明早八点的车",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "only the last line counts as word for word",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about.",
+          "What you said to them unasked lately, latest first:\n- 30 minutes ago, they have not written to you since: 晚安\n- 5 hours ago, they have not written to you since: 票出好了，明早八点的车"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "verbatim",
+        "verdict": "spoken",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:146 recent_proactive(user, 1)",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:139"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "早",
+            "to": {
+              "members": [
+                "2"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "text": "早",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "word for word to someone else is not a repeat",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "verbatim",
+        "verdict": "spoken",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:146",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:139"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793426400000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "the same thing already said to them",
+      "output": {
+        "at": 1793426400000000,
+        "outcome": "refused",
+        "why": "sameThing"
+      },
+      "today": {
+        "by": "same_thing",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/../consciousness/store.rs:21 source_event_id unique, ingest/delivery_claim.rs:40",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:129"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685000000000,
+            "called": false,
+            "extent": "marker",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a line that only lit her mark was not said",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "same_thing",
+        "verdict": "spoken",
+        "where": [
+          "app Sources/MyriadCore/Arbiter/SpeechArbiterRules.swift:154 (lowered to the marker)"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685000000000,
+            "called": false,
+            "extent": "none",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a line never sent was not said",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "same_thing",
+        "verdict": "spoken",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:316 (only a delivered line is kept)"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "早",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "called": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          },
+          "source": "reply",
+          "text": "早",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a reply is said whatever it repeats",
+      "output": {
+        "outcome": "say"
+      },
+      "today": {
+        "by": "called",
+        "verdict": "spoken",
+        "where": [
+          "site backend/src/services/agent/merope/chat replies never pass the proactive gates"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "keepsUntil": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "past when it could wait",
+      "output": {
+        "outcome": "refused",
+        "why": "stale"
+      },
+      "today": {
+        "by": "stale",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:64",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:63"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": false,
+        "wish": {
+          "at": 1793685540000000,
+          "inPerson": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "wander",
+          "thing": "thought:t-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "face to face only, and they are not there",
+      "output": {
+        "outcome": "refused",
+        "why": "notThere"
+      },
+      "today": {
+        "by": "not_there",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/gates.rs:98 said_only_in_person",
+          "app Sources/MyriadCore/Consciousness/ConsciousnessRules.swift:156"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": false,
+        "wish": {
+          "at": 1793685540000000,
+          "inPerson": true,
+          "keepsUntil": 1793685660000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "screen",
+          "thing": "screen:s-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "face to face, they are away a moment and it can wait",
+      "output": {
+        "outcome": "wait",
+        "until": 1793685660000000
+      },
+      "today": {
+        "by": "not_there",
+        "verdict": "waited",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/produce.rs:342 (60 s)",
+          "app Sources/MyriadCore/Consciousness/ConsciousnessDriver.swift:208 (waits for her face)"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "inPerson": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "screen",
+          "thing": "screen:s-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "face to face, and they are there",
+      "output": {
+        "facts": [
+          "Why you want to speak: you saw something on their screen."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "not_there",
+        "verdict": "spoken",
+        "where": [
+          "app Sources/MyriadCore/Consciousness/ConsciousnessRules.swift:148"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第0句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第1句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685480000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第2句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685420000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第3句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685360000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第4句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第5句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685240000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第6句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685180000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第7句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685120000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第8句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685060000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第9句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685000000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第10句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684940000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第11句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684880000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第12句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684820000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第13句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684760000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第14句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684700000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第15句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684640000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第16句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684580000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第17句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684520000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第18句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684460000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第19句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第20句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684340000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第21句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684280000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第22句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684220000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第23句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684160000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第24句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684100000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第25句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684040000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第26句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683980000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第27句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683920000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第28句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683860000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第29句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第30句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683740000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第31句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683680000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第32句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683620000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第33句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683560000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第34句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683500000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第35句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683440000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第36句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683380000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第37句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683320000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第38句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683260000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第39句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683200000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第40句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683140000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第41句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683080000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第42句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683020000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第43句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682960000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第44句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682900000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第45句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682840000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第46句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682780000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第47句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682720000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第48句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682660000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第49句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682600000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第50句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682540000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第51句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682480000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第52句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682420000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第53句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682360000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第54句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682300000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第55句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682240000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第56句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682180000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第57句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682120000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第58句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682060000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "第59句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "the fuse: sixty unasked lines in the last hour",
+      "output": {
+        "count": 60,
+        "outcome": "refused",
+        "why": "fuse"
+      },
+      "today": {
+        "by": "fuse",
+        "verdict": "refused",
+        "where": [
+          "no fuse today; the 180 s cooldown never let her reach 20 an hour"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685600000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第0句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685540000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第1句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685480000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第2句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685420000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第3句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685360000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第4句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685300000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第5句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685240000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第6句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685180000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第7句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685120000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第8句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685060000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第9句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793685000000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第10句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684940000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第11句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684880000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第12句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684820000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第13句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684760000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第14句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684700000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第15句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684640000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第16句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684580000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第17句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684520000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第18句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684460000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第19句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第20句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684340000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第21句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684280000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第22句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684220000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第23句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684160000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第24句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684100000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第25句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684040000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第26句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683980000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第27句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683920000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第28句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683860000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第29句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683800000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第30句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683740000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第31句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683680000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第32句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683620000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第33句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683560000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第34句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683500000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第35句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683440000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第36句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683380000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第37句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683320000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第38句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683260000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第39句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683200000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第40句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683140000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第41句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683080000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第42句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793683020000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第43句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682960000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第44句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682900000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第45句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682840000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第46句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682780000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第47句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682720000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第48句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682660000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第49句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682600000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第50句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682540000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第51句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682480000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第52句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682420000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第53句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682360000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第54句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682300000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第55句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682240000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第56句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682180000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第57句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682120000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第58句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793682060000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "reply",
+            "text": "第59句",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "the fuse counts only unasked lines",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "fuse",
+        "verdict": "spoken",
+        "where": [
+          "no fuse today"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793685300000000,
+        "ledger": [
+          {
+            "at": 1793685000000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "你订的酒店确认了",
+            "thing": "event:e-0",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "theyWroteAt": 1793685300000000,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-2",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "same kind of thing 10 minutes ago (15 minutes today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about.",
+          "You were last talking with them 5 minutes ago.",
+          "What you said to them unasked lately, latest first:\n- 10 minutes ago, they have written to you since: 你订的酒店确认了"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "same_topic_15_min",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:81 SAME_EVENT_MINUTES",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:133"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793685480000000,
+        "ledger": [
+          {
+            "at": 1793685480000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "你订的酒店确认了",
+            "thing": "event:e-0",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-2",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "2 minutes after her last unasked line (180 s cooldown today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about.",
+          "You were last talking with them 2 minutes ago.",
+          "What you said to them unasked lately, latest first:\n- 2 minutes ago, they have not written to you since: 你订的酒店确认了"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "cooldown_180_s",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:86, self_state.rs:47",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:136, MeropeRules.swift:16"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793685120000000,
+        "ledger": [
+          {
+            "at": 1793685120000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "你订的酒店确认了",
+            "thing": "event:e-0",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-2",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "8 minutes after, tired (720 s cooldown today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about.",
+          "You were last talking with them 8 minutes ago.",
+          "What you said to them unasked lately, latest first:\n- 8 minutes ago, they have not written to you since: 你订的酒店确认了"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "cooldown_energy",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/self_state.rs:96",
+          "app Sources/MyriadCore/MeropeRules.swift:16"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793664000000000,
+        "ledger": [
+          {
+            "at": 1793664000000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "greeting",
+            "text": "早上好",
+            "thing": "greeting:2026-11-02",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "greeting",
+          "thing": "greeting:2026-11-03",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a greeting 6 hours after the last (12 hours today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: you want to greet them.",
+          "You last talked with them 6 hours ago.",
+          "What you said to them unasked lately, latest first:\n- 6 hours ago, they have not written to you since: 早上好"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "greeting_12_h",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/produce.rs:81",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:226"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793683200000000,
+        "now": 1793685600000000,
+        "present": true,
+        "theyWroteAt": 1793683200000000,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "他说周五考试",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "reach",
+          "thing": "reach:1|thread-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "writing first 40 minutes after they talked (2 hours today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: you are thinking of writing to them first.",
+          "You were last talking with them 40 minutes ago."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "not_mid_talk_2_h",
+        "verdict": "refused",
+        "where": [
+          "core crates/myriad-merope/src/reach.rs:15 NOT_MID_TALK"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793512800000000,
+        "now": 1793731200000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "reach",
+          "thing": "reach:1|thread-2",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "writing first in her night (asleep today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: you are thinking of writing to them first.",
+          "You last talked with them 2 days ago.",
+          "By your usual hours it is your night now (02:40); you get up about 08:18."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "asleep",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/reach.rs:58",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessReach.swift:20"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793685360000000,
+        "ledger": [
+          {
+            "at": 1793685240000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "wander",
+            "text": "刚才想到你说的那家店",
+            "thing": "thought:t-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "theyWroteAt": 1793685360000000,
+        "wish": {
+          "at": 1793685540000000,
+          "inPerson": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "wander",
+          "thing": "thought:t-2",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a wandering thought 6 minutes after the last (10 minutes today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: your thoughts wandered to them.",
+          "You were last talking with them 4 minutes ago.",
+          "What you said to them unasked lately, latest first:\n- 6 minutes ago, they have written to you since: 刚才想到你说的那家店"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "wander_10_min",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/wander.rs:29 BETWEEN_THOUGHTS_SECS"
+        ]
+      }
+    },
+    {
+      "input": {
+        "lastTalkAt": 1793684700000000,
+        "ledger": [
+          {
+            "at": 1793684700000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "share",
+            "text": "这首你听过吗",
+            "thing": "share:song-3",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "share",
+          "thing": "share:song-9",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "sharing 15 minutes after the last (20 minutes today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: you have something of yours you want to share.",
+          "You were last talking with them 15 minutes ago.",
+          "What you said to them unasked lately, latest first:\n- 15 minutes ago, they have not written to you since: 这首你听过吗"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "share_20_min",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/doing.rs:60 TELL_EVERY",
+          "app Sources/MyriadCore/OwnSharing/OwnSongSharingRules.swift:72"
+        ]
+      }
+    },
+    {
+      "input": {
+        "doing": "查明天去杭州的高铁",
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-3",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "while she is doing something (executing today)",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about.",
+          "You are in the middle of: 查明天去杭州的高铁"
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "busy",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/gates.rs:106",
+          "app Sources/MyriadCore/Consciousness/ConsciousnessRules.swift:161"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685600000000,
+            "called": true,
+            "extent": "full",
+            "place": "web",
+            "source": "touch",
+            "text": "嗯？",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "touchedAt": 1793685570000000,
+        "wish": {
+          "at": 1793685540000000,
+          "called": true,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          },
+          "source": "touch",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a touch 30 seconds after the last (1 minute today)",
+      "output": {
+        "outcome": "say"
+      },
+      "today": {
+        "by": "touch_1_min",
+        "verdict": "refused",
+        "where": [
+          "site backend/src/services/agent/merope/ingest/redeem.rs:81, ingest/produce.rs:213",
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:133"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793682000000000,
+            "called": false,
+            "extent": "full",
+            "groupName": "猫猫群",
+            "place": "group",
+            "source": "event",
+            "text": "这首歌好好听",
+            "thing": "share:song-9",
+            "to": {
+              "group": "telegram:-100123",
+              "members": [
+                "1",
+                "2"
+              ],
+              "venue": "group"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "share",
+          "thing": "share:song-9",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "told in a group an hour ago, now to the partner",
+      "output": {
+        "facts": [
+          "Why you want to speak: you have something of yours you want to share.",
+          "You already told this in the group 猫猫群 60 minutes ago."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "elsewhere",
+        "verdict": "spoken",
+        "where": [
+          "no check today: the site's group and private paths never read each other"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793682000000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "这首歌好好听",
+            "thing": "share:song-9",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "group_share",
+          "thing": "share:song-9",
+          "to": {
+            "group": "telegram:-100123",
+            "members": [
+              "1",
+              "2"
+            ],
+            "venue": "group"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "told in private, now to a group",
+      "output": {
+        "facts": [
+          "Why you want to speak: you want to tell the group what you are doing.",
+          "You already told this in a private talk 60 minutes ago."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "elsewhere",
+        "verdict": "spoken",
+        "where": [
+          "no check today"
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793685600000000,
+        "present": true,
+        "touchedAt": 1793685420000000,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-4",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "her line just touched",
+      "output": {
+        "facts": [
+          "Why you want to speak: something happened that you want to tell them about.",
+          "They touched you 3 minutes ago."
+        ],
+        "outcome": "ask"
+      },
+      "today": {
+        "by": "touched",
+        "verdict": "spoken",
+        "where": [
+          "told, not a gate"
+        ]
+      }
+    },
+    {
+      "input": {
+        "ledger": [
+          {
+            "at": 1793685300000000,
+            "called": false,
+            "extent": "hologram",
+            "mood": "warm",
+            "place": "web",
+            "source": "daydream",
+            "text": "新端写的一句",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          },
+          {
+            "at": 1793684400000000,
+            "called": false,
+            "extent": "full",
+            "place": "web",
+            "source": "event",
+            "text": "票出好了",
+            "thing": "event:e-1",
+            "to": {
+              "members": [
+                "1"
+              ],
+              "venue": "private"
+            }
+          }
+        ],
+        "now": 1793685600000000,
+        "present": true,
+        "wish": {
+          "at": 1793685540000000,
+          "seed": "她帮主人订的票出票了",
+          "seedFrom": {
+            "venue": "own"
+          },
+          "source": "event",
+          "thing": "event:e-1",
+          "to": {
+            "members": [
+              "1"
+            ],
+            "venue": "private"
+          }
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "a row from a newer side does not fail the rest",
+      "output": {
+        "at": 1793684400000000,
+        "outcome": "refused",
+        "why": "sameThing"
+      },
+      "today": {
+        "by": "same_thing",
+        "verdict": "refused",
+        "where": [
+          "app Sources/MyriadCore/Consciousness/LocalStore+ConsciousnessAdmission.swift:129"
+        ]
+      }
+    }
+  ],
+  "version": 1
+}
