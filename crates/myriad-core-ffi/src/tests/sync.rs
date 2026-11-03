@@ -54,6 +54,7 @@ const ENTITIES: &[(Kind, &[u8])] = &[
     (Kind::SerialShelf, fixture!("entities/serial_shelf.json")),
     (Kind::SerialWork, fixture!("entities/serial_work.json")),
     (Kind::SoupGame, fixture!("entities/soup_game.json")),
+    (Kind::SpeechSaid, fixture!("entities/speech_said.json")),
     (Kind::Sticker, fixture!("entities/sticker.json")),
     (Kind::VitalsDay, fixture!("entities/vitals_day.json")),
     (Kind::Wearing, fixture!("entities/wearing.json")),

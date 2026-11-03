@@ -141,11 +141,20 @@ fn names_differ_the_subject_is_her() {
         (Kind::Conversation, "ses_a"),
         (Kind::Conversation, "ses_m"),
         (Kind::ProactiveLine, "nat_1"),
+        (Kind::SpeechSaid, "said_s1"),
+        (Kind::SpeechSaid, "said_m1"),
         (Kind::VitalsDay, "2026-10-08@site"),
         (Kind::VitalsDay, "2026-10-07@local"),
     ] {
         assert!(has(&plan, kind, id), "{kind} {id}");
     }
+    // The same line in both ledgers is kept once.
+    assert!(!has(&plan, Kind::SpeechSaid, "said_m2"));
+    assert!(
+        plan.dropped.iter().any(|gone| gone.kind == Kind::SpeechSaid
+            && gone.id == "said_m2"
+            && gone.why == "twin")
+    );
     // The site's day stays; the Mac's same day does not come (H3d-9).
     assert!(!has(&plan, Kind::VitalsDay, "2026-10-08@local"));
     let proposal = &entity(&plan, Kind::Intention, "int_mac").body["proposal"];

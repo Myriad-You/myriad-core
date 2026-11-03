@@ -57,7 +57,8 @@ pub struct Envelope {
 /// the rest (since format version 2) cross only when she moves or is
 /// exported whole: what she said with the owner, what she proposed, her
 /// pace and what she is doing now, which set each end wears, her state
-/// toward the owner and the history of her persona's fields.
+/// toward the owner, the history of her persona's fields and the ledger of
+/// what she said to the owner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
@@ -79,13 +80,14 @@ pub enum Kind {
     SerialShelf,
     SerialWork,
     SoupGame,
+    SpeechSaid,
     Sticker,
     VitalsDay,
     Wearing,
 }
 
 impl Kind {
-    pub const ALL: [Kind; 21] = [
+    pub const ALL: [Kind; 22] = [
         Kind::AffectAnchor,
         Kind::AffectEvent,
         Kind::Conversation,
@@ -104,6 +106,7 @@ impl Kind {
         Kind::SerialShelf,
         Kind::SerialWork,
         Kind::SoupGame,
+        Kind::SpeechSaid,
         Kind::Sticker,
         Kind::VitalsDay,
         Kind::Wearing,
@@ -151,6 +154,7 @@ impl Kind {
             Kind::SerialShelf => "serial_shelf",
             Kind::SerialWork => "serial_work",
             Kind::SoupGame => "soup_game",
+            Kind::SpeechSaid => "speech_said",
             Kind::Sticker => "sticker",
             Kind::VitalsDay => "vitals_day",
             Kind::Wearing => "wearing",
@@ -441,6 +445,7 @@ fn normalize_body(kind: Kind, state: State, id: &str, body: Value) -> Result<Val
         Kind::Pace => checked::<PaceBody>(body)?,
         Kind::Present => typed::<PresentBody>(body)?,
         Kind::ProactiveLine => checked::<ProactiveLineBody>(body)?,
+        Kind::SpeechSaid => checked::<SpeechSaidBody>(body)?,
         Kind::Wearing => checked::<WearingBody>(body)?,
         Kind::VitalsDay => {
             let mut day: vitals::Day =
@@ -913,6 +918,52 @@ pub struct ProactiveLineBody {
 impl CheckBody for ProactiveLineBody {
     fn check_body(&mut self) -> Result<(), SyncError> {
         check_role(&self.role)
+    }
+}
+
+/// A line in the ledger of what she said to the owner (her log's
+/// `speech.said`, said in private with the owner), called on or not: what
+/// every judgment of whether to speak reads, so it goes where she goes.
+/// What she said in a group stays with the side that holds the group.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SpeechSaidBody {
+    pub at: i64,
+    /// Her words as they went out.
+    pub text: String,
+    /// Where it was said: `web`, `app` or another surface.
+    pub place: String,
+    /// Why she said it, as `myriad_merope::speech::Source` names it.
+    pub source: String,
+    /// She was called on rather than speaking unasked.
+    pub called: bool,
+    /// The thing it was about, by its key.
+    #[serde(default)]
+    pub thing: Option<String>,
+    /// The way out it took on the side that said it.
+    pub exit: String,
+    /// How much of it went out (`myriad_merope::speech::Extent`).
+    pub extent: String,
+    #[serde(default)]
+    pub heard: Option<u32>,
+    #[serde(default)]
+    pub interrupted: bool,
+    /// The side's own id for the line, when it has one.
+    #[serde(default)]
+    pub line: Option<String>,
+}
+
+impl CheckBody for SpeechSaidBody {
+    fn check_body(&mut self) -> Result<(), SyncError> {
+        if [&self.place, &self.source, &self.exit, &self.extent]
+            .into_iter()
+            .any(|word| word.trim().is_empty())
+        {
+            return Err(SyncError::new(
+                "a said line names where, why, which way out and how much went out",
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -1414,6 +1465,8 @@ mod tests {
         assert!(fresh(Kind::Wearing, &|body| body["ends"]["phone"] = json!({})).is_err());
         assert!(fresh(Kind::Pace, &|body| body["lazed"]["yesterday"] = json!(3.0)).is_err());
         assert!(fresh(Kind::ProactiveLine, &|body| body["role"] = json!("tool")).is_err());
+        assert!(fresh(Kind::SpeechSaid, &|body| body["extent"] = json!(" ")).is_err());
+        assert!(fresh(Kind::SpeechSaid, &|body| body["venue"] = json!("group:1")).is_err());
         assert!(fresh(Kind::Intention, &|body| body["proposal"] = json!("x")).is_err());
         let mut elsewhere = fixture(Kind::Pace);
         elsewhere.id = "pace2".into();

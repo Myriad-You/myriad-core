@@ -55,6 +55,11 @@
       "merged": 1,
       "other": 1
     },
+    "speech_said": {
+      "host": 1,
+      "merged": 2,
+      "other": 2
+    },
     "vitals_day": {
       "host": 1,
       "merged": 2,
@@ -72,6 +77,12 @@
       "kind": "vitals_day",
       "side": "other",
       "why": "day"
+    },
+    {
+      "id": "said_m2",
+      "kind": "speech_said",
+      "side": "other",
+      "why": "twin"
     },
     {
       "id": "owner",
@@ -659,6 +670,48 @@
     },
     {
       "body": {
+        "at": 1760000450000000,
+        "called": false,
+        "exit": "notice",
+        "extent": "notice",
+        "heard": null,
+        "interrupted": false,
+        "line": null,
+        "place": "app",
+        "source": "reach",
+        "text": "带伞了吗？",
+        "thing": null
+      },
+      "digest": "608951c913601091a351704c7ef1e4c0",
+      "id": "said_m1",
+      "kind": "speech_said",
+      "origin": "dev_mac1",
+      "rev": "001760000500000-000000-dev_mac1",
+      "state": "live"
+    },
+    {
+      "body": {
+        "at": 1760000100000000,
+        "called": false,
+        "exit": "face",
+        "extent": "full",
+        "heard": null,
+        "interrupted": false,
+        "line": null,
+        "place": "web",
+        "source": "greeting",
+        "text": "早呀，今天下雨。",
+        "thing": null
+      },
+      "digest": "e87302b9c3b56bc24e1365b5c94c321b",
+      "id": "said_s1",
+      "kind": "speech_said",
+      "origin": "site",
+      "rev": "001760000000123-000000-site",
+      "state": "live"
+    },
+    {
+      "body": {
         "alerts": [],
         "busiest": [
           [
@@ -934,6 +987,12 @@
       "from": "other",
       "id": "nat_1",
       "kind": "proactive_line",
+      "replaces": false
+    },
+    {
+      "from": "other",
+      "id": "said_m1",
+      "kind": "speech_said",
       "replaces": false
     },
     {
