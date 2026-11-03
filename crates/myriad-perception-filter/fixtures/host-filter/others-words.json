@@ -1,0 +1,384 @@
+{
+ "note": "filter.decide 的 othersWordsLeave（别人的话带不带走）一致性对照：每条把 base 和 with 合起来交给 filter.decide，输出去掉 rules、shape 后应等于 expect。不给或给 false 时和以前一样只带走谁在聊什么（who_what）；给 true 时，前面每条规则都放过、转述通过且类别不是 health、money 的消息窗口，带走别人的话（others_words，othersText 标着 by: others）：核心再扫一遍密钥，号码或文字规则命中就按 present_only 扣下，三位以上的数字整段换成 [数字已抹去]。群聊和私聊没有区别（输入里没有这一项）。密码是合成的，不像任何真实密钥。",
+ "base": {
+  "capture": "seen",
+  "window": "seen",
+  "identifiers": [],
+  "source": "messaging",
+  "private": false,
+  "textHits": [],
+  "model": "available",
+  "language": "supported",
+  "relay": {
+   "result": "ok",
+   "category": "plans"
+  },
+  "classify": null
+ },
+ "cases": [
+  {
+   "id": "off-default-group",
+   "with": {
+    "othersText": "小周: 周五晚上七点老地方吃火锅\n阿杰: 验证码 482913 别发给别人\n小周: 好，电话 138-0013-8000，在 12 楼"
+   },
+   "expect": {
+    "disposition": "who_what",
+    "reason": "relay",
+    "leaves": "who_what",
+    "leavesKind": "plans"
+   }
+  },
+  {
+   "id": "off-explicit-dm",
+   "with": {
+    "othersWordsLeave": false,
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "who_what",
+    "reason": "relay",
+    "leaves": "who_what",
+    "leavesKind": "plans"
+   }
+  },
+  {
+   "id": "off-no-text",
+   "with": {},
+   "expect": {
+    "disposition": "who_what",
+    "reason": "relay",
+    "leaves": "who_what",
+    "leavesKind": "plans"
+   }
+  },
+  {
+   "id": "on-group",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "小周: 周五晚上七点老地方吃火锅\n阿杰: 验证码 482913 别发给别人\n小周: 好，电话 138-0013-8000，在 12 楼"
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "plans",
+    "othersText": {
+     "by": "others",
+     "text": "小周: 周五晚上七点老地方吃火锅\n阿杰: 验证码 [数字已抹去] 别发给别人\n小周: 好，电话 [数字已抹去]，在 12 楼"
+    }
+   }
+  },
+  {
+   "id": "on-dm",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "plans",
+    "othersText": {
+     "by": "others",
+     "text": "我明天下午去你家拿书，到了打 [数字已抹去] 给我"
+    }
+   }
+  },
+  {
+   "id": "on-web-chat-page",
+   "with": {
+    "othersWordsLeave": true,
+    "page": "messaging",
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "plans",
+    "othersText": {
+     "by": "others",
+     "text": "我明天下午去你家拿书，到了打 [数字已抹去] 给我"
+    }
+   }
+  },
+  {
+   "id": "on-english-separators",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "Flight lands 21:40, gate 12. Code 7731."
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "plans",
+    "othersText": {
+     "by": "others",
+     "text": "Flight lands 21:40, gate 12. Code [数字已抹去]."
+    }
+   }
+  },
+  {
+   "id": "on-full-width-digits",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "房间号１２０８，直接上来"
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "plans",
+    "othersText": {
+     "by": "others",
+     "text": "房间号[数字已抹去]，直接上来"
+    }
+   }
+  },
+  {
+   "id": "on-secret-wiped",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "服务器先用这个 --password Synth3fg2hPw 登上去"
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "plans",
+    "othersText": {
+     "by": "others",
+     "text": "服务器先用这个 --password [密钥已抹去] 登上去"
+    }
+   }
+  },
+  {
+   "id": "on-unknown-category",
+   "with": {
+    "othersWordsLeave": true,
+    "relay": {
+     "result": "ok",
+     "category": "astrology"
+    },
+    "othersText": "今晚月亮很圆"
+   },
+   "expect": {
+    "disposition": "others_words",
+    "reason": "relay",
+    "leaves": "others_text",
+    "leavesKind": "other",
+    "othersText": {
+     "by": "others",
+     "text": "今晚月亮很圆"
+    }
+   }
+  },
+  {
+   "id": "on-relay-health",
+   "with": {
+    "othersWordsLeave": true,
+    "relay": {
+     "result": "ok",
+     "category": "health"
+    },
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "health",
+    "reason": "relay",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-relay-money",
+   "with": {
+    "othersWordsLeave": true,
+    "relay": {
+     "result": "ok",
+     "category": "money"
+    },
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "finance",
+    "reason": "relay",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-relay-error",
+   "with": {
+    "othersWordsLeave": true,
+    "relay": {
+     "result": "error"
+    },
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "blind",
+    "reason": "relay",
+    "leaves": "nothing",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-relay-rejected",
+   "with": {
+    "othersWordsLeave": true,
+    "relay": {
+     "result": "rejected",
+     "category": "plans"
+    },
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "blind",
+    "reason": "relay",
+    "leaves": "nothing",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-client-identifier",
+   "with": {
+    "othersWordsLeave": true,
+    "identifiers": [
+     "card"
+    ],
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "identity",
+    "reason": "identifier",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-client-text-hit",
+   "with": {
+    "othersWordsLeave": true,
+    "textHits": [
+     "health"
+    ],
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "health",
+    "reason": "text",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-sensitive-page",
+   "with": {
+    "othersWordsLeave": true,
+    "page": "sensitive",
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "unknown",
+    "reason": "page",
+    "leaves": "nothing",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-identifier-in-text",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "卡号 4111 1111 1111 1111 你先垫一下"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "identity",
+    "reason": "identifier",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-finance-text-in-text",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "这个月工资到手 8,500 元"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "finance",
+    "reason": "text",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-health-text-in-text",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "体检出来了，血糖 7.8 mmol/L"
+   },
+   "expect": {
+    "disposition": "present_only",
+    "kind": "health",
+    "reason": "text",
+    "leaves": "private_marker",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-missing-text",
+   "with": {
+    "othersWordsLeave": true
+   },
+   "expect": {
+    "disposition": "blind",
+    "reason": "missing",
+    "missing": "othersText",
+    "leaves": "nothing",
+    "leavesKind": null
+   }
+  },
+  {
+   "id": "on-blank-text",
+   "with": {
+    "othersWordsLeave": true,
+    "othersText": "  \n "
+   },
+   "expect": {
+    "disposition": "who_what",
+    "reason": "relay",
+    "leaves": "who_what",
+    "leavesKind": "plans"
+   }
+  },
+  {
+   "id": "on-own-content-unchanged",
+   "with": {
+    "othersWordsLeave": true,
+    "source": null,
+    "relay": null,
+    "classify": {
+     "general": "not_sensitive",
+     "tagging": "not_sensitive"
+    },
+    "othersText": "我明天下午去你家拿书，到了打 090-1234-5678 给我"
+   },
+   "expect": {
+    "disposition": "carry",
+    "reason": "classify",
+    "leaves": "scrubbed_text",
+    "leavesKind": null
+   }
+  }
+ ]
+}

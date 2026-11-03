@@ -3,9 +3,12 @@
 //! each piece of it may go.
 //!
 //! Everything can be seen except passwords and secrets; the owner's
-//! sensitive matters and other people's words may be seen but are never
-//! remembered or sent off the device. Host rules come first, the
-//! on-device model second, and anything unsure is treated as sensitive.
+//! sensitive matters may be seen but are never remembered or sent off the
+//! device. Other people's words leave only as who and what, unless a client
+//! turns on [`Policy::others_words_leave`]: then their text leaves too,
+//! scanned, digits masked and marked as theirs ([`others`]). Host rules come
+//! first, the on-device model second, and anything unsure is treated as
+//! sensitive.
 //!
 //! Pure: no clock, environment, file, network or model call. The client
 //! captures the screen, asks its on-device model and shows the owner what
@@ -25,11 +28,14 @@
 //!    not even the marker;
 //! 4. model unavailable or language unsupported → [`Disposition::Blind`];
 //! 5. other people's words: relayed by the model, checked by [`relay`] →
-//!    [`Disposition::WhoWhat`]; the owner's own content: classified by the
-//!    model → [`Disposition::Carry`] only when it is clearly not sensitive.
+//!    [`Disposition::WhoWhat`], or with [`Policy::others_words_leave`]
+//!    [`Disposition::OthersWords`] (their text, [`others::words`]); the
+//!    owner's own content: classified by the model → [`Disposition::Carry`]
+//!    only when it is clearly not sensitive.
 
 pub mod decide;
 pub mod identifiers;
+pub mod others;
 pub mod page;
 pub mod relay;
 pub mod secrets;
@@ -38,10 +44,11 @@ pub mod text;
 pub mod window;
 
 pub use decide::{
-    Ask, CLASSIFY_ASKS, Classify, Decided, Decision, Disposition, Leaves, PRESENT_ONLY_LEAVES_KIND,
-    Policy, Private, PrivateKind, Reason, Relay, decide, decide_with,
+    Ask, CLASSIFY_ASKS, Classify, Decided, Decision, Disposition, Leaves, OTHERS_WORDS_LEAVE,
+    PRESENT_ONLY_LEAVES_KIND, Policy, Private, PrivateKind, Reason, Relay, decide, decide_with,
 };
 pub use identifiers::IdentifierKind;
+pub use others::{By, OthersText};
 pub use page::{Basis, Page, PageKind, page};
 pub use relay::{RelayCheck, check_relay};
 pub use secrets::{SecretKind, Wiped};
@@ -56,4 +63,4 @@ pub const SHAPE: u32 = 1;
 
 /// The rules' revision: changes whenever a list, a pattern or a decision
 /// changes, so a client can say which rules put a window where it went.
-pub const RULES: &str = "2026-10-24.1";
+pub const RULES: &str = "2026-11-03.1";

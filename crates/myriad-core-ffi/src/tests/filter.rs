@@ -193,6 +193,8 @@ fn decide_matches_the_crate_and_names_its_rules() {
     let lists = ok("filter.lists", json!({}));
     assert_eq!(lists["classifyAsks"], json!(["general", "tagging"]));
     assert_eq!(lists["presentOnlyLeavesKind"], false);
+    assert_eq!(lists["othersWordsLeave"], false);
+    assert_eq!(lists["marks"]["digits"], filter::others::MARK);
     assert_eq!(lists["rules"], RULES);
     assert!(
         lists["captureExcluded"]
@@ -293,6 +295,39 @@ fn page_and_decide_vectors_hold_through_the_core() {
         (built_in["read"].clone(), built_in["category"].clone()),
         (json!(true), json!("reference"))
     );
+}
+
+/// `othersWordsLeave` through the C entry point: `base` and each case's
+/// `with` are the input, the output without `rules` and `shape` is `expect`.
+#[test]
+fn others_words_vectors_hold_through_the_core() {
+    let doc = vectors("others-words");
+    for case in doc["cases"].as_array().unwrap() {
+        let id = &case["id"];
+        let mut input = doc["base"].clone();
+        for (field, value) in case["with"].as_object().unwrap() {
+            input[field] = value.clone();
+        }
+        let mut out = ok("filter.decide", input);
+        assert_eq!(out["rules"], RULES, "{id}");
+        let object = out.as_object_mut().unwrap();
+        object.remove("rules");
+        object.remove("shape");
+        assert_eq!(out, case["expect"], "{id}");
+    }
+    // Anything but a boolean is refused, without quoting it.
+    let (status, out) = ffi(
+        "filter.decide",
+        &json!({ "othersWordsLeave": key(), "capture": "seen" }),
+    );
+    assert_eq!(status, STATUS_BAD_INPUT);
+    assert!(!out.to_string().contains(&key()));
+    // `null` is the default.
+    let out = ok(
+        "filter.decide",
+        json!({ "othersWordsLeave": null, "othersText": "x" }),
+    );
+    assert_eq!(out["missing"], "capture");
 }
 
 #[test]

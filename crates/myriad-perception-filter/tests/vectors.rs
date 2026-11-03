@@ -1,9 +1,10 @@
 //! The consistency vectors every client runs (fixtures/host-filter
-//! `pages.json`, `terminal.json`, `secret-values.json`): here straight from the crate, in
-//! `myriad-core-ffi` through the C entry point.
+//! `pages.json`, `others-words.json`, `terminal.json`, `secret-values.json`):
+//! here straight from the crate, in `myriad-core-ffi` through the C entry point.
 
 use myriad_perception_filter::{
-    Classify, Decision, PageKind, Private, Relay, Sources, decide, page, secrets,
+    Classify, Decision, PageKind, Policy, Private, Relay, Sources, decide, decide_with, page,
+    secrets,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -80,6 +81,7 @@ fn pages_place_and_decide_as_the_vectors_say() {
                 tagging: Some("not_sensitive".into()),
                 kind: None,
             })),
+            others_text: None,
         };
         let decided = name(decide(&decision));
         for field in ["disposition", "kind", "reason", "leaves"] {
@@ -93,6 +95,35 @@ fn pages_place_and_decide_as_the_vectors_say() {
         // A page not read leaves nothing, not even the marker.
         if !placed.read() {
             assert_eq!(decided["leaves"], "nothing", "{}", case.id);
+        }
+    }
+}
+
+/// `filter.decide` with and without `othersWordsLeave`: `base` and the
+/// case's `with` together are the call's input.
+#[test]
+fn others_words_leave_as_the_vectors_say() {
+    let doc = fixture("others-words");
+    for case in doc["cases"].as_array().unwrap() {
+        let id = case["id"].as_str().unwrap();
+        let mut input = doc["base"].clone();
+        for (field, value) in case["with"].as_object().unwrap() {
+            input[field] = value.clone();
+        }
+        let leave = input
+            .as_object_mut()
+            .unwrap()
+            .remove("othersWordsLeave")
+            .map(|on| on.as_bool().unwrap());
+        let decision: Decision = serde_json::from_value(input).unwrap();
+        let policy = Policy {
+            others_words_leave: leave.unwrap_or(Policy::CURRENT.others_words_leave),
+            ..Policy::CURRENT
+        };
+        let decided = name(decide_with(&decision, &policy));
+        assert_eq!(decided, case["expect"], "{id}");
+        if leave.is_none() {
+            assert_eq!(name(decide(&decision)), decided, "{id}");
         }
     }
 }

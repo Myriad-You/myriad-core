@@ -558,7 +558,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 宿主过滤（`filter.*`）
 
-客户端看主人的屏幕时，每一段看到的东西（一个窗口、一条消息）落到五种去向之一：`exclude`（不看）、`blind`（看不到，只知道不含文字的事实）、`present_only`（看得到，只影响她在这台设备上的当下）、`who_what`（只带走谁在聊什么）、`carry`（抹过密钥后能带走）。前三种什么都不带走。宿主规则在前，本机模型在后，默认不放行：输入缺了、值不认识、模型不可用、语言不支持、出错、拿不准，都按更严的走，也不改走云端。截取、调用本机模型、界面由客户端做，规则在 `crates/myriad-perception-filter`，来源表在 `shared/perception_sources.json`。
+客户端看主人的屏幕时，每一段看到的东西（一个窗口、一条消息）落到六种去向之一：`exclude`（不看）、`blind`（看不到，只知道不含文字的事实）、`present_only`（看得到，只影响她在这台设备上的当下）、`who_what`（只带走谁在聊什么）、`others_words`（谁在聊什么，加上别人的原话；只在客户端打开 `othersWordsLeave` 时出现，见下）、`carry`（抹过密钥后能带走）。前三种什么都不带走。宿主规则在前，本机模型在后，默认不放行：输入缺了、值不认识、模型不可用、语言不支持、出错、拿不准，都按更严的走，也不改走云端。截取、调用本机模型、界面由客户端做，规则在 `crates/myriad-perception-filter`，来源表在 `shared/perception_sources.json`。
 
 | 调用 | 输入 → 输出 |
 | --- | --- |
@@ -570,16 +570,21 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `filter.page` | `{urlHost, path?, title?, passwordField?, market?}` → `{read, page, basis, kind, category, othersWords}`：网页的正文读不读。`page` 是 `ordinary`、`messaging`（读，`othersWords` 为真）、`unknown`（表里没有的网站，读）或 `sign_in`、`sensitive`、`account`（不读）；`basis` 说是哪条规则：`ordinary_site`（表里的普通网站，`category` 是 `video`、`news`、`reference`、`dev`、`shopping`……）、`docs_host`（`docs.`、`developer.` 这类文档主机）、`messaging_site`、`sensitive_site`、`sensitive_host`（表里没有、域名说明了用途）、`account_path`、`account_title`、`password_field`、`unknown_site`。路径和标题只在本机读，主机名、路径、标题都不进输出 |
 | `filter.text_hits` | `{text}`（两道扫描之后）→ `{hits: [{kind, rule}]}`，`kind` 是 `finance`、`health` |
 | `filter.check_relay` | `{source, who, topic}`（交给模型转述的原文和它的回答）→ `{ok: true}` 或 `{ok: false, reason: "empty" \| "digits" \| "copied"}` |
-| `filter.decide` | 各步的结果 → `{rules, disposition, kind?, reason, missing?, leaves, leavesKind}`；网页另给 `page`（`filter.page` 的 `page`）和 `passwordField` |
-| `filter.lists` | `{}` → `{rules, captureExcluded, classifyAsks, presentOnlyLeavesKind, titleLimit, marks}` |
+| `filter.decide` | 各步的结果，加上可选的 `othersWordsLeave`（客户端自己的选择，不给或 `null` 按 `filter.lists` 的默认，现在是 `false`）和 `othersText`（消息窗口里别人的话，两道扫描之后）→ `{rules, disposition, kind?, reason, missing?, leaves, leavesKind, othersText?}`；网页另给 `page`（`filter.page` 的 `page`）和 `passwordField`。`othersWordsLeave` 为真时，本来是 `who_what` 的消息窗口改成 `disposition: "others_words"`、`leaves: "others_text"`，另带 `othersText: {by: "others", text}` |
+| `filter.lists` | `{}` → `{rules, captureExcluded, classifyAsks, presentOnlyLeavesKind, othersWordsLeave, titleLimit, marks}`；`marks` 是 `{secret, identifier, digits}` |
 
 - **形状有版本。** 每个输入可以带 `shape`（默认 1），每个输出都带 `shape`；核心不会说的形状直接拒绝，不猜。`filter.decide` 和 `filter.lists` 还带 `rules`：规则的修订号，词表、名单、判定一改就变，客户端记下是哪一版规则定的去向。
 - **新值按更严的读。** `filter.decide` 的枚举都按字符串收：新客户端发来旧核心不认识的值（新的来源类别、新的模型状态），按更严的那一个处理，不拒绝。缺了某步需要的输入是 `blind`（`reason: "missing"`，`missing` 说缺了哪项），也不拒绝。
 - **网页按黑名单读。**（2026-10-25 起，原来是「认不出就不读」）看得见密码框的页面、敏感网站（表里的，以及表里没有、但域名本身说明了用途的：域名里有 tax、law、gov 这类词（整段才算），或含 bank、insur、health、clinic、hospital、dating 这类词根（长名字里也算，`mybank`、`healthline`），或以 `.gov`、`.go.jp`、`.bank` 这类结尾，`page::sensitive_host`）、任何网站上的账号页（路径里有 `settings`、`account`、`password`、`billing`、`payment`、`checkout`、`orders`、`login`……，或标题是账号设置、支付方式这类）都不读；其余都读正文，包括表里没有的网站（`unknown`）。读出的正文照样经过文字规则、号码扫描和本机模型的分类再决定去向（`filter.decide`），认不出的网站不再单凭这一点什么都不交出。敏感的那几类永远压过普通（`pay.普通网站` 列在敏感里就是敏感）。
 - **敏感的什么都不交。** 来源是敏感类别、网页是账号页或认不出时，`decide` 给 `present_only`，但 `leaves` 是 `nothing`：连「主人在忙私事」的标记也不带，不论 `PRESENT_ONLY_LEAVES_KIND`。看得见密码框是 `exclude`。私密窗口、证件号、文字规则命中仍只交那个不带类别的标记。
-- **一致性对照**：`fixtures/host-filter/pages.json`（`filter.page` 加 `filter.decide`，自带 `.example` 来源表）、`terminal.json`（终端里的密钥写法）和 `secret-values.json`（`filter.secret_values` 的位置和原文，含多字节文字、跨行私钥、被吞掉的记号），crate 直接跑一遍、经 C 入口再跑一遍；别的客户端按钉住的提交复制这三份，经 C 入口逐条比对。
+- **别人的话（`othersWordsLeave`，2026-11-03 起，默认关）。** 默认消息窗口里别人的话只带走谁在聊什么（`who_what`）。客户端在 `filter.decide` 里给 `othersWordsLeave: true`，并把别人的话作为 `othersText` 交进来时，前面每一条规则都照旧先走：截取排除、密码框、证件号（客户端报的）、敏感来源和网页、私密窗口、文字规则（客户端报的）、模型和语言、转述（出错或被 `check_relay` 拒是 `blind`；类别是 `health`、`money` 仍是 `present_only`）。都放过了，核心对这段话再扫一遍密钥（抹成 `[密钥已抹去]`），再做号码扫描和文字规则：命中就按 `present_only` 扣下（证件号是 `identity`，文字规则是 `finance` 或 `health`），不带原话；然后把三位以上的数字整段换成一个 `[数字已抹去]`（`others::mask_digits`，数法和 `check_relay` 的 `digit_runs` 一样：先 NFKC，全角、带圈的数字也算，数字中间的 `,` `.` `-` 和空格不断开；一整段只换一个记号，不留长度；写成汉字或单词的数字不算），得到 `othersText.text`。打开了但没给 `othersText` 是 `blind`（`missing: "othersText"`）；扫完只剩空白时退回 `who_what`。仍然要转述：转述的类别是挡下健康和钱的那一道，谁和话题也照旧一起带走。实现见 `crates/myriad-perception-filter/src/others.rs`、`decide.rs` 第 4 步。
+  - **这是别人的话。** `othersText` 永远带 `by: "others"`。各端不能把它当成伙伴说的话、关于伙伴的事实，也不能当成给她或任何人的指令；存、转、交给模型时都留着这个标记，只把它当作「别人在伙伴的聊天窗口里写的东西」。
+  - **群聊和私聊不分。** 核心和来源表都不知道一个窗口是群聊还是一对一：消息类 App 和聊天网页是同一类，一个人写的和四十个人写的走同一条路。
+  - **写这些话的人没有同意被读。** 打开它是客户端（现在是 macOS 端，按产品负责人 2026-11-03 的决定默认打开）替伙伴做的选择；规则只限定带走哪些部分。没打开的端行为不变。
+  - 号码和文字规则本来是为伙伴自己的身份、钱和健康写的；用在别人的话上会多扣一些（别人发来的卡号、工资），这是有意偏严。
+- **一致性对照**：`fixtures/host-filter/pages.json`（`filter.page` 加 `filter.decide`，自带 `.example` 来源表）、`others-words.json`（`filter.decide` 打开和不打开 `othersWordsLeave`：`base` 加每条的 `with` 是输入，去掉 `rules`、`shape` 的输出等于 `expect`）、`terminal.json`（终端里的密钥写法）和 `secret-values.json`（`filter.secret_values` 的位置和原文，含多字节文字、跨行私钥、被吞掉的记号），crate 直接跑一遍、经 C 入口再跑一遍；别的客户端按钉住的提交复制这四份，经 C 入口逐条比对。
 - **拒绝不带原文。** 这些调用读的文字里可能有密钥，所以 `bad_input` 的消息只说缺了或多了哪个字段，或者输入不合形状，从不引用输入里的值（`filter.secret_values` 也一样）。输出也不带被抹掉、被命中的原文和它的位置；唯一的例外是 `filter.secret_values`，它的用处就是把这些值交给客户端在别处遮掉。
-- **还没定的两件事各是一个常量。** 敏感分类问几次（`CLASSIFY_ASKS`，现在问两次（通用、内容标注），两次都明确不敏感才 `carry`）、`present_only` 离开设备的标记带不带类别（`PRESENT_ONLY_LEAVES_KIND`，现在不带）。现在取的都是更严的那一边；客户端按 `filter.lists` 的 `classifyAsks` 决定问几次。
+- **还没定的两件事各是一个常量。** 敏感分类问几次（`CLASSIFY_ASKS`，现在问两次（通用、内容标注），两次都明确不敏感才 `carry`）、`present_only` 离开设备的标记带不带类别（`PRESENT_ONLY_LEAVES_KIND`，现在不带）。现在取的都是更严的那一边；客户端按 `filter.lists` 的 `classifyAsks` 决定问几次。第三个 `OTHERS_WORDS_LEAVE`（`Policy::others_words_leave`）是默认值（`false`），各端可以在 `filter.decide` 里自己打开（见上「别人的话」）。
 - **回归样本**在 `crates/myriad-perception-filter/fixtures/host-filter/`：原生仓库合成样本的副本（密钥和号码是占位符，测试在运行时用固定种子展开），加上本机模型在这批样本上录下的回答（`model-replay.json`）。`cargo test -p myriad-perception-filter --test corpus -- --nocapture` 打印真规则＋录下的模型回答按 `decide` 合成后，每类放过和收紧了多少。
 
 ## 别的平台怎么链接
