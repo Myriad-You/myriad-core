@@ -442,6 +442,26 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **一轮的顺序**（站点 `merope/motion.rs` 的 `direct_motion_inner`）：`motion.floor` 先演；`motion.asked` 拿题，`hidden` 就停；问模型（聊天模型先用 `motion.chat_prompt`）；`motion.plan`；`motion.way` 有题就在剩下的时间里再问一次，答上来用 `motion.lay_way`；`motion.direction` 交出要演的。站立演出另用 `motion.standing_doing` 拼出 `activity`，导演没答出来时用 `motion.standing_floor`，过一会儿再问。
 - **一致性对照** `crates/conformance/v1/motion/`：前八个调用的用例是搬家前用站点后端的代码录下来的输入输出，`standing_doing`、`standing_acting` 照后端的规则手写；`myriad-merope` 的 `tests/motion_conformance.rs` 经 crate 跑，`myriad-core-ffi` 经 C 入口再跑一遍。只随一次写明理由的改动改，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test motion_conformance` 只重写输出变了的文件。2026-11-02 改过一次：转述别人时 `motion.way` 不再朝计划没换上的脸问路（录下的 `way.json` 里这类用例随之改写）。
 
+## 聊天软件里的她（`speaking.chat_app_section`、`talk_shape.*`、`channel.as_messages`、`timing.typing`、`memes.*`、`stickers.section`）
+
+她在聊天软件里的说话习惯，站点的 bot 一直这样说（`channel_work/chat.rs`、`chat_stream.rs` 的 `channel_chat` 一支）；登记出来是为了别的端照同一套说。规则在 `myriad_merope::{speaking, talk_shape, timing, memes, stickers}` 和 `myriad_agent_rules::channel`，调用只做 JSON 转换（`calls/chat_app.rs`）。`Shape` 是 `talk_shape::Shape` 的 camelCase JSON：`{turns, messages, perTurn, single, charsMedian, charsP90, endMark, bang, laughEnd}`。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `speaking.chat_app_section` | `{}` → `{text}`：「## In a chat app」一节 |
+| `talk_shape.room_of` | `{lines: [[说话人, 秒, 原话]]}`（旧的在前，不含她的）→ `{room: Shape \| null}`：不到 `ROOM_AT_LEAST`（8）条是 `null` |
+| `talk_shape.usual` | `{}` → `{room}`：`CHAT_APP_USUAL`，人还没说够时照它 |
+| `talk_shape.describe` | `{room, title}` → `{text}`：他们怎么打字，照实说 |
+| `channel.as_messages` | `{text}` → `{messages}`：她的回复一行一条，空行去掉，超过 `CHAT_MESSAGES`（5）条的并进最后一条 |
+| `talk_shape.messages_this_turn` | `{written, roll}` → `{most}`：这一轮最多发几条；`roll` 是 [0, 1) 的均匀数，由端给 |
+| `talk_shape.goes_out_as` | `{lines, most, room?}` → `{messages}`：每条照那里的人的打法（句号、感叹号），超出 `most` 的接在最后一条后面；没有 `room` 照 `CHAT_APP_USUAL` |
+| `timing.typing` | `{chars, roll}` → `{seconds}`：手机上打这么多字要几秒（最多 15） |
+| `memes.read_kept` | `{line}` → `{known: {term, meaning} \| null}`：她记下的一行（`memes::kept_line`）读回来 |
+| `memes.section` | `{talk, kept}` → `{text}`：`kept` 是她自己 source 为 `meme` 的那些行，读回后挑出 `talk` 里用到的（`known_in`），拼成「Words and memes you know」一节；一个也没有是 `null`。站点 `memes::section_for`、群的 `glance` 也是这三步 |
+| `stickers.section` | `{meanings, leftThisMonth}` → `{text}`：这一轮能发的贴纸（编号从 1）和这个月还能做几张；都没有是 `null` |
+
+- **一轮怎么发**（站点 `channel_work/chat.rs`）：`channel.as_messages` 拆行 → `talk_shape.messages_this_turn` 掷这轮发几条 → `talk_shape.goes_out_as` 照对方的打法（`room_of`，不够时 `usual`）→ 每条先显示正在输入 `timing.typing` 秒再发。
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
