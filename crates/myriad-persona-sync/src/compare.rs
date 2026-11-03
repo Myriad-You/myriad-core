@@ -226,6 +226,7 @@ fn category_of(entity: &EntityVersion) -> Result<Option<Category>, SyncError> {
         | Kind::Pace
         | Kind::Present
         | Kind::ProactiveLine
+        | Kind::SpeechSaid
         | Kind::Wearing => return Ok(None),
     }))
 }

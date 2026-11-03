@@ -33,7 +33,7 @@ use crate::{
     entity::{
         AffectAnchorBody, AffectEventBody, ConversationBody, ConversationLine, EntityVersion,
         FieldHistoryBody, IntentionBody, Kind, OWNER, OutfitBody, OwnerStateBody, PERSONA_ID,
-        PaceBody, ProactiveLineBody, State, WearingBody, Worn, canonicalize,
+        PaceBody, ProactiveLineBody, SpeechSaidBody, State, WearingBody, Worn, canonicalize,
     },
     hlc::{Rev, check_node},
     persona::{FieldClass, PersonaBody, PersonaField, field_class},
@@ -582,29 +582,43 @@ pub fn plan(input: MergeInput) -> Result<MergePlan, SyncError> {
             None => out.put(entity.clone(), Some(Side::Other)),
         }
     }
-    // Her unprompted lines: the same line (when and what) once.
-    let said: BTreeSet<(i64, String)> = of_kind(&host, Kind::ProactiveLine)
-        .filter_map(|entity| entity.body_as::<ProactiveLineBody>().ok())
-        .map(|line| (line.at, line.content))
-        .collect();
-    for entity in of_kind(&host, Kind::ProactiveLine) {
-        out.put(entity.clone(), Some(Side::Host));
-    }
-    for entity in of_kind(&other, Kind::ProactiveLine) {
-        let line: ProactiveLineBody = entity.body_as()?;
-        if let Some(kept) = host.get(&(Kind::ProactiveLine, entity.id.clone())) {
-            if kept.digest != entity.digest && later(kept, entity).1 == Side::Other {
+    // Her unprompted lines, and the ledger of what she said to the owner:
+    // the same line (when and what) once.
+    let said_line = |kind: Kind, entity: &EntityVersion| -> Result<(i64, String), SyncError> {
+        Ok(match kind {
+            Kind::SpeechSaid => {
+                let line: SpeechSaidBody = entity.body_as()?;
+                (line.at, line.text)
+            }
+            _ => {
+                let line: ProactiveLineBody = entity.body_as()?;
+                (line.at, line.content)
+            }
+        })
+    };
+    for kind in [Kind::ProactiveLine, Kind::SpeechSaid] {
+        let said: BTreeSet<(i64, String)> = of_kind(&host, kind)
+            .filter_map(|entity| said_line(kind, entity).ok())
+            .collect();
+        for entity in of_kind(&host, kind) {
+            out.put(entity.clone(), Some(Side::Host));
+        }
+        for entity in of_kind(&other, kind) {
+            let line = said_line(kind, entity)?;
+            if let Some(kept) = host.get(&(kind, entity.id.clone())) {
+                if kept.digest != entity.digest && later(kept, entity).1 == Side::Other {
+                    out.put(entity.clone(), Some(Side::Other));
+                }
+            } else if said.contains(&line) {
+                dropped.push(Dropped {
+                    kind,
+                    id: entity.id.clone(),
+                    side: Side::Other,
+                    why: "twin".into(),
+                });
+            } else {
                 out.put(entity.clone(), Some(Side::Other));
             }
-        } else if said.contains(&(line.at, line.content.clone())) {
-            dropped.push(Dropped {
-                kind: Kind::ProactiveLine,
-                id: entity.id.clone(),
-                side: Side::Other,
-                why: "twin".into(),
-            });
-        } else {
-            out.put(entity.clone(), Some(Side::Other));
         }
     }
 

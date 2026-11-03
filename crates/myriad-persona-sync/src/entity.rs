@@ -24,8 +24,22 @@ use crate::{
 /// The envelope's fixed `format`.
 pub const FORMAT: &str = "myriad.her";
 /// Bumped only for a change an older side cannot read; a new optional
-/// field does not bump it.
-pub const FORMAT_VERSION: u32 = 2;
+/// field does not bump it. 3 added `speech_said`.
+pub const FORMAT_VERSION: u32 = 3;
+/// The versions this side reads: what it writes, and 2, which is 3 without
+/// `speech_said` (a file exported before it still comes back).
+pub const READ_FORMAT_VERSIONS: [u32; 2] = [2, FORMAT_VERSION];
+
+/// Whether this side reads `myriad.her` version `version`; why not, when
+/// not, as an older side would be told.
+pub fn check_format_version(version: u32) -> Result<(), SyncError> {
+    if READ_FORMAT_VERSIONS.contains(&version) {
+        return Ok(());
+    }
+    Err(SyncError::new(format!(
+        "format version {version} is not one this side reads (2, {FORMAT_VERSION})"
+    )))
+}
 /// The one person a synced memory can be with.
 pub const OWNER: &str = "owner";
 /// Longest entity id.
@@ -57,7 +71,8 @@ pub struct Envelope {
 /// the rest (since format version 2) cross only when she moves or is
 /// exported whole: what she said with the owner, what she proposed, her
 /// pace and what she is doing now, which set each end wears, her state
-/// toward the owner and the history of her persona's fields.
+/// toward the owner, the history of her persona's fields and (since format
+/// version 3) the ledger of what she said to the owner.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Kind {
@@ -79,13 +94,14 @@ pub enum Kind {
     SerialShelf,
     SerialWork,
     SoupGame,
+    SpeechSaid,
     Sticker,
     VitalsDay,
     Wearing,
 }
 
 impl Kind {
-    pub const ALL: [Kind; 21] = [
+    pub const ALL: [Kind; 22] = [
         Kind::AffectAnchor,
         Kind::AffectEvent,
         Kind::Conversation,
@@ -104,6 +120,7 @@ impl Kind {
         Kind::SerialShelf,
         Kind::SerialWork,
         Kind::SoupGame,
+        Kind::SpeechSaid,
         Kind::Sticker,
         Kind::VitalsDay,
         Kind::Wearing,
@@ -151,6 +168,7 @@ impl Kind {
             Kind::SerialShelf => "serial_shelf",
             Kind::SerialWork => "serial_work",
             Kind::SoupGame => "soup_game",
+            Kind::SpeechSaid => "speech_said",
             Kind::Sticker => "sticker",
             Kind::VitalsDay => "vitals_day",
             Kind::Wearing => "wearing",
@@ -305,12 +323,7 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
     if envelope.format != FORMAT {
         return Err(SyncError::new(format!("format is {FORMAT:?}")));
     }
-    if envelope.format_version != FORMAT_VERSION {
-        return Err(SyncError::new(format!(
-            "format version {} is not one this side reads ({FORMAT_VERSION})",
-            envelope.format_version
-        )));
-    }
+    check_format_version(envelope.format_version)?;
     check_node(&envelope.origin)?;
     if let Some(model) = &mut envelope.embedding_model {
         model.model = model.model.trim().to_string();
@@ -329,6 +342,14 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
         .any(|pair| (pair[0].kind, &pair[0].id) == (pair[1].kind, &pair[1].id))
     {
         return Err(SyncError::new("an entity is listed twice"));
+    }
+    if envelope.format_version < 3
+        && envelope
+            .entities
+            .iter()
+            .any(|entity| entity.kind == Kind::SpeechSaid)
+    {
+        return Err(SyncError::new("format version 2 has no speech_said"));
     }
     for asset in &mut envelope.assets {
         asset.check()?;
@@ -441,6 +462,7 @@ fn normalize_body(kind: Kind, state: State, id: &str, body: Value) -> Result<Val
         Kind::Pace => checked::<PaceBody>(body)?,
         Kind::Present => typed::<PresentBody>(body)?,
         Kind::ProactiveLine => checked::<ProactiveLineBody>(body)?,
+        Kind::SpeechSaid => checked::<SpeechSaidBody>(body)?,
         Kind::Wearing => checked::<WearingBody>(body)?,
         Kind::VitalsDay => {
             let mut day: vitals::Day =
@@ -913,6 +935,52 @@ pub struct ProactiveLineBody {
 impl CheckBody for ProactiveLineBody {
     fn check_body(&mut self) -> Result<(), SyncError> {
         check_role(&self.role)
+    }
+}
+
+/// A line in the ledger of what she said to the owner (her log's
+/// `speech.said`, said in private with the owner), called on or not: what
+/// every judgment of whether to speak reads, so it goes where she goes.
+/// What she said in a group stays with the side that holds the group.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SpeechSaidBody {
+    pub at: i64,
+    /// Her words as they went out.
+    pub text: String,
+    /// Where it was said: `web`, `app` or another surface.
+    pub place: String,
+    /// Why she said it, as `myriad_merope::speech::Source` names it.
+    pub source: String,
+    /// She was called on rather than speaking unasked.
+    pub called: bool,
+    /// The thing it was about, by its key.
+    #[serde(default)]
+    pub thing: Option<String>,
+    /// The way out it took on the side that said it.
+    pub exit: String,
+    /// How much of it went out (`myriad_merope::speech::Extent`).
+    pub extent: String,
+    #[serde(default)]
+    pub heard: Option<u32>,
+    #[serde(default)]
+    pub interrupted: bool,
+    /// The side's own id for the line, when it has one.
+    #[serde(default)]
+    pub line: Option<String>,
+}
+
+impl CheckBody for SpeechSaidBody {
+    fn check_body(&mut self) -> Result<(), SyncError> {
+        if [&self.place, &self.source, &self.exit, &self.extent]
+            .into_iter()
+            .any(|word| word.trim().is_empty())
+        {
+            return Err(SyncError::new(
+                "a said line names where, why, which way out and how much went out",
+            ));
+        }
+        Ok(())
     }
 }
 
@@ -1414,6 +1482,8 @@ mod tests {
         assert!(fresh(Kind::Wearing, &|body| body["ends"]["phone"] = json!({})).is_err());
         assert!(fresh(Kind::Pace, &|body| body["lazed"]["yesterday"] = json!(3.0)).is_err());
         assert!(fresh(Kind::ProactiveLine, &|body| body["role"] = json!("tool")).is_err());
+        assert!(fresh(Kind::SpeechSaid, &|body| body["extent"] = json!(" ")).is_err());
+        assert!(fresh(Kind::SpeechSaid, &|body| body["venue"] = json!("group:1")).is_err());
         assert!(fresh(Kind::Intention, &|body| body["proposal"] = json!("x")).is_err());
         let mut elsewhere = fixture(Kind::Pace);
         elsewhere.id = "pace2".into();
