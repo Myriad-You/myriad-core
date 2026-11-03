@@ -136,6 +136,18 @@ pub(super) fn standing_doing(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "way": way, "activity": activity }))
 }
 
+/// What she is doing with someone listening along, from only the words of
+/// what she is doing (`standing::together_on`).
+pub(super) fn standing_together(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        what: String,
+    }
+    let req: In = quiet_input(raw)?;
+    Ok(json!({ "activity": standing::together_on(&req.what) }))
+}
+
 /// Whether a standing direction the director gave is any acting.
 pub(super) fn standing_acting(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]

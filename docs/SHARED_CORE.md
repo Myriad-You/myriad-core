@@ -437,6 +437,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `motion.direction` | `{moment, answer?, fallbackToLocal}` → `{outcome, dropped, directive}`：导演的回答（`motion.plan` 的计划写成文字；没回答、出错或超时就不给）变成她要演的。`outcome` 是 `hidden`、`continued`（导演说接着演，什么都不发，也不重放兜底）、`director`、`floor`（导演没有可用的回答，`fallbackToLocal` 为真时演兜底）、`unplayable`（这张脸演不出）、`none`（没回答又不要兜底：兜底已经在演了）；`dropped` 是回答来了但不是合法的计划 |
 | `motion.floor` | `{moment}` → `{directive}`：兜底动作，只看她的状态，不读文字；回合一开始先演 |
 | `motion.standing_doing` | `{thing?, lazing?, together}`（`thing`、`lazing` 恰好给一个）→ `{way, activity}`：她在做的事（`sources::Thing`，或闲着的那一种）告诉导演时的说法，和导演联系不上时按哪一类演（`presence::WAYS`）；`together` 是有人和她一起听 |
+| `motion.standing_together` | `{what}` → `{activity}`：有人和她一起听时的说法，给只有「她在做什么」那几个字、没有那件东西（`sources::Thing`）的端（`standing::together_on`，`standing_doing` 的 `together` 也用它） |
 | `motion.standing_floor` | `{moment, way}` → `{directive}`：导演联系不上时的站立演出，按 `way` 用固定规则演，循环 20 秒 |
 | `motion.standing_acting` | `{directive}` → `{acting}`：导演给的站立演出算不算演了什么（有谱或有站姿） |
 
@@ -530,6 +531,31 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |
 | `pace.section` | `{pace: {day, usualMinutes, daysPastUsual, tone}, spentMinutes, lazedMinutes}` | `pace::section`：`tone` 是 `flat`、`even`、`keen`；没什么可说是 `null` |
 | `pace.lazing` | `{}` → `{lazing: [[种类, 是什么]]}` | `pace::LAZING` |
+
+## 她的样子（`visual.*`、`sticker.*`、`persona.fallback`、`persona.draft`）
+
+她的立绘、全身套装、贴纸头像用的提示、画前对设计的检查、画出来以后对照的契约，和新人设起步的那份，都只在 crate 里写一份；经 FFI 的端调这些，不留提示和词表的副本。调用只做 JSON 转换（`calls/visual.rs`），规则全在 `visual_prompt.rs`、`visual_design.rs`、`visual_contract.rs`、`sticker_avatar.rs`、`persona.rs`。`profile` 是一份视觉设定（`gender`、`language`、`clothingStyle`、`visualIdentity`），和站点存的一样。提示的输出是 `{text}`。
+
+| 调用 | 输入 | 输出与 crate 函数 |
+| --- | --- | --- |
+| `visual.texts` | `{}` | `{school, schoolVersion, styleReferenceSha256, fullBodyInstructionVersion, clothingStyles, sticker: {contractVersion, size, styleReferenceSha256}}` |
+| `visual.character_prompt` | `{name, profile, notes?}` | `build_character_visual_prompt`：半身主立绘 |
+| `visual.full_body_design_prompt` | `{name, profile}` | `build_full_body_design_prompt`：照设计画全身 |
+| `visual.edit_prompt` | `{notes}` | `build_character_visual_edit_prompt`：在主立绘上改 |
+| `visual.full_body_portrait_prompt` | `{}` | `build_full_body_portrait_prompt`：从半身立绘重画全身 |
+| `visual.upright_prompt` | `{profile: "bust" \| "fullBody"}` | `build_upright_portrait_prompt`：上传的图照原画风正过来重画 |
+| `visual.adjustment_in_scope` | `{text}` | `{inScope}`：`portrait_adjustment_is_within_scope` |
+| `visual.requirements` | `{text, gender}` | `normalize_visual_requirements_for_design_with_gender` |
+| `visual.identity`、`visual.identity_for_prompt` | `{value}` | `{identity, issue: {field, reason} \| null}`：`sanitize_upper_body_visual_identity_checked`、`normalize_visual_identity_for_prompt_checked` |
+| `visual.states_gender` | `{value, gender, language}` | `{identity}`：`ensure_visual_identity_states_gender`；不是一份身份时 `null` |
+| `visual.checks` | `{value, gender}` | `{styleLock, cameraDrift, facialDrift, bodyDrift, highCollar, literarySludge, genderMatches}`：`visual_identity_*` 各项 |
+| `visual.clothing_style` | `{text}` | `{style, grammar}`：`normalize_clothing_style`、`clothing_style_grammar` |
+| `visual.character_contract` | `{name, profile, notes?}` | `{contract, text, fingerprint}`：`build_character_asset_contract`；`text` 就是算指纹的那串字节 |
+| `visual.full_body_contract` | `{source: {bust: {portrait, generationFingerprint?}} \| {design: {name, profile}}}` | 同上：`build_full_body_asset_contract` |
+| `sticker.avatar_prompt` | `{name, profile}` | `build_sticker_avatar_prompt` |
+| `sticker.avatar_contract` | `{name, profile, sourcePortraitAssetId}` | `{contract, text}`：`build_sticker_avatar_contract` |
+| `persona.fallback` | `{name, language, tags}` | `{draft}`：`fallback_persona_draft` |
+| `persona.draft` | `{value, fallback}` | `{draft, complete, sludge}`：`sanitize_persona_draft`、`persona_draft_is_complete`、`persona_has_literary_sludge` |
 
 ## 她是不是同一个人（`consistency.*`）
 
