@@ -195,7 +195,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 她的连接的帧（`link.*`）
 
-「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer`、`group` 七个帧族（`group` 是心智在电脑上时，服务端把群里的新消息借给它想、再替它把话发到群里；群的日志仍只在服务端），信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
+「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer`、`group`、`chat` 八个帧族（`group` 是心智在电脑上时，服务端把群里的新消息借给它想、再替它把话发到群里；群的日志仍只在服务端。`chat` 一样，借的是聊天软件上的私聊：对方不是伙伴时，电脑不落盘，那段私聊的日志也只在服务端），信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
 
 `crates/myriad-her-link` 编译时读这份契约，按它判断一帧能不能发、能不能收，规则不会和契约漂移：信封字段、`v`、类型、`seq`／`ack`／`at`、可靠帧必须有 `id` 且符合 `idPattern`、其余帧不能有 `id`、正文的必填和可选字段、`oneOf`（例如 `facts` 和 `sealed` 恰好一个）、`maxItems`、发送方的角色、帧大小，以及密封字段的形状（`{suite, to, keyId, enc, ct}`，套件是契约里的那一个，`enc` 32 字节，`ct` 至少一个标签长）。协议 1 的帧在协议 2 的信封里照旧按它们自己的正文检查。HPKE 的封和开是各端自己的（用各自的钥匙），核心只给 `info`（`myriad-link/2 <t>`）和附加数据（规范 JSON `{from, t, to}`）的写法。
 
@@ -461,6 +461,26 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **今天的门槛变成事实。** 站点的 15 分钟同类事、180 秒×精力的主动冷却、问候的 12 小时、走神 10 分钟、分享 20 分钟、reach 的 2 小时和睡着不发、在办事不说，原生的同类门槛和 1 分钟触摸，受理都不再拦，而是写进 `facts`。各端换过去要逐条用回放 A/B（分步第 3 步）。
 - **一致性对照** `crates/conformance/v1/speech/`：`admit.json` 的每个用例另带 `today`（今天站点和原生的结论、谁定的、在哪），`myriad-merope` 的 `tests/speech_conformance.rs` 核对：硬规则定的，受理也按同一个理由拒；门槛定的，受理放行并给事实。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test speech_conformance` 重写 `output`，`myriad-core-ffi` 经 C 入口再跑一遍。
+
+## 聊天软件里的她（`speaking.chat_app_section`、`talk_shape.*`、`channel.as_messages`、`timing.typing`、`memes.*`、`stickers.section`）
+
+她在聊天软件里的说话习惯，站点的 bot 一直这样说（`channel_work/chat.rs`、`chat_stream.rs` 的 `channel_chat` 一支）；登记出来是为了别的端照同一套说。规则在 `myriad_merope::{speaking, talk_shape, timing, memes, stickers}` 和 `myriad_agent_rules::channel`，调用只做 JSON 转换（`calls/chat_app.rs`）。`Shape` 是 `talk_shape::Shape` 的 camelCase JSON：`{turns, messages, perTurn, single, charsMedian, charsP90, endMark, bang, laughEnd}`。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `speaking.chat_app_section` | `{}` → `{text}`：「## In a chat app」一节 |
+| `talk_shape.room_of` | `{lines: [[说话人, 秒, 原话]]}`（旧的在前，不含她的）→ `{room: Shape \| null}`：不到 `ROOM_AT_LEAST`（8）条是 `null` |
+| `talk_shape.usual` | `{}` → `{room}`：`CHAT_APP_USUAL`，人还没说够时照它 |
+| `talk_shape.describe` | `{room, title}` → `{text}`：他们怎么打字，照实说 |
+| `channel.as_messages` | `{text}` → `{messages}`：她的回复一行一条，空行去掉，超过 `CHAT_MESSAGES`（5）条的并进最后一条 |
+| `talk_shape.messages_this_turn` | `{written, roll}` → `{most}`：这一轮最多发几条；`roll` 是 [0, 1) 的均匀数，由端给 |
+| `talk_shape.goes_out_as` | `{lines, most, room?}` → `{messages}`：每条照那里的人的打法（句号、感叹号），超出 `most` 的接在最后一条后面；没有 `room` 照 `CHAT_APP_USUAL` |
+| `timing.typing` | `{chars, roll}` → `{seconds}`：手机上打这么多字要几秒（最多 15） |
+| `memes.read_kept` | `{line}` → `{known: {term, meaning} \| null}`：她记下的一行（`memes::kept_line`）读回来 |
+| `memes.section` | `{talk, kept}` → `{text}`：`kept` 是她自己 source 为 `meme` 的那些行，读回后挑出 `talk` 里用到的（`known_in`），拼成「Words and memes you know」一节；一个也没有是 `null`。站点 `memes::section_for`、群的 `glance` 也是这三步 |
+| `stickers.section` | `{meanings, leftThisMonth}` → `{text}`：这一轮能发的贴纸（编号从 1）和这个月还能做几张；都没有是 `null` |
+
+- **一轮怎么发**（站点 `channel_work/chat.rs`）：`channel.as_messages` 拆行 → `talk_shape.messages_this_turn` 掷这轮发几条 → `talk_shape.goes_out_as` 照对方的打法（`room_of`，不够时 `usual`）→ 每条先显示正在输入 `timing.typing` 秒再发。
 
 ## 一致性对照（`crates/conformance/`）
 

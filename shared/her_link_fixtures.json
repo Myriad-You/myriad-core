@@ -895,6 +895,63 @@
           "sayId": "gsay_01",
           "sent": true
         }
+      },
+      {
+        "v": 1,
+        "t": "chat.lend",
+        "seq": 27,
+        "ack": 0,
+        "at": 1760140800260,
+        "id": "lend_02",
+        "body": {
+          "chat": "personal:q_5521",
+          "name": "小林",
+          "messages": [
+            {
+              "id": "m_1207",
+              "text": "你昨天说的那本书叫什么？",
+              "at": 1760140800000
+            }
+          ],
+          "recent": [
+            {
+              "id": "m_1205",
+              "text": "最近在读什么？",
+              "at": 1760140700000
+            },
+            {
+              "id": "m_1206",
+              "text": "《雪国》，刚读完。",
+              "at": 1760140710000,
+              "mine": true
+            }
+          ]
+        }
+      },
+      {
+        "v": 1,
+        "t": "chat.say",
+        "seq": 28,
+        "ack": 0,
+        "at": 1760140800270,
+        "id": "csay_01",
+        "body": {
+          "chat": "personal:q_5521",
+          "text": "《雪国》，川端康成的。",
+          "replyTo": "m_1207",
+          "lend": "lend_02"
+        }
+      },
+      {
+        "v": 1,
+        "t": "chat.said",
+        "seq": 29,
+        "ack": 28,
+        "at": 1760140800280,
+        "body": {
+          "sayId": "csay_01",
+          "sent": true
+        }
       }
     ]
   }
