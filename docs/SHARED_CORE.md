@@ -483,6 +483,31 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **一轮怎么发**（站点 `channel_work/chat.rs`）：`channel.as_messages` 拆行 → `talk_shape.messages_this_turn` 掷这轮发几条 → `talk_shape.goes_out_as` 照对方的打法（`room_of`，不够时 `usual`）→ 每条先显示正在输入 `timing.typing` 秒再发。
 
+## 她写东西时读的提示（`chat.reply_instruction`、`speaking.proactive_*`、`views.*`、`wants.*`、`inner.*`、`doing.*`、`explore.*`、`curiosity.*`、`sharing.*`、`chat_remember.*`、`remembering.*`、`chat_days.*`、`heard.*`、`life.*`、`pace.*`）
+
+她回话的收尾、先开口、夜里和聊完以后给自己写的东西，用的提示只在 crate 里写一份；经 FFI 的端调这些拿原文，不留副本（原生用检查拦副本）。调用只做 JSON 转换（`calls/prompts.rs`）。`soul` 是她的整段灵魂（`speaking.persona` 给的那段）。除特别说明，输出都是 `{text}`。
+
+| 调用 | 输入 | crate 函数 |
+| --- | --- | --- |
+| `chat.reply_instruction` | `{}` | `chat_history::CHAT_REPLY_INSTRUCTION`：聊天回复的收尾 |
+| `speaking.proactive_system` | `{soul, mind, recent}` | `speaking::compose_proactive_system`：`mind` 是一轮聊天戴的那几节，`recent` 是她最近没被问就说过的（新的在前） |
+| `speaking.proactive_user` | `{gist, happened?}` | `speaking::compose_proactive_user`：她想说的，和告诉她的那件事（谁说的话归谁） |
+| `speaking.said_lately_line` | `{minutesAgo, theyWroteSince, line}` | `speaking::said_lately_line`：`recent` 里的一行 |
+| `speaking.found_out_section` | `{notes}` | `speaking::format_found_out_section`；没有是 `null` |
+| `speaking.share_section`、`share_links_section` | `{songs}`；`{songs: [[那一行, 链接]]}` | `speaking::format_share_section`、`format_share_links_section`；没有是 `null` |
+| `views.system`、`wants.system`、`inner.system`、`inner.system_for_group`、`doing.choice_system`、`explore.wonder_system`、`curiosity.wonder_system`、`sharing.system`、`sharing.come_back_system`、`chat_days.day_system`、`life.own_day_system` | `{soul}` | 各模块的 `system`（`life::own_day_prompt`） |
+| `inner.system_for` | `{soul, private}` | `inner::system_for` |
+| `doing.digest_system` | `{soul, what, why, how}` | `doing::digest_system` |
+| `explore.think_system` | `{soul, question}` | `explore::think_system` |
+| `explore.step_system` | `{search, searchIsWikipedia, read, video}` | `explore::step_system`（`reading::Senses`） |
+| `curiosity.digest_system` | `{soul, why}` | `curiosity::digest_system` |
+| `sharing.reason`、`sharing.come_back_reason` | `{what, why}` | `sharing::reason`、`come_back_reason` |
+| `chat_remember.extract_system`、`settle_system` | `{existing}`、`{known}` | `chat_remember::extract_system_prompt`、`settle_system_prompt` |
+| `chat_remember.already_system`、`remembering.system`、`chat_days.pick_system`、`heard.system`、`explore.compare_system`、`life.concepts_system` | `{}` | 同名函数（`life::CONCEPTS_SYSTEM`） |
+| `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |
+| `pace.section` | `{pace: {day, usualMinutes, daysPastUsual, tone}, spentMinutes, lazedMinutes}` | `pace::section`：`tone` 是 `flat`、`even`、`keen`；没什么可说是 `null` |
+| `pace.lazing` | `{}` → `{lazing: [[种类, 是什么]]}` | `pace::LAZING` |
+
 ## 一致性对照（`crates/conformance/`）
 
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。

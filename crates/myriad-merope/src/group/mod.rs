@@ -642,6 +642,12 @@ pub enum Answer {
         local: String,
         #[serde(default)]
         doing: Option<String>,
+        /// How she is, as sections, written as the end writes them for
+        /// anyone she talks to (her mood, her day with others, how she is
+        /// this moment: see `speaking::is_her_moment`); not the hour or
+        /// what she is doing, given above. None: the end has none to give.
+        #[serde(default)]
+        state: Vec<String>,
     },
     Stickers {
         #[serde(default)]
@@ -1008,7 +1014,8 @@ pub enum ToRead {
         talk: String,
         related: usize,
     },
-    /// Her clock in her zone (RFC 3339), and what she is doing now.
+    /// Her clock in her zone (RFC 3339), what she is doing now, and how she
+    /// is, if the end has it.
     Now,
     /// The stickers she may send in the group `venue`: hers still of her,
     /// and those she kept that she still uses, belonging there or anywhere;

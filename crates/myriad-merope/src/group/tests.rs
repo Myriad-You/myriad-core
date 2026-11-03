@@ -1231,6 +1231,7 @@ fn default_answer(kind: &str) -> Answer {
         "now" => Answer::Now {
             local: "2026-10-14T14:00:00+08:00".into(),
             doing: None,
+            state: Vec::new(),
         },
         "stickers" => Answer::Stickers {
             stickers: Vec::new(),
@@ -1755,6 +1756,12 @@ fn g1_an_outsider_calls_her() {
         Answer::Now {
             local: "2026-10-14T14:00:30+08:00".into(),
             doing: Some("You are listening to a song.".into()),
+            // How she is, as the end writes it for anyone: this moment
+            // goes last, nearest their words.
+            state: vec![
+                "## Inside you a moment ago\nStill a little sleepy.".into(),
+                "## Your mood\nCalm.".into(),
+            ],
         },
     );
     end.answer(
@@ -1919,6 +1926,21 @@ fn g1_an_outsider_calls_her() {
         message(2, 31, "路人", "@bot 你是机器人吗", true),
     );
     end.run(BASE + secs(900.0));
+    // Put together as a member's answer is: who she is first, how she is
+    // among what she knows of them, how she is this moment last before the
+    // talk, and how she replies at the end.
+    let asks = asks_of(&end, "group_stranger");
+    let prompt = asks[0]["input"].as_str().unwrap();
+    let at = |heading: &str| {
+        prompt
+            .find(heading)
+            .unwrap_or_else(|| panic!("{heading} in {prompt}"))
+    };
+    assert!(at("## Who is talking to you") < at("## Your mood"));
+    assert!(at("## Your mood") < at("## Now"));
+    assert!(at("## Stickers") < at("## Inside you a moment ago"));
+    assert!(at("## Inside you a moment ago") < at("Recent lines in the group"));
+    assert!(prompt.ends_with(crate::chat_history::CHAT_REPLY_INSTRUCTION));
     end.check("an_outsider_calls_her");
 }
 
