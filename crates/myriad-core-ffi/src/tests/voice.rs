@@ -167,7 +167,7 @@ fn the_look_and_the_prompts_are_the_crates() {
     );
     let (status, out) = ffi(
         "persona.flatten",
-        &json!({ "fields": { "secret": "x" }, "language": "zh-CN" }),
+        &json!({ "persona": {}, "language": "zh-CN", "secret": "x" }),
     );
     assert_eq!(status, STATUS_BAD_INPUT);
     assert!(

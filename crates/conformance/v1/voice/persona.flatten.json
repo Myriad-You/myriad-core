@@ -3,7 +3,8 @@
   "cases": [
     {
       "input": {
-        "fields": {
+        "language": "zh-CN",
+        "persona": {
           "drives": [
             "把答应的事做完"
           ],
@@ -19,17 +20,17 @@
             "沉得住气",
             " 嘴硬心软 "
           ]
-        },
-        "language": "zh-CN"
+        }
       },
       "name": "zh-CN, every field",
       "output": {
-        "text": "气质：想到就试、沉得住气、 嘴硬心软 \n喜好：听人讲下雨天的事、陪人打牌\n驱动力：把答应的事做完\n社交：先听，再接话。\n表达：句子短，先回答再问。\n\n她说话很短，熟了以后会开玩笑。"
+        "text": "气质：想到就试、沉得住气、嘴硬心软\n喜好：听人讲下雨天的事、陪人打牌\n驱动力：把答应的事做完\n社交：先听，再接话。\n表达：句子短，先回答再问。\n\n她说话很短，熟了以后会开玩笑。"
       }
     },
     {
       "input": {
-        "fields": {
+        "language": "zh-TW",
+        "persona": {
           "drives": [
             "把答应的事做完"
           ],
@@ -45,17 +46,17 @@
             "沉得住气",
             " 嘴硬心软 "
           ]
-        },
-        "language": "zh-TW"
+        }
       },
       "name": "zh-TW labels",
       "output": {
-        "text": "氣質：想到就试、沉得住气、 嘴硬心软 \n喜好：听人讲下雨天的事、陪人打牌\n驅動力：把答应的事做完\n社交：先听，再接话。\n表達：句子短，先回答再问。\n\n她说话很短，熟了以后会开玩笑。"
+        "text": "氣質：想到就试、沉得住气、嘴硬心软\n喜好：听人讲下雨天的事、陪人打牌\n驅動力：把答应的事做完\n社交：先听，再接话。\n表達：句子短，先回答再问。\n\n她说话很短，熟了以后会开玩笑。"
       }
     },
     {
       "input": {
-        "fields": {
+        "language": "en-US",
+        "persona": {
           "drives": [],
           "likes": [
             "Card games, with friends"
@@ -67,8 +68,7 @@
             "Tries things first, then plans",
             "Keeps a cool head"
           ]
-        },
-        "language": "en-US"
+        }
       },
       "name": "en-US joins traits with semicolons",
       "output": {
@@ -77,7 +77,8 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "ja-JP",
+        "persona": {
           "drives": [],
           "likes": [],
           "socialStyle": "",
@@ -86,8 +87,7 @@
           "temperament": [
             "納得するまで聞く"
           ]
-        },
-        "language": "ja-JP"
+        }
       },
       "name": "ja-JP",
       "output": {
@@ -96,7 +96,8 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "ko-KR",
+        "persona": {
           "drives": [],
           "likes": [
             "산책 이야기 듣기"
@@ -105,8 +106,7 @@
           "speechStyle": "",
           "summary": "말이 짧다.",
           "temperament": []
-        },
-        "language": "ko-KR"
+        }
       },
       "name": "ko-KR",
       "output": {
@@ -115,7 +115,8 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "de-DE",
+        "persona": {
           "drives": [],
           "likes": [],
           "socialStyle": "",
@@ -125,8 +126,7 @@
             "neugierig",
             "ruhig"
           ]
-        },
-        "language": "de-DE"
+        }
       },
       "name": "de-DE keeps the site's joiner",
       "output": {
@@ -135,7 +135,8 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "fr-FR",
+        "persona": {
           "drives": [
             "finir ce qui est promis"
           ],
@@ -144,8 +145,7 @@
           "speechStyle": "",
           "summary": "",
           "temperament": []
-        },
-        "language": "fr-FR"
+        }
       },
       "name": "fr-FR",
       "output": {
@@ -154,7 +154,8 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "es-ES",
+        "persona": {
           "drives": [],
           "likes": [],
           "socialStyle": "",
@@ -163,8 +164,7 @@
           "temperament": [
             "想到就试"
           ]
-        },
-        "language": "es-ES"
+        }
       },
       "name": "a language with no labels reads in English",
       "output": {
@@ -173,15 +173,15 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "zh-CN",
+        "persona": {
           "drives": [],
           "likes": [],
           "socialStyle": "",
           "speechStyle": "",
           "summary": "只有一段。",
           "temperament": []
-        },
-        "language": "zh-CN"
+        }
       },
       "name": "only a summary",
       "output": {
@@ -190,15 +190,15 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "zh-CN",
+        "persona": {
           "drives": [],
           "likes": [],
           "socialStyle": "  ",
           "speechStyle": "　",
           "summary": "",
           "temperament": []
-        },
-        "language": "zh-CN"
+        }
       },
       "name": "blank fields are left out",
       "output": {
@@ -207,16 +207,175 @@
     },
     {
       "input": {
-        "fields": {
+        "language": "zh-CN",
+        "persona": {
           "likes": [
             "陪人打牌"
           ]
-        },
-        "language": "zh-CN"
+        }
       },
       "name": "missing fields count as empty",
       "output": {
         "text": "喜好：陪人打牌"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": {
+          "summary": "她说话很短。",
+          "traits": [
+            "想到就试",
+            "沉得住气"
+          ],
+          "voice": "句子短，先回答再问。"
+        }
+      },
+      "name": "older personas: traits and voice",
+      "output": {
+        "text": "气质：想到就试、沉得住气\n表达：句子短，先回答再问。\n\n她说话很短。"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": {
+          "likes": [
+            "陪人打牌"
+          ],
+          "temperament": [],
+          "traits": [
+            "想到就试"
+          ]
+        }
+      },
+      "name": "an empty temperament is given: traits is not read",
+      "output": {
+        "text": "喜好：陪人打牌"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": {
+          "socialStyle": "先听。",
+          "speechStyle": "",
+          "voice": "句子短。"
+        }
+      },
+      "name": "an empty speech style is given: voice is not read",
+      "output": {
+        "text": "社交：先听。"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": {
+          "likes": [
+            "  "
+          ],
+          "temperament": [
+            " 想到就试 ",
+            "沉得住气、嘴硬心软",
+            "",
+            "a/b|c;d",
+            3,
+            null
+          ]
+        }
+      },
+      "name": "traits are split, trimmed and the empty ones left out",
+      "output": {
+        "text": "气质：想到就试、沉得住气、嘴硬心软、a、b、c、d"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": {
+          "likes": [
+            "喜好1",
+            "喜好2",
+            "喜好3",
+            "喜好4",
+            "喜好5",
+            "喜好6",
+            "喜好7",
+            "喜好8",
+            "喜好9",
+            "喜好10",
+            "喜好11",
+            "喜好12",
+            "喜好13",
+            "喜好14",
+            "喜好15"
+          ]
+        }
+      },
+      "name": "at most twelve to a field",
+      "output": {
+        "text": "喜好：喜好1、喜好2、喜好3、喜好4、喜好5、喜好6、喜好7、喜好8、喜好9、喜好10、喜好11、喜好12"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": {
+          "drives": null,
+          "likes": {
+            "a": "b"
+          },
+          "summary": 7,
+          "temperament": "想到就试"
+        }
+      },
+      "name": "a field that is not a list is no traits",
+      "output": {
+        "text": ""
+      }
+    },
+    {
+      "input": {
+        "language": "ja-JP",
+        "persona": {
+          "displayName": "瞳",
+          "draftSource": "pro",
+          "summary": "她说话很短。",
+          "visualIdentity": {
+            "character": {}
+          }
+        }
+      },
+      "name": "what else the persona holds is not read",
+      "output": {
+        "text": "她说话很短。"
+      }
+    },
+    {
+      "input": {
+        "language": "zh-CN",
+        "persona": [
+          "想到就试"
+        ]
+      },
+      "name": "a persona that is not an object",
+      "output": {
+        "text": ""
+      }
+    },
+    {
+      "input": {
+        "language": "en-US",
+        "persona": {
+          "traits": [
+            "Tries things first, then plans; Keeps a cool head"
+          ]
+        }
+      },
+      "name": "en-US traits keep their commas",
+      "output": {
+        "text": "Temperament：Tries things first, then plans; Keeps a cool head"
       }
     }
   ]

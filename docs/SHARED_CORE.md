@@ -470,7 +470,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `speaking.home` | `{at: "site", name}` 或 `{at: "mac"}` → `{home: {place, line?}}`：她住在哪。站点传站名（`speaking::site_name` 取的），Mac 传 `mac`；子机不调它，原样传主机给它的 `home` |
 | `speaking.soul` | `{name, personality, home}` → `{text}`：她说话时的 soul（名字、按 `home.place` 写的人设契约、性格、`home.line`）；名字和性格都空是 `null`。住在站点时和站点原来拼的（`format_persona` 加空行加 `site_line`）逐字节相同 |
 | `speaking.contract_at` | `{place}` → `{text}`：住在 `place` 时的人设契约；`this site` 就是 `speaking.contract` |
-| `persona.flatten` | `{fields: {summary, temperament, likes, drives, socialStyle, speechStyle}, language}` → `{text}`：人设字段变成一段性格文字，标签按她的语言（`persona.language`，没有的按英文），和站点设置页的扁平化逐字节相同 |
+| `persona.flatten` | `{persona, language}` → `{text}`：她存着的人设（`persona_json` 原样传，旧的 `traits`、`voice` 也认）先照站点设置页读的那样规整（列表拆开、去空白、去空项、每项最多 12 条），再变成一段性格文字，标签按她的语言（`persona.language`，没有的按英文）；和站点前端 `personaFromApi` 加 `flattenPersona` 逐字节相同 |
 | `sending.goes_out` | `{reply, room?, rolls: {split, typing}}` → `{messages: [{text, typingSeconds}], stopped}`：一条回复发出去的几条（长度上限和复读截断、拆条、照那里的人打字去掉句号和感叹号），每条打字要几秒（和 `timing.typing` 同一条规则）；`room` 是 `talk_shape::Shape`（没有就按聊天软件里常见的），`typing` 每条一个，缺的按中间值。第一条的打字时间各端减去她想的那段时间 |
 | `sending.limit_take` | `{used, piece, raw}` → `{used, stop, kept}`：流式回复每来一段问一次；`stop` 是 `length`（超过 8192 个估算 token，`kept` 是说到的全部）或 `loop`（`kept` 是第一圈），`null` 就接着收 |
 | `timing.where_she_is` | `{inTalk, maySleep, wakesIn?, freeIn?}` → `{at}`：消息来时她在哪（`inTalk`、`free`、`busy` 带 `freeIn`、`asleep` 带 `wakesIn`）；`wakesIn` 用 `timing.asleep_at` 算 |
@@ -482,7 +482,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `self_story.checked` | `{answer, records, tally, before}` → `{claims}`：她写的自述里守了约定的那些，一条都不算数时是 `null` |
 | `onboarding.tags_system`、`onboarding.name_system`、`onboarding.persona_system`、`onboarding.import_system`、`onboarding.visual_design_system`、`onboarding.observe_portrait_system` | 人设生成各步的系统提示：`name_system` 要 `{nameStyle}`，`observe_portrait_system` 要 `{language, gender}`，其余 `{}`；→ `{text}` |
 
-- **一致性对照** `crates/conformance/v1/voice/`：每个调用一份。`persona.flatten` 的输出和站点前端的 `flattenPersona` 对过，`speaking.soul` 住在站点时和站点拼的对过；其余照规则写、经 C 入口录下。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi voice` 重写输出，只随一次写明理由的改动用。
+- **一致性对照** `crates/conformance/v1/voice/`：每个调用一份。`persona.flatten` 的输出和站点前端的 `personaFromApi` 加 `flattenPersona` 实跑的结果对过，`speaking.soul` 住在站点时和站点拼的对过；其余照规则写、经 C 入口录下。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi voice` 重写输出，只随一次写明理由的改动用。
 - **先加后删**：`speaking.persona`、`speaking.contract`（契约写死「this site」）留到各端都换成 `speaking.soul` 再删。
 
 ## 一致性对照（`crates/conformance/`）

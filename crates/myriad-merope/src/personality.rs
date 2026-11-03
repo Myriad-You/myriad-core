@@ -3,11 +3,11 @@
 //! own language (`persona.language`), not in the language of whoever is
 //! looking at the setup: her personality does not change with the reader.
 
-use serde::Deserialize;
+use serde_json::Value;
 
-/// The fields of her persona that make her personality, as saved.
-#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+/// The fields of her persona that make her personality, read and tidied
+/// (see [`Fields::from_saved`]).
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Fields {
     pub summary: String,
     pub temperament: Vec<String>,
@@ -15,6 +15,67 @@ pub struct Fields {
     pub drives: Vec<String>,
     pub social_style: String,
     pub speech_style: String,
+}
+
+/// Traits a field may hold, at most.
+pub const MAX_ITEMS: usize = 12;
+
+/// Whether a value counts as given where the setup page reads `a || b`.
+fn given(value: &Value) -> bool {
+    match value {
+        Value::Null => false,
+        Value::Bool(given) => *given,
+        Value::Number(number) => number.as_f64().is_some_and(|number| number != 0.0),
+        Value::String(text) => !text.is_empty(),
+        Value::Array(_) | Value::Object(_) => true,
+    }
+}
+
+/// A list field as saved, tidied: its strings, split again where one holds
+/// several (`、`, `;`, `/`, `|`), trimmed, the empty ones left out, at most
+/// [`MAX_ITEMS`]. What is not a list of strings is no traits.
+fn list(value: Option<&Value>) -> Vec<String> {
+    let Some(Value::Array(items)) = value else {
+        return Vec::new();
+    };
+    items
+        .iter()
+        .filter_map(Value::as_str)
+        .collect::<Vec<_>>()
+        .join("、")
+        .split(['、', ';', '/', '|'])
+        .map(trim)
+        .filter(|item| !item.is_empty())
+        .take(MAX_ITEMS)
+        .map(str::to_string)
+        .collect()
+}
+
+fn text(value: Option<&Value>) -> Option<String> {
+    value.and_then(Value::as_str).map(str::to_string)
+}
+
+impl Fields {
+    /// Her persona's fields as saved (`persona_json`, as it is), read the
+    /// way the site's setup pages read them: older personas keep their
+    /// traits in `traits` and their voice in `voice`.
+    pub fn from_saved(saved: &Value) -> Self {
+        let field = |name: &str| saved.get(name);
+        let temperament = match field("temperament") {
+            Some(temperament) if given(temperament) => Some(temperament),
+            _ => field("traits"),
+        };
+        Self {
+            summary: text(field("summary")).unwrap_or_default(),
+            temperament: list(temperament),
+            likes: list(field("likes")),
+            drives: list(field("drives")),
+            social_style: text(field("socialStyle")).unwrap_or_default(),
+            speech_style: text(field("speechStyle"))
+                .or_else(|| text(field("voice")))
+                .unwrap_or_default(),
+        }
+    }
 }
 
 /// The labels of temperament, likes, drives, social and speech, by language
@@ -93,6 +154,11 @@ pub fn flatten(fields: &Fields, language: &str) -> String {
     lines.join("\n")
 }
 
+/// [`flatten`] of her persona as saved (see [`Fields::from_saved`]).
+pub fn flatten_saved(saved: &Value, language: &str) -> String {
+    flatten(&Fields::from_saved(saved), language)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -120,5 +186,29 @@ mod tests {
         };
         assert_eq!(flatten(&only, "ja-JP"), "只有一段。");
         assert_eq!(flatten(&Fields::default(), "zh-CN"), "");
+    }
+
+    #[test]
+    fn a_persona_as_saved_is_read_as_the_setup_page_reads_it() {
+        let saved = serde_json::json!({
+            "summary": "她说话很短。",
+            "traits": [" 想到就试 ", "沉得住气、嘴硬心软", "", 3],
+            "likes": "陪人打牌",
+            "drives": ["a/b|c;d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n"],
+            "voice": "句子短。",
+            "visualIdentity": {}
+        });
+        let fields = Fields::from_saved(&saved);
+        assert_eq!(fields.temperament, ["想到就试", "沉得住气", "嘴硬心软"]);
+        assert!(fields.likes.is_empty());
+        assert_eq!(fields.drives.len(), MAX_ITEMS);
+        assert_eq!(fields.drives[..4], ["a", "b", "c", "d"]);
+        assert_eq!(fields.speech_style, "句子短。");
+        // An empty list is given: the older field is not read.
+        let empty = serde_json::json!({ "temperament": [], "traits": ["x"], "speechStyle": "", "voice": "y" });
+        let fields = Fields::from_saved(&empty);
+        assert!(fields.temperament.is_empty());
+        assert_eq!(fields.speech_style, "");
+        assert_eq!(flatten_saved(&serde_json::json!("不是对象"), "zh-CN"), "");
     }
 }

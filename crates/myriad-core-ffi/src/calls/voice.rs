@@ -57,34 +57,19 @@ pub(super) fn contract_at(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 pub(super) fn flatten(raw: &[u8]) -> Result<Value, Failure> {
-    /// [`personality::Fields`], refusing a field it does not know.
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields, default)]
-    #[derive(Default)]
-    struct Fields {
-        summary: String,
-        temperament: Vec<String>,
-        likes: Vec<String>,
-        drives: Vec<String>,
-        social_style: String,
-        speech_style: String,
-    }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
-        fields: Fields,
+        /// Her persona's fields as saved, as they are (older ones with
+        /// `traits` and `voice`); what it holds besides them is not read.
+        persona: Value,
         language: String,
     }
     let req: In = input(raw)?;
-    let fields = personality::Fields {
-        summary: req.fields.summary,
-        temperament: req.fields.temperament,
-        likes: req.fields.likes,
-        drives: req.fields.drives,
-        social_style: req.fields.social_style,
-        speech_style: req.fields.speech_style,
-    };
-    Ok(text(Some(personality::flatten(&fields, &req.language))))
+    Ok(text(Some(personality::flatten_saved(
+        &req.persona,
+        &req.language,
+    ))))
 }
 
 pub(super) fn goes_out(raw: &[u8]) -> Result<Value, Failure> {
