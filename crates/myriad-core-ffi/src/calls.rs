@@ -20,6 +20,7 @@ use crate::Failure;
 mod affect;
 mod archive;
 mod chat;
+mod chat_app;
 mod consistency;
 mod filter;
 mod grants;
@@ -59,6 +60,7 @@ const CALLS: &[(&str, Call)] = &[
     ("affect.transition", affect::transition),
     ("affect.user_utterance", affect::user_utterance),
     ("audience.admits", memory::admits),
+    ("channel.as_messages", chat_app::as_messages),
     ("chat.history_lines", chat::history_lines),
     ("chat.history_text", chat::history_text),
     ("chat.pause_text", chat::pause_text),
@@ -143,6 +145,8 @@ const CALLS: &[(&str, Call)] = &[
     ("making.untried_at", soup::untried_at),
     ("making.writing_about_own", soup::writing_about_own),
     ("making_sense.told_section", speaking::told_section),
+    ("memes.read_kept", chat_app::read_kept),
+    ("memes.section", chat_app::meme_section),
     ("memory.always_known", memory::always_known),
     ("memory.base_level", memory::base_level),
     ("memory.gap_in", memory::gap_in),
@@ -237,6 +241,7 @@ const CALLS: &[(&str, Call)] = &[
         "speaking.brought_to_mind_section",
         speaking::brought_to_mind_section,
     ),
+    ("speaking.chat_app_section", chat_app::chat_app_section),
     ("speaking.contract", speaking::contract),
     ("speaking.curious_section", speaking::curious_section),
     ("speaking.doing_section", own::doing_section),
@@ -263,6 +268,7 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.taste_section", own::taste_section),
     ("speaking.us_section", own::us_section),
     ("speaking.views_section", own::views_section),
+    ("stickers.section", chat_app::sticker_section),
     ("style.distance", style::distance),
     ("style.noticed", style::noticed),
     ("style.unlike", style::unlike),
@@ -283,6 +289,14 @@ const CALLS: &[(&str, Call)] = &[
     ("sync.merge_plan", sync::merge_plan),
     ("sync.persona_diff", sync::persona_diff),
     ("sync.rig_package_id", sync::rig_package_id),
+    ("talk_shape.describe", chat_app::describe),
+    ("talk_shape.goes_out_as", chat_app::goes_out_as),
+    (
+        "talk_shape.messages_this_turn",
+        chat_app::messages_this_turn,
+    ),
+    ("talk_shape.room_of", chat_app::room_of),
+    ("talk_shape.usual", chat_app::usual),
     ("threads.section", own::threads_section),
     ("timing.asleep_at", timing::asleep_at),
     ("timing.asleep_for", timing::asleep_for),
@@ -292,6 +306,7 @@ const CALLS: &[(&str, Call)] = &[
     ("timing.past_bedtime", timing::past_bedtime),
     ("timing.past_bedtime_at", timing::past_bedtime_at),
     ("timing.sleep", timing::sleep),
+    ("timing.typing", chat_app::typing),
     ("vitals.alerts", vitals::alerts),
     ("vitals.ends_asking", vitals::ends_asking),
     ("vitals.leaned_on", vitals::leaned_on),

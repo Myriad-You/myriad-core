@@ -7,6 +7,7 @@ use super::*;
 
 mod archive;
 mod books;
+mod chat_app;
 mod consistency;
 mod filter;
 mod games;
@@ -111,6 +112,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .into_iter()
     .chain(archive::TESTED.iter().copied())
     .chain(books::TESTED.iter().copied())
+    .chain(chat_app::TESTED.iter().copied())
     .chain(consistency::TESTED.iter().copied())
     .chain(filter::TESTED.iter().copied())
     .chain(games::TESTED.iter().copied())
