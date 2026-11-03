@@ -194,7 +194,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 她的连接的帧（`link.*`）
 
-「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer`、`group` 七个帧族（`group` 是心智在电脑上时，服务端把群里的新消息借给它想、再替它把话发到群里；群的日志仍只在服务端），信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
+「她的连接」的协议定义是 `shared/her_link_contract.json`。协议 2（契约里的 `next` 块，2026-10-23 定，还没有主机在说，服务端那一侧是 S6）让它成为每台设备唯一保持的连接，加了 `fact`、`hand`、`say`、`lease`、`log`、`peer`、`group`、`chat` 八个帧族（`group` 是心智在电脑上时，服务端把群里的新消息借给它想、再替它把话发到群里；群的日志仍只在服务端。`chat` 一样，借的是聊天软件上的私聊：对方不是伙伴时，电脑不落盘，那段私聊的日志也只在服务端），信封多一个 `v`（帧格式版本，1 是规范 JSON 文本）。结构见 Myriad 的 [ARCHITECTURE.md](https://github.com/Myriad-You/Myriad/blob/preview/docs/development/ARCHITECTURE.md)「Her link and her devices」。
 
 `crates/myriad-her-link` 编译时读这份契约，按它判断一帧能不能发、能不能收，规则不会和契约漂移：信封字段、`v`、类型、`seq`／`ack`／`at`、可靠帧必须有 `id` 且符合 `idPattern`、其余帧不能有 `id`、正文的必填和可选字段、`oneOf`（例如 `facts` 和 `sealed` 恰好一个）、`maxItems`、发送方的角色、帧大小，以及密封字段的形状（`{suite, to, keyId, enc, ct}`，套件是契约里的那一个，`enc` 32 字节，`ct` 至少一个标签长）。协议 1 的帧在协议 2 的信封里照旧按它们自己的正文检查。HPKE 的封和开是各端自己的（用各自的钥匙），核心只给 `info`（`myriad-link/2 <t>`）和附加数据（规范 JSON `{from, t, to}`）的写法。
 
@@ -484,6 +484,31 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **一致性对照** `crates/conformance/v1/voice/`：每个调用一份。`persona.flatten` 的输出和站点前端的 `personaFromApi` 加 `flattenPersona` 实跑的结果对过，`speaking.soul` 住在站点时和站点拼的对过；其余照规则写、经 C 入口录下。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi voice` 重写输出，只随一次写明理由的改动用。
 - **先加后删**：`speaking.persona`、`speaking.contract`（契约写死「this site」）留到各端都换成 `speaking.soul` 再删。
+
+## 她写东西时读的提示（`chat.reply_instruction`、`speaking.proactive_*`、`views.*`、`wants.*`、`inner.*`、`doing.*`、`explore.*`、`curiosity.*`、`sharing.*`、`chat_remember.*`、`remembering.*`、`chat_days.*`、`heard.*`、`life.*`、`pace.*`）
+
+她回话的收尾、先开口、夜里和聊完以后给自己写的东西，用的提示只在 crate 里写一份；经 FFI 的端调这些拿原文，不留副本（原生用检查拦副本）。调用只做 JSON 转换（`calls/prompts.rs`）。`soul` 是她的整段灵魂（`speaking.persona` 给的那段）。除特别说明，输出都是 `{text}`。
+
+| 调用 | 输入 | crate 函数 |
+| --- | --- | --- |
+| `chat.reply_instruction` | `{}` | `chat_history::CHAT_REPLY_INSTRUCTION`：聊天回复的收尾 |
+| `speaking.proactive_system` | `{soul, mind, recent}` | `speaking::compose_proactive_system`：`mind` 是一轮聊天戴的那几节，`recent` 是她最近没被问就说过的（新的在前） |
+| `speaking.proactive_user` | `{gist, happened?}` | `speaking::compose_proactive_user`：她想说的，和告诉她的那件事（谁说的话归谁） |
+| `speaking.said_lately_line` | `{minutesAgo, theyWroteSince, line}` | `speaking::said_lately_line`：`recent` 里的一行 |
+| `speaking.found_out_section` | `{notes}` | `speaking::format_found_out_section`；没有是 `null` |
+| `speaking.share_section`、`share_links_section` | `{songs}`；`{songs: [[那一行, 链接]]}` | `speaking::format_share_section`、`format_share_links_section`；没有是 `null` |
+| `views.system`、`wants.system`、`inner.system`、`inner.system_for_group`、`doing.choice_system`、`explore.wonder_system`、`curiosity.wonder_system`、`sharing.system`、`sharing.come_back_system`、`chat_days.day_system`、`life.own_day_system` | `{soul}` | 各模块的 `system`（`life::own_day_prompt`） |
+| `inner.system_for` | `{soul, private}` | `inner::system_for` |
+| `doing.digest_system` | `{soul, what, why, how}` | `doing::digest_system` |
+| `explore.think_system` | `{soul, question}` | `explore::think_system` |
+| `explore.step_system` | `{search, searchIsWikipedia, read, video}` | `explore::step_system`（`reading::Senses`） |
+| `curiosity.digest_system` | `{soul, why}` | `curiosity::digest_system` |
+| `sharing.reason`、`sharing.come_back_reason` | `{what, why}` | `sharing::reason`、`come_back_reason` |
+| `chat_remember.extract_system`、`settle_system` | `{existing}`、`{known}` | `chat_remember::extract_system_prompt`、`settle_system_prompt` |
+| `chat_remember.already_system`、`remembering.system`、`chat_days.pick_system`、`heard.system`、`explore.compare_system`、`life.concepts_system` | `{}` | 同名函数（`life::CONCEPTS_SYSTEM`） |
+| `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |
+| `pace.section` | `{pace: {day, usualMinutes, daysPastUsual, tone}, spentMinutes, lazedMinutes}` | `pace::section`：`tone` 是 `flat`、`even`、`keen`；没什么可说是 `null` |
+| `pace.lazing` | `{}` → `{lazing: [[种类, 是什么]]}` | `pace::LAZING` |
 
 ## 一致性对照（`crates/conformance/`）
 

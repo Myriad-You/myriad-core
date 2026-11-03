@@ -69,6 +69,37 @@
       "input": {
         "frame": {
           "ack": 0,
+          "at": 1760140800270,
+          "body": {
+            "chat": "personal:q_5521",
+            "replyTo": "m_1207",
+            "text": "嗯"
+          },
+          "id": "csay_02",
+          "seq": 5,
+          "t": "chat.say",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host",
+          "mind"
+        ]
+      },
+      "name": "her mind on a PC says a line in a private chat",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800270,\"body\":{\"chat\":\"personal:q_5521\",\"replyTo\":\"m_1207\",\"text\":\"嗯\"},\"id\":\"csay_02\",\"seq\":5,\"t\":\"chat.say\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "chat",
+          "t": "chat.say"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
           "at": 1760140800010,
           "body": {
             "sealed": {
@@ -321,6 +352,58 @@
         ]
       },
       "name": "bad_frame: only her mind says in a group",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800270,
+          "body": {
+            "chat": "personal:q_5521",
+            "text": "嗯"
+          },
+          "id": "csay_02",
+          "seq": 5,
+          "t": "chat.say",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host"
+        ]
+      },
+      "name": "bad_frame: only her mind says in a private chat",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800260,
+          "body": {
+            "chat": "personal:q_5521",
+            "name": "小林"
+          },
+          "id": "lend_03",
+          "seq": 6,
+          "t": "chat.lend",
+          "v": 1
+        },
+        "roles": [
+          "server",
+          "host"
+        ]
+      },
+      "name": "bad_frame: a private chat lent with no messages",
       "output": {
         "refused": {
           "code": "bad_frame"

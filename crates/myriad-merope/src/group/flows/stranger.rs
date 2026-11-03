@@ -1,13 +1,15 @@
 //! Her answer to someone from outside the community, in a group: the same
 //! voice, far less context (see `crate::strangers`). Who they are to her
 //! (her note on them here, what she noted of them in her other groups, whom
-//! she wonders they might be), the hour and what she is doing, the group's
-//! own bits and days and those of her other groups, her views and what she
-//! heard that their words touch, the turtle soup on offer, the stickers she
-//! can send, the words and memes she knows and the groups' own, how the
-//! group reads; put together here from what is read, asked of her once
-//! (once more when the answer is cut), and taken apart again: the sticker
-//! she chose, the puzzle she said she would think up.
+//! she wonders they might be), the hour, how she is and what she is doing,
+//! the group's own bits and days and those of her other groups, her views
+//! and what she heard that their words touch: what she knows of them, put
+//! together here from what is read. With the turtle soup on offer, the
+//! stickers she can send, the words and memes she knows and the groups'
+//! own and how the group reads, it is put together as every answer in a
+//! group is (`assembly`), asked of her once (once more when the answer is
+//! cut), and taken apart again: the sticker she chose, the puzzle she said
+//! she would think up.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -42,8 +44,6 @@ const JARGON_READ_BACK: u64 = 300;
 const OFFERED: usize = 8;
 /// People from outside she keeps what she offered them for, per group.
 const OFFERS_KEPT: usize = 64;
-/// The lines of the talk the words and memes in it are looked for in.
-const TALK_LINES: usize = 12;
 const REPLY_WITHIN_MS: u64 = 60_000;
 /// The whole answer, put together and asked, within this long.
 const DEADLINE_MS: u64 = 90_000;
@@ -59,10 +59,12 @@ pub struct Replying {
     pub words: String,
     #[serde(default)]
     pub why: Option<String>,
-    /// How the group reads (how people type, how her lines differ, what she
-    /// made of the talk).
     #[serde(default)]
-    pub reading: Vec<String>,
+    pub room: Option<crate::talk_shape::Shape>,
+    #[serde(default)]
+    pub differs: Option<String>,
+    #[serde(default)]
+    pub making_sense: Option<String>,
     pub began: i64,
     pub stage: ReplyStage,
     #[serde(default)]
@@ -80,6 +82,10 @@ pub struct Replying {
     pub local: Option<String>,
     #[serde(default)]
     pub doing: Option<String>,
+    /// How she is, as sections, as the end that hosts her has it: none when
+    /// it gave none.
+    #[serde(default)]
+    pub state: Vec<String>,
     #[serde(default)]
     pub bits: Vec<MemoryRow>,
     #[serde(default)]
@@ -192,7 +198,11 @@ fn stored(r: &Replying) -> String {
 }
 
 /// Begin her answer to the stranger the answer `a` is to.
-pub(crate) fn reply_start(cx: &mut Cx, a: &Answering) -> (Replying, Replied) {
+pub(crate) fn reply_start(
+    cx: &mut Cx,
+    a: &Answering,
+    differs: Option<String>,
+) -> (Replying, Replied) {
     let replying = Replying {
         venue: a.message.venue(),
         owner: a.owner.unwrap_or_default(),
@@ -203,7 +213,9 @@ pub(crate) fn reply_start(cx: &mut Cx, a: &Answering) -> (Replying, Replied) {
         transcript: a.transcript.clone(),
         words: a.said.clone(),
         why: a.chime.clone(),
-        reading: a.sections.clone(),
+        room: a.room.clone(),
+        differs,
+        making_sense: a.making_sense.clone(),
         began: cx.now(),
         stage: ReplyStage::Soul,
         soul: String::new(),
@@ -213,6 +225,7 @@ pub(crate) fn reply_start(cx: &mut Cx, a: &Answering) -> (Replying, Replied) {
         candidate: None,
         local: None,
         doing: None,
+        state: Vec::new(),
         bits: Vec::new(),
         days: Vec::new(),
         theirs: Vec::new(),
@@ -396,9 +409,17 @@ pub(crate) fn reply_step(cx: &mut Cx, r: &mut Replying, answer: Option<Answer>) 
             r.candidate = Some(label);
             now_read(cx, r)
         }
-        (ReplyStage::Now, Some(Answer::Now { local, doing })) => {
+        (
+            ReplyStage::Now,
+            Some(Answer::Now {
+                local,
+                doing,
+                state,
+            }),
+        ) => {
             r.local = Some(local);
             r.doing = doing;
+            r.state = state;
             r.stage = ReplyStage::Bits;
             Replied::Wait(venue_rows(cx, r, BIT_SOURCE))
         }
@@ -557,17 +578,9 @@ fn after_recall(cx: &mut Cx, r: &mut Replying, rows: Vec<MemoryRow>) -> Replied 
     }
 }
 
-/// The talk the words and memes she knows are looked for in: the latest
-/// lines, newest first, and what they said.
+/// The talk the words and memes she knows are looked for in.
 fn talk(r: &Replying) -> String {
-    r.transcript
-        .iter()
-        .rev()
-        .take(TALK_LINES)
-        .map(|line| line.content.clone())
-        .chain(std::iter::once(r.words.clone()))
-        .collect::<Vec<_>>()
-        .join("\n")
+    super::assembly::talk(&r.transcript, &r.words)
 }
 
 /// The stickers she may send, those their words touch first, then a
@@ -616,12 +629,6 @@ pub(crate) fn offer(group: &mut Group, who: &str, stickers: &[StickerRow]) {
     );
 }
 
-/// `venue` (`group:<platform>:<chat>` or `<platform>:<chat>`) without its
-/// prefix.
-fn unprefixed(venue: &str) -> &str {
-    venue.strip_prefix("group:").unwrap_or(venue)
-}
-
 /// The groups whose names what she brings in says it came from.
 fn venues_named(r: &Replying) -> Vec<String> {
     let mut venues = BTreeSet::new();
@@ -634,32 +641,22 @@ fn venues_named(r: &Replying) -> Vec<String> {
         if let Some(group) = heard_in(row)
             && group != r.venue
         {
-            venues.insert(unprefixed(&group).to_string());
+            venues.insert(super::assembly::unprefixed(&group).to_string());
         }
     }
-    for sticker in r.stickers.iter().flatten() {
-        if let Some(from) = &sticker.kept_from {
-            venues.insert(unprefixed(from).to_string());
-        }
-    }
-    let here = stored(r);
     let talk = talk(r);
-    for row in &r.jargon {
-        let Some(word) = crate::memes::read_kept(&row.content) else {
-            continue;
-        };
-        if !talk.contains(&word.term) {
-            continue;
-        }
-        if let Some(venue) = row.venue.as_deref().filter(|venue| *venue != here) {
-            venues.insert(unprefixed(venue).to_string());
-        }
-    }
+    super::assembly::venues_brought(
+        &mut venues,
+        &r.venue,
+        &talk,
+        &r.jargon,
+        r.stickers.as_deref(),
+    );
     venues.into_iter().collect()
 }
 
 fn title(r: &Replying, venue: &str) -> Option<String> {
-    r.titles.get(unprefixed(venue)).cloned().flatten()
+    super::assembly::title(&r.titles, venue)
 }
 
 /// The group a thing she heard was heard in, as its evidence says.
@@ -685,7 +682,8 @@ fn day_of(row: &MemoryRow) -> String {
         .unwrap_or_else(|| lines::time(row.created_at).format("%Y-%m-%d").to_string())
 }
 
-/// Her whole prompt, put together.
+/// Her whole prompt: what she knows of them and how she is, put together
+/// here, and the rest as for anyone in a group.
 fn prompt(cx: &Cx, r: &Replying) -> String {
     let now = cx.now();
     let name = &r.stranger.name;
@@ -706,20 +704,18 @@ fn prompt(cx: &Cx, r: &Replying) -> String {
         .as_deref()
         .and_then(|local| chrono::DateTime::parse_from_rfc3339(local).ok())
         .unwrap_or_else(|| lines::time(now).fixed_offset());
-    let mut sections = vec![
+    let mut known = vec![
         crate::speaking::group_speaking_section(name),
-        crate::speaking::chat_app_section().to_string(),
         crate::strangers::section(name, r.note.as_deref(), &elsewhere),
-        crate::speaking::format_now_section(local),
     ];
-    if let Some(shown_as) = &cx.group.shown_as {
-        sections.insert(1, crate::speaking::shown_as_section(shown_as));
-    }
     // Whom she takes them for, if anyone: a guess, nothing more.
     if let (Some((_, sure, why)), Some(candidate)) = (&r.guess, &r.candidate) {
-        sections.push(crate::recognizing::section(name, candidate, sure, why));
+        known.push(crate::recognizing::section(name, candidate, sure, why));
     }
-    sections.extend(crate::speaking::format_doing_section(
+    // How she is, as with anyone: how she is this moment goes last.
+    known.extend(r.state.iter().cloned());
+    known.push(crate::speaking::format_now_section(local));
+    known.extend(crate::speaking::format_doing_section(
         r.doing.as_deref(),
         &[],
     ));
@@ -731,7 +727,7 @@ fn prompt(cx: &Cx, r: &Replying) -> String {
             (!handle.is_empty()).then(|| (handle, row.content.clone()))
         })
         .collect();
-    sections.extend(crate::speaking::format_bits_section(&bits, true));
+    known.extend(crate::speaking::format_bits_section(&bits, true));
     let mut days: Vec<(String, String)> = r
         .days
         .iter()
@@ -739,7 +735,7 @@ fn prompt(cx: &Cx, r: &Replying) -> String {
         .collect();
     // Freshest first, then what was brought back: by date, oldest first.
     days.sort_by(|left, right| left.0.cmp(&right.0));
-    sections.extend(crate::speaking::format_group_days_section(&days));
+    known.extend(crate::speaking::format_group_days_section(&days));
     let mut theirs = Vec::new();
     for row in &r.theirs {
         let evidence = evidence_of(row);
@@ -771,8 +767,8 @@ fn prompt(cx: &Cx, r: &Replying) -> String {
             .and_then(|venue| title(r, venue));
         theirs.push((group, brought));
     }
-    sections.extend(crate::other_groups::theirs_section(&theirs));
-    sections.extend(crate::speaking::format_views_section(&r.views));
+    known.extend(crate::other_groups::theirs_section(&theirs));
+    known.extend(crate::speaking::format_views_section(&r.views));
     // What she heard in groups about things, as with anyone in the group.
     let heard: Vec<crate::heard::Recalled> = r
         .heard
@@ -794,78 +790,31 @@ fn prompt(cx: &Cx, r: &Replying) -> String {
             }
         })
         .collect();
-    sections.extend(crate::heard::section(&heard));
-    // The group's turtle soup: anyone may ask, and so may they.
-    sections.push(r.soup.clone());
-    // Stickers of her: hers, and this group's own.
-    if let Some(stickers) = &r.stickers {
-        let meanings: Vec<String> = stickers
-            .iter()
-            .map(|sticker| {
-                let line = crate::stickers::offered_line(
-                    &sticker.meaning,
-                    sticker.sent,
-                    sticker.last_sent_at.map(|at| lines::age(now, at)),
-                );
-                match &sticker.kept_from {
-                    Some(from) => crate::stickers::kept_line(&line, title(r, from).as_deref()),
-                    None => line,
-                }
-            })
-            .collect();
-        sections.extend(crate::stickers::format_sticker_section(&meanings, r.left));
-    }
-    sections.extend(r.reading.iter().cloned());
-    // Words and memes in the talk that she looked up before.
-    let memes: Vec<crate::memes::Known> = r
-        .memes
-        .iter()
-        .map(|(term, meaning)| crate::memes::Known {
-            term: term.clone(),
-            meaning: meaning.clone(),
-        })
-        .collect();
-    sections.extend(crate::memes::section(&memes.iter().collect::<Vec<_>>()));
-    // And the groups' own words in it.
-    let here = stored(r);
-    let talk = talk(r);
-    let jargon: Vec<crate::jargon::Known> = r
-        .jargon
-        .iter()
-        .filter_map(|row| {
-            let word = crate::memes::read_kept(&row.content)?;
-            if !talk.contains(&word.term) {
-                return None;
-            }
-            let venue = row.venue.as_deref().unwrap_or_default();
-            let (group, elsewhere) = if venue == here {
-                (None, false)
-            } else {
-                (title(r, venue), true)
-            };
-            Some(crate::jargon::Known {
-                term: word.term,
-                meaning: word.meaning,
-                group,
-                elsewhere,
-            })
-        })
-        .collect();
-    sections.extend(crate::jargon::section(&jargon));
-    // They did not call her: she speaks for a reason of her own.
-    if let Some(why) = &r.why {
-        sections.push(crate::joining::speaking_up_section(why));
-    }
-    let history: Vec<crate::chat_history::HistoryMessage> = r
-        .transcript
-        .iter()
-        .map(|line| crate::chat_history::HistoryMessage {
-            role: &line.role,
-            content: &line.content,
-            sent_at: None,
-        })
-        .collect();
-    crate::chat_history::group_chat_prompt(&r.soul, &sections.join("\n\n"), &history, &r.words)
+    known.extend(crate::heard::section(&heard));
+    super::assembly::prompt(
+        cx,
+        &super::assembly::Assembly {
+            soul: &r.soul,
+            known: &known,
+            doing: r.doing.as_deref(),
+            venue: &r.venue,
+            transcript: &r.transcript,
+            said: &r.words,
+            memes: &r.memes,
+            jargon: &r.jargon,
+            titles: &r.titles,
+            // The group's turtle soup: anyone may ask, and so may they.
+            game: Some(&r.soup),
+            room: r.room.as_ref(),
+            making_sense: r.making_sense.as_deref(),
+            late: None,
+            differs: r.differs.as_deref(),
+            stickers: r.stickers.as_deref(),
+            left: r.left,
+            // They did not call her: she speaks for a reason of her own.
+            chime: r.why.as_deref(),
+        },
+    )
 }
 
 fn ask(cx: &mut Cx, r: &mut Replying) -> Replied {
