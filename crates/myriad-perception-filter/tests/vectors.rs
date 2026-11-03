@@ -27,6 +27,9 @@ struct PageCase {
     #[serde(default)]
     password_field: bool,
     market: Option<String>,
+    /// `filter.decide`'s `private` for this case; `false` when not given.
+    #[serde(default)]
+    private: Option<Value>,
     expect: Value,
     decide: Value,
 }
@@ -68,7 +71,11 @@ fn pages_place_and_decide_as_the_vectors_say() {
             identifiers: Some(vec![]),
             source: Some(name(placed.source).as_str().map(str::to_string)),
             page: name(placed.kind).as_str().map(str::to_string),
-            private: Some(Private::Known(false)),
+            private: Some(match &case.private {
+                Some(Value::String(said)) => Private::Other(said.clone()),
+                Some(Value::Bool(said)) => Private::Known(*said),
+                _ => Private::Known(false),
+            }),
             text_hits: Some(vec![]),
             model: Some("available".into()),
             language: Some("supported".into()),
