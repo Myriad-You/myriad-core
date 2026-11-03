@@ -13,6 +13,7 @@ use super::*;
 use crate::joining::Why;
 
 mod answer;
+mod assembly;
 mod deliver;
 mod errands;
 mod first;
@@ -192,8 +193,10 @@ pub struct Answering {
     pub room: Option<crate::talk_shape::Shape>,
     #[serde(default)]
     pub noted: Pieces,
-    #[serde(default)]
-    pub sections: Vec<String>,
+    /// How her lines differ from how people type there, for someone from
+    /// outside, from the ledger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub differs: Option<String>,
     #[serde(default)]
     pub reply: String,
     #[serde(default)]
