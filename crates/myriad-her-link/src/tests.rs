@@ -182,6 +182,7 @@ fn every_link_case_answers_as_recorded() {
                 "stale_epoch",
                 "clock_ahead",
                 "group_unknown",
+                "chat_unknown",
             ]
             .contains(&code.as_str())
         })
