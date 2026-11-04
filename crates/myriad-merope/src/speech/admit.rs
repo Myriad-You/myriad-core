@@ -232,7 +232,7 @@ where
     }
 
     // Wanting to greet them: when she last did, and how, by the date on
-    // the clock (today or yesterday), as anyone would say it: told before
+    // the clock (already today, or yesterday), as anyone would say it: told before
     // she gets up, yesterday evening's greeting is yesterday's. Lately's
     // lines may have scrolled past it, and a greeting is the one line a day
     // has once.
@@ -244,17 +244,17 @@ where
                 .date_naive()
         };
         let today = date(now);
-        if let Some((day, greeted)) = said_to(&input.ledger, &wish.to)
+        if let Some((told, day, greeted)) = said_to(&input.ledger, &wish.to)
             .into_iter()
             .filter(|said| said.source == Some(Source::Greeting) && said.at <= now)
             .find_map(|said| match (today - date(said.at)).num_days() {
-                0 => Some(("today", said)),
-                1 => Some(("yesterday", said)),
+                0 => Some(("You already greeted", "today", said)),
+                1 => Some(("You last greeted", "yesterday", said)),
                 _ => None,
             })
         {
             facts.push(format!(
-                "You last greeted {them} {day} at {}: \"{}\"",
+                "{told} {them} {day} at {}: \"{}\"",
                 clock(greeted.at, zone),
                 greeted.text.trim()
             ));

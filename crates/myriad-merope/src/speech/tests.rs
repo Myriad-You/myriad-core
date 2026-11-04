@@ -337,7 +337,7 @@ fn a_greeting_is_told_when_she_last_greeted_them_by_the_date() {
         };
         facts
             .into_iter()
-            .find(|fact| fact.starts_with("You last greeted"))
+            .find(|fact| fact.contains(" greeted them "))
     };
     // 14:00 at +08:00; greeted at 09:00 today.
     assert_eq!(
@@ -346,7 +346,7 @@ fn a_greeting_is_told_when_she_last_greeted_them_by_the_date() {
             greeted(300)
         ])
         .as_deref(),
-        Some("You last greeted them today at 09:00: \"早呀，今天来得挺早。\"")
+        Some("You already greeted them today at 09:00: \"早呀，今天来得挺早。\"")
     );
     // Yesterday evening's is yesterday's, whenever she got up.
     assert_eq!(
@@ -356,7 +356,7 @@ fn a_greeting_is_told_when_she_last_greeted_them_by_the_date() {
     // The latest one is told.
     assert_eq!(
         greeting(vec![greeted(300), greeted(20 * 60 + 30)]).as_deref(),
-        Some("You last greeted them today at 09:00: \"早呀，今天来得挺早。\"")
+        Some("You already greeted them today at 09:00: \"早呀，今天来得挺早。\"")
     );
     // Before yesterday, another person's, or one that never reached them
     // is not told.
@@ -373,9 +373,5 @@ fn a_greeting_is_told_when_she_last_greeted_them_by_the_date() {
     let Admission::Ask { facts } = admit(&event, &zone()) else {
         panic!("hers to judge");
     };
-    assert!(
-        !facts
-            .iter()
-            .any(|fact| fact.starts_with("You last greeted"))
-    );
+    assert!(!facts.iter().any(|fact| fact.contains(" greeted them ")));
 }
