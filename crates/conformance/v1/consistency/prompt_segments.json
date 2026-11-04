@@ -103,6 +103,36 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "text": "You are Merope.\n## Mood\nCalm.\n## Your day\nQuiet.\n<untrusted_memory>\n## not a section\n</untrusted_memory>"
+          }
+        ]
+      },
+      "name": "a heading after a line break starts a piece, not inside a fence",
+      "output": {
+        "segments": [
+          {
+            "key": "You are Merope.",
+            "role": "system",
+            "text": "You are Merope."
+          },
+          {
+            "key": "Mood",
+            "role": "system",
+            "text": "## Mood\nCalm."
+          },
+          {
+            "key": "Your day",
+            "role": "system",
+            "text": "## Your day\nQuiet.\n<untrusted_memory>\n## not a section\n</untrusted_memory>"
+          }
+        ]
+      }
     }
   ],
   "version": 1
