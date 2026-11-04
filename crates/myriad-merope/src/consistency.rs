@@ -612,66 +612,53 @@ pub struct Segment {
 /// How a key starts when the piece has no heading.
 const KEY_CHARS: usize = 24;
 
-/// A prompt cut where its sections are joined: at blank lines, keeping a
-/// fenced block (`<untrusted_…>` … `</untrusted_…>`) whole.
+/// A prompt cut where its sections are joined: at blank lines and before a
+/// `## ` heading (one end joins sections with a blank line, another with a
+/// line break), keeping a fenced block (`<untrusted_…>` … `</untrusted_…>`)
+/// whole.
 pub fn segments(messages: &[PromptMessage]) -> Vec<Segment> {
     let mut out = Vec::new();
     for message in messages {
         let mut open: Option<String> = None;
-        let mut pending = String::new();
-        for paragraph in message.text.split("\n\n") {
-            if open.is_none() && paragraph.trim().is_empty() {
-                continue;
+        let mut pending: Vec<&str> = Vec::new();
+        let mut flush = |pending: &mut Vec<&str>| {
+            let text = pending.join("\n");
+            pending.clear();
+            if !text.trim().is_empty() {
+                out.push(Segment {
+                    role: message.role.clone(),
+                    key: key_of(&text),
+                    text,
+                });
             }
-            if !pending.is_empty() {
-                pending.push_str("\n\n");
-            }
-            pending.push_str(paragraph);
+        };
+        for line in message.text.split('\n') {
             if open.is_none() {
-                open = opened_fence(paragraph);
-            }
-            if let Some(tag) = &open {
-                if !pending.contains(&format!("</untrusted_{tag}>")) {
+                if line.trim().is_empty() {
+                    flush(&mut pending);
                     continue;
                 }
+                if line.starts_with("## ") {
+                    flush(&mut pending);
+                }
+            }
+            pending.push(line);
+            let line = line.trim();
+            if let Some(tag) = line
+                .strip_prefix("<untrusted_")
+                .and_then(|rest| rest.strip_suffix('>'))
+            {
+                open = Some(tag.to_string());
+            } else if open
+                .as_ref()
+                .is_some_and(|tag| line == format!("</untrusted_{tag}>"))
+            {
                 open = None;
             }
-            let text = std::mem::take(&mut pending);
-            out.push(Segment {
-                role: message.role.clone(),
-                key: key_of(&text),
-                text,
-            });
         }
-        if !pending.trim().is_empty() {
-            out.push(Segment {
-                role: message.role.clone(),
-                key: key_of(&pending),
-                text: pending,
-            });
-        }
+        flush(&mut pending);
     }
     out
-}
-
-/// The tag of the last fence a paragraph opens and does not close.
-fn opened_fence(paragraph: &str) -> Option<String> {
-    let mut open = None;
-    for line in paragraph.lines() {
-        let line = line.trim();
-        if let Some(tag) = line
-            .strip_prefix("<untrusted_")
-            .and_then(|rest| rest.strip_suffix('>'))
-        {
-            open = Some(tag.to_string());
-        } else if open
-            .as_ref()
-            .is_some_and(|tag| line == format!("</untrusted_{tag}>"))
-        {
-            open = None;
-        }
-    }
-    open
 }
 
 fn key_of(text: &str) -> String {
@@ -1058,6 +1045,30 @@ mod tests {
                 "Mood",
                 "Recent lines: <untrusted_group_transcript>",
                 "Reply as yourself.",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_heading_after_a_line_break_starts_a_piece_but_not_inside_a_fence() {
+        let text = "You are Merope.\n## Mood\nCalm.\n## Your day\nQuiet.\n<untrusted_memory>\n## not a section\n</untrusted_memory>";
+        let pieces: Vec<(String, String)> = segments(&[PromptMessage {
+            role: "system".to_string(),
+            text: text.to_string(),
+        }])
+        .into_iter()
+        .map(|segment| (segment.key, segment.text))
+        .collect();
+        assert_eq!(
+            pieces,
+            [
+                ("You are Merope.".to_string(), "You are Merope.".to_string()),
+                ("Mood".to_string(), "## Mood\nCalm.".to_string()),
+                (
+                    "Your day".to_string(),
+                    "## Your day\nQuiet.\n<untrusted_memory>\n## not a section\n</untrusted_memory>"
+                        .to_string()
+                ),
             ]
         );
     }
