@@ -9,6 +9,7 @@ mod archive;
 mod books;
 mod chat_app;
 mod consistency;
+mod elsewhere;
 mod filter;
 mod games;
 mod grants;
@@ -118,6 +119,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(books::TESTED.iter().copied())
     .chain(chat_app::TESTED.iter().copied())
     .chain(consistency::TESTED.iter().copied())
+    .chain(elsewhere::TESTED.iter().copied())
     .chain(filter::TESTED.iter().copied())
     .chain(games::TESTED.iter().copied())
     .chain(grants::TESTED.iter().copied())

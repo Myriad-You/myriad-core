@@ -22,6 +22,7 @@ mod archive;
 mod chat;
 mod chat_app;
 mod consistency;
+mod elsewhere;
 mod filter;
 mod grants;
 mod group;
@@ -101,6 +102,8 @@ const CALLS: &[(&str, Call)] = &[
     ("doing.digest_system", prompts::doing_digest_system),
     ("draft.ask", voice::draft_ask),
     ("draft.send", voice::draft_send),
+    ("elsewhere.own_feeling", elsewhere::own_feeling),
+    ("elsewhere.since_up_section", elsewhere::since_up_section),
     ("explore.compare_system", prompts::explore_compare_system),
     ("explore.step_system", prompts::explore_step_system),
     ("explore.think_system", prompts::explore_think_system),
