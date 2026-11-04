@@ -173,6 +173,24 @@ pub fn format_going_through_all_section() -> String {
     "## Going through all of it\nAnswering this needs everything you know on it. Before you answer, go through the facts you kept one by one and pick out each that bears on it, with when it was; count, compare or order only those, and leave out what is only alike. What is not there, you do not know.".to_string()
 }
 
+/// Going through all of it, the topics whose facts were not all given to
+/// her for want of room: how many she keeps under each, so she counts what
+/// there is and not only what she sees. `cut` is each topic's name, how many
+/// of its facts are given, and how many she keeps.
+pub fn format_not_all_here_section(cut: &[(String, usize, usize)]) -> Option<String> {
+    let lines: Vec<String> = cut
+        .iter()
+        .filter(|(_, given, kept)| given < kept)
+        .map(|(topic, given, kept)| {
+            format!("- {topic}: you keep {kept} facts under it; {given} of them are above.")
+        })
+        .collect();
+    if lines.is_empty() {
+        return None;
+    }
+    Some(format!("## Not all of it is here\n{}", lines.join("\n")))
+}
+
 /// What their words brought to mind that they did not name: the material of
 /// callbacks and of a remark nobody saw coming. Stated, never an order to
 /// use it; whether it is worth bringing up is hers to judge.
@@ -897,6 +915,21 @@ pub fn compose_proactive_system(soul: &str, mind: &str, recent_block: &str) -> S
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn she_is_told_how_much_of_a_topic_is_not_here() {
+        use super::format_not_all_here_section;
+        assert_eq!(format_not_all_here_section(&[]), None);
+        assert_eq!(
+            format_not_all_here_section(&[("work".to_string(), 3, 3)]),
+            None,
+            "all of it is here"
+        );
+        let section = format_not_all_here_section(&[("seeing doctors".to_string(), 4, 9)]).unwrap();
+        assert!(
+            section.contains("seeing doctors: you keep 9 facts under it; 4 of them are above.")
+        );
+    }
+
     #[test]
     fn her_soul_says_where_she_lives_and_on_the_site_is_what_the_site_put_together() {
         use super::{Home, PERSONA_SPEAKING_CONTRACT, format_persona, site_line, soul};
