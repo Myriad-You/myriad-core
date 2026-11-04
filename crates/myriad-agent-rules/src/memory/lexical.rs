@@ -13,6 +13,11 @@
 //! taken off, and alike in memory and query, so what two forms fold to need
 //! not be a word, only the same.
 //!
+//! English words that only hold a sentence together (do, my, you, can,
+//! some) are not evidence: memories are written of the person ("They go
+//! to …"), so these are rare among them and would weigh most, and a
+//! question's "do I" or "can you" would name whatever happens to say them.
+//!
 //! A memory's concepts are terms too. When the query names a concept by any
 //! of its names (猫, 喵, cat), every memory about that concept shares one
 //! term with it, even with no word in common.
@@ -63,9 +68,25 @@ fn terms(text: &str) -> Vec<Term> {
     out
 }
 
+/// English words that only hold a sentence together, as they are written
+/// (pieces of a contraction included: "don't" reads as "don").
+const FUNCTION_WORDS: &[&str] = &[
+    "about", "above", "after", "again", "all", "also", "am", "an", "and", "any", "are", "aren",
+    "as", "at", "be", "been", "being", "both", "but", "by", "can", "could", "couldn", "did",
+    "didn", "do", "does", "doesn", "doing", "don", "each", "few", "for", "from", "get", "got",
+    "had", "has", "have", "having", "he", "her", "here", "hers", "him", "his", "how", "if", "im",
+    "in", "into", "is", "isn", "it", "its", "just", "ll", "me", "might", "mine", "more", "most",
+    "must", "my", "myself", "no", "nor", "not", "of", "off", "on", "onto", "or", "other", "our",
+    "ours", "out", "over", "re", "same", "shall", "she", "should", "shouldn", "so", "some",
+    "such", "than", "that", "the", "their", "theirs", "them", "then", "there", "these", "they",
+    "this", "those", "to", "too", "up", "us", "ve", "very", "was", "wasn", "we", "were", "what",
+    "when", "where", "which", "who", "whom", "whose", "why", "will", "with", "would", "wouldn",
+    "you", "your", "yours",
+];
+
 fn flush_word(word: &mut String, out: &mut Vec<Term>) {
     // One letter or digit alone says nothing.
-    if word.chars().count() >= 2 {
+    if word.chars().count() >= 2 && FUNCTION_WORDS.binary_search(&word.as_str()).is_err() {
         out.push(Term {
             text: folded(std::mem::take(word)),
             weight: 1.0,
@@ -498,6 +519,21 @@ mod tests {
         let once = score_all("tea", &["tea", "milk"]);
         let many = score_all("tea tea tea", &["tea", "milk"]);
         assert_eq!(once, many);
+    }
+
+    #[test]
+    fn words_that_only_hold_a_sentence_together_name_nothing() {
+        // Kept of the person, these rarely say "do" or "my", which made a
+        // question's "do I" name whatever happened to say them.
+        let kept = [
+            "Goes to Serenity Yoga on Sundays",
+            "They do the dishes after dinner with my sister",
+        ];
+        let scores = score_all("Where do I take my yoga classes?", &kept);
+        assert!(scores[0].strong);
+        assert!(!scores[1].strong, "only do and my in common");
+        assert!(!score_all("can you do that", &kept)[1].strong);
+        assert!(FUNCTION_WORDS.windows(2).all(|pair| pair[0] < pair[1]), "sorted to search");
     }
 
     #[test]

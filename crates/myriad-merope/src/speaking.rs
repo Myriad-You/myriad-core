@@ -166,6 +166,13 @@ pub fn format_remembered_section(contents: &[String]) -> Option<String> {
     ))
 }
 
+/// When answering needs everything she knows on it (how many, which came
+/// first, how often): she goes through what she kept one by one before she
+/// counts, so nothing is counted twice, missed, or counted for being alike.
+pub fn format_going_through_all_section() -> String {
+    "## Going through all of it\nAnswering this needs everything you know on it. Before you answer, go through the facts you kept one by one and pick out each that bears on it, with when it was; count, compare or order only those, and leave out what is only alike. What is not there, you do not know.".to_string()
+}
+
 /// What their words brought to mind that they did not name: the material of
 /// callbacks and of a remark nobody saw coming. Stated, never an order to
 /// use it; whether it is worth bringing up is hers to judge.
