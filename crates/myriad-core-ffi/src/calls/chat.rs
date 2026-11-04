@@ -80,6 +80,16 @@ pub(super) fn safe_content(raw: &[u8]) -> Result<Value, Failure> {
     Ok(text(Some(chat_history::chat_safe_content(&req.content))))
 }
 
+pub(super) fn history_content(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        content: String,
+    }
+    let req: In = input(raw)?;
+    Ok(text(Some(chat_history::chat_history_content(&req.content))))
+}
+
 pub(super) fn pause_text(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
