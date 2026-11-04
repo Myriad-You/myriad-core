@@ -508,6 +508,49 @@ pub fn format_playing_section(line: &str) -> Option<String> {
     ))
 }
 
+/// How long ago, roughly, as she would say it.
+fn roughly(hours: f64) -> String {
+    if hours < 1.0 {
+        "less than an hour ago".into()
+    } else if hours < 1.5 {
+        "about an hour ago".into()
+    } else if hours < 24.0 {
+        format!("about {} hours ago", hours.round())
+    } else {
+        "more than a day ago".into()
+    }
+}
+
+/// Her own day as plain facts: when anyone last came before this
+/// (`hours_since_anyone`, none when nobody has in a day; under an hour is
+/// not said), when she last learned something new (`hours_since_learned`,
+/// none: never), and how today has left her, in words only (`feeling`, see
+/// `elsewhere::own_feeling`; 0 when the end does not know). What it does to
+/// her is left to the model and the personality. The clock is in the Now
+/// section; who else she talked with, and how it went, in the one since she
+/// got up (`elsewhere::section`).
+pub fn format_day_section(
+    hours_since_anyone: Option<f64>,
+    hours_since_learned: Option<f64>,
+    feeling: f64,
+) -> String {
+    let mut lines = Vec::new();
+    if let Some(hours) = hours_since_anyone.filter(|hours| *hours >= 1.0) {
+        lines.push(format!(
+            "Before this, the last time anyone came was {}.",
+            roughly(hours)
+        ));
+    }
+    lines.push(match hours_since_learned {
+        Some(hours) => format!("You last learned something new {}.", roughly(hours)),
+        None => "You have not learned anything new yet.".to_string(),
+    });
+    if let Some(words) = crate::elsewhere::own_feeling_words(feeling) {
+        lines.push(format!("What has happened today has left you {words}."));
+    }
+    format!("## Your day\n{}", lines.join(" "))
+}
+
 /// The date and time where she is: the day of the week and the date as well
 /// as the clock, so "tomorrow" and "last weekend" mean something. `now` is
 /// on her clock: the zone it carries is hers.
@@ -957,6 +1000,22 @@ mod tests {
                 .unwrap()
                 .ends_with(&format!("{PERSONA_SPEAKING_CONTRACT}\n\nx"))
         );
+    }
+
+    #[test]
+    fn her_day_is_facts_and_how_it_left_her_in_words() {
+        use super::format_day_section;
+        assert_eq!(
+            format_day_section(Some(3.4), Some(30.0), 0.0),
+            "## Your day\nBefore this, the last time anyone came was about 3 hours ago. You last learned something new more than a day ago."
+        );
+        assert_eq!(
+            format_day_section(Some(0.5), None, 0.0),
+            "## Your day\nYou have not learned anything new yet."
+        );
+        let low = format_day_section(None, Some(1.2), -100.0);
+        assert!(low.ends_with("about an hour ago. What has happened today has left you hurting."));
+        assert!(!low.contains("100"));
     }
 
     #[test]

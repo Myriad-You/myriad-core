@@ -30,6 +30,7 @@ pub(super) const TESTED: &[&str] = &[
     "sending.goes_out",
     "sending.limit_take",
     "speaking.contract_at",
+    "speaking.day_section",
     "speaking.home",
     "speaking.soul",
     "timing.until_read",
