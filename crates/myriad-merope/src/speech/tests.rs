@@ -323,7 +323,7 @@ fn a_row_of_her_log_is_a_line_of_the_ledger() {
 }
 
 #[test]
-fn a_greeting_is_told_whether_she_already_greeted_them_today() {
+fn a_greeting_is_told_when_she_last_greeted_them_by_the_date() {
     let greeted = |minutes_ago: i64| {
         let mut said = said(private("1"), minutes_ago, "早呀，今天来得挺早。", None);
         said.source = Some(Source::Greeting);
@@ -337,20 +337,30 @@ fn a_greeting_is_told_whether_she_already_greeted_them_today() {
         };
         facts
             .into_iter()
-            .find(|fact| fact.starts_with("You already greeted"))
+            .find(|fact| fact.starts_with("You last greeted"))
     };
-    // 14:00 at +08:00; greeted at 09:00 today, after she got up.
+    // 14:00 at +08:00; greeted at 09:00 today.
     assert_eq!(
         greeting(vec![
             said(private("1"), 30, "看到你订的票了", None),
             greeted(300)
         ])
         .as_deref(),
-        Some("You already greeted them today, at 09:00: \"早呀，今天来得挺早。\"")
+        Some("You last greeted them today at 09:00: \"早呀，今天来得挺早。\"")
     );
-    // Yesterday's greeting, another person's, or one that never reached
-    // them is not today's.
-    assert_eq!(greeting(vec![greeted(26 * 60)]), None);
+    // Yesterday evening's is yesterday's, whenever she got up.
+    assert_eq!(
+        greeting(vec![greeted(20 * 60 + 30)]).as_deref(),
+        Some("You last greeted them yesterday at 17:30: \"早呀，今天来得挺早。\"")
+    );
+    // The latest one is told.
+    assert_eq!(
+        greeting(vec![greeted(300), greeted(20 * 60 + 30)]).as_deref(),
+        Some("You last greeted them today at 09:00: \"早呀，今天来得挺早。\"")
+    );
+    // Before yesterday, another person's, or one that never reached them
+    // is not told.
+    assert_eq!(greeting(vec![greeted(40 * 60)]), None);
     let mut elsewhere = greeted(300);
     elsewhere.to = private("2");
     assert_eq!(greeting(vec![elsewhere]), None);
@@ -366,6 +376,6 @@ fn a_greeting_is_told_whether_she_already_greeted_them_today() {
     assert!(
         !facts
             .iter()
-            .any(|fact| fact.starts_with("You already greeted"))
+            .any(|fact| fact.starts_with("You last greeted"))
     );
 }
