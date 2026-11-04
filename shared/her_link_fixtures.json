@@ -857,7 +857,12 @@
               "name": "小林",
               "text": "这周读到哪了？",
               "at": 1760140800000,
-              "toHer": true
+              "toHer": true,
+              "who": {
+                "kind": "member",
+                "user_id": 101,
+                "bound": true
+              }
             }
           ],
           "recent": [
@@ -866,9 +871,13 @@
               "from": "m3",
               "name": "阿森",
               "text": "我还在第三章",
-              "at": 1760140790000
+              "at": 1760140790000,
+              "who": {
+                "kind": "stranger"
+              }
             }
-          ]
+          ],
+          "owner": 1
         }
       },
       {
@@ -906,6 +915,11 @@
         "body": {
           "chat": "personal:q_5521",
           "name": "小林",
+          "who": {
+            "kind": "member",
+            "user_id": 101,
+            "bound": true
+          },
           "messages": [
             {
               "id": "m_1207",

@@ -317,6 +317,7 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.contract", speaking::contract),
     ("speaking.contract_at", voice::contract_at),
     ("speaking.curious_section", speaking::curious_section),
+    ("speaking.day_section", voice::day_section),
     ("speaking.doing_section", own::doing_section),
     ("speaking.emotion_section", speaking::emotion_section),
     ("speaking.found_out_section", prompts::found_out_section),

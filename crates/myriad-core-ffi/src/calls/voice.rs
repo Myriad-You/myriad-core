@@ -56,6 +56,30 @@ pub(super) fn contract_at(raw: &[u8]) -> Result<Value, Failure> {
     Ok(text(Some(speaking::speaking_contract_at(&req.place))))
 }
 
+pub(super) fn day_section(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct In {
+        /// Hours since anyone last talked to her; absent when nobody has in
+        /// a day.
+        #[serde(default)]
+        hours_since_anyone: Option<f64>,
+        /// Hours since she last learned something new; absent: never.
+        #[serde(default)]
+        hours_since_learned: Option<f64>,
+        /// How today has left her (`elsewhere::own_feeling`); absent when
+        /// the end does not know.
+        #[serde(default)]
+        feeling: f64,
+    }
+    let req: In = input(raw)?;
+    Ok(text(Some(speaking::format_day_section(
+        req.hours_since_anyone,
+        req.hours_since_learned,
+        req.feeling,
+    ))))
+}
+
 pub(super) fn flatten(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]

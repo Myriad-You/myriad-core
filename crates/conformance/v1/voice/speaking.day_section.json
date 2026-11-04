@@ -1,0 +1,93 @@
+{
+  "call": "speaking.day_section",
+  "cases": [
+    {
+      "input": {
+        "hoursSinceAnyone": 3.4,
+        "hoursSinceLearned": 30.0
+      },
+      "name": "someone came hours ago, learned long ago",
+      "output": {
+        "text": "## Your day\nBefore this, the last time anyone came was about 3 hours ago. You last learned something new more than a day ago."
+      }
+    },
+    {
+      "input": {
+        "hoursSinceAnyone": 0.5
+      },
+      "name": "under an hour is not said; never learned",
+      "output": {
+        "text": "## Your day\nYou have not learned anything new yet."
+      }
+    },
+    {
+      "input": {
+        "hoursSinceLearned": 1.2
+      },
+      "name": "nobody in a day",
+      "output": {
+        "text": "## Your day\nYou last learned something new about an hour ago."
+      }
+    },
+    {
+      "input": {
+        "hoursSinceAnyone": 1.49,
+        "hoursSinceLearned": 0.2
+      },
+      "name": "about an hour",
+      "output": {
+        "text": "## Your day\nBefore this, the last time anyone came was about an hour ago. You last learned something new less than an hour ago."
+      }
+    },
+    {
+      "input": {
+        "hoursSinceAnyone": 2.5,
+        "hoursSinceLearned": 23.99
+      },
+      "name": "half rounds away from zero",
+      "output": {
+        "text": "## Your day\nBefore this, the last time anyone came was about 3 hours ago. You last learned something new about 24 hours ago."
+      }
+    },
+    {
+      "input": {
+        "feeling": 100.0,
+        "hoursSinceAnyone": 5.0,
+        "hoursSinceLearned": 2.0
+      },
+      "name": "today left her glad",
+      "output": {
+        "text": "## Your day\nBefore this, the last time anyone came was about 5 hours ago. You last learned something new about 2 hours ago. What has happened today has left you in really good spirits."
+      }
+    },
+    {
+      "input": {
+        "feeling": -100.0,
+        "hoursSinceLearned": 2.0
+      },
+      "name": "today left her hurting",
+      "output": {
+        "text": "## Your day\nYou last learned something new about 2 hours ago. What has happened today has left you hurting."
+      }
+    },
+    {
+      "input": {
+        "feeling": 0.0,
+        "hoursSinceLearned": 2.0
+      },
+      "name": "an even day says nothing of it",
+      "output": {
+        "text": "## Your day\nYou last learned something new about 2 hours ago."
+      }
+    },
+    {
+      "input": {
+        "peopleRecently": 1
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

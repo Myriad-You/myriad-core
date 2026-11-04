@@ -100,6 +100,60 @@
       "input": {
         "frame": {
           "ack": 0,
+          "at": 1760140800230,
+          "body": {
+            "group": "group:g42",
+            "messages": [
+              {
+                "at": 1760140800000,
+                "from": "m7",
+                "id": "m_903",
+                "name": "小林",
+                "text": "这周读到哪了？",
+                "toHer": true,
+                "who": {
+                  "bound": true,
+                  "kind": "member",
+                  "user_id": 101
+                }
+              },
+              {
+                "at": 1760140800100,
+                "from": "m9",
+                "id": "m_904",
+                "name": "路人",
+                "text": "我也在",
+                "who": {
+                  "kind": "stranger"
+                }
+              }
+            ],
+            "owner": 1
+          },
+          "id": "lend_04",
+          "seq": 7,
+          "t": "group.lend",
+          "v": 1
+        },
+        "roles": [
+          "server",
+          "host"
+        ]
+      },
+      "name": "a group lent with who wrote each line and the site's owner",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800230,\"body\":{\"group\":\"group:g42\",\"messages\":[{\"at\":1760140800000,\"from\":\"m7\",\"id\":\"m_903\",\"name\":\"小林\",\"text\":\"这周读到哪了？\",\"toHer\":true,\"who\":{\"bound\":true,\"kind\":\"member\",\"user_id\":101}},{\"at\":1760140800100,\"from\":\"m9\",\"id\":\"m_904\",\"name\":\"路人\",\"text\":\"我也在\",\"who\":{\"kind\":\"stranger\"}}],\"owner\":1},\"id\":\"lend_04\",\"seq\":7,\"t\":\"group.lend\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "group",
+          "t": "group.lend"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
           "at": 1760140800010,
           "body": {
             "sealed": {
@@ -404,6 +458,60 @@
         ]
       },
       "name": "bad_frame: a private chat lent with no messages",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800230,
+          "body": {
+            "group": "group:g42",
+            "messages": [
+              {
+                "at": 1760140800000,
+                "from": "m7",
+                "id": "m_903",
+                "name": "小林",
+                "text": "这周读到哪了？",
+                "toHer": true,
+                "who": {
+                  "bound": true,
+                  "kind": "member",
+                  "user_id": 101
+                }
+              },
+              {
+                "at": 1760140800100,
+                "from": "m9",
+                "id": "m_904",
+                "name": "路人",
+                "text": "我也在",
+                "who": {
+                  "kind": "stranger"
+                }
+              }
+            ],
+            "owner": 1,
+            "who": {
+              "kind": "stranger"
+            }
+          },
+          "id": "lend_04",
+          "seq": 7,
+          "t": "group.lend",
+          "v": 1
+        },
+        "roles": [
+          "server",
+          "host"
+        ]
+      },
+      "name": "bad_frame: who on a group lent, not on its lines",
       "output": {
         "refused": {
           "code": "bad_frame"
