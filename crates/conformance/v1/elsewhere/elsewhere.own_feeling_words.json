@@ -1,0 +1,112 @@
+{
+  "call": "elsewhere.own_feeling_words",
+  "cases": [
+    {
+      "input": {
+        "feeling": 0.0
+      },
+      "name": "even: nothing",
+      "output": {
+        "words": null
+      }
+    },
+    {
+      "input": {
+        "feeling": -9.9
+      },
+      "name": "just short of stung",
+      "output": {
+        "words": null
+      }
+    },
+    {
+      "input": {
+        "feeling": -10.0
+      },
+      "name": "stung, at the line",
+      "output": {
+        "words": "a little stung"
+      }
+    },
+    {
+      "input": {
+        "feeling": -25.0
+      },
+      "name": "hurting, at the line",
+      "output": {
+        "words": "hurting"
+      }
+    },
+    {
+      "input": {
+        "feeling": -60.0
+      },
+      "name": "hurting, well past it",
+      "output": {
+        "words": "hurting"
+      }
+    },
+    {
+      "input": {
+        "feeling": 9.9
+      },
+      "name": "just short of pleased",
+      "output": {
+        "words": null
+      }
+    },
+    {
+      "input": {
+        "feeling": 10.0
+      },
+      "name": "pleased, at the line",
+      "output": {
+        "words": "a little pleased"
+      }
+    },
+    {
+      "input": {
+        "feeling": 25.0
+      },
+      "name": "good spirits, at the line",
+      "output": {
+        "words": "in really good spirits"
+      }
+    },
+    {
+      "input": {
+        "feeling": -12
+      },
+      "name": "a whole number",
+      "output": {
+        "words": "a little stung"
+      }
+    },
+    {
+      "input": {},
+      "name": "no feeling is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "feeling": "low"
+      },
+      "name": "a feeling as text is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "feeling": 0.0,
+        "now": 1
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

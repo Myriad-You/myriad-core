@@ -104,6 +104,8 @@ const CALLS: &[(&str, Call)] = &[
     ("draft.ask", voice::draft_ask),
     ("draft.send", voice::draft_send),
     ("elsewhere.own_feeling", elsewhere::own_feeling),
+    ("elsewhere.own_feeling_is_low", elsewhere::own_feeling_is_low),
+    ("elsewhere.own_feeling_words", elsewhere::own_feeling_words),
     ("elsewhere.since_up_section", elsewhere::since_up_section),
     ("explore.compare_system", prompts::explore_compare_system),
     ("explore.step_system", prompts::explore_step_system),
