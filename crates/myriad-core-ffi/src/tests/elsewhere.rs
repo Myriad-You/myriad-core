@@ -14,7 +14,12 @@ use serde_json::{Value, json};
 use super::{ffi, ok, text};
 use crate::{STATUS_BAD_INPUT, STATUS_OK};
 
-pub(super) const TESTED: &[&str] = &["elsewhere.own_feeling", "elsewhere.since_up_section"];
+pub(super) const TESTED: &[&str] = &[
+    "elsewhere.own_feeling",
+    "elsewhere.own_feeling_is_low",
+    "elsewhere.own_feeling_words",
+    "elsewhere.since_up_section",
+];
 
 #[test]
 fn every_elsewhere_case_answers_through_the_c_entry_point() {
@@ -125,4 +130,31 @@ fn the_section_is_the_crates_for_the_same_facts() {
         now,
     );
     assert_eq!(feeling.to_bits(), crate_feeling.to_bits());
+}
+
+/// What the site reads from her feeling (`self_state` `recall_breadth` and
+/// `facts_view`) is what the calls read, on and around every threshold.
+#[test]
+fn how_today_left_her_reads_as_the_crate_reads_it() {
+    for feeling in [
+        -40.0, -25.0, -24.9, -10.0, -9.9, 0.0, 9.9, 10.0, 24.9, 25.0, 40.0,
+    ] {
+        let low = ok(
+            "elsewhere.own_feeling_is_low",
+            json!({ "feeling": feeling }),
+        )["low"]
+            .clone();
+        assert_eq!(
+            low,
+            json!(elsewhere::own_feeling_is_low(feeling)),
+            "{feeling}"
+        );
+        let words =
+            ok("elsewhere.own_feeling_words", json!({ "feeling": feeling }))["words"].clone();
+        assert_eq!(
+            words,
+            json!(elsewhere::own_feeling_words(feeling)),
+            "{feeling}"
+        );
+    }
 }

@@ -1,0 +1,112 @@
+{
+  "call": "elsewhere.own_feeling_is_low",
+  "cases": [
+    {
+      "input": {
+        "feeling": 0.0
+      },
+      "name": "even: nothing",
+      "output": {
+        "low": false
+      }
+    },
+    {
+      "input": {
+        "feeling": -9.9
+      },
+      "name": "just short of stung",
+      "output": {
+        "low": false
+      }
+    },
+    {
+      "input": {
+        "feeling": -10.0
+      },
+      "name": "stung, at the line",
+      "output": {
+        "low": true
+      }
+    },
+    {
+      "input": {
+        "feeling": -25.0
+      },
+      "name": "hurting, at the line",
+      "output": {
+        "low": true
+      }
+    },
+    {
+      "input": {
+        "feeling": -60.0
+      },
+      "name": "hurting, well past it",
+      "output": {
+        "low": true
+      }
+    },
+    {
+      "input": {
+        "feeling": 9.9
+      },
+      "name": "just short of pleased",
+      "output": {
+        "low": false
+      }
+    },
+    {
+      "input": {
+        "feeling": 10.0
+      },
+      "name": "pleased, at the line",
+      "output": {
+        "low": false
+      }
+    },
+    {
+      "input": {
+        "feeling": 25.0
+      },
+      "name": "good spirits, at the line",
+      "output": {
+        "low": false
+      }
+    },
+    {
+      "input": {
+        "feeling": -12
+      },
+      "name": "a whole number",
+      "output": {
+        "low": true
+      }
+    },
+    {
+      "input": {},
+      "name": "no feeling is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "feeling": "low"
+      },
+      "name": "a feeling as text is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "feeling": 0.0,
+        "now": 1
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

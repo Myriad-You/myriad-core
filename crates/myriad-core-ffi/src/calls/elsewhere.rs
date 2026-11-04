@@ -45,6 +45,27 @@ pub(super) fn own_feeling(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "feeling": elsewhere::own_feeling(&pushes, at(req.now)?) + 0.0 }))
 }
 
+/// How far today has left her, as `elsewhere.own_feeling` gave it.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct FeelingIn {
+    feeling: f64,
+}
+
+/// Whether how today has left her is low enough to narrow her, as
+/// tiredness does (recall keeps to what was said).
+pub(super) fn own_feeling_is_low(raw: &[u8]) -> Result<Value, Failure> {
+    let req: FeelingIn = input(raw)?;
+    Ok(json!({ "low": elsewhere::own_feeling_is_low(req.feeling) }))
+}
+
+/// How today has left her in words, for the facts a decision reads; `null`
+/// when it says nothing.
+pub(super) fn own_feeling_words(raw: &[u8]) -> Result<Value, Failure> {
+    let req: FeelingIn = input(raw)?;
+    Ok(json!({ "words": elsewhere::own_feeling_words(req.feeling) }))
+}
+
 /// Where a talk happened: `{kind: "private"}`, `{kind: "group", venue}`,
 /// `{kind: "work"}`.
 #[derive(Deserialize)]
