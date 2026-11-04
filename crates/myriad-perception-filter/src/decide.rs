@@ -322,11 +322,14 @@ pub fn decide_with(d: &Decision, policy: &Policy) -> Decided {
     if let Some(Some(kind)) = page {
         return held(kind, Reason::Page);
     }
-    // `unknown` is a known gap (some browsers cannot tell), not a pass:
-    // the rules after this still apply.
+    // A web page whose browser could not say whether the window is private
+    // (a Chromium browser without Automation) is held as private: the model
+    // judges an ordinary page in a private window not sensitive, so `unknown`
+    // would carry it. Outside a browser (no `page`) `unknown` says nothing
+    // and the rules after this still apply.
     let private = match private {
         Private::Known(private) => *private,
-        Private::Other(other) => other != "unknown",
+        Private::Other(other) => other != "unknown" || d.page.is_some(),
     };
     if private {
         return held(PrivateKind::PrivateBrowsing, Reason::Private);

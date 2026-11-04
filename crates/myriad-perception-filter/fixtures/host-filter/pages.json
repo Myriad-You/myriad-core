@@ -1,5 +1,5 @@
 {
- "note": "filter.page 与 filter.decide 的一致性对照用例：每条给 filter.page 的输入（table 用本文件的表）和应有的输出；decide 是把 page 的 page、kind 交给 filter.decide（截取与窗口 seen，其余规则都没命中，模型可用、语言受支持；消息类给一次通过复核的转述，其余给两次 not_sensitive）后应有的去向。路径和标题只在本机读，不出现在任何输出里。",
+ "note": "filter.page 与 filter.decide 的一致性对照用例：每条给 filter.page 的输入（table 用本文件的表）和应有的输出；decide 是把 page 的 page、kind 交给 filter.decide（截取与窗口 seen，其余规则都没命中，模型可用、语言受支持；消息类给一次通过复核的转述，其余给两次 not_sensitive）后应有的去向。路径和标题只在本机读，不出现在任何输出里。带 private 的用例把它交给 filter.decide（不给是 false）：浏览器说不出是不是私密窗口（\"unknown\"）的网页按私密收住，不问模型。",
  "table": {
   "note": "filter.page 的对照用例自带的来源表，全部是 .example。",
   "bundles": {},
@@ -469,6 +469,65 @@
     "kind": "unknown",
     "reason": "page",
     "leaves": "nothing"
+   }
+  },
+  {
+   "id": "p-ordinary-private-unknown",
+   "urlHost": "www.tube.example",
+   "path": "/watch?v=abc",
+   "private": "unknown",
+   "expect": {
+    "read": true,
+    "page": "ordinary",
+    "basis": "ordinary_site",
+    "kind": null,
+    "category": "video",
+    "othersWords": false
+   },
+   "decide": {
+    "disposition": "present_only",
+    "kind": "private_browsing",
+    "reason": "private",
+    "leaves": "private_marker"
+   }
+  },
+  {
+   "id": "p-unknown-private-unknown",
+   "urlHost": "blog.someone.example",
+   "path": "/posts/1",
+   "private": "unknown",
+   "expect": {
+    "read": true,
+    "page": "unknown",
+    "basis": "unknown_site",
+    "kind": null,
+    "category": null,
+    "othersWords": false
+   },
+   "decide": {
+    "disposition": "present_only",
+    "kind": "private_browsing",
+    "reason": "private",
+    "leaves": "private_marker"
+   }
+  },
+  {
+   "id": "p-ordinary-private-false",
+   "urlHost": "www.tube.example",
+   "path": "/watch?v=abc",
+   "private": false,
+   "expect": {
+    "read": true,
+    "page": "ordinary",
+    "basis": "ordinary_site",
+    "kind": null,
+    "category": "video",
+    "othersWords": false
+   },
+   "decide": {
+    "disposition": "carry",
+    "reason": "classify",
+    "leaves": "scrubbed_text"
    }
   }
  ]

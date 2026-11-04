@@ -273,7 +273,7 @@ fn page_and_decide_vectors_hold_through_the_core() {
                 "capture": "seen", "window": "seen",
                 "passwordField": case.get("passwordField").cloned().unwrap_or(json!(false)),
                 "identifiers": [], "source": placed["kind"], "page": placed["page"],
-                "private": false, "textHits": [], "model": "available", "language": "supported",
+                "private": case.get("private").cloned().unwrap_or(json!(false)), "textHits": [], "model": "available", "language": "supported",
                 "relay": if messaging { json!({ "result": "ok", "category": "plans" }) } else { Value::Null },
                 "classify": if messaging { Value::Null } else { json!({ "general": "not_sensitive", "tagging": "not_sensitive" }) },
             }),

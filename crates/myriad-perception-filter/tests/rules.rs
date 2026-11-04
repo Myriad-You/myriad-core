@@ -374,12 +374,38 @@ fn the_published_boundaries() {
         kind: None,
     }));
     assert_eq!(disposition(&half), (PresentOnly, Reason::Classify));
-    // A private window the client cannot tell: the rules after it decide (a known gap).
+    // Not a web page, and nothing says whether it is private: the rules after it decide.
     let unknown = Decision {
         private: Some(Private::Other("unknown".into())),
         ..open()
     };
     assert_eq!(disposition(&unknown), (Carry, Reason::Classify));
+    // A web page whose browser could not say: held as private, before the model.
+    for page in ["ordinary", "unknown", "messaging"] {
+        let browser = Decision {
+            page: Some(page.into()),
+            relay: Some(None),
+            classify: Some(None),
+            ..unknown.clone()
+        };
+        let decided = decide(&browser);
+        assert_eq!(
+            (decided.disposition, decided.reason, decided.kind),
+            (
+                PresentOnly,
+                Reason::Private,
+                Some(PrivateKind::PrivateBrowsing)
+            ),
+            "{page}"
+        );
+        assert_eq!(decided.missing, None, "{page}");
+    }
+    // A page the browser said is not private goes on as before.
+    let said = Decision {
+        page: Some("ordinary".into()),
+        ..open()
+    };
+    assert_eq!(disposition(&said), (Carry, Reason::Classify));
 }
 
 #[test]
