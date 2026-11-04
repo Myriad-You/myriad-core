@@ -30,12 +30,15 @@ pub fn doing(doing: Doing<'_>, together: bool) -> (&'static str, String) {
             crate::pace::lazing_line(kind).to_string(),
         ),
     };
-    let activity = if together {
-        format!("{what}, and the person who has her face open is listening along with her")
-    } else {
-        what
-    };
+    let activity = if together { together_on(&what) } else { what };
     (way, activity)
+}
+
+/// What she is doing with someone listening along: the person who has her
+/// face open is in it. For an end that has only the words of what she is
+/// doing, not the thing itself.
+pub fn together_on(what: &str) -> String {
+    format!("{what}, and the person who has her face open is listening along with her")
 }
 
 /// Whether the director's standing acting is any: a score, or a standing look.

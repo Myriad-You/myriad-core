@@ -44,6 +44,7 @@ mod speech;
 mod style;
 mod sync;
 mod timing;
+mod visual;
 mod vitals;
 mod voice;
 
@@ -200,6 +201,7 @@ const CALLS: &[(&str, Call)] = &[
     ("motion.standing_acting", motion::standing_acting),
     ("motion.standing_doing", motion::standing_doing),
     ("motion.standing_floor", motion::standing_floor),
+    ("motion.standing_together", motion::standing_together),
     ("motion.way", motion::way),
     ("nodes.body", nodes::body),
     ("nodes.fold", nodes::fold),
@@ -244,6 +246,8 @@ const CALLS: &[(&str, Call)] = &[
     ("partner.migrate", partner::migrate),
     ("partner.mint", partner::mint),
     ("partner.page", partner::page),
+    ("persona.draft", visual::persona_draft),
+    ("persona.fallback", visual::persona_fallback),
     ("persona.flatten", voice::flatten),
     ("prompt.untrusted_block", speaking::untrusted_block),
     ("reach.as_text", reach::as_text),
@@ -350,6 +354,8 @@ const CALLS: &[(&str, Call)] = &[
     ("speech.strip_markers", speech::strip_markers),
     ("speech.texts", speech::texts),
     ("speech.told", speech::told),
+    ("sticker.avatar_contract", visual::sticker_contract),
+    ("sticker.avatar_prompt", visual::sticker_prompt),
     ("stickers.section", chat_app::sticker_section),
     ("style.distance", style::distance),
     ("style.noticed", style::noticed),
@@ -392,6 +398,27 @@ const CALLS: &[(&str, Call)] = &[
     ("timing.until_read", voice::until_read),
     ("timing.where_she_is", voice::where_she_is),
     ("views.system", prompts::views_system),
+    ("visual.adjustment_in_scope", visual::adjustment_in_scope),
+    ("visual.character_contract", visual::character_contract),
+    ("visual.character_prompt", visual::character_prompt),
+    ("visual.checks", visual::checks),
+    ("visual.clothing_style", visual::clothing_style),
+    ("visual.edit_prompt", visual::edit_prompt),
+    ("visual.full_body_contract", visual::full_body_contract),
+    (
+        "visual.full_body_design_prompt",
+        visual::full_body_design_prompt,
+    ),
+    (
+        "visual.full_body_portrait_prompt",
+        visual::full_body_portrait_prompt,
+    ),
+    ("visual.identity", visual::identity),
+    ("visual.identity_for_prompt", visual::identity_for_prompt),
+    ("visual.requirements", visual::requirements),
+    ("visual.states_gender", visual::states_gender),
+    ("visual.texts", visual::texts),
+    ("visual.upright_prompt", visual::upright_prompt),
     ("vitals.alerts", vitals::alerts),
     ("vitals.ends_asking", vitals::ends_asking),
     ("vitals.leaned_on", vitals::leaned_on),
