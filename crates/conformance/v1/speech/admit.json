@@ -3012,7 +3012,7 @@
           "Why you want to speak: you want to greet them.",
           "You last talked with them 6 hours ago.",
           "What you said to them unasked lately, latest first:\n- 6 hours ago, they have not written to you since: 早上好",
-          "You last greeted them today at 08:00: \"早上好\""
+          "You already greeted them today at 08:00: \"早上好\""
         ],
         "outcome": "ask"
       },
