@@ -1,0 +1,229 @@
+{
+  "call": "elsewhere.since_up_section",
+  "cases": [
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "heard": [
+          {
+            "at": 1793782800000000,
+            "person": "owner",
+            "place": {
+              "kind": "private"
+            }
+          }
+        ],
+        "moved": [],
+        "now": 1793786400000000,
+        "since": 1793750400000000
+      },
+      "name": "only the one in front of her: nobody else",
+      "output": {
+        "text": "## Since you got up\nNobody else has talked with you since you got up."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "heard": [
+          {
+            "at": 1793775600000000,
+            "person": "a",
+            "place": {
+              "kind": "private"
+            }
+          },
+          {
+            "at": 1793776800000000,
+            "person": "a",
+            "place": {
+              "kind": "private"
+            }
+          }
+        ],
+        "moved": [],
+        "now": 1793786400000000,
+        "since": 1793750400000000
+      },
+      "name": "someone else, a plain talk",
+      "output": {
+        "text": "## Since you got up\nYour talks with others since you got up: only how they went, not who or what about. None of it was the one in front of you. How you are shows, as it would on anyone. What happened, and that it was with someone, they know nothing of unless you tell them; whether you would, and to whom, is as your personality would have it.\n- 1 private talk, nothing much in them."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "heard": [
+          {
+            "at": 1793779200000000,
+            "person": "b",
+            "place": {
+              "kind": "group",
+              "venue": "qq:1"
+            }
+          }
+        ],
+        "moved": [
+          {
+            "at": 1793779260000000,
+            "cause": "user_praise",
+            "feltAfter": 30.0,
+            "person": "b"
+          }
+        ],
+        "now": 1793786400000000,
+        "since": 1793750400000000
+      },
+      "name": "praised in a group, felt glad",
+      "output": {
+        "text": "## Since you got up\nYour talks with others since you got up: only how they went, not who or what about. None of it was the one in front of you. How you are shows, as it would on anyone. What happened, and that it was with someone, they know nothing of unless you tell them; whether you would, and to whom, is as your personality would have it.\n- An hour or two ago, in a group, briefly; they praised you; at the time you came away in really good spirits."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "heard": [],
+        "moved": [
+          {
+            "at": 1793782800000000,
+            "cause": "task_ok",
+            "feltAfter": 12.0,
+            "person": "c"
+          }
+        ],
+        "now": 1793786400000000,
+        "since": 1793750400000000
+      },
+      "name": "a task done with no talk around it",
+      "output": {
+        "text": "## Since you got up\nYour talks with others since you got up: only how they went, not who or what about. None of it was the one in front of you. How you are shows, as it would on anyone. What happened, and that it was with someone, they know nothing of unless you tell them; whether you would, and to whom, is as your personality would have it.\n- An hour or two ago, you got done something someone asked of you; at the time you came away a little pleased."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "firstMet": [
+          "d"
+        ],
+        "heard": [
+          {
+            "at": 1793768400000000,
+            "person": "d",
+            "place": {
+              "kind": "private"
+            }
+          }
+        ],
+        "moved": [],
+        "now": 1793786400000000,
+        "since": 1793750400000000,
+        "stung": [
+          {
+            "mended": 1793768700000000,
+            "person": "d",
+            "place": {
+              "kind": "private"
+            },
+            "since": 1793768400000000,
+            "weight": "hurt"
+          }
+        ]
+      },
+      "name": "stung, then made right; first met today",
+      "output": {
+        "text": "## Since you got up\nYour talks with others since you got up: only how they went, not who or what about. None of it was the one in front of you. How you are shows, as it would on anyone. What happened, and that it was with someone, they know nothing of unless you tell them; whether you would, and to whom, is as your personality would have it.\n- A few hours ago, a private talk, briefly; someone you had never talked with before; something they did got to you; they made right something that had got to you."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "heard": [
+          {
+            "at": 1793746800000000,
+            "person": "a",
+            "place": {
+              "kind": "private"
+            }
+          }
+        ],
+        "moved": [],
+        "now": 1793786400000000,
+        "since": 1793750400000000
+      },
+      "name": "before she got up is not told",
+      "output": {
+        "text": "## Since you got up\nNobody else has talked with you since you got up."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "group": "qq:1",
+          "person": "owner"
+        },
+        "heard": [
+          {
+            "at": 1793779200000000,
+            "person": "b",
+            "place": {
+              "kind": "group",
+              "venue": "qq:1"
+            }
+          },
+          {
+            "at": 1793779200000000,
+            "person": "b",
+            "place": {
+              "kind": "group",
+              "venue": "qq:2"
+            }
+          }
+        ],
+        "moved": [],
+        "now": 1793786400000000,
+        "since": 1793750400000000
+      },
+      "name": "facing a group leaves that group out",
+      "output": {
+        "text": "## Since you got up\nYour talks with others since you got up: only how they went, not who or what about. None of it was the one in front of you. How you are shows, as it would on anyone. What happened, and that it was with someone, they know nothing of unless you tell them; whether you would, and to whom, is as your personality would have it.\n- 1 talk in a group, nothing much in them."
+      }
+    },
+    {
+      "input": {
+        "facing": {
+          "person": "owner"
+        },
+        "heard": [],
+        "moved": [],
+        "now": 1793786400000000,
+        "since": 1793750400000000,
+        "stung": [
+          {
+            "person": "d",
+            "place": {
+              "kind": "private"
+            },
+            "since": 1793786400000000,
+            "weight": "huge"
+          }
+        ]
+      },
+      "name": "an unknown weight is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

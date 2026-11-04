@@ -1,0 +1,75 @@
+{
+  "call": "elsewhere.own_feeling",
+  "cases": [
+    {
+      "input": {
+        "now": 1793786400000000,
+        "pushes": []
+      },
+      "name": "nothing pushed her: even",
+      "output": {
+        "feeling": 0.0
+      }
+    },
+    {
+      "input": {
+        "now": 1793786400000000,
+        "pushes": [
+          {
+            "at": 1793786400000000,
+            "valence": 30.0
+          }
+        ]
+      },
+      "name": "a push just now counts whole",
+      "output": {
+        "feeling": 30.0
+      }
+    },
+    {
+      "input": {
+        "now": 1793786400000000,
+        "pushes": [
+          {
+            "at": 1793779200000000,
+            "valence": 30.0
+          },
+          {
+            "at": 1793772000000000,
+            "valence": -30.0
+          }
+        ]
+      },
+      "name": "older pushes fainter",
+      "output": {
+        "feeling": 6.976324738044888
+      }
+    },
+    {
+      "input": {
+        "now": 1793786400000000,
+        "pushes": [
+          {
+            "at": 1793790000000000,
+            "valence": 30.0
+          }
+        ]
+      },
+      "name": "a push after now is not counted",
+      "output": {
+        "feeling": 0.0
+      }
+    },
+    {
+      "input": {
+        "now": 1793786400000000,
+        "pushes": [],
+        "who": "x"
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}
