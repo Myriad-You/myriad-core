@@ -69,6 +69,7 @@ pub mod stickers;
 pub mod style;
 pub mod strangers;
 pub mod talk_shape;
+pub mod topics;
 pub mod undercover;
 pub mod werewolf;
 pub mod avalon;
