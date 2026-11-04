@@ -1,0 +1,76 @@
+{
+  "call": "chat.history_content",
+  "cases": [
+    {
+      "input": {
+        "content": "好啊"
+      },
+      "name": "one line as it is",
+      "output": {
+        "text": "好啊"
+      }
+    },
+    {
+      "input": {
+        "content": "哈哈\n\n那你明天几点到\n\n\n我去接你"
+      },
+      "name": "her old reply with blank lines between its lines",
+      "output": {
+        "text": "哈哈\n那你明天几点到\n我去接你"
+      }
+    },
+    {
+      "input": {
+        "content": "  第一行  \r\n\t\r\n第二行\t"
+      },
+      "name": "lines trimmed, tabs and CRLF too",
+      "output": {
+        "text": "第一行\n第二行"
+      }
+    },
+    {
+      "input": {
+        "content": "查好了\n[输出数据: {\"rows\":3}]\n\n[确认 删除这三条]\n你看看"
+      },
+      "name": "work artifacts riding on a stored line left out",
+      "output": {
+        "text": "查好了\n你看看"
+      }
+    },
+    {
+      "input": {
+        "content": " \n\n\t "
+      },
+      "name": "nothing left but blank lines",
+      "output": {
+        "text": ""
+      }
+    },
+    {
+      "input": {
+        "content": ""
+      },
+      "name": "empty",
+      "output": {
+        "text": ""
+      }
+    },
+    {
+      "input": {},
+      "name": "no content is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "content": "好",
+        "role": "assistant"
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

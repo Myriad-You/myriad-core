@@ -67,6 +67,7 @@ const CALLS: &[(&str, Call)] = &[
     ("audience.admits", memory::admits),
     ("bits.ask", voice::bits_ask),
     ("channel.as_messages", chat_app::as_messages),
+    ("chat.history_content", chat::history_content),
     ("chat.history_lines", chat::history_lines),
     ("chat.history_text", chat::history_text),
     ("chat.pause_text", chat::pause_text),

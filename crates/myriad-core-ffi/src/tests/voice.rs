@@ -16,6 +16,7 @@ use crate::{STATUS_BAD_INPUT, STATUS_OK};
 
 pub(super) const TESTED: &[&str] = &[
     "bits.ask",
+    "chat.history_content",
     "draft.ask",
     "draft.send",
     "onboarding.import_system",

@@ -36,6 +36,18 @@ pub fn chat_safe_content(content: &str) -> String {
         .to_string()
 }
 
+/// A stored message as it goes back in front of her as a message of its
+/// own: what `chat_safe_content` keeps, each line trimmed and the empty ones
+/// left out, so an old reply never brings a blank line into the next.
+pub fn chat_history_content(content: &str) -> String {
+    chat_safe_content(content)
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// Closer for Chat Lite. Tone follows the persona; do not flatten everyone
 /// into a short, warm assistant.
 pub const CHAT_REPLY_INSTRUCTION: &str = "\
@@ -126,12 +138,7 @@ pub fn chat_history_lines(history: &[HistoryMessage]) -> Vec<HistoryLine> {
     let mut kept: Vec<(usize, String, Option<DateTime<Utc>>)> = Vec::new();
     let mut chars = 0;
     for (index, message) in history.iter().enumerate().rev().take(HISTORY_MESSAGES) {
-        let said = chat_safe_content(message.content)
-            .lines()
-            .map(str::trim)
-            .filter(|line| !line.is_empty())
-            .collect::<Vec<_>>()
-            .join(" / ");
+        let said = chat_history_content(message.content).replace('\n', " / ");
         if said.is_empty() {
             continue;
         }
@@ -186,6 +193,19 @@ mod tests {
             content,
             sent_at,
         }
+    }
+
+    #[test]
+    fn a_message_goes_back_without_blank_lines_or_what_rode_on_it() {
+        assert_eq!(
+            chat_history_content("  第一行  \n\n\t\n第二行\r\n"),
+            "第一行\n第二行"
+        );
+        assert_eq!(
+            chat_history_content("[输出数据: x]\n\n好的\n  [确认 y]"),
+            "好的"
+        );
+        assert_eq!(chat_history_content(" \n\n "), "");
     }
 
     #[test]
