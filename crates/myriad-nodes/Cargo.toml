@@ -3,7 +3,7 @@ name = "myriad-nodes"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Her nodes from her log: the three kinds, a node's head and body, the tags on what she keeps, the five relations, the row bodies and their fold, and the pure half of placing a talk."
+description = "Her nodes from her log: the three kinds, a node's head and body, the tags on what she keeps, the five relations, the row bodies and their fold, the pure half of placing a talk, where a fact she keeps goes, and picking nodes for recall."
 authors = ["Myriad Contributors"]
 license = "AGPL-3.0-only"
 
@@ -21,6 +21,11 @@ license = "AGPL-3.0-only"
 # her texts from leaving the device.
 [dependencies]
 base64 = "0.23"
+# Where a fact she keeps goes (`entries`): the placing prompt and how her
+# answer is read live in `myriad_merope::topics`, which the settling prompt
+# reads too; this crate carries them as node rules. Already below this
+# crate (through `myriad-persona-sync`), so no cycle.
+myriad-merope = { path = "../myriad-merope" }
 myriad-perception-filter = { path = "../myriad-perception-filter" }
 myriad-persona-log = { path = "../myriad-persona-log" }
 myriad-persona-sync = { path = "../myriad-persona-sync" }

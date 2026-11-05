@@ -8198,6 +8198,373 @@
           "spans": 1
         }
       }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "bodies": {
+          "h1": {
+            "key": "minted:moving",
+            "kind": "task",
+            "name": "搬家",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "h2": {
+            "base": [],
+            "field": "summary",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              {
+                "because": [
+                  "legacy:old1"
+                ],
+                "text": "月底要搬到新家。"
+              },
+              {
+                "because": [
+                  "memory:r3"
+                ],
+                "text": "网要提前办。"
+              }
+            ],
+            "version": 1
+          },
+          "h3": {
+            "base": [],
+            "because": [
+              "legacy:old1"
+            ],
+            "item": "net",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "网还没办",
+            "version": 1
+          },
+          "h4": {
+            "base": [],
+            "because": [
+              "memory:r3"
+            ],
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "伙伴对搬家有点烦。",
+            "version": 1,
+            "view": "mood"
+          },
+          "h5": {
+            "audience": "personal:7",
+            "refs": [
+              "memory:r3"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "新家在三鹰。",
+            "version": 1
+          },
+          "h6": {
+            "audience": "personal:7",
+            "refs": [
+              "memory:r4"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "想要朝南的房间。",
+            "version": 1
+          },
+          "h7": {
+            "base": [],
+            "field": "aliases",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              "乔迁",
+              "搬新家"
+            ],
+            "version": 1
+          },
+          "v1": {
+            "key": "minted:visa",
+            "kind": "topic",
+            "name": "签证",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "v2": {
+            "audience": "personal:7",
+            "refs": [
+              "message:m5"
+            ],
+            "saidBy": [
+              "her",
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴在等签证材料。",
+            "version": 1
+          },
+          "v3": {
+            "base": [],
+            "field": "aliases",
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "value": [
+              "visa"
+            ],
+            "version": 1
+          }
+        },
+        "candidates": [
+          "a5a500a428658ce58768f5bf38edde49"
+        ],
+        "node": "1df5cac27af07aef9ce36c9ab1298458",
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "h1",
+            "kind": "node.created",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000020-000000-dev_mac",
+            "id": "h2",
+            "kind": "node.revised",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000030-000000-dev_mac",
+            "id": "h3",
+            "kind": "node.open_item",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000040-000000-dev_mac",
+            "id": "h4",
+            "kind": "node.view_changed",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000050-000000-dev_mac",
+            "id": "h5",
+            "kind": "node.entry",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000000060-000000-dev_mac",
+            "id": "h6",
+            "kind": "node.entry",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h6"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 7,
+            "epoch": 1,
+            "hlc": "001760000000070-000000-dev_mac",
+            "id": "v1",
+            "kind": "node.created",
+            "object": "node:a5a500a428658ce58768f5bf38edde49",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:v1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 8,
+            "epoch": 1,
+            "hlc": "001760000000080-000000-dev_mac",
+            "id": "v2",
+            "kind": "node.span",
+            "object": "node:a5a500a428658ce58768f5bf38edde49",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:v2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 9,
+            "epoch": 1,
+            "hlc": "001760000000090-000000-dev_mac",
+            "id": "h7",
+            "kind": "node.revised",
+            "object": "node:1df5cac27af07aef9ce36c9ab1298458",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:h7"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 10,
+            "hlc": "001760000000100-000000-dev_mac",
+            "id": "v3",
+            "kind": "node.revised",
+            "object": "node:a5a500a428658ce58768f5bf38edde49",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:v3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a node's own other names are shown with its name",
+      "output": {
+        "candidates": [
+          {
+            "aliases": [
+              "visa"
+            ],
+            "kind": "topic",
+            "label": "n2",
+            "name": "签证",
+            "status": "active"
+          }
+        ],
+        "due": [
+          "own"
+        ],
+        "entries": [
+          {
+            "label": "e1",
+            "saidBy": [
+              "partner"
+            ],
+            "text": "新家在三鹰。"
+          },
+          {
+            "label": "e2",
+            "saidBy": [
+              "partner"
+            ],
+            "text": "想要朝南的房间。"
+          }
+        ],
+        "node": {
+          "aliases": [
+            "乔迁",
+            "搬新家"
+          ],
+          "kind": "task",
+          "label": "n1",
+          "name": "搬家",
+          "open": [
+            {
+              "label": "o1",
+              "text": "网还没办"
+            }
+          ],
+          "status": "active",
+          "summary": [
+            "月底要搬到新家。",
+            "网要提前办。"
+          ],
+          "views": [
+            {
+              "label": "v1",
+              "text": "伙伴对搬家有点烦。"
+            }
+          ]
+        },
+        "taken": {
+          "entries": 2,
+          "inbox": 0,
+          "spans": 0
+        }
+      }
     }
   ],
   "version": 1

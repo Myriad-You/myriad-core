@@ -1,12 +1,13 @@
 //! Her nodes (`myriad_nodes`): a node's id and key, a row's body and its
 //! one byte form, the fold, the limits both hosts cut to, the pure half of
-//! placing a talk and of her upkeep, and the upkeep queue. The rules are
-//! the crate's; these calls only carry them across. Inputs hold her words,
-//! so a refusal names a field, never a value.
+//! placing a talk and of her upkeep, the upkeep queue, where a fact she
+//! keeps goes and the rows that put it there, and picking nodes for recall.
+//! The rules are the crate's; these calls only carry them across. Inputs
+//! hold her words, so a refusal names a field, never a value.
 
 use myriad_nodes::{
-    Body, NodeError, fold as fold_rows, home, limits as node_limits, place, queue as due, upkeep,
-    wire,
+    Body, NodeError, entries, fold as fold_rows, home, limits as node_limits, place, queue as due,
+    recall, upkeep, wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -157,4 +158,38 @@ pub(super) fn upkeep_input(raw: &[u8]) -> Result<Value, Failure> {
 
 pub(super) fn upkeep_read(raw: &[u8]) -> Result<Value, Failure> {
     answer(&upkeep::read(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{topics?: [{id, name, aliases?, holds?}], facts: [{id, text}]}` →
+/// `{system, schema, input, offered, taken}`: sorting facts under topics.
+pub(super) fn sort_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&entries::sort_prepare(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{output, offered?, facts, known?}` → `{facts: [{fact, to, …}]}`.
+pub(super) fn sort_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&entries::sort_read(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{value?, offered?, known?}` → `{to, …}`: where one fact of the
+/// settling answer goes.
+pub(super) fn under_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&entries::under_read(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{audience, sync?, start?|key?, facts?}` → `{node, key, rows: [{id,
+/// kind, body}]}`.
+pub(super) fn fact_rows(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&entries::fact_rows(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{kind, node, source, revision?}` → `{id}`.
+pub(super) fn row_id(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&entries::row_id(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{ranked, nodes, aboutThem?, her?, thorough?, budget?}` → `{picked?,
+/// aboutThem?, loose?, together?}`.
+pub(super) fn pick(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&recall::pick(quiet_input(raw)?).map_err(refused)?)
 }

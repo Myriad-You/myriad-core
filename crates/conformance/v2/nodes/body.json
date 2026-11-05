@@ -1540,6 +1540,285 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            "Plants",
+            "植物"
+          ],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a topic's other names",
+      "output": {
+        "body": {
+          "base": [],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            "Plants",
+            "植物"
+          ],
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"field\":\"aliases\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"value\":[\"Plants\",\"植物\"],\"version\":1}",
+        "digest": "876a51e442b59244ca0465f92e1bed9a"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [
+            "a1"
+          ],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "a topic's other names taken off",
+      "output": {
+        "body": {
+          "base": [
+            "a1"
+          ],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [],
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"a1\"],\"field\":\"aliases\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"value\":[],\"version\":1}",
+        "digest": "e39b73609ae1c3a20551942e968f31f6"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            "植物",
+            "Plants"
+          ],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "other names out of order",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            "name 00",
+            "name 01",
+            "name 02",
+            "name 03",
+            "name 04",
+            "name 05",
+            "name 06",
+            "name 07",
+            "name 08",
+            "name 09",
+            "name 10",
+            "name 11",
+            "name 12",
+            "name 13",
+            "name 14",
+            "name 15",
+            "name 16"
+          ],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "too many other names",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "field": "aliases",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "value": [
+            "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+          ],
+          "version": 1
+        },
+        "kind": "node.revised"
+      },
+      "name": "an other name too long",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry with only its memory is quote-only",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"quoteOnly\":true,\"refs\":[\"memory:m1\"],\"saidBy\":[\"partner\"],\"sync\":\"shared\",\"text\":\"养了一盆虎尾兰\",\"version\":1}",
+        "digest": "0c2808542eebc2e16288ed1666a95575"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "refs": [
+            "memory:m1",
+            "message:a1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry with its memory and an original",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "refs": [
+            "memory:m1",
+            "message:a1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"refs\":[\"memory:m1\",\"message:a1\"],\"saidBy\":[\"partner\"],\"sync\":\"shared\",\"text\":\"养了一盆虎尾兰\",\"version\":1}",
+        "digest": "55a3176692c5542e62d1441e84897baa"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry with only its memory and no mark still reads",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"refs\":[\"memory:m1\"],\"saidBy\":[\"partner\"],\"sync\":\"shared\",\"text\":\"养了一盆虎尾兰\",\"version\":1}",
+        "digest": "11ac5129c827dab66b664fc17eff098f"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1",
+            "message:a1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "养了一盆虎尾兰",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry with its memory and an original, marked quote-only",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ]
 }

@@ -213,7 +213,8 @@ pub struct Lasting {
     /// When it would be worth remembering, as the model gave them; cleaned
     /// where they are kept.
     pub when_for: Vec<String>,
-    /// The topic it goes under (`crate::topics`).
+    /// The topic it goes under, or about them, or nowhere
+    /// (`crate::topics::read_under`).
     pub topic: crate::topics::Under,
 }
 
@@ -547,16 +548,17 @@ mod tests {
     }
 
     /// Each fact she keeps says which topic it goes under: one she was
-    /// shown, one she starts, or none; a fact without it is kept all the same.
+    /// shown, one she starts, or about them (neither); a fact without it is
+    /// placed nowhere and kept all the same.
     #[test]
     fn each_fact_goes_under_a_topic_she_was_shown_or_starts() {
         use crate::topics::Under;
-        let theirs =
-            "Dr. Lee says the rash is nothing\nmy snake plant is drooping\nI live in Austin";
+        let theirs = "Dr. Lee says the rash is nothing\nmy snake plant is drooping\nI live in Austin\nI cannot eat peanuts";
         let raw = r#"{"lasting":[
             {"fact":"Dr. Lee looked at the rash","evidence":"Dr. Lee says the rash is nothing","from":[],"concepts":[],"whenFor":[],"topic":{"on":"t1","name":"","aliases":[]}},
             {"fact":"has a snake plant","evidence":"my snake plant is drooping","from":[],"concepts":[],"whenFor":[],"topic":{"on":"","name":"houseplants","aliases":["plants"]}},
-            {"fact":"lives in Austin","evidence":"I live in Austin","from":[],"concepts":[],"whenFor":[]}
+            {"fact":"lives in Austin","evidence":"I live in Austin","from":[],"concepts":[],"whenFor":[]},
+            {"fact":"cannot eat peanuts","evidence":"I cannot eat peanuts","from":[],"concepts":[],"whenFor":[],"topic":{"on":"","name":"","aliases":[]}}
         ],"replaces":[],"moment":[],"known":[]}"#;
         let (lasting, _) = parse_settle(raw, theirs, &[], 0, 1).unwrap();
         assert_eq!(lasting[0].topic, Under::Offered(0));
@@ -568,6 +570,7 @@ mod tests {
             }
         );
         assert_eq!(lasting[2].topic, Under::Nowhere);
+        assert_eq!(lasting[3].topic, Under::AboutThem);
         let prompt = settle_system_prompt(&[]);
         assert!(prompt.contains("A topic is a kind of thing, never one item of it"));
         assert!(prompt.contains("up to 5 other names"));

@@ -10,7 +10,8 @@
 //!   created row puts a person or a group in her own audience reads as
 //!   nothing, every row of it passed by (`person_elsewhere`): they live in
 //!   their own audiences.
-//! - **Head fields** (its kind, name, summary, status, who-knows, object,
+//! - **Head fields** (its kind, name, other names, summary, status,
+//!   who-knows, object,
 //!   each person's progress, each view, open item and intent) are each
 //!   folded from the rows that write them. A row's `base` names the versions
 //!   it was written against; every version no row names as a base is
@@ -347,6 +348,10 @@ pub struct Node {
     pub absorbed_into: Option<Absorption>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<Item<String>>,
+    /// The other names it goes by (a topic's own; an object's are on the
+    /// object). Absent until a row writes them.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub aliases: Option<Item<Vec<String>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub summary: Option<Item<Vec<Sentence>>>,
     /// Absent reads as active.
@@ -404,6 +409,7 @@ impl Node {
             done_when: None,
             absorbed_into: None,
             name: None,
+            aliases: None,
             summary: None,
             status: None,
             who_knows: None,
@@ -926,6 +932,7 @@ impl Node {
         out.extend(self.kind.as_ref().and_then(one));
         out.extend(self.done_when.as_ref().and_then(one));
         out.extend(self.name.as_ref().and_then(one));
+        out.extend(self.aliases.as_ref().and_then(one));
         out.extend(self.summary.as_ref().and_then(one));
         out.extend(self.status.as_ref().and_then(one));
         out.extend(self.who_knows.as_ref().and_then(one));
@@ -1387,6 +1394,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         node.key = key.clone();
         let mut kind = Register::<KindValue>::default();
         let mut name = Register::<String>::default();
+        let mut aliases = Register::<Vec<String>>::default();
         let mut summary = Register::<Vec<Sentence>>::default();
         let mut status = Register::<Status>::default();
         let mut who_knows = Register::<Vec<String>>::default();
@@ -1485,6 +1493,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                     };
                     match change {
                         Change::Name(value) => name.push(&base, meta.version(value)),
+                        Change::Aliases(value) => aliases.push(&base, meta.version(value)),
                         Change::Summary(value) => summary.push(&base, meta.version(value)),
                         Change::Status(value) => {
                             let fixed = parsed.map(|parsed| parsed.kinds());
@@ -1745,6 +1754,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         }
         node.kind = kind.resolve();
         node.name = name.resolve();
+        node.aliases = aliases.resolve();
         node.summary = summary.resolve();
         node.status = status.resolve();
         node.who_knows = who_knows.resolve();
