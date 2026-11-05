@@ -1,0 +1,175 @@
+{
+  "call": "nodes.view_may_change",
+  "cases": [
+    {
+      "input": {
+        "because": [
+          "message:a",
+          "message:b",
+          "record:run#3"
+        ],
+        "known": {
+          "her": [
+            "message:b"
+          ],
+          "partner": [
+            "message:a"
+          ],
+          "verified": [
+            "record:run#3"
+          ]
+        }
+      },
+      "name": "everything it rests on counts",
+      "output": {
+        "mayChange": true,
+        "verdict": "view"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:a",
+          "record:agent#9"
+        ],
+        "known": {
+          "her": [
+            "message:b"
+          ],
+          "partner": [
+            "message:a"
+          ],
+          "verified": [
+            "record:run#3"
+          ]
+        }
+      },
+      "name": "an agent's unproven claim does not",
+      "output": {
+        "mayChange": false,
+        "verdict": "refused"
+      }
+    },
+    {
+      "input": {
+        "because": [],
+        "known": {
+          "her": [
+            "message:b"
+          ],
+          "partner": [
+            "message:a"
+          ],
+          "verified": [
+            "record:run#3"
+          ]
+        }
+      },
+      "name": "no evidence never changes a view",
+      "output": {
+        "mayChange": false,
+        "verdict": "refused"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:a",
+          "event:mail"
+        ],
+        "heard": [
+          "event:mail"
+        ],
+        "known": {
+          "her": [
+            "message:b"
+          ],
+          "partner": [
+            "message:a"
+          ],
+          "verified": [
+            "record:run#3"
+          ]
+        }
+      },
+      "name": "heard and counted: only as heard",
+      "output": {
+        "mayChange": false,
+        "verdict": "heard_only"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "event:mail",
+          "record:agent#9"
+        ],
+        "heard": [
+          "event:mail"
+        ],
+        "known": {
+          "her": [
+            "message:b"
+          ],
+          "partner": [
+            "message:a"
+          ],
+          "verified": [
+            "record:run#3"
+          ]
+        }
+      },
+      "name": "heard and merely seen: refused",
+      "output": {
+        "mayChange": false,
+        "verdict": "refused"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "screen:t1"
+        ],
+        "known": {
+          "typed": [
+            "screen:t1"
+          ]
+        }
+      },
+      "name": "what the person typed counts",
+      "output": {
+        "mayChange": true,
+        "verdict": "view"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:a"
+        ]
+      },
+      "name": "nothing known: refused",
+      "output": {
+        "mayChange": false,
+        "verdict": "refused"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:a"
+        ],
+        "known": {
+          "group": [
+            "message:a"
+          ]
+        }
+      },
+      "name": "a known list that is not one the core knows",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

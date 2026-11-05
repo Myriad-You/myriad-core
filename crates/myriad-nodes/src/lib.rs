@@ -59,6 +59,15 @@
 //! its own canonical bytes). A home's own backup of the nodes it keeps
 //! ([`home`]) goes only to a computer of the partner's.
 //!
+//! How far she may take what she keeps ([`trust`], 三档可信): seen, heard
+//! or counts, from who said it and where it came from, never from what it
+//! says; what may reach a person's private talk; when a view may change.
+//! Her intents ([`intents`]): the one gate, when one is due (a time, or
+//! another node of the audience changing or done), the recheck before the
+//! partner's instruction runs, and the pure half of the judgment after each
+//! of the partner's messages. In a private audience `partner` is its one
+//! person, whoever that is on the host.
+//!
 //! Not here yet: wakes beyond what a blocker's change brings, objections,
 //! and forgetting a single span.
 //!
@@ -72,6 +81,7 @@ pub mod body;
 pub mod entries;
 pub mod fold;
 pub mod home;
+pub mod intents;
 pub mod key;
 pub mod limits;
 pub mod migrate;
@@ -79,6 +89,7 @@ pub mod place;
 pub mod queue;
 pub mod recall;
 pub mod tags;
+pub mod trust;
 pub mod upkeep;
 pub mod wire;
 
@@ -124,6 +135,9 @@ pub(crate) fn check_token(what: &str, value: &str) -> Result<(), NodeError> {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod intent_tests;
 
 #[cfg(test)]
 mod sync_tests;

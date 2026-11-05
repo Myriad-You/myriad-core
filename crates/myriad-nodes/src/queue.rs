@@ -159,7 +159,7 @@ impl<'a> Watch<'a> {
         }
     }
 
-    fn rows_of(&self, audience: &str, id: &str) -> &[&'a Row] {
+    pub(crate) fn rows_of(&self, audience: &str, id: &str) -> &[&'a Row] {
         self.changes
             .get(&(audience.to_string(), id.to_string()))
             .map_or(&[], Vec::as_slice)

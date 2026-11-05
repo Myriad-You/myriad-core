@@ -38,9 +38,10 @@
 //! Evidence (`because`) is what she was shown: a span, an entry or an inbox
 //! item is itself; a summary sentence, an open item or a view stands for
 //! what it rests on, so a node with no span of its own can still be
-//! judged. A view changes only on what counts (算数): every piece of it a
-//! span, an entry or an inbox item said only by the partner or her, and not
-//! in a group; anything else is held (`not_counted`).
+//! judged. A view changes only on what counts (算数, [`crate::trust`]):
+//! every piece of it a span, an entry or an inbox item whose tier counts
+//! (said only by the partner or her), and not said in a group; anything
+//! else is held (`not_counted`).
 //!
 //! The kind follows from her `done` alone: with a "done" it is something in
 //! progress; without one it is a topic, unless it is `ongoing` (always being
@@ -1186,15 +1187,8 @@ impl<'a> Reader<'a> {
         let given = field(given, "because")
             .and_then(Value::as_array)
             .ok_or(Fallback::NoEvidence)?;
-        let counts = |said_by: &[SaidBy], audience: &str| {
-            said_by
-                .iter()
-                .all(|said| matches!(said, SaidBy::Partner | SaidBy::Her))
-                && !matches!(
-                    myriad_persona_log::row::Audience::parse(audience),
-                    Ok(myriad_persona_log::row::Audience::Group(_)) | Err(_)
-                )
-        };
+        // The one rule of what counts (`trust`), as M5 has it everywhere.
+        let counts = crate::trust::counts_for_view;
         let mut ids = BTreeSet::new();
         let mut counted = true;
         for label in given {
@@ -1582,6 +1576,8 @@ impl<'a> Reader<'a> {
                         because,
                         status: IntentStatus::Waiting,
                         trigger: None,
+                        origin: None,
+                        action: None,
                     }),
                 )?;
             }
@@ -1842,6 +1838,8 @@ impl<'a> Reader<'a> {
                     because: said.current.value.because.clone(),
                     status: IntentStatus::Waiting,
                     trigger: said.current.value.trigger.clone(),
+                    origin: said.current.value.origin,
+                    action: said.current.value.action,
                 }),
             )?;
         }

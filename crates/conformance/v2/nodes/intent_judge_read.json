@@ -1,0 +1,275 @@
+{
+  "call": "nodes.intent_judge_read",
+  "cases": [
+    {
+      "input": {
+        "notes": [
+          {
+            "id": "n-release",
+            "key": "minted:release"
+          }
+        ],
+        "now": 1793250000000000,
+        "output": "{\"take\": [{\"kind\": \"instruction\", \"action\": \"work\", \"at\": \"2026-10-29T17:00\", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": \"好，五点帮你跑测试\", \"text\": \"跑测试\"}, {\"kind\": \"plan\", \"action\": \"say\", \"at\": \"2026-10-29T17:00\", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"伙伴五点要跑测试\"}, {\"kind\": \"instruction\", \"action\": \"work\", \"at\": null, \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"没有时间的交代\"}, {\"kind\": \"instruction\", \"action\": \"say\", \"at\": \"2026-10-29T09:00\", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"已经过去的时间\"}], \"drop\": [\"t1\", \"t9\"]}",
+        "waiting": [
+          "intent-1"
+        ],
+        "zone": "Asia/Tokyo"
+      },
+      "name": "her answer is read against what she was offered",
+      "output": {
+        "drops": [
+          "intent-1"
+        ],
+        "takes": [
+          {
+            "action": "work",
+            "echo": "好，五点帮你跑测试",
+            "kind": "instruction",
+            "origin": "partner",
+            "text": "跑测试",
+            "trigger": {
+              "at": 1793260800000000,
+              "zone": "Asia/Tokyo"
+            }
+          },
+          {
+            "action": "say",
+            "kind": "plan",
+            "text": "伙伴五点要跑测试",
+            "trigger": {
+              "at": 1793260800000000,
+              "zone": "Asia/Tokyo"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "notes": [
+          {
+            "id": "n-release",
+            "key": "minted:release"
+          }
+        ],
+        "now": 1793250000000000,
+        "output": "{\"take\": [{\"kind\": \"mine\", \"action\": \"work\", \"at\": null, \"after\": \"n1\", \"afterDone\": true, \"note\": \"n7\", \"echo\": null, \"text\": \"问发版顺不顺\"}], \"drop\": []}",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "hers only says, and a label she was not given names no note",
+      "output": {
+        "drops": [],
+        "takes": [
+          {
+            "action": "say",
+            "kind": "mine",
+            "origin": "her",
+            "text": "问发版顺不顺",
+            "trigger": {
+              "change": "done",
+              "node": "minted:release"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "不是 JSON",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "not JSON reads as nothing",
+      "output": {
+        "drops": [],
+        "takes": [],
+        "unreadable": true
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{\"take\": [\"x\"], \"drop\": []}",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "a take that is not an object reads as nothing",
+      "output": {
+        "drops": [],
+        "takes": [],
+        "unreadable": true
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{\"drop\": [\"t1\"]}",
+        "waiting": [
+          "intent-1"
+        ],
+        "zone": "Asia/Tokyo"
+      },
+      "name": "no take reads as nothing",
+      "output": {
+        "drops": [],
+        "takes": [],
+        "unreadable": true
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "```json\n{\"take\": [], \"drop\": []}\n```",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "a fenced answer is not read",
+      "output": {
+        "drops": [],
+        "takes": [],
+        "unreadable": true
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{\"take\": [{\"kind\": \"mine\", \"action\": \"say\", \"at\": null, \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"  \"}, {\"kind\": \"mine\", \"action\": \"say\", \"at\": null, \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"第二件\"}, {\"kind\": \"nothing\", \"action\": \"say\", \"at\": null, \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"认不出的种类\"}, {\"kind\": \"mine\", \"action\": \"say\", \"at\": null, \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"第四件\"}], \"drop\": []}",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "only the first three are read, an empty text is passed",
+      "output": {
+        "drops": [],
+        "takes": [
+          {
+            "action": "say",
+            "kind": "mine",
+            "origin": "her",
+            "text": "第二件"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{\"take\": [{\"kind\": \"instruction\", \"action\": \"say\", \"at\": \"2026-10-29T13:59:30\", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"刚刚\"}, {\"kind\": \"instruction\", \"action\": \"say\", \"at\": \" 2026-10-29 18:30 \", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"空格\"}, {\"kind\": \"instruction\", \"action\": \"say\", \"at\": \"明天九点\", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": null, \"text\": \"读不出的时间\"}], \"drop\": []}",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "a time a minute past still stands, seconds and a space read",
+      "output": {
+        "drops": [],
+        "takes": [
+          {
+            "action": "say",
+            "kind": "instruction",
+            "origin": "partner",
+            "text": "刚刚",
+            "trigger": {
+              "at": 1793249970000000,
+              "zone": "Asia/Tokyo"
+            }
+          },
+          {
+            "action": "say",
+            "kind": "instruction",
+            "origin": "partner",
+            "text": "空格",
+            "trigger": {
+              "at": 1793266200000000,
+              "zone": "Asia/Tokyo"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "notes": [
+          {
+            "id": "n-release",
+            "key": "minted:release"
+          }
+        ],
+        "now": 1793250000000000,
+        "output": "{\"take\": [{\"kind\": \"instruction\", \"action\": \"say\", \"at\": \"等发版\", \"after\": \"n1\", \"afterDone\": false, \"note\": \"n1\", \"echo\": \"好\", \"text\": \"发版有动静就告诉我\"}], \"drop\": []}",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "an unreadable time falls to the node it waits on",
+      "output": {
+        "drops": [],
+        "takes": [
+          {
+            "action": "say",
+            "echo": "好",
+            "kind": "instruction",
+            "note": "n-release",
+            "origin": "partner",
+            "text": "发版有动静就告诉我",
+            "trigger": {
+              "change": "changed",
+              "node": "minted:release"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{\"take\": [], \"drop\": [\"t2\", \"t1\", \"t2\", \"x1\", \"t0\"]}",
+        "waiting": [
+          "intent-1",
+          "intent-2"
+        ],
+        "zone": "Asia/Tokyo"
+      },
+      "name": "their words call off what waits, each once",
+      "output": {
+        "drops": [
+          "intent-2",
+          "intent-1"
+        ],
+        "takes": []
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{\"take\": [{\"kind\": \"instruction\", \"action\": \"say\", \"at\": \"2026-10-30T09:00\", \"after\": null, \"afterDone\": false, \"note\": null, \"echo\": \"好的\", \"text\": \"九点提醒我\"}], \"drop\": []}",
+        "zone": "+08:00"
+      },
+      "name": "a time read in a fixed offset",
+      "output": {
+        "drops": [],
+        "takes": [
+          {
+            "action": "say",
+            "echo": "好的",
+            "kind": "instruction",
+            "origin": "partner",
+            "text": "九点提醒我",
+            "trigger": {
+              "at": 1793322000000000,
+              "zone": "+08:00"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "now": 1793250000000000,
+        "output": "{}",
+        "waiting": [
+          "a",
+          "a"
+        ],
+        "zone": "Asia/Tokyo"
+      },
+      "name": "a waiting id that repeats",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
