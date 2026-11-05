@@ -1,9 +1,9 @@
 //! Her link's frames: what a frame must look like before it is sent or
 //! taken, and its one byte form. The contract is
-//! `shared/her_link_contract.json`; protocol 2 (its `next` block, planned:
-//! no host speaks it yet) is what these rules check. Protocol 2 keeps every
-//! protocol-1 frame, so those check here too, against their protocol-1
-//! bodies inside the protocol-2 envelope.
+//! `shared/her_link_contract.json`, protocol 2, the only one spoken
+//! (protocol 1 is only in its `history`). A frame of a family (`fact`,
+//! `lease`…) is named `<family>.<name>`; the frames that came from
+//! protocol 1 belong to none.
 //!
 //! A frame is one canonical JSON text: `{v, t, seq, ack, id?, at, body}`.
 //! A sealed field (HPKE, RFC 9180) is checked for its shape only: opening
@@ -73,49 +73,57 @@ pub struct Sealing {
 }
 
 #[derive(Debug, Deserialize)]
+struct Sync {
+    families: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct Next {
+struct Contract {
     protocol: u32,
     envelope: Envelope,
     limits: Limits,
     encoding: Encoding,
     sealing: Sealing,
     families: BTreeMap<String, String>,
+    sync: Sync,
     frames: BTreeMap<String, FrameSpec>,
     error_codes: BTreeMap<String, String>,
 }
 
-#[derive(Debug, Deserialize)]
-struct ProtocolOne {
-    frames: BTreeMap<String, FrameSpec>,
-}
+static CONTRACT: LazyLock<Contract> =
+    LazyLock::new(|| serde_json::from_str(CONTRACT_JSON).expect("her_link_contract.json"));
 
-struct Contract {
-    next: Next,
-    one: ProtocolOne,
-}
-
-static CONTRACT: LazyLock<Contract> = LazyLock::new(|| {
-    let raw: Value = serde_json::from_str(CONTRACT_JSON).expect("her_link_contract.json");
-    Contract {
-        next: serde_json::from_value(raw["next"].clone()).expect("her_link_contract.json: next"),
-        one: serde_json::from_value(raw.clone()).expect("her_link_contract.json: frames"),
-    }
-});
-
-/// The protocol these rules check.
+/// The protocol these rules check: the only one spoken.
 pub fn protocol() -> u32 {
-    CONTRACT.next.protocol
+    CONTRACT.protocol
 }
 
 /// The sealing suite every sealed field uses.
 pub fn sealing() -> &'static Sealing {
-    &CONTRACT.next.sealing
+    &CONTRACT.sealing
 }
 
 /// The HPKE `info` for a sealed field of frame type `t`.
 pub fn seal_info(t: &str) -> String {
-    format!("{} {t}", CONTRACT.next.sealing.info)
+    format!("{} {t}", CONTRACT.sealing.info)
+}
+
+/// The family of frame type `t`: the part before its first dot, when that
+/// names a family. The frames that came from protocol 1 have none (`say`,
+/// with no dot, is not of the family `say`).
+pub fn family(t: &str) -> Option<&'static str> {
+    let (family, _) = t.split_once('.')?;
+    CONTRACT
+        .families
+        .get_key_value(family)
+        .map(|(name, _)| name.as_str())
+}
+
+/// Whether frame type `t` flows only on a link whose welcome said sync on
+/// (the contract's `sync.families`).
+pub fn needs_sync(t: &str) -> bool {
+    family(t).is_some_and(|family| CONTRACT.sync.families.iter().any(|one| one == family))
 }
 
 /// The additional data a sealed field of frame `t` is bound to: canonical
@@ -124,7 +132,7 @@ pub fn seal_aad(from: &str, t: &str, to: &str) -> Vec<u8> {
     canonical_bytes(&serde_json::json!({ "from": from, "t": t, "to": to }))
 }
 
-/// Why a frame was refused: one of the contract's `next.errorCodes`.
+/// Why a frame was refused: one of the contract's `errorCodes`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Refusal {
@@ -133,7 +141,7 @@ pub struct Refusal {
 }
 
 fn refuse(code: &str, detail: impl Into<String>) -> Refusal {
-    debug_assert!(CONTRACT.next.error_codes.contains_key(code), "{code}");
+    debug_assert!(CONTRACT.error_codes.contains_key(code), "{code}");
     Refusal {
         code: code.to_string(),
         detail: detail.into(),
@@ -161,11 +169,10 @@ pub fn valid_id(id: &str) -> bool {
 }
 
 fn spec(t: &str) -> Option<(&'static FrameSpec, Option<String>)> {
-    if let Some(spec) = CONTRACT.next.frames.get(t) {
-        let family = t.split('.').next().map(str::to_string);
-        return Some((spec, family));
-    }
-    CONTRACT.one.frames.get(t).map(|spec| (spec, None))
+    CONTRACT
+        .frames
+        .get(t)
+        .map(|spec| (spec, family(t).map(str::to_string)))
 }
 
 fn decoded(what: &str, raw: &Value) -> Result<Vec<u8>, Refusal> {
@@ -176,7 +183,7 @@ fn decoded(what: &str, raw: &Value) -> Result<Vec<u8>, Refusal> {
 
 /// Whether `value` is a sealed field of the contract's suite.
 fn check_sealed(field: &str, value: &Value) -> Result<(), Refusal> {
-    let sealing = &CONTRACT.next.sealing;
+    let sealing = &CONTRACT.sealing;
     let Some(object) = value.as_object() else {
         return Err(refuse("bad_sealed", format!("{field} is not an object")));
     };
@@ -251,15 +258,15 @@ fn check_fields(
 /// Whether `frame` is one that may be sent or taken, from a sender with
 /// `roles` (`device`, `host`, `mind`, `server`; empty: not checked).
 pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
-    let next = &CONTRACT.next;
+    let contract = &*CONTRACT;
     let bytes = canonical_bytes(frame);
-    if bytes.len() > next.limits.max_frame_bytes {
+    if bytes.len() > contract.limits.max_frame_bytes {
         return Err(refuse(
             "too_large",
             format!(
                 "{} bytes, at most {}",
                 bytes.len(),
-                next.limits.max_frame_bytes
+                contract.limits.max_frame_bytes
             ),
         ));
     }
@@ -267,15 +274,15 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
     check_fields(
         "the envelope",
         &envelope,
-        &next.envelope.required,
-        &next.envelope.optional,
+        &contract.envelope.required,
+        &contract.envelope.optional,
     )?;
-    if frame["v"].as_u64() != Some(next.encoding.frame_version) {
+    if frame["v"].as_u64() != Some(contract.encoding.frame_version) {
         return Err(refuse(
             "version_unsupported",
             format!(
                 "v is {}, this end reads {}",
-                frame["v"], next.encoding.frame_version
+                frame["v"], contract.encoding.frame_version
             ),
         ));
     }
@@ -365,7 +372,7 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
 
 /// [`check`] for the bytes off the wire.
 pub fn check_bytes(bytes: &[u8], roles: &[String]) -> Result<Checked, Refusal> {
-    if bytes.len() > CONTRACT.next.limits.max_frame_bytes {
+    if bytes.len() > CONTRACT.limits.max_frame_bytes {
         return Err(refuse("too_large", format!("{} bytes", bytes.len())));
     }
     let frame: Value =
@@ -375,7 +382,7 @@ pub fn check_bytes(bytes: &[u8], roles: &[String]) -> Result<Checked, Refusal> {
 
 /// Every family and what it carries.
 pub fn families() -> &'static BTreeMap<String, String> {
-    &CONTRACT.next.families
+    &CONTRACT.families
 }
 
 #[cfg(test)]

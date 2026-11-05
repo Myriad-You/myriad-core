@@ -1,5 +1,5 @@
-//! The contract's protocol-2 examples (`shared/her_link_fixtures.json`,
-//! `next.frames`) all pass; the shared conformance cases
+//! The contract's examples (`shared/her_link_fixtures.json`, one of every
+//! frame) all pass; the shared conformance cases
 //! (`crates/conformance/v1/link/`) refuse what they name, with the code they
 //! name. `myriad-core-ffi` runs the same cases through the C entry point.
 //!
@@ -14,8 +14,8 @@ use super::*;
 
 const FIXTURES_JSON: &str = include_str!("../../../shared/her_link_fixtures.json");
 
-fn next_fixtures() -> Value {
-    serde_json::from_str::<Value>(FIXTURES_JSON).unwrap()["next"].clone()
+fn fixtures() -> Value {
+    serde_json::from_str::<Value>(FIXTURES_JSON).unwrap()
 }
 
 fn roles(of: &str) -> Vec<String> {
@@ -44,31 +44,37 @@ pub(crate) fn answer(input: &Value) -> Value {
 fn the_contract_reads_and_agrees_with_these_rules() {
     let raw: Value = serde_json::from_str(CONTRACT_JSON).unwrap();
     assert_eq!(raw["schemaVersion"], 2);
-    assert_eq!(raw["protocol"], 1, "no host speaks protocol 2 yet");
+    assert_eq!(raw["protocol"], 2, "the only protocol spoken");
     assert_eq!(protocol(), 2);
-    assert_eq!(raw["next"]["status"], "planned");
-    assert_eq!(CONTRACT.next.limits.id_pattern, "^[A-Za-z0-9_.:-]{1,64}$");
+    assert!(
+        raw.get("next").is_none(),
+        "protocol 1 is history, not a block beside it"
+    );
+    assert!(raw["history"].get("1").is_some());
+    assert_eq!(CONTRACT.limits.id_pattern, "^[A-Za-z0-9_.:-]{1,64}$");
+    assert_eq!(CONTRACT.envelope.required[0], "v", "every frame carries v");
     for id in ["t_1", "A.b:c-D_9", &"x".repeat(64)] {
         assert!(valid_id(id), "{id}");
     }
     for id in ["", "has space", "turn/1", "表", &"x".repeat(65)] {
         assert!(!valid_id(id), "{id}");
     }
-    // Every frame's family is declared, and every family has frames.
+    // Every family has frames, and each frame of a family is sent by a
+    // sender the contract names.
     let declared: BTreeSet<&str> = families().keys().map(String::as_str).collect();
-    let used: BTreeSet<&str> = CONTRACT
-        .next
-        .frames
-        .keys()
-        .map(|t| t.split('.').next().unwrap())
-        .collect();
+    let used: BTreeSet<&str> = CONTRACT.frames.keys().filter_map(|t| family(t)).collect();
     assert_eq!(declared, used);
-    for (t, spec) in &CONTRACT.next.frames {
+    assert_eq!(family("say"), None, "protocol 1's say is of no family");
+    assert_eq!(family("say.line"), Some("say"));
+    assert_eq!(family("touch.appraise"), None);
+    for (t, spec) in &CONTRACT.frames {
         assert!(raw["deliveries"].get(&spec.delivery).is_some(), "{t}");
-        assert!(
-            raw["next"]["roles"].get(&spec.from).is_some() || spec.from == "either",
-            "{t}"
-        );
+        if family(t).is_some() {
+            assert!(
+                raw["senders"].get(&spec.from).is_some() || spec.from == "either",
+                "{t}"
+            );
+        }
         for pair in &spec.one_of {
             for field in pair {
                 assert!(spec.optional.contains(field), "{t}.{field}");
@@ -80,21 +86,27 @@ fn the_contract_reads_and_agrees_with_these_rules() {
                 "{t}.{field}"
             );
         }
-        assert!(!CONTRACT.one.frames.contains_key(t), "{t} is protocol 1's");
     }
-    // New close codes do not reuse protocol 1's numbers.
+    // The sync families are families, and only their frames need sync on.
+    for family in &CONTRACT.sync.families {
+        assert!(declared.contains(family.as_str()), "{family}");
+    }
+    assert!(needs_sync("lease.grant") && needs_sync("chat.lend"));
+    assert!(!needs_sync("fact.up") && !needs_sync("say") && !needs_sync("hello"));
+    // The welcome says whether they flow.
+    assert!(
+        CONTRACT.frames["welcome"]
+            .required
+            .contains(&"sync".to_string())
+    );
+    // No close code twice.
     let mut numbers = BTreeSet::new();
-    for spec in raw["closeCodes"]
-        .as_object()
-        .unwrap()
-        .values()
-        .chain(raw["next"]["closeCodes"].as_object().unwrap().values())
-    {
+    for spec in raw["closeCodes"].as_object().unwrap().values() {
         let code = spec["code"].as_u64().unwrap();
         assert!((4000..5000).contains(&code));
         assert!(numbers.insert(code), "close code {code} twice");
     }
-    assert_eq!(raw["next"]["wake"]["payload"], next_fixtures()["wake"]);
+    assert_eq!(raw["wake"]["payload"], fixtures()["wake"]);
     assert_eq!(seal_info("fact.up"), "myriad-link/2 fact.up");
     assert_eq!(
         String::from_utf8(seal_aad("dev_phone", "fact.up", "dev_mac")).unwrap(),
@@ -103,11 +115,11 @@ fn the_contract_reads_and_agrees_with_these_rules() {
 }
 
 #[test]
-fn every_protocol_two_example_passes_and_every_frame_has_one() {
+fn every_example_passes_and_every_frame_has_one() {
     let mut seen = BTreeSet::new();
-    for frame in next_fixtures()["frames"].as_array().unwrap() {
+    for frame in fixtures()["frames"].as_array().unwrap() {
         let t = frame["t"].as_str().unwrap();
-        let from = &CONTRACT.next.frames[t].from;
+        let from = &CONTRACT.frames[t].from;
         let checked =
             check(frame, &roles(from)).unwrap_or_else(|refusal| panic!("{t}: {refusal:?}"));
         // Its one byte form reads back to itself.
@@ -115,13 +127,19 @@ fn every_protocol_two_example_passes_and_every_frame_has_one() {
         assert_eq!(again, checked);
         seen.insert(t.to_string());
     }
-    let declared: BTreeSet<String> = CONTRACT.next.frames.keys().cloned().collect();
+    let declared: BTreeSet<String> = CONTRACT.frames.keys().cloned().collect();
     assert_eq!(seen, declared, "one example per frame at least");
 }
 
 #[test]
 fn a_frame_over_the_limit_is_too_large() {
-    let mut frame = next_fixtures()["frames"][0].clone();
+    let mut frame = fixtures()["frames"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|frame| frame["t"] == "fact.up")
+        .unwrap()
+        .clone();
     frame["body"]["facts"][0]["data"]["label"] = json!("x".repeat(270_000));
     assert_eq!(check(&frame, &[]).unwrap_err().code, "too_large");
     let bytes = serde_json::to_vec(&frame).unwrap();
@@ -168,25 +186,19 @@ fn every_link_case_answers_as_recorded() {
         text.push('\n');
         std::fs::write(&path, text).unwrap();
     }
-    // Every code a frame can be refused with but too_large (tested above,
-    // too big for a file) has a case.
-    let all: BTreeSet<String> = CONTRACT
-        .next
-        .error_codes
-        .keys()
-        .filter(|code| {
-            ![
-                "too_large",
-                "not_for_me",
-                "not_holder",
-                "stale_epoch",
-                "clock_ahead",
-                "group_unknown",
-                "chat_unknown",
-            ]
-            .contains(&code.as_str())
-        })
-        .cloned()
+    // Every code a frame can be refused with (each `refuse("…"` in the
+    // rules) but too_large (tested above, too big for a file) has a case,
+    // and each is one the contract names.
+    let rules = include_str!("lib.rs");
+    let all: BTreeSet<String> = rules
+        .split("refuse(")
+        .skip(1)
+        .filter_map(|rest| rest.trim_start().strip_prefix('"')?.split('"').next())
+        .filter(|code| *code != "too_large")
+        .map(str::to_string)
         .collect();
+    for code in &all {
+        assert!(CONTRACT.error_codes.contains_key(code), "{code}");
+    }
     assert_eq!(codes, all);
 }

@@ -194,7 +194,7 @@
           "v": 1
         }
       },
-      "name": "a protocol-1 frame in the protocol-2 envelope",
+      "name": "a ping, a frame of no family",
       "output": {
         "accepted": {
           "canonical": "{\"ack\":2,\"at\":1760140800000,\"body\":{},\"seq\":3,\"t\":\"ping\",\"v\":1}",
