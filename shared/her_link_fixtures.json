@@ -620,6 +620,19 @@
   },
   {
     "v": 1,
+    "t": "lease.epoch",
+    "seq": 12,
+    "ack": 0,
+    "at": 1760140800110,
+    "body": {
+      "epoch": 7,
+      "holder": null,
+      "how": "freeze",
+      "move": "mv_1"
+    }
+  },
+  {
+    "v": 1,
     "t": "lease.stopped",
     "seq": 12,
     "ack": 0,

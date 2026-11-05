@@ -18,6 +18,7 @@ use serde_json::Value;
 use crate::{
     LogError,
     kinds::{self, Rule},
+    payloads::StateAudience,
 };
 
 /// The row format this core writes and the newest it reads.
@@ -254,6 +255,38 @@ impl Row {
         }
         if object == kinds::SUBJECT && rule != Rule::Forget {
             return Err(LogError::new("only a forget is about a whole subject"));
+        }
+        if object == kinds::ROW && rule != Rule::Forget {
+            return Err(LogError::new("only a forget is about one row"));
+        }
+        if self.kind == "state.write" {
+            let entity = self
+                .object
+                .strip_prefix("state:")
+                .and_then(|rest| rest.split_once(':'))
+                .map(|(entity, _)| entity)
+                .unwrap_or_default();
+            let fits = match crate::payloads::state_audience(entity) {
+                None => {
+                    return Err(LogError::new(
+                        "a state.write row is about no entity kind it carries",
+                    ));
+                }
+                Some(StateAudience::Own) => audience == Audience::Own,
+                Some(StateAudience::Partner) => {
+                    matches!(audience, Audience::Personal(members) if !members.contains(','))
+                }
+                Some(StateAudience::Either) => {
+                    audience == Audience::Own
+                        || matches!(audience, Audience::Personal(members) if !members.contains(','))
+                }
+            };
+            if !fits {
+                return Err(LogError::new(format!(
+                    "a {entity} is not for audience {:?}",
+                    self.audience
+                )));
+            }
         }
         if let Some(payload) = &self.payload {
             check_token("payload ref", &payload.reference)?;

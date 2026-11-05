@@ -111,6 +111,23 @@ pub(super) fn reach(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_persona_log::forget::reach(input(raw)?).map_err(refused)?)
 }
 
+/// `{rows, ledger?}` (her log's rows, any audience) → `{at?}`: when the
+/// partner last wrote to her, in microseconds, by any side's lines
+/// (`myriad_persona_log::wrote`).
+pub(super) fn partner_wrote(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        rows: Vec<myriad_persona_log::Row>,
+        #[serde(default)]
+        ledger: Vec<myriad_persona_log::Entry>,
+    }
+    let req: In = input(raw)?;
+    let at =
+        myriad_persona_log::wrote::partner_wrote(&req.rows, &req.ledger).map(|ms| ms as i64 * 1000);
+    Ok(json!({ "at": at }))
+}
+
 /// `{sent, serverTime, received}` (local, server, local; microseconds) →
 /// `{offset, uncertainty}`.
 pub(super) fn clock_offset(raw: &[u8]) -> Result<Value, Failure> {
