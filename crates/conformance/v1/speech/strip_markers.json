@@ -100,6 +100,106 @@
         "held": false,
         "text": "好"
       }
+    },
+    {
+      "input": {
+        "text": "行，我唱给你听。\n[[music:play]]"
+      },
+      "name": "a music mark on its own last line, as the player asks",
+      "output": {
+        "held": false,
+        "text": "行，我唱给你听。"
+      }
+    },
+    {
+      "input": {
+        "text": "等我一下，换上[[wear:睡衣]]啦"
+      },
+      "name": "a wear mark inside the line",
+      "output": {
+        "held": false,
+        "text": "等我一下，换上啦"
+      }
+    },
+    {
+      "input": {
+        "text": "好呀，等我想一个……\n[[game:soup]]"
+      },
+      "name": "the soup mark after her words",
+      "output": {
+        "held": false,
+        "text": "好呀，等我想一个……"
+      }
+    },
+    {
+      "input": {
+        "text": "我还是觉得不对。\n[[stance:disagree|周末加班|不值得]]"
+      },
+      "name": "a stance mark after her words",
+      "output": {
+        "held": false,
+        "text": "我还是觉得不对。"
+      }
+    },
+    {
+      "input": {
+        "text": "好，我去查\n[[work: 明天的天气]]\n[[sticker:2]]"
+      },
+      "name": "a sticker and a hand-off together",
+      "output": {
+        "held": false,
+        "text": "好，我去查"
+      }
+    },
+    {
+      "input": {
+        "text": "第一句\n[[wear:睡衣]]\n第二句"
+      },
+      "name": "a mark alone between two lines takes its line",
+      "output": {
+        "held": false,
+        "text": "第一句\n第二句"
+      }
+    },
+    {
+      "input": {
+        "text": "好[[Music:next]]"
+      },
+      "name": "a mark in another case is still a mark",
+      "output": {
+        "held": false,
+        "text": "好"
+      }
+    },
+    {
+      "input": {
+        "text": "我不同意。\n[[stance:disag"
+      },
+      "name": "a stance mark still being written is held",
+      "output": {
+        "held": true,
+        "text": "我不同意。"
+      }
+    },
+    {
+      "input": {
+        "text": "好呀\n[[game:so"
+      },
+      "name": "the soup mark still being written is held",
+      "output": {
+        "held": true,
+        "text": "好呀"
+      }
+    },
+    {
+      "input": {
+        "text": "换上⟦we"
+      },
+      "name": "the Mac's wear bracket still being written is held",
+      "output": {
+        "held": true,
+        "text": "换上"
+      }
     }
   ],
   "version": 1
