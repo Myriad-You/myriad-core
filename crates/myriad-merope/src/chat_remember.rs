@@ -100,7 +100,7 @@ pub fn extract_system_prompt(existing: &[String]) -> String {
     };
     format!(
         "You are keeping what a friend would remember from this message of theirs. facts: 0 to {MAX_FACTS} short facts about them: what happened to them, what they did, are doing or are going to do, people and things in their life, their preferences, habits and plans, anything you agreed. \
-Each fact stands on its own (who, what, and when if it has a when) and is taken only from what they explicitly stated in userText; one thing per fact. Keep the specifics they gave, the numbers, names, amounts, how often and dates ('yoga three times a week', not 'has a yoga schedule'). When userText or a known fact gives both who someone is to them and their name, write both ('their ENT specialist Dr. Patel', not only 'the ENT specialist'); only when that is what they said, never a guess. Every fact is about them, so never call them he or she: in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else. Write each fact in the language of userText. \
+Each fact stands on its own (who, what, and when if it has a when) and is taken only from what they explicitly stated in userText; one thing per fact. Something they did and what it brought them are one thing: say both, with its when ('had a check-up on Tuesday afternoon and was told to cut down on salt', not only 'was told to cut down on salt'). Keep the specifics they gave, the numbers, names, amounts, how often and dates ('yoga three times a week', not 'has a yoga schedule'). When userText or a known fact gives both who someone is to them and their name, write both ('their ENT specialist Dr. Patel', not only 'the ENT specialist'); only when that is what they said, never a guess. Every fact is about them, so never call them he or she: in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else. Write each fact in the language of userText. \
 This is not a reply, not a mood number, not a work lesson or tool param, and not what you yourself are doing. \
 reply is context only; never treat your guesses as their facts. \
 before is what you said just before their message: use it only to understand what userText answers (a short reply to your question), still taking the fact from userText. scene is what was on their screen or playing: context only. \
@@ -144,7 +144,7 @@ pub fn settle_system_prompt(known: &[String]) -> String {
     };
     format!(
         "You keep what a friend would remember about someone, in two places: what they said lately (short notes, true for now, which fade on their own) and what you know of them for good. A stretch of talk with them is over. conversation is that stretch, oldest first (who: them or you; your lines are context only). lately is the short notes you took from it as it went. today is the date. \
-lasting: 0 to {MAX_LASTING} facts from this stretch to keep for good. Only what belongs to the moment stays in lately: a request for right now, a passing mood, what they want you to do this minute, small talk. A note about a moment can still carry something that lasts (who and what is in their life, where they are from, what they have): keep that part as its own fact even when the moment stays in lately ('刚进门，我家橘猫年糕就扑过来了，它五岁了' → '养了一只五岁的橘猫，叫年糕'). Everything else is kept: people, pets and things in their life, what they like and how they live, their plans, what happened to them and when (what they bought and for how much, what they read or finished, where they went), how they feel about you, and what they want from you or with you as a standing wish. Put together notes that are one thing into one fact, keeping the specifics they gave (numbers, names, amounts, dates); write any time as the actual date. Name someone both ways whenever this stretch or what you know for good gives both who they are to them and their name ('their ENT specialist, Dr. Patel, diagnosed chronic sinusitis'; '室友小林搬走了'), so one person met under two names is plainly one; when it is not plain that two are one, write only what they said. Every fact is about them, so never call them he or she: in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else. Keep separate things separate: two purchases on two days are two facts. Judge by what each one says, never by how often it came up. Do not repeat what you know for good. Write each fact in the language of their lines, whatever language the examples here are in. \
+lasting: 0 to {MAX_LASTING} facts from this stretch to keep for good. Only what belongs to the moment stays in lately: a request for right now, a passing mood, what they want you to do this minute, small talk. A note about a moment can still carry something that lasts (who and what is in their life, where they are from, what they have): keep that part as its own fact even when the moment stays in lately ('刚进门，我家橘猫年糕就扑过来了，它五岁了' → '养了一只五岁的橘猫，叫年糕'). Everything else is kept: people, pets and things in their life, what they like and how they live, their plans, what happened to them and when (what they bought and for how much, what they read or finished, where they went), how they feel about you, and what they want from you or with you as a standing wish. Put together notes that are one thing into one fact, keeping the specifics they gave (numbers, names, amounts, dates); write any time as the actual date. When what they did brought something (a visit and what they were told there, a test and its results, a return and the refund), the fact keeps both: what they did, when, and what came of it, never only what came of it ('周二下午去4S店做了保养，店里说刹车片该换了', not only '刹车片该换了'); asked later about the visit or that day, the outcome alone does not answer. Name someone both ways whenever this stretch or what you know for good gives both who they are to them and their name ('their ENT specialist, Dr. Patel, diagnosed chronic sinusitis'; '室友小林搬走了'), so one person met under two names is plainly one; when it is not plain that two are one, write only what they said. Every fact is about them, so never call them he or she: in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else. Keep separate things separate: two purchases on two days are two facts. Judge by what each one says, never by how often it came up. Do not repeat what you know for good. Write each fact in the language of their lines, whatever language the examples here are in. \
 Each lasting fact's evidence is verbatim from their lines where they stated it: one contiguous excerpt, or several from different lines joined with ' / '. Never cite your lines. \
 from lists the indexes (from 0) in lately of the notes a lasting fact puts together or says again; [] if none. moment lists the indexes of the notes that belong to the moment and stay in lately, and known those that only say again what you know for good. Every note is in one of them: a note in none is kept for good as it is. \
 concepts lists 1-5 things a fact is about (a person, pet, work, place, activity, food), each with its usual name and up to 5 other names people use for it. They only help find the fact again. \
@@ -538,6 +538,36 @@ mod tests {
         ] {
             assert!(prompt.contains(rule), "{rule}");
         }
+    }
+
+    /// Something they did and what came of it are kept together: the
+    /// visit as well as its results (a stretch where only the results were
+    /// kept could not say later which day the appointment was).
+    #[test]
+    fn what_they_did_is_kept_with_what_came_of_it() {
+        let theirs = "I need help with meal planning. I just got my blood test results back and my cholesterol levels are a bit high, so I want to make some changes to my diet. By the way, I had a doctor's appointment at 10 AM last Thursday, and that's when I got the results. Can you give me some healthy recipe ideas or suggest a meal planning app?";
+        let raw = r#"{"lasting":[
+            {"fact":"Had a doctor's appointment at 10 AM on 2023-05-18 and got blood test results there showing cholesterol a bit high","evidence":"I had a doctor's appointment at 10 AM last Thursday, and that's when I got the results / my cholesterol levels are a bit high","from":[0,1],"concepts":[],"whenFor":[],
+             "happened":{"from":"2023-05-18","to":"","about":false},"state":"","open":null}
+        ],"replaces":[],"moment":[2],"known":[]}"#;
+        let (lasting, _) = parse_settle(raw, theirs, &[], 3, 0).unwrap();
+        assert_eq!(lasting.len(), 1, "both parts were what they said");
+        assert!(lasting[0].fact.contains("doctor's appointment"));
+        assert_eq!(
+            lasting[0].standing.happened.as_ref().unwrap().from,
+            "2023-05-18"
+        );
+        for prompt in [settle_system_prompt(&[]), extract_system_prompt(&[])] {
+            assert!(prompt.contains("not only"), "{prompt}");
+        }
+        assert!(
+            settle_system_prompt(&[])
+                .contains("the fact keeps both: what they did, when, and what came of it")
+        );
+        assert!(
+            extract_system_prompt(&[])
+                .contains("Something they did and what it brought them are one thing")
+        );
     }
 
     /// A note the answer passed over is left to be kept as it is; one put
