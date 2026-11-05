@@ -145,6 +145,11 @@ fn what_goes_to_an_end_says_which_piece() {
 fn she_hands_off_only_what_they_asked_for() {
     let quiet = section(Host::Site, &[], 0, None);
     assert!(quiet.contains("If it is your own idea, ask first"));
+    // A lookup is hers to hand off, not theirs to go and do.
+    assert!(quiet.contains("you are the one who hands things to it"));
+    assert!(quiet.contains("even when they do not say online or helper"));
+    assert!(quiet.contains("Never tell them to look it up themselves"));
+    assert!(quiet.contains("never that it is still being done or has not come back"));
     assert!(quiet.contains("with their permissions"));
     assert!(quiet.contains("[[stop #N]]"));
     assert!(quiet.contains("never for a new one"));

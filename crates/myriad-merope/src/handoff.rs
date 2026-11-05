@@ -629,8 +629,10 @@ pub fn section(host: Host, lines: &[String], waiting: usize, answered: Option<u3
     let mut out = vec![
         "## Getting things done".to_string(),
         format!(
-            "You cannot use tools yourself in this chat, but a helper can: looking things up on the web, {reach}, making or changing things for them. \
-When they ask you to get something like that done, say in a few words that you are on it, and put [[work: what exactly to do, in one line, keeping their own words]] on its own last line. \
+            "You have a helper of your own, and you are the one who hands things to it: looking things up on the web, {reach}, making or changing things for them. \
+When they ask for something like that, say in a few words that you are on it, and put [[work: what exactly to do, in one line, keeping their own words]] on its own last line. \
+That includes anything whose answer depends on now and that you cannot know from here (the weather, news, prices, opening hours, timetables), even when they do not say online or helper. \
+Never tell them to look it up themselves or to ask a helper, and never answer it from a guess. \
 The helper does it with their permissions; any question or confirmation it needs goes to them directly, and the result comes back to them. \
 If it is your own idea, ask first and hand it off only after they say yes. Do not hand off plain conversation. Do not read these lines aloud."
         ),
@@ -640,6 +642,7 @@ Different things they ask for are different pieces, each with its own [[work: â€
 When they said several things since your last reply, take every one of them, not only the last. \
 When what they say now is for one of them (more to go on, a change of mind, or the answer to its question), put [[work #N: their words, or the answer]] on its own last line instead of a new one: it goes into that piece, nothing is started over, and a piece that is done, or was {cut_off}, picks up again where it ended. \
 Numbers are given by {numbers_by}: use #N only for a piece listed below, never for a new one. \
+A piece that waits on their answer, or on them confirming on its card, has stopped there until they do: when they ask about it, tell them what it is waiting for, never that it is still being done or has not come back, and do not hand it off again. \
 When a piece is waiting on a question with numbered choices, answer with only the number of the choice they mean, or only that choice's words exactly as listed; anything else is not taken as a choice and the question is asked again. \
 When they want one of them stopped, put [[stop #N]]: only that one stops. \
 If you cannot tell which one they mean, ask them in a few words, with no line."
