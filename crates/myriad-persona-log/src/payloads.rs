@@ -215,11 +215,15 @@ pub struct PersonaField {
 /// entity (`kind`, `id`, `state`, `body`; its revision and origin are the
 /// row's own clock and side): her outfits, diary, what she proposed, her
 /// pace, what she is doing, her vitals, her serials, the game of soup, her
-/// stickers, her state toward the owner and the mood it settles from. The
-/// earlier rows are its history. Only the kinds of [`STATE_KINDS`]: the
-/// others have rows of their own (memories, moods, what she said, talk),
-/// are the row's history already (a field's past values) or stay on each
-/// side (which set it wears).
+/// stickers, her state toward the owner, the mood it settles from and each
+/// change of that mood (whole, to replay from: `affect.change` says where it
+/// went, to read). The earlier rows are its history. A record that went is
+/// written `deleted` (body `null`, only the kinds that can go) and is live
+/// again under its id when it comes back: never a `forget`, which takes every
+/// row of its object, those after it too. Only the kinds of [`STATE_KINDS`]:
+/// the others have rows of their own (memories, what she said, talk), are the
+/// row's history already (a field's past values) or stay on each side (which
+/// set it wears).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StateWrite {
@@ -236,8 +240,9 @@ pub struct StateWrite {
 }
 
 /// The entity kinds a `state.write` row carries, sorted.
-pub const STATE_KINDS: [&str; 15] = [
+pub const STATE_KINDS: [&str; 16] = [
     "affect_anchor",
+    "affect_event",
     "diary",
     "intention",
     "outfit",
@@ -267,8 +272,11 @@ pub enum StateAudience {
 }
 
 /// Each kind of [`STATE_KINDS`] and whom its rows are for.
-pub const STATE_AUDIENCES: [(&str, StateAudience); 15] = [
+pub const STATE_AUDIENCES: [(&str, StateAudience); 16] = [
     ("affect_anchor", StateAudience::Partner),
+    // A change of her mood toward the owner (the only one that crosses,
+    // `AffectEventBody.subject`), as `affect.change` toward them is.
+    ("affect_event", StateAudience::Partner),
     ("diary", StateAudience::Either),
     ("intention", StateAudience::Partner),
     ("outfit", StateAudience::Own),

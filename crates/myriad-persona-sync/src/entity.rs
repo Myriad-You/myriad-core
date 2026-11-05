@@ -197,7 +197,19 @@ impl Kind {
     fn states(self) -> &'static [State] {
         match self {
             Kind::Memory => &[State::Live, State::Retired],
-            Kind::Outfit => &[State::Live, State::Deleted],
+            // The records that can go: written gone in her log (`state.write`
+            // deleted, no body), and live again under the same id when they
+            // come back. One a side keeps only one of (her persona, her pace,
+            // her anchor…) never goes.
+            Kind::Outfit
+            | Kind::AffectEvent
+            | Kind::Diary
+            | Kind::Intention
+            | Kind::ProactiveLine
+            | Kind::SerialFollowing
+            | Kind::SerialWork
+            | Kind::Sticker
+            | Kind::VitalsDay => &[State::Live, State::Deleted],
             _ => &[State::Live],
         }
     }
@@ -226,7 +238,9 @@ pub enum State {
     /// A memory she no longer holds (`invalidReason` says why). Retiring is
     /// one-way unless the owner restores it with a later revision.
     Retired,
-    /// An outfit the owner removed: the only tombstone, body `null`.
+    /// A record gone: an outfit the owner removed, a sticker she let go, a
+    /// diary entry or a line past its keeping (body `null`). Only the kinds
+    /// that can go; one that comes back is live again under its id.
     Deleted,
 }
 
@@ -1352,7 +1366,11 @@ mod tests {
     fn only_an_outfit_is_deleted_and_then_its_body_is_null() {
         assert!(canonicalize(entity(Kind::Outfit, "coat", State::Deleted, Value::Null)).is_ok());
         assert!(canonicalize(entity(Kind::Outfit, "coat", State::Deleted, json!({}))).is_err());
-        assert!(canonicalize(entity(Kind::Diary, "d", State::Deleted, Value::Null)).is_err());
+        assert!(canonicalize(entity(Kind::Diary, "d", State::Deleted, Value::Null)).is_ok());
+        assert!(canonicalize(entity(Kind::Diary, "d", State::Deleted, json!({}))).is_err());
+        // One a side keeps only one of never goes.
+        assert!(canonicalize(entity(Kind::Pace, "pace", State::Deleted, Value::Null)).is_err());
+        assert!(canonicalize(entity(Kind::Persona, "her", State::Deleted, Value::Null)).is_err());
     }
 
     #[test]

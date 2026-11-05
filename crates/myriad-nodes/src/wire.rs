@@ -1342,6 +1342,26 @@ mod tests {
                 "{kind}"
             );
         }
+        // A record that went travels with no body, and only of a kind that
+        // can go; the same id live again after it travels as any record.
+        let gone = |kind: &str, id: &str| {
+            serde_json::json!({
+                "at": 2, "format": now, "kind": kind, "id": id, "state": "deleted", "body": null,
+            })
+        };
+        assert_eq!(payload("state.write", &gone("sticker", "stk_5e7a")), Ok(()));
+        assert_eq!(
+            payload("state.write", &gone("affect_event", "ae-1")),
+            Ok(())
+        );
+        assert_eq!(
+            payload("state.write", &gone("pace", "pace")),
+            Err(Why::BadBody)
+        );
+        let mut still = gone("diary", "d-1");
+        still["body"] = sample("diary");
+        assert_eq!(payload("state.write", &still), Err(Why::BadBody));
+
         let mut keyed = sample("sticker");
         keyed["meaning"] = Value::from("下雨了 sk-test-example-only-not-real");
         assert_eq!(
