@@ -63,4 +63,4 @@ pub const SHAPE: u32 = 1;
 
 /// The rules' revision: changes whenever a list, a pattern or a decision
 /// changes, so a client can say which rules put a window where it went.
-pub const RULES: &str = "2026-11-04.1";
+pub const RULES: &str = "2026-11-05.1";

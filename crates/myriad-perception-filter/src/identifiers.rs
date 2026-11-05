@@ -1,5 +1,7 @@
-//! Card numbers and national identity numbers: wiped before any model reads
-//! the text, and a hit means the window shows the owner's own identity.
+//! Card numbers and national identity numbers (cards, Singapore NRIC/FIN,
+//! Japan's My Number, China's resident identity number): wiped before any
+//! model reads the text, and a hit means the window shows the owner's own
+//! identity.
 //!
 //! Only numbers whose check digit is right are taken; a well-formed number
 //! with a wrong check digit stays. Order and tracking numbers that happen to
@@ -24,6 +26,9 @@ pub enum IdentifierKind {
     SgNric,
     /// Japan's individual number, 12 digits.
     JpMyNumber,
+    /// China's resident identity number: 18 characters, a birth date in
+    /// them and an ISO 7064 MOD 11-2 check character (`0`–`9` or `X`).
+    CnResidentId,
 }
 
 /// Digit groups joined by single spaces or hyphens.
@@ -31,18 +36,37 @@ static DIGIT_RUN: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"[0-9]+(?:[ \-][0-9]+)*").unwrap());
 static NRIC: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\b[STFG][0-9]{7}[A-Z]\b").unwrap());
-/// Within 20 characters of a My Number, unless it is written 4-4-4.
-static MY_NUMBER_LABEL: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)マイナンバー|個人番号|my\s?number").unwrap());
+/// Within 20 characters of a My Number, unless it is written 4-4-4. The
+/// label as Japan writes it, and as Chinese writes the same words.
+static MY_NUMBER_LABEL: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)マイナンバー|個人番号|个人番号|个人编号|my\s?number").unwrap()
+});
+/// A China resident identity number's shape: area (first digit 1–9), birth
+/// date 19xx or 20xx, sequence, check character. The date and the check
+/// character are checked in [`cn_resident_id`].
+static CN_RESIDENT_ID: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"[1-9][0-9]{5}(?:19|20)[0-9]{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12][0-9]|3[01])[0-9]{3}[0-9Xx]",
+    )
+    .unwrap()
+});
 
 pub fn scan(text: &str) -> Wiped<IdentifierKind> {
     let mut found: Vec<(usize, usize, IdentifierKind)> = Vec::new();
+    // Resident ids first: one ending in `X` is no digit run, and one ending in
+    // a digit is not also read as a card.
+    for id in CN_RESIDENT_ID.find_iter(text) {
+        if alone(text, id.start(), id.end()) && cn_resident_id(id.as_str()) {
+            found.push((id.start(), id.end(), IdentifierKind::CnResidentId));
+        }
+    }
+    let taken = found.clone();
     for run in DIGIT_RUN.find_iter(text) {
         // A digit glued to a letter or another digit is part of something else.
-        let before = text[..run.start()].chars().next_back();
-        let after = text[run.end()..].chars().next();
-        if before.is_some_and(|c| c.is_ascii_alphanumeric())
-            || after.is_some_and(|c| c.is_ascii_alphanumeric())
+        if !alone(text, run.start(), run.end())
+            || taken
+                .iter()
+                .any(|(start, end, _)| *start < run.end() && run.start() < *end)
         {
             continue;
         }
@@ -62,6 +86,14 @@ pub fn scan(text: &str) -> Wiped<IdentifierKind> {
         text: out,
         wiped: found.into_iter().map(|(_, _, kind)| kind).collect(),
     }
+}
+
+/// Nothing glued to `start..end` on either side: no ASCII letter or digit.
+fn alone(text: &str, start: usize, end: usize) -> bool {
+    let before = text[..start].chars().next_back();
+    let after = text[end..].chars().next();
+    !before.is_some_and(|c| c.is_ascii_alphanumeric())
+        && !after.is_some_and(|c| c.is_ascii_alphanumeric())
 }
 
 /// Cards and My Numbers among one run's groups: the longest valid window of
@@ -166,6 +198,39 @@ pub fn my_number(digits: &[u32]) -> bool {
         .sum();
     let check = if sum % 11 <= 1 { 0 } else { 11 - sum % 11 };
     digits[11] == check
+}
+
+/// A China resident identity number (GB 11643): a real calendar date in
+/// characters 7–14 and the ISO 7064 MOD 11-2 check character last.
+pub fn cn_resident_id(raw: &str) -> bool {
+    let chars: Vec<char> = raw.chars().collect();
+    if chars.len() != 18 {
+        return false;
+    }
+    let body: Vec<u32> = chars[..17].iter().filter_map(|c| c.to_digit(10)).collect();
+    if body.len() != 17 {
+        return false;
+    }
+    let number = |from: usize, to: usize| body[from..to].iter().fold(0, |n, d| n * 10 + d);
+    let (year, month, day) = (number(6, 10), number(10, 12), number(12, 14));
+    let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    let days = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if leap => 29,
+        2 => 28,
+        _ => return false,
+    };
+    if !(1..=days).contains(&day) {
+        return false;
+    }
+    let sum: u32 = body
+        .iter()
+        .zip([7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2])
+        .map(|(d, w)| d * w)
+        .sum();
+    let check = b"10X98765432"[(sum % 11) as usize] as char;
+    chars[17].to_ascii_uppercase() == check
 }
 
 /// A My Number label within 20 characters before or after `start..end`.

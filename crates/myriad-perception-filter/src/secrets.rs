@@ -2,11 +2,12 @@
 //! text reaches any model.
 //!
 //! A safety net, not a guarantee: a private token with no fixed shape and
-//! low entropy (`hunter2`) passes, and so does a credential labelled in
-//! Chinese or Japanese unless its value has a known prefix or reads as
-//! random. It also wipes things that only look like keys (full commit
-//! hashes, image digests, placeholder values in docs); one string fewer seen
-//! is the accepted cost.
+//! low entropy (`hunter2`) passes unless a label stands right before it
+//! (`WiFi 密码：…`, `パスワード …`, `secret key: …`, 2026-11-05); after an
+//! English label and only a space, a value of letters alone still passes,
+//! since it reads as a word. It also wipes things that only look like keys
+//! (full commit hashes, image digests, placeholder values in docs, a word
+//! written after `Password:`); one string fewer seen is the accepted cost.
 //!
 //! Supersedes the native client's `SecretScrub`: same patterns, same order,
 //! same mark, plus the kind of each wipe. [`values`] stands in for its
@@ -42,6 +43,10 @@ pub enum SecretKind {
     Netrc,
     /// A `Cookie:` or `Set-Cookie:` header's value.
     Cookie,
+    /// A short value written after a credential's label in words rather
+    /// than as a name (`WiFi 密码：…`, `パスワード …`, `secret key: …`): see
+    /// [`labelled_value`].
+    Labelled,
     HighEntropy,
 }
 
@@ -158,8 +163,40 @@ static PATTERNS: LazyLock<Vec<Pattern>> = LazyLock::new(|| {
             Cookie,
             true,
         ),
+        // A credential's label in words, then its value (`labelled_value`
+        // says which values are taken): after a separator (`:`, `：`, `=`,
+        // `是`, `为`, `は`) any value; after a password's label in Chinese,
+        // Japanese or Korean, any value too; after any label and only a
+        // space, a value of letters and digits mixed.
+        pattern(
+            &format!(
+                r#"(?i)((?:^|[^A-Za-z]){LABELS}\s*(?:[:：=]|是|为|為|は)\s*["'「]?)({VALUE})"#
+            ),
+            Labelled,
+            true,
+        ),
+        pattern(
+            &format!(r#"((?:{PASSWORD_WORDS})[ \t　]*["'「]?)({VALUE})"#),
+            Labelled,
+            true,
+        ),
+        pattern(
+            &format!(r#"(?i)((?:^|[^A-Za-z]){LABELS}[ \t　]+["'「]?)({VALUE})"#),
+            Labelled,
+            true,
+        ),
     ]
 });
+
+/// A password's label in Chinese, Japanese or Korean: the value right after
+/// it, with or without a space, is the password.
+const PASSWORD_WORDS: &str = "密码|密碼|口令|パスワード|暗証番号|비밀번호";
+/// A credential's label in words, in English or as Chinese, Japanese or
+/// Korean write it.
+const LABELS: &str = "(?:password|passwd|passcode|pwd|secret(?:\\s+key)?|(?:api|access|private)\\s*key|token|密码|密碼|口令|密钥|秘钥|私钥|令牌|パスワード|暗証番号|シークレット|トークン|アクセスキー|api\\s*キー|비밀번호)";
+/// A value: 4 to 64 printable ASCII characters that are no quote, bracket
+/// or comma. A mark (`[密钥…`) never matches.
+const VALUE: &str = r"[A-Za-z0-9!#$%&*+./=?@^_~\-]{4,64}";
 
 static TOKEN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[A-Za-z0-9+_\-]{20,}").unwrap());
 static UUID: LazyLock<Regex> = LazyLock::new(|| {
@@ -355,6 +392,15 @@ fn matches(pattern: &Pattern, text: &str) -> Vec<(usize, usize)> {
         let value = captures.get(2).map_or("", |value| value.as_str());
         let taken = match pattern.kind {
             SecretKind::Assignment => assignment_value(value),
+            SecretKind::Labelled => {
+                let label = captures.get(1).map_or("", |label| label.as_str());
+                // Glued to an earlier wipe (`密码：password=[密钥…`): that
+                // rule already took the value.
+                let glued = captures
+                    .get(2)
+                    .is_some_and(|value| text[value.end()..].starts_with('['));
+                !glued && labelled_value(label, value)
+            }
             // Already a mark, or a variable (`$TOKEN`) rather than its value.
             _ if pattern.keeps_label => !value.starts_with("[密钥") && !value.starts_with('$'),
             _ => true,
@@ -402,6 +448,30 @@ fn assignment_value(value: &str) -> bool {
     after.is_some_and(word_char)
 }
 
+/// A value after a credential's label in words. After a separator or a
+/// password's label in Chinese, Japanese or Korean, any value but a variable
+/// (`$TOKEN`). After a label and only a space, an ASCII word could be prose
+/// (`password reset`), so only a value with both letters and digits is
+/// taken; a password of letters alone there passes (the model's to hold).
+fn labelled_value(label: &str, value: &str) -> bool {
+    if value.starts_with('$') {
+        return false;
+    }
+    let spaced = !label
+        .trim_end_matches(['"', '\'', '「'])
+        .trim_end()
+        .ends_with([':', '：', '=', '是', '为', '為', 'は']);
+    let password_word = PASSWORD_WORDS.split('|').any(|word| {
+        label
+            .trim_end_matches(['"', '\'', '「', ' ', '\t', '　'])
+            .ends_with(word)
+    });
+    if !spaced || password_word {
+        return true;
+    }
+    value.chars().any(|c| c.is_ascii_digit()) && value.chars().any(|c| c.is_ascii_alphabetic())
+}
+
 fn word_char(c: char) -> bool {
     c.is_alphanumeric() || c == '_'
 }
@@ -419,7 +489,10 @@ pub fn looks_random(token: &str) -> bool {
     if token.chars().all(|c| c.is_ascii_hexdigit()) {
         return count >= 32 && digits > 0 && letters > 0;
     }
-    if digits < 2 || letters < 4 {
+    // Few digits: random only as a long run whose case flips as often as a
+    // coin's would (a camelCase name flips about once a word).
+    let few_digits = digits < 2;
+    if letters < 4 || few_digits && !(count >= 24 && flips_like_random(token)) {
         return false;
     }
     // Words joined by separators (`agent_watch_2026_10_19`) are not random.
@@ -443,7 +516,30 @@ pub fn looks_random(token: &str) -> bool {
     });
     let mixed_case = token.chars().any(|c| c.is_ascii_uppercase())
         && token.chars().any(|c| c.is_ascii_lowercase());
-    entropy >= if mixed_case { 3.6 } else { 3.9 }
+    entropy
+        >= if few_digits {
+            4.0
+        } else if mixed_case {
+            3.6
+        } else {
+            3.9
+        }
+}
+
+/// Upper and lower case each a quarter or more of the letters, and the case
+/// changing between at least three in ten neighbouring letters.
+fn flips_like_random(token: &str) -> bool {
+    let letters: Vec<bool> = token
+        .chars()
+        .filter(char::is_ascii_alphabetic)
+        .map(|c| c.is_ascii_uppercase())
+        .collect();
+    let upper = letters.iter().filter(|&&upper| upper).count();
+    let flips = letters.windows(2).filter(|pair| pair[0] != pair[1]).count();
+    letters.len() >= 20
+        && upper * 4 >= letters.len()
+        && (letters.len() - upper) * 4 >= letters.len()
+        && flips * 10 >= (letters.len() - 1) * 3
 }
 
 #[cfg(test)]
