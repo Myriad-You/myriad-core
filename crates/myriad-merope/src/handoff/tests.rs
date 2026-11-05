@@ -365,7 +365,7 @@ fn she_sees_each_piece_on_a_line() {
     };
     assert_eq!(
         line(&asking, now),
-        "#3「订周五的餐厅」在等对方回答：要几点？ 1. 18:00 2. 19:00"
+        "#3「订周五的餐厅」停住了，在等对方回答（对方回答前不会往下办）：要几点？ 1. 18:00 2. 19:00"
     );
     let long = Standing::Waiting {
         question: "问".repeat(RESULT_CHARS + 5),
@@ -400,7 +400,7 @@ fn she_sees_each_piece_on_a_line() {
     );
     assert_eq!(
         line(&piece(8, Standing::Confirming), now),
-        "#8「第8件」在等对方在卡片上确认"
+        "#8「第8件」停住了，在等对方在卡片上确认（确认前不会往下办）"
     );
     let failed = Standing::Failed {
         why: Some("没有权限".into()),

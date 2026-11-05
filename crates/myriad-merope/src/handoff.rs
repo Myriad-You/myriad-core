@@ -352,9 +352,14 @@ pub fn line(piece: &Piece, now: i64) -> String {
             format!("{head}在办{took}{progress}{steps}")
         }
         Standing::Starting => format!("{head}刚交出去，还没开始"),
-        Standing::Confirming => format!("{head}在等对方在卡片上确认"),
+        // Stopped where it is until they act: said on the line itself, so it
+        // is not read as still being done or not back yet.
+        Standing::Confirming => format!("{head}停住了，在等对方在卡片上确认（确认前不会往下办）"),
         Standing::Waiting { question } => {
-            format!("{head}在等对方回答：{}", read_back(question))
+            format!(
+                "{head}停住了，在等对方回答（对方回答前不会往下办）：{}",
+                read_back(question)
+            )
         }
         Standing::CutOff {
             by: CutOffBy::Restart,
