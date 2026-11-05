@@ -20,7 +20,8 @@
           },
           {
             "actedOn": [
-              "site"
+              "site",
+              "app"
             ],
             "forms": [
               "[[game:soup]]",

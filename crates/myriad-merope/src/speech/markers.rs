@@ -56,7 +56,8 @@ pub const MARKERS: &[Marker] = &[
         means: "she starts hosting that game; it follows her words",
         whose: Whose::Her,
         read_by: &["soup::split_start", "hosting::split_seat_game"],
-        acted_on: &["site"],
+        // The Mac hosts turtle soup alone, in her own chat.
+        acted_on: &["site", "app"],
     },
     Marker {
         name: "music",
