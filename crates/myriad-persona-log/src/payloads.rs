@@ -9,8 +9,8 @@
 //! ignores them, so a newer side may add a field without breaking an older
 //! one. Times are milliseconds since the Unix epoch.
 //!
-//! The node kinds (`node.*`) and the judged cases (`case.*`) are not here:
-//! the node kinds come with the nodes' own rules.
+//! The node kinds (`node.*`) are not here: they come with the nodes' own
+//! rules.
 //!
 //! | kind | object | payload |
 //! |---|---|---|
@@ -22,6 +22,9 @@
 //! | `memory.restore` | `memory:<id>` | [`MemoryRestore`] |
 //! | `affect.change` | `affect:<subject>` | [`AffectChange`] |
 //! | `speech.said` | `speech:<id>` | [`SpeechSaid`] |
+//! | `persona.field` | `persona:<field>` | [`PersonaField`] |
+//! | `state.write` | `state:<entity kind>:<id>` | [`StateWrite`] |
+//! | `case.*` | `case:<id>` | [`CaseDisagreed`] and the others below |
 //!
 //! Who said a line, or wrote a memory, is the row's `author` (the owner or
 //! her); who a memory or a mood is about is its `subject`, and who she said
@@ -48,6 +51,7 @@ pub struct SegmentOpen {
 #[serde(rename_all = "camelCase")]
 pub struct SegmentLine {
     pub at: i64,
+    #[serde(default)]
     pub text: String,
     /// The writing side's own id for the line (a message id), when it has
     /// one: the same line is not shown twice.
@@ -56,6 +60,11 @@ pub struct SegmentLine {
     /// The line it answers, by that `line`, when it answers one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reply_to: Option<String>,
+    /// How many pictures came with it. The pictures themselves stay on the
+    /// side that took them; another shows that there were some. A line of
+    /// pictures only has no `text`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pictures: Option<u32>,
 }
 
 /// A stretch of talk is over.
@@ -78,6 +87,11 @@ pub struct MemoryWrite {
     /// gets its own `memory.retire`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub replaces: Vec<String>,
+    /// The words it is found by, as the writing side made them when it was
+    /// written: another side does not make them again (they come from a
+    /// model, and would come out otherwise).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cues: Vec<String>,
 }
 
 /// A memory retired: why, and the one that holds it now when another does.
@@ -186,6 +200,210 @@ pub const SPEECH_SOURCES: [&str; 18] = [
     "work_done",
 ];
 
+/// One field of her persona, as it is now (`persona:<field>`, the field
+/// named here too): `value` is the field's value as `myriad-persona-sync`
+/// writes it, `null` when it was cleared. The earlier rows are its history.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PersonaField {
+    pub at: i64,
+    pub field: String,
+    pub value: Value,
+}
+
+/// One of her records as it is now, as `myriad-persona-sync` writes the
+/// entity (`kind`, `id`, `state`, `body`; its revision and origin are the
+/// row's own clock and side): her outfits, diary, what she proposed, her
+/// pace, what she is doing, her vitals, her serials, the game of soup, her
+/// stickers, her state toward the owner and the mood it settles from. The
+/// earlier rows are its history. Only the kinds of [`STATE_KINDS`]: the
+/// others have rows of their own (memories, moods, what she said, talk),
+/// are the row's history already (a field's past values) or stay on each
+/// side (which set it wears).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StateWrite {
+    pub at: i64,
+    /// The entity format the body is written in
+    /// ([`myriad_persona_sync::FORMAT_VERSION`] where it was written).
+    pub format: u32,
+    pub kind: String,
+    pub id: String,
+    #[serde(default)]
+    pub state: myriad_persona_sync::State,
+    /// In its one form ([`myriad_persona_sync::entity::check_body`]).
+    pub body: Value,
+}
+
+/// The entity kinds a `state.write` row carries, sorted.
+pub const STATE_KINDS: [&str; 15] = [
+    "affect_anchor",
+    "diary",
+    "intention",
+    "outfit",
+    "owner_state",
+    "pace",
+    "present",
+    "proactive_line",
+    "serial_following",
+    "serial_past",
+    "serial_shelf",
+    "serial_work",
+    "soup_game",
+    "sticker",
+    "vitals_day",
+];
+
+/// Whom a `state.write` row of an entity kind is for: fixed by the kind,
+/// never by the side that writes it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StateAudience {
+    /// Her own (`own`): what she is, wears, does and keeps for herself.
+    Own,
+    /// Between her and the partner alone (`personal:<partner>`, one member).
+    Partner,
+    /// Either: a diary of her own day, or of a conversation with them.
+    Either,
+}
+
+/// Each kind of [`STATE_KINDS`] and whom its rows are for.
+pub const STATE_AUDIENCES: [(&str, StateAudience); 15] = [
+    ("affect_anchor", StateAudience::Partner),
+    ("diary", StateAudience::Either),
+    ("intention", StateAudience::Partner),
+    ("outfit", StateAudience::Own),
+    ("owner_state", StateAudience::Partner),
+    ("pace", StateAudience::Own),
+    ("present", StateAudience::Own),
+    ("proactive_line", StateAudience::Partner),
+    ("serial_following", StateAudience::Own),
+    ("serial_past", StateAudience::Own),
+    ("serial_shelf", StateAudience::Own),
+    ("serial_work", StateAudience::Own),
+    ("soup_game", StateAudience::Partner),
+    ("sticker", StateAudience::Own),
+    ("vitals_day", StateAudience::Own),
+];
+
+/// Whom a `state.write` row of entity `kind` is for; none for a kind it
+/// does not carry.
+pub fn state_audience(kind: &str) -> Option<StateAudience> {
+    STATE_AUDIENCES
+        .iter()
+        .find(|(named, _)| *named == kind)
+        .map(|(_, audience)| *audience)
+}
+
+/// The object a `state.write` row of entity `kind` and `id` is about.
+pub fn state_object(kind: &str, id: &str) -> String {
+    format!("state:{kind}:{id}")
+}
+
+/// She told the owner she disagrees with what they want to do or decided
+/// (a judged case begins, `case:<id>`). Ids are the writing side's own.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseDisagreed {
+    pub at: i64,
+    /// What they want, and what she thinks, in her words.
+    pub about: String,
+    pub view: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub conversation: Option<String>,
+    /// Her reply that said it, and their message it answered.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theirs: Option<String>,
+    /// The node the talk was tagged with.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<String>,
+    /// Opened before work they asked her to do: the kind of asking, her
+    /// words then, and the act and its doer when known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ask: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub said: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub act: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub doer: Option<String>,
+}
+
+/// A case line with only its time (`case.insisted`: they had her go
+/// ahead anyway).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseAt {
+    pub at: i64,
+}
+
+/// A case line that names one message (`case.persuaded`: a reason changed
+/// her mind; `case.owned`: she told them herself she was wrong).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseMessage {
+    pub at: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+/// A separate check of their pushback, without what she remembers of them.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseReconsidered {
+    pub at: i64,
+    pub new_reason: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+    /// Their words that carry the reason, a short quote.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quote: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+}
+
+/// The work under way when she said it: the files, paths only. A path
+/// never leaves the side it is on, so these rows travel without a body.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseWork {
+    pub at: i64,
+    pub files: Vec<String>,
+}
+
+/// A test run over that work: `passed` or `failed`, and where it came from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseTested {
+    pub at: i64,
+    pub result: String,
+    pub source: String,
+}
+
+/// How it turned out: `worked` or `failed`, on what basis (`rollback`,
+/// `tests`, `they_said`), and where it came from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseOutcome {
+    pub at: i64,
+    pub result: String,
+    pub basis: String,
+    pub source: String,
+}
+
+/// What the outcome says of her view: right or not, on the outcome's basis.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaseVerdict {
+    pub at: i64,
+    pub right: bool,
+    pub basis: String,
+}
+
+/// The bases a case's outcome and verdict take.
+pub const CASE_BASES: [&str; 3] = ["rollback", "tests", "they_said"];
+
 fn read<T: for<'de> Deserialize<'de>>(kind: &str, value: &Value) -> Result<T, LogError> {
     serde_json::from_value(value.clone())
         .map_err(|_| LogError::new(format!("a {kind} payload is not of its shape")))
@@ -224,7 +442,15 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
                 return Err(LogError::new("a segment.open payload has no place"));
             }
         }
-        "segment.line" => check_text(kind, &read::<SegmentLine>(kind, payload)?.text)?,
+        "segment.line" => {
+            let line: SegmentLine = read(kind, payload)?;
+            if line.pictures == Some(0) {
+                return Err(LogError::new("a segment.line payload counts no pictures"));
+            }
+            if line.pictures.is_none() {
+                check_text(kind, &line.text)?;
+            }
+        }
         "segment.close" => {
             read::<SegmentClose>(kind, payload)?;
         }
@@ -233,6 +459,9 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
             check_text(kind, &memory.text)?;
             for replaced in &memory.replaces {
                 check_memory(kind, replaced)?;
+            }
+            if memory.cues.iter().any(|cue| cue.trim().is_empty()) {
+                return Err(LogError::new("a memory.write payload has an empty cue"));
             }
         }
         "memory.retire" => {
@@ -263,6 +492,84 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
             }
             if !SPEECH_EXTENTS.contains(&said.extent.as_str()) {
                 return Err(LogError::new("a speech.said payload has no known extent"));
+            }
+        }
+        "persona.field" => {
+            let field: PersonaField = read(kind, payload)?;
+            if field.field.is_empty()
+                || field.field.chars().count() > myriad_persona_sync::persona::MAX_FIELD_CHARS
+            {
+                return Err(LogError::new("a persona.field payload names no field"));
+            }
+        }
+        "state.write" => {
+            let state: StateWrite = read(kind, payload)?;
+            if !STATE_KINDS.contains(&state.kind.as_str()) {
+                return Err(LogError::new(
+                    "a state.write payload is of no kind it carries",
+                ));
+            }
+            let entity = myriad_persona_sync::Kind::parse(&state.kind)
+                .ok_or_else(|| LogError::new("a state.write payload is of no kind it carries"))?;
+            // A body in a later format than this core's is one it cannot
+            // check: not taken until this side reads that format. One in an
+            // earlier format it still reads is read as it was written.
+            if state.format > myriad_persona_sync::FORMAT_VERSION {
+                return Ok(false);
+            }
+            if !myriad_persona_sync::READ_FORMAT_VERSIONS.contains(&state.format) {
+                return Err(LogError::new(
+                    "a state.write payload is in no format this core reads",
+                ));
+            }
+            let body = myriad_persona_sync::entity::check_body(
+                entity,
+                state.state,
+                &state.id,
+                state.body.clone(),
+            )
+            .map_err(|_| LogError::new("a state.write payload's body is not of its kind"))?;
+            if state.format == myriad_persona_sync::FORMAT_VERSION && body != state.body {
+                return Err(LogError::new(
+                    "a state.write payload's body is not in its one form",
+                ));
+            }
+        }
+        "case.disagreed" => {
+            let case: CaseDisagreed = read(kind, payload)?;
+            check_text(kind, &case.about)?;
+            check_text(kind, &case.view)?;
+        }
+        "case.insisted" => {
+            read::<CaseAt>(kind, payload)?;
+        }
+        "case.persuaded" | "case.owned" => {
+            read::<CaseMessage>(kind, payload)?;
+        }
+        "case.reconsidered" => {
+            read::<CaseReconsidered>(kind, payload)?;
+        }
+        "case.work" => {
+            read::<CaseWork>(kind, payload)?;
+        }
+        "case.tested" => {
+            let tested: CaseTested = read(kind, payload)?;
+            if !["passed", "failed"].contains(&tested.result.as_str()) {
+                return Err(LogError::new("a case.tested payload has no known result"));
+            }
+        }
+        "case.outcome" => {
+            let outcome: CaseOutcome = read(kind, payload)?;
+            if !["worked", "failed"].contains(&outcome.result.as_str())
+                || !CASE_BASES.contains(&outcome.basis.as_str())
+            {
+                return Err(LogError::new("a case.outcome payload has no known result"));
+            }
+        }
+        "case.verdict" => {
+            let verdict: CaseVerdict = read(kind, payload)?;
+            if !CASE_BASES.contains(&verdict.basis.as_str()) {
+                return Err(LogError::new("a case.verdict payload has no known basis"));
             }
         }
         _ => return Ok(false),

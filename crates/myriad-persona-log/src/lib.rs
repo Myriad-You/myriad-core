@@ -41,6 +41,7 @@ pub mod partner;
 pub mod payloads;
 pub mod row;
 pub mod vector;
+pub mod wrote;
 
 pub use admit::{AdmitInput, Admitted, admit};
 pub use fold::{FoldInput, Folded, fold};

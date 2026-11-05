@@ -80,7 +80,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use myriad_persona_sync::Rev;
 use serde::{Deserialize, Serialize};
 
-use crate::{LogError, Row, kinds::Rule, kinds::SUBJECT, row::Replicate};
+use crate::{
+    LogError, Row,
+    kinds::{ROW, Rule, SUBJECT},
+    row::Replicate,
+};
 
 /// What a ledger entry is.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -413,6 +417,7 @@ impl<'a> View<'a> {
             .copied()
             .collect();
         out.extend(self.subject_of(row));
+        out.extend(self.of_row(row));
         out.extend(self.listing_forgets(row));
         let retracts = self.retracts(row);
         let nodes: BTreeSet<&str> = retracts.iter().map(|entry| entry.target.as_str()).collect();
@@ -443,6 +448,19 @@ impl<'a> View<'a> {
                     .iter()
                     .any(|origin| retracts.iter().any(|entry| entry.homes.contains(origin)))
             })
+            .copied()
+            .collect()
+    }
+
+    /// The forgets of `row` alone (`row:<id>`, one line of a segment): the
+    /// row goes, the rest of its object stays.
+    fn of_row(&self, row: &'a Row) -> Vec<&'a Entry> {
+        let target = format!("{ROW}:{}", row.id);
+        self.by_target
+            .get(&(row.audience.as_str(), target.as_str()))
+            .into_iter()
+            .flatten()
+            .filter(|entry| entry.kind == Kind::Forget)
             .copied()
             .collect()
     }

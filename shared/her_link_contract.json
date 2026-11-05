@@ -577,14 +577,14 @@
       "required": ["grant"],
       "optional": ["stopAfter"],
       "idempotency": "id is the grant's epoch as text.",
-      "description": "To the new holder: grant is {epoch, holder, issued, how, from?, through?} as the log rules write it (log.fold reads the history); from is the holder it moved from (every grant but the first; grants kept from before it was written have none), whose rows through counts; through is per audience, as in lease.yield. The holder catches up to through in from's rows (lease.behind), then thinks. stopAfter is the server's stop time in microseconds (lease.here's stopAfter): how long the holder, cut off from the server and with the owner gone from its 现场, keeps thinking before it stops by itself. The server takes over by the same value, so the holder runs lease.here with it; absent means three minutes."
+      "description": "To the new holder: grant is {epoch, holder, issued, how, from?, through?, move?} as the log rules write it (log.fold reads the history); from is the holder it moved from (every grant but the first; grants kept from before it was written have none), whose rows through counts; through is per audience, as in lease.yield. A grant only goes to a holder: a freeze (how freeze, holder null, move naming the move) goes out as lease.epoch alone. The holder catches up to through in from's rows (lease.behind), then thinks. stopAfter is the server's stop time in microseconds (lease.here's stopAfter): how long the holder, cut off from the server and with the owner gone from its 现场, keeps thinking before it stops by itself. The server takes over by the same value, so the holder runs lease.here with it; absent means three minutes."
     },
     "lease.epoch": {
       "from": "server",
       "delivery": "latest",
       "required": ["epoch", "holder", "how"],
-      "optional": ["holderName", "stopAfter"],
-      "description": "To every device: where her mind is now. A core that held an older epoch stops at once and becomes a child. To a holder that stopped by itself and is back in reach, a lease.epoch naming it at its epoch is the server saying the lease still stands: it drops lease.here's stoppedAt and thinks again. Devices show where she is from it. stopAfter as in lease.grant, so a holder that missed the grant still stops by the server's value."
+      "optional": ["holderName", "stopAfter", "move"],
+      "description": "To every device: where her mind is now. A core that held an older epoch stops at once and becomes a child. While she moves house holder is null, how is freeze and move names the move: every side stops (lease.here says frozen) until a thaw or a commit, both issued by the server. To a holder that stopped by itself and is back in reach, a lease.epoch naming it at its epoch is the server saying the lease still stands: it drops lease.here's stoppedAt and thinks again. Devices show where she is from it. stopAfter as in lease.grant, so a holder that missed the grant still stops by the server's value."
     },
     "lease.stopped": {
       "from": "host",

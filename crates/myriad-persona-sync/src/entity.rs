@@ -317,6 +317,22 @@ pub fn canonicalize(mut entity: EntityVersion) -> Result<EntityVersion, SyncErro
     Ok(entity)
 }
 
+/// Checks one entity's body against its kind, id and state, as
+/// [`canonicalize`] does, and gives it in its one form: what her log's
+/// `state.write` rows carry (`myriad_persona_log::payloads`).
+pub fn check_body(kind: Kind, state: State, id: &str, body: Value) -> Result<Value, SyncError> {
+    check_id(id)?;
+    if let Some(fixed) = kind.fixed_id()
+        && id != fixed
+    {
+        return Err(SyncError::new(format!("the id of a {kind} is {fixed:?}")));
+    }
+    if !kind.states().contains(&state) {
+        return Err(SyncError::new(format!("a {kind} cannot be {state:?}")));
+    }
+    normalize_body(kind, state, id, body)
+}
+
 /// Checks a whole batch and puts it in its one form: entities and assets
 /// canonical and sorted, each listed once.
 pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncError> {

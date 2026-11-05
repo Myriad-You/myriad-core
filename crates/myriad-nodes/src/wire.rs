@@ -479,11 +479,14 @@ fn judge(texts: &[&str], ids: &[&str], whole: &Value) -> Result<(), Why> {
 /// The fields each payload shape names (`myriad_persona_log::payloads`).
 /// On the wire a payload holds no other: a field the core does not know is
 /// one it cannot check.
-const PAYLOAD_FIELDS: [(&str, &[&str]); 8] = [
+const PAYLOAD_FIELDS: [(&str, &[&str]); 19] = [
     ("segment.open", &["at", "place"]),
-    ("segment.line", &["at", "text", "line", "replyTo"]),
+    (
+        "segment.line",
+        &["at", "text", "line", "replyTo", "pictures"],
+    ),
     ("segment.close", &["at"]),
-    ("memory.write", &["at", "text", "kind", "replaces"]),
+    ("memory.write", &["at", "text", "kind", "replaces", "cues"]),
     ("memory.retire", &["at", "why", "by"]),
     ("memory.restore", &["at"]),
     (
@@ -507,11 +510,57 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 8] = [
             "groupName",
         ],
     ),
+    (
+        "case.disagreed",
+        &[
+            "at",
+            "about",
+            "view",
+            "conversation",
+            "message",
+            "theirs",
+            "node",
+            "ask",
+            "said",
+            "act",
+            "doer",
+        ],
+    ),
+    ("case.insisted", &["at"]),
+    ("case.outcome", &["at", "result", "basis", "source"]),
+    ("case.owned", &["at", "message"]),
+    ("case.persuaded", &["at", "message"]),
+    (
+        "case.reconsidered",
+        &["at", "newReason", "reason", "quote", "message"],
+    ),
+    ("case.tested", &["at", "result", "source"]),
+    ("case.verdict", &["at", "right", "basis"]),
+    ("case.work", &["at", "files"]),
+    ("persona.field", &["at", "field", "value"]),
+    (
+        "state.write",
+        &["at", "format", "kind", "id", "state", "body"],
+    ),
 ];
 
 /// The payload fields that are ids, not words: held to the path rule and
 /// the known-key rule, not the random-run one.
-const PAYLOAD_IDS: [&str; 5] = ["line", "replyTo", "replaces", "by", "thing"];
+const PAYLOAD_IDS: [&str; 13] = [
+    "line",
+    "replyTo",
+    "replaces",
+    "by",
+    "thing",
+    "id",
+    "conversation",
+    "message",
+    "theirs",
+    "node",
+    "act",
+    "doer",
+    "files",
+];
 
 /// A payload of a shaped kind checked: its shape, no field it does not
 /// name, then its words and ids.
@@ -533,18 +582,47 @@ fn payload(kind: &str, body: &Value) -> Result<(), Why> {
     let mut texts: Vec<&str> = Vec::new();
     let mut ids: Vec<&str> = Vec::new();
     for (key, value) in fields {
-        let strings: Vec<&str> = match value {
-            Value::String(text) => vec![text.as_str()],
-            Value::Array(items) => items.iter().filter_map(Value::as_str).collect(),
-            _ => Vec::new(),
-        };
-        if PAYLOAD_IDS.contains(&key.as_str()) {
+        // Every string in it, however deep: a record's body (`state.write`)
+        // and a field's value hold their words further in.
+        let mut strings: Vec<&str> = Vec::new();
+        strings_in(value, &mut strings);
+        // A record's body and a field's value are full of ids, digests and
+        // links beside her words: held to the path and known-key rules
+        // only, as ids are, since a digest reads as random.
+        let record = matches!(
+            (kind, key.as_str()),
+            ("state.write", "body") | ("persona.field", "value")
+        );
+        if record || PAYLOAD_IDS.contains(&key.as_str()) {
             ids.extend(strings);
         } else {
             texts.extend(strings);
         }
     }
-    judge(&texts, &ids, body)
+    judge(&texts, &ids, body)?;
+    // A record is checked again as its kind reads it (its one form): what
+    // a side folds is held to the same rules as what was sent.
+    if kind == "state.write" {
+        let state: payloads::StateWrite =
+            serde_json::from_value(body.clone()).map_err(|_| Why::BadBody)?;
+        let entity = myriad_persona_sync::Kind::parse(&state.kind).ok_or(Why::BadBody)?;
+        let read =
+            myriad_persona_sync::entity::check_body(entity, state.state, &state.id, state.body)
+                .map_err(|_| Why::BadBody)?;
+        let mut strings: Vec<&str> = Vec::new();
+        strings_in(&read, &mut strings);
+        judge(&[], &strings, &read)?;
+    }
+    Ok(())
+}
+
+fn strings_in<'a>(value: &'a Value, out: &mut Vec<&'a str>) {
+    match value {
+        Value::String(text) => out.push(text),
+        Value::Array(items) => items.iter().for_each(|item| strings_in(item, out)),
+        Value::Object(fields) => fields.values().for_each(|item| strings_in(item, out)),
+        _ => {}
+    }
 }
 
 /// The nodes whose created row (among `created`, row and body) puts a
@@ -583,6 +661,22 @@ fn carry_as(row: &Row, body: &Value, shared_only: bool) -> Result<(Vec<u8>, Valu
     }
     if !row.kind.starts_with("node.") {
         payload(&row.kind, body)?;
+        // One row is one record: the entity (or the field) its object names,
+        // never another one or a list of them.
+        let about = match row.kind.as_str() {
+            "state.write" => Some(payloads::state_object(
+                body["kind"].as_str().unwrap_or_default(),
+                body["id"].as_str().unwrap_or_default(),
+            )),
+            "persona.field" => Some(format!(
+                "persona:{}",
+                body["field"].as_str().unwrap_or_default()
+            )),
+            _ => None,
+        };
+        if about.is_some_and(|about| about != row.object) {
+            return Err(Why::BadBody);
+        }
         let bytes = canonical_bytes(body);
         if bytes.len() > MAX_BODY_BYTES {
             return Err(Why::TooLarge);
@@ -1038,6 +1132,7 @@ mod tests {
                     text: "早".into(),
                     line: Some("m_1".into()),
                     reply_to: Some("m_0".into()),
+                    pictures: Some(2),
                 }),
             ),
             (
@@ -1051,6 +1146,7 @@ mod tests {
                     text: "喜欢热可可".into(),
                     kind: "preference".into(),
                     replaces: vec!["memory:m-1".into()],
+                    cues: vec!["热可可".into()],
                 }),
             ),
             (
@@ -1092,6 +1188,98 @@ mod tests {
                     group_name: Some("猫猫群".into()),
                 }),
             ),
+            (
+                "case.disagreed",
+                serde_json::to_value(CaseDisagreed {
+                    at: 1,
+                    about: "周五上线".into(),
+                    view: "测试还没跑完".into(),
+                    conversation: Some("c-1".into()),
+                    message: Some("m-2".into()),
+                    theirs: Some("m-1".into()),
+                    node: Some("node:n-1".into()),
+                    ask: Some("task".into()),
+                    said: Some("先跑完测试吧".into()),
+                    act: Some("a-1".into()),
+                    doer: Some("d-1".into()),
+                }),
+            ),
+            ("case.insisted", serde_json::to_value(CaseAt { at: 1 })),
+            (
+                "case.outcome",
+                serde_json::to_value(CaseOutcome {
+                    at: 1,
+                    result: "failed".into(),
+                    basis: "tests".into(),
+                    source: "tests".into(),
+                }),
+            ),
+            (
+                "case.owned",
+                serde_json::to_value(CaseMessage {
+                    at: 1,
+                    message: Some("m-3".into()),
+                }),
+            ),
+            (
+                "case.persuaded",
+                serde_json::to_value(CaseMessage {
+                    at: 1,
+                    message: Some("m-3".into()),
+                }),
+            ),
+            (
+                "case.reconsidered",
+                serde_json::to_value(CaseReconsidered {
+                    at: 1,
+                    new_reason: true,
+                    reason: Some("客户要求".into()),
+                    quote: Some("客户周五要".into()),
+                    message: Some("m-4".into()),
+                }),
+            ),
+            (
+                "case.tested",
+                serde_json::to_value(CaseTested {
+                    at: 1,
+                    result: "passed".into(),
+                    source: "tests".into(),
+                }),
+            ),
+            (
+                "case.verdict",
+                serde_json::to_value(CaseVerdict {
+                    at: 1,
+                    right: true,
+                    basis: "tests".into(),
+                }),
+            ),
+            (
+                "case.work",
+                serde_json::to_value(CaseWork {
+                    at: 1,
+                    files: vec!["/src/a.rs".into()],
+                }),
+            ),
+            (
+                "persona.field",
+                serde_json::to_value(PersonaField {
+                    at: 1,
+                    field: "name".into(),
+                    value: serde_json::json!("Merope"),
+                }),
+            ),
+            (
+                "state.write",
+                serde_json::to_value(StateWrite {
+                    at: 1,
+                    format: myriad_persona_sync::FORMAT_VERSION,
+                    kind: "pace".into(),
+                    id: "pace".into(),
+                    state: myriad_persona_sync::State::Live,
+                    body: serde_json::json!({}),
+                }),
+            ),
         ];
         assert_eq!(full.len(), PAYLOAD_FIELDS.len());
         for ((kind, value), (named, names)) in full.into_iter().zip(PAYLOAD_FIELDS) {
@@ -1108,5 +1296,86 @@ mod tests {
             names.sort();
             assert_eq!(written, names, "{kind}");
         }
+    }
+
+    /// A record travels in its one form of a kind it carries: every kind's
+    /// sample entity does; one holding a key, one off its form and one in a
+    /// format this core does not read yet do not.
+    #[test]
+    fn a_record_travels_as_its_kind_and_never_with_a_key() {
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../myriad-persona-sync/fixtures/entities");
+        let record = |kind: &str, format: u32, body: &Value| {
+            let file: Value =
+                serde_json::from_slice(&std::fs::read(dir.join(format!("{kind}.json"))).unwrap())
+                    .unwrap();
+            serde_json::json!({
+                "at": 1,
+                "format": format,
+                "kind": kind,
+                "id": file["id"],
+                "state": file["state"],
+                "body": body,
+            })
+        };
+        let sample = |kind: &str| -> Value {
+            let file: Value =
+                serde_json::from_slice(&std::fs::read(dir.join(format!("{kind}.json"))).unwrap())
+                    .unwrap();
+            let entity = myriad_persona_sync::Kind::parse(kind).unwrap();
+            let state: myriad_persona_sync::State =
+                serde_json::from_value(file["state"].clone()).unwrap();
+            myriad_persona_sync::entity::check_body(
+                entity,
+                state,
+                file["id"].as_str().unwrap(),
+                file["body"].clone(),
+            )
+            .unwrap()
+        };
+        let now = myriad_persona_sync::FORMAT_VERSION;
+        for kind in payloads::STATE_KINDS {
+            assert_eq!(
+                payload("state.write", &record(kind, now, &sample(kind))),
+                Ok(()),
+                "{kind}"
+            );
+        }
+        let mut keyed = sample("sticker");
+        keyed["meaning"] = Value::from("下雨了 sk-test-example-only-not-real");
+        assert_eq!(
+            payload("state.write", &record("sticker", now, &keyed)),
+            Err(Why::Secret)
+        );
+        let mut extra = sample("sticker");
+        extra["token"] = Value::from("abc");
+        assert_eq!(
+            payload("state.write", &record("sticker", now, &extra)),
+            Err(Why::BadBody)
+        );
+        assert_eq!(
+            payload("state.write", &record("sticker", now + 1, &extra)),
+            Err(Why::NoShape)
+        );
+        assert_eq!(
+            payload("state.write", &record("sticker", 1, &sample("sticker"))),
+            Err(Why::BadBody)
+        );
+        // One row, one record: the entity its object names.
+        let row = |object: &str| -> Row {
+            serde_json::from_value(serde_json::json!({
+                "audience": "own:", "author": "her", "dseq": 1, "epoch": 1,
+                "hlc": "001760000000030-000000-dev_mac", "id": "s-1", "kind": "state.write",
+                "object": object, "origin": "dev_mac", "payload": {"ref": "blob:s-1"},
+                "replicate": "shared", "version": 1,
+            }))
+            .unwrap()
+        };
+        let sticker = record("sticker", now, &sample("sticker"));
+        assert!(carry(&row("state:sticker:stk_5e7a"), &sticker).is_ok());
+        assert_eq!(
+            carry(&row("state:sticker:stk_other"), &sticker).map(|_| ()),
+            Err(Why::BadBody)
+        );
     }
 }

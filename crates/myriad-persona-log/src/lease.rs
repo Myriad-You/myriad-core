@@ -1,7 +1,8 @@
 //! The lease: which host core her one mind is on, numbered by an epoch that
 //! only grows. Only the server issues it.
 //!
-//! It moves three ways, and no other:
+//! It moves three ways, and while she moves house it is held by no one
+//! (below):
 //! 1. **Handover**: the holder gives it up (going to sleep, the owner left
 //!    its place or showed up at another). It answers with its last count
 //!    in each audience ([`Through`]); the target catches up to them before
@@ -14,6 +15,15 @@
 //! 3. **Force**: the owner says "come here". The only way two of her can
 //!    think at once (the old holder still running, offline); its rows from
 //!    after the move are folded in and marked ([`standing`]).
+//!
+//! **Frozen**: while she moves to a host core joining for the first time
+//! (or is taken back from one), she is nowhere: a [`How::Freeze`] grant has
+//! no holder, and every side stops ([`Here::Frozen`]). It ends one of two
+//! ways, both issued by the server: the move is called off and the lease
+//! goes back to whom it was frozen from ([`How::Thaw`]), or the move commits
+//! and the lease goes to its target as a handover from that same side,
+//! carrying what it wrote ([`Request::Commit`]). Nothing else moves a frozen
+//! lease.
 //!
 //! Before a side has ever held or seen a lease (used alone, never connected
 //! to the server) she thinks there alone and writes her rows at epoch
@@ -85,6 +95,10 @@ pub enum How {
     Handover,
     Takeover,
     Force,
+    /// She is moving house: no one holds it ([`Grant::holder`] is none).
+    Freeze,
+    /// The move was called off: back to the side it was frozen from.
+    Thaw,
 }
 
 /// One issue of the lease.
@@ -92,8 +106,9 @@ pub enum How {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Grant {
     pub epoch: u64,
-    /// The host core that holds it (a clock node).
-    pub holder: String,
+    /// The host core that holds it (a clock node); none while she moves
+    /// house ([`How::Freeze`]).
+    pub holder: Option<String>,
     /// The server's clock when it issued it.
     pub issued: Rev,
     pub how: How,
@@ -103,10 +118,14 @@ pub struct Grant {
     /// written have none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from: Option<String>,
-    /// For a handover: the previous holder's last shared count in each
-    /// audience when it gave the lease up.
+    /// For a handover, or a freeze: the previous holder's last shared count
+    /// in each audience when it gave the lease up. A commit after a freeze
+    /// carries the freeze's.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub through: Option<Through>,
+    /// For a freeze: the move it is frozen for.
+    #[serde(default, rename = "move", skip_serializing_if = "Option::is_none")]
+    pub moving: Option<String>,
 }
 
 /// A side's last shared count in each audience it wrote in: `{audience:
@@ -132,31 +151,66 @@ impl Grant {
         if self.epoch == 0 {
             return Err(LogError::new("epochs start at 1"));
         }
-        hlc::check_node(&self.holder).map_err(|error| LogError::new(error.to_string()))?;
+        let frozen = self.how == How::Freeze;
+        match &self.holder {
+            Some(holder) => {
+                if frozen {
+                    return Err(LogError::new("a freeze has no holder"));
+                }
+                hlc::check_node(holder).map_err(|error| LogError::new(error.to_string()))?;
+            }
+            None if !frozen => return Err(LogError::new("only a freeze has no holder")),
+            None => {}
+        }
+        match &self.moving {
+            Some(moving) if frozen => {
+                if moving.is_empty() || moving.chars().count() > 64 {
+                    return Err(LogError::new("a freeze names its move"));
+                }
+            }
+            Some(_) => return Err(LogError::new("only a freeze names a move")),
+            None if frozen => return Err(LogError::new("a freeze names its move")),
+            None => {}
+        }
         if let Some(from) = &self.from {
             if self.how == How::First {
                 return Err(LogError::new("the first grant moves from no one"));
             }
             hlc::check_node(from).map_err(|error| LogError::new(error.to_string()))?;
-            if *from == self.holder {
+            if self.holder.as_deref() == Some(from.as_str()) {
                 return Err(LogError::new("a grant moves from another holder"));
             }
+        } else if frozen {
+            return Err(LogError::new("a freeze names whom it is frozen from"));
         }
         if let Some(through) = &self.through {
-            if self.how != How::Handover {
-                return Err(LogError::new("only a handover carries `through`"));
+            if !matches!(self.how, How::Handover | How::Freeze) {
+                return Err(LogError::new(
+                    "only a handover or a freeze carries `through`",
+                ));
             }
             check_through(through)?;
         }
         Ok(())
     }
 
-    fn rank(&self) -> (u64, std::cmp::Reverse<&Rev>, std::cmp::Reverse<&str>) {
+    fn rank(
+        &self,
+    ) -> (
+        u64,
+        std::cmp::Reverse<&Rev>,
+        std::cmp::Reverse<Option<&str>>,
+    ) {
         (
             self.epoch,
             std::cmp::Reverse(&self.issued),
-            std::cmp::Reverse(self.holder.as_str()),
+            std::cmp::Reverse(self.holder.as_deref()),
         )
+    }
+
+    /// Whether `node` holds it.
+    pub fn held_by(&self, node: &str) -> bool {
+        self.holder.as_deref() == Some(node)
     }
 }
 
@@ -200,6 +254,20 @@ pub enum Request {
     Takeover { server: String },
     /// The owner brings her to `to`.
     Force { to: String },
+    /// She starts moving house (`move`): no one holds it until the move
+    /// commits or is called off. The holder's last shared counts go with
+    /// it, for the target to catch up to.
+    Freeze {
+        #[serde(rename = "move")]
+        moving: String,
+        #[serde(default)]
+        through: Option<Through>,
+    },
+    /// The move is called off: back to the side it was frozen from.
+    Thaw,
+    /// The move commits: the lease goes to `to`, as a handover from the
+    /// side it was frozen from.
+    Commit { to: String },
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -251,6 +319,10 @@ pub enum Refusal {
     OwnerPlaceStale,
     /// The owner left too recently for the holder to have stopped.
     OwnerLeftRecently,
+    /// She is moving house: only the move's end moves the lease.
+    Frozen,
+    /// A thaw or a commit while she is not moving house.
+    NotFrozen,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -279,44 +351,69 @@ pub fn decide(input: MoveInput) -> Result<Moved, LogError> {
             "a new grant is issued after the one standing",
         ));
     }
-    let grant = |holder: &str, how, through| {
+    let issue = |holder: Option<&str>, how, from: Option<String>, through, moving| {
         let grant = Grant {
             epoch: lease.epoch + 1,
-            holder: holder.to_string(),
+            holder: holder.map(str::to_string),
             issued: issued.clone(),
             how,
-            from: Some(lease.holder.clone()),
+            from,
             through,
+            moving,
         };
         grant.check().map(|()| Moved::Granted(grant))
     };
     let refused = |refusal| Ok(Moved::Refused(refusal));
+    // Frozen, only the move's end moves it: back to whom it was frozen
+    // from, or on to the move's target as a handover from them.
+    let Some(holder) = lease.holder.clone() else {
+        let from = lease.from.clone();
+        return match request {
+            Request::Thaw => issue(from.as_deref(), How::Thaw, None, None, None),
+            Request::Commit { to } => {
+                if from.as_deref() == Some(to.as_str()) {
+                    return refused(Refusal::AlreadyHolder);
+                }
+                issue(Some(&to), How::Handover, from, lease.through.clone(), None)
+            }
+            _ => refused(Refusal::Frozen),
+        };
+    };
+    let grant = |to: &str, how, through| issue(Some(to), how, Some(holder.clone()), through, None);
     match request {
+        Request::Thaw | Request::Commit { .. } => refused(Refusal::NotFrozen),
+        Request::Freeze { moving, through } => issue(
+            None,
+            How::Freeze,
+            Some(holder.clone()),
+            through,
+            Some(moving),
+        ),
         Request::Handover {
             from,
             epoch,
             to,
             through,
         } => {
-            if from != lease.holder {
+            if from != holder {
                 return refused(Refusal::NotHolder);
             }
             if epoch != lease.epoch {
                 return refused(Refusal::StaleEpoch);
             }
-            if to == lease.holder {
+            if to == holder {
                 return refused(Refusal::AlreadyHolder);
             }
             grant(&to, How::Handover, through)
         }
         Request::Force { to } => {
-            if to == lease.holder {
+            if to == holder {
                 return refused(Refusal::AlreadyHolder);
             }
             grant(&to, How::Force, None)
         }
         Request::Takeover { server } => {
-            if server == lease.holder {
+            if server == holder {
                 return refused(Refusal::AlreadyHolder);
             }
             let last_seen =
@@ -396,6 +493,9 @@ pub enum Here {
     /// Another side holds the lease (or a newer epoch moved it away): this
     /// side is a child.
     Child,
+    /// No one holds it: she is moving house, and thinks nowhere until the
+    /// move commits or is called off.
+    Frozen,
 }
 
 pub fn here(input: HereInput) -> Result<Here, LogError> {
@@ -403,7 +503,10 @@ pub fn here(input: HereInput) -> Result<Here, LogError> {
         return Ok(Here::Thinking);
     };
     lease.check()?;
-    if lease.holder != input.me {
+    if lease.holder.is_none() {
+        return Ok(Here::Frozen);
+    }
+    if !lease.held_by(&input.me) {
         return Ok(Here::Child);
     }
     if let Some(stopped_at) = input.stopped_at {
@@ -500,7 +603,7 @@ fn placed(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
     let Some(own) = issue(grants, epoch) else {
         return normal;
     };
-    if own.holder != row.origin {
+    if !own.held_by(&row.origin) {
         return (Stand::NotHolder, None);
     }
     let Some(next) = next_epoch(epoch, grants).and_then(|next| issue(grants, next)) else {
@@ -508,7 +611,7 @@ fn placed(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
     };
     let after_issue = row.hlc > next.issued;
     match next.how {
-        How::Handover => {
+        How::Handover | How::Freeze => {
             // An audience the handover leaves out had none of the old
             // holder's rows in it: every one there came after.
             let after = match (row.replicate, row.dseq, &next.through) {
@@ -524,7 +627,7 @@ fn placed(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
             }
         }
         How::Force if after_issue => (Stand::Concurrent, Some(next.epoch)),
-        How::Force | How::Takeover | How::First => normal,
+        How::Force | How::Takeover | How::First | How::Thaw => normal,
     }
 }
 
@@ -539,7 +642,7 @@ fn alone(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
         .filter(|grant| grant.issued < row.hlc)
         .reduce(|a, b| newer(a, b));
     match then {
-        Some(grant) if grant.holder != row.origin => (Stand::Concurrent, Some(grant.epoch)),
+        Some(grant) if !grant.held_by(&row.origin) => (Stand::Concurrent, Some(grant.epoch)),
         _ => (Stand::Normal, None),
     }
 }

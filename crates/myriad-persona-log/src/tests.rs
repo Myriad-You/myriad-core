@@ -93,6 +93,17 @@ fn run(call: &str, raw: Value) -> Result<Value, LogError> {
             let Vectors { mine, theirs } = input(raw)?;
             json!({ "missing": missing(&mine, &theirs) })
         }
+        "log.partner_wrote" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                rows: Vec<Row>,
+                #[serde(default)]
+                ledger: Vec<forget::Entry>,
+            }
+            let In { rows, ledger } = input(raw)?;
+            json!({ "at": crate::wrote::partner_wrote(&rows, &ledger).map(|ms| ms * 1000) })
+        }
         "log.answer" => {
             let Answer {
                 rows,
@@ -291,6 +302,16 @@ fn every_refused_row_is_refused_for_its_own_reason() {
         ("a retract naming another node", "names no other node"),
         ("a forget's list out of order", "takes is sorted"),
         ("a forget listing more than 256 rows", "at most 256 rows"),
+        ("a sticker in the partner's audience", "is not for audience"),
+        (
+            "the game of soup in her own audience",
+            "is not for audience",
+        ),
+        ("an intention between her and two", "is not for audience"),
+        (
+            "a record of no kind it carries",
+            "no entity kind it carries",
+        ),
     ];
     let file: Value = serde_json::from_slice(
         &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),
@@ -551,11 +572,12 @@ fn takeovers_wait_for_the_stop(stop: Option<i64>) {
     let minute = 60_000_000_i64;
     let lease = Grant {
         epoch: 4,
-        holder: "dev_mac".into(),
+        holder: Some("dev_mac".into()),
         issued: rev(1, "site"),
         how: How::Handover,
         from: Some("site".into()),
         through: Some(Through::from([(OWNER.into(), 3)])),
+        moving: None,
     };
     let mut granted = 0;
     for last_seen in (0..=8).map(|m| m * minute) {
@@ -612,11 +634,12 @@ fn takeovers_wait_for_the_stop(stop: Option<i64>) {
 fn a_new_grant_names_the_holder_it_moves_from() {
     let lease = Grant {
         epoch: 4,
-        holder: "dev_mac".into(),
+        holder: Some("dev_mac".into()),
         issued: rev(1, "site"),
         how: How::Handover,
         from: None,
         through: None,
+        moving: None,
     };
     for request in [
         Request::Handover {
@@ -647,11 +670,12 @@ fn a_new_grant_names_the_holder_it_moves_from() {
     }
     let first = Grant {
         epoch: 1,
-        holder: "dev_mac".into(),
+        holder: Some("dev_mac".into()),
         issued: rev(1, "site"),
         how: How::First,
         from: Some("site".into()),
         through: None,
+        moving: None,
     };
     assert!(first.check().is_err());
     let to_itself = Grant {
@@ -667,11 +691,12 @@ fn a_holder_that_stopped_stays_stopped_until_the_server_says_so() {
     let minute = 60_000_000_i64;
     let lease = Grant {
         epoch: 4,
-        holder: "dev_mac".into(),
+        holder: Some("dev_mac".into()),
         issued: rev(1, "site"),
         how: How::Handover,
         from: Some("site".into()),
         through: None,
+        moving: None,
     };
     let here = |disconnected_since, owner_here_at, stopped_at| {
         lease::here(HereInput {
@@ -722,19 +747,21 @@ fn only_a_forced_move_makes_rows_concurrent() {
         vec![
             Grant {
                 epoch: 1,
-                holder: "dev_mac".into(),
+                holder: Some("dev_mac".into()),
                 issued: rev(10, "site"),
                 how: How::First,
                 from: None,
                 through: None,
+                moving: None,
             },
             Grant {
                 epoch: 2,
-                holder: "dev_win".into(),
+                holder: Some("dev_win".into()),
                 issued: rev(200, "site"),
                 how,
                 from: Some("dev_mac".into()),
                 through: None,
+                moving: None,
             },
         ]
     };
@@ -760,4 +787,198 @@ fn only_a_forced_move_makes_rows_concurrent() {
         lease::standing(&late, &grants(How::Handover)),
         lease::Stand::AfterHandover
     );
+}
+
+/// Moving house: no one holds the lease, every side stops, and only the
+/// move's end moves it on, back or to the target as a handover.
+#[test]
+fn a_frozen_lease_is_held_by_no_one_until_the_move_ends() {
+    let held = Grant {
+        epoch: 4,
+        holder: Some("site".into()),
+        issued: rev(1, "site"),
+        how: How::Handover,
+        from: Some("dev_win".into()),
+        through: None,
+        moving: None,
+    };
+    let decide = |lease: &Grant, request: Request| {
+        lease::decide(MoveInput {
+            lease: lease.clone(),
+            request,
+            now: 10,
+            issued: rev(lease.epoch + 1, "site"),
+            holder_last_seen: None,
+            holder_place: None,
+            owner_place: None,
+            stop_after: None,
+        })
+        .unwrap()
+    };
+    let through = Through::from([(OWNER.into(), 7)]);
+    let Moved::Granted(frozen) = decide(
+        &held,
+        Request::Freeze {
+            moving: "mv_1".into(),
+            through: Some(through.clone()),
+        },
+    ) else {
+        panic!("freeze");
+    };
+    assert_eq!(
+        (frozen.holder.as_deref(), frozen.how, frozen.from.as_deref()),
+        (None, How::Freeze, Some("site"))
+    );
+    assert_eq!(frozen.moving.as_deref(), Some("mv_1"));
+    for me in ["site", "dev_mac", "dev_win"] {
+        let here = lease::here(HereInput {
+            me: me.into(),
+            lease: Some(frozen.clone()),
+            now: 11,
+            disconnected_since: None,
+            owner_here_at: None,
+            stop_after: None,
+            stopped_at: None,
+        })
+        .unwrap();
+        assert_eq!(here, Here::Frozen, "{me}");
+    }
+    // Nothing but the move's end moves it.
+    for request in [
+        Request::Force {
+            to: "dev_mac".into(),
+        },
+        Request::Takeover {
+            server: "site".into(),
+        },
+        Request::Handover {
+            from: "site".into(),
+            epoch: 5,
+            to: "dev_mac".into(),
+            through: None,
+        },
+        Request::Freeze {
+            moving: "mv_2".into(),
+            through: None,
+        },
+    ] {
+        assert_eq!(
+            decide(&frozen, request),
+            Moved::Refused(lease::Refusal::Frozen)
+        );
+    }
+    assert_eq!(
+        decide(&held, Request::Thaw),
+        Moved::Refused(lease::Refusal::NotFrozen)
+    );
+    // Called off: back where it was.
+    let Moved::Granted(thawed) = decide(&frozen, Request::Thaw) else {
+        panic!("thaw");
+    };
+    assert_eq!(
+        (thawed.holder.as_deref(), thawed.how, thawed.epoch),
+        (Some("site"), How::Thaw, 6)
+    );
+    // Committed: on to the target, a handover from the side it was frozen
+    // from, with what that side wrote to catch up to.
+    let Moved::Granted(moved) = decide(
+        &frozen,
+        Request::Commit {
+            to: "dev_mac".into(),
+        },
+    ) else {
+        panic!("commit");
+    };
+    assert_eq!(
+        (moved.holder.as_deref(), moved.how, moved.from.as_deref()),
+        (Some("dev_mac"), How::Handover, Some("site"))
+    );
+    assert_eq!(moved.through, Some(through));
+    assert_eq!(
+        decide(&frozen, Request::Commit { to: "site".into() }),
+        Moved::Refused(lease::Refusal::AlreadyHolder)
+    );
+    // A freeze is held by no one and names its move; nothing else does.
+    for bad in [
+        Grant {
+            holder: Some("site".into()),
+            ..frozen.clone()
+        },
+        Grant {
+            moving: None,
+            ..frozen.clone()
+        },
+        Grant {
+            from: None,
+            ..frozen.clone()
+        },
+        Grant {
+            holder: None,
+            ..held.clone()
+        },
+        Grant {
+            moving: Some("mv_1".into()),
+            ..held.clone()
+        },
+    ] {
+        assert!(bad.check().is_err(), "{bad:?}");
+    }
+}
+
+/// No entity a `state.write` row can carry names a credential: no field
+/// of any of the sample entities (every kind the snapshot sync has, those
+/// rows carry and the rest) is a key, token, password or the like. What
+/// such a field would hold must never reach her log.
+#[test]
+fn no_record_names_a_credential() {
+    fn names(value: &Value, out: &mut Vec<String>) {
+        match value {
+            Value::Object(fields) => {
+                for (key, value) in fields {
+                    out.push(key.to_lowercase());
+                    names(value, out);
+                }
+            }
+            Value::Array(items) => items.iter().for_each(|item| names(item, out)),
+            _ => {}
+        }
+    }
+    let dir =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../myriad-persona-sync/fixtures/entities");
+    let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .collect();
+    files.sort();
+    assert_eq!(files.len(), 22, "{files:?}");
+    for kind in payloads::STATE_KINDS {
+        assert!(
+            files.iter().any(|file| file.file_stem().unwrap() == kind),
+            "{kind}"
+        );
+    }
+    let words = [
+        "secret",
+        "password",
+        "passphrase",
+        "credential",
+        "apikey",
+        "api_key",
+        "authorization",
+        "bearer",
+        "privatekey",
+        "cookie",
+    ];
+    for file in files {
+        let entity: Value = serde_json::from_slice(&std::fs::read(&file).unwrap()).unwrap();
+        let mut found = Vec::new();
+        names(&entity["body"], &mut found);
+        for name in found {
+            assert!(
+                !words.iter().any(|word| name.contains(word)) && !name.ends_with("token"),
+                "{}: {name}",
+                file.display()
+            );
+        }
+    }
 }
