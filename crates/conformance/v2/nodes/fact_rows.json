@@ -470,6 +470,129 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "happened": {
+              "from": "2026-10-03"
+            },
+            "memory": "m1",
+            "open": true,
+            "saidBy": [
+              "partner"
+            ],
+            "state": "待取",
+            "text": "2026-10-03 送洗两件衬衫"
+          },
+          {
+            "happened": {
+              "from": "2026-10-20",
+              "to": "2026-10-03"
+            },
+            "memory": "m2",
+            "open": false,
+            "saidBy": [
+              "partner"
+            ],
+            "state": " 已退 ",
+            "text": "退了一双鞋"
+          },
+          {
+            "memory": "m3",
+            "open": true,
+            "saidBy": [
+              "partner"
+            ],
+            "state": "",
+            "text": "喜欢深色的衣服"
+          }
+        ],
+        "start": {
+          "name": "衣服"
+        }
+      },
+      "name": "facts with when they happened and where they stand; what does not hold is left out",
+      "output": {
+        "key": "minted:tb58c6be423e1a583bc61116b",
+        "node": "8b8dafdd48457f205577853c25620298",
+        "rows": [
+          {
+            "body": {
+              "key": "minted:tb58c6be423e1a583bc61116b",
+              "kind": "topic",
+              "name": "衣服",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "id": "ue6abcaa356a679702b6df3f7",
+            "kind": "node.created"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "happened": {
+                "from": "2026-10-03"
+              },
+              "open": true,
+              "quoteOnly": true,
+              "refs": [
+                "memory:m1"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "state": "待取",
+              "sync": "shared",
+              "text": "2026-10-03 送洗两件衬衫",
+              "version": 1
+            },
+            "id": "u447bc41c7212994fa14d15ef",
+            "kind": "node.entry"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "open": false,
+              "quoteOnly": true,
+              "refs": [
+                "memory:m2"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "state": "已退",
+              "sync": "shared",
+              "text": "退了一双鞋",
+              "version": 1
+            },
+            "id": "u238baca7fc5fe7569f58479c",
+            "kind": "node.entry"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "quoteOnly": true,
+              "refs": [
+                "memory:m3"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "喜欢深色的衣服",
+              "version": 1
+            },
+            "id": "u6da08b615db890b196b252e1",
+            "kind": "node.entry"
+          }
+        ]
+      }
     }
   ],
   "version": 1

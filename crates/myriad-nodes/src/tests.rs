@@ -95,6 +95,9 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.fact_rows" => json_of(&entries::fact_rows(input(raw)?)?),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
+        "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
+        "nodes.range_dates" => json_of(&listing::range_dates(input(raw)?)?),
+        "nodes.list" => json_of(&listing::list(input(raw)?)?),
         "nodes.trust_tier" => json_of(&trust::tiers(input(raw)?)),
         "nodes.usable_in_private" => json_of(&trust::usable(input(raw)?)?),
         "nodes.view_may_change" => json_of(&trust::view_answer(input(raw)?)),
@@ -129,7 +132,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 30, "{files:?}");
+    assert_eq!(files.len(), 33, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -519,6 +522,49 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         ("notes that repeat", "note ids repeat"),
         ("a waiting id that repeats", "waiting ids repeat"),
+        // nodes.body: when an entry happened and where it stands
+        (
+            "an entry happened on a day that is not one",
+            "happened from is a day, a month or a year",
+        ),
+        (
+            "an entry happened ending before it starts",
+            "happened to comes after from",
+        ),
+        (
+            "an entry happened to the same as from",
+            "happened to is left out when it is from",
+        ),
+        (
+            "an entry happened in words",
+            "happened from is a day, a month or a year",
+        ),
+        (
+            "an entry happened with a field it does not know",
+            "unknown field",
+        ),
+        (
+            "an entry open without a state",
+            "open is only beside a state",
+        ),
+        ("an entry state too long", "state is a word or two"),
+        ("an entry state with two spaces", "state is a word or two"),
+        ("an entry state empty", "state is a word or two"),
+        // nodes.sort_input, nodes.standing_read, nodes.range_dates, nodes.list
+        ("a said day that is not a day", "said and today are a day"),
+        ("no item", "missing field `item`"),
+        ("refused: no units", "a range counts 1 to 120 units"),
+        (
+            "refused: dates the wrong way round",
+            "a range's to comes after its from",
+        ),
+        (
+            "refused: a zone that is no zone",
+            "zone is not one the core knows",
+        ),
+        ("refused: a limit of none", "limit is at least 1"),
+        ("refused: to before from", "to comes before from"),
+        ("refused: nodes that repeat in a list", "node ids repeat"),
     ];
     let mut seen = 0;
     for path in case_files() {

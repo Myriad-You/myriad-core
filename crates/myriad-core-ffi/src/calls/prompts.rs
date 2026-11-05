@@ -321,6 +321,42 @@ pub(super) fn remembering_system(raw: &[u8]) -> Result<Value, Failure> {
     plain(raw, remembering::system())
 }
 
+/// `{}` → `{schema}`: the recall judgment's answer.
+pub(super) fn remembering_schema(raw: &[u8]) -> Result<Value, Failure> {
+    let Nothing {} = input(raw)?;
+    Ok(serde_json::json!({ "schema": remembering::schema() }))
+}
+
+/// `{output}` → `{cues, thorough, lookBack, aboutYou, range?, open?}`, or
+/// `null` when the answer cannot be read.
+pub(super) fn remembering_read(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        output: String,
+    }
+    let req: In = input(raw)?;
+    Ok(match remembering::parse(&req.output) {
+        None => Value::Null,
+        Some(cues) => {
+            let mut out = serde_json::json!({
+                "cues": cues.cues,
+                "thorough": cues.thorough,
+                "lookBack": cues.look_back,
+                "aboutYou": cues.about_you,
+            });
+            if let Some(range) = &cues.range {
+                out["range"] = serde_json::to_value(range)
+                    .map_err(|_| Failure::BadInput("answer does not serialize".into()))?;
+            }
+            if let Some(open) = cues.open {
+                out["open"] = Value::Bool(open);
+            }
+            out
+        }
+    })
+}
+
 pub(super) fn chat_days_day_system(raw: &[u8]) -> Result<Value, Failure> {
     soul(raw, chat_days::day_system)
 }

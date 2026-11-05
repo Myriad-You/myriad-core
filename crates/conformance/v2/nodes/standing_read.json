@@ -1,0 +1,87 @@
+{
+  "call": "nodes.standing_read",
+  "cases": [
+    {
+      "input": {
+        "item": {
+          "fact": "x",
+          "happened": {
+            "about": true,
+            "from": "2026-10-03",
+            "to": "2026-10-05"
+          },
+          "open": true,
+          "state": "待取"
+        }
+      },
+      "name": "when it happened and where it stands",
+      "output": {
+        "happened": {
+          "about": true,
+          "from": "2026-10-03",
+          "to": "2026-10-05"
+        },
+        "open": true,
+        "state": "待取"
+      }
+    },
+    {
+      "input": {
+        "item": {
+          "happened": "2026-10"
+        }
+      },
+      "name": "a bare day for when it happened",
+      "output": {
+        "happened": {
+          "from": "2026-10"
+        }
+      }
+    },
+    {
+      "input": {
+        "item": {
+          "happened": {
+            "about": false,
+            "from": "",
+            "to": ""
+          },
+          "open": null,
+          "state": ""
+        }
+      },
+      "name": "none given",
+      "output": {}
+    },
+    {
+      "input": {
+        "item": {
+          "happened": {
+            "from": "上周五"
+          },
+          "open": true,
+          "state": 3
+        }
+      },
+      "name": "garbled is none",
+      "output": {}
+    },
+    {
+      "input": {
+        "item": {
+          "open": false
+        }
+      },
+      "name": "open without a state is none",
+      "output": {}
+    },
+    {
+      "input": {},
+      "name": "no item",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -2035,6 +2035,403 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "2026-10-03"
+          },
+          "open": true,
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "待取",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry with when it happened and where it stands",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "2026-10-03"
+          },
+          "open": true,
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "待取",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"happened\":{\"from\":\"2026-10-03\"},\"open\":true,\"quoteOnly\":true,\"refs\":[\"memory:m1\"],\"saidBy\":[\"partner\"],\"state\":\"待取\",\"sync\":\"shared\",\"text\":\"送洗两件衬衫\",\"version\":1}",
+        "digest": "93f1706f396aaf88f23d793864090643"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "about": true,
+            "from": "2026-09",
+            "to": "2026-10-20"
+          },
+          "open": false,
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "已完成",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry that went on for a while, roughly",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "about": true,
+            "from": "2026-09",
+            "to": "2026-10-20"
+          },
+          "open": false,
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "已完成",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"happened\":{\"about\":true,\"from\":\"2026-09\",\"to\":\"2026-10-20\"},\"open\":false,\"quoteOnly\":true,\"refs\":[\"memory:m1\"],\"saidBy\":[\"partner\"],\"state\":\"已完成\",\"sync\":\"shared\",\"text\":\"送洗两件衬衫\",\"version\":1}",
+        "digest": "e320af3b079a4532caa4a24a57ef94cb"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "还在用",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry with a state and no open",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "还在用",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"quoteOnly\":true,\"refs\":[\"memory:m1\"],\"saidBy\":[\"partner\"],\"state\":\"还在用\",\"sync\":\"shared\",\"text\":\"送洗两件衬衫\",\"version\":1}",
+        "digest": "fe8ebd12b7914d2d633de25c4efd412f"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "about": false,
+            "from": "2026"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry whose about is false writes none",
+      "output": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "2026"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "canonical": "{\"audience\":\"personal:7\",\"happened\":{\"from\":\"2026\"},\"quoteOnly\":true,\"refs\":[\"memory:m1\"],\"saidBy\":[\"partner\"],\"sync\":\"shared\",\"text\":\"送洗两件衬衫\",\"version\":1}",
+        "digest": "a20d5349e0f6e406ec1dc4d341f82750"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "2026-02-30"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry happened on a day that is not one",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "2026-10-20",
+            "to": "2026-10-03"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry happened ending before it starts",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "2026-10",
+            "to": "2026-10"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry happened to the same as from",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "from": "上周五"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry happened in words",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "happened": {
+            "at": 1,
+            "from": "2026-10-03"
+          },
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry happened with a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "open": true,
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry open without a state",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "这件衣服现在还放在干洗店里等着去取",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry state too long",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "picked  up",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry state with two spaces",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "audience": "personal:7",
+          "quoteOnly": true,
+          "refs": [
+            "memory:m1"
+          ],
+          "saidBy": [
+            "partner"
+          ],
+          "state": "",
+          "sync": "shared",
+          "text": "送洗两件衬衫",
+          "version": 1
+        },
+        "kind": "node.entry"
+      },
+      "name": "an entry state empty",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ]
 }

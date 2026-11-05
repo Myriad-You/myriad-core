@@ -107,8 +107,8 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Action, Body, Change, How, IntentStatus, Object, ObjectKind, Origin, Relation, Sentence,
-        Status, Trigger,
+        Action, Body, Change, Happened, How, IntentStatus, Object, ObjectKind, Origin, Relation,
+        Sentence, Status, Trigger,
     },
     key::{Key, Kind, node_id},
     limits::HISTORY,
@@ -242,6 +242,12 @@ pub struct EntryOut {
     pub refs: Vec<String>,
     #[serde(skip_serializing_if = "is_false")]
     pub quote_only: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub happened: Option<Happened>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub open: Option<bool>,
     /// The node it was written on, when a merge moved it here.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub moved_from: Option<String>,
@@ -1616,6 +1622,9 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                         text: body.text,
                         refs: body.refs,
                         quote_only: body.quote_only,
+                        happened: body.happened,
+                        state: body.state,
+                        open: body.open,
                         moved_from: None,
                     });
                 }

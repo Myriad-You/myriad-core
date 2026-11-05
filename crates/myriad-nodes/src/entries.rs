@@ -37,10 +37,13 @@ use myriad_persona_sync::canonical::sha256_hex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub use myriad_merope::happened::{
+    HAPPENED_AND_STATE, Happened, STATE_CHARS, Standing, read_standing, span_of, state_of,
+};
 pub use myriad_merope::topics::{
     ALIASES, HOLDS_CHARS, NAME_CHARS, OF_A_KIND, OFFERED, SORT_BATCH, SORT_FACT_CHARS, Topic,
-    Under, goes_by, name_words, offered, read_sorted, read_under, same_name, shown, sort_input,
-    sort_schema, sort_system_prompt, under_schema,
+    Under, goes_by, name_words, offered, read_sorted, read_sorted_standing, read_under, same_name,
+    shown, sort_input, sort_input_on, sort_schema, sort_system_prompt, under_schema,
 };
 
 use crate::{
@@ -76,12 +79,16 @@ impl TopicIn {
     }
 }
 
-/// A fact to sort: the host's id for it (its memory row) and its text.
+/// A fact to sort: the host's id for it (its memory row), its text, and
+/// the day she learned it (`YYYY-MM-DD` in her zone), when the host gives
+/// it, so what the fact tells of can be placed in time.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FactIn {
     pub id: String,
     pub text: String,
+    #[serde(default)]
+    pub said: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -93,6 +100,9 @@ pub struct SortInput {
     pub topics: Vec<TopicIn>,
     /// Facts under no topic yet, the first [`SORT_BATCH`] taken.
     pub facts: Vec<FactIn>,
+    /// Her today (`YYYY-MM-DD`), when the host gives it.
+    #[serde(default)]
+    pub today: Option<String>,
 }
 
 /// What to ask her: the prompt, the schema, the input (labels and numbers,
@@ -133,18 +143,28 @@ pub fn sort_prepare(input: SortInput) -> Result<SortPrepared, NodeError> {
         "topic id",
         input.topics.iter().map(|topic| topic.id.as_str()),
     )?;
-    let facts: Vec<String> = input
+    for day in input
         .facts
         .iter()
-        .take(SORT_BATCH)
-        .map(|fact| fact.text.clone())
+        .filter_map(|fact| fact.said.as_deref())
+        .chain(input.today.as_deref())
+    {
+        if day.len() != 10 || span_of(day).is_none() {
+            return Err(NodeError::new("said and today are a day, YYYY-MM-DD"));
+        }
+    }
+    let taken: Vec<&FactIn> = input.facts.iter().take(SORT_BATCH).collect();
+    let facts: Vec<String> = taken.iter().map(|fact| fact.text.clone()).collect();
+    let dated: Vec<(&str, Option<&str>)> = taken
+        .iter()
+        .map(|fact| (fact.text.as_str(), fact.said.as_deref()))
         .collect();
     let topics: Vec<Topic> = input.topics.iter().map(TopicIn::topic).collect();
     let order = offered(&facts.join("\n"), &topics);
     Ok(SortPrepared {
         system: sort_system_prompt(),
         schema: sort_schema(),
-        input: sort_input(shown(&topics, &order), &facts),
+        input: sort_input_on(shown(&topics, &order), &dated, input.today.as_deref()),
         offered: order
             .iter()
             .map(|index| input.topics[*index].id.clone())
@@ -236,6 +256,9 @@ pub struct Sorted {
     pub fact: String,
     #[serde(flatten)]
     pub placement: Placement,
+    /// When it happened and where it stands, where she said and it reads.
+    #[serde(flatten)]
+    pub standing: Standing,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -256,11 +279,12 @@ pub fn sort_read(input: SortReadInput) -> Result<SortRead, NodeError> {
         input.known.iter().map(|topic| topic.id.as_str()),
     )?;
     Ok(SortRead {
-        facts: read_sorted(&input.output, input.offered.len(), input.facts.len())
+        facts: read_sorted_standing(&input.output, input.offered.len(), input.facts.len())
             .into_iter()
-            .map(|(at, under)| Sorted {
+            .map(|(at, under, standing)| Sorted {
                 fact: input.facts[at].clone(),
                 placement: placement(&under, &input.offered, &input.known),
+                standing,
             })
             .collect(),
     })
@@ -288,6 +312,20 @@ pub fn under_read(input: UnderReadInput) -> Result<Placement, NodeError> {
     )?;
     let under = read_under(input.value.as_ref(), input.offered.len());
     Ok(placement(&under, &input.offered, &input.known))
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StandingReadInput {
+    /// One fact of the settling answer (one of `lasting`), as it came: its
+    /// `happened`, `state` and `open` are read.
+    pub item: Value,
+}
+
+/// When one fact of the settling answer happened and where it stands
+/// ([`read_standing`]): each none when absent or not readable.
+pub fn standing_read(input: StandingReadInput) -> Standing {
+    read_standing(&input.item)
 }
 
 /// The id of a row made from something else: of `kind`, on `node`, from
@@ -403,6 +441,16 @@ pub struct Fact {
     /// words in a group, kept in their private audience.
     #[serde(default)]
     pub audience: Option<String>,
+    /// When what it tells of happened, as her answer gave it
+    /// ([`read_standing`]); one that does not hold is left out.
+    #[serde(default)]
+    pub happened: Option<Happened>,
+    /// Where it stands; one that is not a word or two is left out, and
+    /// `open` with it.
+    #[serde(default)]
+    pub state: Option<String>,
+    #[serde(default)]
+    pub open: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -560,6 +608,12 @@ pub fn fact_rows(input: FactRowsInput) -> Result<FactRows, NodeError> {
         let mut refs = originals;
         refs.push(memory.clone());
         refs.sort();
+        let happened = fact
+            .happened
+            .clone()
+            .filter(|happened| happened.check().is_ok());
+        let state = fact.state.as_deref().and_then(state_of);
+        let open = fact.open.filter(|_| state.is_some());
         rows.push(row(
             &node,
             &memory,
@@ -572,6 +626,9 @@ pub fn fact_rows(input: FactRowsInput) -> Result<FactRows, NodeError> {
                 text,
                 refs,
                 quote_only,
+                happened,
+                state,
+                open,
             }),
         )?);
     }
