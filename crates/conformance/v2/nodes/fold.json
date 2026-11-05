@@ -21237,6 +21237,198 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "bodies": {
+          "e1": {
+            "audience": "personal:7",
+            "refs": [
+              "message:a2"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴习惯先跑测试再提交。",
+            "version": 1
+          },
+          "e2": {
+            "audience": "personal:7",
+            "refs": [
+              "message:a3"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "伙伴不想让她记住的那件事。",
+            "version": 1
+          },
+          "m1": {
+            "key": "repo:github.com/demo/sample-repo",
+            "kind": "topic",
+            "name": "sample-repo",
+            "object": {
+              "aliases": [
+                "样例仓库"
+              ],
+              "kind": "repo",
+              "name": "sample-repo"
+            },
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "m1",
+            "kind": "node.created",
+            "object": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "origin": "site",
+            "payload": {
+              "ref": "body:m1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000061000-000000-site",
+            "id": "e1",
+            "kind": "node.entry",
+            "object": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "origin": "site",
+            "payload": {
+              "ref": "body:e1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000062000-000000-site",
+            "id": "e2",
+            "kind": "node.entry",
+            "object": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "origin": "site",
+            "payload": {
+              "ref": "body:e2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000063000-000000-site",
+            "id": "f1",
+            "kind": "forget",
+            "object": "row:e2",
+            "origin": "site",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "forgetting one entry of a node (row:<id>): the node and its other entry stay",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "createdBy": "her",
+            "entries": [
+              {
+                "at": 1760000061000000,
+                "audience": "personal:7",
+                "author": "her",
+                "refs": [
+                  "message:a2"
+                ],
+                "row": "e1",
+                "saidBy": [
+                  "partner"
+                ],
+                "sync": "shared",
+                "text": "伙伴习惯先跑测试再提交。"
+              }
+            ],
+            "id": "98ef5969e985afd6bc0eb702cd1ffe5c",
+            "key": "repo:github.com/demo/sample-repo",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "m1"
+              ],
+              "epoch": 1,
+              "row": "m1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "topic"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "m1"
+              ],
+              "epoch": 1,
+              "row": "m1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "sample-repo"
+            },
+            "object": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "m1"
+              ],
+              "epoch": 1,
+              "row": "m1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "aliases": [
+                  "样例仓库"
+                ],
+                "kind": "repo",
+                "name": "sample-repo"
+              }
+            },
+            "updatedAt": 1760000062000000
+          }
+        ],
+        "stubbed": [
+          "e2"
+        ]
+      }
     }
   ],
   "version": 1
