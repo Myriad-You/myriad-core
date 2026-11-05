@@ -170,6 +170,78 @@ fn the_backend_redaction_key_names_are_assignments_too() {
 }
 
 #[test]
+fn a_short_value_after_a_label_in_words_goes_and_the_label_stays() {
+    let mark = secrets::MARK;
+    let mixed = synthetic::random(6, "abcdefghijkmnpqrstuvwxyz", 51)
+        + &synthetic::random(2, "23456789", 55);
+    let letters = synthetic::random(8, "abcdefghijkmnpqrstuvwxyz", 52);
+    let key = synthetic::random(30, "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz", 53);
+    for (label, value) in [
+        ("WiFi 密码 ", &letters),
+        ("WiFi 密码：", &mixed),
+        ("Wi-Fi パスワード ", &letters),
+        ("パスワードは ", &mixed),
+        ("WiFi password 是 ", &letters),
+        ("wifi password ", &mixed),
+        ("Passcode：", &letters),
+        ("密钥：", &key),
+        ("シークレット：", &key),
+        ("secret key: ", &key),
+        ("API 密钥：", &key),
+        ("令牌 = ", &mixed),
+    ] {
+        let scan = secrets::scan(&format!("{label}{value}，记得改"));
+        assert_eq!(scan.text, format!("{label}{mark}，记得改"), "{label}");
+        assert_eq!(scan.wiped, [SecretKind::Labelled], "{label}");
+    }
+}
+
+#[test]
+fn a_label_in_prose_or_before_a_variable_takes_nothing() {
+    let letters = synthetic::random(8, "abcdefghijkmnpqrstuvwxyz", 52);
+    for text in [
+        "Reset your password below",
+        "The password is incorrect, try again",
+        "password manager and password reset links",
+        "密码是正确的，请登录",
+        "パスワードを忘れた方はこちら",
+        "the secret ingredient is love",
+        "token 数量上限 4096",
+        "--token $GITHUB_TOKEN",
+        "Edit the token budget in settings",
+    ] {
+        let scan = secrets::scan(text);
+        assert_eq!(scan.text, text);
+        assert!(scan.wiped.is_empty(), "误抹：{text}");
+    }
+    // A password of letters alone after an English label and only a space
+    // reads as a word: the model's to hold, not this scan's.
+    let text = format!("wifi password {letters}");
+    assert!(secrets::scan(&text).wiped.is_empty());
+}
+
+#[test]
+fn a_long_random_run_with_few_digits_is_wiped_and_camel_case_is_not() {
+    let random = synthetic::random(30, "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz", 54);
+    for text in [
+        random.clone(),
+        format!("lmp_{random}"),
+        format!("rvr-key-{random}"),
+    ] {
+        let scan = secrets::scan(&format!("用 {text} 登录"));
+        assert_eq!(scan.wiped, [SecretKind::HighEntropy], "{}", text.len());
+        assert!(!scan.text.contains(&random));
+    }
+    for text in [
+        "consciousnessProductionAttentionSuspendsReadyLine",
+        "XMLHttpRequestEventTargetPrototype",
+        "AGENT_WATCH_DEFAULT_TIMEOUT_SECONDS",
+    ] {
+        assert!(secrets::scan(text).wiped.is_empty(), "误抹：{text}");
+    }
+}
+
+#[test]
 fn ordinary_code_text_is_left_alone() {
     for text in [
         "Edit Sources/MyriadCore/AgentWatch/SecretScrub.swift at line 42",
@@ -220,6 +292,49 @@ fn identifiers_with_a_right_check_digit_are_wiped() {
     for (_, value) in synthetic::identifiers() {
         assert_eq!(identifiers::scan(&value).wiped.len(), 1, "{value}");
     }
+}
+
+#[test]
+fn a_china_resident_id_with_its_date_and_check_character_is_wiped() {
+    use IdentifierKind::*;
+    for x in [false, true] {
+        let id = synthetic::cn_resident_id(40, x);
+        for text in [
+            format!("身份证号 {id}"),
+            format!("身份证号：{id}。"),
+            format!("Resident ID {id}"),
+            id.clone(),
+        ] {
+            let scan = identifiers::scan(&text);
+            assert_eq!(scan.wiped, [CnResidentId], "x {x}");
+            assert!(!scan.text.contains(&id) && scan.text.contains(identifiers::MARK));
+        }
+        // Lower-case `x` is the same character.
+        assert_eq!(wiped_kinds(&id.to_lowercase()), [CnResidentId]);
+        // A wrong check character, a date that does not exist, or glued to more.
+        let wrong = format!("{}{}", &id[..17], if x { '0' } else { 'X' });
+        let no_date = format!("{}0230{}", &id[..10], &id[14..]);
+        for text in [wrong, no_date, format!("A{id}"), format!("{id}7")] {
+            assert!(!wiped_kinds(&text).contains(&CnResidentId), "x {x}");
+        }
+    }
+}
+
+#[test]
+fn a_plain_my_number_under_its_chinese_label_is_wiped() {
+    let plain: String = synthetic::my_number()
+        .chars()
+        .filter(char::is_ascii_digit)
+        .collect();
+    for label in ["个人编号 ", "个人番号：", "マイナンバー "] {
+        assert_eq!(
+            wiped_kinds(&format!("{label}{plain}")),
+            [IdentifierKind::JpMyNumber],
+            "{label}"
+        );
+    }
+    // No label, no grouping: an order number with a right check digit stays.
+    assert!(wiped_kinds(&format!("订单号 {plain}")).is_empty());
 }
 
 #[test]

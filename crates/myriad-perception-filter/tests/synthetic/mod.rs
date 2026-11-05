@@ -148,6 +148,31 @@ pub fn my_number() -> String {
     groups_of_four(&body)
 }
 
+/// A China resident identity number from a seed: a made-up area and
+/// sequence, a real birth date and its ISO 7064 check character. Seeds are
+/// tried from `seed` on until the check character is `X` when `x` says so,
+/// a digit otherwise.
+pub fn cn_resident_id(seed: u64, x: bool) -> String {
+    for seed in seed.. {
+        let mut body: Vec<u32> = "110101".chars().map(|c| c.to_digit(10).unwrap()).collect();
+        body.extend("19900215".chars().map(|c| c.to_digit(10).unwrap()));
+        body.extend(digits(3, seed));
+        let sum: u32 = body
+            .iter()
+            .zip([7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2])
+            .map(|(d, w)| d * w)
+            .sum();
+        let check = b"10X98765432"[(sum % 11) as usize] as char;
+        if (check == 'X') == x {
+            return format!(
+                "{}{check}",
+                body.iter().map(u32::to_string).collect::<String>()
+            );
+        }
+    }
+    unreachable!()
+}
+
 pub fn identifiers() -> Vec<(&'static str, String)> {
     vec![
         ("card", card()),
