@@ -148,7 +148,7 @@ pub fn format_emotion_section(emotion: f64, emotion_arousal: f64) -> Option<Stri
 pub fn format_activity_section(activity: &str) -> Option<String> {
     let line = match activity {
         "working" => {
-            "A task you are doing for them is still running. You cannot see its progress, so do not pretend to."
+            "A task you are doing for them is still running. Say only what you are shown of it, if anything; never make up how far it got or what came of it."
         }
         _ => return None,
     };
@@ -1417,7 +1417,10 @@ mod tests {
         assert!(format_activity_section("thinking").is_none());
         let working = format_activity_section("working").unwrap();
         assert!(working.contains("A task you are doing for them is still running"));
-        assert!(working.contains("cannot see its progress"));
+        // What she is shown of it (a handed-off piece waiting on them) is
+        // hers to say; only what she is not shown she must not make up.
+        assert!(working.contains("Say only what you are shown of it"));
+        assert!(!working.contains("cannot see"));
     }
 
     #[test]

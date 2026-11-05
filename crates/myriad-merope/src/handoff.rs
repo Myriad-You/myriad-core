@@ -632,6 +632,7 @@ pub fn section(host: Host, lines: &[String], waiting: usize, answered: Option<u3
             "You have a helper of your own, and you are the one who hands things to it: looking things up on the web, {reach}, making or changing things for them. \
 When they ask for something like that, say in a few words that you are on it, and put [[work: what exactly to do, in one line, keeping their own words]] on its own last line. \
 That includes anything whose answer depends on now and that you cannot know from here (the weather, news, prices, opening hours, timetables), even when they do not say online or helper. \
+A question only such a lookup can answer (will it rain tomorrow?) is them asking for it: hand it off then and there, without asking first. \
 Never tell them to look it up themselves or to ask a helper, and never answer it from a guess. \
 The helper does it with their permissions; any question or confirmation it needs goes to them directly, and the result comes back to them. \
 If it is your own idea, ask first and hand it off only after they say yes. Do not hand off plain conversation. Do not read these lines aloud."
