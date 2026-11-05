@@ -59,6 +59,15 @@ fn run(call: &str, input: &Value) -> Value {
             })
         }
         "motion.floor" => json!({ "directive": motion::local_directive(&moment(input)) }),
+        "motion.round_style" => json!({
+            "style": myriad_merope::round_motion_style(
+                input["clientStyle"].as_str(),
+                input.get("persona").filter(|persona| !persona.is_null()),
+                input["personaFound"].as_bool().unwrap(),
+                input["mood"].as_i64().unwrap() as i32,
+                input["arousal"].as_i64().unwrap() as i32,
+            ),
+        }),
         "motion.standing_floor" => json!({
             "directive": motion::standing_floor(&moment(input), input["way"].as_str().unwrap()),
         }),

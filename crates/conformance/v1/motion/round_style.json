@@ -1,0 +1,190 @@
+{
+  "call": "motion.round_style",
+  "cases": [
+    {
+      "input": {
+        "arousal": 60,
+        "clientStyle": "open",
+        "mood": 80,
+        "persona": {
+          "socialStyle": "先观察再靠近",
+          "temperament": [
+            "安静",
+            "慢热"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "a slow-to-warm persona holds back at any mood",
+      "output": {
+        "style": "restrained"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 55,
+        "persona": {
+          "socialStyle": "主动搭话",
+          "temperament": [
+            "活泼"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "a lively persona opens up",
+      "output": {
+        "style": "open"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 70,
+        "persona": {
+          "socialStyle": "Reserved with strangers",
+          "temperament": []
+        },
+        "personaFound": true
+      },
+      "name": "social style is read case-blind",
+      "output": {
+        "style": "restrained"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 60,
+        "persona": {
+          "socialStyle": "温和",
+          "temperament": [
+            "认真"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "a plain persona at an ordinary mood moves evenly",
+      "output": {
+        "style": "even"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 40,
+        "persona": {
+          "socialStyle": "温和",
+          "temperament": [
+            "认真"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "a low mood holds her back",
+      "output": {
+        "style": "restrained"
+      }
+    },
+    {
+      "input": {
+        "arousal": 55,
+        "mood": 75,
+        "persona": {
+          "socialStyle": "温和",
+          "temperament": [
+            "认真"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "high and stirred opens her up",
+      "output": {
+        "style": "open"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 90,
+        "persona": {
+          "socialStyle": "温和",
+          "temperament": [
+            "认真"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "high but calm stays even",
+      "output": {
+        "style": "even"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "clientStyle": "restrained",
+        "mood": 60,
+        "persona": {
+          "socialStyle": "温和",
+          "temperament": [
+            "认真"
+          ]
+        },
+        "personaFound": true
+      },
+      "name": "a loaded persona wins over the client's style",
+      "output": {
+        "style": "even"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 20,
+        "persona": null,
+        "personaFound": true
+      },
+      "name": "a persona with no fields goes by mood",
+      "output": {
+        "style": "restrained"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "clientStyle": "open",
+        "mood": 20,
+        "personaFound": false
+      },
+      "name": "with no persona the client's style stands",
+      "output": {
+        "style": "open"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "clientStyle": "wild",
+        "mood": 60,
+        "personaFound": false
+      },
+      "name": "an unknown client style is even",
+      "output": {
+        "style": "even"
+      }
+    },
+    {
+      "input": {
+        "arousal": 48,
+        "mood": 60,
+        "personaFound": false
+      },
+      "name": "no persona and no client style is even",
+      "output": {
+        "style": "even"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -19,6 +19,7 @@ pub(super) const TESTED: &[&str] = &[
     "motion.floor",
     "motion.lay_way",
     "motion.plan",
+    "motion.round_style",
     "motion.standing_acting",
     "motion.standing_doing",
     "motion.standing_floor",

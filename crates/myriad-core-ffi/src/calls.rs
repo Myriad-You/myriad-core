@@ -204,6 +204,7 @@ const CALLS: &[(&str, Call)] = &[
     ("motion.floor", motion::floor),
     ("motion.lay_way", motion::lay_way),
     ("motion.plan", motion::plan),
+    ("motion.round_style", motion::round_style),
     ("motion.standing_acting", motion::standing_acting),
     ("motion.standing_doing", motion::standing_doing),
     ("motion.standing_floor", motion::standing_floor),
