@@ -1,0 +1,152 @@
+{
+  "call": "nodes.under_read",
+  "cases": [
+    {
+      "input": {
+        "offered": [
+          "n-work",
+          "n-plants"
+        ],
+        "value": {
+          "aliases": [],
+          "name": "plants",
+          "on": "t2"
+        }
+      },
+      "name": "a label she was shown",
+      "output": {
+        "node": "n-plants",
+        "to": "node"
+      }
+    },
+    {
+      "input": {
+        "offered": [
+          "n-work"
+        ],
+        "value": {
+          "aliases": [
+            "x"
+          ],
+          "name": " ",
+          "on": ""
+        }
+      },
+      "name": "neither a label nor a name is about them",
+      "output": {
+        "to": "about_them"
+      }
+    },
+    {
+      "input": {
+        "offered": [
+          "n-work"
+        ],
+        "value": {
+          "aliases": [],
+          "name": "",
+          "on": "t9"
+        }
+      },
+      "name": "a label she was not shown is nowhere",
+      "output": {
+        "to": "nowhere"
+      }
+    },
+    {
+      "input": {
+        "offered": [
+          "n-work"
+        ]
+      },
+      "name": "no answer is nowhere",
+      "output": {
+        "to": "nowhere"
+      }
+    },
+    {
+      "input": {
+        "offered": [
+          "n-work"
+        ],
+        "value": {
+          "on": 1
+        }
+      },
+      "name": "an answer it cannot read is nowhere",
+      "output": {
+        "to": "nowhere"
+      }
+    },
+    {
+      "input": {
+        "value": {
+          "aliases": [
+            "Seeing Doctors",
+            "看病",
+            "看病",
+            "doctor visits",
+            "a",
+            "b",
+            "c",
+            "d"
+          ],
+          "name": "  seeing   doctors ",
+          "on": ""
+        }
+      },
+      "name": "a topic she starts keeps distinct other names",
+      "output": {
+        "aliases": [
+          "看病",
+          "doctor visits",
+          "a",
+          "b",
+          "c"
+        ],
+        "name": "seeing doctors",
+        "to": "start"
+      }
+    },
+    {
+      "input": {
+        "known": [
+          {
+            "id": "n-plants",
+            "name": "houseplants"
+          }
+        ],
+        "value": {
+          "aliases": [],
+          "name": "Houseplants",
+          "on": ""
+        }
+      },
+      "name": "a topic she starts under a known name is that one",
+      "output": {
+        "node": "n-plants",
+        "to": "node"
+      }
+    },
+    {
+      "input": {
+        "known": [
+          {
+            "id": "k",
+            "name": "a"
+          },
+          {
+            "id": "k",
+            "name": "b"
+          }
+        ],
+        "value": null
+      },
+      "name": "known ids that repeat",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

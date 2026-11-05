@@ -9,7 +9,17 @@
 //!
 //! A topic is a node of hers (`myriad-nodes`, a topic node with a minted
 //! key); here is only what she is shown of them and how her answer is read,
-//! so every host shows the same and reads the same.
+//! so every host shows the same and reads the same. `myriad_nodes::entries`
+//! carries the placing half to every host as node rules (the calls
+//! `nodes.sort_input`, `nodes.sort_read`, `nodes.under_read`) and turns
+//! where a fact goes into node rows; it lives here because the settling
+//! prompt (`chat_remember`) reads it, and this crate is below
+//! `myriad-nodes`.
+//!
+//! Tidying ([`tidy_system_prompt`] and what goes with it) is for a host that
+//! keeps topics in its own tables; once a host stores topics as node rows,
+//! `myriad_nodes::upkeep` does it instead (merging two that are one kind is
+//! an `absorb` there).
 
 use myriad_agent_rules::Concept;
 use myriad_agent_rules::memory::lexical::{Document, score_all, uses_word};
@@ -130,7 +140,13 @@ pub fn shown(topics: &[Topic], offered: &[usize]) -> Value {
 /// Where a fact she keeps goes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Under {
-    /// Under no topic: only about them, or a one-off.
+    /// About them as a person and of no kind (their name, where they live,
+    /// what they cannot eat): `on` and `name` both empty, as [`OF_A_KIND`]
+    /// asks. The host puts it on their own node (`person:<id>`, 「关于你」).
+    AboutThem,
+    /// Placed nowhere: her answer named a label she was not shown, or said
+    /// nothing readable. The fact is kept all the same, and decided: it is
+    /// not asked about again.
     Nowhere,
     /// Under the offered topic at this place in `offered` (from 0).
     Offered(usize),
@@ -154,10 +170,16 @@ pub fn under_schema() -> Value {
 }
 
 /// Where her answer puts a fact, given `offered` topics were shown. A label
-/// she was shown wins over a name; a label she was not shown, or nothing
-/// readable, is no topic: the fact is kept all the same.
+/// she was shown wins over a name; `on` and `name` both empty is about them
+/// ([`Under::AboutThem`]); a label she was not shown, or nothing readable
+/// (no answer, not an object, neither `on` nor `name` as text), is
+/// [`Under::Nowhere`]: the fact is kept all the same.
 pub fn read_under(value: Option<&Value>, offered: usize) -> Under {
-    let Some(value) = value else {
+    let Some(value) = value.filter(|value| {
+        ["on", "name"]
+            .iter()
+            .any(|key| value.get(key).is_some_and(Value::is_string))
+    }) else {
         return Under::Nowhere;
     };
     let text = |key: &str| {
@@ -180,7 +202,7 @@ pub fn read_under(value: Option<&Value>, offered: usize) -> Under {
     }
     let name = text("name");
     if name.is_empty() {
-        return Under::Nowhere;
+        return Under::AboutThem;
     }
     let name = cut(&name, NAME_CHARS);
     let mut aliases: Vec<String> = Vec::new();
@@ -209,13 +231,22 @@ pub fn read_under(value: Option<&Value>, offered: usize) -> Under {
 /// Whether `name` is the name of `topic`: the same words, whatever the case.
 /// A topic she starts under a name she already keeps one by is that one.
 pub fn same_name(name: &str, topic: &str) -> bool {
-    let words = |text: &str| {
-        text.split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .to_lowercase()
-    };
-    words(name) == words(topic)
+    name_words(name) == name_words(topic)
+}
+
+/// Whether `name` is a name `topic` goes by: its name or one of its other
+/// names ([`same_name`]). A topic she starts under it is that one.
+pub fn goes_by(name: &str, topic: &Topic) -> bool {
+    same_name(name, topic.name) || topic.aliases.iter().any(|alias| same_name(name, alias))
+}
+
+/// A name as [`same_name`] compares it: its words, one space apart,
+/// lowercased.
+pub fn name_words(name: &str) -> String {
+    name.split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
 }
 
 /// Sorting what she already knows of someone under topics, a batch at a
@@ -271,7 +302,10 @@ pub fn sort_input(topics: Value, facts: &[String]) -> String {
 
 /// Where her answer puts each of `facts` facts, `offered` topics shown: by
 /// index from 0, the first answer for a fact winning. A fact she did not
-/// answer for, or answered for unreadably, is left out (still unsorted).
+/// answer for, or answered for without a `topic`, is left out (still
+/// unsorted, asked again); one she answered for is decided, each as
+/// [`read_under`] reads it: about them, nowhere (a label she was not
+/// shown, or an answer it cannot read), a topic shown or one she starts.
 pub fn read_sorted(raw: &str, offered: usize, facts: usize) -> Vec<(usize, Under)> {
     let Ok(value) = serde_json::from_str::<Value>(raw) else {
         return Vec::new();
@@ -519,8 +553,30 @@ mod tests {
         let unseen = json!({"on": "t9", "name": "plants", "aliases": []});
         assert_eq!(read_under(Some(&unseen), 3), Under::Nowhere);
         assert_eq!(read_under(None, 3), Under::Nowhere);
+        // Neither a label nor a name: about them as a person.
         let neither = json!({"on": "", "name": " ", "aliases": ["x"]});
-        assert_eq!(read_under(Some(&neither), 3), Under::Nowhere);
+        assert_eq!(read_under(Some(&neither), 3), Under::AboutThem);
+        let label_only = json!({"on": ""});
+        assert_eq!(read_under(Some(&label_only), 3), Under::AboutThem);
+        // Nothing readable is nowhere, not about them.
+        for unreadable in [json!({}), json!("t1"), json!({"on": 1, "name": null})] {
+            assert_eq!(
+                read_under(Some(&unreadable), 3),
+                Under::Nowhere,
+                "{unreadable}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_name_a_topic_goes_by_is_that_topic() {
+        let aliases = vec!["看病".to_string()];
+        let none: Vec<String> = Vec::new();
+        let doctors = topic("seeing doctors", &aliases, &none);
+        assert!(goes_by("Seeing  Doctors", &doctors));
+        assert!(goes_by("看病", &doctors));
+        assert!(!goes_by("doctors", &doctors));
+        assert_eq!(name_words("  Seeing\tDoctors "), "seeing doctors");
     }
 
     #[test]
@@ -629,8 +685,17 @@ mod tests {
                         aliases: vec!["看病".to_string()],
                     }
                 ),
-                (2, Under::Nowhere),
+                (2, Under::AboutThem),
             ]
+        );
+        let unseen = json!({"facts": [
+            {"fact": 1, "topic": {"on": "t5", "name": "", "aliases": []}},
+            {"fact": 2, "topic": "t1"}
+        ]})
+        .to_string();
+        assert_eq!(
+            read_sorted(&unseen, 1, 2),
+            vec![(0, Under::Nowhere), (1, Under::Nowhere)]
         );
         assert!(read_sorted("not json", 1, 4).is_empty());
         let input: Value =

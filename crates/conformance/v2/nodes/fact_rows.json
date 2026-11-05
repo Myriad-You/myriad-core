@@ -1,0 +1,476 @@
+{
+  "call": "nodes.fact_rows",
+  "cases": [
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "memory": "m1",
+            "saidBy": [
+              "partner"
+            ],
+            "text": "has a snake plant"
+          },
+          {
+            "memory": "m2",
+            "refs": [
+              "message:b",
+              "message:a",
+              "memory:other"
+            ],
+            "revision": "2",
+            "saidBy": [
+              "partner",
+              "partner"
+            ],
+            "text": "  waters it on Sundays\u0007 "
+          }
+        ],
+        "start": {
+          "aliases": [
+            "Plants",
+            "houseplants",
+            "plants",
+            "植物"
+          ],
+          "name": " houseplants "
+        }
+      },
+      "name": "a topic she starts, with a fact quote-only and one with its original",
+      "output": {
+        "key": "minted:t4b949f5bae218c65b2cb80eb",
+        "node": "59e0d4b98576f50d0e92cd8f3a0bf5eb",
+        "rows": [
+          {
+            "body": {
+              "key": "minted:t4b949f5bae218c65b2cb80eb",
+              "kind": "topic",
+              "name": "houseplants",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "id": "u6b589409f19761a908b53f68",
+            "kind": "node.created"
+          },
+          {
+            "body": {
+              "base": [],
+              "field": "aliases",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": [
+                "Plants",
+                "植物"
+              ],
+              "version": 1
+            },
+            "id": "ua43d5570813470cb93151c4c",
+            "kind": "node.revised"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "quoteOnly": true,
+              "refs": [
+                "memory:m1"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "has a snake plant",
+              "version": 1
+            },
+            "id": "u7d8b3efe569feaea64eb98fc",
+            "kind": "node.entry"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "memory:m2",
+                "message:a",
+                "message:b"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "waters it on Sundays",
+              "version": 1
+            },
+            "id": "ufe53aa9af599d7371028dc89",
+            "kind": "node.entry"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "memory": "m3",
+            "refs": [
+              "message:c"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "text": "对芒果过敏"
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "facts about them on their own node",
+      "output": {
+        "key": "person:7",
+        "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "memory:m3",
+                "message:c"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "对芒果过敏",
+              "version": 1
+            },
+            "id": "u1f6a3231868c0ed43ec8a1a2",
+            "kind": "node.entry"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "start": {
+          "key": "person:7",
+          "name": "小林"
+        }
+      },
+      "name": "their own node started once",
+      "output": {
+        "key": "person:7",
+        "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+        "rows": [
+          {
+            "body": {
+              "key": "person:7",
+              "kind": "person",
+              "name": "小林",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "id": "u648acc0596b65b7245b25d9d",
+            "kind": "node.created"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:local-owner",
+        "facts": [
+          {
+            "memory": "m4",
+            "saidBy": [
+              "partner"
+            ],
+            "text": "上周看了皮肤科"
+          }
+        ],
+        "start": {
+          "key": "minted:3f2a9c0e8d7b4a61b5c2d1e0f9a8b7c6",
+          "name": "看病"
+        }
+      },
+      "name": "a topic a host kept under its own minted key",
+      "output": {
+        "key": "minted:3f2a9c0e8d7b4a61b5c2d1e0f9a8b7c6",
+        "node": "6a5b51acb0aa5239b8ab3ac4414eaf61",
+        "rows": [
+          {
+            "body": {
+              "key": "minted:3f2a9c0e8d7b4a61b5c2d1e0f9a8b7c6",
+              "kind": "topic",
+              "name": "看病",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "id": "u4ec149a1228e2d5bb758e350",
+            "kind": "node.created"
+          },
+          {
+            "body": {
+              "audience": "personal:local-owner",
+              "quoteOnly": true,
+              "refs": [
+                "memory:m4"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "上周看了皮肤科",
+              "version": 1
+            },
+            "id": "u6ada3c7dd6e91c495f2d3beb",
+            "kind": "node.entry"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "audience": "group:g1",
+            "memory": "m5",
+            "refs": [
+              "message:g9"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "text": "住在杭州"
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "the partner's own words from a group kept in private",
+      "output": {
+        "key": "person:7",
+        "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+        "rows": [
+          {
+            "body": {
+              "audience": "group:g1",
+              "refs": [
+                "memory:m5",
+                "message:g9"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "住在杭州",
+              "version": 1
+            },
+            "id": "uc533dc2be90c324512d85843",
+            "kind": "node.entry"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "facts": [
+          {
+            "memory": "m6",
+            "saidBy": [
+              "her"
+            ],
+            "text": "她喜欢下雨天"
+          }
+        ],
+        "key": "her",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a fact kept on one device",
+      "output": {
+        "key": "her",
+        "node": "20fd261473263a35859f3c42f034d3a0",
+        "rows": [
+          {
+            "body": {
+              "audience": "own:",
+              "quoteOnly": true,
+              "refs": [
+                "memory:m6"
+              ],
+              "saidBy": [
+                "her"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "她喜欢下雨天",
+              "version": 1
+            },
+            "id": "u89d500b115503c3f8e4c6926",
+            "kind": "node.entry"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "memory": "m7",
+            "saidBy": [
+              "partner"
+            ],
+            "text": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "a long fact is cut to an entry",
+      "output": {
+        "key": "person:7",
+        "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "quoteOnly": true,
+              "refs": [
+                "memory:m7"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长…",
+              "version": 1
+            },
+            "id": "u6bdec55c201614e8c9a0fc62",
+            "kind": "node.entry"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "person:7",
+        "start": {
+          "name": "plants"
+        }
+      },
+      "name": "refused: start and key both",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "start": {
+          "key": "repo:github.com/demo/sample-repo",
+          "name": "sample-repo"
+        }
+      },
+      "name": "refused: a repository started without its object",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "audience": "group:g1",
+            "memory": "m8",
+            "saidBy": [
+              "other_person"
+            ],
+            "text": "他住在杭州"
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "refused: someone else's words from a group",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "facts": [
+          {
+            "memory": "m9",
+            "saidBy": [
+              "her"
+            ],
+            "text": "a"
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "refused: a person's node in her own audience",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "memory": "m9",
+            "saidBy": [
+              "partner"
+            ],
+            "text": " \n "
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "refused: a fact with no text",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "facts": [
+          {
+            "memory": "m9",
+            "refs": [
+              "abc123"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "text": "a"
+          }
+        ],
+        "key": "person:7"
+      },
+      "name": "refused: an original that is not <type>:<id>",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

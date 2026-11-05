@@ -1,0 +1,51 @@
+{
+  "call": "nodes.row_id",
+  "cases": [
+    {
+      "input": {
+        "kind": "node.entry",
+        "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+        "source": "memory:m1"
+      },
+      "name": "an entry made from a memory row",
+      "output": {
+        "id": "u6b99923b49c5c95ea8357268"
+      }
+    },
+    {
+      "input": {
+        "kind": "node.entry",
+        "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+        "revision": "2",
+        "source": "memory:m1"
+      },
+      "name": "the same memory at another revision is another row",
+      "output": {
+        "id": "u19771c364ea6655d15832dca"
+      }
+    },
+    {
+      "input": {
+        "kind": "node.created",
+        "node": "709dcfae6ac947320eeac936f8f4e292",
+        "source": "minted:sample-topic"
+      },
+      "name": "a topic's created row from its key",
+      "output": {
+        "id": "uae4a6e9ef3663b021171aa62"
+      }
+    },
+    {
+      "input": {
+        "kind": "case.judged",
+        "node": "n",
+        "source": "memory:m1"
+      },
+      "name": "refused: a row id of a kind the core does not read",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

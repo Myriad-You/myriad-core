@@ -178,6 +178,12 @@ pub(crate) fn made_id(audience: &str, key: &str) -> String {
     sha256_hex(format!("node\u{1f}{audience}\u{1f}{key}").as_bytes())[..32].to_string()
 }
 
+/// `audience` as a node id is made from it: the partner's private talk
+/// under its one fixed name, whatever id the partner goes by.
+pub(crate) fn id_audience(audience: &str) -> Cow<'_, str> {
+    fixed(audience, "her").0
+}
+
 /// `audience` and `key` as a node id is made from them: the partner's
 /// private talk, and their own node in it, under the fixed name.
 fn fixed<'a>(audience: &'a str, key: &'a str) -> (Cow<'a, str>, Cow<'a, str>) {

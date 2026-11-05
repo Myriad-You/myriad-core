@@ -20686,6 +20686,557 @@
           "ma"
         ]
       }
+    },
+    {
+      "input": {
+        "bodies": {
+          "t1": {
+            "key": "minted:sample-topic",
+            "kind": "topic",
+            "name": "植物",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "t2": {
+            "base": [],
+            "field": "aliases",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              "plants"
+            ],
+            "version": 1
+          },
+          "t3": {
+            "base": [
+              "t2"
+            ],
+            "field": "aliases",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              "houseplants",
+              "plants"
+            ],
+            "version": 1
+          }
+        },
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "t1",
+            "kind": "node.created",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-site",
+            "id": "t2",
+            "kind": "node.revised",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "t3",
+            "kind": "node.revised",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a topic's other names fold like its name",
+      "output": {
+        "nodes": [
+          {
+            "aliases": {
+              "at": 1760000002000000,
+              "author": "her",
+              "base": [
+                "t3"
+              ],
+              "epoch": 1,
+              "history": [
+                {
+                  "at": 1760000001000000,
+                  "author": "her",
+                  "epoch": 1,
+                  "row": "t2",
+                  "saidBy": [
+                    "her"
+                  ],
+                  "sync": "shared",
+                  "value": [
+                    "plants"
+                  ]
+                }
+              ],
+              "row": "t3",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": [
+                "houseplants",
+                "plants"
+              ]
+            },
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "createdBy": "her",
+            "id": "709dcfae6ac947320eeac936f8f4e292",
+            "key": "minted:sample-topic",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "topic"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "植物"
+            },
+            "updatedAt": 1760000002000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "t1": {
+            "key": "minted:sample-topic",
+            "kind": "topic",
+            "name": "植物",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "t2": {
+            "base": [],
+            "field": "aliases",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              "plants"
+            ],
+            "version": 1
+          },
+          "t3": {
+            "base": [
+              "t2"
+            ],
+            "field": "aliases",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "value": [
+              "greens",
+              "plants"
+            ],
+            "version": 1
+          },
+          "t4": {
+            "base": [
+              "t2"
+            ],
+            "field": "aliases",
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "value": [
+              "houseplants"
+            ],
+            "version": 1
+          }
+        },
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "t1",
+            "kind": "node.created",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-site",
+            "id": "t2",
+            "kind": "node.revised",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "t3",
+            "kind": "node.revised",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000003000-000000-dev_mac",
+            "id": "t4",
+            "kind": "node.revised",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:t4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a topic's other names revised on both sides",
+      "output": {
+        "nodes": [
+          {
+            "aliases": {
+              "at": 1760000002000000,
+              "author": "her",
+              "base": [
+                "t3",
+                "t4"
+              ],
+              "bothChanged": true,
+              "epoch": 1,
+              "history": [
+                {
+                  "at": 1760000001000000,
+                  "author": "her",
+                  "epoch": 1,
+                  "row": "t2",
+                  "saidBy": [
+                    "her"
+                  ],
+                  "sync": "shared",
+                  "value": [
+                    "plants"
+                  ]
+                }
+              ],
+              "rivals": [
+                {
+                  "at": 1760000003000000,
+                  "author": "owner",
+                  "row": "t4",
+                  "saidBy": [
+                    "partner"
+                  ],
+                  "sync": "shared",
+                  "value": [
+                    "houseplants"
+                  ]
+                }
+              ],
+              "row": "t3",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": [
+                "greens",
+                "plants"
+              ]
+            },
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "createdBy": "her",
+            "id": "709dcfae6ac947320eeac936f8f4e292",
+            "key": "minted:sample-topic",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "topic"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "植物"
+            },
+            "updatedAt": 1760000003000000
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "e1": {
+            "audience": "personal:7",
+            "quoteOnly": true,
+            "refs": [
+              "memory:m1"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "养了一盆虎尾兰",
+            "version": 1
+          },
+          "e2": {
+            "audience": "personal:7",
+            "refs": [
+              "memory:m2",
+              "message:a1"
+            ],
+            "saidBy": [
+              "partner"
+            ],
+            "sync": "shared",
+            "text": "每周日浇水",
+            "version": 1
+          },
+          "t1": {
+            "key": "minted:sample-topic",
+            "kind": "topic",
+            "name": "植物",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          }
+        },
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "t1",
+            "kind": "node.created",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-site",
+            "id": "e1",
+            "kind": "node.entry",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:e1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "e2",
+            "kind": "node.entry",
+            "object": "node:709dcfae6ac947320eeac936f8f4e292",
+            "origin": "site",
+            "payload": {
+              "ref": "body:e2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "entries keep the memory they are the place of",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "createdBy": "her",
+            "entries": [
+              {
+                "at": 1760000001000000,
+                "audience": "personal:7",
+                "author": "her",
+                "quoteOnly": true,
+                "refs": [
+                  "memory:m1"
+                ],
+                "row": "e1",
+                "saidBy": [
+                  "partner"
+                ],
+                "sync": "shared",
+                "text": "养了一盆虎尾兰"
+              },
+              {
+                "at": 1760000002000000,
+                "audience": "personal:7",
+                "author": "her",
+                "refs": [
+                  "memory:m2",
+                  "message:a1"
+                ],
+                "row": "e2",
+                "saidBy": [
+                  "partner"
+                ],
+                "sync": "shared",
+                "text": "每周日浇水"
+              }
+            ],
+            "id": "709dcfae6ac947320eeac936f8f4e292",
+            "key": "minted:sample-topic",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "topic"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "t1"
+              ],
+              "epoch": 1,
+              "row": "t1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "植物"
+            },
+            "updatedAt": 1760000002000000
+          }
+        ]
+      }
     }
   ],
   "version": 1

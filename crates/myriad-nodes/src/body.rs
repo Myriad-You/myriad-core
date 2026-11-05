@@ -11,12 +11,12 @@
 //! | --- | --- |
 //! | `node.created` | `kind`, `key`, `name`, `object?` |
 //! | `node.kind_changed` | `base`, `kind`, `reason`, `because` |
-//! | `node.revised` | `base`, `field` (`name`, `summary`, `status`, `who_knows`, `object`, `progress`), `person?` (progress only), `value` |
+//! | `node.revised` | `base`, `field` (`name`, `aliases`, `summary`, `status`, `who_knows`, `object`, `progress`), `person?` (progress only), `value` |
 //! | `node.view_changed` | `base`, `view`, `text`, `because` |
 //! | `node.open_item` | `base`, `item`, `text`, `because`, `closed?` |
 //! | `node.intent` | `base`, `intent`, `text`, `because`, `status`, `trigger?` |
 //! | `node.span` | `audience`, `text`, `refs?`, `from?`, `to?` |
-//! | `node.entry` | `audience`, `text`, `refs?`, `quoteOnly?` |
+//! | `node.entry` | `audience`, `text`, `refs?` (`memory:<id>`: the memory row it is the place of), `quoteOnly?` |
 //! | `node.related` | `relation`, `to` (the other node's key), `reason`, `because` |
 //! | `node.unrelated` | `base` (the related rows it takes back), `reason` |
 //! | `node.done_when` | `base`, `text` (what "done" is, or null for none), `because` |
@@ -130,20 +130,26 @@ pub struct Object {
 impl Object {
     fn check(&self) -> Result<(), NodeError> {
         check_text("object name", &self.name, limits::NAME_CHARS)?;
-        if self.aliases.len() > limits::ALIASES {
-            return Err(NodeError::new(format!(
-                "aliases hold more than {}",
-                limits::ALIASES
-            )));
-        }
-        for alias in &self.aliases {
-            check_text("alias", alias, limits::NAME_CHARS)?;
-        }
-        if !self.aliases.windows(2).all(|pair| pair[0] < pair[1]) {
-            return Err(NodeError::new("aliases are not sorted or repeat"));
-        }
-        Ok(())
+        check_aliases(&self.aliases)
     }
+}
+
+/// Other names (an object's, a topic's own): at most [`limits::ALIASES`],
+/// each a name, sorted, no repeats.
+fn check_aliases(aliases: &[String]) -> Result<(), NodeError> {
+    if aliases.len() > limits::ALIASES {
+        return Err(NodeError::new(format!(
+            "aliases hold more than {}",
+            limits::ALIASES
+        )));
+    }
+    for alias in aliases {
+        check_text("alias", alias, limits::NAME_CHARS)?;
+    }
+    if !aliases.windows(2).all(|pair| pair[0] < pair[1]) {
+        return Err(NodeError::new("aliases are not sorted or repeat"));
+    }
+    Ok(())
 }
 
 /// One sentence of a summary and what it rests on.
@@ -222,6 +228,10 @@ pub struct KindChanged {
 pub enum Field {
     /// `value`: a text.
     Name,
+    /// `value`: the other names it goes by, sorted, no repeats, at most
+    /// [`limits::ALIASES`], each at most [`limits::NAME_CHARS`]; `[]` for
+    /// none. A topic's own (an object's are on the object).
+    Aliases,
     /// `value`: `[{text, because}]`, every sentence with its evidence.
     Summary,
     /// `value`: a [`Status`].
@@ -253,6 +263,7 @@ pub struct Revised {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Change {
     Name(String),
+    Aliases(Vec<String>),
     Summary(Vec<Sentence>),
     Status(Status),
     WhoKnows(Vec<String>),
@@ -265,6 +276,7 @@ impl Change {
     pub fn to_value(&self) -> Value {
         let value = match self {
             Self::Name(name) => serde_json::to_value(name),
+            Self::Aliases(aliases) => serde_json::to_value(aliases),
             Self::Summary(sentences) => serde_json::to_value(sentences),
             Self::Status(status) => serde_json::to_value(status),
             Self::WhoKnows(people) => serde_json::to_value(people),
@@ -288,6 +300,11 @@ impl Revised {
                 let name: String = typed(&self.value)?;
                 check_text("name", &name, limits::NAME_CHARS)?;
                 Change::Name(name)
+            }
+            Field::Aliases => {
+                let aliases: Vec<String> = typed(&self.value)?;
+                check_aliases(&aliases)?;
+                Change::Aliases(aliases)
             }
             Field::Summary => {
                 let sentences: Vec<Sentence> = typed(&self.value)?;
@@ -395,8 +412,12 @@ pub struct Span {
 }
 
 /// `node.entry`: a fact or a preference taken from the originals. Without
-/// a reference it is marked quote-only (只有引文): the original was not
-/// found again.
+/// a reference to an original it is marked quote-only (只有引文): the
+/// original was not found again. A `memory:<id>` reference is not an
+/// original: it names the memory row this entry is the place of (the row
+/// keeps its strength and what replaced it), so an entry with only that
+/// may be marked quote-only (what `entries::fact_rows` writes); one with
+/// only that and no mark, as entries were written before, still reads.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Entry {
@@ -533,6 +554,15 @@ pub struct Upkept {
 
 fn is_false(value: &bool) -> bool {
     !*value
+}
+
+/// The reference form that names a memory row: `memory:<id>`.
+pub const MEMORY_REF: &str = "memory:";
+
+/// Whether a reference on an entry points at an original (a message, a
+/// record…), not at the memory row the entry is the place of.
+pub fn is_original(reference: &str) -> bool {
+    !reference.starts_with(MEMORY_REF)
 }
 
 /// One row's body, by its kind.
@@ -728,7 +758,12 @@ impl Body {
                 check_audience(&body.audience)?;
                 check_text("text", &body.text, limits::TEXT_CHARS)?;
                 check_ids("refs", &body.refs, false, true, limits::REFS)?;
-                if body.quote_only != body.refs.is_empty() {
+                // Quote-only means no original; no refs at all means
+                // quote-only. An entry with only `memory:` refs and no mark
+                // was written before the mark counted them out (native
+                // rows), and reads as it was.
+                let original = body.refs.iter().any(|id| is_original(id));
+                if (body.quote_only && original) || (body.refs.is_empty() && !body.quote_only) {
                     return Err(NodeError::new(
                         "an entry has refs, or is quote-only without them",
                     ));

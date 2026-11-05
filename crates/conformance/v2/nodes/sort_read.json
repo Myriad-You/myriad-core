@@ -1,0 +1,135 @@
+{
+  "call": "nodes.sort_read",
+  "cases": [
+    {
+      "input": {
+        "facts": [
+          "m1",
+          "m2",
+          "m3",
+          "m4"
+        ],
+        "offered": [
+          "n-plants"
+        ],
+        "output": "{\"facts\": [{\"fact\": 2, \"topic\": {\"on\": \"t1\", \"name\": \"\", \"aliases\": []}}, {\"fact\": 1, \"topic\": {\"on\": \"\", \"name\": \"seeing doctors\", \"aliases\": [\"看病\"]}}, {\"fact\": 2, \"topic\": {\"on\": \"\", \"name\": \"\", \"aliases\": []}}, {\"fact\": 3, \"topic\": {\"on\": \"\", \"name\": \"\", \"aliases\": []}}, {\"fact\": 9, \"topic\": {\"on\": \"t1\", \"name\": \"\", \"aliases\": []}}, {\"fact\": 4}]}"
+      },
+      "name": "each fact read once; one without a topic is still to sort",
+      "output": {
+        "facts": [
+          {
+            "fact": "m2",
+            "node": "n-plants",
+            "to": "node"
+          },
+          {
+            "aliases": [
+              "看病"
+            ],
+            "fact": "m1",
+            "name": "seeing doctors",
+            "to": "start"
+          },
+          {
+            "fact": "m3",
+            "to": "about_them"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          "m1",
+          "m2",
+          "m3"
+        ],
+        "known": [
+          {
+            "aliases": [
+              "看病"
+            ],
+            "id": "n-doctors",
+            "name": "seeing doctors"
+          }
+        ],
+        "offered": [],
+        "output": "{\"facts\": [{\"fact\": 1, \"topic\": {\"on\": \"\", \"name\": \" 看病 \", \"aliases\": []}}, {\"fact\": 2, \"topic\": {\"on\": \"\", \"name\": \"Seeing  Doctors\", \"aliases\": []}}, {\"fact\": 3, \"topic\": {\"on\": \"\", \"name\": \"gardening\", \"aliases\": [\"Gardening\", \"园艺\"]}}]}"
+      },
+      "name": "a topic she starts under a name one she keeps goes by is that one",
+      "output": {
+        "facts": [
+          {
+            "fact": "m1",
+            "node": "n-doctors",
+            "to": "node"
+          },
+          {
+            "fact": "m2",
+            "node": "n-doctors",
+            "to": "node"
+          },
+          {
+            "aliases": [
+              "园艺"
+            ],
+            "fact": "m3",
+            "name": "gardening",
+            "to": "start"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          "m1",
+          "m2"
+        ],
+        "offered": [
+          "n-plants"
+        ],
+        "output": "{\"facts\": [{\"fact\": 1, \"topic\": {\"on\": \"t3\", \"name\": \"plants\", \"aliases\": []}}, {\"fact\": 2, \"topic\": \"t1\"}]}"
+      },
+      "name": "a label she was not shown is nowhere",
+      "output": {
+        "facts": [
+          {
+            "fact": "m1",
+            "to": "nowhere"
+          },
+          {
+            "fact": "m2",
+            "to": "nowhere"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          "m1"
+        ],
+        "offered": [
+          "n-plants"
+        ],
+        "output": "我觉得都挂到植物下面"
+      },
+      "name": "an answer that is not JSON sorts nothing",
+      "output": {
+        "facts": []
+      }
+    },
+    {
+      "input": {
+        "facts": [],
+        "output": "{\"facts\": []}"
+      },
+      "name": "no facts to read",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

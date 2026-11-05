@@ -443,6 +443,7 @@ fn node_parts(body: &Body) -> (Vec<&str>, Vec<&str>) {
 fn revised_parts(change: &Change) -> (Vec<String>, Vec<String>) {
     match change {
         Change::Name(name) => (vec![name.clone()], Vec::new()),
+        Change::Aliases(aliases) => (aliases.clone(), Vec::new()),
         Change::Summary(sentences) => (
             sentences.iter().map(|one| one.text.clone()).collect(),
             sentences

@@ -45,6 +45,14 @@
 //! lineage they leave, a whole's parts rolled up, how often recall used a
 //! node or a relation (what fades is what is unused, not what is old).
 //!
+//! Facts she keeps for good have a place too ([`entries`]): an entry on a
+//! topic of the kind it is of, on the person it is only about, or on none,
+//! naming the memory row it is the place of. Where it goes is hers to
+//! judge by one rule; what she is shown, how her answer is read and the
+//! rows that follow are here. Before she answers, recall ([`recall`]) turns
+//! the host's ranking of those entries into the nodes that come to mind and
+//! the entries of each.
+//!
 //! Between host cores ([`wire`]): one audience's rows and their bodies in
 //! batches, nothing to a side that may not hold the audience, and every
 //! body checked again where it lands (shared, no local path, no secret,
@@ -61,6 +69,7 @@
 use std::fmt;
 
 pub mod body;
+pub mod entries;
 pub mod fold;
 pub mod home;
 pub mod key;
@@ -68,6 +77,7 @@ pub mod limits;
 pub mod migrate;
 pub mod place;
 pub mod queue;
+pub mod recall;
 pub mod tags;
 pub mod upkeep;
 pub mod wire;

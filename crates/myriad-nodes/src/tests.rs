@@ -89,6 +89,12 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.home_take" => json_of(&home::take(input(raw)?)?),
         "nodes.home_owed" => json_of(&home::home_owed(input(raw)?)?),
         "nodes.retract" => json_of(&fold::retract_lists(input(raw)?)?),
+        "nodes.sort_input" => json_of(&entries::sort_prepare(input(raw)?)?),
+        "nodes.sort_read" => json_of(&entries::sort_read(input(raw)?)?),
+        "nodes.under_read" => json_of(&entries::under_read(input(raw)?)?),
+        "nodes.fact_rows" => json_of(&entries::fact_rows(input(raw)?)?),
+        "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
+        "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -115,7 +121,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 16, "{files:?}");
+    assert_eq!(files.len(), 22, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -419,6 +425,44 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         // nodes.wire_send to an older side
         ("refused: a peer of no ABI", "ABI is 1 or more"),
+        // a topic's own other names, and entries that name their memory
+        ("other names out of order", "aliases are not sorted"),
+        ("too many other names", "aliases hold more than 16"),
+        ("an other name too long", "longer than 80"),
+        (
+            "an entry with its memory and an original, marked quote-only",
+            "quote-only",
+        ),
+        // nodes.sort_input, nodes.sort_read, nodes.under_read
+        ("no facts to sort", "no facts"),
+        ("fact ids that repeat", "fact ids repeat"),
+        ("no facts to read", "no facts"),
+        ("known ids that repeat", "known ids repeat"),
+        // nodes.fact_rows, nodes.row_id
+        ("refused: start and key both", "give start or key"),
+        (
+            "refused: a repository started without its object",
+            "with its object",
+        ),
+        (
+            "refused: someone else's words from a group",
+            "only the partner's own words",
+        ),
+        (
+            "refused: a person's node in her own audience",
+            "lives in its own audience",
+        ),
+        ("refused: a fact with no text", "text is empty"),
+        (
+            "refused: an original that is not <type>:<id>",
+            "<type>:<id>",
+        ),
+        (
+            "refused: a row id of a kind the core does not read",
+            "the core reads",
+        ),
+        // nodes.pick
+        ("refused: node ids that repeat", "node ids repeat"),
     ];
     let mut seen = 0;
     for path in case_files() {

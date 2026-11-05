@@ -161,6 +161,7 @@ pub struct UpkeepInput {
 pub enum Head {
     Kind,
     Name,
+    Aliases,
     Summary,
     Status,
     DoneWhen,
@@ -195,6 +196,9 @@ pub struct ShownNode {
     pub kind: Option<Kind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// The other names it goes by (a topic's own).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
     pub status: Status,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub done_when: Option<String>,
@@ -259,6 +263,9 @@ pub struct ShownNeighbour {
     pub kind: Option<Kind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// The other names it goes by (a topic's own).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
     pub status: Status,
     /// Its summary's first sentence, cut.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -276,6 +283,9 @@ pub struct ShownCandidate {
     pub kind: Option<Kind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// The other names it goes by (a topic's own).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub aliases: Vec<String>,
     pub status: Status,
     /// Its summary's first sentence, cut.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -343,6 +353,13 @@ fn partners<T>(item: &Item<T>) -> bool {
             .rivals
             .iter()
             .any(|rival| rival.author == Author::Owner)
+}
+
+fn aliases_of(node: &Node) -> Vec<String> {
+    node.aliases
+        .as_ref()
+        .map(|aliases| aliases.current.value.clone())
+        .unwrap_or_default()
 }
 
 fn status_of(node: &Node) -> Status {
@@ -465,6 +482,11 @@ fn kept(node: &Node) -> Kept {
         both(node.name.as_ref().map(|i| i.both_changed)),
     );
     head(
+        Head::Aliases,
+        by_partner(&node.aliases),
+        both(node.aliases.as_ref().map(|i| i.both_changed)),
+    );
+    head(
         Head::Summary,
         by_partner(&node.summary),
         both(node.summary.as_ref().map(|i| i.both_changed)),
@@ -545,6 +567,7 @@ fn kept(node: &Node) -> Kept {
         label: "n1".to_string(),
         kind: node.kind.as_ref().map(|kind| kind.current.value.kind),
         name: node.name.as_ref().map(|name| name.current.value.clone()),
+        aliases: aliases_of(node),
         status: status_of(node),
         done_when: node
             .done_when
@@ -776,6 +799,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
                     label,
                     kind: other.kind.as_ref().map(|kind| kind.current.value.kind),
                     name: other.name.as_ref().map(|name| name.current.value.clone()),
+                    aliases: aliases_of(other),
                     status: status_of(other),
                     gist: gist(other),
                     relations,
@@ -809,6 +833,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
                 label,
                 kind: other.kind.as_ref().map(|kind| kind.current.value.kind),
                 name: other.name.as_ref().map(|name| name.current.value.clone()),
+                aliases: aliases_of(other),
                 status: status_of(other),
                 gist: gist(other),
             }
@@ -1746,6 +1771,7 @@ impl<'a> Reader<'a> {
         // any current version of it theirs.
         let partner_items = by_partner(&me.kind)
             || by_partner(&me.name)
+            || by_partner(&me.aliases)
             || by_partner(&me.summary)
             || by_partner(&me.status)
             || by_partner(&me.done_when)
