@@ -145,6 +145,11 @@ fn what_goes_to_an_end_says_which_piece() {
 fn she_hands_off_only_what_they_asked_for() {
     let quiet = section(Host::Site, &[], 0, None);
     assert!(quiet.contains("If it is your own idea, ask first"));
+    // A lookup is hers to hand off, not theirs to go and do.
+    assert!(quiet.contains("you are the one who hands things to it"));
+    assert!(quiet.contains("even when they do not say online or helper"));
+    assert!(quiet.contains("Never tell them to look it up themselves"));
+    assert!(quiet.contains("never that it is still being done or has not come back"));
     assert!(quiet.contains("with their permissions"));
     assert!(quiet.contains("[[stop #N]]"));
     assert!(quiet.contains("never for a new one"));
@@ -360,7 +365,7 @@ fn she_sees_each_piece_on_a_line() {
     };
     assert_eq!(
         line(&asking, now),
-        "#3「订周五的餐厅」在等对方回答：要几点？ 1. 18:00 2. 19:00"
+        "#3「订周五的餐厅」停住了，在等对方回答（对方回答前不会往下办）：要几点？ 1. 18:00 2. 19:00"
     );
     let long = Standing::Waiting {
         question: "问".repeat(RESULT_CHARS + 5),
@@ -395,7 +400,7 @@ fn she_sees_each_piece_on_a_line() {
     );
     assert_eq!(
         line(&piece(8, Standing::Confirming), now),
-        "#8「第8件」在等对方在卡片上确认"
+        "#8「第8件」停住了，在等对方在卡片上确认（确认前不会往下办）"
     );
     let failed = Standing::Failed {
         why: Some("没有权限".into()),
