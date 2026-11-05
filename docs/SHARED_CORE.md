@@ -229,7 +229,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 她的节点（`nodes.*`）
 
-节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。第一批定了节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样；第二批定了整理：哪些节点该整理、按什么顺序，她整理一个节点时看到什么、她的回答怎么变成行，以及关系带来的后果；第三批补上整理的缺口：调用方给的同一受众候选、没有经历的节点也能有依据、没有节点时只整理收件箱、一起看过的不被并走、整理里改概括、看法和没收尾的事（看法只凭算数的依据改）。M7 定了节点在端之间怎么走（下面「在端之间」）。站点记忆搬到节点上（2026-11-05）带来话题自己的别的叫法、记下的事挂在哪和它的行、回想挑节点、从来源算出的行 id（下面「记下的事挂在哪」「回想挑节点」）。唤醒（除了挡着的那件变了带来的那一种）、反对、只忘掉一段还都不在。
+节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。第一批定了节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样；第二批定了整理：哪些节点该整理、按什么顺序，她整理一个节点时看到什么、她的回答怎么变成行，以及关系带来的后果；第三批补上整理的缺口：调用方给的同一受众候选、没有经历的节点也能有依据、没有节点时只整理收件箱、一起看过的不被并走、整理里改概括、看法和没收尾的事（看法只凭算数的依据改）。M7 定了节点在端之间怎么走（下面「在端之间」）。站点记忆搬到节点上（2026-11-05）带来话题自己的别的叫法、记下的事挂在哪和它的行、回想挑节点、从来源算出的行 id（下面「记下的事挂在哪」「回想挑节点」）。M5 把原生的可信三档和意图搬进核心（下面「可信三档」「意图」），原生和网站用同一套规矩。唤醒（除了挡着的那件变了带来的那一种）、反对、只忘掉一段还都不在。
 
 **三种节点**（`kind`）。种类只在规则不同时才成立：
 
@@ -258,8 +258,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 **每段经历、每条条目带三个标签**（每个 body 都带前两个）：
 
 - `sync`：`shared`（可以去她的每一台设备），或 `{"local": <设备>}`（只在那台设备上）。标签要和行一致：`shared` 只能在 `shared` 的行上；`local` 只能在那台设备自己写的 `local` 行上。
-- `saidBy`（是谁说的，按字母排、不重复）：`partner` 伙伴、`her` 她自己、`third_party` 第三方内容（网页、视频、字幕、别的 AI、编程 agent 的输出）、`other_person` 别人（群里的人，或别人私聊里的那个人）。一段对话的经历列出里面所有说话的人。伙伴写的行（`author: owner`）只能是 `["partner"]`。
-- `audience`（经历和条目才有）：在哪说的。和行的受众相同；唯一的例外是伙伴自己在群里说的话，可以记在伙伴的私聊里。群里别人的话不进私聊。
+- `saidBy`（是谁说的，按字母排、不重复）：`partner` 伙伴、`her` 她自己、`third_party` 第三方内容（网页、视频、字幕、别的 AI、编程 agent 的输出）、`other_person` 别人（群里的人）。**`partner` 是这个私聊受众唯一的那个人（本人）**：原生上就是伙伴；网站上每个账号在自己的 `personal:<账号>` 里说的话都标 `partner`。群里所有人标 `other_person`；一个人在群里说的关于自己的话记进他自己的私聊时标 `partner`（下一条的例外）。一段对话的经历列出里面所有说话的人。伙伴写的行（`author: owner`）只能是 `["partner"]`。
+- `audience`（经历和条目才有）：在哪说的。和行的受众相同；唯一的例外是本人自己在群里说的话，可以记在本人的私聊里。群里别人的话不进私聊。
 
 **行和 body。** 节点的每次变化是日志里关于 `node:<id>` 的一行（信封不变），内容在另放的 body 里（`nodes.body` 检查它并给出规范字节）。每个 body 带 `version`（现在 1），拒收不认识的字段；列表要排好序、不重复，所以每个 body 只有一种字节。
 
@@ -270,7 +270,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `node.revised` | `base`、`field`（`name`、`aliases`、`summary`、`status`、`who_knows`、`object`、`progress`）、`person?`（只给 `progress`）、`value`；`aliases` 是话题自己的别的叫法（对象的叫法在对象上）：排好序、不重复、最多 16 个、每个最多 80 字，`[]` 是去掉 |
 | `node.view_changed` | `base`、`view`、`text`、`because` |
 | `node.open_item` | `base`、`item`、`text`、`because`、`closed?` |
-| `node.intent` | `base`、`intent`、`text`、`because`、`status`（`waiting` 等着、`said` 说了、`done` 完了、`dropped` 放下）、`trigger?`（`{at, zone}`：绝对时刻加当时的时区） |
+| `node.intent` | `base`、`intent`、`text`、`because`、`status`（`waiting` 等着、`said` 说了、`done` 完了、`dropped` 放下）、`trigger?`（`{at, zone}`：绝对时刻加当时的时区；或 `{node, change}`：同一受众里另一个节点的键，`changed` 有变化、`done` 做完，两种只能有一种）、`origin?`（`partner` 伙伴的交代、`her` 她自己想的：必须就是说的人，`saidBy` 是 `["partner"]` 或 `["her"]`，对不上的 body 拒收）、`action?`（`say` 提起或提醒、`work` 去做：只有 `origin: partner` 才能 `work`；不写是 `say`）。三个新字段都可以不写，不写时字节和以前一样 |
 | `node.span` | `audience`、`text`（她的话）、`refs?`、`from?`、`to?` |
 | `node.entry` | `audience`、`text`、`refs?`、`quoteOnly?`（找不回原文的标「只有引文」，这时没有指向原文的 `refs`；有就不能标）。`memory:<id>` 不是原文，是这条条目所在的那行记忆（记忆行照旧存强弱和新旧），所以只带它的条目可以标「只有引文」（`nodes.fact_rows` 这样写）；以前写的只带它、没标的照旧能读 |
 | `node.related` | `relation`、`to`（另一个节点的键）、`reason`、`because` |
@@ -349,7 +349,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `open` | `item?`（一个 `o…`；不写是新的一件）、`text?`、`closed?`、`because`（没收尾的事，改写或收尾） | `node.open_item` |
 
 - **种类只由「做完」的标准决定**：有做完的标准是进行中的事；没有、会反复聊是话题；没有、但一直要做（`ongoing`）是进行中的事，状态 `ongoing`。仓库和人的种类不能改。
-- **看法只凭算数的改**：一条看法的每个依据都必须是直接给她看的经历、条目或收件箱的一条，只有伙伴或她说的（`saidBy` 只有 `partner`、`her`），而且不是在群里说的（按它自己的 `audience`）；网页、别的 AI、群里别人的话、或者只引概括和别的头一项的，都不改看法，列在 `held`（`not_counted`）。概括和没收尾的事不受这一条限制。
+- **看法只凭算数的改**：一条看法的每个依据都必须是直接给她看的经历、条目或收件箱的一条，可信档是算数（下面「可信三档」，`saidBy` 只有 `partner`、`her`），而且不是在群里说的（按它自己的 `audience`）；和 `nodes.view_may_change` 是同一条规矩；网页、别的 AI、群里别人的话、或者只引概括和别的头一项的，都不改看法，列在 `held`（`not_counted`）。概括和没收尾的事不受这一条限制。
 - **一起看过的不并走**：`minted:together-…` 的节点并进别处和人、仓库一样，整个回答不改（`not_allowed`）；别的节点并进它可以，从它拆出一部分也可以（和仓库一样，只有人不能拆）。
 - **伙伴定的为准**：要改的头一项、没收尾的事或看法当前版本是伙伴写的、要收回的关系是伙伴建的，或者要并走的节点本身、它的某条关系、它头里的任何一项（种类、名字、概括、状态、「做完」、谁知道、对象、进度）、某条看法、没收尾的某件事、还等着说的某句话有一个当前版本是伙伴写的（并入只把经历、条目、没收尾的事、想说的话和关系带过去，而且以她的名义再写一遍，伙伴定的别的东西会跟着并走的节点消失），这一条动作就不做，列在 `held`（`partner_set`），她只能举手；同一个回答里别的动作照做。
 - **读不了就什么都不改**：超过 32768 字节、不是 JSON、没有 `actions`、超过 24 条、不认识的动作、她没看到的编号、字段不对、没有依据或依据不是她看到的、`part_of` 成环、规则不允许的（人被拆或并走、一起看过的被并走、种类和键不合、经历挂到「关于你」或并进「关于你」、一条收件箱放两次、同一项（同一条看法、同一件没收尾的事）写两次、收回到不是上级的节点、收回不存在的关系、新节点上什么都没有），这些都只写 `node.upkept`，`fallback` 写明原因，队列照样往下走；这个节点下次有变化时再排进来。
@@ -360,7 +360,28 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - `place_input`：条目按顺序取，每条截到 600 字，最多 40 条、合计 12000 字（第一条一定要；`taken` 是取了几条，剩下的下一次再放）；候选节点按给的顺序最多 12 个，名字截到 40 字、概括 160 字，编号 `n1`、`n2`……，节点 id 不给模型。截断按 Unicode 标量计数，超出的以 `…` 结尾；控制字符换成空格。
 - `place_read`：读 `{"spans":[{"start":1,"node":"n2","gist":"…"}]}`。条目从 1 编号，每段从自己的 `start` 到下一段之前；第一段从 1 开始，`start` 只增；`node` 是编号，`null` 或不写就是收件箱；`gist` 是她给这段的几个字，截到 120 字。回答包在代码块里或前后有话都能读。别的地方不对（不是 JSON、没有段、段比条目多、`start` 不对、编号不认识、没有 `gist`、超过 16384 字节），整段作为一段进收件箱，`fallback` 写明原因：什么都不丢，也不猜。
 
-所有长度和条数都在 `myriad_nodes::limits`，`nodes.limits` 原样给出。它们是初值，改在这里就是改所有端。
+**可信三档**（`nodes.trust_tier`、`nodes.usable_in_private`、`nodes.view_may_change`，原生 M5 搬进核心，`myriad_nodes::trust`）：她能把记下的东西用到哪一步，只看是谁说的（`saidBy`）和从哪来，从不看话里写了什么。核心不读正文；只有宿主知道的由宿主给。
+
+| 档 | 什么时候 | 怎么用 |
+| --- | --- | --- |
+| `counts` 算数 | 本人说的、她自己说的；`typed`（本人正在打的字）；`verified`（被真实结果验证过）；本人对「听说」回了「是这样」（`answer: confirmed`） | 当事实 |
+| `heard` 待确认 | 第三方内容（`third_party`）、本人在场一起看到（`together`）、而且记成关于本人的（`aboutPartner`） | 只当「听说」，带出处；她可以问一次 |
+| `seen` 只是看到过 | 其余：群里别人说的（`other_person`）、本人不在场时看到的、没验证的 agent 说法、不是关于本人的第三方内容 | 只当那段经历上的旁证，不当事实、不拿来问 |
+
+- 几方一起说的按最低的那一方；`saidBy` 是空的只算看到过（哪怕 `typed`）。本人回了「不是」（`answer: denied`）的作废（`null`），之后再也不取。
+- **宿主要给的**：每一条的来历 `provenance`（`together`、`typed`、`verified`、`answer`，不写就是否；出处的文字、回答的时间、问过没有这些留在宿主）；依据 id 的归属 `known`（`partner`：本人在自己私聊里说的话；`her`：她在那里说的；`typed`；`verified`：真实跑过的结果；不在里面的都算看到过；群里的消息永远不算本人的）。
+- **进不进私聊**（`usable_in_private`）：`private` 必须是一个人的私聊受众（`personal:<一个人>`，不是就 `bad_input`）。含 `other_person` 的、作废的、别人私聊里的都不能用；本人私聊里的和她自己受众（`own:`）里的可以；本人在群里说的、只有 `partner` 的可以。网站上每个账号都按自己的 `personal:<账号>` 问。
+- **看法改不改**（`view_may_change`）：依据不空、每一条都算数才可以改（`mayChange`）；`verdict` 再分出 `heard_only`（有待确认的、没有只是看到过的，`heard` 是宿主记成待确认的那些 id，只能写成「听说……」）和 `refused`。整理（`nodes.upkeep_read`）改看法前用的就是这一条（`not_counted`）。
+
+**意图**（`nodes.intent_admit`、`nodes.intents_due`、`nodes.intent_check`、`nodes.intent_judge_input`、`nodes.intent_judge_read`，原生 M5 搬进核心，`myriad_nodes::intents`）：她打算以后提起、或者伙伴交代她去做的事，写成 `node.intent` 行。`partner` 同上是这个私聊受众的本人。
+
+- **唯一的入口**（`intent_admit`）：伙伴的（`origin: partner`）必须以本人在自己私聊里的那条消息为依据（`message` 在 `because` 里，而且在 `known.partner` 里），否则 `not_the_partners`；还必须有触发，否则 `untimed`（「现在就做」是聊天里原有的提议办事，不归这里）。她的（`origin: her`）必须至少有一条依据在本人那边（`known.partner`、`typed`、`verified`），只有她自己的话也不行（她的回复可能复述了别人的内容），否则 `rests_on_nothing`；她的永远只提起（回答的 `action` 是 `say`）。挂在哪个节点、依据有没有被忘掉，由宿主查。
+- **到期**（`intents_due`）：宿主给这些受众的行和 `now`（核心不读钟）。在等的、时间触发 `at <= now` 的到期（`time`）；节点触发在同一受众里按键找那个节点：`done` 要它的状态是做完（`done`），`changed` 要它在这条意图写下之后有变化（`changed`：它自己的行，回想 `node.used`、整理标记 `node.upkept`、跳过的行不算；「写下」是这条意图留着的最早一版的时钟）。别的受众里同一个键的节点不算；忘掉的、并走的节点上的意图不到期；没有触发的从不自己到期，等她下一个合适的时候。`next` 是下一个时间触发。
+- **执行前重查**（`intent_check`）：只有伙伴交代去做的（`origin: partner`、`action: work`、带着交代 `instruction`）才可能执行；交代时记下的设备、本人、她（说话人的指纹）、当时生效的运行时授予，和宿主给的现在（`now`）比：设备不同 `other_device`，本人或她变了、或者现在没有本人 `identity`，交代时的任何一个授予现在没了 `revoked`，不是交代 `not_an_instruction`；都对才 `run`，否则 `raise`（改成举手）。网站上设备恒为 `site`。授予只看运行时授予。
+- **判断**（`intent_judge_input`、`intent_judge_read`）：本人在自己私聊里说了一句后，跑一次小模型 JSON（`operation` 是 `node.intents`，没有工具），由她以自己的身份判断：是对她的明确交代（`instruction`，成为伙伴的意图）、本人自己的安排（`plan`，什么都不留）、还是她自己想以后提（`mine`，她的意图）。`intent_judge_input` 给出系统提示（她的 `soul` 在前，措辞照原生，合成样例 34/34）、回答的 schema 和给模型的输入：只有本人这句话（截到 1200 字）和之前最多 4 句（`who` 是 `them`、`you`；`other` 的行先算进 4 句再去掉；每句 300 字），候选节点的编号（`n1`……最多 8 个）、种类和名字（40 字），在等的意图的编号（`t1`……最多 8 个）和文字（300 字），以及读时间用的 `now`（按 `zone` 写成 `2026-10-29T14:00, Thursday`）和 `zone`。每段文字先过密钥扫描（`filter.scan_secrets`）再截。节点上挂的经历、条目、原文、回想到的东西这个调用根本没有字段收，所以别人内容里的「提醒他……」到不了这一步；不发任何 id。候选节点由宿主挑（本人自己私有受众里、这句话找得到的，进行中的在前）。
+- `intent_judge_read` 读 `{"take":[…],"drop":[…]}`：整段必须是一个 JSON 对象（包在代码块里的不读），`take` 必须是对象的列表，否则 `unreadable`，什么都不取。只读前 3 条；种类认不出、`text` 空的跳过；`action` 认不出是 `say`；`at`（`YYYY-MM-DDTHH:MM`，也认秒和空格）按 `zone` 读，早于 `now` 一分钟以上的整条丢掉；读不出时间时看 `after`（`n…`，`afterDone` 为真是等做完）；交代没有触发的丢掉；`note` 是她给过的编号才算（不算就是挂「关于你」）；只有交代才能 `work`。`drop` 里每个给过的 `t…` 记一次。回答的 `takes` 带 `kind`、`origin`（交代是 `partner`、`mine` 是 `her`、计划没有）、`text`（控制字符换成空格、截到 1000 字）、`action`、`trigger?`（时间触发带给的 `zone`；节点触发是节点的键）、`note?`（节点 id）、`echo?`（她当下回的那一句）；`drops` 是被叫停的意图 id。之后每一条再过 `intent_admit`。
+
+所有长度和条数都在 `myriad_nodes::limits`，`nodes.limits` 原样给出。它们是初值，改在这里就是改所有端。意图判断的几个上限（`INTENT_*`）也在那里，但不在 `nodes.limits` 的回答里（加进去会改动已有的一致性对照）。
 
 | 调用 | 输入 → 输出 |
 | --- | --- |
@@ -371,6 +392,11 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.home_owed` | `{ledger, origin}` → `{retract: [{audience, node}]}`：这一端欠的撤回，只从账算：账里它是家（`home`）、有撤回而撤回的 `homes` 里没有 `origin` 的节点（`node` 是 `node:<id>`），被忘掉直接点名的不列，各个受众的都在，按受众、节点排好序；每个写一行清单为空的 `retract` 和 `retract.home`。宿主恢复家页时写到一半停了，再问一次；`origin` 是空的是 `bad_input` |
 | `nodes.home_take` | `{page, holder, peer, ledger, held?, origin?}` → `{rows, bodies?, filled?, withheld?, ledger, retract?}`：把家页恢复到这台电脑上，它成了家；`held` 是这一端已经有的这个受众的行，`filled` 是其中原来是桩、现在有了 body 的；body 照 `wire_take` 的检查（`local` 标签的也收），不是规范字节或不通过的进 `withheld`，行照样存、没有 body；`held` 里已经是完整的一行、页里没带它的 body 的，不进 `rows` 也不进 `withheld`，照原样留着（两个家，或家导回自己的文件）；`retract` 是这一端在这一页的受众里欠的撤回（`{audience, node}`，排好序，同 `nodes.home_owed`；每个写一行清单为空的 `retract` 和 `retract.home`）；`holder` 不是 `pc`、页里有不是留着的行都是 `bad_input`；`peer` 是文件头里的伙伴 id（没有就是 `local-owner`），和 `holder.owner` 不一样也是 `bad_input` |
 | `nodes.id` | `{audience, key}` → `{id}` |
+| `nodes.intent_admit` | `{origin, action?, because, message?, trigger?, known?}` → `{admitted, action?, why?}`（`why`：`not_the_partners`、`rests_on_nothing`、`untimed`） |
+| `nodes.intent_check` | `{origin?, action?, instruction?: {owner, persona, device, granted}, now: {owner, persona, device, granted}}` → `{verdict: run \| raise, why?}`（`why`：`not_an_instruction`、`other_device`、`identity`、`revoked`） |
+| `nodes.intent_judge_input` | `{soul, said, before?: [{who, text}], notes?: [{id, key, kind, name}], waiting?: [{id, text}], now, zone}` → `{operation, system, schema, input, notes: [{id, key}], waiting: [id]}` |
+| `nodes.intent_judge_read` | `{output, notes?: [{id, key}], waiting?: [id], now, zone}` → `{takes: [{kind, origin?, text, action, trigger?, note?, echo?}], drops: [id], unreadable?}` |
+| `nodes.intents_due` | `{rows, bodies?, ledger, now}` → `{due: [{audience, node, intent, why}], next?}` |
 | `nodes.limits` | `{}` → 每个上限 |
 | `nodes.pick` | `{ranked: [{id, named?}], nodes: [{id, status?, gone?, entries?: [{id, at}]}], aboutThem?, her?, thorough?, budget?: {picked?, entries?, aboutThem?, together?}}` → `{picked?: [{node, entries}], aboutThem?, loose?, together?: [{node, entries?, shown, of}]}`（见下面「回想挑节点」） |
 | `nodes.place_input` | `{items: [{id, saidBy, text}], candidates?: [{id, kind, name, summary?}]}` → `{items: [{n, id, saidBy, text}], taken, candidates?: [{label, id, kind, name, summary?}]}` |
@@ -381,9 +407,12 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.retract` | `{audience, node, rows, bodies?, ledger, forget?}` → `{takes: [[id]]}`：伙伴撤回 `node` 时，这一端的折叠放在它里面的、别的节点的行（`local` 的不列：它不离开这一端，别的端的折叠够不到它；`forget: true` 时照列这一端留着的 `local` 行，它们在这里也要拿走；所以家里写的忘掉的 `takes` 会带出 `local` 行的 id，只有 id、从不带内容：id 只是一行的标识，不含它写了什么，别的端没有这些行，id 在那里什么都够不到，而少了它们，家自己的忘掉就拿不走伙伴看到的那些行），排好序，每份最多 256 个，一份写一行 `retract`（至少一份，可以是空的）；`forget: true` 是伙伴在家里忘掉 `node` 时：只列其中这一端留着的行，一份写一行 `forget`；`node` 不在给的行里是 `bad_input` |
 | `nodes.sort_input` | `{topics?: [{id, name, aliases?, holds?}], facts: [{id, text}]}` → `{system, schema, input, offered: [id], taken}` |
 | `nodes.sort_read` | `{output, offered?: [id], facts: [id], known?: [{id, name, aliases?}]}` → `{facts: [{fact, to, …}]}` |
+| `nodes.trust_tier` | `{items: [{saidBy, provenance?: {together?, typed?, verified?, answer?}, aboutPartner?}]}` → `{tiers: [seen \| heard \| counts \| null]}` |
 | `nodes.under_read` | `{value?, offered?: [id], known?}` → `{to, …}` |
 | `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?}], ledger?}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken, local?}`；`local` 为真时这个节点被撤回、这一端是它的家，这一次整理只写 `local` 行 |
 | `nodes.upkeep_read` | `{input: <upkeep_input 的输入>, run, sync, output}` → `{writes: [{id, node, kind, body, to?, takes?}], placed?, held?, fallback?}`；并入、拆出的那一行带 `to`（和拆出的 `takes`），调用方原样写进行的信封；`upkeep_input` 回答 `local` 时 `sync` 必须是 `local`，不然是 `bad_input` |
+| `nodes.usable_in_private` | `{private, items: [{saidBy, audience, provenance?}]}` → `{usable: [bool]}` |
+| `nodes.view_may_change` | `{because, known?: {partner?, her?, typed?, verified?}, heard?}` → `{mayChange, verdict: view \| heard_only \| refused}` |
 | `nodes.wire_send` | `{audience, rows, bodies?, theirs?, ask?, holder, here, ledger, peerAbi, elsewhere?}` → `{batches: [{audience, rows, payloads?, withheld?: [{id, why}]}], notHeld?, tooOld?, heldBack?}`；`here`（这一端的 id）和对方的 id（`holder.owner`）不一样是 `bad_input`（见「只在同一个 id 之间同步」；对方是子端时不查，照旧 `notHeld`）；`peerAbi` 是对方的 ABI（hello 列了 `log2` 是 2，否则 1；0 是 `bad_input`），对方是 1 而要发的有它读不懂的行时 `{batches: [], tooOld: true}`；对方不能完整存的行（`Holder::holds_row`：关于别的 id 下的伙伴）发成桩，对方的计数就没有缺口，列在 `heldBack` 里；`forget`、撤回和家的标记没有桩的写法，不发、也列在 `heldBack` 里，对方的计数在那里留下一个永远补不上的缺口（这一端以后每次同步都会再发那一端后面的行）。只在同一个 id 之间同步，给 `log.ledger` 传 `holder` 的一端不会写出这样的行，`partner.migrate` 把以前的迁走或拒绝，所以只有宿主的毛病才会有，`heldBack` 是报出这个毛病 |
 | `nodes.wire_take` | `{batch, holder, peer, now, known?, members?, ledger?, epochs?, held?, elsewhere?, people?}` → `{accepted, refused?, clockAhead?, ledger, epochs, bodies?, withheld?, ask?, elsewhere?}`；批里有撤回时必须给 `ledger`；`peer` 同 `log.admit` |
 

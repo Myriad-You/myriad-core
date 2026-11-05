@@ -1,0 +1,398 @@
+{
+  "call": "nodes.trust_tier",
+  "cases": [
+    {
+      "input": {
+        "items": [
+          {
+            "aboutPartner": true,
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "saidBy": [
+              "her"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "typed": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "provenance": {
+              "verified": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "saidBy": [
+              "partner",
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "answer": "confirmed",
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "answer": "denied",
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          }
+        ]
+      },
+      "name": "who said it decides the tier, never the words",
+      "output": {
+        "tiers": [
+          "counts",
+          "counts",
+          "counts",
+          "counts",
+          "heard",
+          "seen",
+          "seen",
+          "seen",
+          "seen",
+          "counts",
+          null
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "saidBy": []
+          },
+          {
+            "provenance": {
+              "typed": true
+            },
+            "saidBy": []
+          },
+          {
+            "provenance": {
+              "answer": "confirmed"
+            },
+            "saidBy": []
+          }
+        ]
+      },
+      "name": "nobody named is only seen, even typed",
+      "output": {
+        "tiers": [
+          "seen",
+          "seen",
+          "counts"
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "saidBy": [
+              "her",
+              "partner"
+            ]
+          }
+        ]
+      },
+      "name": "a site account's own words count in its own talk",
+      "output": {
+        "tiers": [
+          "counts",
+          "seen",
+          "counts"
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": false
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          }
+        ]
+      },
+      "name": "the poisoning set: nothing of it counts, heard only when seen together",
+      "output": {
+        "tiers": [
+          "seen",
+          "seen",
+          "seen",
+          "seen",
+          "heard",
+          "seen",
+          "heard",
+          "heard",
+          "heard",
+          "seen",
+          "heard",
+          "seen",
+          "heard",
+          "heard",
+          "seen",
+          "seen",
+          "heard",
+          "heard"
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "provenance": {
+              "source": "一起看的邮件"
+            },
+            "saidBy": [
+              "partner"
+            ]
+          }
+        ]
+      },
+      "name": "a provenance field the core does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "saidBy": [
+              "stranger"
+            ]
+          }
+        ]
+      },
+      "name": "a sayer that is not one",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

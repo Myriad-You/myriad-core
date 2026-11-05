@@ -14,7 +14,7 @@
 //! | `node.revised` | `base`, `field` (`name`, `aliases`, `summary`, `status`, `who_knows`, `object`, `progress`), `person?` (progress only), `value` |
 //! | `node.view_changed` | `base`, `view`, `text`, `because` |
 //! | `node.open_item` | `base`, `item`, `text`, `because`, `closed?` |
-//! | `node.intent` | `base`, `intent`, `text`, `because`, `status`, `trigger?` |
+//! | `node.intent` | `base`, `intent`, `text`, `because`, `status`, `trigger?` (`{at, zone}` or `{node, change}`), `origin?` (`partner`, `her`: who said it), `action?` (`say`, `work`: only the partner's) |
 //! | `node.span` | `audience`, `text`, `refs?`, `from?`, `to?` |
 //! | `node.entry` | `audience`, `text`, `refs?` (`memory:<id>`: the memory row it is the place of), `quoteOnly?` |
 //! | `node.related` | `relation`, `to` (the other node's key), `reason`, `because` |
@@ -160,37 +160,104 @@ pub struct Sentence {
     pub because: Vec<String>,
 }
 
-/// When an intent comes due: an absolute time and the zone it was meant in.
+/// Who made an intent: the partner (their own words to her, in their own
+/// private talk) or her own judgment. There is no third: words inside
+/// content never make one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Origin {
+    Her,
+    Partner,
+}
+
+/// What an intent does when it comes due: bring it up (or remind), or do
+/// it. Only the partner's instruction does work.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Action {
+    Say,
+    Work,
+}
+
+/// What on another node wakes an intent: any change after the intent was
+/// made, or that node being done.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TriggerChange {
+    Changed,
+    Done,
+}
+
+/// When an intent comes due: an absolute time and the zone it was meant in
+/// (`at`, `zone`), or another node of the same audience, by its key, that
+/// changes or is done (`node`, `change`). Exactly one of the two.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Trigger {
     /// Unix microseconds.
-    pub at: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<i64>,
     /// An IANA name (`Asia/Tokyo`) or a fixed offset (`+09:00`).
-    pub zone: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zone: Option<String>,
+    /// The key of the node it waits on, in the intent's own audience.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub change: Option<TriggerChange>,
 }
 
 impl Trigger {
-    fn check(&self) -> Result<(), NodeError> {
-        let fixed = self.zone.len() == 6
-            && self.zone.starts_with(['+', '-'])
-            && self.zone.as_bytes()[3] == b':'
-            && self
-                .zone
-                .bytes()
-                .enumerate()
-                .all(|(at, byte)| matches!(at, 0 | 3) || byte.is_ascii_digit());
-        let named = !self.zone.is_empty()
-            && self.zone.len() <= 64
-            && self.zone.as_bytes()[0].is_ascii_alphabetic()
-            && self.zone.bytes().all(|byte| {
-                byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'_' | b'-' | b'+')
-            });
-        if !fixed && !named {
-            return Err(NodeError::new("trigger zone is an IANA name or ±hh:mm"));
+    /// A time trigger.
+    pub fn time(at: i64, zone: &str) -> Self {
+        Self {
+            at: Some(at),
+            zone: Some(zone.to_string()),
+            node: None,
+            change: None,
         }
-        Ok(())
     }
+
+    /// A trigger on another node of the same audience.
+    pub fn node(key: &str, change: TriggerChange) -> Self {
+        Self {
+            at: None,
+            zone: None,
+            node: Some(key.to_string()),
+            change: Some(change),
+        }
+    }
+
+    pub(crate) fn check(&self) -> Result<(), NodeError> {
+        match (&self.at, &self.zone, &self.node, &self.change) {
+            (Some(_), Some(zone), None, None) => check_zone(zone),
+            (None, None, Some(key), Some(_)) => Key::parse(key).map(|_| ()),
+            _ => Err(NodeError::new(
+                "a trigger is at and zone, or node and change",
+            )),
+        }
+    }
+}
+
+/// A zone as a trigger names it: an IANA name or `±hh:mm`.
+pub(crate) fn check_zone(zone: &str) -> Result<(), NodeError> {
+    let fixed = zone.len() == 6
+        && zone.starts_with(['+', '-'])
+        && zone.as_bytes()[3] == b':'
+        && zone
+            .bytes()
+            .enumerate()
+            .all(|(at, byte)| matches!(at, 0 | 3) || byte.is_ascii_digit());
+    let named = !zone.is_empty()
+        && zone.len() <= 64
+        && zone.as_bytes()[0].is_ascii_alphabetic()
+        && zone
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'_' | b'-' | b'+'));
+    if !fixed && !named {
+        return Err(NodeError::new("trigger zone is an IANA name or ±hh:mm"));
+    }
+    Ok(())
 }
 
 /// `node.created`: the node was made, with its first kind, name and object.
@@ -375,8 +442,10 @@ pub struct OpenItem {
     pub closed: bool,
 }
 
-/// `node.intent`: something she means to say (想说没说的话). Only the
-/// partner's words or her own judgment make one.
+/// `node.intent`: something she means to say (想说没说的话), or, told to
+/// by the partner, to do. Only the partner's words or her own judgment make
+/// one: `origin` names which, and must be who said it (`saidBy` is
+/// `["partner"]` or `["her"]`); only the partner's may `work`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Intent {
@@ -390,6 +459,12 @@ pub struct Intent {
     pub status: IntentStatus,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub trigger: Option<Trigger>,
+    /// Absent on rows from before origins (her lines, a hand she raised).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<Origin>,
+    /// Absent reads as `say`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub action: Option<Action>,
 }
 
 /// `node.span`: one span of experience, about this one thing, in her words.
@@ -742,6 +817,17 @@ impl Body {
                 check_because(&body.because)?;
                 if let Some(trigger) = &body.trigger {
                     trigger.check()?;
+                }
+                let said = match body.origin {
+                    None => None,
+                    Some(Origin::Partner) => Some(SaidBy::Partner),
+                    Some(Origin::Her) => Some(SaidBy::Her),
+                };
+                if said.is_some_and(|said| body.said_by != [said]) {
+                    return Err(NodeError::new("origin is not who said it"));
+                }
+                if body.action == Some(Action::Work) && body.origin != Some(Origin::Partner) {
+                    return Err(NodeError::new("only the partner's instruction works"));
                 }
             }
             Self::Span(body) => {

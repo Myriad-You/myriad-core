@@ -86,6 +86,20 @@ pub const UPKEEP_OUTPUT_BYTES: usize = 32_768;
 /// Nodes one queue call may hand out.
 pub const QUEUE_MAX: usize = 200;
 
+/// The intent judgment ([`crate::intents`]): lines of the talk before the
+/// partner's message, at most.
+pub const INTENT_BEFORE: usize = 4;
+/// Candidate nodes offered, at most.
+pub const INTENT_NOTES: usize = 8;
+/// Waiting intents offered, at most.
+pub const INTENT_WAITING: usize = 8;
+/// Takes read from one answer, at most.
+pub const INTENT_TAKES: usize = 3;
+/// The partner's message as the model sees it.
+pub const INTENT_SAID_CHARS: usize = 1200;
+/// One line before it, or a waiting intent's text, as the model sees it.
+pub const INTENT_LINE_CHARS: usize = 300;
+
 /// The marker a cut text ends with.
 pub const ELLIPSIS: char = '…';
 

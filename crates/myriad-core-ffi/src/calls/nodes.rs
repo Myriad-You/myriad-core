@@ -1,13 +1,15 @@
 //! Her nodes (`myriad_nodes`): a node's id and key, a row's body and its
 //! one byte form, the fold, the limits both hosts cut to, the pure half of
 //! placing a talk and of her upkeep, the upkeep queue, where a fact she
-//! keeps goes and the rows that put it there, and picking nodes for recall.
-//! The rules are the crate's; these calls only carry them across. Inputs
-//! hold her words, so a refusal names a field, never a value.
+//! keeps goes and the rows that put it there, picking nodes for recall,
+//! the three trust tiers, and her intents (the gate, when they are due,
+//! the recheck before one runs, the judgment's request and reading). The
+//! rules are the crate's; these calls only carry them across. Inputs hold
+//! her words, so a refusal names a field, never a value.
 
 use myriad_nodes::{
-    Body, NodeError, entries, fold as fold_rows, home, limits as node_limits, place, queue as due,
-    recall, upkeep, wire,
+    Body, NodeError, entries, fold as fold_rows, home, intents, limits as node_limits, place,
+    queue as due, recall, trust, upkeep, wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -192,4 +194,55 @@ pub(super) fn row_id(raw: &[u8]) -> Result<Value, Failure> {
 /// aboutThem?, loose?, together?}`.
 pub(super) fn pick(raw: &[u8]) -> Result<Value, Failure> {
     answer(&recall::pick(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{items: [{saidBy, provenance?, aboutPartner?}]}` → `{tiers}`: each
+/// piece's tier (`seen`, `heard`, `counts`; `null`: void, the person
+/// denied it), from who said it and where it came from, never from its
+/// words. `partner` is the one person of the private audience.
+pub(super) fn trust_tier(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&trust::tiers(quiet_input(raw)?))
+}
+
+/// `{private, items: [{saidBy, audience, provenance?}]}` → `{usable}`:
+/// whether each piece (said in `audience`) may be used in the private talk
+/// of `private` (`personal:<one>`) at all.
+pub(super) fn usable_in_private(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&trust::usable(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{because, known?, heard?}` → `{mayChange, verdict}`: whether a view
+/// resting on `because` may change (everything it rests on counts), and
+/// what it may be written as (`view`, `heard_only`, `refused`).
+pub(super) fn view_may_change(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&trust::view_answer(quiet_input(raw)?))
+}
+
+/// `{origin, action?, because, message?, trigger?, known?}` →
+/// `{admitted, action?, why?}`: the one gate an intent passes.
+pub(super) fn intent_admit(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&intents::admit(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{origin?, action?, instruction?, now}` → `{verdict, why?}`: whether a
+/// due intent runs now or her hand goes up instead.
+pub(super) fn intent_check(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&intents::check(quiet_input(raw)?))
+}
+
+/// `{rows, bodies?, ledger, now}` → `{due, next?}`: the waiting intents due
+/// at `now`, and when the next time trigger comes.
+pub(super) fn intents_due(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&intents::due(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{soul, said, before?, notes?, waiting?, now, zone}` → `{operation,
+/// system, schema, input, notes, waiting}`: the judgment's request.
+pub(super) fn intent_judge_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&intents::prepare(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{output, notes?, waiting?, now, zone}` → `{takes, drops, unreadable?}`.
+pub(super) fn intent_judge_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&intents::read(quiet_input(raw)?).map_err(refused)?)
 }

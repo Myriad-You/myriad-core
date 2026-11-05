@@ -1,0 +1,1654 @@
+{
+  "call": "nodes.intent_admit",
+  "cases": [
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:theirs",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "the partner's instruction on their own message, timed",
+      "output": {
+        "action": "work",
+        "admitted": true
+      }
+    },
+    {
+      "input": {
+        "action": "say",
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:theirs",
+        "origin": "partner",
+        "trigger": {
+          "change": "done",
+          "node": "minted:release"
+        }
+      },
+      "name": "the partner's instruction waiting on another node",
+      "output": {
+        "action": "say",
+        "admitted": true
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:hers"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:hers",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "the partner's on her message is not theirs",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:in-group"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:in-group",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "the partner's on a group message is not theirs",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#4"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:theirs",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "the partner's naming a message it does not rest on",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "the partner's without a message",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:theirs",
+        "origin": "partner"
+      },
+      "name": "the partner's with nothing to wake it",
+      "output": {
+        "admitted": false,
+        "why": "untimed"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:page",
+          "record:agent#4"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "origin": "her"
+      },
+      "name": "hers on content's words rests on nothing",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "origin": "her"
+      },
+      "name": "hers on the partner's words only says",
+      "output": {
+        "action": "say",
+        "admitted": true
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:hers"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "origin": "her"
+      },
+      "name": "hers on her own line alone rests on nothing",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "record:run#3"
+        ],
+        "known": {
+          "verified": [
+            "record:run#3"
+          ]
+        },
+        "origin": "her"
+      },
+      "name": "hers on a real result",
+      "output": {
+        "action": "say",
+        "admitted": true
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "screen:t1"
+        ],
+        "known": {
+          "typed": [
+            "screen:t1"
+          ]
+        },
+        "origin": "her"
+      },
+      "name": "hers on what the partner typed",
+      "output": {
+        "action": "say",
+        "admitted": true
+      }
+    },
+    {
+      "input": {
+        "because": [],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "origin": "her"
+      },
+      "name": "hers on nothing at all",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "origin": "content"
+      },
+      "name": "an origin that is not one",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "because": [
+          "message:theirs"
+        ],
+        "known": {
+          "her": [
+            "message:hers"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:theirs",
+        "origin": "partner",
+        "trigger": {
+          "at": 1,
+          "change": "done",
+          "node": "minted:x",
+          "zone": "+09:00"
+        }
+      },
+      "name": "a trigger that is both",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:g1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on the content, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:g1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on the content, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#g1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on an agent's record, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#g1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on an agent's record, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-g1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on her reply quoting it, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-g1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on her reply quoting it, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-g1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on a group message, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-g1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-g1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-g1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison g1 (group) on a group message, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:a1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on the content, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:a1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on the content, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#a1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on an agent's record, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#a1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on an agent's record, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-a1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on her reply quoting it, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-a1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on her reply quoting it, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-a1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on a group message, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-a1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-a1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-a1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison a1 (agent) on a group message, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:p1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on the content, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:p1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on the content, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#p1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on an agent's record, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#p1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on an agent's record, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-p1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on her reply quoting it, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-p1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on her reply quoting it, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-p1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on a group message, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-p1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-p1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-p1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison p1 (page) on a group message, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:v1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on the content, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:v1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on the content, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#v1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on an agent's record, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#v1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on an agent's record, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-v1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on her reply quoting it, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-v1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on her reply quoting it, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-v1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on a group message, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-v1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-v1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-v1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison v1 (video) on a group message, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:m1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on the content, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:m1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on the content, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#m1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on an agent's record, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#m1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on an agent's record, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-m1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on her reply quoting it, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-m1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on her reply quoting it, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-m1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on a group message, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-m1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-m1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-m1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison m1 (mail) on a group message, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:q1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on the content, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "event:q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "event:q1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on the content, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#q1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on an agent's record, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "record:agent#q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "record:agent#q1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on an agent's record, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-q1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on her reply quoting it, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:quoting-q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:quoting-q1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on her reply quoting it, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-q1",
+        "origin": "her",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on a group message, as her's",
+      "output": {
+        "admitted": false,
+        "why": "rests_on_nothing"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "because": [
+          "message:group-q1"
+        ],
+        "known": {
+          "her": [
+            "message:quoting-q1"
+          ],
+          "partner": [
+            "message:theirs"
+          ]
+        },
+        "message": "message:group-q1",
+        "origin": "partner",
+        "trigger": {
+          "at": 1793880000000000,
+          "zone": "Asia/Tokyo"
+        }
+      },
+      "name": "poison q1 (quoted) on a group message, as partner's",
+      "output": {
+        "admitted": false,
+        "why": "not_the_partners"
+      }
+    }
+  ],
+  "version": 1
+}

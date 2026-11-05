@@ -1,0 +1,395 @@
+{
+  "call": "nodes.intent_check",
+  "cases": [
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "more",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "it runs when everything it was given under still holds",
+      "output": {
+        "verdict": "run"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "a grant withdrawn",
+      "output": {
+        "verdict": "raise",
+        "why": "revoked"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-b",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "another device",
+      "output": {
+        "verdict": "raise",
+        "why": "other_device"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "someone-else",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "another partner",
+      "output": {
+        "verdict": "raise",
+        "why": "identity"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "another-her"
+        },
+        "origin": "partner"
+      },
+      "name": "another her",
+      "output": {
+        "verdict": "raise",
+        "why": "identity"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "no partner now",
+      "output": {
+        "verdict": "raise",
+        "why": "identity"
+      }
+    },
+    {
+      "input": {
+        "action": "say",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "the partner's to be said",
+      "output": {
+        "verdict": "raise",
+        "why": "not_an_instruction"
+      }
+    },
+    {
+      "input": {
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "the partner's with no action named",
+      "output": {
+        "verdict": "raise",
+        "why": "not_an_instruction"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "her"
+      },
+      "name": "hers, even carrying an instruction",
+      "output": {
+        "verdict": "raise",
+        "why": "not_an_instruction"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "no instruction, no run",
+      "output": {
+        "verdict": "raise",
+        "why": "not_an_instruction"
+      }
+    },
+    {
+      "input": {
+        "now": {
+          "device": "mac-a",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "local-owner",
+          "persona": "ari"
+        }
+      },
+      "name": "no origin, no run",
+      "output": {
+        "verdict": "raise",
+        "why": "not_an_instruction"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "site",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "42",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "site",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "42",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "the website: the device is the site",
+      "output": {
+        "verdict": "run"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "instruction": {
+          "device": "site",
+          "granted": [
+            "memory.read",
+            "memory.write",
+            "work.run"
+          ],
+          "owner": "42",
+          "persona": "ari"
+        },
+        "now": {
+          "device": "site",
+          "granted": [
+            "memory.read"
+          ],
+          "owner": "42",
+          "persona": "ari"
+        },
+        "origin": "partner"
+      },
+      "name": "the website: a grant withdrawn on another account's",
+      "output": {
+        "verdict": "raise",
+        "why": "revoked"
+      }
+    },
+    {
+      "input": {
+        "action": "work",
+        "now": {
+          "device": "mac-a"
+        },
+        "origin": "partner"
+      },
+      "name": "a standing missing who it is for",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -654,6 +654,8 @@ name = "myriad-nodes"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "chrono",
+ "chrono-tz",
  "myriad-merope",
  "myriad-perception-filter",
  "myriad-persona-log",

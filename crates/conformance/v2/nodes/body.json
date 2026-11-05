@@ -1819,6 +1819,222 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "work",
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "partner",
+          "saidBy": [
+            "partner"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "change": "done",
+            "node": "minted:release-week"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "the partner's instruction to work, waiting on a node being done",
+      "output": {
+        "body": {
+          "action": "work",
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "partner",
+          "saidBy": [
+            "partner"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "change": "done",
+            "node": "minted:release-week"
+          },
+          "version": 1
+        },
+        "canonical": "{\"action\":\"work\",\"base\":[],\"because\":[\"message:m5\"],\"intent\":\"tests\",\"origin\":\"partner\",\"saidBy\":[\"partner\"],\"status\":\"waiting\",\"sync\":\"shared\",\"text\":\"5 点帮伙伴跑测试。\",\"trigger\":{\"change\":\"done\",\"node\":\"minted:release-week\"},\"version\":1}",
+        "digest": "3417d893bd4749a44296d6e88386355c"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "say",
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "her",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "at": 1760003600000000,
+            "zone": "Asia/Tokyo"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "her own intent to say, at a time",
+      "output": {
+        "body": {
+          "action": "say",
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "her",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "at": 1760003600000000,
+            "zone": "Asia/Tokyo"
+          },
+          "version": 1
+        },
+        "canonical": "{\"action\":\"say\",\"base\":[],\"because\":[\"message:m5\"],\"intent\":\"tests\",\"origin\":\"her\",\"saidBy\":[\"her\"],\"status\":\"waiting\",\"sync\":\"shared\",\"text\":\"5 点帮伙伴跑测试。\",\"trigger\":{\"at\":1760003600000000,\"zone\":\"Asia/Tokyo\"},\"version\":1}",
+        "digest": "83577eae2e8bea28a969f52bd2d478d8"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "say",
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "partner",
+          "saidBy": [
+            "third_party"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "change": "done",
+            "node": "minted:release-week"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "an intent whose origin is not who said it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "action": "work",
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "her",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "change": "done",
+            "node": "minted:release-week"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "her intent that works",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "her",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "at": 1,
+            "change": "done",
+            "node": "minted:x",
+            "zone": "+09:00"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "a trigger that is a time and a node",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "message:m5"
+          ],
+          "intent": "tests",
+          "origin": "her",
+          "saidBy": [
+            "her"
+          ],
+          "status": "waiting",
+          "sync": "shared",
+          "text": "5 点帮伙伴跑测试。",
+          "trigger": {
+            "change": "done",
+            "node": "release"
+          },
+          "version": 1
+        },
+        "kind": "node.intent"
+      },
+      "name": "a trigger on a key that is not one",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ]
 }

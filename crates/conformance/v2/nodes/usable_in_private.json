@@ -1,0 +1,182 @@
+{
+  "call": "nodes.usable_in_private",
+  "cases": [
+    {
+      "input": {
+        "items": [
+          {
+            "audience": "group:g-1",
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "audience": "personal:local-owner",
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "audience": "group:g-1",
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "audience": "group:g-1",
+            "saidBy": [
+              "other_person",
+              "partner"
+            ]
+          },
+          {
+            "audience": "personal:someone-else",
+            "saidBy": [
+              "third_party"
+            ]
+          }
+        ],
+        "private": "personal:local-owner"
+      },
+      "name": "a group member's words never reach the private talk",
+      "output": {
+        "usable": [
+          false,
+          false,
+          true,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "audience": "own:",
+            "saidBy": [
+              "her"
+            ]
+          },
+          {
+            "audience": "personal:local-owner",
+            "provenance": {
+              "together": true
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "audience": "personal:local-owner",
+            "provenance": {
+              "answer": "denied"
+            },
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "audience": "group:g-1",
+            "saidBy": [
+              "her"
+            ]
+          },
+          {
+            "audience": "group:g-1",
+            "saidBy": [
+              "partner",
+              "third_party"
+            ]
+          }
+        ],
+        "private": "personal:local-owner"
+      },
+      "name": "her own audience and the person's own talk are usable, a void one never",
+      "output": {
+        "usable": [
+          true,
+          true,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "audience": "personal:42",
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "audience": "group:g-7",
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "audience": "group:g-7",
+            "saidBy": [
+              "other_person"
+            ]
+          },
+          {
+            "audience": "personal:local-owner",
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "audience": "personal:42,43",
+            "saidBy": [
+              "partner"
+            ]
+          }
+        ],
+        "private": "personal:42"
+      },
+      "name": "another account is the one person of its own talk",
+      "output": {
+        "usable": [
+          true,
+          true,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": [
+          {
+            "audience": "personal:42,43",
+            "saidBy": [
+              "partner"
+            ]
+          }
+        ],
+        "private": "personal:42,43"
+      },
+      "name": "a private audience of two is not one person's",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "items": [],
+        "private": "group:g-1"
+      },
+      "name": "a group is not a private audience",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -43,7 +43,11 @@
 //! a tag that does not fit its row, the partner's row not said by the
 //! partner, a who-knows or progress for someone outside the audience, an
 //! intent from words that were neither the partner's nor hers, a span on
-//! 「关于你」, a kind change on a node whose kind is fixed.
+//! 「关于你」, a kind change on a node whose kind is fixed. (An intent whose
+//! `origin` is not who said it, or that works without being the partner's,
+//! is a body that does not read: `bad_body`.) An intent carries its
+//! `origin`, `action` and trigger as written; when one waiting on another
+//! node is due is [`crate::intents::due`]'s, from this fold.
 //!
 //! Forgetting a node (or its subject in its audience) folds it to nothing
 //! but the mark that it was, in any order; its rows become stubs, listed in
@@ -103,7 +107,8 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Body, Change, How, IntentStatus, Object, ObjectKind, Relation, Sentence, Status, Trigger,
+        Action, Body, Change, How, IntentStatus, Object, ObjectKind, Origin, Relation, Sentence,
+        Status, Trigger,
     },
     key::{Key, Kind, node_id},
     limits::HISTORY,
@@ -194,6 +199,10 @@ pub struct IntentValue {
     pub status: IntentStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trigger: Option<Trigger>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub origin: Option<Origin>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub action: Option<Action>,
 }
 
 /// One span of experience on the node, with its three tags.
@@ -590,7 +599,7 @@ fn row_refusal(message: &str) -> &'static str {
 }
 
 /// A row's clock as Unix microseconds.
-fn micros(row: &Row) -> i64 {
+pub(crate) fn micros(row: &Row) -> i64 {
     // The clock's wall is at most 10^15 ms, well inside i64 microseconds.
     i64::try_from(row.hlc.wall_ms).unwrap_or(i64::MAX / 1000) * 1000
 }
@@ -1564,6 +1573,8 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                             because: body.because,
                             status: body.status,
                             trigger: body.trigger,
+                            origin: body.origin,
+                            action: body.action,
                         }),
                     );
                 }

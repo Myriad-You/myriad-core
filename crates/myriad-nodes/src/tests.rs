@@ -95,6 +95,14 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.fact_rows" => json_of(&entries::fact_rows(input(raw)?)?),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
+        "nodes.trust_tier" => json_of(&trust::tiers(input(raw)?)),
+        "nodes.usable_in_private" => json_of(&trust::usable(input(raw)?)?),
+        "nodes.view_may_change" => json_of(&trust::view_answer(input(raw)?)),
+        "nodes.intent_admit" => json_of(&intents::admit(input(raw)?)?),
+        "nodes.intent_check" => json_of(&intents::check(input(raw)?)),
+        "nodes.intents_due" => json_of(&intents::due(input(raw)?)?),
+        "nodes.intent_judge_input" => json_of(&intents::prepare(input(raw)?)?),
+        "nodes.intent_judge_read" => json_of(&intents::read(input(raw)?)?),
         other => return Err(NodeError::new(format!("no call {other}"))),
     })
 }
@@ -121,7 +129,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 22, "{files:?}");
+    assert_eq!(files.len(), 30, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -463,6 +471,54 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         // nodes.pick
         ("refused: node ids that repeat", "node ids repeat"),
+        // nodes.body: intents
+        (
+            "an intent whose origin is not who said it",
+            "origin is not who said it",
+        ),
+        (
+            "her intent that works",
+            "only the partner's instruction works",
+        ),
+        (
+            "a trigger that is a time and a node",
+            "a trigger is at and zone, or node and change",
+        ),
+        (
+            "a trigger on a key that is not one",
+            "key is <space>:<value>",
+        ),
+        // nodes.trust_tier, nodes.usable_in_private, nodes.view_may_change
+        ("a provenance field the core does not know", "unknown field"),
+        ("a sayer that is not one", "unknown variant"),
+        (
+            "a private audience of two is not one person's",
+            "private is a personal: audience of one",
+        ),
+        (
+            "a group is not a private audience",
+            "private is a personal: audience of one",
+        ),
+        (
+            "a known list that is not one the core knows",
+            "unknown field",
+        ),
+        // nodes.intent_admit, nodes.intent_check, nodes.intents_due
+        ("an origin that is not one", "unknown variant"),
+        (
+            "a trigger that is both",
+            "a trigger is at and zone, or node and change",
+        ),
+        ("a standing missing who it is for", "missing field `owner`"),
+        ("without a ledger", "missing field `ledger`"),
+        // nodes.intent_judge_input, nodes.intent_judge_read
+        ("a zone that is not one", "zone is not one the core knows"),
+        (
+            "what sits on a node is no field of this call",
+            "unknown field `spans`",
+        ),
+        ("notes that repeat", "note ids repeat"),
+        ("a waiting id that repeats", "waiting ids repeat"),
     ];
     let mut seen = 0;
     for path in case_files() {
