@@ -523,7 +523,7 @@ fn a_node_trigger_waits_for_that_node_of_the_same_audience() {
                "text": "发版有动静就说", "because": ["message:x"], "status": "waiting",
                "trigger": {"node": "minted:release", "change": change}})
     };
-    let base_rows = vec![
+    let base_rows = [
         (
             row(1, MINE, "minted:release", "node.created", T),
             created("minted:release", "task"),
