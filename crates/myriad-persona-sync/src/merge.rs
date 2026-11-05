@@ -197,6 +197,12 @@ fn side_of(entities: Vec<EntityVersion>, which: &str) -> Result<Map, SyncError> 
     for entity in entities {
         let entity =
             canonicalize(entity).map_err(|error| SyncError::new(format!("{which}: {error}")))?;
+        // A record gone (a log's row says so) is not one of her this side
+        // has: a merge takes what each side has. A deleted outfit stays: the
+        // merge settles where it went.
+        if entity.state == State::Deleted && entity.kind != Kind::Outfit {
+            continue;
+        }
         if out
             .insert((entity.kind, entity.id.clone()), entity)
             .is_some()

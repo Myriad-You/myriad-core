@@ -1717,6 +1717,91 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "leases": [
+          {
+            "epoch": 1,
+            "holder": "dev_mac",
+            "how": "first",
+            "issued": "001759999999900-000000-site"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000010-000000-dev_mac",
+            "id": "st-1",
+            "kind": "state.write",
+            "object": "state:sticker:stk_5e7a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:st-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000020-000000-dev_mac",
+            "id": "st-2",
+            "kind": "state.write",
+            "object": "state:sticker:stk_5e7a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:st-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000030-000000-dev_mac",
+            "id": "st-3",
+            "kind": "state.write",
+            "object": "state:sticker:stk_5e7a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:st-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a record gone and back: written, written deleted, live again under its id; the latest stands, nothing is absorbed",
+      "output": {
+        "objects": [
+          {
+            "audience": "own:",
+            "current": {
+              "state.write": "st-3"
+            },
+            "history": {
+              "state.write": [
+                "st-1",
+                "st-2"
+              ]
+            },
+            "object": "state:sticker:stk_5e7a",
+            "rows": [
+              "st-1",
+              "st-2",
+              "st-3"
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1

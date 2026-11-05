@@ -1570,6 +1570,47 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "own:",
+          "author": "her",
+          "dseq": 31,
+          "epoch": 1,
+          "hlc": "001760000000031-000000-dev_mac",
+          "id": "s-7",
+          "kind": "state.write",
+          "object": "state:sticker:stk_5e7a",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-7"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "a sticker that went: a row like any other of its object (its body says deleted), and it comes back as one more",
+      "output": {
+        "canonical": "{\"audience\":\"own:\",\"author\":\"her\",\"dseq\":31,\"epoch\":1,\"hlc\":\"001760000000031-000000-dev_mac\",\"id\":\"s-7\",\"kind\":\"state.write\",\"object\":\"state:sticker:stk_5e7a\",\"origin\":\"dev_mac\",\"payload\":{\"ref\":\"blob:s-7\"},\"replicate\":\"shared\",\"version\":1}",
+        "digest": "61843591db547b6c21caac5f10eeeed0",
+        "row": {
+          "audience": "own:",
+          "author": "her",
+          "dseq": 31,
+          "epoch": 1,
+          "hlc": "001760000000031-000000-dev_mac",
+          "id": "s-7",
+          "kind": "state.write",
+          "object": "state:sticker:stk_5e7a",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-7"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      }
     }
   ],
   "version": 1
