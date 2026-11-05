@@ -232,7 +232,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 ## 她的节点（`nodes.*`）
 
-节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。第一批定了节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样；第二批定了整理：哪些节点该整理、按什么顺序，她整理一个节点时看到什么、她的回答怎么变成行，以及关系带来的后果；第三批补上整理的缺口：调用方给的同一受众候选、没有经历的节点也能有依据、没有节点时只整理收件箱、一起看过的不被并走、整理里改概括、看法和没收尾的事（看法只凭算数的依据改）。M7 定了节点在端之间怎么走（下面「在端之间」）。站点记忆搬到节点上（2026-11-05）带来话题自己的别的叫法、记下的事挂在哪和它的行、回想挑节点、从来源算出的行 id（下面「记下的事挂在哪」「回想挑节点」）。M5 把原生的可信三档和意图搬进核心（下面「可信三档」「意图」），原生和网站用同一套规矩。唤醒（除了挡着的那件变了带来的那一种）、反对、只忘掉一段还都不在。
+节点是她记在心上的一件事。规则在 `crates/myriad-nodes`，服务端和每台电脑都用它，所以同一串日志行在哪一端都折出同一个节点。第一批定了节点是什么、装什么、行怎么写、怎么折、放置的输入输出长什么样；第二批定了整理：哪些节点该整理、按什么顺序，她整理一个节点时看到什么、她的回答怎么变成行，以及关系带来的后果；第三批补上整理的缺口：调用方给的同一受众候选、没有经历的节点也能有依据、没有节点时只整理收件箱、一起看过的不被并走、整理里改概括、看法和没收尾的事（看法只凭算数的依据改）。M7 定了节点在端之间怎么走（下面「在端之间」）。站点记忆搬到节点上（2026-11-05）带来话题自己的别的叫法、记下的事挂在哪和它的行、回想挑节点、从来源算出的行 id（下面「记下的事挂在哪」「回想挑节点」）。M5 把原生的可信三档和意图搬进核心（下面「可信三档」「意图」），原生和网站用同一套规矩。列全一类（2026-11-06）给条目加上发生在什么时候和现在怎样、给回想判断加上时间范围，由代码列出一类（下面「列全一类」）。唤醒（除了挡着的那件变了带来的那一种）、反对、只忘掉一段还都不在。
 
 **三种节点**（`kind`）。种类只在规则不同时才成立：
 
@@ -275,7 +275,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `node.open_item` | `base`、`item`、`text`、`because`、`closed?` |
 | `node.intent` | `base`、`intent`、`text`、`because`、`status`（`waiting` 等着、`said` 说了、`done` 完了、`dropped` 放下）、`trigger?`（`{at, zone}`：绝对时刻加当时的时区；或 `{node, change}`：同一受众里另一个节点的键，`changed` 有变化、`done` 做完，两种只能有一种）、`origin?`（`partner` 伙伴的交代、`her` 她自己想的：必须就是说的人，`saidBy` 是 `["partner"]` 或 `["her"]`，对不上的 body 拒收）、`action?`（`say` 提起或提醒、`work` 去做：只有 `origin: partner` 才能 `work`；不写是 `say`）。三个新字段都可以不写，不写时字节和以前一样 |
 | `node.span` | `audience`、`text`（她的话）、`refs?`、`from?`、`to?` |
-| `node.entry` | `audience`、`text`、`refs?`、`quoteOnly?`（找不回原文的标「只有引文」，这时没有指向原文的 `refs`；有就不能标）。`memory:<id>` 不是原文，是这条条目所在的那行记忆（记忆行照旧存强弱和新旧），所以只带它的条目可以标「只有引文」（`nodes.fact_rows` 这样写）；以前写的只带它、没标的照旧能读 |
+| `node.entry` | `audience`、`text`、`refs?`、`quoteOnly?`（找不回原文的标「只有引文」，这时没有指向原文的 `refs`；有就不能标）。`memory:<id>` 不是原文，是这条条目所在的那行记忆（记忆行照旧存强弱和新旧），所以只带它的条目可以标「只有引文」（`nodes.fact_rows` 这样写）；以前写的只带它、没标的照旧能读。`happened?`（发生在什么时候，不是哪天说的：`{from, to?, about?}`，`from`、`to` 各是一天 `YYYY-MM-DD`、一个月 `YYYY-MM` 或一年 `YYYY`，数字写全；`to` 只在延续到 `from` 之后时写，和 `from` 一样的拒收；`about` 是「大约」）、`state?`（现在怎样，一两个词：待取、已退、已完成，词之间一个空格、最多 16 字）、`open?`（只能跟着 `state`：还有事要做或还在进行是 `true`，已经结束是 `false`，给代码筛）。三个都可以不写，不写时字节和以前一样 |
 | `node.related` | `relation`、`to`（另一个节点的键）、`reason`、`because` |
 | `node.unrelated` | `base`（收回这个节点上的哪几条 `node.related`）、`reason` |
 | `node.done_when` | `base`、`text`（「做完」是什么，她的话；`null` 是没有）、`because` |
@@ -389,7 +389,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | 调用 | 输入 → 输出 |
 | --- | --- |
 | `nodes.body` | `{kind, body}` → `{body, canonical, digest}` |
-| `nodes.fact_rows` | `{audience, sync?, start?: {key?, name, aliases?}, key?, facts?: [{memory, text, saidBy, refs?, revision?, audience?}]}` → `{node, key, rows: [{id, kind, body}]}`（见下面「记下的事挂在哪」） |
+| `nodes.fact_rows` | `{audience, sync?, start?: {key?, name, aliases?}, key?, facts?: [{memory, text, saidBy, refs?, revision?, audience?, happened?, state?, open?}]}` → `{node, key, rows: [{id, kind, body}]}`（见下面「记下的事挂在哪」） |
 | `nodes.fold` | `{rows, bodies?, ledger}` → `{nodes, relations?, stubbed?, skipped?, reached?}`；节点多 `retracted?`（写过撤回的各端）；`reached` 是这一端的忘掉经过并入、拆出够到的节点，只给调用方自己清理（删 `stubbed` 列的 body），不写成行；家还留着行的节点不列 |
 | `nodes.home_send` | `{audience, rows, bodies?, ledger, holder, elsewhere?}` → 家页 `{audience, rows, payloads?, withheld?}`：这一端留着的整行、body 和标记，body 照 `wire_send` 的检查（`local` 标签的也放），不通过的只放行（`withheld`）；`holder` 不是 `pc` 是 `bad_input` |
 | `nodes.home_owed` | `{ledger, origin}` → `{retract: [{audience, node}]}`：这一端欠的撤回，只从账算：账里它是家（`home`）、有撤回而撤回的 `homes` 里没有 `origin` 的节点（`node` 是 `node:<id>`），被忘掉直接点名的不列，各个受众的都在，按受众、节点排好序；每个写一行清单为空的 `retract` 和 `retract.home`。宿主恢复家页时写到一半停了，再问一次；`origin` 是空的是 `bad_input` |
@@ -401,15 +401,18 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.intent_judge_read` | `{output, notes?: [{id, key}], waiting?: [id], now, zone}` → `{takes: [{kind, origin?, text, action, trigger?, note?, echo?}], drops: [id], unreadable?}` |
 | `nodes.intents_due` | `{rows, bodies?, ledger, now}` → `{due: [{audience, node, intent, why}], next?}` |
 | `nodes.limits` | `{}` → 每个上限 |
+| `nodes.list` | `{nodes: [{id, gone?, entries?: [{id, at, text, memory?, quote?, happened?, state?, open?}]}], zone, from?, to?, open?, limit?}` → `{items: [{id, node, text, said, memory?, happened?, state?, open?, quote?, fit?}], looked, of, outside, otherState, section?}`（见下面「列全一类」） |
 | `nodes.pick` | `{ranked: [{id, named?}], nodes: [{id, status?, gone?, entries?: [{id, at}]}], aboutThem?, her?, thorough?, budget?: {picked?, entries?, aboutThem?, together?}}` → `{picked?: [{node, entries}], aboutThem?, loose?, together?: [{node, entries?, shown, of}]}`（见下面「回想挑节点」） |
 | `nodes.place_input` | `{items: [{id, saidBy, text}], candidates?: [{id, kind, name, summary?}]}` → `{items: [{n, id, saidBy, text}], taken, candidates?: [{label, id, kind, name, summary?}]}` |
 | `nodes.place_read` | `{items: [id], candidates?: [{label, id}], output}` → `{spans: [{items, node?, gist}], fallback?}` |
 | `nodes.queue` | `{rows, bodies?, ledger?, max}` → `{due: [{audience, node, since, why}], more?}` |
+| `nodes.range_dates` | `{range, now, zone}` → `{today, from?, to?}`（见下面「列全一类」） |
 | `nodes.repo_key` | `{remote}` → `{key}` |
 | `nodes.row_id` | `{kind, node, source, revision?}` → `{id}`：从别的东西做出来的行的 id（`u` 加 24 位十六进制，和整理的行同一种样子、不同的种子），同样的四样永远是同一个 id，迁移和回填跑两次不多写 |
 | `nodes.retract` | `{audience, node, rows, bodies?, ledger, forget?}` → `{takes: [[id]]}`：伙伴撤回 `node` 时，这一端的折叠放在它里面的、别的节点的行（`local` 的不列：它不离开这一端，别的端的折叠够不到它；`forget: true` 时照列这一端留着的 `local` 行，它们在这里也要拿走；所以家里写的忘掉的 `takes` 会带出 `local` 行的 id，只有 id、从不带内容：id 只是一行的标识，不含它写了什么，别的端没有这些行，id 在那里什么都够不到，而少了它们，家自己的忘掉就拿不走伙伴看到的那些行），排好序，每份最多 256 个，一份写一行 `retract`（至少一份，可以是空的）；`forget: true` 是伙伴在家里忘掉 `node` 时：只列其中这一端留着的行，一份写一行 `forget`；`node` 不在给的行里是 `bad_input` |
-| `nodes.sort_input` | `{topics?: [{id, name, aliases?, holds?}], facts: [{id, text}]}` → `{system, schema, input, offered: [id], taken}` |
-| `nodes.sort_read` | `{output, offered?: [id], facts: [id], known?: [{id, name, aliases?}]}` → `{facts: [{fact, to, …}]}` |
+| `nodes.sort_input` | `{topics?: [{id, name, aliases?, holds?}], facts: [{id, text, said?}], today?}` → `{system, schema, input, offered: [id], taken}` |
+| `nodes.sort_read` | `{output, offered?: [id], facts: [id], known?: [{id, name, aliases?}]}` → `{facts: [{fact, to, …, happened?, state?, open?}]}` |
+| `nodes.standing_read` | `{item}` → `{happened?, state?, open?}`：整理回答里一条事实的发生时间和状态 |
 | `nodes.trust_tier` | `{items: [{saidBy, provenance?: {together?, typed?, verified?, answer?}, aboutPartner?}]}` → `{tiers: [seen \| heard \| counts \| null]}` |
 | `nodes.under_read` | `{value?, offered?: [id], known?}` → `{to, …}` |
 | `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?}], ledger?}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken, local?}`；`local` 为真时这个节点被撤回、这一端是它的家，这一次整理只写 `local` 行 |
@@ -441,6 +444,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 话题只会增、不会自己合。还把话题存在自己表里的宿主，会把挂得少（`topics::SMALL`，2 条以内）、又在上次整理之后变过的话题拿出来整理（`topics::tidy_system_prompt`、`tidy_schema`、`tidy_input`，最多 24 个，旁边再按字面挑最多 12 个别的话题）：每个话题要么保留，要么并入另一个（两个是同一类事，窄的并进宽的），要么放下（不是一类事，只关于这个人本身，下面的事实改成不挂）。`read_tidied` 读她的回答，顺着并入的链一直走到底：并进一个被放下的话题，就跟着被放下；转成一圈的，在圈里最先出现的那个话题保留。只看变过的话题，所以花费跟着新增走，不跟着总量涨。话题存成节点行以后，这件事由她的整理（`nodes.upkeep_*`）做，并入就是节点的 `absorb`（`merged`）。
 要翻遍时（「哪些」「几个」），同一个话题下的事一起想起；给她的没装下一个话题的全部时，`speaking::format_not_all_here_section` 告诉她那个话题下一共有几条、给了几条，她就不会只数看到的。
 
+- 发生在什么时候、现在怎样（`myriad_merope::happened`）：谈完整理和补挂是同一次调用，每条长期事实多答 `happened`（`{from, to, about}`，不知道时 `from` 空）、`state`（空是没有）和 `open`（没有状态时 `null`），同一条 `HAPPENED_AND_STATE` 规则，不多调用。读回答（`happened::read_standing`；整理时 `chat_remember::parse_settle` 放进 `Lasting::standing`，补挂时 `topics::read_sorted_standing`、`nodes.sort_read`，别的端读整理回答用 `nodes.standing_read`）宽松：缺了、读不出、日子不对、状态超过 16 字都当没有，`open` 只跟着状态；事实照样记下。`nodes.fact_rows` 把它们写进条目（不成立的去掉）。补挂时宿主可以给每条事实哪天记下的（`said`）和今天（`today`），这样只写了月日的事实也能放到对的年份；都不给时输入和以前一个字节都不差。
+
 **回想挑节点**（`nodes.pick`，`myriad_nodes::recall`）：她回话之前想起哪几个节点、每个带哪几条。条目照旧由宿主自己排（最相关的在前；这句话找到的标 `named`，只是补位的不标）；退役的（被取代、淡了、忘掉的）宿主先去掉再给。`nodes` 是这个受众的节点（`gone` 是忘掉了或并进别处了，条目的 id 是记忆行的 id，没有就是条目行的 id；在 Rust 里 `PickNode::of` 从折好的节点算）。
 - **挑节点**：只有标了 `named` 的条目能把它的节点带进来（补位的不是这句话要的）。进行中和一直在做的先，歇着的其次，做完和放下的最后；同一档里按它第一条 `named` 条目排在第几。没了的节点永远不挑；做完和放下的只有被直接找到时才来（任何节点都只能这样被挑），排在还在进行的后面。这个人自己的节点（`aboutThem`）和她自己（`her`）不挑：前者有自己的位置，后者的头宿主每次都带。最多 `budget.picked`（默认 3）个。
 - **每个节点带哪几条**：先是排进来的、在它上面的条目（按排名），再按新补满，最多 `budget.entries`（默认 3）条。
@@ -448,6 +453,11 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **`loose`**：排进来、上面都没带出的条目，按排名：没挂节点的、节点没被挑的、超出一个节点名额的。宿主照以前带记忆的办法带出，排进来的什么都不丢。
 - **翻遍时**（`thorough`）：标了 `named` 的条目的节点，按各自第一条的排名（上面挑过的也再来一次），一个个按新补上还没带出的条目，合计最多 `budget.together`（默认 24）条；每个过一遍的节点都写带出了几条（`shown`）、一共几条（`of`），给 `format_not_all_here_section` 用。
 - 默认值是原生的（`NodeRecall.Budget.chat`：3 个节点、每个 3 条、关于你 5 条）和站点的（翻遍时再多 24 条）。
+
+**列全一类**（`nodes.range_dates`、`nodes.list`，`myriad_nodes::listing`）：问「哪些」「几个」时由代码列，她只判断每条算不算，不再让她读几十条文字自己数。一件东西（一件要取的衣服、一个项目、一笔花费）是那一类话题节点上的一条条目，不是一个节点。
+- **时间范围**：回想判断那一次（`remembering.system`，就是答 `thorough` 的那一次）多答一个 `range` 和 `open`（`happened::RANGE_RULE`）。`range` 的 `how`：`this`（这一天、周、月、年的整段：今年以来、这个月）、`previous`（这一个之前的 `count` 个整周、整月、整年：上个月、前两周、去年）、`past`（到今天为止最近 `count` 天、周、月、年：最近三周、这几天）、`dates`（`from`、`to` 各是天、月或年，可以只给一头：十月、九月以来）、`none`。周从周一算。`open` 是只问还没结束的（`true`）还是只问已经结束的（`false`）。只在 `thorough` 时才有，读不出就是没有（`remembering::parse`；别的端用 `remembering.read`，schema 是 `remembering.schema`）。`nodes.range_dates` 按宿主给的 `now` 和她的时区算出今天，再换成具体的第一天和最后一天（`happened::Range::dates`），不读钟。
+- **列出来**（`nodes.list`）：`nodes` 是这一类的节点和它们的条目（`gone` 的跳过；在 Rust 里 `ListNode::of` 从折好的节点算，原话由宿主补：只给对方自己说的话）；退役的宿主先去掉。按同一行记忆（没有就是条目自己的行）算一件，同样的文字加同样的原话也算一件（只是同一句原话不算：一句话可以说两件事），互相连着的都并成一件，最新的那条代表它，它没写的发生时间、状态、原话从旧的补。按新取最多 `limit`（默认 80）件，`looked` 是看了几件，`of` 是一共几件。给了 `from`/`to`：发生时间完全落在外面的去掉（`outside`），部分落在里面的标 `partly`，完全在里面的 `in`，没写发生时间的留着标 `unknown`，让她按内容和哪天说的判断。给了 `open`：已知是另一种状态的去掉（`otherState`），没写的留着。按发生时间（没有就按哪天说的）从早到晚排；`said` 是按她的时区哪天说的。原话只在有用时附（不为空、事实里没有原样包含它），最多 160 字（`speaking::THEIR_WORDS_CHARS`）。
+- **作答规矩**：`section` 是她作答前读的那一节（`speaking::format_listed_section`，每条 `speaking::listed_line`）：看了几件、一共几件、按什么时间和状态去掉了几件，然后一条条列出；里面带 `speaking::LISTED_RULE`：清单给出时就照着数，给出最可能的答案，拿不准的那一项单独说明。站点和原生作答、以及记忆测评（站点 `tests/merope/memory-bench.json` 的作答提示读的 `goingThroughAll`）都放同一节，所以规矩只写在这里一次。她什么都没记这一类时没有这一节。
 
 ## 交办（`handoff.*`）
 
@@ -602,6 +612,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `sharing.reason`、`sharing.come_back_reason` | `{what, why}` | `sharing::reason`、`come_back_reason` |
 | `chat_remember.extract_system`、`settle_system` | `{existing}`、`{known}` | `chat_remember::extract_system_prompt`、`settle_system_prompt` |
 | `chat_remember.already_system`、`remembering.system`、`chat_days.pick_system`、`heard.system`、`explore.compare_system`、`life.concepts_system` | `{}` | 同名函数（`life::CONCEPTS_SYSTEM`） |
+| `remembering.schema`、`remembering.read` | `{}`、`{output}` | `remembering::schema`（`{schema}`）、`remembering::parse`（`{cues, thorough, lookBack, aboutYou, range?, open?}`，读不出是 `null`） |
 | `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |
 | `pace.section` | `{pace: {day, usualMinutes, daysPastUsual, tone}, spentMinutes, lazedMinutes}` | `pace::section`：`tone` 是 `flat`、`even`、`keen`；没什么可说是 `null` |
 | `pace.lazing` | `{}` → `{lazing: [[种类, 是什么]]}` | `pace::LAZING` |

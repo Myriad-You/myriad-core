@@ -414,6 +414,7 @@ fn node_parts(body: &Body) -> (Vec<&str>, Vec<&str>) {
         }
         Body::Entry(body) => {
             texts.push(&body.text);
+            texts.extend(body.state.as_deref());
             ids.extend(body.refs.iter().map(String::as_str));
         }
         Body::Related(body) => {

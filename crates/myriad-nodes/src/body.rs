@@ -16,7 +16,7 @@
 //! | `node.open_item` | `base`, `item`, `text`, `because`, `closed?` |
 //! | `node.intent` | `base`, `intent`, `text`, `because`, `status`, `trigger?` (`{at, zone}` or `{node, change}`), `origin?` (`partner`, `her`: who said it), `action?` (`say`, `work`: only the partner's) |
 //! | `node.span` | `audience`, `text`, `refs?`, `from?`, `to?` |
-//! | `node.entry` | `audience`, `text`, `refs?` (`memory:<id>`: the memory row it is the place of), `quoteOnly?` |
+//! | `node.entry` | `audience`, `text`, `refs?` (`memory:<id>`: the memory row it is the place of), `quoteOnly?`, `happened?` (`{from, to?, about?}`: when what it tells of happened, not when it was said), `state?` (where it stands, a word or two), `open?` (only beside `state`) |
 //! | `node.related` | `relation`, `to` (the other node's key), `reason`, `because` |
 //! | `node.unrelated` | `base` (the related rows it takes back), `reason` |
 //! | `node.done_when` | `base`, `text` (what "done" is, or null for none), `because` |
@@ -32,6 +32,7 @@
 
 use std::collections::BTreeMap;
 
+pub use myriad_merope::happened::Happened;
 use myriad_persona_sync::{
     Rev,
     canonical::{canonical_bytes, digest},
@@ -493,6 +494,14 @@ pub struct Span {
 /// keeps its strength and what replaced it), so an entry with only that
 /// may be marked quote-only (what `entries::fact_rows` writes); one with
 /// only that and no mark, as entries were written before, still reads.
+///
+/// An item of a kind (a shirt to pick up, a project, a purchase) is an
+/// entry on the topic of that kind, and may say when it happened
+/// (`happened`: a day, a month or a year, or a stretch, maybe rough; a
+/// row's clock says when it was said) and where it stands (`state`, a word
+/// or two in the fact's language, with `open` for code to go by), so a
+/// list of all of a kind is code's to count. All three may be left out, and
+/// a row without them has the bytes it always had.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Entry {
@@ -505,6 +514,12 @@ pub struct Entry {
     pub refs: Vec<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub quote_only: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub happened: Option<Happened>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub open: Option<bool>,
 }
 
 /// `node.related`: this node relates to the node of `to` in the same
@@ -853,6 +868,22 @@ impl Body {
                     return Err(NodeError::new(
                         "an entry has refs, or is quote-only without them",
                     ));
+                }
+                if let Some(happened) = &body.happened {
+                    happened.check().map_err(NodeError::new)?;
+                }
+                if let Some(state) = &body.state {
+                    // One byte form: the state as it is kept, words one
+                    // space apart.
+                    if myriad_merope::happened::state_of(state).as_ref() != Some(state) {
+                        return Err(NodeError::new(format!(
+                            "state is a word or two, at most {} characters",
+                            myriad_merope::happened::STATE_CHARS
+                        )));
+                    }
+                }
+                if body.open.is_some() && body.state.is_none() {
+                    return Err(NodeError::new("open is only beside a state"));
                 }
             }
             Self::Related(body) => {

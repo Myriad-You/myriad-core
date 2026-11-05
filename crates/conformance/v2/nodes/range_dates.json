@@ -1,0 +1,164 @@
+{
+  "call": "nodes.range_dates",
+  "cases": [
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "count": 1,
+          "how": "previous",
+          "unit": "month"
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "last month (上个月)",
+      "output": {
+        "from": "2026-10-01",
+        "to": "2026-10-31",
+        "today": "2026-11-05"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "how": "this",
+          "unit": "year"
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "this year so far (今年以来)",
+      "output": {
+        "from": "2026-01-01",
+        "to": "2026-12-31",
+        "today": "2026-11-05"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "count": 3,
+          "how": "past",
+          "unit": "week"
+        },
+        "zone": "Asia/Shanghai"
+      },
+      "name": "the last three weeks (最近三周)",
+      "output": {
+        "from": "2026-10-16",
+        "to": "2026-11-05",
+        "today": "2026-11-05"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "how": "this",
+          "unit": "week"
+        },
+        "zone": "+08:00"
+      },
+      "name": "this week starts on Monday",
+      "output": {
+        "from": "2026-11-02",
+        "to": "2026-11-08",
+        "today": "2026-11-05"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "count": 2,
+          "how": "previous",
+          "unit": "week"
+        },
+        "zone": "+08:00"
+      },
+      "name": "the two weeks before this one",
+      "output": {
+        "from": "2026-10-19",
+        "to": "2026-11-01",
+        "today": "2026-11-05"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "from": "2026-09",
+          "how": "dates"
+        },
+        "zone": "+08:00"
+      },
+      "name": "since September",
+      "output": {
+        "from": "2026-09-01",
+        "today": "2026-11-05"
+      }
+    },
+    {
+      "input": {
+        "now": 1793833200000000,
+        "range": {
+          "how": "this",
+          "unit": "day"
+        },
+        "zone": "America/Los_Angeles"
+      },
+      "name": "today is her day, not the server's",
+      "output": {
+        "from": "2026-11-04",
+        "to": "2026-11-04",
+        "today": "2026-11-04"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "count": 0,
+          "how": "past",
+          "unit": "day"
+        },
+        "zone": "+08:00"
+      },
+      "name": "refused: no units",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "from": "2026-10",
+          "how": "dates",
+          "to": "2026-09"
+        },
+        "zone": "+08:00"
+      },
+      "name": "refused: dates the wrong way round",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "now": 1793836800000000,
+        "range": {
+          "how": "this",
+          "unit": "month"
+        },
+        "zone": "Mars/Base"
+      },
+      "name": "refused: a zone that is no zone",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

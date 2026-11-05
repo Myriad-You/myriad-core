@@ -129,6 +129,44 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "facts": [
+          "m1",
+          "m2",
+          "m3"
+        ],
+        "offered": [
+          "n1"
+        ],
+        "output": "{\"facts\": [{\"fact\": 1, \"topic\": {\"on\": \"t1\", \"name\": \"\", \"aliases\": []}, \"happened\": {\"from\": \"2026-10-03\", \"to\": \"\", \"about\": false}, \"state\": \"待取\", \"open\": true}, {\"fact\": 2, \"topic\": {\"on\": \"\", \"name\": \"\", \"aliases\": []}, \"happened\": {\"from\": \"\", \"to\": \"\", \"about\": false}, \"state\": \"\", \"open\": null}, {\"fact\": 3, \"topic\": {\"on\": \"t1\", \"name\": \"\", \"aliases\": []}, \"happened\": {\"from\": \"十月\", \"to\": \"\", \"about\": true}, \"state\": \"已退\", \"open\": \"no\"}]}"
+      },
+      "name": "each fact with when it happened and where it stands, where she said",
+      "output": {
+        "facts": [
+          {
+            "fact": "m1",
+            "happened": {
+              "from": "2026-10-03"
+            },
+            "node": "n1",
+            "open": true,
+            "state": "待取",
+            "to": "node"
+          },
+          {
+            "fact": "m2",
+            "to": "about_them"
+          },
+          {
+            "fact": "m3",
+            "node": "n1",
+            "state": "已退",
+            "to": "node"
+          }
+        ]
+      }
     }
   ],
   "version": 1

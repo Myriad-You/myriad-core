@@ -490,13 +490,13 @@ pub struct Prepared {
 
 /// A zone to read times in: an IANA name or a fixed offset `±hh:mm`.
 #[derive(Clone, Copy)]
-enum Zone {
+pub(crate) enum Zone {
     Named(chrono_tz::Tz),
     Fixed(FixedOffset),
 }
 
 impl Zone {
-    fn parse(raw: &str) -> Result<Self, NodeError> {
+    pub(crate) fn parse(raw: &str) -> Result<Self, NodeError> {
         crate::body::check_zone(raw)?;
         if let Ok(zone) = chrono_tz::Tz::from_str(raw) {
             return Ok(Self::Named(zone));
@@ -513,6 +513,15 @@ impl Zone {
             Self::Named(zone) => now.with_timezone(&zone).format(FORMAT).to_string(),
             Self::Fixed(zone) => now.with_timezone(&zone).format(FORMAT).to_string(),
         }
+    }
+
+    /// The day it is at `micros` in this zone.
+    pub(crate) fn day(self, micros: i64) -> Result<chrono::NaiveDate, NodeError> {
+        let now = at(micros)?;
+        Ok(match self {
+            Self::Named(zone) => now.with_timezone(&zone).date_naive(),
+            Self::Fixed(zone) => now.with_timezone(&zone).date_naive(),
+        })
     }
 
     /// A local wall time in this zone. Of two (the clock going back), the

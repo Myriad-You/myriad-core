@@ -179,6 +179,145 @@ pub fn with_their_words(fact: &str, said: &str) -> String {
     format!("{fact} (their words: \"{said}\")")
 }
 
+/// How much of what they said goes beside a fact: enough for the sentence
+/// a name or detail was in.
+pub const THEIR_WORDS_CHARS: usize = 160;
+
+/// How she answers from a list code made of all of a kind: from the list,
+/// with the most likely answer, the one unsure item named.
+pub const LISTED_RULE: &str = "When a list is given, count from it and give the most likely answer; if one item is unsure, say which one and why, instead of giving no answer.";
+
+/// One fact of a list of all of a kind, as she reads it: the day she
+/// learned it, the fact, when it happened (shown, as
+/// `crate::happened::Happened::shown` gives it) and where it stands, whether
+/// it is only partly in the stretch of time asked about, whether its time
+/// is unknown when one was asked about, and their words when they add
+/// something.
+pub struct ListedFact<'a> {
+    pub said: &'a str,
+    pub text: &'a str,
+    pub happened: Option<String>,
+    pub state: Option<&'a str>,
+    pub open: Option<bool>,
+    pub partly: bool,
+    pub time_unknown: bool,
+    pub their_words: Option<&'a str>,
+}
+
+pub fn listed_line(fact: &ListedFact) -> String {
+    let mut marks: Vec<String> = Vec::new();
+    if let Some(happened) = &fact.happened {
+        marks.push(format!("happened {happened}"));
+    } else if fact.time_unknown {
+        marks.push("when it happened is not known".to_string());
+    }
+    if let Some(state) = fact.state {
+        marks.push(match fact.open {
+            Some(true) => format!("now {state}, still open"),
+            Some(false) => format!("now {state}, over"),
+            None => format!("now {state}"),
+        });
+    }
+    if fact.partly {
+        marks.push("only partly in that time".to_string());
+    }
+    let mut line = format!("[{}] {}", fact.said, fact.text);
+    if !marks.is_empty() {
+        line.push_str(&format!(" ({})", marks.join("; ")));
+    }
+    match fact.their_words {
+        Some(said) => with_their_words(&line, said),
+        None => line,
+    }
+}
+
+/// A list code made of all of a kind ([`listed_line`] for each fact): over
+/// what stretch of time (`range`, shown: `between 2026-10-01 and
+/// 2026-10-31`, `since 2026-09-01`, `up to 2026-10-31`) and which state (`open`), how many it looked at of
+/// how many she keeps, and how many it left out for falling outside that
+/// time or that state. None when she keeps nothing of it.
+pub struct Listing<'a> {
+    pub lines: &'a [String],
+    pub range: Option<String>,
+    pub open: Option<bool>,
+    pub looked: usize,
+    pub of: usize,
+    pub outside: usize,
+    pub other_state: usize,
+}
+
+pub fn format_listed_section(listing: &Listing) -> Option<String> {
+    if listing.of == 0 {
+        return None;
+    }
+    let mut about = String::new();
+    if let Some(range) = &listing.range {
+        about.push_str(&format!(", for what happened {range}"));
+    }
+    match listing.open {
+        Some(true) => about.push_str(", only what is still open"),
+        Some(false) => about.push_str(", only what is over"),
+        None => {}
+    }
+    let mut said = vec![if listing.looked < listing.of {
+        format!(
+            "Code went through the newest {} of the {} facts you keep of this kind{about}; the {} oldest are not here.",
+            listing.looked,
+            listing.of,
+            listing.of - listing.looked
+        )
+    } else {
+        format!(
+            "Code went through all {} facts you keep of this kind{about}.",
+            listing.of
+        )
+    }];
+    let mut left: Vec<String> = Vec::new();
+    if listing.outside > 0 {
+        left.push(format!(
+            "{} that happened outside that time",
+            listing.outside
+        ));
+    }
+    if listing.other_state > 0 {
+        left.push(format!(
+            "{} that {} {}",
+            listing.other_state,
+            if listing.other_state == 1 {
+                "is"
+            } else {
+                "are"
+            },
+            if listing.open == Some(false) {
+                "still open"
+            } else {
+                "over"
+            }
+        ));
+    }
+    if !left.is_empty() {
+        said.push(format!("Left out: {}.", left.join("; ")));
+    }
+    let list = if listing.lines.is_empty() {
+        "None of them is left.".to_string()
+    } else {
+        said.push("Below is each that is left, once, with the day you learned it, and when it happened and where it stands where you know; a fact whose time is not known may or may not fall in that time, so judge it by what it says and the day you learned it. Count, compare or order only those that bear on the question.".to_string());
+        myriad_agent_rules::untrusted_block(
+            "all_of_a_kind",
+            &listing
+                .lines
+                .iter()
+                .map(|line| format!("- {line}"))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    };
+    Some(format!(
+        "## All of it, listed\n{} {LISTED_RULE}\n{list}",
+        said.join(" ")
+    ))
+}
+
 /// Going through all of it, the topics whose facts were not all given to
 /// her for want of room: how many she keeps under each, so she counts what
 /// there is and not only what she sees. `cut` is each topic's name, how many
@@ -992,6 +1131,83 @@ mod tests {
             "[05-21] diagnosed with chronic sinusitis (their words: \"my ENT, Dr. Patel, said it's chronic\")"
         );
         assert!(format_going_through_all_section().contains("Where their words are beside a fact"));
+    }
+
+    /// A list code made of all of a kind says what it went through and
+    /// left out, and how to answer from it.
+    #[test]
+    fn a_list_of_all_of_a_kind_says_what_it_went_through() {
+        use super::{ListedFact, Listing, format_listed_section, listed_line};
+        let line = listed_line(&ListedFact {
+            said: "2026-10-05",
+            text: "两件衬衫送去干洗",
+            happened: Some("2026-10-03".into()),
+            state: Some("待取"),
+            open: Some(true),
+            partly: false,
+            time_unknown: false,
+            their_words: Some("周五把两件衬衫送去干洗了"),
+        });
+        assert_eq!(
+            line,
+            "[2026-10-05] 两件衬衫送去干洗 (happened 2026-10-03; now 待取, still open) (their words: \"周五把两件衬衫送去干洗了\")"
+        );
+        let unknown = listed_line(&ListedFact {
+            said: "2026-10-09",
+            text: "退了一双鞋",
+            happened: None,
+            state: None,
+            open: None,
+            partly: false,
+            time_unknown: true,
+            their_words: None,
+        });
+        assert_eq!(
+            unknown,
+            "[2026-10-09] 退了一双鞋 (when it happened is not known)"
+        );
+        let lines = [line, unknown];
+        let section = format_listed_section(&Listing {
+            lines: &lines,
+            range: Some("between 2026-10-01 and 2026-10-31".into()),
+            open: None,
+            looked: 5,
+            of: 7,
+            outside: 3,
+            other_state: 0,
+        })
+        .unwrap();
+        assert!(section.starts_with("## All of it, listed\nCode went through the newest 5 of the 7 facts you keep of this kind, for what happened between 2026-10-01 and 2026-10-31; the 2 oldest are not here. Left out: 3 that happened outside that time."));
+        assert!(
+            section.contains("When a list is given, count from it and give the most likely answer")
+        );
+        assert!(section.contains("- [2026-10-09] 退了一双鞋"));
+        let empty = format_listed_section(&Listing {
+            lines: &[],
+            range: None,
+            open: Some(true),
+            looked: 2,
+            of: 2,
+            outside: 0,
+            other_state: 2,
+        })
+        .unwrap();
+        assert!(empty.contains(
+            "all 2 facts you keep of this kind, only what is still open. Left out: 2 that are over."
+        ));
+        assert!(empty.ends_with("None of them is left."));
+        assert_eq!(
+            format_listed_section(&Listing {
+                lines: &[],
+                range: None,
+                open: None,
+                looked: 0,
+                of: 0,
+                outside: 0,
+                other_state: 0
+            }),
+            None
+        );
     }
 
     #[test]

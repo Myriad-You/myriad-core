@@ -51,7 +51,9 @@
 //! judge by one rule; what she is shown, how her answer is read and the
 //! rows that follow are here. Before she answers, recall ([`recall`]) turns
 //! the host's ranking of those entries into the nodes that come to mind and
-//! the entries of each.
+//! the entries of each. Asked for all of a kind ([`listing`]), code lists
+//! its entries once each, in the stretch of time and the state asked
+//! about, and she only judges which count.
 //!
 //! Between host cores ([`wire`]): one audience's rows and their bodies in
 //! batches, nothing to a side that may not hold the audience, and every
@@ -84,6 +86,7 @@ pub mod home;
 pub mod intents;
 pub mod key;
 pub mod limits;
+pub mod listing;
 pub mod migrate;
 pub mod place;
 pub mod queue;

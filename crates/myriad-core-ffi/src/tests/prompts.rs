@@ -8,7 +8,7 @@ use myriad_merope::{
 };
 use serde_json::json;
 
-use super::{micros, text};
+use super::{micros, ok, text};
 
 pub(super) const TESTED: &[&str] = &[
     "chat.reply_instruction",
@@ -33,6 +33,8 @@ pub(super) const TESTED: &[&str] = &[
     "life.own_day_system",
     "pace.lazing",
     "pace.section",
+    "remembering.read",
+    "remembering.schema",
     "remembering.system",
     "sharing.come_back_reason",
     "sharing.come_back_system",
@@ -77,6 +79,34 @@ fn the_texts_without_input_are_the_crates() {
     ] {
         assert_eq!(text(name, json!({})), some(expected), "{name}");
     }
+}
+
+/// The recall judgment's answer, its schema and how it is read, with the
+/// stretch of time it names.
+#[test]
+fn the_recall_judgment_reads_as_the_crate_reads_it() {
+    assert_eq!(
+        ok("remembering.schema", json!({}))["schema"],
+        remembering::schema()
+    );
+    let read = ok(
+        "remembering.read",
+        json!({"output": r#"{"cues":["干洗"],"thorough":true,"range":{"how":"previous","unit":"month","count":1,"from":"","to":""},"open":true,"lookBack":false,"aboutYou":false}"#}),
+    );
+    assert_eq!(
+        read,
+        json!({"cues": ["干洗"], "thorough": true, "lookBack": false, "aboutYou": false,
+            "range": {"how": "previous", "unit": "month", "count": 1}, "open": true})
+    );
+    let plain = ok(
+        "remembering.read",
+        json!({"output": r#"{"cues":[],"thorough":false}"#}),
+    );
+    assert!(plain.get("range").is_none() && plain.get("open").is_none());
+    assert_eq!(
+        ok("remembering.read", json!({"output": "嗯"})),
+        serde_json::Value::Null
+    );
 }
 
 #[test]

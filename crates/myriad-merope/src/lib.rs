@@ -21,6 +21,7 @@ pub mod draft;
 pub mod elsewhere;
 pub mod explore;
 pub mod group;
+pub mod happened;
 pub mod handoff;
 pub mod heard;
 pub mod hosting;

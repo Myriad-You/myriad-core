@@ -3,7 +3,7 @@ name = "myriad-nodes"
 version = "0.1.0"
 edition = "2024"
 publish = false
-description = "Her nodes from her log: the three kinds, a node's head and body, the tags on what she keeps, the five relations, the row bodies and their fold, the pure half of placing a talk, where a fact she keeps goes, picking nodes for recall, the three trust tiers and her intents."
+description = "Her nodes from her log: the three kinds, a node's head and body, the tags on what she keeps, the five relations, the row bodies and their fold, the pure half of placing a talk, where a fact she keeps goes, picking nodes for recall, listing all of a kind, the three trust tiers and her intents."
 authors = ["Myriad Contributors"]
 license = "AGPL-3.0-only"
 

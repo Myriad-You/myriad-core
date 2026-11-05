@@ -8,8 +8,8 @@
 //! her words, so a refusal names a field, never a value.
 
 use myriad_nodes::{
-    Body, NodeError, entries, fold as fold_rows, home, intents, limits as node_limits, place,
-    queue as due, recall, trust, upkeep, wire,
+    Body, NodeError, entries, fold as fold_rows, home, intents, limits as node_limits, listing,
+    place, queue as due, recall, trust, upkeep, wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -194,6 +194,24 @@ pub(super) fn row_id(raw: &[u8]) -> Result<Value, Failure> {
 /// aboutThem?, loose?, together?}`.
 pub(super) fn pick(raw: &[u8]) -> Result<Value, Failure> {
     answer(&recall::pick(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{item}` → `{happened?, state?, open?}`: when one fact of the settling
+/// answer happened and where it stands; what does not read is left out.
+pub(super) fn standing_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&entries::standing_read(quiet_input(raw)?))
+}
+
+/// `{range, now, zone}` → `{today, from?, to?}`: the days of the stretch
+/// of time the recall judgment named.
+pub(super) fn range_dates(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&listing::range_dates(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{nodes, zone, from?, to?, open?, limit?}` → `{items, looked, of,
+/// outside, otherState, section?}`: all of a kind, listed once each.
+pub(super) fn list(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&listing::list(quiet_input(raw)?).map_err(refused)?)
 }
 
 /// `{items: [{saidBy, provenance?, aboutPartner?}]}` → `{tiers}`: each
