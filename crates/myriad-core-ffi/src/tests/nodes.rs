@@ -156,7 +156,7 @@ fn a_wire_batch_fits_one_log_rows_frame() {
     let path =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../shared/her_link_contract.json");
     let contract: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
-    let frame = &contract["next"]["frames"]["log.rows"];
+    let frame = &contract["frames"]["log.rows"];
     assert_eq!(frame["maxItems"]["rows"], myriad_nodes::wire::BATCH_ROWS);
     assert_eq!(
         frame["maxItems"]["payloads"],
@@ -166,11 +166,9 @@ fn a_wire_batch_fits_one_log_rows_frame() {
         frame["maxItems"]["withheld"],
         myriad_nodes::wire::BATCH_ROWS
     );
-    let vector = &contract["next"]["frames"]["log.vector"];
+    let vector = &contract["frames"]["log.vector"];
     assert_eq!(vector["maxItems"]["ask"], myriad_nodes::wire::ASK_ROWS);
-    let max = contract["next"]["limits"]["maxFrameBytes"]
-        .as_u64()
-        .unwrap() as usize;
+    let max = contract["limits"]["maxFrameBytes"].as_u64().unwrap() as usize;
     assert!(myriad_nodes::wire::BATCH_BYTES + (32 << 10) <= max);
     // The largest body that travels, in base64, fits one batch with room
     // for its row.

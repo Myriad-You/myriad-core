@@ -554,6 +554,7 @@ fn takeovers_wait_for_the_stop(stop: Option<i64>) {
         holder: "dev_mac".into(),
         issued: rev(1, "site"),
         how: How::Handover,
+        from: Some("site".into()),
         through: Some(Through::from([(OWNER.into(), 3)])),
     };
     let mut granted = 0;
@@ -592,6 +593,7 @@ fn takeovers_wait_for_the_stop(stop: Option<i64>) {
                             disconnected_since: Some(last_seen),
                             owner_here_at: Some(owner_left),
                             stop_after: stop,
+                            stopped_at: None,
                         })
                         .unwrap();
                         assert!(
@@ -604,6 +606,105 @@ fn takeovers_wait_for_the_stop(stop: Option<i64>) {
         }
     }
     assert!(granted > 0, "{stop:?}");
+}
+
+#[test]
+fn a_new_grant_names_the_holder_it_moves_from() {
+    let lease = Grant {
+        epoch: 4,
+        holder: "dev_mac".into(),
+        issued: rev(1, "site"),
+        how: How::Handover,
+        from: None,
+        through: None,
+    };
+    for request in [
+        Request::Handover {
+            from: "dev_mac".into(),
+            epoch: 4,
+            to: "site".into(),
+            through: None,
+        },
+        Request::Force {
+            to: "dev_win".into(),
+        },
+    ] {
+        let moved = lease::decide(MoveInput {
+            lease: lease.clone(),
+            request,
+            now: 10,
+            issued: rev(2, "site"),
+            holder_last_seen: None,
+            holder_place: None,
+            owner_place: None,
+            stop_after: None,
+        })
+        .unwrap();
+        let Moved::Granted(grant) = moved else {
+            panic!("{moved:?}");
+        };
+        assert_eq!(grant.from.as_deref(), Some("dev_mac"));
+    }
+    let first = Grant {
+        epoch: 1,
+        holder: "dev_mac".into(),
+        issued: rev(1, "site"),
+        how: How::First,
+        from: Some("site".into()),
+        through: None,
+    };
+    assert!(first.check().is_err());
+    let to_itself = Grant {
+        how: How::Force,
+        from: Some("dev_mac".into()),
+        ..first
+    };
+    assert!(to_itself.check().is_err());
+}
+
+#[test]
+fn a_holder_that_stopped_stays_stopped_until_the_server_says_so() {
+    let minute = 60_000_000_i64;
+    let lease = Grant {
+        epoch: 4,
+        holder: "dev_mac".into(),
+        issued: rev(1, "site"),
+        how: How::Handover,
+        from: Some("site".into()),
+        through: None,
+    };
+    let here = |disconnected_since, owner_here_at, stopped_at| {
+        lease::here(HereInput {
+            me: "dev_mac".into(),
+            lease: Some(lease.clone()),
+            now: 60 * minute,
+            disconnected_since,
+            owner_here_at,
+            stop_after: None,
+            stopped_at,
+        })
+        .unwrap()
+    };
+    // Cut off an hour, the owner back a minute ago: by itself it thinks.
+    assert_eq!(here(Some(0), Some(59 * minute), None), Here::Thinking);
+    // Having stopped at 3 minutes, it stays stopped, cut off or not.
+    let stopped = Here::Stopped {
+        stopped_at: 3 * minute,
+    };
+    assert_eq!(here(Some(0), Some(59 * minute), Some(3 * minute)), stopped);
+    assert_eq!(here(None, Some(59 * minute), Some(3 * minute)), stopped);
+    // Another holder now: a child, stopped or not.
+    let elsewhere = lease::here(HereInput {
+        me: "dev_win".into(),
+        lease: Some(lease.clone()),
+        now: 60 * minute,
+        disconnected_since: None,
+        owner_here_at: None,
+        stop_after: None,
+        stopped_at: Some(3 * minute),
+    })
+    .unwrap();
+    assert_eq!(elsewhere, Here::Child);
 }
 
 #[test]
@@ -624,6 +725,7 @@ fn only_a_forced_move_makes_rows_concurrent() {
                 holder: "dev_mac".into(),
                 issued: rev(10, "site"),
                 how: How::First,
+                from: None,
                 through: None,
             },
             Grant {
@@ -631,6 +733,7 @@ fn only_a_forced_move_makes_rows_concurrent() {
                 holder: "dev_win".into(),
                 issued: rev(200, "site"),
                 how,
+                from: Some("dev_mac".into()),
                 through: None,
             },
         ]

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "description": "One example of every frame in her_link_contract.json, as it goes over the link. Both ends test against these: the host serializes to them and parses them.",
+  "description": "One example of every frame in her_link_contract.json, as it goes over the link; fact.up and log.rows each in clear and sealed (synthetic keys and ciphertext). Both ends test against these: each serializes to them and parses them. wake is the one push payload.",
   "frames": [
     {
-      "t": "hello", "seq": 1, "ack": 0, "at": 1760140800000,
+      "v": 1, "t": "hello", "seq": 1, "ack": 0, "at": 1760140800000,
       "body": {
-        "protocol": 1,
+        "protocol": 2,
         "role": "child",
         "surface": "app",
         "capabilities": ["rig", "voice.out", "voice.in", "notify", "panel"],
@@ -15,9 +15,9 @@
       }
     },
     {
-      "t": "welcome", "seq": 1, "ack": 1, "at": 1760140800050,
+      "v": 1, "t": "welcome", "seq": 1, "ack": 1, "at": 1760140800050,
       "body": {
-        "protocol": 1,
+        "protocol": 2,
         "role": "host",
         "host": "site",
         "deviceId": "dev_0123456789abcdef0123456789abcdef",
@@ -29,13 +29,14 @@
         "turns": [
           { "turnId": "t_01", "runId": "run_0123456789abcdef0123456789abcdef", "sessionId": "sess_1", "lastSequence": 42, "completed": true }
         ],
-        "serverTime": 1760140800050
+        "serverTime": 1760140800050,
+        "sync": "on"
       }
     },
     {
-      "t": "hello", "seq": 1, "ack": 0, "at": 1760140820000,
+      "v": 1, "t": "hello", "seq": 1, "ack": 0, "at": 1760140820000,
       "body": {
-        "protocol": 1,
+        "protocol": 2,
         "role": "host",
         "surface": "app",
         "capabilities": ["rig", "notify", "panel", "partner", "log2"],
@@ -44,9 +45,9 @@
       }
     },
     {
-      "t": "welcome", "seq": 1, "ack": 1, "at": 1760140820050,
+      "v": 1, "t": "welcome", "seq": 1, "ack": 1, "at": 1760140820050,
       "body": {
-        "protocol": 1,
+        "protocol": 2,
         "role": "site",
         "host": "app",
         "deviceId": "dev_fedcba9876543210fedcba9876543210",
@@ -56,11 +57,12 @@
         "capabilities": ["nodes", "partner", "log2"],
         "turns": [],
         "serverTime": 1760140820050,
-        "partner": "partner_0199d5c0b00044444444444444444444"
+        "partner": "partner_0199d5c0b00044444444444444444444",
+        "sync": "off"
       }
     },
     {
-      "t": "input", "seq": 2, "ack": 1, "id": "t_02", "at": 1760140801000,
+      "v": 1, "t": "input", "seq": 2, "ack": 1, "id": "t_02", "at": 1760140801000,
       "body": {
         "surface": "app",
         "text": "今天过得怎么样？",
@@ -69,7 +71,7 @@
       }
     },
     {
-      "t": "input", "seq": 3, "ack": 1, "id": "t_03", "at": 1760140802000,
+      "v": 1, "t": "input", "seq": 3, "ack": 1, "id": "t_03", "at": 1760140802000,
       "body": {
         "surface": "app",
         "text": "你看，这是我今天买的。",
@@ -79,7 +81,7 @@
       }
     },
     {
-      "t": "presence", "seq": 3, "ack": 1, "at": 1760140801500,
+      "v": 1, "t": "presence", "seq": 3, "ack": 1, "at": 1760140801500,
       "body": {
         "presence": { "pageVisible": true, "panelVisible": true, "faceVisible": true, "speaking": false, "speechInterruptible": false, "visibleMode": "chat" },
         "perception": [
@@ -89,19 +91,19 @@
       }
     },
     {
-      "t": "run.resume", "seq": 4, "ack": 3, "at": 1760140802000,
+      "v": 1, "t": "run.resume", "seq": 4, "ack": 3, "at": 1760140802000,
       "body": { "turnId": "t_02", "runId": "run_fedcba9876543210fedcba9876543210", "afterSeq": 3 }
     },
     {
-      "t": "run.accepted", "seq": 2, "ack": 2, "at": 1760140801020,
+      "v": 1, "t": "run.accepted", "seq": 2, "ack": 2, "at": 1760140801020,
       "body": { "turnId": "t_02", "runId": "run_fedcba9876543210fedcba9876543210", "sessionId": "sess_1", "duplicate": false }
     },
     {
-      "t": "run.rejected", "seq": 3, "ack": 2, "at": 1760140801020,
+      "v": 1, "t": "run.rejected", "seq": 3, "ack": 2, "at": 1760140801020,
       "body": { "turnId": "t_03", "code": "agent_access_denied" }
     },
     {
-      "t": "run.event", "seq": 4, "ack": 2, "at": 1760140801100,
+      "v": 1, "t": "run.event", "seq": 4, "ack": 2, "at": 1760140801100,
       "body": {
         "turnId": "t_02",
         "runId": "run_fedcba9876543210fedcba9876543210",
@@ -110,11 +112,11 @@
       }
     },
     {
-      "t": "run.end", "seq": 5, "ack": 2, "at": 1760140803000,
+      "v": 1, "t": "run.end", "seq": 5, "ack": 2, "at": 1760140803000,
       "body": { "turnId": "t_02", "runId": "run_fedcba9876543210fedcba9876543210", "lastSequence": 9 }
     },
     {
-      "t": "perform", "seq": 6, "ack": 2, "at": 1760140801200,
+      "v": 1, "t": "perform", "seq": 6, "ack": 2, "at": 1760140801200,
       "body": {
         "turnId": "t_02",
         "runId": "run_fedcba9876543210fedcba9876543210",
@@ -134,7 +136,7 @@
       }
     },
     {
-      "t": "mood", "seq": 7, "ack": 2, "at": 1760140800060,
+      "v": 1, "t": "mood", "seq": 7, "ack": 2, "at": 1760140800060,
       "body": {
         "mood": {
           "before": 62.0, "after": 64.5, "arousalBefore": 50.0, "arousalAfter": 52.0,
@@ -144,7 +146,7 @@
       }
     },
     {
-      "t": "say", "seq": 10, "ack": 6, "id": "spk_0123456789abcdef0123456789abcdef", "at": 1760140820000,
+      "v": 1, "t": "say", "seq": 10, "ack": 6, "id": "spk_0123456789abcdef0123456789abcdef", "at": 1760140820000,
       "body": {
         "text": "你回来啦。",
         "kind": "greeting",
@@ -165,7 +167,7 @@
       }
     },
     {
-      "t": "perform", "seq": 11, "ack": 6, "at": 1760140802400,
+      "v": 1, "t": "perform", "seq": 11, "ack": 6, "at": 1760140802400,
       "body": {
         "turnId": "t_02",
         "runId": "run_fedcba9876543210fedcba9876543210",
@@ -183,7 +185,7 @@
       }
     },
     {
-      "t": "playback.observe", "seq": 6, "ack": 9, "at": 1760140802300,
+      "v": 1, "t": "playback.observe", "seq": 6, "ack": 9, "at": 1760140802300,
       "body": {
         "runId": "run_fedcba9876543210fedcba9876543210",
         "upcomingText": "还不错，下午去散了步。",
@@ -191,11 +193,11 @@
       }
     },
     {
-      "t": "playback.end", "seq": 7, "ack": 11, "at": 1760140806000,
+      "v": 1, "t": "playback.end", "seq": 7, "ack": 11, "at": 1760140806000,
       "body": { "runId": "run_fedcba9876543210fedcba9876543210" }
     },
     {
-      "t": "speech.delivered", "seq": 8, "ack": 11, "id": "sd_6F1E2D3C-4B5A-4978-8695-A4B3C2D1E0F9", "at": 1760140806010,
+      "v": 1, "t": "speech.delivered", "seq": 8, "ack": 11, "id": "sd_6F1E2D3C-4B5A-4978-8695-A4B3C2D1E0F9", "at": 1760140806010,
       "body": {
         "turnId": "t_02",
         "runId": "run_fedcba9876543210fedcba9876543210",
@@ -206,7 +208,7 @@
       }
     },
     {
-      "t": "touch.appraise", "seq": 9, "ack": 11, "at": 1760140810000,
+      "v": 1, "t": "touch.appraise", "seq": 9, "ack": 11, "at": 1760140810000,
       "body": {
         "touchId": "touch_01",
         "touch": { "region": "hair", "gesture": "stroke", "durationMs": 600, "repeatCount": 1, "displayedReaction": "notice" },
@@ -214,17 +216,17 @@
       }
     },
     {
-      "t": "touch.reaction", "seq": 12, "ack": 9, "at": 1760140810900,
+      "v": 1, "t": "touch.reaction", "seq": 12, "ack": 9, "at": 1760140810900,
       "body": { "touchId": "touch_01", "reaction": "accept" }
     },
     {
-      "t": "touch", "seq": 10, "ack": 12, "id": "touch_01", "at": 1760140811600,
+      "v": 1, "t": "touch", "seq": 10, "ack": 12, "id": "touch_01", "at": 1760140811600,
       "body": {
         "touch": { "region": "hair", "gesture": "stroke", "durationMs": 1600, "repeatCount": 2, "displayedReaction": "accept" }
       }
     },
     {
-      "t": "outfit", "seq": 13, "ack": 10, "at": 1760140812000,
+      "v": 1, "t": "outfit", "seq": 13, "ack": 10, "at": 1760140812000,
       "body": {
         "outfitId": "coat",
         "rigAssetId": "6a7ed7e6cc28d41bfc5955e00677c9b97d78ef40af7e144ee68281b5e439a0f5",
@@ -232,19 +234,19 @@
       }
     },
     {
-      "t": "outfit.wear", "seq": 11, "ack": 13, "at": 1760140813000,
+      "v": 1, "t": "outfit.wear", "seq": 11, "ack": 13, "at": 1760140813000,
       "body": { "outfitId": "default" }
     },
     {
-      "t": "work.recall", "seq": 12, "ack": 13, "at": 1760140820000,
+      "v": 1, "t": "work.recall", "seq": 12, "ack": 13, "at": 1760140820000,
       "body": { "requestId": "wr_01", "query": "把这周的周报整理成表格" }
     },
     {
-      "t": "work.recalled", "seq": 14, "ack": 12, "at": 1760140820120,
+      "v": 1, "t": "work.recalled", "seq": 14, "ack": 12, "at": 1760140820120,
       "body": { "requestId": "wr_01", "memories": ["周报要按项目分组，表格放在最前面"], "ids": ["mem_0b6f3c2e7a414c8e9d0a3f5e2b1c4d6a"] }
     },
     {
-      "t": "experience", "seq": 13, "ack": 14, "id": "exp_0123456789abcdef0123456789abcdef", "at": 1760140880000,
+      "v": 1, "t": "experience", "seq": 13, "ack": 14, "id": "exp_0123456789abcdef0123456789abcdef", "at": 1760140880000,
       "body": {
         "kind": "work",
         "started": "owner",
@@ -261,11 +263,11 @@
       }
     },
     {
-      "t": "experience.taken", "seq": 15, "ack": 13, "at": 1760140880400,
+      "v": 1, "t": "experience.taken", "seq": 15, "ack": 13, "at": 1760140880400,
       "body": { "id": "exp_0123456789abcdef0123456789abcdef" }
     },
     {
-      "t": "moment", "seq": 14, "ack": 15, "id": "mom_0123456789abcdef0123456789abcdef", "at": 1760140881000,
+      "v": 1, "t": "moment", "seq": 14, "ack": 15, "id": "mom_0123456789abcdef0123456789abcdef", "at": 1760140881000,
       "body": {
         "kind": "agent.merope.peer_agent",
         "occurredAt": 1760140880900,
@@ -277,11 +279,11 @@
       }
     },
     {
-      "t": "moment.taken", "seq": 16, "ack": 14, "at": 1760140881200,
+      "v": 1, "t": "moment.taken", "seq": 16, "ack": 14, "at": 1760140881200,
       "body": { "id": "mom_0123456789abcdef0123456789abcdef" }
     },
     {
-      "t": "nodes", "seq": 17, "ack": 14, "at": 1760140890000,
+      "v": 1, "t": "nodes", "seq": 17, "ack": 14, "at": 1760140890000,
       "body": {
         "nodes": [
           {
@@ -307,11 +309,11 @@
       }
     },
     {
-      "t": "node.forget", "seq": 15, "ack": 17, "id": "forget_01", "at": 1760140900000,
+      "v": 1, "t": "node.forget", "seq": 15, "ack": 17, "id": "forget_01", "at": 1760140900000,
       "body": { "nodeId": "node_0123456789abcdef0123456789abcdef01234567" }
     },
     {
-      "t": "conversations", "seq": 16, "ack": 15, "at": 1760140900000,
+      "v": 1, "t": "conversations", "seq": 16, "ack": 15, "at": 1760140900000,
       "body": {
         "sessions": [
           {
@@ -327,7 +329,7 @@
       }
     },
     {
-      "t": "notice", "seq": 17, "ack": 15, "at": 1760140910000,
+      "v": 1, "t": "notice", "seq": 17, "ack": 15, "at": 1760140910000,
       "body": {
         "id": "agent_run_0123456789abcdef0123456789abcdef",
         "kind": "work",
@@ -338,7 +340,7 @@
       }
     },
     {
-      "t": "proposals", "seq": 18, "ack": 15, "at": 1760140920000,
+      "v": 1, "t": "proposals", "seq": 18, "ack": 15, "at": 1760140920000,
       "body": {
         "proposals": [
           {
@@ -367,11 +369,11 @@
       }
     },
     {
-      "t": "proposal.answer", "seq": 16, "ack": 18, "at": 1760140930000,
+      "v": 1, "t": "proposal.answer", "seq": 16, "ack": 18, "at": 1760140930000,
       "body": { "proposalId": "int_0123456789abcdef0123456789abcdef", "accept": true }
     },
     {
-      "t": "proposal.answered", "seq": 19, "ack": 16, "at": 1760140930200,
+      "v": 1, "t": "proposal.answered", "seq": 19, "ack": 16, "at": 1760140930200,
       "body": {
         "proposalId": "int_0123456789abcdef0123456789abcdef",
         "accepted": true,
@@ -380,7 +382,7 @@
       }
     },
     {
-      "t": "act.request", "seq": 20, "id": "act_0123456789abcdef0123456789abcdef", "ack": 16, "at": 1760140940000,
+      "v": 1, "t": "act.request", "seq": 20, "id": "act_0123456789abcdef0123456789abcdef", "ack": 16, "at": 1760140940000,
       "body": {
         "proposalId": "int_1123456789abcdef0123456789abcdef",
         "title": "把这台 Mac 的截图收进一个文件夹",
@@ -391,7 +393,7 @@
       }
     },
     {
-      "t": "act.result", "seq": 17, "id": "act_0123456789abcdef0123456789abcdef.finished", "ack": 20, "at": 1760140990000,
+      "v": 1, "t": "act.result", "seq": 17, "id": "act_0123456789abcdef0123456789abcdef.finished", "ack": 20, "at": 1760140990000,
       "body": {
         "actId": "act_0123456789abcdef0123456789abcdef",
         "phase": "finished",
@@ -400,11 +402,11 @@
       }
     },
     {
-      "t": "act.cancel", "seq": 21, "ack": 17, "at": 1760140995000,
+      "v": 1, "t": "act.cancel", "seq": 21, "ack": 17, "at": 1760140995000,
       "body": { "actId": "act_0123456789abcdef0123456789abcdef", "code": "act_cancelled" }
     },
     {
-      "t": "wardrobe", "seq": 22, "ack": 17, "at": 1760141000000,
+      "v": 1, "t": "wardrobe", "seq": 22, "ack": 17, "at": 1760141000000,
       "body": {
         "outfits": [
           {
@@ -421,7 +423,7 @@
       }
     },
     {
-      "t": "conversation", "seq": 23, "ack": 17, "at": 1760141010000,
+      "v": 1, "t": "conversation", "seq": 23, "ack": 17, "at": 1760141010000,
       "body": {
         "session": {
           "sessionId": "ses_0123456789abcdef0123456789abcdef",
@@ -436,537 +438,527 @@
         }
       }
     },
-    { "t": "ack", "seq": 5, "ack": 7, "at": 1760140803100, "body": {} },
+    { "v": 1, "t": "ack", "seq": 5, "ack": 7, "at": 1760140803100, "body": {} },
     {
-      "t": "host.freeze", "seq": 2, "ack": 1, "at": 1760140830000,
+      "v": 1, "t": "host.freeze", "seq": 2, "ack": 1, "at": 1760140830000,
       "body": { "moveId": "mv_0123456789abcdef0123456789abcdef", "kind": "move", "to": "site" }
     },
     {
-      "t": "host.thaw", "seq": 3, "ack": 2, "at": 1760140840000,
+      "v": 1, "t": "host.thaw", "seq": 3, "ack": 2, "at": 1760140840000,
       "body": { "moveId": "mv_0123456789abcdef0123456789abcdef" }
     },
     {
-      "t": "host.moved", "seq": 4, "ack": 3, "at": 1760140850000,
+      "v": 1, "t": "host.moved", "seq": 4, "ack": 3, "at": 1760140850000,
       "body": { "epoch": 3, "holder": "site" }
     },
-    { "t": "ping", "seq": 8, "ack": 5, "at": 1760140815000, "body": {} },
-    { "t": "pong", "seq": 6, "ack": 8, "at": 1760140815020, "body": {} },
+    { "v": 1, "t": "ping", "seq": 8, "ack": 5, "at": 1760140815000, "body": {} },
+    { "v": 1, "t": "pong", "seq": 6, "ack": 8, "at": 1760140815020, "body": {} },
     {
-      "t": "error", "seq": 9, "ack": 6, "at": 1760140815030,
+      "v": 1, "t": "error", "seq": 9, "ack": 6, "at": 1760140815030,
       "body": { "code": "unknown_frame", "ref": 6 }
-    }
-  ],
-  "next": {
-    "protocol": 2,
-    "description": "One example of every protocol-2 frame (contract: next.frames), as it goes over the link; fact.up and log.rows each in clear and sealed. Synthetic keys and ciphertext.",
-    "wake": {
-      "myriad": {
-        "wake": "connect"
-      }
     },
-    "frames": [
-      {
-        "v": 1,
-        "t": "fact.up",
-        "seq": 1,
-        "ack": 0,
-        "at": 1760140800000,
-        "id": "facts_01",
-        "body": {
-          "facts": [
-            {
-              "source": "place",
-              "kind": "place.here",
-              "at": 1760140800000,
-              "until": 1760141400000,
-              "data": {
-                "label": "at work"
-              }
-            }
-          ]
-        }
-      },
-      {
-        "v": 1,
-        "t": "fact.up",
-        "seq": 2,
-        "ack": 0,
-        "at": 1760140800010,
-        "id": "facts_02",
-        "body": {
-          "sealed": {
-            "suite": "x25519-sha256-chacha20poly1305",
-            "to": "dev_mac",
-            "keyId": "f7639ecdaf467ba6f0b01159af38dba6",
-            "enc": "X7Krdu2b2gNLGSxIxwaTWSUvzNoWjZJazArn0xbAtT4=",
-            "ct": "+NyzQwjlxp9GozyvpivZIkdrGMeKEU6xRONKXjdPfWD43LNDCOXGn0ajPK+mK9kiR2sYx4oRTrFE40peN099YPjcs0MI5cafRqM8r6Yr2SJHaxjHihFOsUTjSl43T31g"
+  {
+    "v": 1,
+    "t": "fact.up",
+    "seq": 1,
+    "ack": 0,
+    "at": 1760140800000,
+    "id": "facts_01",
+    "body": {
+      "facts": [
+        {
+          "source": "place",
+          "kind": "place.here",
+          "at": 1760140800000,
+          "until": 1760141400000,
+          "data": {
+            "label": "at work"
           }
         }
+      ]
+    }
+  },
+  {
+    "v": 1,
+    "t": "fact.up",
+    "seq": 2,
+    "ack": 0,
+    "at": 1760140800010,
+    "id": "facts_02",
+    "body": {
+      "sealed": {
+        "suite": "x25519-sha256-chacha20poly1305",
+        "to": "dev_mac",
+        "keyId": "f7639ecdaf467ba6f0b01159af38dba6",
+        "enc": "X7Krdu2b2gNLGSxIxwaTWSUvzNoWjZJazArn0xbAtT4=",
+        "ct": "+NyzQwjlxp9GozyvpivZIkdrGMeKEU6xRONKXjdPfWD43LNDCOXGn0ajPK+mK9kiR2sYx4oRTrFE40peN099YPjcs0MI5cafRqM8r6Yr2SJHaxjHihFOsUTjSl43T31g"
+      }
+    }
+  },
+  {
+    "v": 1,
+    "t": "hand.raise",
+    "seq": 3,
+    "ack": 0,
+    "at": 1760140800020,
+    "body": {
+      "handId": "hand_01",
+      "tier": "say",
+      "expiresAt": 1760140830000,
+      "exit": "voice",
+      "reason": "noticed"
+    }
+  },
+  {
+    "v": 1,
+    "t": "hand.answer",
+    "seq": 4,
+    "ack": 0,
+    "at": 1760140800030,
+    "body": {
+      "handId": "hand_01",
+      "allowed": false,
+      "bound": "meeting"
+    }
+  },
+  {
+    "v": 1,
+    "t": "hand.drop",
+    "seq": 5,
+    "ack": 0,
+    "at": 1760140800040,
+    "body": {
+      "handId": "hand_01"
+    }
+  },
+  {
+    "v": 1,
+    "t": "say.line",
+    "seq": 6,
+    "ack": 0,
+    "at": 1760140800050,
+    "id": "line_01",
+    "body": {
+      "text": "我先不打扰你，开完会再说。",
+      "kind": "proactive",
+      "saidAt": 1760140800050,
+      "handId": "hand_01",
+      "sessionId": "sess_1"
+    }
+  },
+  {
+    "v": 1,
+    "t": "say.delivered",
+    "seq": 7,
+    "ack": 0,
+    "at": 1760140800060,
+    "id": "said_01",
+    "body": {
+      "lineId": "line_01",
+      "spokenChars": 13,
+      "totalChars": 13,
+      "interrupted": false
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.ask",
+    "seq": 8,
+    "ack": 0,
+    "at": 1760140800070,
+    "body": {
+      "why": "talk",
+      "epoch": 5
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.yield",
+    "seq": 9,
+    "ack": 0,
+    "at": 1760140800080,
+    "id": "yield_01",
+    "body": {
+      "epoch": 5,
+      "through": {
+        "personal:o1": 41
       },
-      {
-        "v": 1,
-        "t": "hand.raise",
-        "seq": 3,
-        "ack": 0,
-        "at": 1760140800020,
-        "body": {
-          "handId": "hand_01",
-          "tier": "say",
-          "expiresAt": 1760140830000,
-          "exit": "voice",
-          "reason": "noticed"
+      "to": "site"
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.grant",
+    "seq": 10,
+    "ack": 0,
+    "at": 1760140800090,
+    "id": "6",
+    "body": {
+      "grant": {
+        "epoch": 6,
+        "holder": "site",
+        "issued": "001760140860000-000000-site",
+        "how": "handover",
+        "through": {
+          "personal:o1": 41
         }
+      }
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.epoch",
+    "seq": 11,
+    "ack": 0,
+    "at": 1760140800100,
+    "body": {
+      "epoch": 6,
+      "holder": "site",
+      "how": "handover",
+      "holderName": "server"
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.stopped",
+    "seq": 12,
+    "ack": 0,
+    "at": 1760140800110,
+    "id": "stop_01",
+    "body": {
+      "epoch": 5,
+      "stoppedAt": 1760140620000
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.takeover",
+    "seq": 13,
+    "ack": 0,
+    "at": 1760140800120,
+    "body": {
+      "grant": {
+        "epoch": 7,
+        "holder": "site",
+        "issued": "001760140870000-000000-site",
+        "how": "takeover"
       },
-      {
-        "v": 1,
-        "t": "hand.answer",
-        "seq": 4,
-        "ack": 0,
-        "at": 1760140800030,
-        "body": {
-          "handId": "hand_01",
-          "allowed": false,
-          "bound": "meeting"
-        }
+      "through": {
+        "personal:o1": 41
+      }
+    }
+  },
+  {
+    "v": 1,
+    "t": "log.vector",
+    "seq": 14,
+    "ack": 0,
+    "at": 1760140800130,
+    "body": {
+      "audience": "personal:o1",
+      "vector": {
+        "dev_mac": 41,
+        "site": 12
       },
-      {
-        "v": 1,
-        "t": "hand.drop",
-        "seq": 5,
-        "ack": 0,
-        "at": 1760140800040,
-        "body": {
-          "handId": "hand_01"
-        }
-      },
-      {
-        "v": 1,
-        "t": "say.line",
-        "seq": 6,
-        "ack": 0,
-        "at": 1760140800050,
-        "id": "line_01",
-        "body": {
-          "text": "我先不打扰你，开完会再说。",
-          "kind": "proactive",
-          "saidAt": 1760140800050,
-          "handId": "hand_01",
-          "sessionId": "sess_1"
-        }
-      },
-      {
-        "v": 1,
-        "t": "say.delivered",
-        "seq": 7,
-        "ack": 0,
-        "at": 1760140800060,
-        "id": "said_01",
-        "body": {
-          "lineId": "line_01",
-          "spokenChars": 13,
-          "totalChars": 13,
-          "interrupted": false
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.ask",
-        "seq": 8,
-        "ack": 0,
-        "at": 1760140800070,
-        "body": {
-          "why": "talk",
-          "epoch": 5
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.yield",
-        "seq": 9,
-        "ack": 0,
-        "at": 1760140800080,
-        "id": "yield_01",
-        "body": {
+      "ask": ["row_00"]
+    }
+  },
+  {
+    "v": 1,
+    "t": "log.rows",
+    "seq": 15,
+    "ack": 0,
+    "at": 1760140800140,
+    "id": "rows_01",
+    "body": {
+      "audience": "personal:o1",
+      "rows": [
+        {
+          "version": 1,
+          "id": "row_01",
+          "origin": "dev_mac",
+          "author": "her",
           "epoch": 5,
-          "through": {
-            "personal:o1": 41
+          "dseq": 41,
+          "hlc": "001760140800000-000000-dev_mac",
+          "audience": "personal:o1",
+          "object": "node:lamp",
+          "kind": "node.view_changed",
+          "payload": {
+            "ref": "blob:row_01"
           },
-          "to": "site"
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.grant",
-        "seq": 10,
-        "ack": 0,
-        "at": 1760140800090,
-        "id": "6",
-        "body": {
-          "grant": {
-            "epoch": 6,
-            "holder": "site",
-            "issued": "001760140860000-000000-site",
-            "how": "handover",
-            "through": {
-              "personal:o1": 41
-            }
-          }
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.epoch",
-        "seq": 11,
-        "ack": 0,
-        "at": 1760140800100,
-        "body": {
-          "epoch": 6,
-          "holder": "site",
-          "how": "handover",
-          "holderName": "server"
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.stopped",
-        "seq": 12,
-        "ack": 0,
-        "at": 1760140800110,
-        "id": "stop_01",
-        "body": {
+          "replicate": "shared"
+        },
+        {
+          "version": 1,
+          "id": "row_02",
+          "origin": "dev_mac",
+          "author": "her",
           "epoch": 5,
-          "stoppedAt": 1760140620000
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.takeover",
-        "seq": 13,
-        "ack": 0,
-        "at": 1760140800120,
-        "body": {
-          "grant": {
-            "epoch": 7,
-            "holder": "site",
-            "issued": "001760140870000-000000-site",
-            "how": "takeover"
+          "dseq": 42,
+          "hlc": "001760140800001-000000-dev_mac",
+          "audience": "personal:o1",
+          "object": "node:lamp",
+          "kind": "node.span",
+          "payload": {
+            "ref": "blob:row_02"
           },
-          "through": {
-            "personal:o1": 41
-          }
+          "replicate": "shared"
         }
-      },
-      {
-        "v": 1,
-        "t": "log.vector",
-        "seq": 14,
-        "ack": 0,
-        "at": 1760140800130,
-        "body": {
-          "audience": "personal:o1",
-          "vector": {
-            "dev_mac": 41,
-            "site": 12
-          },
-          "ask": ["row_00"]
+      ],
+      "payloads": [
+        {
+          "ref": "blob:row_01",
+          "data": "I59Z7VXnN8dxR89VrQwbAwttfudIp0JpUvm4UtWpNeUjn1ntVec3x3FHz1WtDBsD"
         }
-      },
-      {
-        "v": 1,
-        "t": "log.rows",
-        "seq": 15,
-        "ack": 0,
-        "at": 1760140800140,
-        "id": "rows_01",
-        "body": {
-          "audience": "personal:o1",
-          "rows": [
-            {
-              "version": 1,
-              "id": "row_01",
-              "origin": "dev_mac",
-              "author": "her",
-              "epoch": 5,
-              "dseq": 41,
-              "hlc": "001760140800000-000000-dev_mac",
-              "audience": "personal:o1",
-              "object": "node:lamp",
-              "kind": "node.view_changed",
-              "payload": {
-                "ref": "blob:row_01"
-              },
-              "replicate": "shared"
-            },
-            {
-              "version": 1,
-              "id": "row_02",
-              "origin": "dev_mac",
-              "author": "her",
-              "epoch": 5,
-              "dseq": 42,
-              "hlc": "001760140800001-000000-dev_mac",
-              "audience": "personal:o1",
-              "object": "node:lamp",
-              "kind": "node.span",
-              "payload": {
-                "ref": "blob:row_02"
-              },
-              "replicate": "shared"
-            }
-          ],
-          "payloads": [
-            {
-              "ref": "blob:row_01",
-              "data": "I59Z7VXnN8dxR89VrQwbAwttfudIp0JpUvm4UtWpNeUjn1ntVec3x3FHz1WtDBsD"
-            }
-          ],
-          "withheld": [
-            {
-              "id": "row_02",
-              "why": "secret"
-            }
-          ]
+      ],
+      "withheld": [
+        {
+          "id": "row_02",
+          "why": "secret"
         }
-      },
-      {
-        "v": 1,
-        "t": "log.rows",
-        "seq": 16,
-        "ack": 0,
-        "at": 1760140800150,
-        "id": "rows_02",
-        "body": {
-          "audience": "personal:o1",
-          "sealed": {
-            "suite": "x25519-sha256-chacha20poly1305",
-            "to": "dev_mac",
-            "keyId": "f7639ecdaf467ba6f0b01159af38dba6",
-            "enc": "X7Krdu2b2gNLGSxIxwaTWSUvzNoWjZJazArn0xbAtT4=",
-            "ct": "+NyzQwjlxp9GozyvpivZIkdrGMeKEU6xRONKXjdPfWD43LNDCOXGn0ajPK+mK9kiR2sYx4oRTrFE40peN099YPjcs0MI5cafRqM8r6Yr2SJHaxjHihFOsUTjSl43T31g"
-          }
-        }
-      },
-      {
-        "v": 1,
-        "t": "log.full",
-        "seq": 17,
-        "ack": 0,
-        "at": 1760140800160,
-        "body": {
-          "audience": "personal:o1",
-          "url": "https://example.test/api/agent/link/log/full_01",
-          "expiresAt": 1760141400000,
-          "vector": {
-            "site": 12
-          }
-        }
-      },
-      {
-        "v": 1,
-        "t": "peer.publish",
-        "seq": 18,
-        "ack": 0,
-        "at": 1760140800170,
-        "id": "keys_01",
-        "body": {
-          "signKey": "V6cfMFn9rRTvLOiv5GHYf12bAncTFRP9bJv9eJXrGjQ=",
-          "sealKey": "QeWO68tCqsnOtxI2UkNlTJ6LySJ13M/fmIbb9LpmAPs="
-        }
-      },
-      {
-        "v": 1,
-        "t": "peer.keys",
-        "seq": 19,
-        "ack": 0,
-        "at": 1760140800180,
-        "body": {
-          "devices": [
-            {
-              "deviceId": "dev_mac",
-              "name": "MacBook",
-              "signKey": "V6cfMFn9rRTvLOiv5GHYf12bAncTFRP9bJv9eJXrGjQ=",
-              "sealKey": "QeWO68tCqsnOtxI2UkNlTJ6LySJ13M/fmIbb9LpmAPs=",
-              "keyId": "f7639ecdaf467ba6f0b01159af38dba6"
-            }
-          ]
-        }
-      },
-      {
-        "v": 1,
-        "t": "peer.hello",
-        "seq": 20,
-        "ack": 0,
-        "at": 1760140800190,
-        "body": {
-          "protocol": 2,
-          "deviceId": "dev_phone",
-          "nonce": "Z2uLuEznJn3VIN7KSBHI8QpT5jY1LwaYf0L+QlrO3YA=",
-          "partner": "partner_0199d5c0b00044444444444444444444"
-        }
-      },
-      {
-        "v": 1,
-        "t": "peer.welcome",
-        "seq": 21,
-        "ack": 0,
-        "at": 1760140800200,
-        "body": {
-          "protocol": 2,
+      ]
+    }
+  },
+  {
+    "v": 1,
+    "t": "log.rows",
+    "seq": 16,
+    "ack": 0,
+    "at": 1760140800150,
+    "id": "rows_02",
+    "body": {
+      "audience": "personal:o1",
+      "sealed": {
+        "suite": "x25519-sha256-chacha20poly1305",
+        "to": "dev_mac",
+        "keyId": "f7639ecdaf467ba6f0b01159af38dba6",
+        "enc": "X7Krdu2b2gNLGSxIxwaTWSUvzNoWjZJazArn0xbAtT4=",
+        "ct": "+NyzQwjlxp9GozyvpivZIkdrGMeKEU6xRONKXjdPfWD43LNDCOXGn0ajPK+mK9kiR2sYx4oRTrFE40peN099YPjcs0MI5cafRqM8r6Yr2SJHaxjHihFOsUTjSl43T31g"
+      }
+    }
+  },
+  {
+    "v": 1,
+    "t": "log.full",
+    "seq": 17,
+    "ack": 0,
+    "at": 1760140800160,
+    "body": {
+      "audience": "personal:o1",
+      "url": "https://example.test/api/agent/link/log/full_01",
+      "expiresAt": 1760141400000,
+      "vector": {
+        "site": 12
+      }
+    }
+  },
+  {
+    "v": 1,
+    "t": "peer.publish",
+    "seq": 18,
+    "ack": 0,
+    "at": 1760140800170,
+    "id": "keys_01",
+    "body": {
+      "signKey": "V6cfMFn9rRTvLOiv5GHYf12bAncTFRP9bJv9eJXrGjQ=",
+      "sealKey": "QeWO68tCqsnOtxI2UkNlTJ6LySJ13M/fmIbb9LpmAPs="
+    }
+  },
+  {
+    "v": 1,
+    "t": "peer.keys",
+    "seq": 19,
+    "ack": 0,
+    "at": 1760140800180,
+    "body": {
+      "devices": [
+        {
           "deviceId": "dev_mac",
-          "nonce": "BICpPS6bCUuJ4I4Bl2CJrBgZOvgCxmtjHMjS3BuujIg=",
-          "certHash": "06298432e8066b29e2223bcc23aa9504b56ae508fabf3435508869b9c3190e22",
-          "proof": "sqpBPGT5t3nOZP7YIeHXZ5gEZaHDAGizCT1U/luzxCCyqkE8ZPm3ec5k/tgh4ddnmARlocMAaLMJPVT+W7PEIA==",
-          "partner": "partner_0199d5c0b00044444444444444444444"
+          "name": "MacBook",
+          "signKey": "V6cfMFn9rRTvLOiv5GHYf12bAncTFRP9bJv9eJXrGjQ=",
+          "sealKey": "QeWO68tCqsnOtxI2UkNlTJ6LySJ13M/fmIbb9LpmAPs=",
+          "keyId": "f7639ecdaf467ba6f0b01159af38dba6"
         }
-      },
-      {
-        "v": 1,
-        "t": "peer.proof",
-        "seq": 22,
-        "ack": 0,
-        "at": 1760140800210,
-        "body": {
-          "proof": "kGm/uA8fXE6hhv3WQ78HKlc+UMDYXvHzKwSJf1HQQNiQab+4Dx9cTqGG/dZDvwcqVz5QwNhe8fMrBIl/UdBA2A=="
-        }
-      },
-      {
-        "v": 1,
-        "t": "lease.place",
-        "seq": 23,
-        "ack": 0,
-        "at": 1760140800220,
-        "body": {
-          "ownerHere": true,
-          "place": "pl_7f3a9c"
-        }
-      },
-      {
-        "v": 1,
-        "t": "group.lend",
-        "seq": 24,
-        "ack": 0,
-        "at": 1760140800230,
-        "id": "lend_01",
-        "body": {
-          "group": "group:g42",
-          "name": "读书会",
-          "messages": [
-            {
-              "id": "m_903",
-              "from": "m7",
-              "name": "小林",
-              "text": "这周读到哪了？",
-              "at": 1760140800000,
-              "toHer": true,
-              "who": {
-                "kind": "member",
-                "user_id": 101,
-                "bound": true
-              }
-            }
-          ],
-          "recent": [
-            {
-              "id": "m_902",
-              "from": "m3",
-              "name": "阿森",
-              "text": "我还在第三章",
-              "at": 1760140790000,
-              "who": {
-                "kind": "stranger"
-              }
-            }
-          ],
-          "owner": 1
-        }
-      },
-      {
-        "v": 1,
-        "t": "group.say",
-        "seq": 25,
-        "ack": 0,
-        "at": 1760140800240,
-        "id": "gsay_01",
-        "body": {
-          "group": "group:g42",
-          "text": "第四章刚开头。",
-          "replyTo": "m_903",
-          "lend": "lend_01"
-        }
-      },
-      {
-        "v": 1,
-        "t": "group.said",
-        "seq": 26,
-        "ack": 25,
-        "at": 1760140800250,
-        "body": {
-          "sayId": "gsay_01",
-          "sent": true
-        }
-      },
-      {
-        "v": 1,
-        "t": "chat.lend",
-        "seq": 27,
-        "ack": 0,
-        "at": 1760140800260,
-        "id": "lend_02",
-        "body": {
-          "chat": "personal:q_5521",
+      ]
+    }
+  },
+  {
+    "v": 1,
+    "t": "peer.hello",
+    "seq": 20,
+    "ack": 0,
+    "at": 1760140800190,
+    "body": {
+      "protocol": 2,
+      "deviceId": "dev_phone",
+      "nonce": "Z2uLuEznJn3VIN7KSBHI8QpT5jY1LwaYf0L+QlrO3YA=",
+      "partner": "partner_0199d5c0b00044444444444444444444"
+    }
+  },
+  {
+    "v": 1,
+    "t": "peer.welcome",
+    "seq": 21,
+    "ack": 0,
+    "at": 1760140800200,
+    "body": {
+      "protocol": 2,
+      "deviceId": "dev_mac",
+      "nonce": "BICpPS6bCUuJ4I4Bl2CJrBgZOvgCxmtjHMjS3BuujIg=",
+      "certHash": "06298432e8066b29e2223bcc23aa9504b56ae508fabf3435508869b9c3190e22",
+      "proof": "sqpBPGT5t3nOZP7YIeHXZ5gEZaHDAGizCT1U/luzxCCyqkE8ZPm3ec5k/tgh4ddnmARlocMAaLMJPVT+W7PEIA==",
+      "partner": "partner_0199d5c0b00044444444444444444444"
+    }
+  },
+  {
+    "v": 1,
+    "t": "peer.proof",
+    "seq": 22,
+    "ack": 0,
+    "at": 1760140800210,
+    "body": {
+      "proof": "kGm/uA8fXE6hhv3WQ78HKlc+UMDYXvHzKwSJf1HQQNiQab+4Dx9cTqGG/dZDvwcqVz5QwNhe8fMrBIl/UdBA2A=="
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.place",
+    "seq": 23,
+    "ack": 0,
+    "at": 1760140800220,
+    "body": {
+      "ownerHere": true,
+      "place": "pl_7f3a9c"
+    }
+  },
+  {
+    "v": 1,
+    "t": "group.lend",
+    "seq": 24,
+    "ack": 0,
+    "at": 1760140800230,
+    "id": "lend_01",
+    "body": {
+      "group": "group:g42",
+      "name": "读书会",
+      "messages": [
+        {
+          "id": "m_903",
+          "from": "m7",
           "name": "小林",
+          "text": "这周读到哪了？",
+          "at": 1760140800000,
+          "toHer": true,
           "who": {
             "kind": "member",
             "user_id": 101,
             "bound": true
-          },
-          "messages": [
-            {
-              "id": "m_1207",
-              "text": "你昨天说的那本书叫什么？",
-              "at": 1760140800000
-            }
-          ],
-          "recent": [
-            {
-              "id": "m_1205",
-              "text": "最近在读什么？",
-              "at": 1760140700000
-            },
-            {
-              "id": "m_1206",
-              "text": "《雪国》，刚读完。",
-              "at": 1760140710000,
-              "mine": true
-            }
-          ]
+          }
         }
+      ],
+      "recent": [
+        {
+          "id": "m_902",
+          "from": "m3",
+          "name": "阿森",
+          "text": "我还在第三章",
+          "at": 1760140790000,
+          "who": {
+            "kind": "stranger"
+          }
+        }
+      ],
+      "owner": 1
+    }
+  },
+  {
+    "v": 1,
+    "t": "group.say",
+    "seq": 25,
+    "ack": 0,
+    "at": 1760140800240,
+    "id": "gsay_01",
+    "body": {
+      "group": "group:g42",
+      "text": "第四章刚开头。",
+      "replyTo": "m_903",
+      "lend": "lend_01"
+    }
+  },
+  {
+    "v": 1,
+    "t": "group.said",
+    "seq": 26,
+    "ack": 25,
+    "at": 1760140800250,
+    "body": {
+      "sayId": "gsay_01",
+      "sent": true
+    }
+  },
+  {
+    "v": 1,
+    "t": "chat.lend",
+    "seq": 27,
+    "ack": 0,
+    "at": 1760140800260,
+    "id": "lend_02",
+    "body": {
+      "chat": "personal:q_5521",
+      "name": "小林",
+      "who": {
+        "kind": "member",
+        "user_id": 101,
+        "bound": true
       },
-      {
-        "v": 1,
-        "t": "chat.say",
-        "seq": 28,
-        "ack": 0,
-        "at": 1760140800270,
-        "id": "csay_01",
-        "body": {
-          "chat": "personal:q_5521",
-          "text": "《雪国》，川端康成的。",
-          "replyTo": "m_1207",
-          "lend": "lend_02"
+      "messages": [
+        {
+          "id": "m_1207",
+          "text": "你昨天说的那本书叫什么？",
+          "at": 1760140800000
         }
-      },
-      {
-        "v": 1,
-        "t": "chat.said",
-        "seq": 29,
-        "ack": 28,
-        "at": 1760140800280,
-        "body": {
-          "sayId": "csay_01",
-          "sent": true
+      ],
+      "recent": [
+        {
+          "id": "m_1205",
+          "text": "最近在读什么？",
+          "at": 1760140700000
+        },
+        {
+          "id": "m_1206",
+          "text": "《雪国》，刚读完。",
+          "at": 1760140710000,
+          "mine": true
         }
-      }
-    ]
+      ]
+    }
+  },
+  {
+    "v": 1,
+    "t": "chat.say",
+    "seq": 28,
+    "ack": 0,
+    "at": 1760140800270,
+    "id": "csay_01",
+    "body": {
+      "chat": "personal:q_5521",
+      "text": "《雪国》，川端康成的。",
+      "replyTo": "m_1207",
+      "lend": "lend_02"
+    }
+  },
+  {
+    "v": 1,
+    "t": "chat.said",
+    "seq": 29,
+    "ack": 28,
+    "at": 1760140800280,
+    "body": {
+      "sayId": "csay_01",
+      "sent": true
+    }
   }
+  ],
+  "wake": {"myriad": {"wake": "connect"}}
 }

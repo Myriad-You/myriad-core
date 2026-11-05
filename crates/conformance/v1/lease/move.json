@@ -29,6 +29,7 @@
       "output": {
         "granted": {
           "epoch": 5,
+          "from": "dev_mac",
           "holder": "site",
           "how": "handover",
           "issued": "001760001800000-000000-site",
@@ -139,6 +140,7 @@
       "output": {
         "granted": {
           "epoch": 5,
+          "from": "dev_mac",
           "holder": "dev_win",
           "how": "force",
           "issued": "001760001800000-000000-site"
@@ -199,6 +201,7 @@
       "output": {
         "granted": {
           "epoch": 5,
+          "from": "dev_mac",
           "holder": "site",
           "how": "takeover",
           "issued": "001760001800000-000000-site"
@@ -468,6 +471,7 @@
       "output": {
         "granted": {
           "epoch": 5,
+          "from": "dev_mac",
           "holder": "site",
           "how": "takeover",
           "issued": "001760001800000-000000-site"
@@ -568,6 +572,7 @@
       "output": {
         "granted": {
           "epoch": 5,
+          "from": "dev_mac",
           "holder": "site",
           "how": "handover",
           "issued": "001760001800000-000000-site",

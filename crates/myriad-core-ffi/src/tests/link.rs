@@ -26,10 +26,10 @@ fn every_link_case_answers_through_the_c_entry_point() {
 }
 
 #[test]
-fn every_protocol_two_example_encodes_to_its_canonical_text() {
+fn every_example_encodes_to_its_canonical_text() {
     let fixtures: Value =
         serde_json::from_str(include_str!("../../../../shared/her_link_fixtures.json")).unwrap();
-    for frame in fixtures["next"]["frames"].as_array().unwrap() {
+    for frame in fixtures["frames"].as_array().unwrap() {
         let text = ok("link.encode", json!({ "frame": frame }))["text"]
             .as_str()
             .unwrap()
@@ -37,7 +37,7 @@ fn every_protocol_two_example_encodes_to_its_canonical_text() {
         let back: Value = serde_json::from_str(&text).unwrap();
         assert_eq!(&back, frame);
     }
-    let mut bad = fixtures["next"]["frames"][0].clone();
+    let mut bad = fixtures["frames"][0].clone();
     bad["v"] = json!(2);
     let (status, out) = ffi("link.encode", &json!({ "frame": bad }));
     assert_eq!(status, STATUS_BAD_INPUT, "{out}");

@@ -97,6 +97,12 @@ pub struct Grant {
     /// The server's clock when it issued it.
     pub issued: Rev,
     pub how: How,
+    /// The holder it moved from: the one that stood when this one was
+    /// issued. Every grant but the first names it, so the new holder knows
+    /// whose rows to wait for ([`behind`]); grants kept from before it was
+    /// written have none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
     /// For a handover: the previous holder's last shared count in each
     /// audience when it gave the lease up.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -127,6 +133,15 @@ impl Grant {
             return Err(LogError::new("epochs start at 1"));
         }
         hlc::check_node(&self.holder).map_err(|error| LogError::new(error.to_string()))?;
+        if let Some(from) = &self.from {
+            if self.how == How::First {
+                return Err(LogError::new("the first grant moves from no one"));
+            }
+            hlc::check_node(from).map_err(|error| LogError::new(error.to_string()))?;
+            if *from == self.holder {
+                return Err(LogError::new("a grant moves from another holder"));
+            }
+        }
         if let Some(through) = &self.through {
             if self.how != How::Handover {
                 return Err(LogError::new("only a handover carries `through`"));
@@ -270,6 +285,7 @@ pub fn decide(input: MoveInput) -> Result<Moved, LogError> {
             holder: holder.to_string(),
             issued: issued.clone(),
             how,
+            from: Some(lease.holder.clone()),
             through,
         };
         grant.check().map(|()| Moved::Granted(grant))
@@ -355,6 +371,14 @@ pub struct HereInput {
     /// absent ([`stop_after`]).
     #[serde(default)]
     pub stop_after: Option<i64>,
+    /// When this side stopped by itself, while it holds the lease and the
+    /// server has not yet said, since it came back in reach, that the lease
+    /// still stands (a `lease.epoch` naming it). Stopped, it stays stopped:
+    /// the owner coming back to it while it is cut off, or its coming back
+    /// in reach, does not start her again, since the server may have taken
+    /// her over meanwhile. The caller drops it once the server has said so.
+    #[serde(default)]
+    pub stopped_at: Option<i64>,
 }
 
 /// What her mind does on this side.
@@ -365,8 +389,8 @@ pub enum Here {
     Thinking,
     /// The holder stopped by itself at `stoppedAt`: she no longer thinks or
     /// writes her rows here; it still takes the owner's rows and finishes
-    /// work in hand. Back in reach with the lease unchanged, she thinks
-    /// again.
+    /// work in hand. She thinks again only once the server, back in reach,
+    /// has said the lease is unchanged ([`HereInput::stopped_at`]).
     #[serde(rename_all = "camelCase")]
     Stopped { stopped_at: i64 },
     /// Another side holds the lease (or a newer epoch moved it away): this
@@ -381,6 +405,9 @@ pub fn here(input: HereInput) -> Result<Here, LogError> {
     lease.check()?;
     if lease.holder != input.me {
         return Ok(Here::Child);
+    }
+    if let Some(stopped_at) = input.stopped_at {
+        return Ok(Here::Stopped { stopped_at });
     }
     let Some(cut_off) = input.disconnected_since else {
         return Ok(Here::Thinking);

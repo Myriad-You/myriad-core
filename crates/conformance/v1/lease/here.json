@@ -177,6 +177,47 @@
       "output": {
         "state": "thinking"
       }
+    },
+    {
+      "name": "a holder that stopped by itself stays stopped, the owner back, until the server says the lease stands",
+      "input": {
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "from": "site",
+          "issued": "001760000000000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760003600000000,
+        "disconnectedSince": 1760000000000000,
+        "ownerHereAt": 1760003540000000,
+        "stoppedAt": 1760000180000000
+      },
+      "output": {
+        "state": "stopped",
+        "stoppedAt": 1760000180000000
+      }
+    },
+    {
+      "name": "back in reach, still stopped until the server says so",
+      "input": {
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "from": "site",
+          "issued": "001760000000000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760003600000000,
+        "ownerHereAt": 1760003540000000,
+        "stoppedAt": 1760000180000000
+      },
+      "output": {
+        "state": "stopped",
+        "stoppedAt": 1760000180000000
+      }
     }
   ],
   "version": 1
