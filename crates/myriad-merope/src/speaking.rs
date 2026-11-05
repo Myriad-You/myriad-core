@@ -170,7 +170,13 @@ pub fn format_remembered_section(contents: &[String]) -> Option<String> {
 /// first, how often): she goes through what she kept one by one before she
 /// counts, so nothing is counted twice, missed, or counted for being alike.
 pub fn format_going_through_all_section() -> String {
-    "## Going through all of it\nAnswering this needs everything you know on it. Before you answer, go through the facts you kept one by one and pick out each that bears on it, with when it was; count, compare or order only those, and leave out what is only alike. What is not there, you do not know.".to_string()
+    "## Going through all of it\nAnswering this needs everything you know on it. Before you answer, go through the facts you kept one by one and pick out each that bears on it, with when it was; count, compare or order only those, and leave out what is only alike. Where their words are beside a fact, that is what they said: go by them to tell whether two facts are one thing or two (one doctor under two names). What is not there, you do not know.".to_string()
+}
+
+/// A fact she kept, going through all of it, with what they said that it
+/// was taken from, so a name or detail the fact left out is still there.
+pub fn with_their_words(fact: &str, said: &str) -> String {
+    format!("{fact} (their words: \"{said}\")")
 }
 
 /// Going through all of it, the topics whose facts were not all given to
@@ -971,6 +977,21 @@ mod tests {
         assert!(
             section.contains("seeing doctors: you keep 9 facts under it; 4 of them are above.")
         );
+    }
+
+    /// Going through all of it, a fact can carry what they said, and she is
+    /// told to tell one thing from two by it.
+    #[test]
+    fn going_through_all_of_it_goes_by_their_words() {
+        use super::{format_going_through_all_section, with_their_words};
+        assert_eq!(
+            with_their_words(
+                "[05-21] diagnosed with chronic sinusitis",
+                "my ENT, Dr. Patel, said it's chronic"
+            ),
+            "[05-21] diagnosed with chronic sinusitis (their words: \"my ENT, Dr. Patel, said it's chronic\")"
+        );
+        assert!(format_going_through_all_section().contains("Where their words are beside a fact"));
     }
 
     #[test]

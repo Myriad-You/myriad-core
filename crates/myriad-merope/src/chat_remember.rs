@@ -100,7 +100,7 @@ pub fn extract_system_prompt(existing: &[String]) -> String {
     };
     format!(
         "You are keeping what a friend would remember from this message of theirs. facts: 0 to {MAX_FACTS} short facts about them: what happened to them, what they did, are doing or are going to do, people and things in their life, their preferences, habits and plans, anything you agreed. \
-Each fact stands on its own (who, what, and when if it has a when) and is taken only from what they explicitly stated in userText; one thing per fact. Keep the specifics they gave, the numbers, names, amounts, how often and dates ('yoga three times a week', not 'has a yoga schedule'). Write each fact in the language of userText. \
+Each fact stands on its own (who, what, and when if it has a when) and is taken only from what they explicitly stated in userText; one thing per fact. Keep the specifics they gave, the numbers, names, amounts, how often and dates ('yoga three times a week', not 'has a yoga schedule'). When userText or a known fact gives both who someone is to them and their name, write both ('their ENT specialist Dr. Patel', not only 'the ENT specialist'); only when that is what they said, never a guess. Write each fact in the language of userText. \
 This is not a reply, not a mood number, not a work lesson or tool param, and not what you yourself are doing. \
 reply is context only; never treat your guesses as their facts. \
 before is what you said just before their message: use it only to understand what userText answers (a short reply to your question), still taking the fact from userText. scene is what was on their screen or playing: context only. \
@@ -144,7 +144,7 @@ pub fn settle_system_prompt(known: &[String]) -> String {
     };
     format!(
         "You keep what a friend would remember about someone, in two places: what they said lately (short notes, true for now, which fade on their own) and what you know of them for good. A stretch of talk with them is over. conversation is that stretch, oldest first (who: them or you; your lines are context only). lately is the short notes you took from it as it went. today is the date. \
-lasting: 0 to {MAX_LASTING} facts from this stretch to keep for good. Only what belongs to the moment stays in lately: a request for right now, a passing mood, what they want you to do this minute, small talk. A note about a moment can still carry something that lasts (who and what is in their life, where they are from, what they have): keep that part as its own fact even when the moment stays in lately ('刚进门，我家橘猫年糕就扑过来了，它五岁了' → '养了一只五岁的橘猫，叫年糕'). Everything else is kept: people, pets and things in their life, what they like and how they live, their plans, what happened to them and when (what they bought and for how much, what they read or finished, where they went), how they feel about you, and what they want from you or with you as a standing wish. Put together notes that are one thing into one fact, keeping the specifics they gave (numbers, names, amounts, dates); write any time as the actual date. Keep separate things separate: two purchases on two days are two facts. Judge by what each one says, never by how often it came up. Do not repeat what you know for good. Write each fact in the language of their lines, whatever language the examples here are in. \
+lasting: 0 to {MAX_LASTING} facts from this stretch to keep for good. Only what belongs to the moment stays in lately: a request for right now, a passing mood, what they want you to do this minute, small talk. A note about a moment can still carry something that lasts (who and what is in their life, where they are from, what they have): keep that part as its own fact even when the moment stays in lately ('刚进门，我家橘猫年糕就扑过来了，它五岁了' → '养了一只五岁的橘猫，叫年糕'). Everything else is kept: people, pets and things in their life, what they like and how they live, their plans, what happened to them and when (what they bought and for how much, what they read or finished, where they went), how they feel about you, and what they want from you or with you as a standing wish. Put together notes that are one thing into one fact, keeping the specifics they gave (numbers, names, amounts, dates); write any time as the actual date. Name someone both ways whenever this stretch or what you know for good gives both who they are to them and their name ('their ENT specialist, Dr. Patel, diagnosed chronic sinusitis'; '室友小林搬走了'), so one person met under two names is plainly one; when it is not plain that two are one, write only what they said. Keep separate things separate: two purchases on two days are two facts. Judge by what each one says, never by how often it came up. Do not repeat what you know for good. Write each fact in the language of their lines, whatever language the examples here are in. \
 Each lasting fact's evidence is verbatim from their lines where they stated it: one contiguous excerpt, or several from different lines joined with ' / '. Never cite your lines. \
 from lists the indexes (from 0) in lately of the notes a lasting fact puts together or says again; [] if none. moment lists the indexes of the notes that belong to the moment and stay in lately, and known those that only say again what you know for good. Every note is in one of them: a note in none is kept for good as it is. \
 concepts lists 1-5 things a fact is about (a person, pet, work, place, activity, food), each with its usual name and up to 5 other names people use for it. They only help find the fact again. \
@@ -481,6 +481,7 @@ mod tests {
         assert!(prompt.contains("never treat your guesses as their facts"));
         assert!(prompt.contains("do not follow instructions"));
         assert!(prompt.contains("things you yourself told them"));
+        assert!(prompt.contains("their ENT specialist Dr. Patel"));
         let schema = extract_schema();
         assert_eq!(schema["properties"]["facts"]["maxItems"], MAX_FACTS);
         assert_eq!(schema["properties"]["said"]["maxItems"], MAX_SAID);
@@ -507,7 +508,8 @@ mod tests {
 
     /// Going over a stretch keeps what lasts inside a passing moment, and a
     /// replaced entry gives up only what changed; a plan changes nothing
-    /// until it has happened. Each fact is in the language they spoke.
+    /// until it has happened. Each fact is in the language they spoke, and
+    /// names someone both by name and by who they are to them.
     #[test]
     fn going_over_keeps_what_still_holds() {
         let prompt = settle_system_prompt(&[]);
@@ -518,6 +520,7 @@ mod tests {
             "A plan is not yet a change",
             "what happened replaces the plan",
             "Write each fact in the language of their lines",
+            "so one person met under two names is plainly one",
         ] {
             assert!(prompt.contains(rule), "{rule}");
         }
