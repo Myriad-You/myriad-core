@@ -68,6 +68,33 @@ pub(super) fn plan(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "plan": questions::plan(&req.answers, &req.moment, state.as_ref(), req.direct) }))
 }
 
+/// Her way of moving this round (`round_motion_style`): her persona's
+/// temperament and social style with her mood when a persona is loaded,
+/// otherwise the client's own style.
+pub(super) fn round_style(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct In {
+        #[serde(default)]
+        client_style: Option<String>,
+        #[serde(default)]
+        persona: Option<Value>,
+        persona_found: bool,
+        mood: i32,
+        arousal: i32,
+    }
+    let req: In = quiet_input(raw)?;
+    Ok(json!({
+        "style": myriad_merope::round_motion_style(
+            req.client_style.as_deref(),
+            req.persona.as_ref(),
+            req.persona_found,
+            req.mood,
+            req.arousal,
+        ),
+    }))
+}
+
 /// The director's answer (`motion.plan`'s plan as text, or none when it had
 /// no answer) as what she plays.
 pub(super) fn direction(raw: &[u8]) -> Result<Value, Failure> {
