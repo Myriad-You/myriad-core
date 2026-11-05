@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "description": "One example of every frame in her_link_contract.json, as it goes over the link; fact.up and log.rows each in clear and sealed (synthetic keys and ciphertext). Both ends test against these: each serializes to them and parses them. wake is the one push payload.",
+  "description": "One example of every frame in her_link_contract.json, as it goes over the link; fact.up and log.rows each in clear and sealed (synthetic keys and ciphertext). Both ends test against these: each serializes to them and parses them. closed is a hello the host closes the link on, with the close code: an app from before the device she lives on dialled in as a child. wake is the one push payload.",
   "frames": [
     {
       "v": 1, "t": "hello", "seq": 1, "ack": 0, "at": 1760140800000,
@@ -37,7 +37,7 @@
       "v": 1, "t": "hello", "seq": 1, "ack": 0, "at": 1760140820000,
       "body": {
         "protocol": 2,
-        "role": "host",
+        "role": "child",
         "surface": "app",
         "capabilities": ["rig", "notify", "panel", "partner", "log2"],
         "app": { "name": "MyriadNative", "version": "0.2.0" },
@@ -48,7 +48,7 @@
       "v": 1, "t": "welcome", "seq": 1, "ack": 1, "at": 1760140820050,
       "body": {
         "protocol": 2,
-        "role": "site",
+        "role": "host",
         "host": "app",
         "deviceId": "dev_fedcba9876543210fedcba9876543210",
         "deviceName": "Mac Studio",
@@ -972,6 +972,22 @@
       "sent": true
     }
   }
+  ],
+  "closed": [
+    {
+      "close": "unsupported_protocol",
+      "frame": {
+        "v": 1, "t": "hello", "seq": 1, "ack": 0, "at": 1760140820000,
+        "body": {
+          "protocol": 2,
+          "role": "host",
+          "surface": "app",
+          "capabilities": ["rig", "notify", "panel", "partner", "log2"],
+          "app": {"name": "MyriadNative", "version": "0.1.9"},
+          "hostEpoch": 3
+        }
+      }
+    }
   ],
   "wake": {"myriad": {"wake": "connect"}}
 }

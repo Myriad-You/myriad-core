@@ -131,6 +131,33 @@ fn every_example_passes_and_every_frame_has_one() {
     assert_eq!(seen, declared, "one example per frame at least");
 }
 
+/// One role dials the host: every hello and welcome example names a role
+/// the contract has, and the hello it closes the link on (an app from
+/// before the device she lives on dialled in as a child) is a frame like
+/// any other, closed by its role with a code the contract has.
+#[test]
+fn one_role_dials_the_host_and_the_old_one_is_told_to_update() {
+    let raw: Value = serde_json::from_str(CONTRACT_JSON).unwrap();
+    let roles = raw["roles"].as_array().unwrap();
+    assert_eq!(roles, &[json!("child"), json!("host")]);
+    for frame in fixtures()["frames"].as_array().unwrap() {
+        match frame["t"].as_str().unwrap() {
+            "hello" => assert_eq!(frame["body"]["role"], "child"),
+            "welcome" => assert_eq!(frame["body"]["role"], "host"),
+            _ => {}
+        }
+    }
+    let closed = fixtures()["closed"].as_array().unwrap().clone();
+    assert!(!closed.is_empty());
+    for example in closed {
+        let close = example["close"].as_str().unwrap();
+        assert!(raw["closeCodes"].get(close).is_some(), "{close}");
+        check(&example["frame"], &[]).unwrap();
+        assert_eq!(example["frame"]["body"]["role"], "host");
+    }
+    assert!(raw["closeCodes"].get("host_is_site").is_none());
+}
+
 #[test]
 fn a_frame_over_the_limit_is_too_large() {
     let mut frame = fixtures()["frames"]
