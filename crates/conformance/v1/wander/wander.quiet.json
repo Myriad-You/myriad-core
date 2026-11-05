@@ -1,0 +1,154 @@
+{
+  "call": "wander.quiet",
+  "cases": [
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "userAt": 1789999400000000
+      },
+      "name": "recorded 0",
+      "output": {
+        "quiet": true
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "userAt": 1789999970000000
+      },
+      "name": "recorded 1",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "proactiveAt": 1789999900000000,
+        "userAt": 1789999400000000
+      },
+      "name": "recorded 2",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 600,
+        "now": 1790000000000000,
+        "proactiveAt": 1789999700000000,
+        "userAt": 1789999400000000
+      },
+      "name": "recorded 3",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "thoughtAt": 1789999940000000,
+        "userAt": 1789999400000000
+      },
+      "name": "recorded 4",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000
+      },
+      "name": "recorded 5",
+      "output": {
+        "quiet": true
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "proactiveAt": 1789999820000000,
+        "thoughtAt": 1789999400000000,
+        "userAt": 1789999820000000
+      },
+      "name": "recorded 6",
+      "output": {
+        "quiet": true
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "userAt": 1789999820001000
+      },
+      "name": "recorded 7",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "userAt": 1789999819500000
+      },
+      "name": "recorded 8",
+      "output": {
+        "quiet": true
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180,
+        "now": 1790000000000000,
+        "userAt": 1790000030000000
+      },
+      "name": "recorded 9",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 720,
+        "now": 1790000000000000,
+        "proactiveAt": 1789999281000000,
+        "thoughtAt": 1789999401000000,
+        "userAt": 1789999400000000
+      },
+      "name": "recorded 10",
+      "output": {
+        "quiet": false
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 720,
+        "now": 1790000000000000,
+        "proactiveAt": 1789999280000000,
+        "thoughtAt": 1789999400000000,
+        "userAt": 1789999400000000
+      },
+      "name": "recorded 11",
+      "output": {
+        "quiet": true
+      }
+    },
+    {
+      "input": {
+        "cooldownSeconds": 180
+      },
+      "name": "no now is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "call": "wander.thought",
+  "cases": [
+    {
+      "input": {
+        "content": "养了一只猫叫年糕"
+      },
+      "name": "recorded 0",
+      "output": {
+        "event": "agent.merope.thought",
+        "text": "你忽然想起关于对方的一件事：养了一只猫叫年糕"
+      }
+    },
+    {
+      "input": {
+        "content": "养了一只猫叫年糕",
+        "gap": {
+          "known": 1,
+          "name": "年糕"
+        }
+      },
+      "name": "recorded 1",
+      "output": {
+        "event": "agent.merope.thought",
+        "text": "你忽然想起关于对方的一件事：养了一只猫叫年糕。关于「年糕」，你只记得这一件事。"
+      }
+    },
+    {
+      "input": {
+        "content": "喜欢喝茶",
+        "gap": {
+          "known": 2,
+          "name": "茶"
+        }
+      },
+      "name": "recorded 2",
+      "output": {
+        "event": "agent.merope.thought",
+        "text": "你忽然想起关于对方的一件事：喜欢喝茶。关于「茶」，你只记得两件事。"
+      }
+    }
+  ]
+}

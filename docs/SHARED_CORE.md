@@ -469,6 +469,19 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **今天的门槛变成事实。** 站点的 15 分钟同类事、180 秒×精力的主动冷却、问候的 12 小时、走神 10 分钟、分享 20 分钟、reach 的 2 小时和睡着不发、在办事不说，原生的同类门槛和 1 分钟触摸，受理都不再拦，而是写进 `facts`。各端换过去要逐条用回放 A/B（分步第 3 步）。
 - **一致性对照** `crates/conformance/v1/speech/`：`admit.json` 的每个用例另带 `today`（今天站点和原生的结论、谁定的、在哪），`myriad-merope` 的 `tests/speech_conformance.rs` 核对：硬规则定的，受理也按同一个理由拒；门槛定的，受理放行并给事实。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-merope --test speech_conformance` 重写 `output`，`myriad-core-ffi` 经 C 入口再跑一遍。
 
+## 走神和值得通知（`memory.wander`、`wander.*`、`notify.kind`）
+
+两条判断只写在这里，站点和原生都调它（2026-11-05 收掉两端各一份的副本）；谁在场、她最近想过什么、把念头交给事件判断，各端自己编排。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `memory.wander` | `{rows: [{content, concepts?, at, primed?, thoughtAt?}], now, rolls}` → `{landed: {index, gap?: {name, known}} \| null}`：她的思绪在一个人的记忆上走一段（`recall::wander`）。`rows` 是这个受众听得到的、关于他们的记忆，新的在前；同样的字（`rank::normalize_content`）只算一次，不到两条不走。从 `primed`（还在心上的，取最大的，相同取最后一个）出发，没有就随机挑一条、偏向新的；沿联想走最多 `WANDER_STEPS`（3）步（`association::wander`：共同的概念、同一段时间里学到的），不落在 `thoughtAt` 不到 3 天（`NOT_AGAIN_SECS`）的记忆上。`index` 是落在 `rows` 里的下标，`gap` 是那条里她只知道一点的概念和她有几条（`thinly_known`）。`rolls` 是走的时候依次用的 0..1 均匀数：没有 `primed` 时起点用一个，每步一个，给 4 个；不够是 `bad_input` |
+| `wander.quiet` | `{userAt?, proactiveAt?, thoughtAt?, cooldownSeconds, now}` → `{quiet}`：静了够久，她的思绪才飘到他们身上：他们上次说话至少 3 分钟、她上次主动开口至少 `cooldownSeconds`（她自己的冷却，累了更长）、上次走神落定至少 10 分钟 |
+| `wander.thought` | `{content, gap?: {name, known}}` → `{text, event}`：念头交给事件判断时的文字，落在只知道一点的事上时带上这件事实；`event` 是 `agent.merope.thought` |
+| `notify.kind` | `{kind}` → `{inPerson, taskOutcome, interruptsWhenAway, worthNotifying}`：一个事件键是哪一种。`inPerson`：只当面说、或者不说（走神、自己查到的、自己做了的、在玩的、子端告诉她的三种 `moment`、和主人一起看、直播冷场），永远不是通知、不进日记；`taskOutcome`：任务的结局或等主人回答；`interruptsWhenAway`：值得在人不在时打扰（任务结局、`phantasi.source_error`、`platform.sync.failed`、`agent.merope.platform_activity`、`report_ready`、`reach_out`）；`worthNotifying`：人没在看时要不要通知：不是摸她、不是只当面的，并且值得打扰或是她自己的（`agent.merope.` 开头）。站点的通知目录（每个键、偏好开关）还在站点，哪些键值得打扰从这里读 |
+
+- **一致性对照** `crates/conformance/v1/wander/`（`memory.wander` 的前 40 个用例和 `wander.quiet`、`wander.thought` 的录制用例是原生照站点录下的参照，两端今天都过）和 `v1/notify/notify.kind.json`（每个用例另带 `today`：站点和原生今天的结论；两端一致的，核心说的一样，`myriad-core-ffi` 的测试核对）。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi wander` 只随一次写明理由的改动用。
+
 ## 聊天软件里的她（`speaking.chat_app_section`、`talk_shape.*`、`channel.as_messages`、`timing.typing`、`memes.*`、`stickers.section`）
 
 她在聊天软件里的说话习惯，站点的 bot 一直这样说（`channel_work/chat.rs`、`chat_stream.rs` 的 `channel_chat` 一支）；登记出来是为了别的端照同一套说。规则在 `myriad_merope::{speaking, talk_shape, timing, memes, stickers}` 和 `myriad_agent_rules::channel`，调用只做 JSON 转换（`calls/chat_app.rs`）。`Shape` 是 `talk_shape::Shape` 的 camelCase JSON：`{turns, messages, perTurn, single, charsMedian, charsP90, endMark, bang, laughEnd}`。
@@ -588,7 +601,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份；`voice/`：她怎么说（soul、性格文字、回复怎么发出去、看到和打字的时间、发前再看、写法提示），每个调用一份；`consistency/`：她是不是同一个人，每个 `consistency.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份；`voice/`：她怎么说（soul、性格文字、回复怎么发出去、看到和打字的时间、发前再看、写法提示），每个调用一份；`consistency/`：她是不是同一个人，每个 `consistency.*` 调用一份；`wander/`：走神；`notify/`：事件键是哪一种。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v1/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。

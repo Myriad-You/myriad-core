@@ -134,6 +134,71 @@ pub(super) fn spread(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "activation": association::spread(&req.seeds, &nodes) }))
 }
 
+/// Mind-wandering over one person's memories (`recall::wander`): rows
+/// newest first; `rolls` are the uniform numbers the walk draws, in order
+/// (one for the start when nothing is primed, then one per step: give
+/// `1 + recall::WANDER_STEPS`, four). Running out of rolls is `bad_input`.
+pub(super) fn wander(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Row {
+        content: String,
+        #[serde(default)]
+        concepts: Vec<Concept>,
+        /// When it was learned.
+        at: i64,
+        /// What is still on her mind of it.
+        #[serde(default)]
+        primed: f64,
+        /// When she last thought of it while wandering.
+        #[serde(default, rename = "thoughtAt")]
+        thought_at: Option<i64>,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        rows: Vec<Row>,
+        now: i64,
+        rolls: Vec<f64>,
+    }
+    let req: In = input(raw)?;
+    let rows = req
+        .rows
+        .iter()
+        .map(|row| {
+            Ok(recall::Musing {
+                content: &row.content,
+                concepts: &row.concepts,
+                at: fixed(row.at)?,
+                primed: row.primed,
+                thought_at: row.thought_at.map(fixed).transpose()?,
+            })
+        })
+        .collect::<Result<Vec<_>, Failure>>()?;
+    let mut rolls = req.rolls.iter().copied();
+    let mut ran_out = false;
+    let mut roll = || {
+        rolls.next().unwrap_or_else(|| {
+            ran_out = true;
+            0.0
+        })
+    };
+    let landed = recall::wander(&rows, fixed(req.now)?, &mut roll);
+    if ran_out {
+        return Err(Failure::BadInput(format!(
+            "{} rolls ran out (give {})",
+            req.rolls.len(),
+            1 + recall::WANDER_STEPS
+        )));
+    }
+    Ok(json!({
+        "landed": landed.map(|landed| json!({
+            "index": landed.index,
+            "gap": landed.gap.map(|(name, known)| json!({ "name": name, "known": known })),
+        })),
+    }))
+}
+
 pub(super) fn base_level(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]

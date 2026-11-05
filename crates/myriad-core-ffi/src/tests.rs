@@ -29,6 +29,7 @@ mod speech;
 mod sync;
 mod visual;
 mod voice;
+mod wander;
 
 /// Through the C ABI, as a platform calls it: status and decoded JSON.
 fn ffi(name: &str, input: &Value) -> (i32, Value) {
@@ -139,6 +140,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(sync::TESTED.iter().copied())
     .chain(visual::TESTED.iter().copied())
     .chain(voice::TESTED.iter().copied())
+    .chain(wander::TESTED.iter().copied())
     .collect();
     let names = call_names();
     assert!(

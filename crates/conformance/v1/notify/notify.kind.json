@@ -1,0 +1,1520 @@
+{
+  "call": "notify.kind",
+  "cases": [
+    {
+      "input": {
+        "kind": "agent.task_progress"
+      },
+      "name": "agent.task_progress",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.task_completed"
+      },
+      "name": "agent.task_completed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": true,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.task_failed"
+      },
+      "name": "agent.task_failed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": true,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.task_cancelled"
+      },
+      "name": "agent.task_cancelled",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": true,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.clarification"
+      },
+      "name": "agent.clarification",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": true,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": true,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.platform_activity"
+      },
+      "name": "agent.merope.platform_activity",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.report_ready"
+      },
+      "name": "agent.merope.report_ready",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.reach_out"
+      },
+      "name": "agent.merope.reach_out",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.reminder_due"
+      },
+      "name": "agent.reminder_due",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "heartbeat.succeeded"
+      },
+      "name": "heartbeat.succeeded",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "heartbeat.failed"
+      },
+      "name": "heartbeat.failed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "heartbeat.seo_review"
+      },
+      "name": "heartbeat.seo_review",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "mcp.connected"
+      },
+      "name": "mcp.connected",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "mcp.disconnected"
+      },
+      "name": "mcp.disconnected",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "phantasi.new_items"
+      },
+      "name": "phantasi.new_items",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "phantasi.source_error"
+      },
+      "name": "phantasi.source_error",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "platform.sync.failed"
+      },
+      "name": "platform.sync.failed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": true,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": true,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "tapp.message"
+      },
+      "name": "tapp.message",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "tapp.warning"
+      },
+      "name": "tapp.warning",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "tapp.error"
+      },
+      "name": "tapp.error",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "updater.submitted"
+      },
+      "name": "updater.submitted",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "updater.running"
+      },
+      "name": "updater.running",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "updater.succeeded"
+      },
+      "name": "updater.succeeded",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "updater.failed"
+      },
+      "name": "updater.failed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "updater.needs_manual"
+      },
+      "name": "updater.needs_manual",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "updater.unknown"
+      },
+      "name": "updater.unknown",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.channel_message"
+      },
+      "name": "federation.channel_message",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.room_message"
+      },
+      "name": "federation.room_message",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.new_follower"
+      },
+      "name": "federation.new_follower",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.follow_accepted"
+      },
+      "name": "federation.follow_accepted",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.channel_invite"
+      },
+      "name": "federation.channel_invite",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.room_invite"
+      },
+      "name": "federation.room_invite",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.channel_accepted"
+      },
+      "name": "federation.channel_accepted",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.room_invite_accepted"
+      },
+      "name": "federation.room_invite_accepted",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.delivery_failed"
+      },
+      "name": "federation.delivery_failed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "federation.domain_revoked"
+      },
+      "name": "federation.domain_revoked",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "system.info"
+      },
+      "name": "system.info",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "skill.pruned"
+      },
+      "name": "skill.pruned",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "skill.improved"
+      },
+      "name": "skill.improved",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "skill.changed"
+      },
+      "name": "skill.changed",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.touch"
+      },
+      "name": "agent.merope.touch",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.greeting"
+      },
+      "name": "agent.merope.greeting",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.mood_floor"
+      },
+      "name": "agent.merope.mood_floor",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.thought"
+      },
+      "name": "agent.merope.thought",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.found_out"
+      },
+      "name": "agent.merope.found_out",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.doing"
+      },
+      "name": "agent.merope.doing",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.playing"
+      },
+      "name": "agent.merope.playing",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.peer_agent"
+      },
+      "name": "agent.merope.peer_agent",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.ai_chat"
+      },
+      "name": "agent.merope.ai_chat",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.situation"
+      },
+      "name": "agent.merope.situation",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.together"
+      },
+      "name": "agent.merope.together",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.on_air"
+      },
+      "name": "agent.merope.on_air",
+      "output": {
+        "inPerson": true,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": true,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope.screen"
+      },
+      "name": "agent.merope.screen",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope."
+      },
+      "name": "'agent.merope.'",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": true
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": true
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.merope"
+      },
+      "name": "'agent.merope'",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": ""
+      },
+      "name": "''",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "Agent.Task_Completed"
+      },
+      "name": "'Agent.Task_Completed'",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "agent.task_completed "
+      },
+      "name": "'agent.task_completed '",
+      "output": {
+        "inPerson": false,
+        "interruptsWhenAway": false,
+        "taskOutcome": false,
+        "worthNotifying": false
+      },
+      "today": {
+        "native": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        },
+        "site": {
+          "inPerson": false,
+          "interruptsWhenAway": false,
+          "taskOutcome": false,
+          "worthNotifying": false
+        }
+      }
+    },
+    {
+      "input": {},
+      "name": "no kind is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}
