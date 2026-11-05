@@ -1,7 +1,9 @@
 //! Whether she is the same person wherever she talks, measured. Two ends
 //! count as one her only when both hold: the same scene gives the same whole
 //! prompt on each (`prompt_diff`), and her real conversations, played on
-//! each, read alike by the numbers in `measure` (`apart`). A short judgment
+//! each, read alike by the numbers in `measure` (`apart`): each end answers
+//! them `RUNS_COMPARED` times and the runs are taken together
+//! (`measure_runs`), since one draw of a reply is not her. A short judgment
 //! of whether she sounds like a person is no evidence either way; these are
 //! counts made in code, the same on every end.
 //!
@@ -62,6 +64,11 @@ pub struct Hit {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Measures {
+    /// Times the same turns were answered and measured together
+    /// (`measure_runs`); 1 for one answer each.
+    #[serde(default = "one_run")]
+    pub runs: u32,
+    /// Turns in all the runs.
     pub turns: u32,
     pub messages: u32,
     /// Messages in a turn.
@@ -91,6 +98,10 @@ pub struct Measures {
     /// read as a block: both what the reply instruction rules out.
     pub blank_lines: u32,
     pub long_messages: u32,
+}
+
+fn one_run() -> u32 {
+    1
 }
 
 /// The writing `CHAT_REPLY_INSTRUCTION` rules out as AI-flavored, by kind:
@@ -327,6 +338,7 @@ pub fn measure(turns: &[Turn]) -> Measures {
     ai_hits.sort_by_key(|hit| std::cmp::Reverse(hit.messages));
 
     Measures {
+        runs: 1,
         turns: turns.len() as u32,
         messages: messages.len() as u32,
         per_turn,
@@ -351,6 +363,93 @@ pub fn measure(turns: &[Turn]) -> Measures {
             .iter()
             .filter(|message| letters_and_marks(message) > LONG_MESSAGE)
             .count() as u32,
+    }
+}
+
+/// The same turns answered more than once on one end, by the numbers: each
+/// run measured on its own, then taken together. Shares, ratios and spreads
+/// are the runs' mean (the max the largest), counts their sum, phrases and
+/// hits gathered across them with their shares averaged; so a greeting or a
+/// line said again in another run is not counted as said again. No runs is
+/// `measure(&[])`.
+pub fn measure_runs(runs: &[Vec<Turn>]) -> Measures {
+    let each: Vec<Measures> = runs.iter().map(|turns| measure(turns)).collect();
+    let Some(first) = each.first() else {
+        return measure(&[]);
+    };
+    if each.len() == 1 {
+        return first.clone();
+    }
+    let sum = |of: fn(&Measures) -> u32| each.iter().map(of).sum::<u32>();
+    let mean = |of: fn(&Measures) -> Option<f64>| {
+        let values: Vec<f64> = each.iter().filter_map(of).collect();
+        (!values.is_empty()).then(|| rounded(values.iter().sum::<f64>() / values.len() as f64))
+    };
+    let spreads = |of: fn(&Measures) -> Option<Spread>| {
+        let values: Vec<Spread> = each.iter().filter_map(of).collect();
+        let n = values.len() as f64;
+        (!values.is_empty()).then(|| Spread {
+            mean: rounded(values.iter().map(|spread| spread.mean).sum::<f64>() / n),
+            p50: rounded(values.iter().map(|spread| spread.p50).sum::<f64>() / n),
+            p90: rounded(values.iter().map(|spread| spread.p90).sum::<f64>() / n),
+            max: values
+                .iter()
+                .map(|spread| spread.max)
+                .fold(f64::MIN, f64::max),
+        })
+    };
+    let gathered = |of: fn(&Measures) -> &Vec<Phrase>| {
+        let mut shares: BTreeMap<&str, f64> = BTreeMap::new();
+        for measures in &each {
+            for phrase in of(measures) {
+                *shares.entry(phrase.phrase.as_str()).or_default() += phrase.share;
+            }
+        }
+        let mut phrases: Vec<Phrase> = shares
+            .into_iter()
+            .map(|(phrase, share)| Phrase {
+                phrase: phrase.to_string(),
+                share: rounded(share / each.len() as f64),
+            })
+            .collect();
+        phrases.sort_by(|a, b| b.share.total_cmp(&a.share));
+        phrases.truncate(PHRASES);
+        phrases
+    };
+    let mut hits: BTreeMap<(&str, &str), u32> = BTreeMap::new();
+    for measures in &each {
+        for hit in &measures.ai_hits {
+            *hits
+                .entry((hit.kind.as_str(), hit.term.as_str()))
+                .or_default() += hit.messages;
+        }
+    }
+    Measures {
+        runs: each.len() as u32,
+        turns: sum(|m| m.turns),
+        messages: sum(|m| m.messages),
+        per_turn: spreads(|m| m.per_turn),
+        chars: spreads(|m| m.chars),
+        length_ratio: mean(|m| m.length_ratio),
+        asking: mean(|m| m.asking),
+        habits: gathered(|m| &m.habits),
+        habit_turns: mean(|m| m.habit_turns),
+        openers: sum(|m| m.openers),
+        opener_phrases: gathered(|m| &m.opener_phrases),
+        opener_reuse: mean(|m| m.opener_reuse),
+        repeated: mean(|m| m.repeated),
+        echoed: mean(|m| m.echoed),
+        ai_flavored: mean(|m| m.ai_flavored),
+        ai_hits: hits
+            .into_iter()
+            .map(|((kind, term), messages)| Hit {
+                kind: kind.to_string(),
+                term: term.to_string(),
+                messages,
+            })
+            .collect(),
+        blank_lines: sum(|m| m.blank_lines),
+        long_messages: sum(|m| m.long_messages),
     }
 }
 
@@ -491,20 +590,33 @@ pub struct Apart {
     pub right: Option<f64>,
 }
 
-/// Turns on each side before two measures are worth comparing.
+/// Turns on each side, in a run, before two measures are worth comparing.
 pub const COMPARED_AFTER: u32 = 20;
 
+/// Times each end answers the same turns before two ends are compared. A
+/// reply is drawn: answering the same 40 prompts again moved one end's
+/// `asking` by up to 12 points (2026-11-05), more than its tolerance, while
+/// three runs taken together kept within it.
+pub const RUNS_COMPARED: u32 = 3;
+
 /// How far apart a measure may be on two ends and still read as the same
-/// way of talking: at least `floor`, or `relative` of the larger one.
-/// Starting values, to be tightened once two ends have been put side by
-/// side often enough to know their noise.
+/// way of talking: at least `floor`, or `relative` of the larger one; for
+/// `RUNS_COMPARED` runs taken together. Starting values, to be tightened
+/// once two ends have been put side by side often enough to know their
+/// noise. `asking` was 0.1: with the same 40 real turns answered three
+/// times on each of two ends (2026-11-05), one run's `asking` sways about 0.067 (sd)
+/// on an end, a binomial share's own sway at that size; three runs together
+/// sway 0.039, and two ends' gap 0.054, so 0.1 is 1.8 of those and would
+/// call one comparison in 15 apart on chance alone. 0.12 is 2.2 (about one
+/// in 35) and still finds the 0.15 two ends were apart before the private
+/// chat was put together alike.
 const TOLERANCE: &[(&str, f64, f64)] = &[
     ("perTurn.mean", 0.5, 0.25),
     ("perTurn.p90", 1.0, 0.25),
     ("chars.p50", 3.0, 0.3),
     ("chars.p90", 6.0, 0.3),
     ("lengthRatio", 0.5, 0.3),
-    ("asking", 0.1, 0.0),
+    ("asking", 0.12, 0.0),
     ("habitTurns", 0.15, 0.0),
     ("openerReuse", 0.2, 0.0),
     ("repeated", 0.05, 0.0),
@@ -514,19 +626,26 @@ const TOLERANCE: &[(&str, f64, f64)] = &[
 
 /// The measures in which two ends' replay of the same conversations are too
 /// far apart, in the order of `TOLERANCE`; `turns` first when either side
-/// has fewer than `COMPARED_AFTER` turns, and then nothing else. A measure
-/// one side has and the other does not is apart.
+/// has fewer than `COMPARED_AFTER` turns a run, and then nothing else. A
+/// measure one side has and the other does not is apart. Either side
+/// measured from fewer than `RUNS_COMPARED` runs puts `runs` first: the
+/// rest is listed for reference, and the two are not called alike.
 pub fn apart(left: &Measures, right: &Measures) -> Vec<Apart> {
-    if left.turns < COMPARED_AFTER || right.turns < COMPARED_AFTER {
+    let per_run = |measures: &Measures| measures.turns / measures.runs.max(1);
+    if per_run(left) < COMPARED_AFTER || per_run(right) < COMPARED_AFTER {
         return vec![Apart {
             measure: "turns".to_string(),
-            left: Some(f64::from(left.turns)),
-            right: Some(f64::from(right.turns)),
+            left: Some(f64::from(per_run(left))),
+            right: Some(f64::from(per_run(right))),
         }];
     }
-    TOLERANCE
-        .iter()
-        .filter_map(|(measure, floor, relative)| {
+    let runs = (left.runs < RUNS_COMPARED || right.runs < RUNS_COMPARED).then(|| Apart {
+        measure: "runs".to_string(),
+        left: Some(f64::from(left.runs)),
+        right: Some(f64::from(right.runs)),
+    });
+    runs.into_iter()
+        .chain(TOLERANCE.iter().filter_map(|(measure, floor, relative)| {
             let (a, b) = (value_of(left, measure), value_of(right, measure));
             let far = match (a, b) {
                 (Some(a), Some(b)) => (a - b).abs() > floor.max(relative * a.abs().max(b.abs())),
@@ -538,7 +657,7 @@ pub fn apart(left: &Measures, right: &Measures) -> Vec<Apart> {
                 left: a,
                 right: b,
             })
-        })
+        }))
         .collect()
 }
 
@@ -986,8 +1105,61 @@ mod tests {
         assert_eq!(measures.messages, 3);
     }
 
+    /// `turns` of the same line, answered `RUNS_COMPARED` times.
     fn many(said: &str, turns: u32) -> Measures {
-        measure(&(0..turns).map(|_| turn(&[said])).collect::<Vec<_>>())
+        let run: Vec<Turn> = (0..turns).map(|_| turn(&[said])).collect();
+        measure_runs(&vec![run; RUNS_COMPARED as usize])
+    }
+
+    #[test]
+    fn runs_are_measured_each_on_its_own_and_taken_together() {
+        let greeting = |said: &str| Turn {
+            said: vec![said.to_string()],
+            answering: None,
+            opens: true,
+        };
+        // Each run greets three times, in words of its own each time, the
+        // same words in every run; one run asks in its last turn.
+        let run = |last: &str| {
+            vec![
+                greeting("你好呀今天下雨了"),
+                greeting("早上好你醒得真早"),
+                greeting("晚上见我先去吃饭"),
+                turn(&[last]),
+            ]
+        };
+        let runs = [
+            run("你在做什么呢？"),
+            run("我在看书呢。"),
+            run("我在看书呢。"),
+        ];
+        let together = measure_runs(&runs);
+        assert_eq!(
+            (together.runs, together.turns, together.openers),
+            (3, 12, 9)
+        );
+        assert_eq!(together.asking, Some(0.083));
+        // A greeting or a line again in another run is not said again.
+        assert_eq!(together.opener_reuse, Some(0.0));
+        assert_eq!(together.repeated, Some(0.0));
+        let one_long_run = measure(&runs.concat());
+        assert!(one_long_run.opener_reuse > Some(0.5));
+        assert!(one_long_run.repeated > Some(0.5));
+        assert_eq!(measure_runs(&[]), measure(&[]));
+    }
+
+    #[test]
+    fn one_run_is_listed_for_reference_but_not_called_alike() {
+        let one = |said: &str| measure(&(0..30).map(|_| turn(&[said])).collect::<Vec<_>>());
+        let found: Vec<String> = apart(&one("好呀"), &one(&"好呀".repeat(20)))
+            .into_iter()
+            .map(|apart| apart.measure)
+            .collect();
+        assert_eq!(
+            found,
+            ["runs", "chars.p50", "chars.p90", "habitTurns", "repeated"]
+        );
+        assert_eq!(apart(&one("好呀"), &one("好呀")).len(), 1);
     }
 
     #[test]

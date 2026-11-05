@@ -89,6 +89,7 @@ const CALLS: &[(&str, Call)] = &[
     ),
     ("consistency.apart", consistency::apart),
     ("consistency.measure", consistency::measure),
+    ("consistency.measure_runs", consistency::measure_runs),
     ("consistency.prompt_diff", consistency::prompt_diff),
     ("consistency.prompt_segments", consistency::prompt_segments),
     ("contrast.describe", style::describe),

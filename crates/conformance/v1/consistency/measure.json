@@ -24,6 +24,7 @@
           "openers": 0,
           "perTurn": null,
           "repeated": null,
+          "runs": 1,
           "turns": 0
         }
       }
@@ -176,6 +177,7 @@
             "p90": 2.0
           },
           "repeated": 0.071,
+          "runs": 1,
           "turns": 14
         }
       }
@@ -251,6 +253,7 @@
             "p90": 2.0
           },
           "repeated": 0.0,
+          "runs": 1,
           "turns": 6
         }
       }
@@ -330,6 +333,7 @@
             "p90": 1.0
           },
           "repeated": 0.0,
+          "runs": 1,
           "turns": 3
         }
       }
@@ -418,6 +422,7 @@
             "p90": 3.0
           },
           "repeated": 0.0,
+          "runs": 1,
           "turns": 3
         }
       }

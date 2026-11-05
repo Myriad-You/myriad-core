@@ -19,6 +19,16 @@ pub(super) fn measure(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "measures": consistency::measure(&req.turns) }))
 }
 
+pub(super) fn measure_runs(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        runs: Vec<Vec<Turn>>,
+    }
+    let req: In = input(raw)?;
+    Ok(json!({ "measures": consistency::measure_runs(&req.runs) }))
+}
+
 pub(super) fn apart(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
