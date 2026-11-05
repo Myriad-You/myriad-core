@@ -1,0 +1,157 @@
+{
+  "call": "keys.open",
+  "cases": [
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4atpCEe+8ch2oqkPQiRk2jnsg/8D1rrF47Z0="
+      },
+      "name": "a payload opens for its own row",
+      "output": {
+        "data": "d2hhdCBzaGUgdGhvdWdodA=="
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "audience": "personal:p_1",
+          "holder": "41",
+          "kind": "object_key",
+          "object": "node:n_1"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6SlpqeoqaqrxjleDmHuJJhKTK34K1fu8UCdayOmgnRbpDccvUOWSz4dPHKodVtoUoVDYehPJnXU"
+      },
+      "name": "an object's key opens for its own object",
+      "output": {
+        "data": "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8="
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "file": "myriad",
+          "generation": 1,
+          "kind": "store_key"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6Slpqeoqaqrplk+bgGORPgqLM2YSzeOkSD9C0PG4hQ7xFd83SP2K175DqQOHNh+ZuwxMULCuwhE"
+      },
+      "name": "a computer's key opens for its own file and generation",
+      "output": {
+        "data": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8="
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_2"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4atpCEe+8ch2oqkPQiRk2jnsg/8D1rrF47Z0="
+      },
+      "name": "another row does not open it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "42",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4atpCEe+8ch2oqkPQiRk2jnsg/8D1rrF47Z0="
+      },
+      "name": "another account does not open it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "file": "myriad",
+          "generation": 2,
+          "kind": "store_key"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6Slpqeoqaqrplk+bgGORPgqLM2YSzeOkSD9C0PG4hQ7xFd83SP2K175DqQOHNh+ZuwxMULCuwhE"
+      },
+      "name": "the next generation does not open it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "file": "record",
+          "generation": 1,
+          "kind": "store_key"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6Slpqeoqaqrplk+bgGORPgqLM2YSzeOkSD9C0PG4hQ7xFd83SP2K175DqQOHNh+ZuwxMULCuwhE"
+      },
+      "name": "another file does not open it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "key": "7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u4=",
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4atpCEe+8ch2oqkPQiRk2jnsg/8D1rrF47Z0="
+      },
+      "name": "another key does not open it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4atpCEe+8ch2oqkPQiRk2jnsg/8D1rrF47Zw="
+      },
+      "name": "one changed byte does not open",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4ato="
+      },
+      "name": "too short to be sealed",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

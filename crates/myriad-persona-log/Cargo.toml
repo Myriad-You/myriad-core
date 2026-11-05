@@ -7,14 +7,18 @@ description = "Her log across host cores: the row envelope and its canonical byt
 authors = ["Myriad Contributors"]
 license = "AGPL-3.0-only"
 
-# Pure: no I/O, no clock, no randomness. Ids, revisions and times come from
-# the caller. The site links it directly and the shared core
+# Pure: no I/O, no clock, no randomness. Ids, revisions, times, keys and
+# nonces come from the caller. The site links it directly and the shared core
 # (`myriad-core-ffi`) links it for every other platform, so every host core
 # folds the same log into the same her.
 #
 # The snapshot sync and first-meeting merge stay in `myriad-persona-sync`;
 # this crate only takes its clock (`hlc`) and its canonical bytes from there.
 [dependencies]
+# What a side keeps sealed at rest (`keys`): the bytes the server has sealed
+# since S6. Nonces come from the caller, so no random source.
+aes-gcm = { version = "0.11", default-features = false, features = ["aes", "alloc", "zeroize"] }
+base64 = "0.23"
 myriad-persona-sync = { path = "../myriad-persona-sync" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }

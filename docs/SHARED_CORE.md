@@ -170,6 +170,28 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 节点（`node.*`）和判过的事（`case.*`）的载荷随节点的规则一起进来，不在这张表里。
 
+### 存放时封起来（`keys.*`、`store_keys.*`）
+
+钥匙环不出端。行和载荷在两端之间走连接的 TLS，是明文（服务端要读得到她的日志，同步方案的问题 5）；每个存着它们的地方用自己的钥匙封好再存，忘掉作为 `forget` 行传到每一端，每一端删自己的钥匙。核心只管两件事：每一端封的方式一样，同一条账在每一端删到的钥匙一样。钥匙和 nonce 都由调用方给，核心不取随机数；拒绝的理由里不出现任何钥匙、nonce、密文或明文（输入用 `quiet_input` 读）。
+
+- **封装**：AES-256-GCM。先是调用方给的 12 字节 nonce，后面是密文和 16 字节的 tag。绑定的东西作为附加数据：一个标签，后面每一部分各占一行，任何一部分为空或带换行都拒绝。字节和站点服务端 S6 以来封的一样（`her_log/keys.rs`），所以站点已经存下的照样能打开。
+- **忘掉删哪些钥匙**：受众里 `subject:<id>` 的账删这个受众里关于这个主体的所有对象钥匙（对象钥匙存的时候记着它关于谁）；别的账删它那个对象自己的钥匙。
+- **一台电脑自己的库文件**（`store_keys.*`）：每个库文件整份用自己的钥匙封（原生用 SQLCipher）。这些钥匙用一把包装钥匙封好（宿主自己保管，比如钥匙串），放在数据旁边一个小文件里（store keys）。每一代钥匙都绑定文件名和代号（`store_key` 的附加数据）。store keys 不进任何备份，所以忘掉一项后文件换到下一代钥匙，这个文件之前的所有副本，不论在哪份备份里，都打不开了：要的钥匙已经不在任何地方。宿主每走一步就整份重写 store keys（`store_keys.step`）；每次启动、每次停在半路之后，按磁盘上看到的问 `store_keys.settle` 下一步做什么。
+  - 从明文搬过来：`migrate`（做钥匙，`begin`，状态 `migrating`）；`export`（把明文封成 `<文件>.encrypting`、核对，把明文挪到 `<文件>.plain-aside`、封好的那份换上原名，`swapped`）；`open_then_drop_aside`（照平常完整打开一次，成了就 `opened`、删掉旁边的明文；打不开就删掉封好的、把明文挪回来、`abandon`）。停在任何一处，`settle` 都给出接着做的那一步（`delete_encrypting`、`finish_swap`、`mark_swapped`、`mark_ready`、`restore_aside`、`delete_aside`、`abandon`）。
+  - 换下一代：`rotate`（先记下一代），在一个事务里重封，然后 `rotated`；没换成就 `drop_next`。有下一代的时候，文件用当前这代或下一代打开都行。
+  - 封着的文件、这里却没有它的钥匙：`lost_key`，绝不在它上面做新钥匙。放回来一份明文（从更早的备份）：在下一代下重新搬一次。文件没了：在下一代下新建（`create`）。两份明文都在：`keep_plain`，这次照明文打开并说明。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `keys.seal` | `{key, nonce, bound, data}`（32、12 字节，base64）→ `{sealed}`。`bound` 是 `{kind: object_key, holder, audience, object}`、`{kind: payload, holder, row}` 或 `{kind: store_key, file, generation}`；`holder` 是存它的那一端认的这份日志是谁的，站点是账户 id 的十进制 |
+| `keys.open` | `{key, sealed, bound}` → `{data}`；钥匙不对、绑定的东西不对、改过一个字节，都拒绝 |
+| `keys.forget_reach` | `{audience, target}` → `{audience, object}` 或 `{audience, subject}` |
+| `store_keys.read` | `{keys?, file}` → `{file}`：这个文件的 `{generation, state, key, next?}`，没有就是 null；store keys 查不过就拒绝 |
+| `store_keys.step` | `{keys?, file, event}` → `{keys}`。`event` 是 `{begin: {generation, key}}`、`{created: …}`、`{rotate: …}`、`swapped`、`opened`、`abandon`、`rotated`、`drop_next`；新钥匙的代号必须是上一代加一（第一代是 1） |
+| `store_keys.settle` | `{keys?, file, found: {main: plain\|sealed\|missing, encrypting, aside}}` → `{action, generation?}`：要做新钥匙时 `generation` 给出它的代号 |
+
+store keys 是 `{format: "myriad.store-keys", version: 1, files: {<名>: {generation, state: migrating|swapped|ready, key, next?: {generation, key}}}}`。名字是 1 到 32 个 a-z、0-9 或连字符；`key` 是一把封好的钥匙（60 字节，base64）。一致性对照在 `crates/conformance/v1/keys/`、`v1/store_keys/`，经 C 入口跑；`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi keys` 重写输出。
+
 ## 伙伴的 id（`partner.*`）
 
 伙伴私聊的受众是 `personal:<id>`。以前 Mac 用 `local-owner`，站点用它自己的账号 id。伙伴 2026-10-30 定：换成一个新的 id，两端都用它。2026-10-31 协调人把模型改简单（伙伴回来可以改）：**id 由站点发，Mac 只从认证连接拿；文件不改变已有的 id，只有空的、从没连过的一端才认文件的 id**。规则在 `myriad_persona_log::partner` 和 `myriad_nodes::migrate`。
@@ -588,7 +610,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 两份运行时（苹果系的 Swift、其余的 Rust）编排同一份核心规则时，可能编排得不一样；这里放两边都要过的对照。目录按版本分，原生按 `CORE_PIN` 复制进它自己的测试。`nodes/` 现在是 `v2/nodes`（ABI 2：`ledger`、`to`、`takes` 必填，加了家页的两个调用）；`v1/nodes` 留着 ABI 1 时的样子给还钉着它的端，本仓库不再跑它，到没有一端钉它时删掉。`log/` 也是 `v2/log`（`log.admit`、`log.answer` 的 `holder` 必填；撤回的 `takes`、够到的新规则、并入和拆出必带 `to`、`takes`）；`v1/log` 留着 ABI 1 时的样子，同样到没有一端钉它时删掉。其余的还在 `v1/`。
 
 - 每个文件是 `{version, call, cases: [{name, input, output}]}`。`input` 和 `output` 就是那个调用经 C 入口进出的 JSON；输入被拒时 `output` 是 `{"error": "bad_input"}`（不比对消息）。比对按规范字节。
-- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份；`voice/`：她怎么说（soul、性格文字、回复怎么发出去、看到和打字的时间、发前再看、写法提示），每个调用一份；`consistency/`：她是不是同一个人，每个 `consistency.*` 调用一份。
+- `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份；`voice/`：她怎么说（soul、性格文字、回复怎么发出去、看到和打字的时间、发前再看、写法提示），每个调用一份；`consistency/`：她是不是同一个人，每个 `consistency.*` 调用一份。`keys/`、`store_keys/`：存放时怎么封、忘掉删哪些钥匙、一台电脑的库文件钥匙每一步和停在半路后怎么接着走，每个调用一份。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v1/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。

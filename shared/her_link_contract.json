@@ -679,7 +679,7 @@
         },
         "sealed": ["sealed"],
         "idempotency": "id is made by the sender once per batch.",
-        "description": "A batch of one audience's rows (log.answer: every forget first). rows are row envelopes; payloads is [{ref, data}] for the payloads the rows point at, data base64, sealed per object when S5 lands. Rows only a PC keeps that travel between PCs go sealed to the receiving PC. The receiver checks the batch (log.admit) and merges it (log.merge); a batch with a clock too far ahead is refused whole with error clock_ahead and the server's time. withheld is [{id, why}] for the rows here that point at a payload and go without it (nodes.wire_send): a why other than no_body or bad_body is for good, and the receiver does not ask for it again."
+        "description": "A batch of one audience's rows (log.answer: every forget first). rows are row envelopes; payloads is [{ref, data}] for the payloads the rows point at, data base64, in the clear inside the link's TLS: each side that keeps them seals them at rest with keys of its own (keys.seal), no key ring ever leaves a side, and forgetting reaches every side as forget rows. Rows only a PC keeps that travel between PCs go sealed to the receiving PC. The receiver checks the batch (log.admit) and merges it (log.merge); a batch with a clock too far ahead is refused whole with error clock_ahead and the server's time. withheld is [{id, why}] for the rows here that point at a payload and go without it (nodes.wire_send): a why other than no_body or bad_body is for good, and the receiver does not ask for it again."
       },
       "log.full": {
         "from": "server",

@@ -23,9 +23,14 @@
 //! Its clock is the shared one (`hlc`), fed corrected time and kept from
 //! running ahead of the server ([`clock`]).
 //!
-//! Pure: nothing here reads a clock, a file, the network, a key or a random
-//! source. Times come in as Unix microseconds; ids and revisions come from
-//! the caller. Content never enters a row: a row only points at its payload.
+//! What a side keeps is sealed at rest with keys of its own, the same way on
+//! every side, and no key ring leaves a side ([`keys`]); a computer seals
+//! each of its database files whole ([`store_keys`]).
+//!
+//! Pure: nothing here reads a clock, a file, the network, a key store or a
+//! random source. Times come in as Unix microseconds; ids, revisions, keys
+//! and nonces come from the caller. Content never enters a row: a row only
+//! points at its payload.
 
 use std::fmt;
 
@@ -34,12 +39,14 @@ pub mod clock;
 pub mod fold;
 pub mod forget;
 pub mod holder;
+pub mod keys;
 pub mod kinds;
 pub mod lease;
 pub mod merge;
 pub mod partner;
 pub mod payloads;
 pub mod row;
+pub mod store_keys;
 pub mod vector;
 
 pub use admit::{AdmitInput, Admitted, admit};

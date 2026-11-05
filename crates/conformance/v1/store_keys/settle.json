@@ -1,0 +1,467 @@
+{
+  "call": "store_keys.settle",
+  "cases": [
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "plain"
+        }
+      },
+      "name": "no key, a clear file: move it",
+      "output": {
+        "action": "migrate",
+        "generation": 1
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "missing"
+        }
+      },
+      "name": "no key, no file: make it new",
+      "output": {
+        "action": "create",
+        "generation": 1
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "sealed"
+        }
+      },
+      "name": "no key, a sealed file: never a new key over it",
+      "output": {
+        "action": "lost_key"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": true,
+          "main": "plain"
+        }
+      },
+      "name": "no key and a copy left half made: delete it first",
+      "output": {
+        "action": "delete_encrypting"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": false,
+          "main": "missing"
+        }
+      },
+      "name": "no key, only the clear copy aside: put it back",
+      "output": {
+        "action": "restore_aside"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": false,
+          "main": "plain"
+        }
+      },
+      "name": "no key and two clear files: keep the clear one this time",
+      "output": {
+        "action": "keep_plain"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "plain"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "migrating, still clear: copy it sealed",
+      "output": {
+        "action": "export"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": true,
+          "main": "plain"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "migrating, stopped while copying",
+      "output": {
+        "action": "delete_encrypting"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": true,
+          "main": "missing"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "migrating, stopped between the two moves",
+      "output": {
+        "action": "finish_swap"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "migrating, stopped after the copy took the name",
+      "output": {
+        "action": "mark_swapped"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "missing"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "migrating and nothing there: give it up",
+      "output": {
+        "action": "abandon"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "swapped: open it, then drop the clear copy",
+      "output": {
+        "action": "open_then_drop_aside"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "swapped and the clear copy already gone",
+      "output": {
+        "action": "mark_ready"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": false,
+          "main": "missing"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "swapped, stopped while going back",
+      "output": {
+        "action": "restore_aside"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "plain"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "swapped but back in the clear: give it up",
+      "output": {
+        "action": "abandon"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 3,
+              "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "ready and sealed: open",
+      "output": {
+        "action": "open"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 3,
+              "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+              "next": {
+                "generation": 4,
+                "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE"
+              },
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "ready while a rekey is under way: open",
+      "output": {
+        "action": "open"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": true,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "ready and the clear copy still aside: delete it",
+      "output": {
+        "action": "delete_aside"
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "plain"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 3,
+              "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "ready but a clear copy put back: seal it again one generation on",
+      "output": {
+        "action": "migrate",
+        "generation": 4
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "missing"
+        },
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 3,
+              "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "ready but the file is gone: make it new one generation on",
+      "output": {
+        "action": "create",
+        "generation": 4
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "found": {
+          "aside": false,
+          "encrypting": false,
+          "main": "sealed"
+        },
+        "keys": {
+          "files": {},
+          "format": "other",
+          "version": 1
+        }
+      },
+      "name": "store keys that do not check are refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

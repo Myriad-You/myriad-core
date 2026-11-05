@@ -1,0 +1,151 @@
+{
+  "call": "keys.seal",
+  "cases": [
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "data": "d2hhdCBzaGUgdGhvdWdodA==",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "a payload as the server seals it",
+      "output": {
+        "sealed": "oKGio6SlpqeoqaqrkXAdWWW4atpCEe+8ch2oqkPQiRk2jnsg/8D1rrF47Z0="
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "audience": "personal:p_1",
+          "holder": "41",
+          "kind": "object_key",
+          "object": "node:n_1"
+        },
+        "data": "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8=",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "an object's key under its audience's key",
+      "output": {
+        "sealed": "oKGio6SlpqeoqaqrxjleDmHuJJhKTK34K1fu8UCdayOmgnRbpDccvUOWSz4dPHKodVtoUoVDYehPJnXU"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "file": "myriad",
+          "generation": 1,
+          "kind": "store_key"
+        },
+        "data": "QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl8=",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "a computer's key for one file and generation",
+      "output": {
+        "sealed": "oKGio6Slpqeoqaqrplk+bgGORPgqLM2YSzeOkSD9C0PG4hQ7xFd83SP2K175DqQOHNh+ZuwxMULCuwhE"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "data": "",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "nothing sealed is still bound",
+      "output": {
+        "sealed": "oKGio6SlpqeoqaqrnFRauBXQaeMT4Hn8wFexQQ=="
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row\n1"
+        },
+        "data": "d2hhdCBzaGUgdGhvdWdodA==",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "a part with a line break is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "data": "d2hhdCBzaGUgdGhvdWdodA==",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "an empty part is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "file": "myriad",
+          "generation": 0,
+          "kind": "store_key"
+        },
+        "data": "d2hhdCBzaGUgdGhvdWdodA==",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "generation 0 is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "data": "d2hhdCBzaGUgdGhvdWdodA==",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHg==",
+        "nonce": "oKGio6Slpqeoqaqr"
+      },
+      "name": "a key that is not 32 bytes is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "bound": {
+          "holder": "41",
+          "kind": "payload",
+          "row": "row_1"
+        },
+        "data": "d2hhdCBzaGUgdGhvdWdodA==",
+        "key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+        "nonce": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYX"
+      },
+      "name": "a nonce that is not 12 bytes is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

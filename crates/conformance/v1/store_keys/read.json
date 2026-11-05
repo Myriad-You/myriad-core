@@ -1,0 +1,92 @@
+{
+  "call": "store_keys.read",
+  "cases": [
+    {
+      "input": {
+        "file": "myriad"
+      },
+      "name": "no store keys yet",
+      "output": {
+        "file": null
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 3,
+              "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+              "next": {
+                "generation": 4,
+                "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE"
+              },
+              "state": "ready"
+            },
+            "record": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "one file's key",
+      "output": {
+        "file": {
+          "generation": 3,
+          "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+          "next": {
+            "generation": 4,
+            "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE"
+          },
+          "state": "ready"
+        }
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "record": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a file the store keys do not hold",
+      "output": {
+        "file": null
+      }
+    },
+    {
+      "input": {
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 0,
+              "key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a generation 0 is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

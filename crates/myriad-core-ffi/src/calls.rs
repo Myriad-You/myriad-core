@@ -27,6 +27,7 @@ mod filter;
 mod grants;
 mod group;
 mod handoff;
+mod keys;
 mod link;
 mod log;
 mod memory;
@@ -152,6 +153,9 @@ const CALLS: &[(&str, Call)] = &[
     ("inner.system", prompts::inner_system),
     ("inner.system_for", prompts::inner_system_for),
     ("inner.system_for_group", prompts::inner_system_for_group),
+    ("keys.forget_reach", keys::forget_reach),
+    ("keys.open", keys::open),
+    ("keys.seal", keys::seal),
     ("lease.behind", log::lease_behind),
     ("lease.here", log::lease_here),
     ("lease.move", log::lease_move),
@@ -364,6 +368,9 @@ const CALLS: &[(&str, Call)] = &[
     ("sticker.avatar_contract", visual::sticker_contract),
     ("sticker.avatar_prompt", visual::sticker_prompt),
     ("stickers.section", chat_app::sticker_section),
+    ("store_keys.read", keys::store_read),
+    ("store_keys.settle", keys::store_settle),
+    ("store_keys.step", keys::store_step),
     ("style.distance", style::distance),
     ("style.noticed", style::noticed),
     ("style.unlike", style::unlike),

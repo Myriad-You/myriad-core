@@ -1,0 +1,59 @@
+{
+  "call": "keys.forget_reach",
+  "cases": [
+    {
+      "input": {
+        "audience": "personal:p_1",
+        "target": "node:n_1"
+      },
+      "name": "an object's own key",
+      "output": {
+        "audience": "personal:p_1",
+        "object": "node:n_1"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:p_1",
+        "target": "subject:s_9"
+      },
+      "name": "every key about a subject in the audience",
+      "output": {
+        "audience": "personal:p_1",
+        "subject": "s_9"
+      }
+    },
+    {
+      "input": {
+        "audience": "own:",
+        "target": "subjects:x"
+      },
+      "name": "a target that only starts like a subject is an object",
+      "output": {
+        "audience": "own:",
+        "object": "subjects:x"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:p_1",
+        "target": "subject:"
+      },
+      "name": "a subject forget names the subject",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "",
+        "target": "node:n_1"
+      },
+      "name": "a forget names its audience",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

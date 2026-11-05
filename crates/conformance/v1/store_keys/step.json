@@ -1,0 +1,522 @@
+{
+  "call": "store_keys.step",
+  "cases": [
+    {
+      "input": {
+        "event": {
+          "begin": {
+            "generation": 1,
+            "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
+          }
+        },
+        "file": "myriad"
+      },
+      "name": "a first key starts moving the file from the clear",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "created": {
+            "generation": 1,
+            "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
+          }
+        },
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "record": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a new file is sealed from its first byte",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            },
+            "record": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "begin": {
+            "generation": 3,
+            "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD"
+          }
+        },
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 2,
+              "key": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a clear copy put back starts again one generation on",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 3,
+              "key": "AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "begin": {
+            "generation": 2,
+            "key": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC"
+          }
+        },
+        "file": "myriad"
+      },
+      "name": "the first key is generation 1",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": "swapped",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "swapped after migrating",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": "opened",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "opened after swapped",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": "opened",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "opened before swapped is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": "abandon",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "swapped"
+            },
+            "record": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "abandoning takes the file's key away",
+      "output": {
+        "keys": {
+          "files": {
+            "record": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": "abandon",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a sealed file is not abandoned",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "rotate": {
+            "generation": 5,
+            "key": "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+          }
+        },
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "the next generation before a rekey",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "next": {
+                "generation": 5,
+                "key": "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+              },
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "rotate": {
+            "generation": 6,
+            "key": "BgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYG"
+          }
+        },
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a next generation that skips one is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "rotate": {
+            "generation": 2,
+            "key": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC"
+          }
+        },
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "migrating"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a file still in the clear has no next key",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": "rotated",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "next": {
+                "generation": 5,
+                "key": "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+              },
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "rotated: the next is the current key",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 5,
+              "key": "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": "rotated",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "rotated with no next key is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": "drop_next",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "next": {
+                "generation": 5,
+                "key": "BQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUF"
+              },
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "the next key dropped",
+      "output": {
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 4,
+              "key": "BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "begin": {
+            "generation": 1,
+            "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+          }
+        },
+        "file": "myriad"
+      },
+      "name": "a key that is not one sealed key is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": {
+          "begin": {
+            "generation": 1,
+            "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB"
+          }
+        },
+        "file": "My.riad"
+      },
+      "name": "a name outside a-z, 0-9 and the hyphen is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": "swapped",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "state": "ready"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 2
+        }
+      },
+      "name": "store keys of another version are refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "event": "opened",
+        "file": "myriad",
+        "keys": {
+          "files": {
+            "myriad": {
+              "generation": 1,
+              "key": "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB",
+              "next": {
+                "generation": 2,
+                "key": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIC"
+              },
+              "state": "swapped"
+            }
+          },
+          "format": "myriad.store-keys",
+          "version": 1
+        }
+      },
+      "name": "a next key on a file not sealed is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
