@@ -1392,6 +1392,184 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "own:",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-1",
+          "kind": "state.write",
+          "object": "state:sticker:stk_5e7a",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-1"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "a sticker of hers: a record of her own in her own audience",
+      "output": {
+        "canonical": "{\"audience\":\"own:\",\"author\":\"her\",\"dseq\":30,\"epoch\":1,\"hlc\":\"001760000000030-000000-dev_mac\",\"id\":\"s-1\",\"kind\":\"state.write\",\"object\":\"state:sticker:stk_5e7a\",\"origin\":\"dev_mac\",\"payload\":{\"ref\":\"blob:s-1\"},\"replicate\":\"shared\",\"version\":1}",
+        "digest": "3ac849ccd12cf9b4f54b4bc08e6059db",
+        "row": {
+          "audience": "own:",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-1",
+          "kind": "state.write",
+          "object": "state:sticker:stk_5e7a",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-1"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-2",
+          "kind": "state.write",
+          "object": "state:diary:d_1",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-2"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "a diary of a conversation with the partner, in their audience",
+      "output": {
+        "canonical": "{\"audience\":\"personal:o1\",\"author\":\"her\",\"dseq\":30,\"epoch\":1,\"hlc\":\"001760000000030-000000-dev_mac\",\"id\":\"s-2\",\"kind\":\"state.write\",\"object\":\"state:diary:d_1\",\"origin\":\"dev_mac\",\"payload\":{\"ref\":\"blob:s-2\"},\"replicate\":\"shared\",\"version\":1}",
+        "digest": "fced6fcdf22134c2226877b2b0bebe1a",
+        "row": {
+          "audience": "personal:o1",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-2",
+          "kind": "state.write",
+          "object": "state:diary:d_1",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-2"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-3",
+          "kind": "state.write",
+          "object": "state:sticker:stk_5e7a",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-3"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: a sticker in the partner's audience",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "own:",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-4",
+          "kind": "state.write",
+          "object": "state:soup_game:o1",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-4"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: the game of soup in her own audience",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:o1,o2",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-5",
+          "kind": "state.write",
+          "object": "state:intention:i_1",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-5"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: an intention between her and two",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "own:",
+          "author": "her",
+          "dseq": 30,
+          "epoch": 1,
+          "hlc": "001760000000030-000000-dev_mac",
+          "id": "s-6",
+          "kind": "state.write",
+          "object": "state:wearing:end",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:s-6"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: a record of no kind it carries",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

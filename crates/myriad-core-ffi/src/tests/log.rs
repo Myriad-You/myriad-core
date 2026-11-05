@@ -28,6 +28,7 @@ pub(super) const TESTED: &[&str] = &[
     "log.ledger",
     "log.merge",
     "log.missing",
+    "log.partner_wrote",
     "log.reach",
 ];
 

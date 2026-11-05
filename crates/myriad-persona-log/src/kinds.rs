@@ -116,7 +116,6 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("node.upkept", Some("node"), Rule::Event),
     ("node.used", Some("node"), Rule::Event),
     ("node.view_changed", Some("node"), Rule::Latest),
-    ("outfit.write", Some("outfit"), Rule::Latest),
     // One field of her persona per object: `persona:<field>`.
     ("persona.field", Some("persona"), Rule::Latest),
     // The partner took a node back from sync: it is forgotten on every
@@ -131,11 +130,20 @@ const KINDS: &[(&str, Object, Rule)] = &[
     // `segment.line`: a line she says first, or in a group, need not be in
     // a stretch of talk.
     ("speech.said", Some("speech"), Rule::Event),
+    // One of her records as `myriad-persona-sync` writes it (an outfit, a
+    // diary note, what she proposed, her pace…), per entity:
+    // `state:<entity kind>:<id>`, the payload's `kind` and `id`.
+    ("state.write", Some("state"), Rule::Latest),
 ];
 
 /// The object type a forget names to forget everything about a subject in
 /// its audience: `subject:<id>`. No other row is about it.
 pub const SUBJECT: &str = "subject";
+
+/// The object type a forget names to forget one row and nothing else of
+/// its object (one line of a segment): `row:<row id>`. No other row is
+/// about it.
+pub const ROW: &str = "row";
 
 fn entry(kind: &str) -> Option<&'static (&'static str, Object, Rule)> {
     KINDS
