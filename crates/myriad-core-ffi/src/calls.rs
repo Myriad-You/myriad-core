@@ -32,6 +32,7 @@ mod log;
 mod memory;
 mod motion;
 mod nodes;
+mod notify;
 mod outfit;
 mod own;
 mod partner;
@@ -48,6 +49,7 @@ mod timing;
 mod visual;
 mod vitals;
 mod voice;
+mod wander;
 
 type Call = fn(&[u8]) -> Result<Value, Failure>;
 
@@ -198,6 +200,7 @@ const CALLS: &[(&str, Call)] = &[
     ("memory.readiness", memory::readiness),
     ("memory.score_all", memory::score_all),
     ("memory.spread", memory::spread),
+    ("memory.wander", memory::wander),
     ("meta.version", version),
     ("motion.asked", motion::asked),
     ("motion.chat_prompt", motion::chat_prompt),
@@ -227,6 +230,7 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.upkeep_read", nodes::upkeep_read),
     ("nodes.wire_send", nodes::wire_send),
     ("nodes.wire_take", nodes::wire_take),
+    ("notify.kind", notify::kind),
     ("onboarding.import_system", voice::onboarding_import),
     ("onboarding.name_system", voice::onboarding_name),
     (
@@ -432,6 +436,8 @@ const CALLS: &[(&str, Call)] = &[
     ("vitals.ends_asking", vitals::ends_asking),
     ("vitals.leaned_on", vitals::leaned_on),
     ("vitals.quantile", vitals::quantile),
+    ("wander.quiet", wander::quiet),
+    ("wander.thought", wander::thought),
     ("wants.section", prompts::wants_section),
     ("wants.system", prompts::wants_system),
 ];

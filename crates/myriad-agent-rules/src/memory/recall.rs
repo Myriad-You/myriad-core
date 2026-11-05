@@ -1,10 +1,12 @@
 //! Which concept a person just brought up is one she knows only a little
-//! about: a real gap worth one question.
+//! about: a real gap worth one question; what she always has in mind about
+//! someone; and where her mind wanders over what she knows of them.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use chrono::{DateTime, FixedOffset};
 
+use super::association;
 use super::lexical::{self, Document};
 use super::rank::{self, Row};
 use crate::Concept;
@@ -126,6 +128,94 @@ pub fn always_known(rows: &[Row], now: DateTime<FixedOffset>) -> Vec<usize> {
         }
     }
     chosen
+}
+
+/// How far one bout of mind-wandering drifts.
+pub const WANDER_STEPS: usize = 3;
+/// A memory she thought of is not landed on again for this long: the same
+/// thought does not keep coming back.
+pub const NOT_AGAIN_SECS: i64 = 3 * 24 * 3600;
+
+/// One memory her mind may wander over.
+pub struct Musing<'a> {
+    pub content: &'a str,
+    pub concepts: &'a [Concept],
+    /// When it was learned.
+    pub at: DateTime<FixedOffset>,
+    /// What is still on her mind of it (priming), `0` when nothing.
+    pub primed: f64,
+    /// When she last thought of it while wandering, if she remembers.
+    pub thought_at: Option<DateTime<FixedOffset>>,
+}
+
+/// Where a bout of mind-wandering settled.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Wandered {
+    /// Into the rows given.
+    pub index: usize,
+    /// Something in it she knows only a little about, and how many memories
+    /// she has of it, if anything.
+    pub gap: Option<(String, usize)>,
+}
+
+/// Let the mind wander over one person's memories (`rows`, newest first, the
+/// ones the present audience may hear): the same words count once; start
+/// from what is most on the mind (else somewhere, leaning recent), drift up
+/// to [`WANDER_STEPS`] along association (see [`association::wander`]) and
+/// settle on something not thought of in the last [`NOT_AGAIN_SECS`].
+/// `roll` yields uniform numbers in `0..1`: one for the start when nothing
+/// is on the mind, then one per step.
+pub fn wander(
+    rows: &[Musing],
+    now: DateTime<FixedOffset>,
+    roll: &mut impl FnMut() -> f64,
+) -> Option<Wandered> {
+    let mut seen = HashSet::new();
+    let kept: Vec<usize> = (0..rows.len())
+        .filter(|index| {
+            let content = rank::normalize_content(rows[*index].content);
+            !content.is_empty() && seen.insert(content)
+        })
+        .collect();
+    if kept.len() < 2 {
+        return None;
+    }
+    let nodes: Vec<association::Node> = kept
+        .iter()
+        .map(|index| association::Node {
+            concepts: rows[*index].concepts,
+            at: rows[*index].at,
+        })
+        .collect();
+    // The last of equals, as `Iterator::max_by` keeps it.
+    let primed = kept
+        .iter()
+        .enumerate()
+        .map(|(position, index)| (rows[*index].primed, position))
+        .filter(|(activation, _)| *activation > 0.0)
+        .max_by(|left, right| left.0.total_cmp(&right.0))
+        .map(|(_, position)| position);
+    // Rows are newest first; squaring leans a random start toward recent.
+    let start = primed.unwrap_or_else(|| {
+        let at = roll().clamp(0.0, 1.0);
+        ((at * at) * kept.len() as f64) as usize % kept.len()
+    });
+    let avoid: Vec<usize> = kept
+        .iter()
+        .enumerate()
+        .filter(|(_, index)| {
+            rows[**index]
+                .thought_at
+                .is_some_and(|at| (now - at).num_seconds() < NOT_AGAIN_SECS)
+        })
+        .map(|(position, _)| position)
+        .collect();
+    let landed = association::wander(&nodes, start, WANDER_STEPS, &avoid, roll)?;
+    let counts = concept_counts(nodes.iter().map(|node| node.concepts));
+    Some(Wandered {
+        index: kept[landed],
+        gap: thinly_known(nodes[landed].concepts, &counts),
+    })
 }
 
 #[cfg(test)]
