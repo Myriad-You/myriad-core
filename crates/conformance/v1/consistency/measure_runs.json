@@ -1,0 +1,161 @@
+{
+  "call": "consistency.measure_runs",
+  "cases": [
+    {
+      "input": {
+        "runs": []
+      },
+      "name": "no runs",
+      "output": {
+        "measures": {
+          "aiFlavored": null,
+          "aiHits": [],
+          "asking": null,
+          "blankLines": 0,
+          "chars": null,
+          "echoed": null,
+          "habitTurns": null,
+          "habits": [],
+          "lengthRatio": null,
+          "longMessages": 0,
+          "messages": 0,
+          "openerPhrases": [],
+          "openerReuse": null,
+          "openers": 0,
+          "perTurn": null,
+          "repeated": null,
+          "runs": 1,
+          "turns": 0
+        }
+      }
+    },
+    {
+      "input": {
+        "runs": [
+          [
+            {
+              "opens": true,
+              "said": [
+                "你好呀今天下雨了"
+              ]
+            },
+            {
+              "opens": true,
+              "said": [
+                "早上好你醒得真早"
+              ]
+            },
+            {
+              "opens": true,
+              "said": [
+                "晚上见我先去吃饭"
+              ]
+            },
+            {
+              "answering": "你在干嘛",
+              "said": [
+                "你在做什么呢？"
+              ]
+            }
+          ],
+          [
+            {
+              "opens": true,
+              "said": [
+                "你好呀今天下雨了"
+              ]
+            },
+            {
+              "opens": true,
+              "said": [
+                "早上好你醒得真早"
+              ]
+            },
+            {
+              "opens": true,
+              "said": [
+                "晚上见我先去吃饭"
+              ]
+            },
+            {
+              "answering": "你在干嘛",
+              "said": [
+                "我在看书呢。"
+              ]
+            }
+          ],
+          [
+            {
+              "opens": true,
+              "said": [
+                "你好呀今天下雨了"
+              ]
+            },
+            {
+              "opens": true,
+              "said": [
+                "早上好你醒得真早"
+              ]
+            },
+            {
+              "opens": true,
+              "said": [
+                "晚上见我先去吃饭"
+              ]
+            },
+            {
+              "answering": "你在干嘛",
+              "said": [
+                "我在看书呢。"
+              ]
+            }
+          ]
+        ]
+      },
+      "name": "three runs taken together, each measured on its own",
+      "output": {
+        "measures": {
+          "aiFlavored": 0.0,
+          "aiHits": [],
+          "asking": 0.083,
+          "blankLines": 0,
+          "chars": {
+            "max": 8.0,
+            "mean": 7.583,
+            "p50": 8.0,
+            "p90": 8.0
+          },
+          "echoed": 0.0,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 1.583,
+          "longMessages": 0,
+          "messages": 12,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 9,
+          "perTurn": {
+            "max": 1.0,
+            "mean": 1.0,
+            "p50": 1.0,
+            "p90": 1.0
+          },
+          "repeated": 0.0,
+          "runs": 3,
+          "turns": 12
+        }
+      }
+    },
+    {
+      "input": {
+        "runs": [],
+        "turns": []
+      },
+      "name": "an unknown field is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

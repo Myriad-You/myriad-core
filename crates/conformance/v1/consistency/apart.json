@@ -154,7 +154,7 @@
           "habits": [],
           "lengthRatio": 2.25,
           "longMessages": 0,
-          "messages": 18,
+          "messages": 54,
           "openerPhrases": [],
           "openerReuse": 0.0,
           "openers": 2,
@@ -165,7 +165,8 @@
             "p90": 2.0
           },
           "repeated": 0.077,
-          "turns": 30
+          "runs": 3,
+          "turns": 90
         },
         "right": {
           "aiFlavored": 0.167,
@@ -204,7 +205,7 @@
           "habits": [],
           "lengthRatio": 2.25,
           "longMessages": 0,
-          "messages": 18,
+          "messages": 54,
           "openerPhrases": [],
           "openerReuse": 0.0,
           "openers": 2,
@@ -215,7 +216,8 @@
             "p90": 2.0
           },
           "repeated": 0.077,
-          "turns": 30
+          "runs": 3,
+          "turns": 90
         }
       },
       "name": "the same measures are not apart",
@@ -299,12 +301,12 @@
               "term": "（…）"
             }
           ],
-          "asking": 0.127,
+          "asking": 0.077,
           "blankLines": 0,
           "chars": {
             "max": 13.0,
             "mean": 6.0,
-            "p50": 9.0,
+            "p50": 7.0,
             "p90": 9.0
           },
           "echoed": 0.2,
@@ -324,6 +326,122 @@
           },
           "repeated": 0.077,
           "turns": 30
+        }
+      },
+      "name": "one run on each side is listed for reference but not called alike",
+      "output": {
+        "apart": [
+          {
+            "left": 1.0,
+            "measure": "runs",
+            "right": 1.0
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "left": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.077,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 7.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 54,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "runs": 3,
+          "turns": 90
+        },
+        "right": {
+          "aiFlavored": 0.167,
+          "aiHits": [
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "希望对你有帮助"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "有什么可以帮"
+            },
+            {
+              "kind": "assistant",
+              "messages": 1,
+              "term": "随时告诉我"
+            },
+            {
+              "kind": "stage",
+              "messages": 1,
+              "term": "（…）"
+            }
+          ],
+          "asking": 0.127,
+          "blankLines": 0,
+          "chars": {
+            "max": 13.0,
+            "mean": 6.0,
+            "p50": 9.0,
+            "p90": 9.0
+          },
+          "echoed": 0.2,
+          "habitTurns": 0.0,
+          "habits": [],
+          "lengthRatio": 2.25,
+          "longMessages": 0,
+          "messages": 54,
+          "openerPhrases": [],
+          "openerReuse": 0.0,
+          "openers": 2,
+          "perTurn": {
+            "max": 2.0,
+            "mean": 1.385,
+            "p50": 1.0,
+            "p90": 2.0
+          },
+          "repeated": 0.077,
+          "runs": 3,
+          "turns": 90
         }
       },
       "name": "within the tolerances is not apart",
@@ -370,7 +488,7 @@
           "habits": [],
           "lengthRatio": 2.25,
           "longMessages": 0,
-          "messages": 18,
+          "messages": 54,
           "openerPhrases": [],
           "openerReuse": 0.0,
           "openers": 2,
@@ -381,7 +499,8 @@
             "p90": 2.0
           },
           "repeated": 0.077,
-          "turns": 30
+          "runs": 3,
+          "turns": 90
         },
         "right": {
           "aiFlavored": 0.3,
@@ -420,7 +539,7 @@
           "habits": [],
           "lengthRatio": 2.25,
           "longMessages": 0,
-          "messages": 18,
+          "messages": 54,
           "openerPhrases": [],
           "openerReuse": null,
           "openers": 2,
@@ -431,7 +550,8 @@
             "p90": 2.0
           },
           "repeated": 0.077,
-          "turns": 30
+          "runs": 3,
+          "turns": 90
         }
       },
       "name": "longer messages, more AI flavor, no greetings on one side",

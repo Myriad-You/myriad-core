@@ -27,6 +27,15 @@ fn run(call: &str, raw: &Value) -> Option<Value> {
             let req: In = input(raw)?;
             json!({ "measures": consistency::measure(&req.turns) })
         }
+        "consistency.measure_runs" => {
+            #[derive(Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct In {
+                runs: Vec<Vec<Turn>>,
+            }
+            let req: In = input(raw)?;
+            json!({ "measures": consistency::measure_runs(&req.runs) })
+        }
         "consistency.apart" => {
             #[derive(Deserialize)]
             #[serde(deny_unknown_fields)]

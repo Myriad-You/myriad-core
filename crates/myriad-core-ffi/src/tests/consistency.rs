@@ -15,6 +15,7 @@ use crate::{STATUS_BAD_INPUT, STATUS_OK};
 pub(super) const TESTED: &[&str] = &[
     "consistency.apart",
     "consistency.measure",
+    "consistency.measure_runs",
     "consistency.prompt_diff",
     "consistency.prompt_segments",
 ];
