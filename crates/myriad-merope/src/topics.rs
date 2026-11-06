@@ -657,7 +657,13 @@ mod tests {
 
     #[test]
     fn going_over_talk_and_sorting_put_a_fact_under_a_topic_by_one_rule() {
-        assert!(crate::chat_remember::settle_system_prompt(&[]).contains(OF_A_KIND));
+        assert!(
+            crate::chat_remember::settle_system_prompt(
+                &[],
+                crate::chat_remember::Examples::Chinese
+            )
+            .contains(OF_A_KIND)
+        );
         assert!(sort_system_prompt().contains(OF_A_KIND));
         assert!(tidy_system_prompt().contains(OF_A_KIND));
     }

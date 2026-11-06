@@ -156,8 +156,24 @@ impl Standing {
 
 /// What a fact she keeps carries beside it, the same wherever she keeps
 /// one: going over a stretch of talk, or sorting what she knew before.
-pub const HAPPENED_AND_STATE: &str = "happened is when what the fact tells of happened, which is not when they said it: from is the day (YYYY-MM-DD), or only the month (YYYY-MM) or the year (YYYY) when that is all that is known; to is the last day, month or year when it went on past from, else empty; about is true when the time is only rough (around then, early that month, a few weeks ago). Work it out from today and what they said ('last Friday', 'the week before'); a plan has the day it is planned for. from and to are empty when the fact tells of no time of its own (a liking, who someone is, where they live) or none was given. \
-state is where it stands now, in a word or two in the language of the fact (待取, 已退, 已完成, 还在用, picked up), for something that is still to be done or can be over (a thing to pick up or return, an order, a booking, a project); else empty. open is true while something is still to be done about it or it is still going on, false once it is over (picked up, returned, finished, called off), and null when state is empty.";
+macro_rules! happened_and_state {
+    ($words:literal) => {
+        concat!("happened is when what the fact tells of happened, which is not when they said it: from is the day (YYYY-MM-DD), or only the month (YYYY-MM) or the year (YYYY) when that is all that is known; to is the last day, month or year when it went on past from, else empty; about is true when the time is only rough (around then, early that month, a few weeks ago). Work it out from today and what they said ('last Friday', 'the week before'); a plan has the day it is planned for. from and to are empty when the fact tells of no time of its own (a liking, who someone is, where they live) or none was given. \
+state is where it stands now, in a word or two in the language of the fact ", $words, ", for something that is still to be done or can be over (a thing to pick up or return, an order, a booking, a project); else empty. open is true while something is still to be done about it or it is still going on, false once it is over (picked up, returned, finished, called off), and null when state is empty.")
+    };
+}
+
+pub const HAPPENED_AND_STATE: &str = happened_and_state!("(待取, 已退, 已完成, 还在用, picked up)");
+
+/// [`HAPPENED_AND_STATE`] with the state words in the examples' language.
+pub fn happened_and_state(examples: crate::chat_remember::Examples) -> &'static str {
+    match examples {
+        crate::chat_remember::Examples::Chinese => HAPPENED_AND_STATE,
+        crate::chat_remember::Examples::English => {
+            happened_and_state!("(to pick up, returned, done, still in use, picked up)")
+        }
+    }
+}
 
 /// The schema of when a fact happened, in her answer.
 pub fn happened_schema() -> Value {

@@ -444,7 +444,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 话题只会增、不会自己合。还把话题存在自己表里的宿主，会把挂得少（`topics::SMALL`，2 条以内）、又在上次整理之后变过的话题拿出来整理（`topics::tidy_system_prompt`、`tidy_schema`、`tidy_input`，最多 24 个，旁边再按字面挑最多 12 个别的话题）：每个话题要么保留，要么并入另一个（两个是同一类事，窄的并进宽的），要么放下（不是一类事，只关于这个人本身，下面的事实改成不挂）。`read_tidied` 读她的回答，顺着并入的链一直走到底：并进一个被放下的话题，就跟着被放下；转成一圈的，在圈里最先出现的那个话题保留。只看变过的话题，所以花费跟着新增走，不跟着总量涨。话题存成节点行以后，这件事由她的整理（`nodes.upkeep_*`）做，并入就是节点的 `absorb`（`merged`）。
 要翻遍时（「哪些」「几个」），同一个话题下的事一起想起；给她的没装下一个话题的全部时，`speaking::format_not_all_here_section` 告诉她那个话题下一共有几条、给了几条，她就不会只数看到的。
 
-- 发生在什么时候、现在怎样（`myriad_merope::happened`）：谈完整理和补挂是同一次调用，每条长期事实多答 `happened`（`{from, to, about}`，不知道时 `from` 空）、`state`（空是没有）和 `open`（没有状态时 `null`），同一条 `HAPPENED_AND_STATE` 规则，不多调用。读回答（`happened::read_standing`；整理时 `chat_remember::parse_settle` 放进 `Lasting::standing`，补挂时 `topics::read_sorted_standing`、`nodes.sort_read`，别的端读整理回答用 `nodes.standing_read`）宽松：缺了、读不出、日子不对、状态超过 16 字都当没有，`open` 只跟着状态；事实照样记下。`nodes.fact_rows` 把它们写进条目（不成立的去掉）。补挂时宿主可以给每条事实哪天记下的（`said`）和今天（`today`），这样只写了月日的事实也能放到对的年份；都不给时输入和以前一个字节都不差。
+- 发生在什么时候、现在怎样（`myriad_merope::happened`）：谈完整理和补挂是同一次调用，每条长期事实多答 `happened`（`{from, to, about}`，不知道时 `from` 空）、`state`（空是没有）和 `open`（没有状态时 `null`），同一条 `HAPPENED_AND_STATE` 规则，不多调用。整理时一条事实里有汉字、这段谈话里对方的话一个汉字都没有，就是回答换了语言（只看摘录不行：中文谈话也可能只摘到「iPhone 15 Pro」）：这条不收，它 `from` 里的短期记录原样留下（`chat_remember::changed_language`，只比字符；条数用 `settle_changed_language` 记日志）。读回答（`happened::read_standing`；整理时 `chat_remember::parse_settle` 放进 `Lasting::standing`，补挂时 `topics::read_sorted_standing`、`nodes.sort_read`，别的端读整理回答用 `nodes.standing_read`）宽松：缺了、读不出、日子不对、状态超过 16 字都当没有，`open` 只跟着状态；事实照样记下。`nodes.fact_rows` 把它们写进条目（不成立的去掉）。补挂时宿主可以给每条事实哪天记下的（`said`）和今天（`today`），这样只写了月日的事实也能放到对的年份；都不给时输入和以前一个字节都不差。
 
 **回想挑节点**（`nodes.pick`，`myriad_nodes::recall`）：她回话之前想起哪几个节点、每个带哪几条。条目照旧由宿主自己排（最相关的在前；这句话找到的标 `named`，只是补位的不标）；退役的（被取代、淡了、忘掉的）宿主先去掉再给。`nodes` 是这个受众的节点（`gone` 是忘掉了或并进别处了，条目的 id 是记忆行的 id，没有就是条目行的 id；在 Rust 里 `PickNode::of` 从折好的节点算）。
 - **挑节点**：只有标了 `named` 的条目能把它的节点带进来（补位的不是这句话要的）。进行中和一直在做的先，歇着的其次，做完和放下的最后；同一档里按它第一条 `named` 条目排在第几。没了的节点永远不挑；做完和放下的只有被直接找到时才来（任何节点都只能这样被挑），排在还在进行的后面。这个人自己的节点（`aboutThem`）和她自己（`her`）不挑：前者有自己的位置，后者的头宿主每次都带。最多 `budget.picked`（默认 3）个。
@@ -610,7 +610,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `explore.step_system` | `{search, searchIsWikipedia, read, video}` | `explore::step_system`（`reading::Senses`） |
 | `curiosity.digest_system` | `{soul, why}` | `curiosity::digest_system` |
 | `sharing.reason`、`sharing.come_back_reason` | `{what, why}` | `sharing::reason`、`come_back_reason` |
-| `chat_remember.extract_system`、`settle_system` | `{existing}`、`{known}` | `chat_remember::extract_system_prompt`、`settle_system_prompt` |
+| `chat_remember.extract_system`、`settle_system` | `{existing, theirs?}`、`{known, theirs?}` | `chat_remember::extract_system_prompt`、`settle_system_prompt`；例子的语言按 `theirs`（对方这句、这一段对方的话）选（`chat_remember::Examples::for_words`）：有汉字、没有假名和谚文是中文例子，其余是英文例子；不给 `theirs` 是中文例子，和以前一个字节都不差 |
 | `chat_remember.already_system`、`remembering.system`、`chat_days.pick_system`、`heard.system`、`explore.compare_system`、`life.concepts_system` | `{}` | 同名函数（`life::CONCEPTS_SYSTEM`） |
 | `remembering.schema`、`remembering.read` | `{}`、`{output}` | `remembering::schema`（`{schema}`）、`remembering::parse`（`{cues, thorough, lookBack, aboutYou, range?, open?}`，读不出是 `null`） |
 | `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |

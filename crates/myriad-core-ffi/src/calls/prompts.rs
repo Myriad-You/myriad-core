@@ -290,27 +290,46 @@ pub(super) fn sharing_come_back_reason(raw: &[u8]) -> Result<Value, Failure> {
     Ok(text(Some(sharing::come_back_reason(&req.what, &req.why))))
 }
 
-/// `existing`: what she already keeps of them.
+/// The examples' language for `theirs` (what they said); without it, the
+/// Chinese ones every host had before it was asked.
+fn examples(theirs: Option<&str>) -> chat_remember::Examples {
+    theirs.map_or(
+        chat_remember::Examples::Chinese,
+        chat_remember::Examples::for_words,
+    )
+}
+
+/// `existing`: what she already keeps of them; `theirs`: their message.
 pub(super) fn remember_extract_system(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         existing: Vec<String>,
+        #[serde(default)]
+        theirs: Option<String>,
     }
     let req: In = input(raw)?;
     Ok(text(Some(chat_remember::extract_system_prompt(
         &req.existing,
+        examples(req.theirs.as_deref()),
     ))))
 }
 
+/// `known`: what she knows of them for good; `theirs`: their lines in the
+/// stretch.
 pub(super) fn remember_settle_system(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         known: Vec<String>,
+        #[serde(default)]
+        theirs: Option<String>,
     }
     let req: In = input(raw)?;
-    Ok(text(Some(chat_remember::settle_system_prompt(&req.known))))
+    Ok(text(Some(chat_remember::settle_system_prompt(
+        &req.known,
+        examples(req.theirs.as_deref()),
+    ))))
 }
 
 pub(super) fn remember_already_system(raw: &[u8]) -> Result<Value, Failure> {
