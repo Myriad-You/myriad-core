@@ -266,6 +266,11 @@ pub struct Sorted {
 pub struct SortRead {
     /// In the order she answered; a fact not here is still to sort.
     pub facts: Vec<Sorted>,
+    /// No answer could be read at all (no JSON object with `facts` in it):
+    /// the batch failed and is asked again, which is not the same as an
+    /// answer that puts none of them anywhere.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub unreadable: bool,
 }
 
 pub fn sort_read(input: SortReadInput) -> Result<SortRead, NodeError> {
@@ -278,7 +283,11 @@ pub fn sort_read(input: SortReadInput) -> Result<SortRead, NodeError> {
         "known id",
         input.known.iter().map(|topic| topic.id.as_str()),
     )?;
+    let unreadable = myriad_merope::answer::parse::<Value>(&input.output)
+        .and_then(|answer| answer.get("facts").map(Value::is_array))
+        != Some(true);
     Ok(SortRead {
+        unreadable,
         facts: read_sorted_standing(&input.output, input.offered.len(), input.facts.len())
             .into_iter()
             .map(|(at, under, standing)| Sorted {

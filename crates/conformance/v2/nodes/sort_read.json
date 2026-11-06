@@ -117,7 +117,29 @@
       },
       "name": "an answer that is not JSON sorts nothing",
       "output": {
-        "facts": []
+        "facts": [],
+        "unreadable": true
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          "m1"
+        ],
+        "offered": [
+          "n-plants"
+        ],
+        "output": "```json\n{\"facts\": [{\"fact\": 1, \"topic\": {\"on\": \"t1\", \"name\": \"\", \"aliases\": []}}]}\n```"
+      },
+      "name": "a fenced answer is read",
+      "output": {
+        "facts": [
+          {
+            "fact": "m1",
+            "node": "n-plants",
+            "to": "node"
+          }
+        ]
       }
     },
     {
