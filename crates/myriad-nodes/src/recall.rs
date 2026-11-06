@@ -19,8 +19,11 @@
 //!   time. At most [`Budget::picked`].
 //! - **Each picked node's entries**: its ranked entries first, in rank
 //!   order, then its newest to fill, at most [`Budget::entries`].
-//! - **About them**: the entries of their own node, ranked first, then the
-//!   newest, at most [`Budget::about_them`].
+//! - **About them**: the ranked entries of their own node, in rank order,
+//!   at most [`Budget::about_them`]; never its newest to fill. What she
+//!   makes of them comes every turn with its head (its summary, views and
+//!   open items, the host's to show); filling with whatever they said last
+//!   only brought what these words were not about.
 //! - **Loose**: the ranked entries shown in none of those, in rank order:
 //!   on no node, on a node not picked, past a node's room. The host shows
 //!   them as it showed memories before, so nothing it ranked is lost.
@@ -55,7 +58,7 @@ pub struct Budget {
     pub picked: usize,
     /// Entries of each picked node.
     pub entries: usize,
-    /// Entries of their own node.
+    /// Ranked entries of their own node.
     pub about_them: usize,
     /// Entries added in all when going through all of a kind.
     pub together: usize,
@@ -303,7 +306,14 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
                 .iter()
                 .position(|node| &node.id == id && !node.gone)
         })
-        .map(|at| best(&input.nodes[at], &ranked, &on, at, input.budget.about_them))
+        .map(|at| {
+            ranked
+                .iter()
+                .filter(|id| on.get(*id) == Some(&at))
+                .take(input.budget.about_them)
+                .map(|id| id.to_string())
+                .collect::<Vec<_>>()
+        })
         .unwrap_or_default();
     let mut shown: BTreeSet<String> = picked
         .iter()
@@ -396,10 +406,22 @@ mod tests {
         assert_eq!(nodes, ["plants", "resting", "done"]);
         // Ranked first, then the newest.
         assert_eq!(out.picked[0].entries, ["p2", "p5", "p4"]);
-        assert_eq!(out.about_them, ["a3", "a6", "a5", "a4", "a2"]);
+        // Only what was ranked of them: nothing newest to fill.
+        assert_eq!(out.about_them, ["a3"]);
         // Shown nowhere above: on her node, on a gone node, on no node.
         assert_eq!(out.loose, ["x", "y1", "h1"]);
         assert!(out.together.is_empty());
+    }
+
+    #[test]
+    fn nothing_about_them_found_brings_none_of_them() {
+        let out = run(json!({
+            "ranked": [{"id": "x", "named": true}],
+            "nodes": [{"id": "you", "entries": entries("a", 6)}],
+            "aboutThem": "you"
+        }));
+        assert!(out.about_them.is_empty());
+        assert_eq!(out.loose, ["x"]);
     }
 
     #[test]

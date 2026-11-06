@@ -149,11 +149,7 @@
       "name": "named entries pick their nodes, active before resting before done",
       "output": {
         "aboutThem": [
-          "a3",
-          "a6",
-          "a5",
-          "a4",
-          "a2"
+          "a3"
         ],
         "loose": [
           "x",
@@ -633,14 +629,72 @@
         ],
         "ranked": []
       },
-      "name": "about them only",
+      "name": "nothing about them ranked: none of them, never the newest",
+      "output": {}
+    },
+    {
+      "input": {
+        "aboutThem": "you",
+        "budget": {
+          "aboutThem": 2
+        },
+        "nodes": [
+          {
+            "entries": [
+              {
+                "at": 1760000000000001,
+                "id": "a1"
+              },
+              {
+                "at": 1760000000000002,
+                "id": "a2"
+              },
+              {
+                "at": 1760000000000003,
+                "id": "a3"
+              },
+              {
+                "at": 1760000000000004,
+                "id": "a4"
+              },
+              {
+                "at": 1760000000000005,
+                "id": "a5"
+              },
+              {
+                "at": 1760000000000006,
+                "id": "a6"
+              },
+              {
+                "at": 1760000000000007,
+                "id": "a7"
+              }
+            ],
+            "id": "you"
+          }
+        ],
+        "ranked": [
+          {
+            "id": "a2",
+            "named": true
+          },
+          {
+            "id": "a6"
+          },
+          {
+            "id": "a1",
+            "named": true
+          }
+        ]
+      },
+      "name": "about them: what was ranked of them, in rank order, within the budget",
       "output": {
         "aboutThem": [
-          "a7",
-          "a6",
-          "a5",
-          "a4",
-          "a3"
+          "a2",
+          "a6"
+        ],
+        "loose": [
+          "a1"
         ]
       }
     },
