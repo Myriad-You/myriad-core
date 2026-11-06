@@ -134,10 +134,12 @@ fn is_chinese_character(ch: char) -> bool {
     )
 }
 
-/// A fact in Chinese characters kept from words with none: the answer
-/// wrote in another language than they spoke.
-pub fn changed_language(fact: &str, evidence: &str) -> bool {
-    fact.chars().any(is_chinese_character) && !evidence.chars().any(is_chinese_character)
+/// A fact in Chinese characters from a stretch whose lines of theirs have
+/// none: the answer wrote in another language than they spoke. Judged on
+/// all their lines, not the excerpt: a Chinese talk can cite only
+/// 'iPhone 15 Pro'.
+pub fn changed_language(fact: &str, theirs: &str) -> bool {
+    fact.chars().any(is_chinese_character) && !theirs.chars().any(is_chinese_character)
 }
 
 /// The examples in what she is asked, in one language.
@@ -389,7 +391,7 @@ pub fn parse_settle(
             let holds = !fact.is_empty()
                 && fact.chars().count() <= 240
                 && settle_evidence_holds(&evidence, theirs)
-                && !changed_language(&fact, &evidence);
+                && !changed_language(&fact, theirs);
             holds.then(|| Lasting {
                 fact,
                 evidence,
@@ -449,7 +451,7 @@ pub fn settle_changed_language(raw: &str, theirs: &str) -> usize {
                     .unwrap_or("")
             };
             let evidence = field("evidence").trim();
-            settle_evidence_holds(evidence, theirs) && changed_language(field("fact"), evidence)
+            settle_evidence_holds(evidence, theirs) && changed_language(field("fact"), theirs)
         })
         .count()
 }
@@ -644,30 +646,48 @@ mod tests {
         assert!(extract_system_prompt(&[], Examples::Chinese).contains("我也喜欢茶"));
     }
 
-    /// A fact in Chinese characters from evidence with none is not kept,
-    /// and the notes it put together are kept as they were; Japanese
-    /// evidence has Chinese characters too and is kept.
+    /// A fact in Chinese characters from a stretch where they wrote none is
+    /// not kept, and the notes it put together are kept as they were; a
+    /// Chinese talk citing only Latin words, or a Japanese one, is kept.
     #[test]
     fn a_fact_in_another_language_than_they_spoke_is_left_to_the_notes() {
-        let theirs = "I had the car serviced on Tuesday\nmy cat Mochi is five\n車検は来週です";
+        let theirs = "I had the car serviced on Tuesday\nmy cat Mochi is five";
         let raw = r#"{"lasting":[
             {"fact":"周二给车做了保养","evidence":"I had the car serviced on Tuesday","from":[0],"concepts":[],"whenFor":[]},
-            {"fact":"has a five-year-old cat called Mochi","evidence":"my cat Mochi is five","from":[1],"concepts":[],"whenFor":[]},
-            {"fact":"来周车检","evidence":"車検は来週です","from":[2],"concepts":[],"whenFor":[]}
+            {"fact":"has a five-year-old cat called Mochi","evidence":"my cat Mochi is five","from":[1],"concepts":[],"whenFor":[]}
         ],"replaces":[],"moment":[],"known":[]}"#;
-        let (lasting, _) = parse_settle(raw, theirs, &[], 3, 0).unwrap();
+        let (lasting, _) = parse_settle(raw, theirs, &[], 2, 0).unwrap();
         let kept: Vec<&str> = lasting.iter().map(|fact| fact.fact.as_str()).collect();
-        assert_eq!(kept, ["has a five-year-old cat called Mochi", "来周车检"]);
+        assert_eq!(kept, ["has a five-year-old cat called Mochi"]);
         assert_eq!(
-            settle_left(raw, &lasting, 3),
+            settle_left(raw, &lasting, 2),
             [0],
             "its note is kept as it was"
         );
         assert_eq!(settle_changed_language(raw, theirs), 1);
         assert_eq!(settle_changed_language("not json", theirs), 0);
+        for (theirs, evidence, fact) in [
+            (
+                "上周换了 iPhone 15 Pro\n还买了 Switch",
+                "iPhone 15 Pro",
+                "上周换了 iPhone 15 Pro",
+            ),
+            ("車検は来週です", "車検は来週です", "来周车检"),
+        ] {
+            let raw = serde_json::json!({"lasting":[
+                {"fact":fact,"evidence":evidence,"from":[0],"concepts":[],"whenFor":[]}
+            ],"replaces":[],"moment":[],"known":[]})
+            .to_string();
+            let (lasting, _) = parse_settle(&raw, theirs, &[], 1, 0).unwrap();
+            assert_eq!(lasting.len(), 1, "{theirs}");
+            assert_eq!(settle_changed_language(&raw, theirs), 0, "{theirs}");
+        }
         assert!(changed_language("周二保养", "serviced on Tuesday"));
         assert!(!changed_language("serviced on Tuesday", "周二保养"));
-        assert!(!changed_language("来周车检", "車検は来週です"));
+        assert!(!changed_language(
+            "换了 iPhone 15 Pro",
+            "上周换了 iPhone 15 Pro"
+        ));
     }
 
     #[test]
