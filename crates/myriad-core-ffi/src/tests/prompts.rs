@@ -213,15 +213,42 @@ fn the_texts_with_their_input_are_the_crates() {
         );
     }
     let known = vec!["养了一只猫".to_string(), "在上海工作".to_string()];
+    use chat_remember::Examples;
     for kept in [known.clone(), vec![]] {
         assert_eq!(
             text("chat_remember.extract_system", json!({ "existing": kept })),
-            some(chat_remember::extract_system_prompt(&kept))
+            some(chat_remember::extract_system_prompt(
+                &kept,
+                Examples::Chinese
+            ))
         );
         assert_eq!(
             text("chat_remember.settle_system", json!({ "known": kept })),
-            some(chat_remember::settle_system_prompt(&kept))
+            some(chat_remember::settle_system_prompt(
+                &kept,
+                Examples::Chinese
+            ))
         );
+        for (theirs, examples) in [
+            ("I got a new bike", Examples::English),
+            ("新买了一辆自行车", Examples::Chinese),
+            ("新しい自転車を買った", Examples::English),
+        ] {
+            assert_eq!(
+                text(
+                    "chat_remember.extract_system",
+                    json!({ "existing": kept, "theirs": theirs })
+                ),
+                some(chat_remember::extract_system_prompt(&kept, examples))
+            );
+            assert_eq!(
+                text(
+                    "chat_remember.settle_system",
+                    json!({ "known": kept, "theirs": theirs })
+                ),
+                some(chat_remember::settle_system_prompt(&kept, examples))
+            );
+        }
     }
 }
 
