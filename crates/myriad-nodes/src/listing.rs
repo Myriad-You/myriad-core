@@ -21,7 +21,10 @@
 //! - **In the stretch asked about**: an entry whose `happened` falls
 //!   outside it is left out (`outside`); one only partly in it is kept and
 //!   marked; one with no `happened` is kept and marked, for her to judge by
-//!   what it says and the day she learned it.
+//!   what it says and the day she learned it. One whose time is only rough
+//!   (`about`) and falls outside by at most [`NEAR_DAYS`] is kept and
+//!   marked too: "last month", said near the end of a month, may be only a
+//!   few weeks back.
 //! - **In the state asked about** (`open`): an entry known to be the other
 //!   way is left out (`otherState`); one with no `open` is kept.
 //! - **In order**: by when it happened, else the day she learned it,
@@ -48,6 +51,10 @@ use crate::{NodeError, body::MEMORY_REF, check_token, fold::Node, intents::Zone}
 
 /// Entries looked at, at most, by default.
 pub const LIMIT: usize = 80;
+
+/// How far outside the stretch asked about, in days, an entry whose time
+/// is only rough may fall and still be kept, marked.
+pub const NEAR_DAYS: i64 = 7;
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -179,6 +186,8 @@ pub struct ListInput {
 pub enum Fit {
     In,
     Partly,
+    /// Its time is only rough and falls just outside ([`NEAR_DAYS`]).
+    Near,
     /// It has no `happened`.
     Unknown,
 }
@@ -345,14 +354,22 @@ pub fn list(input: ListInput) -> Result<Listed, NodeError> {
                 let starts = from.unwrap_or(NaiveDate::MIN);
                 let ends = to.unwrap_or(NaiveDate::MAX);
                 if last < starts || first > ends {
-                    outside += 1;
-                    continue;
-                }
-                Some(if first >= starts && last <= ends {
-                    Fit::In
+                    let gap = if last < starts {
+                        (starts - last).num_days()
+                    } else {
+                        (first - ends).num_days()
+                    };
+                    if !happened.as_ref().is_some_and(|happened| happened.about) || gap > NEAR_DAYS
+                    {
+                        outside += 1;
+                        continue;
+                    }
+                    Some(Fit::Near)
+                } else if first >= starts && last <= ends {
+                    Some(Fit::In)
                 } else {
-                    Fit::Partly
-                })
+                    Some(Fit::Partly)
+                }
             }
         };
         let state = entry.state.as_deref().and_then(state_of);
@@ -401,6 +418,7 @@ pub fn list(input: ListInput) -> Result<Listed, NodeError> {
                 state: item.state.as_deref(),
                 open: item.open,
                 partly: item.fit == Some(Fit::Partly),
+                near: item.fit == Some(Fit::Near),
                 time_unknown: item.fit == Some(Fit::Unknown),
                 their_words: item.quote.as_deref(),
             })
@@ -487,6 +505,35 @@ mod tests {
         assert!(
             section.contains("- [2026-10-02] 送洗外套 (their words: \"衬衫和外套都送去干洗了\")")
         );
+    }
+
+    #[test]
+    fn a_rough_time_just_outside_is_kept_and_marked() {
+        // Asked on the 30th about the last month: a plant they said on the
+        // 25th they got "last month" is around April, a day before it.
+        let out = run(json!({
+            "zone": "+00:00",
+            "from": "2023-05-01",
+            "to": "2023-05-30",
+            "nodes": [{"id": "plants", "entries": [
+                {"id": "april", "at": OCT_1, "text": "姐姐给的虎尾兰", "happened": {"from": "2023-04", "about": true}},
+                {"id": "about", "at": OCT_1, "text": "绿萝", "happened": {"from": "2023-04-26", "about": true}},
+                {"id": "day", "at": OCT_1, "text": "多肉", "happened": {"from": "2023-04-29"}},
+                {"id": "month", "at": OCT_1, "text": "仙人掌", "happened": {"from": "2023-04"}},
+                {"id": "march", "at": OCT_1, "text": "文竹", "happened": {"from": "2023-03", "about": true}},
+                {"id": "may", "at": OCT_1, "text": "白掌", "happened": {"from": "2023-05-06"}}
+            ]}]
+        }));
+        // Known exactly, a day or a month goes by the edge; a rough one
+        // far off too.
+        assert_eq!(out.outside, 3);
+        assert_eq!(ids(&out), ["april", "about", "may"]);
+        let fit: Vec<Option<Fit>> = out.items.iter().map(|item| item.fit).collect();
+        assert_eq!(fit, [Some(Fit::Near), Some(Fit::Near), Some(Fit::In)]);
+        let section = out.section.unwrap();
+        assert!(section.contains(
+            "姐姐给的虎尾兰 (happened around 2023-04; just outside that time, but when it was is only rough)"
+        ));
     }
 
     #[test]

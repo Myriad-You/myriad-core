@@ -184,15 +184,15 @@ pub fn with_their_words(fact: &str, said: &str) -> String {
 pub const THEIR_WORDS_CHARS: usize = 160;
 
 /// How she answers from a list code made of all of a kind: from the list,
-/// with the most likely answer, the one unsure item named.
-pub const LISTED_RULE: &str = "When a list is given, count from it and give the most likely answer; if one item is unsure, say which one and why, instead of giving no answer.";
+/// counting only what it shows fits, what only might named apart.
+pub const LISTED_RULE: &str = "When a list is given, count from it only those it shows fit what they asked, and give that answer; one that only might (its time, or what it says, leaves it open) is not in the count: name it apart and say why, instead of giving no answer.";
 
 /// One fact of a list of all of a kind, as she reads it: the day she
 /// learned it, the fact, when it happened (shown, as
 /// `crate::happened::Happened::shown` gives it) and where it stands, whether
-/// it is only partly in the stretch of time asked about, whether its time
-/// is unknown when one was asked about, and their words when they add
-/// something.
+/// it is only partly in the stretch of time asked about or, its time only
+/// rough, just outside it, whether its time is unknown when one was asked
+/// about, and their words when they add something.
 pub struct ListedFact<'a> {
     pub said: &'a str,
     pub text: &'a str,
@@ -200,6 +200,7 @@ pub struct ListedFact<'a> {
     pub state: Option<&'a str>,
     pub open: Option<bool>,
     pub partly: bool,
+    pub near: bool,
     pub time_unknown: bool,
     pub their_words: Option<&'a str>,
 }
@@ -220,6 +221,9 @@ pub fn listed_line(fact: &ListedFact) -> String {
     }
     if fact.partly {
         marks.push("only partly in that time".to_string());
+    }
+    if fact.near {
+        marks.push("just outside that time, but when it was is only rough".to_string());
     }
     let mut line = format!("[{}] {}", fact.said, fact.text);
     if !marks.is_empty() {
@@ -1145,6 +1149,7 @@ mod tests {
             state: Some("待取"),
             open: Some(true),
             partly: false,
+            near: false,
             time_unknown: false,
             their_words: Some("周五把两件衬衫送去干洗了"),
         });
@@ -1159,6 +1164,7 @@ mod tests {
             state: None,
             open: None,
             partly: false,
+            near: false,
             time_unknown: true,
             their_words: None,
         });
@@ -1178,9 +1184,7 @@ mod tests {
         })
         .unwrap();
         assert!(section.starts_with("## All of it, listed\nCode went through the newest 5 of the 7 facts you keep of this kind, for what happened between 2026-10-01 and 2026-10-31; the 2 oldest are not here. Left out: 3 that happened outside that time."));
-        assert!(
-            section.contains("When a list is given, count from it and give the most likely answer")
-        );
+        assert!(section.contains("When a list is given, count from it only those it shows fit"));
         assert!(section.contains("- [2026-10-09] 退了一双鞋"));
         let empty = format_listed_section(&Listing {
             lines: &[],
