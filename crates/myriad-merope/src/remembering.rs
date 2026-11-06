@@ -39,7 +39,7 @@ pub fn system() -> String {
     format!(
         "Someone you talk with just said the message below. Before you answer, think what you would try to remember of your past conversations with them. \
 cues: up to 4 short phrases to look for in your memories of them: the things, people, events and times the answer may rest on, each also in other words people use for it (a peace lily is a plant; 'got' may be bought or was given), in the language the conversations were in. \
-thorough: true if answering needs everything you know on it (how many, all of them, which came first, before or after, since when, how often), false if what comes to mind first will do. \
+thorough: true if answering needs everything you know on it (how many, all of them, which came first, before or after, since when, how often), false if what comes to mind first will do. A count, a total or a list of a kind always needs all of it, also when it asks only for what is still to be done or what happened in some stretch of time (how many books they have lent out and not had back, how much the car has cost them this year): which of them count is for range and open, not a reason to stop at the first few. \
 {range} \
 lookBack: true if they ask about something said in a past conversation in detail (exactly what you said or recommended, a name, a number, an item in a list you gave), which a person would check by scrolling back through the chat. \
 aboutYou: true if the message is about you: they ask how you have been, what you have been doing or up to, what you like, want or think, or the talk turns to you and your life; false when it is about them or anything else. \
@@ -365,6 +365,10 @@ mod tests {
         assert_eq!(merged(&tries, 4), ["b", "a", "e", "d"]);
         assert_eq!(merged(&tries, 10), ["b", "a", "e", "d", "c"]);
         assert!(system().contains("thorough"));
+        // Asked how many of a kind are still to be done, not only what
+        // comes to mind first (a question once judged that way left all but
+        // one of what was to be picked up unsaid).
+        assert!(system().contains("A count, a total or a list of a kind always needs all of it"));
         assert!(
             parse(r#"{"cues":["work from home jobs"],"thorough":false,"lookBack":true}"#)
                 .unwrap()

@@ -343,7 +343,7 @@ pub fn read_sorted_standing(
     offered: usize,
     facts: usize,
 ) -> Vec<(usize, Under, Standing)> {
-    let Ok(value) = serde_json::from_str::<Value>(raw) else {
+    let Some(value) = crate::answer::parse::<Value>(raw) else {
         return Vec::new();
     };
     let mut out: Vec<(usize, Under, Standing)> = Vec::new();
@@ -459,7 +459,7 @@ pub enum Tidied {
 /// too; a ring of them keeps at its first.
 pub fn read_tidied(raw: &str, due: usize, others: usize) -> Vec<Tidied> {
     let mut said = vec![Tidied::Keep; due];
-    let Ok(value) = serde_json::from_str::<Value>(raw) else {
+    let Some(value) = crate::answer::parse::<Value>(raw) else {
         return said;
     };
     let label = |text: &str, prefix: char, count: usize| {
@@ -693,6 +693,10 @@ mod tests {
             ]
         );
         assert_eq!(read_tidied("nope", 2, 0), vec![Tidied::Keep; 2]);
+        assert_eq!(
+            read_tidied(&format!("```json\n{raw}\n```"), 4, 2),
+            read_tidied(&raw, 4, 2)
+        );
         let none: Vec<String> = Vec::new();
         let input: Value = serde_json::from_str(&tidy_input(
             &[topic("sculpting projects", &none, &none)],
@@ -738,6 +742,16 @@ mod tests {
             vec![(0, Under::Nowhere), (1, Under::Nowhere)]
         );
         assert!(read_sorted("not json", 1, 4).is_empty());
+        // Where the endpoint takes no schema, the answer comes fenced or
+        // with words around it: still read, or a batch places none and
+        // sorting stops there.
+        let one = json!({"facts": [{"fact": 1, "topic": {"on": "t1", "name": "", "aliases": []}}]});
+        for wrapped in [
+            format!("```json\n{one}\n```"),
+            format!("Here is where each goes:\n{one}"),
+        ] {
+            assert_eq!(read_sorted(&wrapped, 1, 1), vec![(0, Under::Offered(0))]);
+        }
         let input: Value =
             serde_json::from_str(&sort_input(json!([]), &["a".repeat(400)])).unwrap();
         assert_eq!(input["facts"][0]["n"], 1);

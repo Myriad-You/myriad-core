@@ -119,14 +119,18 @@
     {
       "input": {
         "now": 1793250000000000,
-        "output": "```json\n{\"take\": [], \"drop\": []}\n```",
-        "zone": "Asia/Tokyo"
+        "output": "```json\n{\"take\": [], \"drop\": [\"t1\"]}\n```",
+        "zone": "Asia/Tokyo",
+        "waiting": [
+          "intent-1"
+        ]
       },
-      "name": "a fenced answer is not read",
+      "name": "a fenced answer is read",
       "output": {
-        "drops": [],
-        "takes": [],
-        "unreadable": true
+        "drops": [
+          "intent-1"
+        ],
+        "takes": []
       }
     },
     {

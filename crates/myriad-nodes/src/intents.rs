@@ -744,7 +744,7 @@ pub fn read(input: ReadInput) -> Result<JudgeRead, NodeError> {
         drops: Vec::new(),
         unreadable: true,
     };
-    let Ok(Value::Object(object)) = serde_json::from_str::<Value>(&input.output) else {
+    let Some(Value::Object(object)) = myriad_merope::answer::parse::<Value>(&input.output) else {
         return Ok(unreadable);
     };
     let Some(given) = object.get("take").and_then(Value::as_array) else {
