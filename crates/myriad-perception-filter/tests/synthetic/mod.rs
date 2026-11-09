@@ -173,6 +173,56 @@ pub fn cn_resident_id(seed: u64, x: bool) -> String {
     unreachable!()
 }
 
+/// Passport numbers from a seed, one per shape: Japan (two letters, 7
+/// digits), Singapore (letter, 7 digits, letter), China (`E` and 8 digits,
+/// `E`, a letter and 7 digits, the older `G` and 8 digits). Made up: no check
+/// digit to get right.
+pub fn passports(seed: u64) -> Vec<(&'static str, String)> {
+    let d = |count: usize, offset: u64| random(count, "0123456789", seed + offset);
+    let letter = |offset: u64| random(1, "ABCDEFGHJKLMNPRSTUVWXYZ", seed + offset);
+    vec![
+        ("jp", format!("TZ{}", d(7, 1))),
+        ("sg", format!("K{}{}", d(7, 2), letter(3))),
+        ("cn", format!("E{}", d(8, 4))),
+        ("cn_letter", format!("E{}{}", letter(5), d(7, 6))),
+        ("cn_old", format!("G{}", d(8, 7))),
+    ]
+}
+
+/// The ICAO 9303 check digit, written out apart from the crate's.
+pub fn mrz_check(data: &str) -> char {
+    let sum: u32 = data
+        .chars()
+        .zip([7, 3, 1].into_iter().cycle())
+        .map(|(c, w)| {
+            w * match c {
+                '<' => 0,
+                c if c.is_ascii_digit() => c.to_digit(10).unwrap(),
+                c => c as u32 - 'A' as u32 + 10,
+            }
+        })
+        .sum();
+    char::from_digit(sum % 10, 10).unwrap()
+}
+
+/// A passport's machine readable zone (TD3), both lines, for a made-up
+/// holder: the second line's check digits all right.
+pub fn mrz(number: &str, birth: &str, expiry: &str) -> (String, String) {
+    let first = format!("{:<<44}", "P<JPNSHIRAKAWA<<AOI");
+    let number = format!("{number:<<9}");
+    let optional = "<".repeat(14);
+    let mut second = format!(
+        "{number}{}JPN{birth}{}F{expiry}{}{optional}{}",
+        mrz_check(&number),
+        mrz_check(birth),
+        mrz_check(expiry),
+        mrz_check(&optional),
+    );
+    let whole = format!("{}{}{}", &second[..10], &second[13..20], &second[21..43]);
+    second.push(mrz_check(&whole));
+    (first, second)
+}
+
 pub fn identifiers() -> Vec<(&'static str, String)> {
     vec![
         ("card", card()),

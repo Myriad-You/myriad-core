@@ -127,7 +127,8 @@ pub(super) fn secret_values(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{text}` → `{text, wiped: [{kind}]}`, kinds `card`, `sg_nric`,
-/// `jp_my_number`, `cn_resident_id`. Run after `filter.scan_secrets`.
+/// `jp_my_number`, `cn_resident_id`, `passport`. Run after
+/// `filter.scan_secrets`.
 pub(super) fn scan_identifiers(raw: &[u8]) -> Result<Value, Failure> {
     let req: Text = shaped(raw)?;
     let scan = identifiers::scan(&req.text);
