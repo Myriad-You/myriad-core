@@ -56,8 +56,8 @@
 //!   kind whose payload shape is in `myriad_persona_log::payloads`
 //!   (segments, memories, mood), with no field its shape does not name
 //!   (`bad_body`: a field the core cannot read is a field it cannot check).
-//!   Anything else (the native app's older node kinds, judged cases until
-//!   they have a shape) goes as a row only (`no_shape`).
+//!   Anything else (the native app's older node kinds) goes as a row only
+//!   (`no_shape`).
 //! - **Not too large**: at most [`MAX_BODY_BYTES`] canonical bytes, so it
 //!   and its row fit one batch (`too_large`); a larger one would be refused
 //!   by the link every time and hold the audience up behind it.
@@ -487,7 +487,12 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 19] = [
         &["at", "text", "line", "replyTo", "pictures"],
     ),
     ("segment.close", &["at"]),
-    ("memory.write", &["at", "text", "kind", "replaces", "cues"]),
+    (
+        "memory.write",
+        &[
+            "at", "text", "kind", "replaces", "cues", "speaker", "source", "when",
+        ],
+    ),
     ("memory.retire", &["at", "why", "by"]),
     ("memory.restore", &["at"]),
     (
@@ -1148,6 +1153,9 @@ mod tests {
                     kind: "preference".into(),
                     replaces: vec!["memory:m-1".into()],
                     cues: vec!["热可可".into()],
+                    speaker: Some(MemorySpeaker::Partner),
+                    source: Some("chat".into()),
+                    when: vec!["有人问喝什么时".into()],
                 }),
             ),
             (

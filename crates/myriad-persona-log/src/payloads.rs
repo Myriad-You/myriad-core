@@ -92,7 +92,42 @@ pub struct MemoryWrite {
     /// model, and would come out otherwise).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub cues: Vec<String>,
+    /// Who it came from: she said it or came to it herself (`her`), or the
+    /// partner told her (`partner`). What a memory is worth as a fact
+    /// about the partner turns on it, so every side keeps it as written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speaker: Option<MemorySpeaker>,
+    /// Where the writing side learned it, in that side's own word for it
+    /// (a site's `chat` or `bit`, a Mac's own…): no list of them here, so
+    /// no side has to speak another's. A side that knows the word keeps
+    /// it; one that does not keeps the memory as one another side wrote.
+    /// Lowercase letters, digits and `_`, at most [`MAX_MEMORY_SOURCE`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    /// When it would come to mind: a few moments it was kept for (what
+    /// someone might say or ask that it answers), as the writing side's
+    /// extraction gave them (`chat_remember`'s `whenFor`). Another side
+    /// keeps them and does not ask a model again; a memory without them
+    /// comes to mind by its words alone. At most [`MAX_MEMORY_WHEN`], each
+    /// at most [`MEMORY_WHEN_CHARS`] chars.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub when: Vec<String>,
 }
+
+/// Who a memory came from ([`MemoryWrite::speaker`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MemorySpeaker {
+    Her,
+    Partner,
+}
+
+/// The longest word a side names where it learned a memory with.
+pub const MAX_MEMORY_SOURCE: usize = 32;
+/// How many moments a memory is kept for, and how long each is: the same
+/// bounds as the extraction that writes them (`chat_remember`'s `whenFor`).
+pub const MAX_MEMORY_WHEN: usize = 3;
+pub const MEMORY_WHEN_CHARS: usize = 60;
 
 /// A memory retired: why, and the one that holds it now when another does.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -441,7 +476,7 @@ fn check_scale(value: f64) -> Result<(), LogError> {
 }
 
 /// Whether `payload` is of the shape rows of `kind` carry. `Ok(false)` for
-/// a kind whose payload is not one of these (`node.*`, `case.*`, ...).
+/// a kind whose payload is not one of these (`node.*`, ...).
 pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
     match kind {
         "segment.open" => {
@@ -470,6 +505,27 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
             }
             if memory.cues.iter().any(|cue| cue.trim().is_empty()) {
                 return Err(LogError::new("a memory.write payload has an empty cue"));
+            }
+            if let Some(source) = &memory.source
+                && (source.is_empty()
+                    || source.len() > MAX_MEMORY_SOURCE
+                    || !source.bytes().all(|byte| {
+                        byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'
+                    }))
+            {
+                return Err(LogError::new(
+                    "a memory.write payload names where it was learned with another kind of word",
+                ));
+            }
+            if memory.when.len() > MAX_MEMORY_WHEN
+                || memory
+                    .when
+                    .iter()
+                    .any(|when| when.trim().is_empty() || when.chars().count() > MEMORY_WHEN_CHARS)
+            {
+                return Err(LogError::new(
+                    "a memory.write payload says when it would come to mind out of its bounds",
+                ));
             }
         }
         "memory.retire" => {
@@ -605,6 +661,11 @@ mod tests {
                 json!({"at": 4, "text": "喜欢热可可", "kind": "preference", "replaces": ["memory:m-1"]}),
             ),
             (
+                "memory.write",
+                json!({"at": 4, "text": "第一次一起看雨", "kind": "narrative",
+                    "speaker": "her", "source": "spoke_up", "when": ["有人说起下雨天时"]}),
+            ),
+            (
                 "memory.retire",
                 json!({"at": 5, "why": "superseded", "by": "memory:m-2"}),
             ),
@@ -644,6 +705,26 @@ mod tests {
             (
                 "memory.write",
                 json!({"at": 4, "text": "x", "kind": "fact", "replaces": ["node:a"]}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "source": "Chat Room"}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "source": ""}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "speaker": "someone"}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "when": ["a", "b", "c", "d"]}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "when": [" "]}),
             ),
             ("memory.retire", json!({"at": 5, "why": ""})),
             (
