@@ -402,14 +402,17 @@ struct KnownFact {
     fact: String,
 }
 
-/// `{changes, known: [{on, fact}], today}` → `{text}`: what inferring is
-/// given (`inferring::infer_input`); `changes` index `known`.
+/// `{changes, known: [{on, fact}], already?, today}` → `{text}`: what
+/// inferring is given (`inferring::infer_input`); `changes` index `known`,
+/// `already` is her inferences still held.
 pub(super) fn inferring_input(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         changes: Vec<usize>,
         known: Vec<KnownFact>,
+        #[serde(default)]
+        already: Vec<String>,
         today: String,
     }
     let req: In = input(raw)?;
@@ -421,9 +424,11 @@ pub(super) fn inferring_input(raw: &[u8]) -> Result<Value, Failure> {
             fact: &known.fact,
         })
         .collect();
+    let already: Vec<&str> = req.already.iter().map(String::as_str).collect();
     Ok(text(Some(inferring::infer_input(
         &req.changes,
         &known,
+        &already,
         &req.today,
     ))))
 }

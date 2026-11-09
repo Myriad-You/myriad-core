@@ -144,11 +144,12 @@ fn an_inference_reads_as_the_crate_reads_it() {
             json!({"changes": [1], "known": [
                 {"on": "2026-08-01", "fact": "每天骑车上班"},
                 {"on": "2026-10-02", "fact": "打球把腿摔断了"},
-            ], "today": "2026-10-03 (Saturday)"})
+            ], "already": ["腿断了"], "today": "2026-10-03 (Saturday)"})
         ),
         some(inferring::infer_input(
             &[1],
             &known,
+            &["腿断了"],
             "2026-10-03 (Saturday)"
         ))
     );
