@@ -46,6 +46,15 @@ fn scans_match_the_crate() {
     assert!(!ids.to_string().contains("4111"));
 }
 
+#[test]
+fn a_labelled_passport_number_is_wiped_as_passport() {
+    let text = "护照号码：TZ0428613，有效期至 2031 年";
+    let out = ok("filter.scan_identifiers", json!({ "text": text }));
+    assert_eq!(out["text"], identifiers::scan(text).text);
+    assert_eq!(out["wiped"], json!([{ "kind": "passport" }]));
+    assert!(!out.to_string().contains("0428613"));
+}
+
 /// What the scan wipes, on the original text: the crate's answer, and the
 /// one stretch the cookie rule leaves when it swallows the prefix rule's mark.
 #[test]

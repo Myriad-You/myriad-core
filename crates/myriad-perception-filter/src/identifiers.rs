@@ -1,11 +1,17 @@
 //! Card numbers and national identity numbers (cards, Singapore NRIC/FIN,
-//! Japan's My Number, China's resident identity number): wiped before any
-//! model reads the text, and a hit means the window shows the owner's own
-//! identity.
+//! Japan's My Number, China's resident identity number, passports): wiped
+//! before any model reads the text, and a hit means the window shows the
+//! owner's own identity.
 //!
 //! Only numbers whose check digit is right are taken; a well-formed number
 //! with a wrong check digit stays. Order and tracking numbers that happen to
 //! pass Luhn are wiped too: one number fewer seen.
+//!
+//! Passport numbers have no check digit, and their shapes are those of order
+//! numbers, model numbers and the like, so one is taken only with a passport
+//! label just before it on the same line ([`passport_labelled`]), or as part
+//! of a passport's machine readable zone, whose check digits are checked
+//! ([`mrz_line`]).
 
 use std::sync::LazyLock;
 
@@ -29,6 +35,12 @@ pub enum IdentifierKind {
     /// China's resident identity number: 18 characters, a birth date in
     /// them and an ISO 7064 MOD 11-2 check character (`0`–`9` or `X`).
     CnResidentId,
+    /// A passport number under a passport label on the same line (Japan: two
+    /// letters and 7 digits; Singapore: a letter, 7 digits and a letter;
+    /// China: `E` and 8 digits, `E`, a letter and 7 digits, or the older `G`
+    /// and 8 digits), or the second line of a passport's machine readable
+    /// zone (ICAO 9303 TD3) whose check digits are right.
+    Passport,
 }
 
 /// Digit groups joined by single spaces or hyphens.
@@ -51,12 +63,43 @@ static CN_RESIDENT_ID: LazyLock<Regex> = LazyLock::new(|| {
     .unwrap()
 });
 
+/// The passport number shapes: Japan (two letters, 7 digits; China's `E`, a
+/// letter and 7 digits is the same shape), Singapore (letter, 7 digits,
+/// letter: which letters are in use is not checked) and China (`E` or the
+/// older `G`, 8 digits). Upper case only, as printed.
+static PASSPORT: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"[A-Z]{2}[0-9]{7}|[A-Z][0-9]{7}[A-Z]|[EG][0-9]{8}").unwrap());
+/// A passport label, as Chinese, Japanese and English write it, and the mixed
+/// `Passport 号码`.
+static PASSPORT_LABEL: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)护照号码?|旅券番号|パスポート番号|passport\s*(?:no\b\.?|number\b|#|号码)")
+        .unwrap()
+});
+/// At most this many characters between a passport label and its number.
+const PASSPORT_LABEL_GAP: usize = 12;
+/// A candidate machine readable zone line: 44 of `A`–`Z`, `0`–`9` and `<`.
+static MRZ_LINE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[A-Z0-9<]{44}").unwrap());
+
 pub fn scan(text: &str) -> Wiped<IdentifierKind> {
     let mut found: Vec<(usize, usize, IdentifierKind)> = Vec::new();
-    // Resident ids first: one ending in `X` is no digit run, and one ending in
+    // Machine readable zones first: a passport number inside one is glued to
+    // its check digit, and the whole line goes.
+    for line in MRZ_LINE.find_iter(text) {
+        let (start, end) = (line.start(), line.end());
+        let before = text[..start].chars().next_back();
+        let after = text[end..].chars().next();
+        let in_zone = |c: char| c.is_ascii_alphanumeric() || c == '<';
+        if !before.is_some_and(in_zone) && !after.is_some_and(in_zone) && mrz_line(line.as_str()) {
+            found.push((start, end, IdentifierKind::Passport));
+        }
+    }
+    // Resident ids next: one ending in `X` is no digit run, and one ending in
     // a digit is not also read as a card.
     for id in CN_RESIDENT_ID.find_iter(text) {
-        if alone(text, id.start(), id.end()) && cn_resident_id(id.as_str()) {
+        if alone(text, id.start(), id.end())
+            && free(&found, id.start(), id.end())
+            && cn_resident_id(id.as_str())
+        {
             found.push((id.start(), id.end(), IdentifierKind::CnResidentId));
         }
     }
@@ -73,8 +116,14 @@ pub fn scan(text: &str) -> Wiped<IdentifierKind> {
         found.extend(numbers_in(text, run.start(), run.as_str()));
     }
     for nric in NRIC.find_iter(text) {
-        if nric_valid(nric.as_str()) {
+        if free(&found, nric.start(), nric.end()) && nric_valid(nric.as_str()) {
             found.push((nric.start(), nric.end(), IdentifierKind::SgNric));
+        }
+    }
+    for number in PASSPORT.find_iter(text) {
+        let (start, end) = (number.start(), number.end());
+        if alone(text, start, end) && free(&found, start, end) && passport_labelled(text, start) {
+            found.push((start, end, IdentifierKind::Passport));
         }
     }
     found.sort_by_key(|(start, _, _)| *start);
@@ -94,6 +143,82 @@ fn alone(text: &str, start: usize, end: usize) -> bool {
     let after = text[end..].chars().next();
     !before.is_some_and(|c| c.is_ascii_alphanumeric())
         && !after.is_some_and(|c| c.is_ascii_alphanumeric())
+}
+
+/// `start..end` overlaps nothing already found.
+fn free(found: &[(usize, usize, IdentifierKind)], start: usize, end: usize) -> bool {
+    !found.iter().any(|(from, to, _)| *from < end && start < *to)
+}
+
+/// A passport label before `start` on the same line, ending at most
+/// [`PASSPORT_LABEL_GAP`] characters before it. A label on an earlier line
+/// (a heading, an article about applying for a passport) takes nothing.
+pub fn passport_labelled(text: &str, start: usize) -> bool {
+    let line = text[..start]
+        .rfind(['\n', '\r', '\u{2028}', '\u{2029}'])
+        .map_or(0, |at| {
+            at + text[at..].chars().next().map_or(1, char::len_utf8)
+        });
+    PASSPORT_LABEL
+        .find_iter(&text[line..start])
+        .last()
+        .is_some_and(|label| text[line + label.end()..start].chars().count() <= PASSPORT_LABEL_GAP)
+}
+
+/// The second line of a passport's machine readable zone (ICAO 9303, TD3):
+/// document number and its check digit, nationality, birth date and its check
+/// digit, sex, expiry date and its check digit, optional data and its check
+/// digit, and the check digit over all of them. The document number, both
+/// dates and the whole line have to check out.
+pub fn mrz_line(line: &str) -> bool {
+    let chars: Vec<char> = line.chars().collect();
+    if chars.len() != 44 {
+        return false;
+    }
+    let field = |from: usize, to: usize| &chars[from..to];
+    let number = field(0, 9);
+    if !number.iter().any(char::is_ascii_alphanumeric)
+        || !field(10, 13)
+            .iter()
+            .all(|c| c.is_ascii_uppercase() || *c == '<')
+        || !matches!(chars[20], 'M' | 'F' | 'X' | '<')
+        || !date(field(13, 19))
+        || !date(field(21, 27))
+    {
+        return false;
+    }
+    let checks = |data: &[char], digit: char| mrz_check(data) == digit.to_digit(10);
+    let whole: Vec<char> = [field(0, 10), field(13, 20), field(21, 43)].concat();
+    checks(number, chars[9])
+        && checks(field(13, 19), chars[19])
+        && checks(field(21, 27), chars[27])
+        && checks(&whole, chars[43])
+}
+
+/// A `YYMMDD` date: six digits, a month and a day that can be.
+fn date(chars: &[char]) -> bool {
+    let digits: Vec<u32> = chars.iter().filter_map(|c| c.to_digit(10)).collect();
+    if digits.len() != 6 {
+        return false;
+    }
+    let (month, day) = (digits[2] * 10 + digits[3], digits[4] * 10 + digits[5]);
+    (1..=12).contains(&month) && (1..=31).contains(&day)
+}
+
+/// The ICAO 9303 check digit: digits as themselves, `A`–`Z` as 10–35, `<` as
+/// 0, weighted 7, 3, 1 in turn, modulo 10. `None` for any other character.
+pub fn mrz_check(data: &[char]) -> Option<u32> {
+    let mut sum = 0;
+    for (at, c) in data.iter().enumerate() {
+        let value = match c {
+            '0'..='9' => c.to_digit(10)?,
+            'A'..='Z' => *c as u32 - 'A' as u32 + 10,
+            '<' => 0,
+            _ => return None,
+        };
+        sum += value * [7, 3, 1][at % 3];
+    }
+    Some(sum % 10)
 }
 
 /// Cards and My Numbers among one run's groups: the longest valid window of

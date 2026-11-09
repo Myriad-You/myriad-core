@@ -338,6 +338,126 @@ fn a_plain_my_number_under_its_chinese_label_is_wiped() {
 }
 
 #[test]
+fn a_passport_number_under_its_label_is_wiped() {
+    let mark = identifiers::MARK;
+    for (shape, number) in synthetic::passports(60) {
+        for label in [
+            "护照号码：",
+            "护照号 ",
+            "旅券番号　",
+            "パスポート番号：",
+            "Passport No. ",
+            "passport no: ",
+            "PASSPORT NUMBER ",
+            "Passport #",
+            "Passport 号码：",
+            "护照号码（本人）：",
+        ] {
+            let text = format!("姓名 白川 葵，{label}{number}，有效期至 2031 年");
+            let scan = identifiers::scan(&text);
+            assert_eq!(scan.wiped, [IdentifierKind::Passport], "{shape} {label}");
+            assert_eq!(
+                scan.text,
+                format!("姓名 白川 葵，{label}{mark}，有效期至 2031 年"),
+                "{shape} {label}"
+            );
+        }
+    }
+    // Two on one line, each under its own label.
+    let all = synthetic::passports(61);
+    let text = format!("旧护照号码 {}，新护照号码 {}", all[4].1, all[2].1);
+    assert_eq!(
+        wiped_kinds(&text),
+        [IdentifierKind::Passport, IdentifierKind::Passport]
+    );
+}
+
+#[test]
+fn a_passport_shape_without_its_label_stays() {
+    for (shape, number) in synthetic::passports(62) {
+        for text in [
+            // The same shapes as order, booking and model numbers.
+            format!("订单号 {number}"),
+            format!("预订编号：{number}（航班 NH 0858）"),
+            format!("型号 {number}，保修三年"),
+            format!("Order #{number} has shipped"),
+            format!("Flight booking ref {number}"),
+            // A label on the line above: a heading, an article, a form laid
+            // out in two lines.
+            format!("护照办理指南\n办理时带好护照号码和照片。\n订单号 {number}"),
+            format!("Passport No.\n{number}"),
+            format!("旅券番号\r\n{number}"),
+            // The label too far before it on the line.
+            format!("护照号码请在下方填写，本页样例的订单号是 {number}"),
+            // Glued to a letter or a digit: part of a longer code.
+            format!("护照号码 {number}7"),
+            format!("Passport No. {number}X"),
+            format!("护照号码 A{number}"),
+        ] {
+            assert!(wiped_kinds(&text).is_empty(), "{shape}: {text}");
+        }
+    }
+    // An article about applying for a passport, no number in it.
+    for text in [
+        "护照号码在资料页的右上角，办理签证时要填写。",
+        "パスポート番号は旅券の顔写真ページに記載されています。",
+        "How to find your passport number before you book.",
+    ] {
+        assert!(wiped_kinds(text).is_empty(), "{text}");
+    }
+    // Lower case is not how a passport number is printed.
+    assert!(wiped_kinds("Passport No. tz1234567").is_empty());
+}
+
+#[test]
+fn a_machine_readable_zone_line_whose_check_digits_are_right_is_wiped() {
+    let mark = identifiers::MARK;
+    // ICAO 9303's own specimen: the crate's check digits agree with it.
+    let check = |data: &str| identifiers::mrz_check(&data.chars().collect::<Vec<_>>());
+    assert_eq!(check("L898902C3"), Some(6));
+    assert_eq!(check("740812"), Some(2));
+    assert_eq!(check("120415"), Some(9));
+    assert!(identifiers::mrz_line(
+        "L898902C36UTO7408122F1204159ZE184226B<<<<<10"
+    ));
+    for (shape, number) in synthetic::passports(63) {
+        let (first, second) = synthetic::mrz(&number, "900215", "310214");
+        // No label needed; the first line (the name) is not a number.
+        for text in [
+            format!("{first}\n{second}"),
+            format!("{first} {second}"),
+            second.clone(),
+        ] {
+            let scan = identifiers::scan(&text);
+            assert_eq!(scan.wiped, [IdentifierKind::Passport], "{shape}");
+            assert!(
+                !scan.text.contains(&number) && scan.text.ends_with(mark),
+                "{shape}"
+            );
+        }
+        // One character changed anywhere a check digit covers.
+        for at in [0, 3, 8, 9, 13, 16, 19, 22, 25, 27, 30, 43] {
+            let mut chars: Vec<char> = second.chars().collect();
+            // Steps that move the value by one, never by a multiple of ten
+            // (`<` to `A`, or `K` to `<`, would leave every check digit right).
+            chars[at] = match chars[at] {
+                '9' => '8',
+                'Z' => 'Y',
+                '<' => 'B',
+                c => (c as u8 + 1) as char,
+            };
+            let changed: String = chars.into_iter().collect();
+            assert!(
+                wiped_kinds(&format!("{first}\n{changed}")).is_empty(),
+                "{shape} at {at}"
+            );
+        }
+        // A 45th character makes it something else.
+        assert!(wiped_kinds(&format!("{second}<")).is_empty(), "{shape}");
+    }
+}
+
+#[test]
 fn a_well_formed_number_with_a_wrong_check_digit_stays() {
     for text in [
         "S1234567A",
