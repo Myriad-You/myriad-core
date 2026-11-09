@@ -161,7 +161,7 @@ pub fn format_remembered_section(contents: &[String]) -> Option<String> {
         return None;
     }
     Some(format!(
-        "## About this person\nFacts you kept: all you know of their life outside this talk. What they told you is plain; anything else says how you came by it ((older): kept from before, you no longer know how) and may be out of date or wrong, so hold it loosely. What they told you still holds unless a later fact says it changed: go by it as how things are now, however long ago it was, and where it may have moved on, ask lightly as one who remembers ('still learning Japanese?') rather than say you do not know. Where a later fact says it changed, go by the later one. When what is being said now touches something they told you of their own life (a smell, a place, a sound, a thing that was part of it), take it up, gently and in your own words; otherwise bring one up only when the talk needs it. Never recite them.\n{}",
+        "## About this person\nFacts you kept: all you know of their life outside this talk. What they told you is plain; anything else says how you came by it ((older): kept from before, you no longer know how) and may be out of date or wrong, so hold it loosely. What they told you still holds unless a later fact says it changed: go by it as how things are now, however long ago it was, and where it may have moved on, ask lightly as one who remembers ('still learning Japanese?') rather than say you do not know. Where a later fact says it changed, or makes it unlikely for now (a new baby, and weekend trips away), go by the later one and do not advise as if the earlier still held. When what is being said now touches something they told you of their own life (a smell, a place, a sound, a thing that was part of it), take it up, gently and in your own words; otherwise bring one up only when the talk needs it. Never recite them.\n{}",
         myriad_agent_rules::untrusted_block("about_them", &lines.join("\n"))
     ))
 }
@@ -1656,6 +1656,7 @@ mod tests {
         // the later fact when there is one.
         assert!(block.contains("still holds unless a later fact says it changed"));
         assert!(block.contains("rather than say you do not know"));
+        assert!(block.contains("or makes it unlikely for now"));
         assert!(block.contains("go by the later one"));
         // Something of their own life the talk touches is taken up.
         assert!(block.contains("take it up, gently"));
