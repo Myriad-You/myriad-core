@@ -155,15 +155,15 @@ fn an_inference_reads_as_the_crate_reads_it() {
     assert_eq!(
         ok(
             "inferring.read",
-            json!({"output": r#"{"inference":"腿断了，这阵子大概骑不了车上班","from":[0,9],"whenFor":["聊到上班怎么去"]}"#,
+            json!({"output": r#"{"inference":"腿断了，这阵子大概骑不了车上班","because":[0,9],"whenFor":["聊到上班怎么去"]}"#,
                 "changes": [1], "known": 2})
         ),
-        json!({"inference": "腿断了，这阵子大概骑不了车上班", "from": [0, 1], "whenFor": ["聊到上班怎么去"]})
+        json!({"inference": "腿断了，这阵子大概骑不了车上班", "because": [0, 1], "whenFor": ["聊到上班怎么去"]})
     );
     assert_eq!(
         ok(
             "inferring.read",
-            json!({"output": r#"{"inference":null,"from":[],"whenFor":[]}"#, "changes": [1], "known": 2})
+            json!({"output": r#"{"inference":null,"because":[],"whenFor":[]}"#, "changes": [1], "known": 2})
         ),
         serde_json::Value::Null
     );

@@ -429,7 +429,7 @@ pub(super) fn inferring_input(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{output, changes, known}` (`known`: how many she was shown) →
-/// `{inference, from, whenFor}`, or `null` when nothing follows or the
+/// `{inference, because, whenFor}`, or `null` when nothing follows or the
 /// answer cannot be read (`inferring::parse_inferred`).
 pub(super) fn inferring_read(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
@@ -445,7 +445,7 @@ pub(super) fn inferring_read(raw: &[u8]) -> Result<Value, Failure> {
             None => Value::Null,
             Some(inferred) => json!({
                 "inference": inferred.text,
-                "from": inferred.from,
+                "because": inferred.because,
                 "whenFor": inferred.when_for,
             }),
         },
