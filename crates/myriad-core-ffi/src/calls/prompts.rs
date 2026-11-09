@@ -7,8 +7,8 @@
 //! keeps no copy of it.
 
 use myriad_merope::{
-    chat_days, chat_history, chat_remember, curiosity, doing, explore, heard, inner, life, pace,
-    reading, remembering, sharing, speaking, views, wants,
+    chat_days, chat_history, chat_remember, curiosity, doing, explore, heard, inferring, inner,
+    life, pace, reading, remembering, sharing, speaking, views, wants,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -374,6 +374,82 @@ pub(super) fn remembering_read(raw: &[u8]) -> Result<Value, Failure> {
             out
         }
     })
+}
+
+/// `judged`: whether going over the talk already found that what they
+/// told her turns something (`inferring::infer_system_prompt`).
+pub(super) fn inferring_system(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        judged: bool,
+    }
+    let req: In = input(raw)?;
+    Ok(text(Some(inferring::infer_system_prompt(req.judged))))
+}
+
+/// `{}` → `{schema}`: an inference's answer.
+pub(super) fn inferring_schema(raw: &[u8]) -> Result<Value, Failure> {
+    let Nothing {} = input(raw)?;
+    Ok(json!({ "schema": inferring::infer_schema() }))
+}
+
+/// One fact she knows of them, as inferring is shown it.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct KnownFact {
+    on: String,
+    fact: String,
+}
+
+/// `{changes, known: [{on, fact}], today}` → `{text}`: what inferring is
+/// given (`inferring::infer_input`); `changes` index `known`.
+pub(super) fn inferring_input(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        changes: Vec<usize>,
+        known: Vec<KnownFact>,
+        today: String,
+    }
+    let req: In = input(raw)?;
+    let known: Vec<inferring::Known<'_>> = req
+        .known
+        .iter()
+        .map(|known| inferring::Known {
+            on: &known.on,
+            fact: &known.fact,
+        })
+        .collect();
+    Ok(text(Some(inferring::infer_input(
+        &req.changes,
+        &known,
+        &req.today,
+    ))))
+}
+
+/// `{output, changes, known}` (`known`: how many she was shown) →
+/// `{inference, from, whenFor}`, or `null` when nothing follows or the
+/// answer cannot be read (`inferring::parse_inferred`).
+pub(super) fn inferring_read(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        output: String,
+        changes: Vec<usize>,
+        known: usize,
+    }
+    let req: In = input(raw)?;
+    Ok(
+        match inferring::parse_inferred(&req.output, &req.changes, req.known) {
+            None => Value::Null,
+            Some(inferred) => json!({
+                "inference": inferred.text,
+                "from": inferred.from,
+                "whenFor": inferred.when_for,
+            }),
+        },
+    )
 }
 
 pub(super) fn chat_days_day_system(raw: &[u8]) -> Result<Value, Failure> {

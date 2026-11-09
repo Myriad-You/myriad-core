@@ -25,6 +25,7 @@ pub mod happened;
 pub mod handoff;
 pub mod heard;
 pub mod hosting;
+pub mod inferring;
 pub mod inner;
 pub mod jargon;
 pub mod jubensha;
