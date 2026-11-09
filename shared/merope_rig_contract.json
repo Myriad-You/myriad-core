@@ -107,7 +107,7 @@
     "maxBones": 48,
     "maxGpuBones": 48,
     "maxTextures": 16,
-    "maxParts": 80,
+    "maxParts": 128,
     "maxVerticesPerPart": 16384,
     "maxTotalVertices": 65535,
     "maxCollisionVolumes": 16
