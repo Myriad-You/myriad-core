@@ -25,6 +25,7 @@ mod own;
 mod partner;
 mod prompts;
 mod recall;
+mod screen;
 mod speech;
 mod sync;
 mod visual;
@@ -136,6 +137,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(partner::TESTED.iter().copied())
     .chain(prompts::TESTED.iter().copied())
     .chain(recall::TESTED.iter().copied())
+    .chain(screen::TESTED.iter().copied())
     .chain(speech::TESTED.iter().copied())
     .chain(sync::TESTED.iter().copied())
     .chain(visual::TESTED.iter().copied())

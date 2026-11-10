@@ -1,0 +1,204 @@
+{
+  "call": "screen.notes",
+  "cases": [
+    {
+      "input": {
+        "app": "Zed",
+        "notes": [],
+        "thing": "main.rs"
+      },
+      "name": "no notes",
+      "output": {
+        "notes": []
+      }
+    },
+    {
+      "input": {
+        "app": "Zed",
+        "notes": [
+          {
+            "kind": "project",
+            "summary": "Rust 写的站点",
+            "title": "Myriad 后端",
+            "updatedAt": 1
+          },
+          {
+            "active": true,
+            "kind": "person",
+            "title": "Myriad",
+            "updatedAt": 9
+          },
+          {
+            "active": true,
+            "kind": "project",
+            "title": "做饭",
+            "updatedAt": 5
+          },
+          {
+            "active": true,
+            "aliases": [
+              "rust"
+            ],
+            "kind": "topic",
+            "title": "Myriad 前端",
+            "updatedAt": 2
+          }
+        ],
+        "thing": "Myriad · main.rs"
+      },
+      "name": "never a person; in play first",
+      "output": {
+        "notes": [
+          {
+            "index": 3,
+            "label": "n1"
+          },
+          {
+            "index": 0,
+            "label": "n2"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "app": "Safari",
+        "notes": [
+          {
+            "kind": "topic",
+            "threads": [
+              "京都红叶"
+            ],
+            "title": "秋天的旅行",
+            "updatedAt": 3
+          },
+          {
+            "kind": "topic",
+            "name": "富士 X100",
+            "title": "相机",
+            "updatedAt": 4
+          },
+          {
+            "aliases": [
+              "京都"
+            ],
+            "kind": "thing",
+            "title": "攻略本",
+            "updatedAt": 5
+          }
+        ],
+        "thing": "京都 红叶 攻略 X100"
+      },
+      "name": "names, aliases and threads count",
+      "output": {
+        "notes": [
+          {
+            "index": 2,
+            "label": "n1"
+          },
+          {
+            "index": 0,
+            "label": "n2"
+          },
+          {
+            "index": 1,
+            "label": "n3"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "app": "Word",
+        "notes": [
+          {
+            "kind": "topic",
+            "title": "report 0",
+            "updatedAt": 0
+          },
+          {
+            "kind": "topic",
+            "title": "report 1",
+            "updatedAt": 1
+          },
+          {
+            "kind": "topic",
+            "title": "report 2",
+            "updatedAt": 2
+          },
+          {
+            "kind": "topic",
+            "title": "report 3",
+            "updatedAt": 3
+          },
+          {
+            "kind": "topic",
+            "title": "report 4",
+            "updatedAt": 4
+          },
+          {
+            "kind": "topic",
+            "title": "report 5",
+            "updatedAt": 5
+          },
+          {
+            "kind": "topic",
+            "title": "report 6",
+            "updatedAt": 6
+          },
+          {
+            "kind": "topic",
+            "title": "report 7",
+            "updatedAt": 7
+          }
+        ],
+        "thing": "report"
+      },
+      "name": "at most six",
+      "output": {
+        "notes": [
+          {
+            "index": 7,
+            "label": "n1"
+          },
+          {
+            "index": 6,
+            "label": "n2"
+          },
+          {
+            "index": 5,
+            "label": "n3"
+          },
+          {
+            "index": 4,
+            "label": "n4"
+          },
+          {
+            "index": 3,
+            "label": "n5"
+          },
+          {
+            "index": 2,
+            "label": "n6"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "app": "Music",
+        "notes": [
+          {
+            "kind": "topic",
+            "title": "京都",
+            "updatedAt": 1
+          }
+        ]
+      },
+      "name": "no shared word: none",
+      "output": {
+        "notes": []
+      }
+    }
+  ]
+}

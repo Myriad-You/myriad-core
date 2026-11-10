@@ -39,6 +39,7 @@ mod partner;
 mod prompts;
 mod reach;
 mod reminder;
+mod screen;
 mod serial;
 mod soup;
 mod speaking;
@@ -296,6 +297,9 @@ const CALLS: &[(&str, Call)] = &[
     ("remembering.schema", prompts::remembering_schema),
     ("remembering.system", prompts::remembering_system),
     ("reminder.due", reminder::due),
+    ("screen.fact", screen::fact),
+    ("screen.notes", screen::notes),
+    ("screen.unquoted", screen::unquoted),
     ("self_story.ask", voice::self_story_ask),
     ("self_story.checked", voice::self_story_checked),
     ("sending.goes_out", voice::goes_out),
