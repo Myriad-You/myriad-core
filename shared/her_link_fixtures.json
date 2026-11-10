@@ -855,6 +855,7 @@
     "body": {
       "group": "group:g42",
       "name": "读书会",
+      "through": 12,
       "messages": [
         {
           "id": "m_903",
@@ -920,6 +921,7 @@
     "body": {
       "chat": "personal:q_5521",
       "name": "小林",
+      "through": 3,
       "who": {
         "kind": "member",
         "user_id": 101,
