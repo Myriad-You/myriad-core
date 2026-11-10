@@ -3,7 +3,8 @@
 //! (`crates/conformance/v1/wander`, `v1/notify`), and the calls said again
 //! through the crates. A `notify.kind` case carries `today`, the site's and
 //! the Mac's own conclusions before the core held this; where the two agreed
-//! the core says the same.
+//! the core says the same. A case the core changed on purpose carries
+//! `changed`, why, instead.
 //! `MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi wander`
 //! writes the outputs again after a deliberate change.
 

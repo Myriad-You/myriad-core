@@ -35,8 +35,9 @@ pub const INTERRUPTS_WHEN_AWAY: [&str; 5] = [
 
 /// What a child end saw for her and told her host (her link's `moment`,
 /// `shared/her_link_contract.json`): another coding agent's session there,
-/// the owner's conversation with another AI there, and that machine's own
-/// reading of what they are doing in front of it.
+/// the owner's conversation with another AI there, that machine's own
+/// reading of what they are doing in front of it, and a look at their
+/// screen its own screen gate let through.
 pub const PEER_AGENT_EVENT: &str = "agent.merope.peer_agent";
 pub const AI_CHAT_EVENT: &str = "agent.merope.ai_chat";
 pub const SITUATION_EVENT: &str = "agent.merope.situation";
