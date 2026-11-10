@@ -1,0 +1,127 @@
+{
+  "call": "screen.unquoted",
+  "cases": [
+    {
+      "input": {
+        "mood": "好奇",
+        "note": "n1",
+        "tookIn": "the quick brown fox jumps over"
+      },
+      "name": "no window text: kept as said",
+      "output": {
+        "mood": "好奇",
+        "note": "n1",
+        "tookIn": "the quick brown fox jumps over"
+      }
+    },
+    {
+      "input": {
+        "mood": null,
+        "note": null,
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": null
+      },
+      "name": "only noticed: nothing to take out",
+      "output": {
+        "mood": null,
+        "note": null,
+        "tookIn": null
+      }
+    },
+    {
+      "input": {
+        "mood": "开心",
+        "note": "n2",
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "I liked: the QUICK brown fox jumps, so fun"
+      },
+      "name": "a run she repeated is one ellipsis",
+      "output": {
+        "mood": "开心",
+        "note": "n2",
+        "tookIn": "I liked: …, so fun"
+      }
+    },
+    {
+      "input": {
+        "mood": null,
+        "note": null,
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "quick brown fox, ha"
+      },
+      "name": "shorter than a run stays hers",
+      "output": {
+        "mood": null,
+        "note": null,
+        "tookIn": "quick brown fox, ha"
+      }
+    },
+    {
+      "input": {
+        "mood": "轻松",
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "她说今天天气真好啊我们出去"
+      },
+      "name": "eight wide characters make a run",
+      "output": {
+        "mood": "轻松",
+        "note": null,
+        "tookIn": "她说…"
+      }
+    },
+    {
+      "input": {
+        "mood": "x",
+        "note": "n1",
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "ｔｈｅ ｑｕｉｃｋ ｂｒｏｗｎ ｆｏｘ"
+      },
+      "name": "full width folds to the usual letters",
+      "output": {
+        "mood": null,
+        "note": null,
+        "tookIn": null
+      }
+    },
+    {
+      "input": {
+        "mood": "今天天气真好啊我们出去",
+        "note": null,
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "想去散步"
+      },
+      "name": "her mood loses a run too",
+      "output": {
+        "mood": null,
+        "note": null,
+        "tookIn": "想去散步"
+      }
+    },
+    {
+      "input": {
+        "mood": "开心",
+        "note": "n1",
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "The quick brown fox jumps over the lazy dog"
+      },
+      "name": "nothing of hers left: only knew",
+      "output": {
+        "mood": null,
+        "note": null,
+        "tookIn": null
+      }
+    },
+    {
+      "input": {
+        "shown": "The quick brown fox jumps over the lazy dog. 今天天气真好啊我们出去走走吧",
+        "tookIn": "看到 the quick\nbrown   fox jumps 了"
+      },
+      "name": "line breaks and spaces aside",
+      "output": {
+        "mood": null,
+        "note": null,
+        "tookIn": "看到 … 了"
+      }
+    }
+  ]
+}

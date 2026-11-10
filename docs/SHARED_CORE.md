@@ -542,6 +542,16 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - **一致性对照** `crates/conformance/v1/wander/`（`memory.wander` 的前 40 个用例和 `wander.quiet`、`wander.thought` 的录制用例是原生照站点录下的参照，两端今天都过）和 `v1/notify/notify.kind.json`（每个用例另带 `today`：站点和原生今天的结论；两端一致的，核心说的一样，`myriad-core-ffi` 的测试核对）。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi wander` 只随一次写明理由的改动用。
 
+## 屏幕上的一眼成为她的什么（`screen.*`）
+
+一眼屏幕（`agent.merope.screen` 的 moment，原生在本机看到的或者子机告诉主机的）接不接过来，由她在本来就要做的决定里自己说。下面三条只管：她的话里哪些能留下、给她看哪些笔记、只知道的那条事实怎么写。两端都调这里（2026-11-10 起；原生跟钉以后改用它，站点做主机时直接用），不各写一份。规则在 `myriad_merope::screen`。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `screen.unquoted` | `{tookIn, mood?, note?, shown?}` → `{tookIn, mood, note}`：她接过来的话和心情里，凡是和 `shown`（随这一眼给她看的窗口文字）连续重合够一段的，换成一个 `…`。一段按字宽算：宽字（中日韩、假名、谚文、全角）算 2，其余算 1，够 16 就是一段；比对时空格和换行不算，大小写、全半角不分。替换后她自己的字母和数字不到 2 个，就当她只是知道：三项都是 null |
+| `screen.notes` | `{app, thing?, notes: [{kind, title, name?, summary?, aliases?, threads?, active?, updatedAt?}]}` → `{notes: [{label, index}]}`：给她看的笔记。`notes` 是伙伴本人私聊受众里还在的节点（并进别处的由调用方先去掉）；`person` 不给。按回忆用的词法打分（`lexical::score_all`），只留共有完整词的；排序是在用的在前，再按分数，再按最近改过；最多 6 个。`label` 依次是 `n1`、`n2`……，`index` 是输入里的位置，id 不给她 |
+| `screen.fact` | `{app, thing?, at, zone, language}` → `{text, source}`：只知道的那一眼写成一条事实：时间（`zone` 里的 `yyyy-MM-dd HH:mm`）、应用、窗口或文件，按 `language` 写日文、英文，其余写中文；没有她的话，也没有页面上的字。`source` 是 `screen` |
+
 ## 聊天软件里的她（`speaking.chat_app_section`、`talk_shape.*`、`channel.as_messages`、`timing.typing`、`memes.*`、`stickers.section`）
 
 她在聊天软件里的说话习惯，站点的 bot 一直这样说（`channel_work/chat.rs`、`chat_stream.rs` 的 `channel_chat` 一支）；登记出来是为了别的端照同一套说。规则在 `myriad_merope::{speaking, talk_shape, timing, memes, stickers}` 和 `myriad_agent_rules::channel`，调用只做 JSON 转换（`calls/chat_app.rs`）。`Shape` 是 `talk_shape::Shape` 的 camelCase JSON：`{turns, messages, perTurn, single, charsMedian, charsP90, endMark, bang, laughEnd}`。

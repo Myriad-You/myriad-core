@@ -1,0 +1,112 @@
+{
+  "call": "screen.fact",
+  "cases": [
+    {
+      "input": {
+        "app": "Word",
+        "at": 1793750400000000,
+        "language": "zh-CN",
+        "thing": "报告.docx",
+        "zone": "Asia/Singapore"
+      },
+      "name": "zh with a window",
+      "output": {
+        "source": "screen",
+        "text": "屏幕上：2026-11-04 08:00 你在 Word 里开着「报告.docx」"
+      }
+    },
+    {
+      "input": {
+        "app": "Safari",
+        "at": 1793750400000000,
+        "language": "zh",
+        "zone": "Asia/Singapore"
+      },
+      "name": "zh app alone",
+      "output": {
+        "source": "screen",
+        "text": "屏幕上：2026-11-04 08:00 你在用 Safari"
+      }
+    },
+    {
+      "input": {
+        "app": "Safari",
+        "at": 1793750400000000,
+        "language": "ja-JP",
+        "thing": "京都の紅葉",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "ja with a window",
+      "output": {
+        "source": "screen",
+        "text": "画面：2026-11-04 09:00 Safari で「京都の紅葉」を開いていた"
+      }
+    },
+    {
+      "input": {
+        "app": "Safari",
+        "at": 1793750400000000,
+        "language": "ja",
+        "zone": "Asia/Tokyo"
+      },
+      "name": "ja app alone",
+      "output": {
+        "source": "screen",
+        "text": "画面：2026-11-04 09:00 Safari を使っていた"
+      }
+    },
+    {
+      "input": {
+        "app": "Zed",
+        "at": 1793750400000000,
+        "language": "EN",
+        "thing": "main.rs",
+        "zone": "+00:00"
+      },
+      "name": "en with a file",
+      "output": {
+        "source": "screen",
+        "text": "On screen: at 2026-11-04 00:00 you had «main.rs» open in Zed"
+      }
+    },
+    {
+      "input": {
+        "app": "Zed",
+        "at": 1793750400000000,
+        "language": "en-US",
+        "thing": "",
+        "zone": "America/New_York"
+      },
+      "name": "en empty thing is none",
+      "output": {
+        "source": "screen",
+        "text": "On screen: at 2026-11-03 19:00 you were using Zed"
+      }
+    },
+    {
+      "input": {
+        "app": "Zed",
+        "at": 1793750400000000,
+        "language": "de",
+        "zone": "Asia/Shanghai"
+      },
+      "name": "other languages write Chinese",
+      "output": {
+        "source": "screen",
+        "text": "屏幕上：2026-11-04 08:00 你在用 Zed"
+      }
+    },
+    {
+      "input": {
+        "app": "Zed",
+        "at": 1793750400000000,
+        "language": "zh",
+        "zone": "Mars/Base"
+      },
+      "name": "unknown zone",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ]
+}
