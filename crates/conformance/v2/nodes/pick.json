@@ -663,6 +663,74 @@
     },
     {
       "input": {
+        "budget": {
+          "entries": 3
+        },
+        "nodes": [
+          {
+            "entries": [
+              {
+                "at": 1760000000000001,
+                "id": "r1"
+              },
+              {
+                "at": 1760000000000002,
+                "id": "r2"
+              },
+              {
+                "at": 1760000000000003,
+                "id": "r3"
+              },
+              {
+                "at": 1760000000000004,
+                "id": "r4"
+              },
+              {
+                "at": 1760000000000005,
+                "id": "r5"
+              },
+              {
+                "at": 1760000000000006,
+                "id": "r6"
+              }
+            ],
+            "id": "running"
+          }
+        ],
+        "ranked": [
+          {
+            "id": "r2",
+            "named": true
+          },
+          {
+            "id": "r1",
+            "named": true
+          },
+          {
+            "id": "r3",
+            "named": true
+          }
+        ]
+      },
+      "name": "a picked node shows its newest entry even when the words found only older ones",
+      "output": {
+        "loose": [
+          "r3"
+        ],
+        "picked": [
+          {
+            "entries": [
+              "r2",
+              "r1",
+              "r6"
+            ],
+            "node": "running"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
         "nodes": [
           {
             "id": "n"
