@@ -46,7 +46,7 @@
   },
   "deliveries": {
     "handshake": "Once per connection, first thing.",
-    "reliable": "The sender keeps the frame until the other end's ack covers its seq, and sends it again (same id, new seq) after a reconnect. The receiver deduplicates by id.",
+    "reliable": "The sender keeps the frame until the other end's ack covers its seq, and sends it again (same id, new seq) after a reconnect. The receiver deduplicates by id. Except group.lend and chat.lend: sent once, on the link they were made for, never again after a reconnect; one not acked when that link closes is the server's again (see group.lend).",
     "answer": "Sent in reply to one frame; carries what that frame's id or turnId refers to.",
     "turn": "A run's events in run sequence. After a reconnect the child asks for what it missed with run.resume.",
     "latest": "Only the newest value counts. Dropped while disconnected; the host sends its current value again after the next welcome.",
@@ -158,7 +158,8 @@
     "nodes",
     "images",
     "partner",
-    "log2"
+    "log2",
+    "lend"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
   "noticeKinds": ["work", "waiting", "report", "reminder"],
@@ -206,7 +207,7 @@
       "delivery": "handshake",
       "required": ["protocol", "role", "surface"],
       "optional": ["capabilities", "app", "lineage", "hostEpoch"],
-      "description": "The first frame, within helloTimeoutMs of the upgrade. protocol is the one this end speaks (protocol): another closes the link with unsupported_protocol. role is child: every end that dials the host is one, the device she lives on too (her lease names it and the site let its copy of her go, H3e): its welcome says host app (welcome). A hello with role host is an app from before the two links were one: it closes with unsupported_protocol, as a hello of another protocol does, so the owner is told to update it. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. log2 says this end's shared core is ABI 2 or later (it reads her log's merge, split and retract rows, MYRIAD_CORE_ABI_VERSION): an end sends those rows only to a side that listed it (nodes.wire_send peerAbi). app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time). The device she lives on is welcomed as her host only while hostEpoch is one of its holding: from the grant that gave it her to the one that stands (a freeze and a thaw for a move called off keep her with it); a device that lost her in between is closed with host_moved and lets its copy go. For other children the host does not act on them yet. An end lists the capability partner when its core knows the welcome's partner field."
+      "description": "The first frame, within helloTimeoutMs of the upgrade. protocol is the one this end speaks (protocol): another closes the link with unsupported_protocol. role is child: every end that dials the host is one, the device she lives on too (her lease names it and the site let its copy of her go, H3e): its welcome says host app (welcome). A hello with role host is an app from before the two links were one: it closes with unsupported_protocol, as a hello of another protocol does, so the owner is told to update it. surface is the kind of child (app). capabilities is what this end can do, from the list above; unknown ones are dropped. log2 says this end's shared core is ABI 2 or later (it reads her log's merge, split and retract rows, MYRIAD_CORE_ABI_VERSION): an end sends those rows only to a side that listed it (nodes.wire_send peerAbi). app is {name, version} for logs. lineage and hostEpoch are what this child last heard in a welcome (null the first time). The device she lives on is welcomed as her host only while hostEpoch is one of its holding: from the grant that gave it her to the one that stands (a freeze and a thaw for a move called off keep her with it); a device that lost her in between is closed with host_moved and lets its copy go. For other children the host does not act on them yet. An end lists the capability partner when its core knows the welcome's partner field. An end lists lend when its mind thinks with what the server lends it (group.lend, chat.lend) and can answer for it: the server lends only to a link whose hello listed it; to one that did not, nothing is lent, and a group's lines are taken up by the server's own group mind and private messages held as before."
     },
     "welcome": {
       "from": "host",
@@ -676,8 +677,8 @@
       "required": ["group", "messages"],
       "optional": ["name", "recent", "owner"],
       "maxItems": {"messages": 64, "recent": 64},
-      "idempotency": "id is made by the server once per lend, the same on every resend.",
-      "description": "To the core her mind is on, when that is a PC: new messages in a group she is in, lent for her to think with. group is the group's audience (group:<id>), name what the group is called there. messages are the new ones and recent the ones just before them, oldest first, each {id, from, name, text, at, toHer?, who?}: id the platform's message id as text, from the member's id in the group's audience (the subject its rows use), name what the member is called there, at milliseconds since the epoch, toHer whether it was addressed to her (a mention or a reply to her), who who wrote it as the server knows them, in the shape of the group mind's identified answer: {kind: member, user_id, bound} for someone paired with an account on the site (bound: their binding there is current), {kind: stranger} for anyone else; the community has no guests, so only a paired account makes a member. who absent: the server could not tell (the mind takes it as unknown). owner is the site owner's user id, the identified answer's owner: who hosts her in the group (a stranger's reply is on their account). So her mind on a PC knows the group's people as the server does. What she knows of the group (her own lines there, what she noted of its members) is the group's log, which the mind reads with log.vector as the holder. The PC keeps none of it on disk and lets it go when she is done or the lease moves; only the server keeps a group. Sent only while that PC holds the lease; a lend not acked when the lease moves is the server's again."
+      "idempotency": "id is made by the server once per lend; a lend is never sent again (delivery reliable only for its id and its ack), so the mind takes each id once.",
+      "description": "To the core her mind is on, when that is a PC: new messages in a group she is in, lent for her to think with. group is the group's audience (group:<id>), name what the group is called there. messages are the new ones and recent the ones just before them, oldest first, each {id, from, name, text, at, toHer?, who?}: id the platform's message id as text, from the member's id in the group's audience (the subject its rows use), name what the member is called there, at milliseconds since the epoch, toHer whether it was addressed to her (a mention or a reply to her), who who wrote it as the server knows them, in the shape of the group mind's identified answer: {kind: member, user_id, bound} for someone paired with an account on the site (bound: their binding there is current), {kind: stranger} for anyone else; the community has no guests, so only a paired account makes a member. who absent: the server could not tell (the mind takes it as unknown). owner is the site owner's user id, the identified answer's owner: who hosts her in the group (a stranger's reply is on their account). So her mind on a PC knows the group's people as the server does. What she knows of the group (her own lines there, what she noted of its members) is the group's log, which the mind reads with log.vector as the holder. The PC keeps none of it on disk and lets it go when she is done or the lease moves; only the server keeps a group. Sent only while that PC holds the lease and only on a link whose hello listed lend, once per lend: a lend is the mind's once the PC's ack covers it (whether she says anything is hers), and one not acked when the lease moves or the link closes is the server's again (its lines go to the server's group mind)."
     },
     "group.say": {
       "from": "mind",
@@ -685,14 +686,14 @@
       "required": ["group", "text"],
       "optional": ["replyTo", "lend"],
       "idempotency": "id is made by the mind once per line, the same on every resend.",
-      "description": "Her mind on a PC says text in a group: the server sends it there as her, the way it sends her own lines. replyTo is the message id she answers, lend the group.lend it comes from. Her line and what she noted are hers to write: the mind writes them as rows of the group's audience at its epoch and sends them with log.rows, and the server keeps them; the PC keeps neither on disk (it writes them for the server, then lets them go). Taken only from the holder (not_holder otherwise); answered with group.said."
+      "description": "Her mind on a PC says text in a group: the server sends it there as her, the way it sends her own lines. replyTo is the message id she answers, lend the group.lend it comes from. Her line and what she noted are hers to write: the mind writes them as rows of the group's audience at its epoch and sends them with log.rows, and the server keeps them; the PC keeps neither on disk (it writes them for the server, then lets them go). Taken only from the holder: from a core that does not hold the lease it is refused by the frame check as a frame from a role it does not have (error bad_frame, with ref); answered with group.said."
     },
     "group.said": {
       "from": "server",
       "delivery": "answer",
       "required": ["sayId", "sent"],
       "optional": ["code"],
-      "description": "The answer to group.say: sayId is its id, sent whether the line went out. code, when it did not, is why, from errorCodes (not_holder, group_unknown) or unavailable when the platform would not take it; the mind does not say it again on its own."
+      "description": "The answer to group.say: sayId is its id, sent whether the line went out. code, when it did not, is why: group_unknown (a group the server does not keep or did not lend), or unavailable when the platform would not take it or the text is empty; the mind does not say it again on its own."
     },
     "chat.lend": {
       "from": "server",
@@ -700,8 +701,8 @@
       "required": ["chat", "messages"],
       "optional": ["name", "recent", "who"],
       "maxItems": {"messages": 64, "recent": 64},
-      "idempotency": "id is made by the server once per lend, the same on every resend.",
-      "description": "To the core her mind is on, when that is a PC: new messages someone sent her in a private chat on a chat app the server reaches (a bot), lent for her to think with, as group.lend lends a group's. chat is that talk's audience (personal:<id>, id the one she talks with as her log names them), name what they are called there, who who they are as the server knows them, in group.lend's shape ({kind: member, user_id, bound}: a private chat is lent only with someone paired with an account on the site). messages are the new ones and recent the ones just before them, oldest first, each {id, text, at, mine?}: id the platform's message id as text, at milliseconds since the epoch, mine true for a line she said there (recent only). When the one she talks with is not the partner (chat is not the PC's own holder's personal audience), it is talk the PC does not hold: it keeps none of it on disk and lets it go when she is done or the lease moves, and what she knows of them is that audience's log, which the mind reads with log.vector as the holder; only the server keeps it. When it is the partner, it is the partner's own talk, which the PC holds and keeps as it keeps that talk's rows. Sent only while that PC holds the lease; a lend not acked when the lease moves is the server's again."
+      "idempotency": "id is made by the server once per lend; a lend is never sent again (delivery reliable only for its id and its ack), so the mind takes each id once.",
+      "description": "To the core her mind is on, when that is a PC: new messages someone sent her in a private chat on a chat app the server reaches (a bot), lent for her to think with, as group.lend lends a group's. chat is that talk's audience (personal:<id>, id the one she talks with as her log names them), name what they are called there, who who they are as the server knows them, in group.lend's shape ({kind: member, user_id, bound}: a private chat is lent only with someone paired with an account on the site). messages are the new ones and recent the ones just before them, oldest first, each {id, text, at, mine?}: id the platform's message id as text, at milliseconds since the epoch, mine true for a line she said there (recent only). When the one she talks with is not the partner (chat is not the PC's own holder's personal audience), it is talk the PC does not hold: it keeps none of it on disk and lets it go when she is done or the lease moves, and what she knows of them is that audience's log, which the mind reads with log.vector as the holder; only the server keeps it. When it is the partner, it is the partner's own talk, which the PC holds and keeps as it keeps that talk's rows. Sent only while that PC holds the lease and only on a link whose hello listed lend, once per lend: a lend is the mind's once the PC's ack covers it (whether she says anything is hers), and one not acked when the lease moves or the link closes is the server's again (the message is held for when she is back)."
     },
     "chat.say": {
       "from": "mind",
@@ -709,19 +710,19 @@
       "required": ["chat", "text"],
       "optional": ["replyTo", "lend"],
       "idempotency": "id is made by the mind once per line, the same on every resend.",
-      "description": "Her mind on a PC says text in a private chat: the server sends it there as her, the way it sends her own lines. replyTo is the message id she answers, lend the chat.lend it comes from. Her line and what she noted are hers to write: the mind writes them as rows of the chat's audience at its epoch and sends them with log.rows, and the server keeps them; when the one she talks with is not the partner, the PC keeps neither on disk (it writes them for the server, then lets them go). Taken only from the holder (not_holder otherwise); answered with chat.said."
+      "description": "Her mind on a PC says text in a private chat: the server sends it there as her, the way it sends her own lines. replyTo is the message id she answers, lend the chat.lend it comes from. Her line and what she noted are hers to write: the mind writes them as rows of the chat's audience at its epoch and sends them with log.rows, and the server keeps them; when the one she talks with is not the partner, the PC keeps neither on disk (it writes them for the server, then lets them go). Taken only from the holder: from a core that does not hold the lease it is refused by the frame check as a frame from a role it does not have (error bad_frame, with ref); answered with chat.said."
     },
     "chat.said": {
       "from": "server",
       "delivery": "answer",
       "required": ["sayId", "sent"],
       "optional": ["code"],
-      "description": "The answer to chat.say: sayId is its id, sent whether the line went out. code, when it did not, is why, from errorCodes (not_holder, chat_unknown) or unavailable when the platform would not take it; the mind does not say it again on its own."
+      "description": "The answer to chat.say: sayId is its id, sent whether the line went out. code, when it did not, is why: chat_unknown (a chat the server does not keep or did not lend), or unavailable when the platform would not take it or the text is empty; the mind does not say it again on its own."
     }
   },
   "errorCodes": {
     "unknown_frame": "A frame type this end does not know (a newer end): ignored.",
-    "bad_frame": "Not an envelope, a body without its required fields or with fields it does not take, or both or neither of a oneOf pair.",
+    "bad_frame": "Not an envelope, a body without its required fields or with fields it does not take, both or neither of a oneOf pair, or a frame from a role the sender does not have (a mind frame from a core that does not hold the lease).",
     "not_ready": "A frame other than hello before hello: ignored; the host still waits for hello.",
     "binary_unsupported": "A binary frame: the link has none (encoding.text).",
     "empty_input": "input text is empty.",
@@ -750,8 +751,8 @@
     "not_for_me": "Sealed to another device: relay it, do not open it.",
     "not_holder": "A lease frame from a core that does not hold the epoch it names.",
     "stale_epoch": "A lease frame for an epoch that no longer stands.",
-    "group_unknown": "A group frame naming a group the server does not keep, or one she is not in.",
-    "chat_unknown": "A chat frame naming a private chat the server does not keep, or one no chat app reaches now.",
+    "group_unknown": "A group frame naming a group the server does not keep, one she is not in, or one the server did not lend that core.",
+    "chat_unknown": "A chat frame naming a private chat the server does not keep, one no chat app reaches now, or one the server did not lend that core.",
     "clock_ahead": "log.rows refused whole: a row's clock more than five minutes ahead. Carries serverTime; the sender measures its offset, repairs its unsynced rows and sends again.",
     "sync_off": "A frame of a sync family (sync.families) on a link whose welcome said sync off."
   },
