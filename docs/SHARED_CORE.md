@@ -552,6 +552,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `screen.notes` | `{app, thing?, notes: [{kind, title, name?, summary?, aliases?, threads?, active?, updatedAt?}]}` → `{notes: [{label, index}]}`：给她看的笔记。`notes` 是伙伴本人私聊受众里还在的节点（并进别处的由调用方先去掉）；`person` 不给。按回忆用的词法打分（`lexical::score_all`），只留共有完整词的；排序是在用的在前，再按分数，再按最近改过；最多 6 个。`label` 依次是 `n1`、`n2`……，`index` 是输入里的位置，id 不给她 |
 | `screen.fact` | `{app, thing?, at, zone, language}` → `{text, source}`：只知道的那一眼写成一条事实：时间（`zone` 里的 `yyyy-MM-dd HH:mm`）、应用、窗口或文件，按 `language` 写日文、英文，其余写中文；没有她的话，也没有页面上的字。`source` 是 `screen` |
 
+- **一致性对照** `crates/conformance/v1/screen/`（输出由核心写下，`myriad-core-ffi` 的测试核对；原生改用前在自己那边对一遍）。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi screen` 在有意改动后重写输出。
+
 ## 聊天软件里的她（`speaking.chat_app_section`、`talk_shape.*`、`channel.as_messages`、`timing.typing`、`memes.*`、`stickers.section`）
 
 她在聊天软件里的说话习惯，站点的 bot 一直这样说（`channel_work/chat.rs`、`chat_stream.rs` 的 `channel_chat` 一支）；登记出来是为了别的端照同一套说。规则在 `myriad_merope::{speaking, talk_shape, timing, memes, stickers}` 和 `myriad_agent_rules::channel`，调用只做 JSON 转换（`calls/chat_app.rs`）。`Shape` 是 `talk_shape::Shape` 的 camelCase JSON：`{turns, messages, perTurn, single, charsMedian, charsP90, endMark, bang, laughEnd}`。

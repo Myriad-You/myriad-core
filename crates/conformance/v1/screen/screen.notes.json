@@ -87,7 +87,7 @@
             "updatedAt": 5
           }
         ],
-        "thing": "京都 红叶 攻略"
+        "thing": "京都 红叶 攻略 X100"
       },
       "name": "names, aliases and threads count",
       "output": {
@@ -99,6 +99,10 @@
           {
             "index": 0,
             "label": "n2"
+          },
+          {
+            "index": 1,
+            "label": "n3"
           }
         ]
       }
