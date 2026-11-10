@@ -1359,25 +1359,12 @@
       },
       "name": "agent.merope.screen",
       "output": {
-        "inPerson": false,
+        "inPerson": true,
         "interruptsWhenAway": false,
         "taskOutcome": false,
-        "worthNotifying": true
+        "worthNotifying": false
       },
-      "today": {
-        "native": {
-          "inPerson": false,
-          "interruptsWhenAway": false,
-          "taskOutcome": false,
-          "worthNotifying": true
-        },
-        "site": {
-          "inPerson": false,
-          "interruptsWhenAway": false,
-          "taskOutcome": false,
-          "worthNotifying": true
-        }
-      }
+      "changed": "2026-11-10: a look at the screen is a link moment now (her_link_contract moments.kinds), said in person or not at all like every moment, never a notification. Before, both ends notified it as any other agent.merope kind (inPerson false, worthNotifying true)."
     },
     {
       "input": {
