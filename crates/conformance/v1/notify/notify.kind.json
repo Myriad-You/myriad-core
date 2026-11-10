@@ -9,6 +9,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -35,6 +36,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": true,
         "worthNotifying": true
       },
@@ -61,6 +63,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": true,
         "worthNotifying": true
       },
@@ -87,6 +90,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": true,
         "worthNotifying": true
       },
@@ -113,6 +117,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": true,
         "worthNotifying": true
       },
@@ -139,6 +144,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -165,6 +171,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -191,6 +198,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -217,6 +225,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -243,6 +252,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -269,6 +279,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -295,6 +306,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -321,6 +333,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -347,6 +360,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -373,6 +387,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -399,6 +414,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -425,6 +441,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": true,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -451,6 +468,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -477,6 +495,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -503,6 +522,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -529,6 +549,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -555,6 +576,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -581,6 +603,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -607,6 +630,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -633,6 +657,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -659,6 +684,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -685,6 +711,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -711,6 +738,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -737,6 +765,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -763,6 +792,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -789,6 +819,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -815,6 +846,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -841,6 +873,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -867,6 +900,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -893,6 +927,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -919,6 +954,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -945,6 +981,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -971,6 +1008,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -997,6 +1035,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1023,6 +1062,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1049,6 +1089,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1075,6 +1116,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -1101,6 +1143,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -1127,6 +1170,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1153,6 +1197,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1179,6 +1224,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1205,6 +1251,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1231,6 +1278,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1257,6 +1305,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1283,6 +1332,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1309,6 +1359,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1335,6 +1386,7 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": true,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1354,6 +1406,7 @@
       }
     },
     {
+      "changed": "2026-11-10: a look at the screen is a link moment now (her_link_contract moments.kinds), said in person or not at all like every moment, never a notification. Before, both ends notified it as any other agent.merope kind (inPerson false, worthNotifying true).",
       "input": {
         "kind": "agent.merope.screen"
       },
@@ -1361,10 +1414,10 @@
       "output": {
         "inPerson": true,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
-      },
-      "changed": "2026-11-10: a look at the screen is a link moment now (her_link_contract moments.kinds), said in person or not at all like every moment, never a notification. Before, both ends notified it as any other agent.merope kind (inPerson false, worthNotifying true)."
+      }
     },
     {
       "input": {
@@ -1374,6 +1427,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": true
       },
@@ -1400,6 +1454,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1426,6 +1481,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1452,6 +1508,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },
@@ -1478,6 +1535,7 @@
       "output": {
         "inPerson": false,
         "interruptsWhenAway": false,
+        "needsPresence": false,
         "taskOutcome": false,
         "worthNotifying": false
       },

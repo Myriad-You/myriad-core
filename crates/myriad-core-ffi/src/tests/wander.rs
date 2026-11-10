@@ -3,8 +3,8 @@
 //! (`crates/conformance/v1/wander`, `v1/notify`), and the calls said again
 //! through the crates. A `notify.kind` case carries `today`, the site's and
 //! the Mac's own conclusions before the core held this; where the two agreed
-//! the core says the same. A case the core changed on purpose carries
-//! `changed`, why, instead.
+//! the core says the same, in the fields `today` has. A case the core
+//! changed on purpose carries `changed`, why, instead.
 //! `MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi wander`
 //! writes the outputs again after a deliberate change.
 
@@ -51,8 +51,19 @@ fn run(family: &str) -> Vec<String> {
             if let Some(today) = case.get("today") {
                 let (site, native) = (&today["site"], &today["native"]);
                 if site == native {
+                    // What the core says that `today` did not ask yet
+                    // (a field added since) is not compared.
+                    let asked: serde_json::Map<String, Value> = site
+                        .as_object()
+                        .map(|fields| {
+                            fields
+                                .keys()
+                                .filter_map(|key| Some((key.clone(), got.get(key)?.clone())))
+                                .collect()
+                        })
+                        .unwrap_or_default();
                     assert_eq!(
-                        &got,
+                        &Value::Object(asked),
                         site,
                         "{} › {}: both ends agreed",
                         path.display(),
@@ -187,12 +198,14 @@ fn a_kind_is_the_crates() {
         "agent.merope.thought",
         "agent.merope.touch",
         "agent.merope.greeting",
+        "agent.merope.screen",
         "mcp.connected",
     ] {
         assert_eq!(
             ok("notify.kind", json!({ "kind": kind })),
             json!({
                 "inPerson": notify::said_only_in_person(kind),
+                "needsPresence": notify::needs_presence(kind),
                 "taskOutcome": notify::is_task_outcome(kind),
                 "interruptsWhenAway": notify::interrupts_when_away(kind),
                 "worthNotifying": notify::worth_notifying(kind),
