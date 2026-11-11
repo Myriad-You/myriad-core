@@ -165,8 +165,10 @@ pub fn answer_to(
         row.to.is_some()
             || !row.takes.is_empty()
             || row.rule() == crate::Rule::Retract
-            || row.author == crate::row::Author::Rule
-            || row.kind == "node.standing"
+            // Local rows never go, so a local rule's row or standing is
+            // no reason to refuse.
+            || (row.replicate == Replicate::Shared
+                && (row.author == crate::row::Author::Rule || row.kind == "node.standing"))
     }) {
         return Err(LogError::new(
             "a row names another node, is a retract, a rule's row or a node.standing: \
