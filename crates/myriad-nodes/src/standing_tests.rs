@@ -176,6 +176,25 @@ fn a_rule_row_is_about_a_node_and_holds_no_lease() {
             .to_string()
             .contains("only adds")
     );
+    // Forgetting follows what an envelope names, whoever wrote it.
+    let mut absorbed = node_row.clone();
+    absorbed.kind = "node.absorbed".into();
+    absorbed.to = Some("node:n2".into());
+    let mut named = node_row.clone();
+    named.to = Some("node:n2".into());
+    let mut takes = node_row.clone();
+    takes.takes = vec!["a0".into()];
+    for refused in [absorbed, named, takes] {
+        assert!(
+            refused
+                .check()
+                .unwrap_err()
+                .to_string()
+                .contains("names no other node"),
+            "{}",
+            refused.kind
+        );
+    }
     let mut memory = node_row;
     memory.kind = "memory.write".into();
     memory.object = "memory:m1".into();

@@ -271,6 +271,17 @@ impl Row {
                 "a rule's row is about a node, and only adds to it (no forget, no retract)",
             ));
         }
+        // What an envelope names counts whoever wrote it (forgetting follows
+        // it), so a rule names no other node.
+        if self.author == Author::Rule
+            && (self.to.is_some()
+                || !self.takes.is_empty()
+                || kinds::names(&self.kind) != kinds::Names::None)
+        {
+            return Err(LogError::new(
+                "a rule's row names no other node (no to, no takes, no absorbed or split_off)",
+            ));
+        }
         if self.kind == "state.write" {
             let entity = self
                 .object
