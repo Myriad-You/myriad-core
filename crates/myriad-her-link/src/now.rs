@@ -157,7 +157,8 @@ fn valid_tool(tool: &str) -> bool {
         })
 }
 
-/// A remote as repoKey writes it, without `repo:`: `host/path`, lowercase,
+/// A remote as repoKey writes it, without `repo:` (at most
+/// `sessions.remoteBytes`, so the key fits a token): `host/path`, lowercase,
 /// no scheme, no user or password (`@`), no port (`:`), no `.git`, no
 /// trailing or doubled slash, no space. Whether it is exactly repoKey's
 /// form is the nodes' to check; this keeps anything that could carry a
@@ -170,7 +171,16 @@ pub fn valid_remote(remote: &str) -> bool {
     let Some((host, path)) = remote.split_once('/') else {
         return false;
     };
-    !host.is_empty()
+    // A host name: dot-separated labels of a-z 0-9 and inner hyphens.
+    let host_name = host.split('.').all(|label| {
+        !label.is_empty()
+            && !label.starts_with('-')
+            && !label.ends_with('-')
+            && label
+                .bytes()
+                .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+    });
+    host_name
         && !path.is_empty()
         && !remote.ends_with('/')
         && !remote.ends_with(".git")
@@ -375,6 +385,9 @@ mod tests {
             ("remote", json!("/Users/me/repo")),
             ("remote", json!("github.com")),
             ("remote", json!("GitHub.com/me/repo")),
+            ("remote", json!("-x.com/me/repo")),
+            ("remote", json!("a~b.com/me/repo")),
+            ("remote", json!(format!("github.com/{}", "a".repeat(500)))),
             ("touched", json!(["/etc/passwd"])),
             ("touched", json!(["~/notes.md"])),
             ("touched", json!(["C:/x.rs"])),

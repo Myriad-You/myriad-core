@@ -10,19 +10,29 @@
 //! | failed | where it stands: stuck, and why |
 //! | quiet | where it stands only |
 //!
-//! Every frame carries the session's whole picture, so what the owner asked
-//! of it, what it said last, the files it changed and its checks go on the
-//! task each time they change: a row's id comes from what it holds, and the
-//! same again is the same row. What the device told is not her view: every
-//! row is said by a third party (a coding agent's output), or by the partner
-//! for what they said to it, and her own judgment is never written here.
+//! Every frame carries the session's whole picture. What the owner asked of
+//! it, what it said last, the files it changed and its checks go on the
+//! task when they say something new: their row's id comes from what they
+//! hold, so the same words again are the same row. Where it stands, its
+//! open items and its status are written for each change: their row's id
+//! comes from when it changed, so the same frame sent again is the same
+//! rows, and a later change is new ones even when it says what an earlier
+//! one did. What the device told is not her view: every row is said by a
+//! third party (a coding agent's output), or by the partner for what they
+//! said to it, and her own judgment is never written here.
 //!
 //! A task's key comes from the device, the grant and the session
 //! ([`task_key`]), so one session is one task on every host, and a grant
-//! dropped is gone for good: a later one makes other keys. Everything
-//! written from one session names it ([`session_ref`]), in `because` or
-//! `refs`, so a host forgets a grant by forgetting its tasks and every row
-//! that names one of them.
+//! dropped is gone for good: a later one makes other keys. A host forgets a
+//! grant by forgetting each task it made (the whole node: its created row
+//! and status rows name nothing) and every other row that names the grant
+//! ([`grant_ref`]): the only ones elsewhere are the results folded back onto
+//! a repository. Every row that can name something names the grant and the
+//! session ([`session_ref`]), in `because` or `refs`.
+//!
+//! The host gives what it keeps of the task as it stands after the rows of
+//! the last change it took were written: two changes of one session are
+//! taken one after the other, never from the same reading.
 //!
 //! Pure: nothing here reads a clock, a file or the network.
 
@@ -55,20 +65,31 @@ fn session_token(device: &str, grant: &str, session: &str) -> String {
     sha256_hex(seed.as_bytes())[..24].to_string()
 }
 
-/// What every row written from one session names: `session:` and the same
-/// 24 hex as its task's key.
+/// What a row written from one session names: `session:` and the same 24
+/// hex as its task's key.
 pub fn session_ref(device: &str, grant: &str, session: &str) -> String {
     format!("session:s{}", session_token(device, grant, session))
 }
 
-/// One of the task's open items, as the host keeps it now.
+/// What every row written under one grant of a device names: `grant:g` and
+/// 24 hex of the device and the grant. Forgetting a grant is forgetting
+/// what names it, and the tasks it made.
+pub fn grant_ref(device: &str, grant: &str) -> String {
+    let seed = format!("grant\u{1f}{device}\u{1f}{grant}");
+    format!("grant:g{}", &sha256_hex(seed.as_bytes())[..24])
+}
+
+/// One of the task's open items, closed or not, as the host keeps it now.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct OpenKnown {
+pub struct ItemKnown {
     pub item: String,
     pub text: String,
-    /// The row it stands at.
-    pub row: String,
+    #[serde(default)]
+    pub closed: bool,
+    /// The rows it stands at (the fold's `base`): what the next write of
+    /// it is written against.
+    pub base: Vec<String>,
 }
 
 /// The task as the host keeps it now.
@@ -76,12 +97,12 @@ pub struct OpenKnown {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TaskKnown {
     pub status: Status,
-    /// The row its status stands at; none while it was never revised.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub status_row: Option<String>,
-    /// Its open items not closed.
+    /// The rows its status stands at; empty while it was never revised.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub open: Vec<OpenKnown>,
+    pub status_base: Vec<String>,
+    /// Its open items, closed ones too.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub items: Vec<ItemKnown>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -220,6 +241,8 @@ struct Writer<'a> {
     rows: Vec<Placed>,
     audience: &'a str,
     reference: String,
+    /// The grant's and the session's references, sorted.
+    names: Vec<String>,
 }
 
 impl Writer<'_> {
@@ -257,8 +280,8 @@ impl Writer<'_> {
         said_by: SaidBy,
         text: String,
         state: Option<String>,
+        revision: String,
     ) -> Result<(), NodeError> {
-        let revision = digest(&format!("{}\u{1f}{text}", state.as_deref().unwrap_or("")));
         self.push(
             node,
             &format!("{}/{what}", self.reference),
@@ -269,7 +292,7 @@ impl Writer<'_> {
                 said_by: vec![said_by],
                 audience: self.audience.to_string(),
                 text,
-                refs: vec![self.reference.clone()],
+                refs: self.names.clone(),
                 quote_only: false,
                 happened: None,
                 state,
@@ -297,12 +320,16 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
     let task_key = task_key(&device, &session.grant, &session.session);
     let task_node = node_id(&audience, &task_key)?;
     let reference = session_ref(&device, &session.grant, &session.session);
+    let mut because = vec![grant_ref(&device, &session.grant), reference.clone()];
+    because.sort();
     let mut writer = Writer {
         rows: Vec::new(),
         audience: &audience,
         reference: reference.clone(),
+        names: because.clone(),
     };
-    let because = vec![reference.clone()];
+    // A change's own rows: the same frame again is the same rows.
+    let changed = session.occurred_at.to_string();
     let name = repo_name(&session.remote);
 
     if !repo_known {
@@ -364,20 +391,45 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
 
     // What it holds, as it stands.
     if let Some(asked) = session.from_owner.as_deref().and_then(text) {
-        writer.entry(&task_node, "owner", SaidBy::Partner, asked, None)?;
+        let revision = digest(&asked);
+        writer.entry(&task_node, "owner", SaidBy::Partner, asked, None, revision)?;
     }
     if let Some(said) = session.from_agent.as_deref().and_then(text) {
-        writer.entry(&task_node, "agent", SaidBy::ThirdParty, said, None)?;
+        let revision = digest(&said);
+        writer.entry(
+            &task_node,
+            "agent",
+            SaidBy::ThirdParty,
+            said,
+            None,
+            revision,
+        )?;
     }
     if !session.touched.is_empty() {
         let files = cut(
             &format!("changed {}", session.touched.join(", ")),
             limits::TEXT_CHARS,
         );
-        writer.entry(&task_node, "touched", SaidBy::ThirdParty, files, None)?;
+        let revision = digest(&files);
+        writer.entry(
+            &task_node,
+            "touched",
+            SaidBy::ThirdParty,
+            files,
+            None,
+            revision,
+        )?;
     }
     if let Some(checks) = checks_line(&session) {
-        writer.entry(&task_node, "checks", SaidBy::ThirdParty, checks, None)?;
+        let revision = digest(&checks);
+        writer.entry(
+            &task_node,
+            "checks",
+            SaidBy::ThirdParty,
+            checks,
+            None,
+            revision,
+        )?;
     }
     let (state, line) = standing(&session);
     writer.entry(
@@ -386,12 +438,14 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         SaidBy::ThirdParty,
         line,
         Some(state.to_string()),
+        changed.clone(),
     )?;
 
-    // What waits on the owner.
-    let open = task
+    // What waits on the owner: one item per question, opened when it is
+    // asked (again, when it was closed), closed once the session goes on.
+    let items = task
         .as_ref()
-        .map(|task| task.open.as_slice())
+        .map(|task| task.items.as_slice())
         .unwrap_or(&[]);
     let asking = (session.change == Change::Asked).then(|| {
         let question = session
@@ -402,46 +456,37 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         (format!("ask-{}", digest(&question)), question)
     });
     let keeps_open = matches!(session.change, Change::Failed | Change::Quiet);
-    if !keeps_open {
-        for known in open {
-            if asking.as_ref().is_some_and(|(item, _)| item == &known.item) {
-                continue;
-            }
-            writer.push(
-                &task_node,
-                &format!("{reference}/{}", known.item),
-                "closed",
-                Body::OpenItem(OpenItem {
-                    version: BODY_VERSION,
-                    sync: Sync::Shared,
-                    said_by: vec![SaidBy::ThirdParty],
-                    base: vec![known.row.clone()],
-                    item: known.item.clone(),
-                    text: known.text.clone(),
-                    because: because.clone(),
-                    closed: true,
-                }),
-            )?;
-        }
-    }
-    if let Some((item, question)) = &asking
-        && !open.iter().any(|known| &known.item == item)
-    {
+    let mut item_row = |item: &str, text: &str, base: Vec<String>, closed: bool| {
         writer.push(
             &task_node,
             &format!("{reference}/{item}"),
-            "",
+            &changed,
             Body::OpenItem(OpenItem {
                 version: BODY_VERSION,
                 sync: Sync::Shared,
                 said_by: vec![SaidBy::ThirdParty],
-                base: Vec::new(),
-                item: item.clone(),
-                text: question.clone(),
+                base,
+                item: item.to_string(),
+                text: text.to_string(),
                 because: because.clone(),
-                closed: false,
+                closed,
             }),
-        )?;
+        )
+    };
+    if !keeps_open {
+        for known in items.iter().filter(|known| !known.closed) {
+            if asking.as_ref().is_some_and(|(item, _)| item == &known.item) {
+                continue;
+            }
+            item_row(&known.item, &known.text, known.base.clone(), true)?;
+        }
+    }
+    if let Some((item, question)) = &asking {
+        match items.iter().find(|known| &known.item == item) {
+            None => item_row(item, question, Vec::new(), false)?,
+            Some(known) if known.closed => item_row(item, question, known.base.clone(), false)?,
+            Some(_) => {}
+        }
     }
 
     // Done or not.
@@ -454,13 +499,12 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
     if status != was {
         let base: Vec<String> = task
             .as_ref()
-            .and_then(|task| task.status_row.clone())
-            .into_iter()
-            .collect();
+            .map(|task| task.status_base.clone())
+            .unwrap_or_default();
         writer.push(
             &task_node,
             &format!("{reference}/status"),
-            &format!("{}\u{1f}{}", session.occurred_at, status_word(status)),
+            &format!("{changed}-{}", status_word(status)),
             Body::Revised(Revised {
                 version: BODY_VERSION,
                 sync: Sync::Shared,
@@ -494,6 +538,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             SaidBy::ThirdParty,
             cut(&result, limits::TEXT_CHARS),
             None,
+            changed.clone(),
         )?;
     }
 
@@ -629,8 +674,8 @@ mod tests {
     fn asking_opens_an_item_and_finishing_closes_it_and_folds_back() {
         let task = TaskKnown {
             status: Status::Active,
-            status_row: None,
-            open: Vec::new(),
+            status_base: Vec::new(),
+            items: Vec::new(),
         };
         let asked = session_rows(input("asked", true, Some(task))).unwrap();
         let item = asked
@@ -655,10 +700,11 @@ mod tests {
                 .any(|placed| placed.row.kind == "node.revised")
         );
 
-        let open = OpenKnown {
+        let open = ItemKnown {
             item: item.row.body["item"].as_str().unwrap().into(),
             text: item.row.body["text"].as_str().unwrap().into(),
-            row: item.row.id.clone(),
+            closed: false,
+            base: vec![item.row.id.clone()],
         };
         // Asked again with the same question: nothing new opens.
         let again = session_rows(input(
@@ -666,8 +712,8 @@ mod tests {
             true,
             Some(TaskKnown {
                 status: Status::Active,
-                status_row: None,
-                open: vec![open.clone()],
+                status_base: Vec::new(),
+                items: vec![open.clone()],
             }),
         ))
         .unwrap();
@@ -683,8 +729,8 @@ mod tests {
             true,
             Some(TaskKnown {
                 status: Status::Active,
-                status_row: None,
-                open: vec![open.clone()],
+                status_base: Vec::new(),
+                items: vec![open.clone()],
             }),
         ))
         .unwrap();
@@ -700,8 +746,8 @@ mod tests {
             true,
             Some(TaskKnown {
                 status: Status::Active,
-                status_row: None,
-                open: vec![open.clone()],
+                status_base: Vec::new(),
+                items: vec![open.clone()],
             }),
         ))
         .unwrap();
@@ -711,7 +757,7 @@ mod tests {
             .find(|placed| placed.row.kind == "node.open_item")
             .unwrap();
         assert_eq!(closed.row.body["closed"], true);
-        assert_eq!(closed.row.body["base"], json!([open.row]));
+        assert_eq!(closed.row.body["base"], json!(open.base));
         let status = finished
             .rows
             .iter()
@@ -738,15 +784,24 @@ mod tests {
         assert_ne!(one.task_key, two.task_key);
         assert_eq!(one.repo_key, two.repo_key);
         let reference = session_ref("dev_mac", "g_0123456789", "s-1");
-        // Every row written from the session names it, but the
-        // repository's own start.
+        let grant = grant_ref("dev_mac", "g_0123456789");
+        // Off the task (forgotten whole), only what names the grant and
+        // the session; on it, every row that can name something.
         for placed in &one.rows[1..] {
-            assert!(
-                placed.node == one.task || names_session(&placed.row.body, &reference),
-                "{placed:?}"
-            );
+            let names = names_session(&placed.row.body, &reference)
+                && names_session(&placed.row.body, &grant);
+            let can_name = !matches!(placed.row.kind.as_str(), "node.created" | "node.revised");
+            assert!(placed.node == one.task, "{placed:?}");
+            assert_eq!(names, can_name, "{placed:?}");
         }
         let finished = session_rows(input("finished", true, None)).unwrap();
+        assert!(
+            finished
+                .rows
+                .iter()
+                .all(|placed| placed.node == finished.task
+                    || names_session(&placed.row.body, &grant))
+        );
         let result = finished
             .rows
             .iter()
@@ -781,5 +836,103 @@ mod tests {
                 Some(state)
             );
         }
+    }
+
+    /// What the link's reader takes, the nodes take as a repository's key.
+    #[test]
+    fn every_remote_the_link_takes_is_a_repository_key() {
+        for remote in [
+            "github.com/me/repo",
+            "gitlab.example.co.jp/group/sub/repo",
+            "a-b.com/x_y/z.w",
+            "git.sr.ht/~me/repo",
+            &format!("github.com/{}", "a".repeat(489)),
+        ] {
+            assert!(myriad_her_link::now::valid_remote(remote), "{remote}");
+            assert_eq!(repo_key(remote).unwrap(), format!("repo:{remote}"));
+        }
+    }
+
+    fn known(rows: &[&SessionRows]) -> TaskKnown {
+        // What the fold would keep, from the rows written so far.
+        let mut items: Vec<ItemKnown> = Vec::new();
+        let mut status = Status::Active;
+        let mut status_base = Vec::new();
+        for placed in rows.iter().flat_map(|rows| rows.rows.iter()) {
+            match placed.row.kind.as_str() {
+                "node.open_item" => {
+                    let item = placed.row.body["item"].as_str().unwrap().to_string();
+                    let next = ItemKnown {
+                        item: item.clone(),
+                        text: placed.row.body["text"].as_str().unwrap().into(),
+                        closed: placed.row.body["closed"] == true,
+                        base: vec![placed.row.id.clone()],
+                    };
+                    items.retain(|known| known.item != item);
+                    items.push(next);
+                }
+                "node.revised" => {
+                    status = serde_json::from_value(placed.row.body["value"].clone()).unwrap();
+                    status_base = vec![placed.row.id.clone()];
+                }
+                _ => {}
+            }
+        }
+        TaskKnown {
+            status,
+            status_base,
+            items,
+        }
+    }
+
+    fn at(change: &str, when: i64, task: Option<TaskKnown>) -> SessionInput {
+        let mut input = input(change, true, task);
+        input.session.occurred_at = when;
+        input
+    }
+
+    /// Asked, finished, asked the same again, finished again: each change
+    /// writes its own rows, and the question opens again on the row it
+    /// was closed at.
+    #[test]
+    fn a_question_asked_again_opens_again_and_each_change_is_new() {
+        let one = session_rows(at("asked", 1, None)).unwrap();
+        let two = session_rows(at("finished", 2, Some(known(&[&one])))).unwrap();
+        let three = session_rows(at("asked", 3, Some(known(&[&one, &two])))).unwrap();
+        let four = session_rows(at("finished", 4, Some(known(&[&one, &two, &three])))).unwrap();
+        let ids: Vec<&str> = [&one, &two, &three, &four]
+            .iter()
+            .flat_map(|rows| rows.rows.iter().map(|placed| placed.row.id.as_str()))
+            .collect();
+        let state_rows = [&one, &two, &three, &four]
+            .iter()
+            .flat_map(|rows| rows.rows.iter())
+            .filter(|placed| placed.row.body.get("state").is_some())
+            .count();
+        assert_eq!(state_rows, 4, "where it stands, for each change");
+        // Only the content entries repeat (the same words are one row).
+        let mut unique = ids.clone();
+        unique.sort();
+        unique.dedup();
+        let content = 4 * 3;
+        assert_eq!(ids.len() - unique.len(), content);
+        let reopened = three
+            .rows
+            .iter()
+            .find(|placed| placed.row.kind == "node.open_item")
+            .unwrap();
+        assert_eq!(reopened.row.body["closed"], json!(null));
+        let closed_at = two
+            .rows
+            .iter()
+            .find(|placed| placed.row.kind == "node.open_item")
+            .unwrap();
+        assert_eq!(reopened.row.body["base"], json!([closed_at.row.id]));
+        let after = known(&[&one, &two, &three, &four]);
+        assert_eq!(after.status, Status::Done);
+        assert!(after.items.iter().all(|item| item.closed));
+        // The same frame again: the same rows.
+        let again = session_rows(at("asked", 3, Some(known(&[&one, &two])))).unwrap();
+        assert_eq!(again, three);
     }
 }
