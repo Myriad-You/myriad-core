@@ -116,7 +116,10 @@ pub struct TaskKnown {
 }
 
 /// The sync of the row that made a node, from the node as the fold gives
-/// it: its kind's first version is that row's.
+/// it: its kind's first version is that row's. A fold keeps the latest 20
+/// versions of a field, so a node whose kind changed more often reads the
+/// sync of its oldest kept change; the nodes the rules write never change
+/// kind.
 pub fn created_sync(node: &Value) -> Option<Sync> {
     let kind = node.get("kind")?;
     let first = kind
@@ -201,9 +204,13 @@ pub struct SessionInput {
     /// The task, when the host keeps it.
     #[serde(default)]
     pub task: Option<TaskKnown>,
-    /// The rows' sync tag: shared when not given. Local (the host's own
-    /// side) until every side it syncs with reads node.standing and rows a
-    /// rule wrote (her link's `log3`).
+    /// The sync tag of rows on nodes made now: shared when not given. Local
+    /// (the host's own side) until every side it syncs with reads
+    /// node.standing and rows a rule wrote (her link's `log3`). Rows on a
+    /// node that is there already keep the sync it was made with
+    /// ([`Self::repo_sync`], [`TaskKnown::sync`]), so a result entry on a
+    /// shared repository is shared; a side without `log3` is not sent rows
+    /// a rule wrote either way.
     #[serde(default = "shared")]
     pub sync: Sync,
 }
@@ -220,7 +227,9 @@ pub fn folder_key(device: &str, folder: &str) -> String {
     format!("minted:l{}", &sha256_hex(seed.as_bytes())[..24])
 }
 
-/// One row to write and the node it is about.
+/// One row to write and the node it is about. Rows of one change may carry
+/// different syncs: each row's envelope takes its replicate from its own
+/// body's sync.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Placed {
