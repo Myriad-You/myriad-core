@@ -21425,6 +21425,315 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "bodies": {
+          "t1": {
+            "key": "minted:release-week",
+            "kind": "task",
+            "name": "搬家",
+            "saidBy": [
+              "third_party"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "t2": {
+            "base": [],
+            "because": [
+              "session:s1"
+            ],
+            "item": "now",
+            "saidBy": [
+              "third_party"
+            ],
+            "since": 1760000001000000,
+            "sync": "shared",
+            "text": "在等你：问要不要推送",
+            "version": 1
+          },
+          "t3": {
+            "base": [
+              "t2"
+            ],
+            "because": [
+              "session:s1"
+            ],
+            "item": "now",
+            "saidBy": [
+              "third_party"
+            ],
+            "since": 1760000002000000,
+            "sync": "shared",
+            "text": "在等测试",
+            "version": 1
+          },
+          "t4": {
+            "base": [],
+            "because": [
+              "session:s1"
+            ],
+            "saidBy": [
+              "third_party"
+            ],
+            "sync": "shared",
+            "text": "他做事很细",
+            "version": 1,
+            "view": "v1"
+          },
+          "t5": {
+            "base": [],
+            "because": [
+              "span:x"
+            ],
+            "item": "movers",
+            "saidBy": [
+              "her"
+            ],
+            "since": "2026-10",
+            "sync": "shared",
+            "text": "搬家公司：订好了",
+            "version": 1
+          },
+          "t6": {
+            "base": [
+              "t5"
+            ],
+            "because": [
+              "span:y"
+            ],
+            "ended": true,
+            "item": "movers",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "text": "搬家公司：退了",
+            "version": 1
+          }
+        },
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "rule",
+            "dseq": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "t1",
+            "kind": "node.created",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "rule",
+            "dseq": 2,
+            "hlc": "001760000001000-000000-site",
+            "id": "t2",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "rule",
+            "dseq": 3,
+            "hlc": "001760000002000-000000-site",
+            "id": "t3",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "rule",
+            "dseq": 4,
+            "hlc": "001760000003000-000000-site",
+            "id": "t4",
+            "kind": "node.view_changed",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000004000-000000-site",
+            "id": "t5",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000005000-000000-site",
+            "id": "t6",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:t6"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "how things stand: a rule rewrites now, never her view; an ended one stays marked",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "createdBy": "rule",
+            "id": "25ae623559006437c416adbde717a853",
+            "key": "minted:release-week",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "rule",
+              "base": [
+                "t1"
+              ],
+              "row": "t1",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "task"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "rule",
+              "base": [
+                "t1"
+              ],
+              "row": "t1",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "value": "搬家"
+            },
+            "standing": {
+              "movers": {
+                "at": 1760000005000000,
+                "author": "her",
+                "base": [
+                  "t6"
+                ],
+                "epoch": 1,
+                "history": [
+                  {
+                    "at": 1760000004000000,
+                    "author": "her",
+                    "epoch": 1,
+                    "row": "t5",
+                    "saidBy": [
+                      "her"
+                    ],
+                    "sync": "shared",
+                    "value": {
+                      "because": [
+                        "span:x"
+                      ],
+                      "since": "2026-10",
+                      "text": "搬家公司：订好了"
+                    }
+                  }
+                ],
+                "row": "t6",
+                "saidBy": [
+                  "her"
+                ],
+                "sync": "shared",
+                "value": {
+                  "because": [
+                    "span:y"
+                  ],
+                  "ended": true,
+                  "text": "搬家公司：退了"
+                }
+              },
+              "now": {
+                "at": 1760000002000000,
+                "author": "rule",
+                "base": [
+                  "t3"
+                ],
+                "history": [
+                  {
+                    "at": 1760000001000000,
+                    "author": "rule",
+                    "row": "t2",
+                    "saidBy": [
+                      "third_party"
+                    ],
+                    "sync": "shared",
+                    "value": {
+                      "because": [
+                        "session:s1"
+                      ],
+                      "since": 1760000001000000,
+                      "text": "在等你：问要不要推送"
+                    }
+                  }
+                ],
+                "row": "t3",
+                "saidBy": [
+                  "third_party"
+                ],
+                "sync": "shared",
+                "value": {
+                  "because": [
+                    "session:s1"
+                  ],
+                  "since": 1760000002000000,
+                  "text": "在等测试"
+                }
+              }
+            },
+            "updatedAt": 1760000005000000
+          }
+        ],
+        "skipped": [
+          {
+            "id": "t4",
+            "why": "author_mismatch"
+          }
+        ]
+      }
     }
   ],
   "version": 1

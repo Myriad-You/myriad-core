@@ -93,7 +93,7 @@ use crate::{
     NodeError,
     body::{
         Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged, OpenItem,
-        Related, Relation, Revised, Sentence, Span, SplitOff, Status, Unrelated, Upkept,
+        Related, Relation, Revised, Sentence, Span, SplitOff, Standing, Status, Unrelated, Upkept,
         ViewChanged,
     },
     check_token,
@@ -1200,7 +1200,7 @@ impl<'a> Reader<'a> {
                     .iter()
                     .find(|span| span.row == *row)
                     .ok_or(Fallback::NoEvidence)?;
-                counted &= counts(&span.said_by, &span.audience);
+                counted &= counts(Some(span.author), &span.said_by, &span.audience);
                 ids.insert(format!("span:{row}"));
             } else if let Some(row) = self.context.entries.get(label) {
                 let entry = self
@@ -1209,11 +1209,11 @@ impl<'a> Reader<'a> {
                     .iter()
                     .find(|entry| entry.row == *row)
                     .ok_or(Fallback::NoEvidence)?;
-                counted &= counts(&entry.said_by, &entry.audience);
+                counted &= counts(Some(entry.author), &entry.said_by, &entry.audience);
                 ids.insert(format!("entry:{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
                 let item = &self.context.items[at];
-                counted &= counts(&item.said_by, item.said_in(&self.context.audience));
+                counted &= counts(None, &item.said_by, item.said_in(&self.context.audience));
                 ids.insert(item.id.clone());
             } else if let Some(rests_on) = self.context.heads.get(label) {
                 counted = false;
@@ -1235,6 +1235,7 @@ impl<'a> Reader<'a> {
             Body::Revised(_) => "node.revised",
             Body::ViewChanged(_) => "node.view_changed",
             Body::OpenItem(_) => "node.open_item",
+            Body::Standing(_) => "node.standing",
             Body::Intent(_) => "node.intent",
             Body::Span(_) => "node.span",
             Body::Entry(_) => "node.entry",
@@ -1840,6 +1841,28 @@ impl<'a> Reader<'a> {
                     trigger: said.current.value.trigger.clone(),
                     origin: said.current.value.origin,
                     action: said.current.value.action,
+                }),
+            )?;
+        }
+        // How things stand goes on too, but not a rule's: the rule writes
+        // its own again where the thing is now.
+        for (item, standing) in &me.standing {
+            let current = &standing.current;
+            if current.value.ended || current.author == Author::Rule {
+                continue;
+            }
+            self.write(
+                &into.id,
+                Body::Standing(Standing {
+                    version: 1,
+                    sync: self.sync.clone(),
+                    said_by: current.said_by.clone(),
+                    base: Vec::new(),
+                    item: format!("m{}", minted(&format!("standing\u{1f}{id}\u{1f}{item}"))),
+                    text: current.value.text.clone(),
+                    since: current.value.since.clone(),
+                    because: current.value.because.clone(),
+                    ended: false,
                 }),
             )?;
         }

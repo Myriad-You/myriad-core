@@ -26,6 +26,13 @@
 //! A piece said by several is as low as its lowest sayer. One the person
 //! denied is void (no tier): never taken again.
 //!
+//! **A rule's rows** (author `rule`: what a device reported, laid out on
+//! nodes by a fixed rule, no model) are seen, whoever their `saidBy` names:
+//! a device saying the partner asked something is not the partner saying
+//! it to her. What a rule wrote is never her view and never evidence for
+//! one; how a thing stands (`node.standing`) weighs by who wrote it
+//! ([`standing_tier`]).
+//!
 //! What the host supplies, never the core:
 //!
 //! - **provenance** (on each piece it keeps): `together` (the person was
@@ -39,7 +46,7 @@
 
 use std::collections::BTreeSet;
 
-use myriad_persona_log::row::Audience;
+use myriad_persona_log::row::{Audience, Author};
 use serde::{Deserialize, Serialize};
 
 use crate::tags::SaidBy;
@@ -214,12 +221,25 @@ pub fn intent_may_rest(because: &[String], known: &Known) -> bool {
     })
 }
 
+/// How far how a thing stands (`node.standing`) may be taken: a rule's is
+/// only seen; the partner's counts; hers is what she concluded, and counts
+/// as far as who she wrote it from does.
+pub fn standing_tier(author: Author, said_by: &[SaidBy]) -> Tier {
+    match author {
+        Author::Rule => Tier::Seen,
+        Author::Owner => Tier::Counts,
+        Author::Her => tier(said_by, None, false).unwrap_or(Tier::Seen),
+    }
+}
+
 /// Whether a piece her upkeep was shown counts as evidence for a view: it
-/// counts by its tier (no provenance travels in a body), and was said
-/// where the person's words are theirs, not in a group (as a host's
-/// [`Known`] never names a group's message as the person's).
-pub(crate) fn counts_for_view(said_by: &[SaidBy], audience: &str) -> bool {
-    tier(said_by, None, false) == Some(Tier::Counts)
+/// was not written by a rule, counts by its tier (no provenance travels in
+/// a body), and was said where the person's words are theirs, not in a
+/// group (as a host's [`Known`] never names a group's message as the
+/// person's). An inbox item has no row yet, so no author: `None`.
+pub(crate) fn counts_for_view(author: Option<Author>, said_by: &[SaidBy], audience: &str) -> bool {
+    author != Some(Author::Rule)
+        && tier(said_by, None, false) == Some(Tier::Counts)
         && matches!(
             Audience::parse(audience),
             Ok(Audience::Personal(_) | Audience::Own)

@@ -2432,6 +2432,227 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "name": "a standing since a day",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "item": "running",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "because": [
+            "entry:e1"
+          ],
+          "since": "2026-10-18"
+        }
+      },
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "entry:e1"
+          ],
+          "item": "running",
+          "saidBy": [
+            "her"
+          ],
+          "since": "2026-10-18",
+          "sync": "shared",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"entry:e1\"],\"item\":\"running\",\"saidBy\":[\"her\"],\"since\":\"2026-10-18\",\"sync\":\"shared\",\"text\":\"跑步：停了，膝盖半月板，医生说三个月\",\"version\":1}",
+        "digest": "0609dd1eb6faa5cbbf91b225bb920825"
+      }
+    },
+    {
+      "name": "a standing a rule wrote since a moment",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "third_party"
+          ],
+          "base": [],
+          "item": "now",
+          "text": "在等你：问要不要推送",
+          "because": [
+            "session:s1"
+          ],
+          "since": 1762840920000000
+        }
+      },
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "session:s1"
+          ],
+          "item": "now",
+          "saidBy": [
+            "third_party"
+          ],
+          "since": 1762840920000000,
+          "sync": "shared",
+          "text": "在等你：问要不要推送",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"session:s1\"],\"item\":\"now\",\"saidBy\":[\"third_party\"],\"since\":1762840920000000,\"sync\":\"shared\",\"text\":\"在等你：问要不要推送\",\"version\":1}",
+        "digest": "381ee5b6d60953a5e030160c9702d7f2"
+      }
+    },
+    {
+      "name": "a standing that ended",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [
+            "a2"
+          ],
+          "item": "shop",
+          "text": "网店：关了",
+          "because": [
+            "entry:e1"
+          ],
+          "ended": true
+        }
+      },
+      "output": {
+        "body": {
+          "base": [
+            "a2"
+          ],
+          "because": [
+            "entry:e1"
+          ],
+          "ended": true,
+          "item": "shop",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "网店：关了",
+          "version": 1
+        },
+        "canonical": "{\"base\":[\"a2\"],\"because\":[\"entry:e1\"],\"ended\":true,\"item\":\"shop\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":\"网店：关了\",\"version\":1}",
+        "digest": "f177ad246cf4c5c631a1b86260f3aa0b"
+      }
+    },
+    {
+      "name": "a standing not ended, the mark left out",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "item": "running",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "because": [
+            "entry:e1"
+          ],
+          "ended": false
+        }
+      },
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "entry:e1"
+          ],
+          "item": "running",
+          "saidBy": [
+            "her"
+          ],
+          "sync": "shared",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"entry:e1\"],\"item\":\"running\",\"saidBy\":[\"her\"],\"sync\":\"shared\",\"text\":\"跑步：停了，膝盖半月板，医生说三个月\",\"version\":1}",
+        "digest": "52dece75838efd61b26182db54b94cb8"
+      }
+    },
+    {
+      "name": "a standing since no day",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "item": "running",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "because": [
+            "entry:e1"
+          ],
+          "since": "上个月"
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a standing without evidence",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "item": "running",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "because": []
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "name": "a standing with a field it does not know",
+      "input": {
+        "kind": "node.standing",
+        "body": {
+          "version": 1,
+          "sync": "shared",
+          "saidBy": [
+            "her"
+          ],
+          "base": [],
+          "item": "running",
+          "text": "跑步：停了，膝盖半月板，医生说三个月",
+          "because": [
+            "entry:e1"
+          ],
+          "seen": 1
+        }
+      },
+      "output": {
+        "error": "bad_input"
+      }
     }
   ]
 }

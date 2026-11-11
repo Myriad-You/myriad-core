@@ -745,6 +745,84 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "aboutThem": "you",
+        "nodes": [
+          {
+            "entries": [
+              {
+                "at": 1760000000000001,
+                "id": "m1"
+              },
+              {
+                "at": 1760000000000002,
+                "id": "m2"
+              }
+            ],
+            "id": "moving",
+            "standing": [
+              {
+                "at": 1760000000000001,
+                "item": "old"
+              },
+              {
+                "at": 1760000000000005,
+                "item": "now"
+              },
+              {
+                "at": 1760000000000009,
+                "ended": true,
+                "item": "movers"
+              }
+            ]
+          },
+          {
+            "entries": [
+              {
+                "at": 1760000000000001,
+                "id": "y1"
+              }
+            ],
+            "id": "you",
+            "standing": [
+              {
+                "at": 1760000000000003,
+                "item": "home"
+              }
+            ]
+          }
+        ],
+        "ranked": [
+          {
+            "id": "m1",
+            "named": true
+          }
+        ]
+      },
+      "name": "how things stand comes first and takes no entry's place",
+      "output": {
+        "aboutThem": [
+          "y1"
+        ],
+        "aboutThemStanding": [
+          "home"
+        ],
+        "picked": [
+          {
+            "entries": [
+              "m1",
+              "m2"
+            ],
+            "node": "moving",
+            "standing": [
+              "now",
+              "old"
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1

@@ -12,7 +12,7 @@
 //!   their own audiences.
 //! - **Head fields** (its kind, name, other names, summary, status,
 //!   who-knows, object,
-//!   each person's progress, each view, open item and intent) are each
+//!   each person's progress, each view, open item, standing and intent) are each
 //!   folded from the rows that write them. A row's `base` names the versions
 //!   it was written against; every version no row names as a base is
 //!   current. One current version is the field. Two current versions that
@@ -108,7 +108,7 @@ use crate::{
     NodeError,
     body::{
         Action, Body, Change, Happened, How, IntentStatus, Object, ObjectKind, Origin, Relation,
-        Sentence, Status, Trigger,
+        Sentence, Since, Status, Trigger,
     },
     key::{Key, Kind, node_id},
     limits::HISTORY,
@@ -189,6 +189,19 @@ pub struct OpenValue {
     pub because: Vec<String>,
     #[serde(skip_serializing_if = "is_false")]
     pub closed: bool,
+}
+
+/// How one thing stands now (`node.standing`); the version's author says
+/// whether she concluded it, the partner set it, or a rule wrote it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StandingValue {
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub since: Option<Since>,
+    pub because: Vec<String>,
+    #[serde(skip_serializing_if = "is_false")]
+    pub ended: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -384,6 +397,9 @@ pub struct Node {
     pub views: BTreeMap<String, Item<ViewValue>>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub open: BTreeMap<String, Item<OpenValue>>,
+    /// How each thing on it stands now, by item; an ended one stays, marked.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub standing: BTreeMap<String, Item<StandingValue>>,
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     pub intents: BTreeMap<String, Item<IntentValue>>,
     /// In log order.
@@ -432,6 +448,7 @@ impl Node {
             progress: BTreeMap::new(),
             views: BTreeMap::new(),
             open: BTreeMap::new(),
+            standing: BTreeMap::new(),
             intents: BTreeMap::new(),
             spans: Vec::new(),
             entries: Vec::new(),
@@ -494,7 +511,8 @@ pub enum Why {
     /// Its sync tag does not fit the row (shared on a local row, local on a
     /// shared row or another device's).
     SyncMismatch,
-    /// The partner's row, not said by the partner.
+    /// The partner's row, not said by the partner; or a rule's row writing
+    /// what only she concludes (a view, an intent, her upkeep).
     AuthorMismatch,
     /// A span or entry said in another audience, not the partner's own
     /// words from a group kept in their private audience.
@@ -761,6 +779,14 @@ fn misfit(row: &Row, body: &Body) -> Option<Why> {
     if row.author == Author::Owner && said_by != [SaidBy::Partner] {
         return Some(Why::AuthorMismatch);
     }
+    if row.author == Author::Rule
+        && matches!(
+            body,
+            Body::ViewChanged(_) | Body::Intent(_) | Body::Upkept(_)
+        )
+    {
+        return Some(Why::AuthorMismatch);
+    }
     None
 }
 
@@ -955,6 +981,7 @@ impl Node {
         out.extend(self.progress.values().filter_map(one));
         out.extend(self.views.values().filter_map(one));
         out.extend(self.open.values().filter_map(one));
+        out.extend(self.standing.values().filter_map(one));
         out.extend(self.intents.values().filter_map(one));
         out
     }
@@ -1417,6 +1444,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         let mut progress: BTreeMap<String, Register<Option<String>>> = BTreeMap::new();
         let mut views: BTreeMap<String, Register<ViewValue>> = BTreeMap::new();
         let mut open: BTreeMap<String, Register<OpenValue>> = BTreeMap::new();
+        let mut standing: BTreeMap<String, Register<StandingValue>> = BTreeMap::new();
         let mut intents: BTreeMap<String, Register<IntentValue>> = BTreeMap::new();
         let mut done_when = Register::<Option<String>>::default();
         let mut kinds_by_row: BTreeMap<String, Kind> = BTreeMap::new();
@@ -1561,6 +1589,15 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                         text: body.text,
                         because: body.because,
                         closed: body.closed,
+                    }),
+                ),
+                Body::Standing(body) => standing.entry(body.item).or_default().push(
+                    &base,
+                    meta.version(StandingValue {
+                        text: body.text,
+                        since: body.since,
+                        because: body.because,
+                        ended: body.ended,
                     }),
                 ),
                 Body::Intent(body) => {
@@ -1782,6 +1819,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
         node.progress = resolve_all(progress);
         node.views = resolve_all(views);
         node.open = resolve_all(open);
+        node.standing = resolve_all(standing);
         node.intents = resolve_all(intents);
         node.done_when = done_when.resolve();
         node.created_at = created.or(first);

@@ -36,12 +36,16 @@ pub const MAX_RETRACT_TAKES: usize = 256;
 
 /// Who wrote a row. Her rows come only from the holder of the lease; the
 /// owner's (what they said, set, approved, revoked, had her forget) from
-/// any side, offline too.
+/// any side, offline too. A rule's are what a side wrote by a fixed rule
+/// from what a device reported (a coding session began, asked, finished),
+/// with no model and nobody deciding: from any side, only about nodes, and
+/// never what she concluded. A core below ABI 3 does not read this author.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Author {
     Owner,
     Her,
+    Rule,
 }
 
 /// Whether a row may leave the side that wrote it. A local row (what the
@@ -216,6 +220,9 @@ impl Row {
             (Author::Owner, Some(_)) => {
                 return Err(LogError::new("the owner's row carries no lease epoch"));
             }
+            (Author::Rule, Some(_)) => {
+                return Err(LogError::new("a rule's row carries no lease epoch"));
+            }
             _ => {}
         }
         match (self.replicate, self.dseq) {
@@ -258,6 +265,9 @@ impl Row {
         }
         if object == kinds::ROW && rule != Rule::Forget {
             return Err(LogError::new("only a forget is about one row"));
+        }
+        if self.author == Author::Rule && object != "node" {
+            return Err(LogError::new("a rule's row is about a node"));
         }
         if self.kind == "state.write" {
             let entity = self
