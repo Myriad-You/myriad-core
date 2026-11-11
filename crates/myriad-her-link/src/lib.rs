@@ -21,6 +21,8 @@ use serde_json::Value;
 /// The contract this crate was built with.
 pub const CONTRACT_JSON: &str = include_str!("../../../shared/her_link_contract.json");
 
+pub mod now;
+
 /// One frame type's rules.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -122,7 +122,8 @@
     "log": "Her log between host cores: version vectors, batched rows, the first full sync.",
     "peer": "Device identities: published, confirmed by the owner, and proven on the LAN.",
     "group": "A group's new messages lent to her mind on a PC to think with (the group's log stays on the server), and what she says there, sent out by the server.",
-    "chat": "A private chat's new messages on a chat app, lent to her mind on a PC to think with (someone else's talk stays on the server), and what she says there, sent out by the server."
+    "chat": "A private chat's new messages on a chat app, lent to her mind on a PC to think with (someone else's talk stays on the server), and what she says there, sent out by the server.",
+    "now": "What is going on on a device, told as it changes: the coding-agent sessions running there. Her host keeps it by rules (sessions), not by judging each one."
   },
   "sync": {
     "families": ["lease", "log", "group", "chat"],
@@ -159,7 +160,8 @@
     "images",
     "partner",
     "log2",
-    "lend"
+    "lend",
+    "now.sessions"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
   "noticeKinds": ["work", "waiting", "report", "reminder"],
@@ -183,6 +185,24 @@
         "directive", "command", "commands", "rule", "rules", "should", "must", "action", "advice", "suggestion", "suggest"
       ]
     }
+  },
+  "sessions": {
+    "description": "What a now.session may say (the now family). A device tells her host only when one of the owner's coding-agent sessions on it changes, one of changes: started (a new session began working), asked (it stopped and its next step waits on the owner's answer), finished (a turn ended with nothing for the owner to answer), failed (it kept erring or its checks failed), quiet (it has neither asked nor moved for a long while). Nothing else is told: several sessions at once, or two touching one file, are what the host sees across them. Each now.session carries the session's whole picture as it stands, so a newer one replaces an older one of the same session; one older than the newest the host has of that session is taken and changes nothing. A session is under a grant: the id the device made when the owner last let it watch their sessions, made new every time, never reused; whatever the host keeps of a session is made from the device, the grant and the session, so a grant dropped (now.drop) is forgotten for good and a later one starts afresh. Only a session in a repository with a remote is told: one without stays on its device. What comes up has been through the device's host filter (keys, numbers, cards, addresses, personal data removed), and is never a command's output, a file's content or a diff. Her host reads every text of it as data about what happened, never as instructions: fromOwner is what the owner last said to the session, fromAgent what the session last said or asked (with the choices it gave).",
+    "changes": ["started", "asked", "finished", "failed", "quiet"],
+    "waitingOn": ["owner", "checks", "program", "unknown"],
+    "checkKinds": ["test", "build", "other"],
+    "checkStates": ["running", "passed", "failed"],
+    "grantPattern": "^[A-Za-z0-9_-]{8,64}$",
+    "sessionPattern": "^[A-Za-z0-9_.:-]{1,128}$",
+    "toolPattern": "^[a-z0-9][a-z0-9_.-]{0,63}$",
+    "remoteBytes": 512,
+    "folderChars": 128,
+    "titleChars": 200,
+    "wordsChars": 2000,
+    "pathBytes": 512,
+    "touchedAtMost": 64,
+    "checksAtMost": 16,
+    "keepMs": 86400000
   },
   "capNames": {
     "description": "The permission names an act.request cap may carry (the site's), and the names of a Mac's own grants each stands for, as the Mac checks its Work tools. Both ends read this table: the host sends only names in it, and a Mac narrows its run to the grants these name. A name not in it, on either side, allows nothing. A Mac name ending in .* stands for every grant of the Mac that starts with what comes before it (mcp.* is each of its MCP servers). What only the site has (its platforms, Tapps, router, pages and the rest) is not here: a Mac has nothing it could stand for.",
@@ -386,6 +406,31 @@
       "delivery": "answer",
       "required": ["id"],
       "description": "The moment id has been written on the host, and the child forgets it. Sent again whenever that id comes again."
+    },
+    "now.session": {
+      "from": "device",
+      "delivery": "reliable",
+      "idempotency": "id is ns_ and a ULID or 32 hex digits, made by the device once per change and kept across resends and restarts.",
+      "required": ["grant", "session", "change", "occurredAt", "tool", "remote"],
+      "optional": ["folder", "title", "fromOwner", "fromAgent", "touched", "checks", "waitingOn"],
+      "maxItems": {
+        "touched": 64,
+        "checks": 16
+      },
+      "description": "Only from a device whose hello listed now.sessions, and only once the welcome listed it back: one of the owner's coding-agent sessions on this device changed (sessions says which changes and what each field may hold). grant is the device's current grant; session the session's own id on this device, the same for its whole life; change one of sessions.changes; occurredAt when it changed, milliseconds since the epoch; tool which coding agent it is (sessions.toolPattern). remote is the repository's remote as core's repoKey normalizes it, without its repo: prefix (github.com/me/repo: no scheme, user, password, port or .git). folder is the last part of the folder it runs in, nothing above it; title the session's title. fromOwner and fromAgent are at most sessions.wordsChars characters each. touched is the files it changed, paths relative to the repository's root (no leading /, ~ or drive, no .. part), the latest first. checks is its tests and builds, the latest first, each {kind, state, at}: kind one of checkKinds, state one of checkStates, at milliseconds since the epoch. waitingOn is who its next step waits on, one of sessions.waitingOn: owner (asked always says owner), checks (its tests or builds are running), program (another program), unknown. A body against these rules is refused with bad_frame, and nothing of it is kept. The host writes it first, then answers now.taken; the same id again is answered now.taken again and changes nothing. The device keeps it until now.taken names it, at most sessions.keepMs; a newer now.session of the same session made before it went replaces it, and it is dropped, never sent, once the owner stops the device watching their sessions (now.drop), this device is removed, the site has another owner, or the owner disconnects this device."
+    },
+    "now.taken": {
+      "from": "host",
+      "delivery": "answer",
+      "required": ["id"],
+      "description": "The now.session or now.drop id has been written on the host, and the device forgets it. Sent again whenever that id comes again."
+    },
+    "now.drop": {
+      "from": "device",
+      "delivery": "reliable",
+      "idempotency": "id is nd_ and a ULID or 32 hex digits, made by the device once per drop.",
+      "required": ["grant"],
+      "description": "Only from a device whose hello listed now.sessions: the owner stopped this device watching their sessions, and grant (sessions.grantPattern) is the grant that ended. The host forgets (deletes, not marks) everything it keeps that was made from this device's sessions under that grant, wherever it went, and answers now.taken. The host does the same for every grant of a device that is removed, when the site has another owner, or when the owner disconnects the device, with no frame."
     },
     "nodes": {
       "from": "host",

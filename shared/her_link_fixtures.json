@@ -283,6 +283,32 @@
       "body": { "id": "mom_0123456789abcdef0123456789abcdef" }
     },
     {
+      "v": 1, "t": "now.session", "seq": 15, "ack": 16, "id": "ns_0123456789abcdef0123456789abcdef", "at": 1760140881300,
+      "body": {
+        "grant": "g_01J9ZQ4C2W8N5Y7T3K6M0P1R2S",
+        "session": "0199d5c0-9000-7333-8333-333333333333",
+        "change": "asked",
+        "occurredAt": 1760140881250,
+        "tool": "coding-agent",
+        "remote": "github.com/sample/sample-repo",
+        "folder": "sample-repo",
+        "title": "Split the store into two crates",
+        "fromOwner": "Split the store into two crates and commit it.",
+        "fromAgent": "The split is committed locally (2 commits) and the tests pass. Should I push it now, or wait until you have looked? (push / wait)",
+        "touched": ["crates/store/src/lib.rs", "crates/store-read/src/lib.rs", "Cargo.toml"],
+        "checks": [{ "kind": "test", "state": "passed", "at": 1760140870000 }, { "kind": "build", "state": "passed", "at": 1760140850000 }],
+        "waitingOn": "owner"
+      }
+    },
+    {
+      "v": 1, "t": "now.taken", "seq": 18, "ack": 15, "at": 1760140881400,
+      "body": { "id": "ns_0123456789abcdef0123456789abcdef" }
+    },
+    {
+      "v": 1, "t": "now.drop", "seq": 16, "ack": 18, "id": "nd_0123456789abcdef0123456789abcdef", "at": 1760140990000,
+      "body": { "grant": "g_01J9ZQ4C2W8N5Y7T3K6M0P1R2S" }
+    },
+    {
       "v": 1, "t": "nodes", "seq": 17, "ack": 14, "at": 1760140890000,
       "body": {
         "nodes": [
