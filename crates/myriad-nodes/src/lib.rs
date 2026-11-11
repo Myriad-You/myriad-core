@@ -91,6 +91,7 @@ pub mod migrate;
 pub mod place;
 pub mod queue;
 pub mod recall;
+pub mod sessions;
 pub mod tags;
 pub mod trust;
 pub mod upkeep;

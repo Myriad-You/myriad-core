@@ -40,3 +40,24 @@ pub(super) fn encode(raw: &[u8]) -> Result<Value, Failure> {
         .map_err(|refusal| Failure::BadInput(format!("{}: {}", refusal.code, refusal.detail)))?;
     Ok(json!({ "text": checked.canonical }))
 }
+
+/// `{t, body}` → `{session}` (`now.session`), `{drop}` (`now.drop`) or
+/// `{refused: {code, detail}}`: a `now` family body read by the contract's
+/// `sessions` rules. Another `t` is bad input.
+pub(super) fn now_read(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        t: String,
+        body: Value,
+    }
+    let In { t, body } = input(raw)?;
+    let answer = match t.as_str() {
+        "now.session" => {
+            myriad_her_link::now::read_session(&body).map(|session| json!({ "session": session }))
+        }
+        "now.drop" => myriad_her_link::now::read_drop(&body).map(|drop| json!({ "drop": drop })),
+        _ => return Err(Failure::BadInput("t is not now.session or now.drop".into())),
+    };
+    Ok(answer.unwrap_or_else(|refusal| json!({ "refused": refusal })))
+}

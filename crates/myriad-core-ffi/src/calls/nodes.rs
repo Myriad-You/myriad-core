@@ -185,6 +185,13 @@ pub(super) fn fact_rows(raw: &[u8]) -> Result<Value, Failure> {
     answer(&entries::fact_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
+/// `{audience, device, session, repoKnown?, task?}` → `{repo, repoKey,
+/// task, taskKey, rows: [{node, id, kind, body}]}`: what one change of a
+/// coding-agent session (`now.session`) puts on her nodes, by rules.
+pub(super) fn session_rows(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::sessions::session_rows(quiet_input(raw)?).map_err(refused)?)
+}
+
 /// `{kind, node, source, revision?}` → `{id}`.
 pub(super) fn row_id(raw: &[u8]) -> Result<Value, Failure> {
     answer(&entries::row_id(quiet_input(raw)?).map_err(refused)?)
