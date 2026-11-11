@@ -3,11 +3,15 @@
 //!
 //! A safety net, not a guarantee: a private token with no fixed shape and
 //! low entropy (`hunter2`) passes unless a label stands right before it
-//! (`WiFi 密码：…`, `パスワード …`, `secret key: …`, 2026-11-05); after an
+//! (`WiFi 密码：…`, `パスワード …`, `secret key: …`, 2026-11-05), or, with
+//! letters and digits mixed, a sign-in word stands near it on its line
+//! (`试了 … 登不进去`, `sudo 输 …`, `admin / …`, 2026-11-11); after an
 //! English label and only a space, a value of letters alone still passes,
 //! since it reads as a word. It also wipes things that only look like keys
-//! (full commit hashes, image digests, placeholder values in docs, a word
-//! written after `Password:`); one string fewer seen is the accepted cost.
+//! (image digests, placeholder values in docs, a word written after
+//! `Password:`, a full commit hash nothing names as one); one string fewer
+//! seen is the accepted cost. A full commit hash right after a commit word
+//! (`commit …`, `回退到 …`) stays, and so does a short one (2026-11-11).
 //!
 //! Supersedes the native client's `SecretScrub`: same patterns, same order,
 //! same mark, plus the kind of each wipe. [`values`] stands in for its
@@ -199,6 +203,83 @@ const LABELS: &str = "(?:password|passwd|passcode|pwd|secret(?:\\s+key)?|(?:api|
 const VALUE: &str = r"[A-Za-z0-9!#$%&*+./=?@^_~\-]{4,64}";
 
 static TOKEN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[A-Za-z0-9+_\-]{20,}").unwrap());
+/// A run of base64's alphabet with its `/` and `+` (`TOKEN` stops at a `/`).
+static SLASHED: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[A-Za-z0-9/+]+=*").unwrap());
+/// What a word that may be a password is: letters, digits and the symbols
+/// passwords use, no `/` (a path) and no `.` (a file, a version).
+static WORD: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"[A-Za-z0-9!#$%&*+=?@^_~\-]{6,32}").unwrap());
+/// An account's name, `/`, then its password (`admin / …`).
+static PAIR: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(
+        r"(?i)\b(?:admin|root|user|test|guest|demo)[ \t]*/[ \t]*([A-Za-z0-9!#$%&*+=?@^_~\-]{4,32})",
+    )
+    .unwrap()
+});
+/// Words that say someone signs in or types a password (2026-11-11): a word
+/// near one of them on its line, with letters and digits mixed, is taken
+/// for the password (`试了 … 登不进去`, `sudo 输 …`).
+const SIGNING_IN: [&str; 19] = [
+    "登录",
+    "登入",
+    "登陆",
+    "登不进",
+    "登不上",
+    "登进",
+    "ログイン",
+    "サインイン",
+    "sudo",
+    "login",
+    "log in",
+    "sign in",
+    "ssh ",
+    "密码",
+    "密碼",
+    "口令",
+    "パスワード",
+    "password",
+    "passwd",
+];
+/// What a sign-in word names when it is a part of the product, not someone
+/// signing in (`登录页`, `login flow`).
+const SIGN_IN_FEATURES: [&str; 16] = [
+    "页",
+    "界面",
+    "按钮",
+    "流程",
+    "模块",
+    "接口",
+    "画面",
+    "ページ",
+    "page",
+    "screen",
+    "button",
+    "flow",
+    "form",
+    "view",
+    "api",
+    "route",
+];
+/// How many characters on either side of a word a sign-in word may stand.
+const SIGNING_IN_REACH: usize = 12;
+/// Words that name a commit: a full hash right after one is that commit.
+const COMMIT_WORDS: [&str; 15] = [
+    "commit",
+    "sha",
+    "revert",
+    "cherry-pick",
+    "merge",
+    "rebase",
+    "reset",
+    "checkout",
+    "head",
+    "git show",
+    "提交",
+    "回退",
+    "回滚",
+    "合并",
+    "コミット",
+];
 static UUID: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$")
         .unwrap()
@@ -290,10 +371,21 @@ impl Pass {
         }
         let found: Vec<(usize, usize)> = TOKEN
             .find_iter(&pass.text)
-            .filter(|token| looks_random(token.as_str()))
+            .filter(|token| {
+                looks_random(token.as_str())
+                    && !named_commit(&pass.text, token.start(), token.as_str())
+            })
             .map(|token| (token.start(), token.end()))
             .collect();
         pass.wipe(&found, SecretKind::HighEntropy);
+        let found: Vec<(usize, usize)> = SLASHED
+            .find_iter(&pass.text)
+            .filter(|run| slashed_key(&pass.text, run.start(), run.end()))
+            .map(|run| (run.start(), run.end()))
+            .collect();
+        pass.wipe(&found, SecretKind::HighEntropy);
+        let found = signing_in(&pass.text);
+        pass.wipe(&found, SecretKind::Labelled);
         pass
     }
 
@@ -430,6 +522,109 @@ fn matches(pattern: &Pattern, text: &str) -> Vec<(usize, usize)> {
             whole.end() + 1
         };
     }
+    found
+}
+
+/// A full commit hash (40 lowercase hex digits) named as one: a commit word
+/// stands within 24 characters before it on its line (`回退到 <hash>`,
+/// `git show <hash>`). Any other 40-digit hex run is still taken for a key:
+/// classic GitHub tokens had that shape.
+fn named_commit(text: &str, start: usize, token: &str) -> bool {
+    if token.len() != 40 || !token.chars().all(|c| matches!(c, '0'..='9' | 'a'..='f')) {
+        return false;
+    }
+    let before: String = text[..start]
+        .chars()
+        .rev()
+        .take_while(|&c| c != '\n')
+        .take(24)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect::<String>()
+        .to_lowercase();
+    COMMIT_WORDS.iter().any(|word| before.contains(word))
+}
+
+/// A 40-character run of base64's alphabet with a `/` or `+` in it (an AWS
+/// secret access key's shape) that reads as random once those are taken
+/// out, and is not part of a path: nothing path-like touches either end.
+fn slashed_key(text: &str, start: usize, end: usize) -> bool {
+    let run = text[start..end].trim_end_matches('=');
+    if run.chars().count() != 40
+        || !run.contains(['/', '+'])
+        || run.starts_with('/')
+        || run.ends_with('/')
+    {
+        return false;
+    }
+    let touches =
+        |c: Option<char>| c.is_some_and(|c| matches!(c, '/' | '.' | '\\' | '~' | '_' | '-'));
+    if touches(text[..start].chars().next_back()) || touches(text[end..].chars().next()) {
+        return false;
+    }
+    looks_random(&run.replace(['/', '+'], ""))
+}
+
+/// Words taken for passwords by what is around them (2026-11-11): one with
+/// letters and digits mixed (not hex alone, which reads as a short commit)
+/// near a sign-in word on its line, and the one after `admin /` and its kin
+/// when it has a digit or a symbol. Marks already in the text are never
+/// matched (they hold no ASCII).
+fn signing_in(text: &str) -> Vec<(usize, usize)> {
+    let mut found: Vec<(usize, usize)> = PAIR
+        .captures_iter(text)
+        .filter_map(|c| c.get(1))
+        .filter(|v| {
+            v.as_str()
+                .chars()
+                .any(|c| c.is_ascii_digit() || "!#$%&*@^~".contains(c))
+        })
+        .map(|v| (v.start(), v.end()))
+        .collect();
+    for word in WORD.find_iter(text) {
+        let value = word.as_str();
+        let mixed = value.chars().any(|c| c.is_ascii_digit())
+            && value.chars().any(|c| c.is_ascii_alphabetic());
+        if !mixed
+            || value.chars().all(|c| c.is_ascii_hexdigit())
+            || found
+                .iter()
+                .any(|&(s, e)| s < word.end() && word.start() < e)
+        {
+            continue;
+        }
+        let line_start = text[..word.start()].rfind('\n').map_or(0, |i| i + 1);
+        let line_end = text[word.end()..]
+            .find('\n')
+            .map_or(text.len(), |i| word.end() + i);
+        let before: String = text[line_start..word.start()]
+            .chars()
+            .rev()
+            .take(SIGNING_IN_REACH)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect();
+        let after: String = text[word.end()..line_end]
+            .chars()
+            .take(SIGNING_IN_REACH)
+            .collect();
+        let near = format!("{before}\u{1f}{after}").to_lowercase();
+        // The word itself is not its own context (`password1` alone); a sign-in
+        // word naming a page or a feature (`登录页`, `login flow`) is not someone
+        // signing in.
+        let signs_in = SIGNING_IN.iter().any(|w| {
+            near.match_indices(w).any(|(at, _)| {
+                let rest = near[at + w.len()..].trim_start();
+                !SIGN_IN_FEATURES.iter().any(|f| rest.starts_with(f))
+            })
+        });
+        if signs_in {
+            found.push((word.start(), word.end()));
+        }
+    }
+    found.sort_unstable();
     found
 }
 
