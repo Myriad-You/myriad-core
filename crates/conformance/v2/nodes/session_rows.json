@@ -160,21 +160,22 @@
           },
           {
             "body": {
-              "audience": "personal:7",
-              "refs": [
+              "base": [],
+              "because": [
                 "grant:gd30b104b040e8927cfd8bafa",
                 "session:s1fa465ebd5f9b41e95a74e4e"
               ],
+              "item": "now",
               "saidBy": [
                 "third_party"
               ],
-              "state": "working",
+              "since": 1760000000000000,
               "sync": "shared",
               "text": "started working",
               "version": 1
             },
-            "id": "u030681dfe2407b4354f22e45",
-            "kind": "node.entry",
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           }
         ],
@@ -294,21 +295,22 @@
           },
           {
             "body": {
-              "audience": "personal:7",
-              "refs": [
+              "base": [],
+              "because": [
                 "grant:gd30b104b040e8927cfd8bafa",
                 "session:s1fa465ebd5f9b41e95a74e4e"
               ],
+              "item": "now",
               "saidBy": [
                 "third_party"
               ],
-              "state": "waiting owner",
+              "since": 1760000000000000,
               "sync": "shared",
               "text": "waiting on the owner's answer to what it asked",
               "version": 1
             },
-            "id": "u030681dfe2407b4354f22e45",
-            "kind": "node.entry",
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           },
           {
@@ -457,21 +459,22 @@
           },
           {
             "body": {
-              "audience": "personal:7",
-              "refs": [
+              "base": [],
+              "because": [
                 "grant:gd30b104b040e8927cfd8bafa",
                 "session:s1fa465ebd5f9b41e95a74e4e"
               ],
+              "item": "now",
               "saidBy": [
                 "third_party"
               ],
-              "state": "finished",
+              "since": 1760000000000000,
               "sync": "shared",
               "text": "finished, nothing waits on the owner",
               "version": 1
             },
-            "id": "u030681dfe2407b4354f22e45",
-            "kind": "node.entry",
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           },
           {
@@ -656,21 +659,22 @@
           },
           {
             "body": {
-              "audience": "personal:7",
-              "refs": [
+              "base": [],
+              "because": [
                 "grant:gd30b104b040e8927cfd8bafa",
                 "session:s1fa465ebd5f9b41e95a74e4e"
               ],
+              "item": "now",
               "saidBy": [
                 "third_party"
               ],
-              "state": "waiting checks",
+              "since": 1760000000000000,
               "sync": "shared",
               "text": "quiet for long, its tests or builds still running",
               "version": 1
             },
-            "id": "u030681dfe2407b4354f22e45",
-            "kind": "node.entry",
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           }
         ],
@@ -802,21 +806,22 @@
           },
           {
             "body": {
-              "audience": "personal:7",
-              "refs": [
+              "base": [],
+              "because": [
                 "grant:gd30b104b040e8927cfd8bafa",
                 "session:s1fa465ebd5f9b41e95a74e4e"
               ],
+              "item": "now",
               "saidBy": [
                 "third_party"
               ],
-              "state": "waiting owner",
+              "since": 1760000000000000,
               "sync": "shared",
               "text": "waiting on the owner's answer to what it asked",
               "version": 1
             },
-            "id": "u030681dfe2407b4354f22e45",
-            "kind": "node.entry",
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           },
           {

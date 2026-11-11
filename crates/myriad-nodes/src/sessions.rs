@@ -45,7 +45,7 @@ use crate::{
     NodeError,
     body::{
         BODY_VERSION, Body, Created, Entry, Field, Object, ObjectKind, OpenItem, Related, Relation,
-        Revised, Status,
+        Revised, Since, Standing, Status,
     },
     entries::{RowOut, row_id_from},
     key::{Kind, node_id, repo_key},
@@ -53,6 +53,10 @@ use crate::{
     place::clean,
     tags::{SaidBy, Sync},
 };
+
+/// The one thing on a task its standing (`node.standing`) is about: where
+/// the session is now.
+pub const NOW: &str = "now";
 
 /// The key of the task one session is: `minted:s` and 24 hex of the
 /// device, the grant and the session.
@@ -103,6 +107,62 @@ pub struct TaskKnown {
     /// Its open items, closed ones too.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub items: Vec<ItemKnown>,
+    /// The rows where it stands now ([`NOW`]) stands at.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub standing_base: Vec<String>,
+}
+
+/// What the host keeps of a task, from its node as the fold gives it
+/// (`Folded.nodes`, serialized): its status, its open items and where it
+/// stands. A node the fold has no created row for yet is none.
+pub fn task_known(node: &Value) -> Option<TaskKnown> {
+    node.get("key")?;
+    let strings = |value: &Value| -> Vec<String> {
+        value
+            .as_array()
+            .map(|ids| {
+                ids.iter()
+                    .filter_map(|id| id.as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    let status = node
+        .get("status")
+        .and_then(|status| serde_json::from_value(status["value"].clone()).ok())
+        .unwrap_or(Status::Active);
+    let status_base = node
+        .get("status")
+        .map(|status| strings(&status["base"]))
+        .unwrap_or_default();
+    let items = node
+        .get("open")
+        .and_then(Value::as_object)
+        .map(|open| {
+            open.iter()
+                .map(|(item, held)| ItemKnown {
+                    item: item.clone(),
+                    text: held["value"]["text"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_string(),
+                    closed: held["value"]["closed"] == true,
+                    base: strings(&held["base"]),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let standing_base = node
+        .get("standing")
+        .and_then(|standing| standing.get(NOW))
+        .map(|now| strings(&now["base"]))
+        .unwrap_or_default();
+    Some(TaskKnown {
+        status,
+        status_base,
+        items,
+        standing_base,
+    })
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -259,6 +319,7 @@ impl Writer<'_> {
             Body::OpenItem(_) => "node.open_item",
             Body::Entry(_) => "node.entry",
             Body::Related(_) => "node.related",
+            Body::Standing(_) => "node.standing",
             _ => unreachable!("only these are made here"),
         };
         let body = Body::read(kind, &body.to_value())?;
@@ -431,14 +492,26 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             revision,
         )?;
     }
-    let (state, line) = standing(&session);
-    writer.entry(
+    // Where it stands now (现在), one line rewritten with each change.
+    let (_, line) = standing(&session);
+    writer.push(
         &task_node,
-        "standing",
-        SaidBy::ThirdParty,
-        line,
-        Some(state.to_string()),
-        changed.clone(),
+        &format!("{reference}/{NOW}"),
+        &changed,
+        Body::Standing(Standing {
+            version: BODY_VERSION,
+            sync: Sync::Shared,
+            said_by: vec![SaidBy::ThirdParty],
+            base: task
+                .as_ref()
+                .map(|task| task.standing_base.clone())
+                .unwrap_or_default(),
+            item: NOW.to_string(),
+            text: line,
+            since: Some(Since::At(session.occurred_at.saturating_mul(1000))),
+            because: because.clone(),
+            ended: false,
+        }),
     )?;
 
     // What waits on the owner: one item per question, opened when it is
@@ -635,7 +708,7 @@ mod tests {
                 ("task", "node.entry"),
                 ("task", "node.entry"),
                 ("task", "node.entry"),
-                ("task", "node.entry"),
+                ("task", "node.standing"),
             ]
         );
         assert_eq!(rows.rows[0].row.body["object"]["kind"], "repo");
@@ -648,7 +721,9 @@ mod tests {
         for placed in &rows.rows[4..] {
             assert_eq!(placed.row.body["saidBy"], json!(["third_party"]));
         }
-        assert_eq!(rows.rows[7].row.body["state"], "working");
+        assert_eq!(rows.rows[7].row.kind, "node.standing");
+        assert_eq!(rows.rows[7].row.body["text"], "started working");
+        assert_eq!(rows.rows[7].row.body["since"], 1_760_000_000_000_000_i64);
         // Never her own.
         assert!(
             rows.rows
@@ -676,6 +751,7 @@ mod tests {
             status: Status::Active,
             status_base: Vec::new(),
             items: Vec::new(),
+            standing_base: Vec::new(),
         };
         let asked = session_rows(input("asked", true, Some(task))).unwrap();
         let item = asked
@@ -690,9 +766,12 @@ mod tests {
         let standing = asked
             .rows
             .iter()
-            .find(|placed| placed.row.body.get("state").is_some())
+            .find(|placed| placed.row.kind == "node.standing")
             .unwrap();
-        assert_eq!(standing.row.body["state"], "waiting owner");
+        assert_eq!(
+            standing.row.body["text"],
+            "waiting on the owner's answer to what it asked"
+        );
         assert!(
             !asked
                 .rows
@@ -714,6 +793,7 @@ mod tests {
                 status: Status::Active,
                 status_base: Vec::new(),
                 items: vec![open.clone()],
+                standing_base: Vec::new(),
             }),
         ))
         .unwrap();
@@ -731,6 +811,7 @@ mod tests {
                 status: Status::Active,
                 status_base: Vec::new(),
                 items: vec![open.clone()],
+                standing_base: Vec::new(),
             }),
         ))
         .unwrap();
@@ -748,6 +829,7 @@ mod tests {
                 status: Status::Active,
                 status_base: Vec::new(),
                 items: vec![open.clone()],
+                standing_base: Vec::new(),
             }),
         ))
         .unwrap();
@@ -828,13 +910,8 @@ mod tests {
         let mut quiet = session("quiet");
         quiet.waiting_on = Some(WaitingOn::Checks);
         assert_eq!(standing(&quiet).0, "waiting checks");
-        // Each state is one a node entry keeps.
         for change in ["started", "asked", "finished", "failed", "quiet"] {
-            let state = standing(&session(change)).0;
-            assert_eq!(
-                myriad_merope::happened::state_of(state).as_deref(),
-                Some(state)
-            );
+            assert!(!standing(&session(change)).1.is_empty());
         }
     }
 
@@ -853,36 +930,47 @@ mod tests {
         }
     }
 
+    /// The task as the fold keeps it, from every row written so far, each
+    /// written by the rule on the site.
     fn known(rows: &[&SessionRows]) -> TaskKnown {
-        // What the fold would keep, from the rows written so far.
-        let mut items: Vec<ItemKnown> = Vec::new();
-        let mut status = Status::Active;
-        let mut status_base = Vec::new();
+        use myriad_persona_log::Row;
+        let mut log: Vec<Row> = Vec::new();
+        let mut bodies = std::collections::BTreeMap::new();
+        let mut seen = std::collections::BTreeSet::new();
         for placed in rows.iter().flat_map(|rows| rows.rows.iter()) {
-            match placed.row.kind.as_str() {
-                "node.open_item" => {
-                    let item = placed.row.body["item"].as_str().unwrap().to_string();
-                    let next = ItemKnown {
-                        item: item.clone(),
-                        text: placed.row.body["text"].as_str().unwrap().into(),
-                        closed: placed.row.body["closed"] == true,
-                        base: vec![placed.row.id.clone()],
-                    };
-                    items.retain(|known| known.item != item);
-                    items.push(next);
-                }
-                "node.revised" => {
-                    status = serde_json::from_value(placed.row.body["value"].clone()).unwrap();
-                    status_base = vec![placed.row.id.clone()];
-                }
-                _ => {}
+            // A row the host has is written already.
+            if !seen.insert(placed.row.id.clone()) {
+                continue;
             }
+            let at = 1_760_000_000_000_u64 + log.len() as u64;
+            log.push(
+                serde_json::from_value(json!({
+                    "version": 1,
+                    "id": placed.row.id,
+                    "origin": "site",
+                    "author": "rule",
+                    "dseq": log.len() + 1,
+                    "hlc": format!("{at:015}-000000-site"),
+                    "audience": "personal:7",
+                    "object": format!("node:{}", placed.node),
+                    "kind": placed.row.kind,
+                    "replicate": "shared",
+                    "payload": {"ref": format!("body:{}", placed.row.id)},
+                }))
+                .unwrap(),
+            );
+            bodies.insert(placed.row.id.clone(), placed.row.body.clone());
         }
-        TaskKnown {
-            status,
-            status_base,
-            items,
-        }
+        let folded = crate::fold(crate::FoldInput {
+            rows: log,
+            bodies,
+            ledger: Vec::new(),
+        })
+        .unwrap();
+        assert!(folded.skipped.is_empty(), "{:?}", folded.skipped);
+        let task = rows[0].task.clone();
+        let node = folded.nodes.iter().find(|node| node.id == task).unwrap();
+        task_known(&serde_json::to_value(node).unwrap()).unwrap()
     }
 
     fn at(change: &str, when: i64, task: Option<TaskKnown>) -> SessionInput {
@@ -907,7 +995,7 @@ mod tests {
         let state_rows = [&one, &two, &three, &four]
             .iter()
             .flat_map(|rows| rows.rows.iter())
-            .filter(|placed| placed.row.body.get("state").is_some())
+            .filter(|placed| placed.row.kind == "node.standing")
             .count();
         assert_eq!(state_rows, 4, "where it stands, for each change");
         // Only the content entries repeat (the same words are one row).
@@ -931,6 +1019,14 @@ mod tests {
         let after = known(&[&one, &two, &three, &four]);
         assert_eq!(after.status, Status::Done);
         assert!(after.items.iter().all(|item| item.closed));
+        assert_eq!(after.items.len(), 1, "one question, one item");
+        // Where it stands moved on with each change, one version current.
+        let now = four
+            .rows
+            .iter()
+            .find(|placed| placed.row.kind == "node.standing")
+            .unwrap();
+        assert_eq!(after.standing_base, std::slice::from_ref(&now.row.id));
         // The same frame again: the same rows.
         let again = session_rows(at("asked", 3, Some(known(&[&one, &two])))).unwrap();
         assert_eq!(again, three);
