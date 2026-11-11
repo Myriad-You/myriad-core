@@ -18,9 +18,13 @@
 //!   its own place below, the second's head is the host's to show every
 //!   time. At most [`Budget::picked`].
 //! - **Each picked node's entries**: its ranked entries first, in rank
-//!   order, then its newest to fill, at most [`Budget::entries`].
+//!   order, then its newest to fill, at most [`Budget::entries`]; with two
+//!   places or more its newest entry always among them (it takes the last
+//!   place when the ranked fill them all), since what the words found may
+//!   all be from before and the newest says how things are now.
 //! - **About them**: the entries of their own node, ranked first, then the
-//!   newest, at most [`Budget::about_them`].
+//!   newest, at most [`Budget::about_them`]; its newest always among them
+//!   too.
 //! - **Loose**: the ranked entries shown in none of those, in rank order:
 //!   on no node, on a node not picked, past a node's room. The host shows
 //!   them as it showed memories before, so nothing it ranked is lost.
@@ -205,7 +209,10 @@ fn newest(node: &PickNode) -> Vec<&str> {
 }
 
 /// Of `node`, the ranked entries on it in rank order, then its newest, at
-/// most `count`.
+/// most `count`; with two places or more its newest entry always among
+/// them. What the words found may all be from before, and the newest says
+/// how things are now: where the ranked fill every place, the newest takes
+/// the last of them. A single place stays the best found.
 fn best(
     node: &PickNode,
     ranked: &[&str],
@@ -213,12 +220,13 @@ fn best(
     at: usize,
     count: usize,
 ) -> Vec<String> {
+    let newest = newest(node);
     let mut out: Vec<String> = Vec::new();
     for id in ranked
         .iter()
         .copied()
         .filter(|id| on.get(id) == Some(&at))
-        .chain(newest(node))
+        .chain(newest.iter().copied())
     {
         if out.len() >= count {
             break;
@@ -226,6 +234,13 @@ fn best(
         if !out.iter().any(|seen| seen == id) {
             out.push(id.to_string());
         }
+    }
+    if let Some(&latest) = newest.first()
+        && out.len() >= 2
+        && !out.iter().any(|seen| seen == latest)
+    {
+        out.pop();
+        out.push(latest.to_string());
     }
     out
 }
@@ -400,6 +415,42 @@ mod tests {
         // Shown nowhere above: on her node, on a gone node, on no node.
         assert_eq!(out.loose, ["x", "y1", "h1"]);
         assert!(out.together.is_empty());
+    }
+
+    #[test]
+    fn a_picked_node_always_shows_its_newest_entry() {
+        // The words found three old entries: they would fill all three
+        // places, and the newest (how things are now) would not come.
+        let out = run(json!({
+            "ranked": [
+                {"id": "r2", "named": true},
+                {"id": "r1", "named": true},
+                {"id": "r3", "named": true}
+            ],
+            "nodes": [{"id": "running", "entries": entries("r", 6)}]
+        }));
+        assert_eq!(out.picked[0].entries, ["r2", "r1", "r6"]);
+        // What it pushed out is still shown, as loose.
+        assert_eq!(out.loose, ["r3"]);
+        // Already among what the words found: nothing changes.
+        let out = run(json!({
+            "ranked": [
+                {"id": "r2", "named": true},
+                {"id": "r6", "named": true},
+                {"id": "r3", "named": true}
+            ],
+            "nodes": [{"id": "running", "entries": entries("r", 6)}]
+        }));
+        assert_eq!(out.picked[0].entries, ["r2", "r6", "r3"]);
+        // Their own node too.
+        let out = run(json!({
+            "ranked": [
+                {"id": "a1"}, {"id": "a2"}, {"id": "a3"}, {"id": "a4"}, {"id": "a5"}
+            ],
+            "nodes": [{"id": "you", "entries": entries("a", 9)}],
+            "aboutThem": "you"
+        }));
+        assert_eq!(out.about_them, ["a1", "a2", "a3", "a4", "a9"]);
     }
 
     #[test]
