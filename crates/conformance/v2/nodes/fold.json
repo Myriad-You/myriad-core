@@ -21478,9 +21478,8 @@
               "third_party"
             ],
             "sync": "shared",
-            "text": "他做事很细",
-            "version": 1,
-            "view": "v1"
+            "text": "推送完就算做完",
+            "version": 1
           },
           "t5": {
             "base": [],
@@ -21566,7 +21565,7 @@
             "dseq": 4,
             "hlc": "001760000003000-000000-site",
             "id": "t4",
-            "kind": "node.view_changed",
+            "kind": "node.done_when",
             "object": "node:25ae623559006437c416adbde717a853",
             "origin": "site",
             "payload": {
@@ -21609,7 +21608,7 @@
           }
         ]
       },
-      "name": "how things stand: a rule rewrites now, never her view; an ended one stays marked",
+      "name": "how things stand: a rule rewrites now, never what done is; an ended one stays marked",
       "output": {
         "nodes": [
           {

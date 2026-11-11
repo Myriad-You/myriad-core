@@ -27,11 +27,13 @@
 //! denied is void (no tier): never taken again.
 //!
 //! **A rule's rows** (author `rule`: what a device reported, laid out on
-//! nodes by a fixed rule, no model) are seen, whoever their `saidBy` names:
-//! a device saying the partner asked something is not the partner saying
-//! it to her. What a rule wrote is never her view and never evidence for
-//! one; how a thing stands (`node.standing`) weighs by who wrote it
-//! ([`standing_tier`]).
+//! nodes by a fixed rule, no model) are seen, whoever their `saidBy` names,
+//! until the person confirms them: a device saying the partner asked
+//! something is not the partner saying it to her. What a rule wrote is
+//! never her view and never evidence for one. How a thing stands
+//! (`node.standing`) weighs as any piece does: by who wrote it and who said
+//! it. Whether a piece may be used in private talk at all
+//! ([`usable_in_private`]) is where it was said, not who wrote it down.
 //!
 //! What the host supplies, never the core:
 //!
@@ -111,6 +113,22 @@ pub fn tier(
             SaidBy::ThirdParty | SaidBy::OtherPerson => Tier::Seen,
         })
         .min()
+}
+
+/// The tier of a piece as written down by `author`: a rule's is seen until
+/// the person answers (confirmed: counts; denied: void), whoever `said_by`
+/// names; anyone else's is [`tier`].
+pub fn written_tier(
+    author: Option<Author>,
+    said_by: &[SaidBy],
+    provenance: Option<&Provenance>,
+    about_partner: bool,
+) -> Option<Tier> {
+    let answer = provenance.and_then(|provenance| provenance.answer);
+    if author == Some(Author::Rule) && answer.is_none() {
+        return Some(Tier::Seen);
+    }
+    tier(said_by, provenance, about_partner)
 }
 
 /// Whether `private` is a private audience of one person (`personal:<one>`).
@@ -221,17 +239,6 @@ pub fn intent_may_rest(because: &[String], known: &Known) -> bool {
     })
 }
 
-/// How far how a thing stands (`node.standing`) may be taken: a rule's is
-/// only seen; the partner's counts; hers is what she concluded, and counts
-/// as far as who she wrote it from does.
-pub fn standing_tier(author: Author, said_by: &[SaidBy]) -> Tier {
-    match author {
-        Author::Rule => Tier::Seen,
-        Author::Owner => Tier::Counts,
-        Author::Her => tier(said_by, None, false).unwrap_or(Tier::Seen),
-    }
-}
-
 /// Whether a piece her upkeep was shown counts as evidence for a view: it
 /// was not written by a rule, counts by its tier (no provenance travels in
 /// a body), and was said where the person's words are theirs, not in a
@@ -248,12 +255,15 @@ pub(crate) fn counts_for_view(author: Option<Author>, said_by: &[SaidBy], audien
 
 // MARK: The calls
 
-/// One piece to weigh: who said it, where it came from, and whether it was
-/// noted about the one person of the private audience.
+/// One piece to weigh: who said it, who wrote it down (its row's author;
+/// absent: not a rule), where it came from, and whether it was noted about
+/// the one person of the private audience.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Piece {
     pub said_by: Vec<SaidBy>,
+    #[serde(default)]
+    pub author: Option<Author>,
     #[serde(default)]
     pub provenance: Option<Provenance>,
     #[serde(default)]
@@ -280,7 +290,8 @@ pub fn tiers(input: TierInput) -> Tiers {
             .items
             .iter()
             .map(|piece| {
-                tier(
+                written_tier(
+                    piece.author,
                     &piece.said_by,
                     piece.provenance.as_ref(),
                     piece.about_partner,

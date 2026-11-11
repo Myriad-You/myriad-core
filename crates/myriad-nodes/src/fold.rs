@@ -107,8 +107,8 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Action, Body, Change, Happened, How, IntentStatus, Object, ObjectKind, Origin, Relation,
-        Sentence, Since, Status, Trigger,
+        Action, Body, Change, Field, Happened, How, IntentStatus, Object, ObjectKind, Origin,
+        Relation, Sentence, Since, Status, Trigger,
     },
     key::{Key, Kind, node_id},
     limits::HISTORY,
@@ -512,7 +512,7 @@ pub enum Why {
     /// shared row or another device's).
     SyncMismatch,
     /// The partner's row, not said by the partner; or a rule's row writing
-    /// what only she concludes (a view, an intent, her upkeep).
+    /// what only she concludes ([`by_rule`]).
     AuthorMismatch,
     /// A span or entry said in another audience, not the partner's own
     /// words from a group kept in their private audience.
@@ -779,15 +779,35 @@ fn misfit(row: &Row, body: &Body) -> Option<Why> {
     if row.author == Author::Owner && said_by != [SaidBy::Partner] {
         return Some(Why::AuthorMismatch);
     }
-    if row.author == Author::Rule
-        && matches!(
-            body,
-            Body::ViewChanged(_) | Body::Intent(_) | Body::Upkept(_)
-        )
-    {
+    if row.author == Author::Rule && !by_rule(body) {
         return Some(Why::AuthorMismatch);
     }
     None
+}
+
+/// What a rule may write: what a device reported, laid out (a node, its
+/// name, status or object, a relation, a span or an entry, something open,
+/// how things stand). Never what she concludes: a kind change, a summary, a
+/// view, an intent, what done is, a split or a merge, her recall or upkeep.
+fn by_rule(body: &Body) -> bool {
+    match body {
+        Body::Revised(revised) => revised.field != Field::Summary,
+        Body::Created(_)
+        | Body::Related(_)
+        | Body::Unrelated(_)
+        | Body::Span(_)
+        | Body::Entry(_)
+        | Body::OpenItem(_)
+        | Body::Standing(_) => true,
+        Body::KindChanged(_)
+        | Body::ViewChanged(_)
+        | Body::Intent(_)
+        | Body::DoneWhen(_)
+        | Body::SplitOff(_)
+        | Body::Absorbed(_)
+        | Body::Used(_)
+        | Body::Upkept(_) => false,
+    }
 }
 
 /// The nodes that went into another, read before forgets turn rows into

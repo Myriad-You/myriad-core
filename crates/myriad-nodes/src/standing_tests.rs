@@ -8,7 +8,7 @@ use crate::{
     fold::Why,
     node_id,
     recall::{PickInput, PickNode, pick},
-    trust::{Tier, standing_tier},
+    trust::{Tier, written_tier},
 };
 
 const AUDIENCE: &str = "personal:7";
@@ -119,25 +119,38 @@ fn a_rule_writes_how_things_stand_but_never_what_she_concludes() {
             json!({ "item": "now", "saidBy": ["third_party"], "text": text, "because": ["session:s1"] }),
         )
     };
-    let view = json!({
+    let done_when = json!({
         "version": 1, "sync": "shared", "saidBy": ["third_party"], "base": [],
-        "view": "v1", "text": "他做事很细", "because": ["session:s1"],
+        "text": "推送完就算做完", "because": ["session:s1"],
     });
     let log = vec![
         (row("a1", T, "node.created", "rule"), created()),
         (row("a2", T + 1, "node.standing", "rule"), rule("在等测试")),
-        (row("a3", T + 2, "node.view_changed", "rule"), view),
+        (row("a3", T + 2, "node.done_when", "rule"), done_when),
+        (
+            row("a4", T + 3, "node.kind_changed", "rule"),
+            json!({
+                "version": 1, "sync": "shared", "saidBy": ["third_party"], "base": ["a1"],
+                "kind": "topic", "reason": "没有做完的标准", "because": ["session:s1"],
+            }),
+        ),
     ];
     let folded = folded(&log);
     let node = &folded.nodes[0];
     assert_eq!(node.standing["now"].current.author, Author::Rule);
-    assert!(node.views.is_empty());
-    let skipped = folded
-        .skipped
-        .iter()
-        .find(|skipped| skipped.id == "a3")
-        .unwrap();
-    assert_eq!(skipped.why, Why::AuthorMismatch);
+    assert!(node.done_when.is_none());
+    for id in ["a3", "a4"] {
+        let skipped = folded
+            .skipped
+            .iter()
+            .find(|skipped| skipped.id == id)
+            .unwrap();
+        assert_eq!(skipped.why, Why::AuthorMismatch, "{id}");
+    }
+    assert_eq!(
+        node.kind.as_ref().unwrap().current.value.kind,
+        crate::Kind::Task
+    );
 }
 
 #[test]
@@ -153,6 +166,16 @@ fn a_rule_row_is_about_a_node_and_holds_no_lease() {
             .to_string()
             .contains("lease epoch")
     );
+    let mut forget = node_row.clone();
+    forget.kind = "forget".into();
+    forget.payload = None;
+    assert!(
+        forget
+            .check()
+            .unwrap_err()
+            .to_string()
+            .contains("only adds")
+    );
     let mut memory = node_row;
     memory.kind = "memory.write".into();
     memory.object = "memory:m1".into();
@@ -166,16 +189,43 @@ fn a_rule_row_is_about_a_node_and_holds_no_lease() {
 }
 
 #[test]
-fn a_rules_standing_is_only_seen() {
-    assert_eq!(standing_tier(Author::Rule, &[SaidBy::Partner]), Tier::Seen);
+fn what_a_rule_wrote_is_only_seen_until_the_person_answers() {
+    use crate::trust::{Answer, Provenance};
+    let rule = Some(Author::Rule);
     assert_eq!(
-        standing_tier(Author::Owner, &[SaidBy::Partner]),
-        Tier::Counts
+        written_tier(rule, &[SaidBy::Partner], None, true),
+        Some(Tier::Seen)
     );
-    assert_eq!(standing_tier(Author::Her, &[SaidBy::Her]), Tier::Counts);
+    let typed = Provenance {
+        typed: true,
+        ..Default::default()
+    };
     assert_eq!(
-        standing_tier(Author::Her, &[SaidBy::ThirdParty]),
-        Tier::Seen
+        written_tier(rule, &[SaidBy::Partner], Some(&typed), true),
+        Some(Tier::Seen)
+    );
+    let answered = |answer| Provenance {
+        answer: Some(answer),
+        ..Default::default()
+    };
+    let confirmed = answered(Answer::Confirmed);
+    assert_eq!(
+        written_tier(rule, &[SaidBy::ThirdParty], Some(&confirmed), true),
+        Some(Tier::Counts)
+    );
+    let denied = answered(Answer::Denied);
+    assert_eq!(
+        written_tier(rule, &[SaidBy::Partner], Some(&denied), true),
+        None
+    );
+    let owner = Some(Author::Owner);
+    assert_eq!(
+        written_tier(owner, &[SaidBy::Partner], None, true),
+        Some(Tier::Counts)
+    );
+    assert_eq!(
+        written_tier(None, &[SaidBy::Her], None, false),
+        Some(Tier::Counts)
     );
 }
 

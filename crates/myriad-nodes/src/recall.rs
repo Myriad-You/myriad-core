@@ -247,8 +247,11 @@ fn newest(node: &PickNode) -> Vec<&str> {
 fn standing(node: &PickNode) -> Vec<String> {
     let mut now: Vec<&PickStanding> = node.standing.iter().filter(|one| !one.ended).collect();
     now.sort_by(|a, b| b.at.cmp(&a.at).then_with(|| a.item.cmp(&b.item)));
-    now.dedup_by(|a, b| a.item == b.item);
-    now.into_iter().map(|one| one.item.clone()).collect()
+    let mut seen = BTreeSet::new();
+    now.into_iter()
+        .filter(|one| seen.insert(one.item.as_str()))
+        .map(|one| one.item.clone())
+        .collect()
 }
 
 /// Of `node`, the ranked entries on it in rank order, then its newest, at

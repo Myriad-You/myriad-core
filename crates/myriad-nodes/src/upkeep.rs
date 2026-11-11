@@ -941,6 +941,10 @@ pub enum HeldWhy {
     /// A view that does not rest only on what counts (算数): the partner's
     /// or her own words, outside a group, shown to her as they are.
     NotCounted,
+    /// How something on it stands is kept where this run does not write
+    /// (a local standing, on a shared run): going into another node would
+    /// carry it where it may not go, or leave it behind.
+    KeptElsewhere,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -1785,9 +1789,23 @@ impl<'a> Reader<'a> {
                 .intents
                 .values()
                 .filter(|said| said.current.value.status == IntentStatus::Waiting)
+                .any(partners)
+            || me
+                .standing
+                .values()
+                .filter(|standing| !standing.current.value.ended)
                 .any(partners);
         if me.created_by == Some(Author::Owner) || partner_rows || partner_items {
             self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        // Her standing goes on with the node (below), under this run's tag:
+        // one kept under another (local on a shared run) holds the merge.
+        if me.standing.values().any(|standing| {
+            let current = &standing.current;
+            !current.value.ended && current.author != Author::Rule && current.sync != self.sync
+        }) {
+            self.hold(n, HeldWhy::KeptElsewhere);
             return Ok(());
         }
         let id = me.id.clone();
@@ -1844,8 +1862,9 @@ impl<'a> Reader<'a> {
                 }),
             )?;
         }
-        // How things stand goes on too, but not a rule's: the rule writes
-        // its own again where the thing is now.
+        // How things stand goes on too (hers: the partner's held the merge
+        // above), but not a rule's: the rule writes its own again where the
+        // thing is now.
         for (item, standing) in &me.standing {
             let current = &standing.current;
             if current.value.ended || current.author == Author::Rule {

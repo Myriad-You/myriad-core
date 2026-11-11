@@ -266,8 +266,10 @@ impl Row {
         if object == kinds::ROW && rule != Rule::Forget {
             return Err(LogError::new("only a forget is about one row"));
         }
-        if self.author == Author::Rule && object != "node" {
-            return Err(LogError::new("a rule's row is about a node"));
+        if self.author == Author::Rule && (object != "node" || rule != Rule::Event) {
+            return Err(LogError::new(
+                "a rule's row is about a node, and only adds to it (no forget, no retract)",
+            ));
         }
         if self.kind == "state.write" {
             let entity = self
