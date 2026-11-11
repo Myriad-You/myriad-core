@@ -123,9 +123,9 @@ pub(super) fn home_take(raw: &[u8]) -> Result<Value, Failure> {
 /// elsewhere?}` → `{batches, notHeld?, tooOld?, heldBack?}`: what to send
 /// another host core of one audience; a forgotten or retracted node goes as
 /// stubs only. `here` is the id this side goes by: a host core under
-/// another id is refused. `peerAbi` is the other side's ABI (2 when its
-/// hello listed `log2`, else 1): rows it cannot read are not sent to it
-/// (`tooOld`). `heldBack` lists rows that went as stubs or were left out,
+/// another id is refused. `peerAbi` is the other side's ABI (3 when its
+/// hello listed `log3`, 2 when `log2`, else 1): rows it cannot read are not
+/// sent to it (`tooOld`). `heldBack` lists rows that went as stubs or were left out,
 /// a host's fault.
 pub(super) fn wire_send(raw: &[u8]) -> Result<Value, Failure> {
     answer(&wire::send(quiet_input(raw)?).map_err(refused)?)

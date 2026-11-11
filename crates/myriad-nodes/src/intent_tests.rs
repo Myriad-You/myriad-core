@@ -181,7 +181,7 @@ fn upkeep_counts_what_the_tiers_count() {
         (&[Partner][..], "nowhere", false),
     ] {
         assert_eq!(
-            trust::counts_for_view(said_by, audience),
+            trust::counts_for_view(None, said_by, audience),
             counts,
             "{said_by:?} in {audience}"
         );

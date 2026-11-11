@@ -22,6 +22,10 @@
 //!   places or more its newest entry always among them (it takes the last
 //!   place when the ranked fill them all), since what the words found may
 //!   all be from before and the newest says how things are now.
+//! - **How things stand** (`node.standing`): each picked node's, and
+//!   their own node's, come before its entries and take none of their
+//!   places: every one that has not ended, newest first. Ranking never
+//!   finds them; they are how things are now, which entries only tell of.
 //! - **About them**: the entries of their own node, ranked first, then the
 //!   newest, at most [`Budget::about_them`]; its newest always among them
 //!   too.
@@ -95,6 +99,17 @@ pub struct PickEntry {
     pub at: i64,
 }
 
+/// How one thing on a node stands now: its item, when its current
+/// version was written (Unix microseconds), and whether it ended.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PickStanding {
+    pub item: String,
+    pub at: i64,
+    #[serde(default)]
+    pub ended: bool,
+}
+
 /// A node of the audience as recall sees it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -108,6 +123,8 @@ pub struct PickNode {
     pub gone: bool,
     #[serde(default)]
     pub entries: Vec<PickEntry>,
+    #[serde(default)]
+    pub standing: Vec<PickStanding>,
 }
 
 impl PickNode {
@@ -129,6 +146,15 @@ impl PickNode {
                         .unwrap_or(&entry.row)
                         .to_string(),
                     at: entry.at,
+                })
+                .collect(),
+            standing: node
+                .standing
+                .iter()
+                .map(|(item, standing)| PickStanding {
+                    item: item.clone(),
+                    at: standing.current.at,
+                    ended: standing.current.value.ended,
                 })
                 .collect(),
         }
@@ -159,6 +185,10 @@ pub struct PickInput {
 #[serde(rename_all = "camelCase")]
 pub struct Picked {
     pub node: String,
+    /// How things on it stand, by item, newest first: shown before its
+    /// entries.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub standing: Vec<String>,
     pub entries: Vec<String>,
 }
 
@@ -182,6 +212,10 @@ pub struct Pick {
     pub picked: Vec<Picked>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub about_them: Vec<String>,
+    /// How things stand on their own node, by item, newest first: shown
+    /// before its entries.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub about_them_standing: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub loose: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -205,6 +239,18 @@ fn newest(node: &PickNode) -> Vec<&str> {
         .into_iter()
         .map(|entry| entry.id.as_str())
         .filter(|id| seen.insert(*id))
+        .collect()
+}
+
+/// How things on `node` stand: every one not ended, newest first (the same
+/// time: by item).
+fn standing(node: &PickNode) -> Vec<String> {
+    let mut now: Vec<&PickStanding> = node.standing.iter().filter(|one| !one.ended).collect();
+    now.sort_by(|a, b| b.at.cmp(&a.at).then_with(|| a.item.cmp(&b.item)));
+    let mut seen = BTreeSet::new();
+    now.into_iter()
+        .filter(|one| seen.insert(one.item.as_str()))
+        .map(|one| one.item.clone())
         .collect()
 }
 
@@ -254,6 +300,9 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         }
         for entry in &node.entries {
             check_token("entry id", &entry.id)?;
+        }
+        for one in &node.standing {
+            crate::tags::check_item_id("standing item", &one.item)?;
         }
     }
     for own in [&input.about_them, &input.her].into_iter().flatten() {
@@ -306,19 +355,21 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         .iter()
         .map(|at| Picked {
             node: input.nodes[*at].id.clone(),
+            standing: standing(&input.nodes[*at]),
             entries: best(&input.nodes[*at], &ranked, &on, *at, input.budget.entries),
         })
         .collect();
-    let about_them = input
-        .about_them
-        .as_ref()
-        .and_then(|id| {
-            input
-                .nodes
-                .iter()
-                .position(|node| &node.id == id && !node.gone)
-        })
+    let about_them_at = input.about_them.as_ref().and_then(|id| {
+        input
+            .nodes
+            .iter()
+            .position(|node| &node.id == id && !node.gone)
+    });
+    let about_them = about_them_at
         .map(|at| best(&input.nodes[at], &ranked, &on, at, input.budget.about_them))
+        .unwrap_or_default();
+    let about_them_standing = about_them_at
+        .map(|at| standing(&input.nodes[at]))
         .unwrap_or_default();
     let mut shown: BTreeSet<String> = picked
         .iter()
@@ -356,6 +407,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     Ok(Pick {
         picked,
         about_them,
+        about_them_standing,
         loose,
         together,
     })

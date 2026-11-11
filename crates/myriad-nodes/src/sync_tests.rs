@@ -2763,3 +2763,64 @@ fn a_forget_pressed_on_a_home_takes_the_kept_rows_it_showed() {
     }
     assert!(reached(&mac.folded(MINE, false)).contains(&format!("node:{id}")));
 }
+
+/// A rule's row: no lease epoch, written by any side.
+fn by_rule(mut row: Row) -> Row {
+    row.author = myriad_persona_log::row::Author::Rule;
+    row.epoch = None;
+    row
+}
+
+fn now_of(text: &str, base: &[&str]) -> Value {
+    json!({
+        "version": 1, "sync": "shared", "saidBy": ["third_party"], "base": base,
+        "item": "now", "text": text, "since": T as i64 * 1000, "because": ["session:s1"],
+    })
+}
+
+#[test]
+fn how_a_task_stands_goes_only_to_a_side_that_reads_it() {
+    let (mut mac, mut site) = shared_node();
+    mac.write(
+        by_rule(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "node.standing")),
+        Some(now_of("在等你：问要不要推送", &[])),
+    );
+    // A core below ABI 3 refuses the author and the kind: nothing goes.
+    let sent = mac.send_to(&site, MINE);
+    assert!(sent.too_old && sent.batches.is_empty());
+    site.abi = 3;
+    site.sync_from(&mac, MINE);
+    let folded = site.folded(MINE, false);
+    let now = &node(&folded, KEY)["standing"]["now"];
+    assert_eq!(now["value"]["text"], "在等你：问要不要推送");
+    assert_eq!(now["author"], "rule");
+    // A new one replaces it; the old one is its history.
+    mac.write(
+        by_rule(row("r5", "dev_mac", 5, T + 20, MINE, KEY, "node.standing")),
+        Some(now_of("在等测试", &["r4"])),
+    );
+    site.sync_from(&mac, MINE);
+    let folded = site.folded(MINE, false);
+    let now = &node(&folded, KEY)["standing"]["now"];
+    assert_eq!(now["value"]["text"], "在等测试");
+    assert_eq!(now["history"][0]["row"], "r4");
+}
+
+#[test]
+fn a_local_standing_never_holds_an_older_side_up() {
+    let (mut mac, site) = shared_node();
+    let mut local = by_rule(row("r4", "dev_mac", 4, T + 10, MINE, KEY, "node.standing"));
+    local.replicate = myriad_persona_log::Replicate::Local;
+    local.dseq = None;
+    let mut body = now_of("在等测试", &[]);
+    body["sync"] = json!({ "local": "dev_mac" });
+    mac.write(local, Some(body));
+    // Until every side reads ABI 3, hosts write these local: they never go,
+    // and the rest still goes to a side of ABI 2.
+    assert!(!mac.send_to(&site, MINE).too_old);
+    let folded = mac.folded(MINE, false);
+    assert_eq!(
+        node(&folded, KEY)["standing"]["now"]["value"]["text"],
+        "在等测试"
+    );
+}

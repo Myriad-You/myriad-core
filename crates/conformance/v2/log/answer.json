@@ -946,6 +946,53 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "l1",
+            "kind": "node.created",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:l1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "rule",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "l3",
+            "kind": "node.standing",
+            "object": "node:0c2573a2514b3b8ec39ddb60f133e266",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1,
+            "payload": {
+              "ref": "doc:l3"
+            }
+          }
+        ],
+        "theirs": {}
+      },
+      "name": "refused: a rule's row goes by nodes.wire_send, not log.answer",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

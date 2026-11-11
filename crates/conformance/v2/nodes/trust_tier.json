@@ -392,6 +392,44 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "name": "a rule's piece is seen until the person answers",
+      "input": {
+        "items": [
+          {
+            "aboutPartner": true,
+            "author": "rule",
+            "saidBy": [
+              "partner"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "author": "rule",
+            "provenance": {
+              "answer": "confirmed"
+            },
+            "saidBy": [
+              "third_party"
+            ]
+          },
+          {
+            "aboutPartner": true,
+            "author": "owner",
+            "saidBy": [
+              "partner"
+            ]
+          }
+        ]
+      },
+      "output": {
+        "tiers": [
+          "seen",
+          "counts",
+          "counts"
+        ]
+      }
     }
   ],
   "version": 1

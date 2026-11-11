@@ -14,6 +14,7 @@
 //! | `node.revised` | `base`, `field` (`name`, `aliases`, `summary`, `status`, `who_knows`, `object`, `progress`), `person?` (progress only), `value` |
 //! | `node.view_changed` | `base`, `view`, `text`, `because` |
 //! | `node.open_item` | `base`, `item`, `text`, `because`, `closed?` |
+//! | `node.standing` | `base`, `item`, `text`, `since?` (Unix microseconds, or a day, a month or a year), `because`, `ended?` |
 //! | `node.intent` | `base`, `intent`, `text`, `because`, `status`, `trigger?` (`{at, zone}` or `{node, change}`), `origin?` (`partner`, `her`: who said it), `action?` (`say`, `work`: only the partner's) |
 //! | `node.span` | `audience`, `text`, `refs?`, `from?`, `to?` |
 //! | `node.entry` | `audience`, `text`, `refs?` (`memory:<id>`: the memory row it is the place of), `quoteOnly?`, `happened?` (`{from, to?, about?}`: when what it tells of happened, not when it was said), `state?` (where it stands, a word or two), `open?` (only beside `state`) |
@@ -443,6 +444,58 @@ pub struct OpenItem {
     pub closed: bool,
 }
 
+/// `node.standing`: how one thing on it stands now (现在), rewritten as it
+/// changes: a habit, where they live, their work, or what a task is doing
+/// right now (在等你、在等测试、卡住了). A node may hold several, one per
+/// `item`; a new version names the one it replaces in `base`, and the old
+/// one goes to its history. `since` is when it began standing so, as far as
+/// it is known: not when the row was written. `ended`: it no longer stands
+/// at all, with nothing in its place.
+///
+/// Who wrote it is the row's author: her (what she concluded), the
+/// partner, or a rule (what a device reported, written without a model:
+/// only seen, never her view; [`crate::trust`]).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Standing {
+    pub version: u32,
+    pub sync: Sync,
+    pub said_by: Vec<SaidBy>,
+    pub base: Vec<String>,
+    pub item: String,
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub since: Option<Since>,
+    pub because: Vec<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub ended: bool,
+}
+
+/// When something began standing so: a moment (Unix microseconds, as a
+/// span's `from`), or a day, a month or a year (`2026-10-18`, `2026-10`,
+/// `2026`) when no more is known.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum Since {
+    At(i64),
+    Day(String),
+}
+
+impl Since {
+    fn check(&self) -> Result<(), NodeError> {
+        match self {
+            Self::At(_) => Ok(()),
+            Self::Day(day) => Happened {
+                from: day.clone(),
+                to: None,
+                about: false,
+            }
+            .check()
+            .map_err(|_| NodeError::new("since is a moment, a day, a month or a year")),
+        }
+    }
+}
+
 /// `node.intent`: something she means to say (想说没说的话), or, told to
 /// by the partner, to do. Only the partner's words or her own judgment make
 /// one: `origin` names which, and must be who said it (`saidBy` is
@@ -663,6 +716,7 @@ pub enum Body {
     Revised(Revised),
     ViewChanged(ViewChanged),
     OpenItem(OpenItem),
+    Standing(Standing),
     Intent(Intent),
     Span(Span),
     Entry(Entry),
@@ -688,6 +742,7 @@ pub const READ: &[&str] = &[
     "node.revised",
     "node.span",
     "node.split_off",
+    "node.standing",
     "node.unrelated",
     "node.upkept",
     "node.used",
@@ -771,6 +826,7 @@ impl Body {
             }
             "node.span" => Self::Span(typed(value)?),
             "node.split_off" => Self::SplitOff(typed(value)?),
+            "node.standing" => Self::Standing(typed(value)?),
             "node.unrelated" => Self::Unrelated(typed(value)?),
             "node.upkept" => Self::Upkept(typed(value)?),
             "node.used" => Self::Used(typed(value)?),
@@ -824,6 +880,14 @@ impl Body {
             Self::OpenItem(body) => {
                 check_item_id("item", &body.item)?;
                 check_text("text", &body.text, limits::TEXT_CHARS)?;
+                check_because(&body.because)?;
+            }
+            Self::Standing(body) => {
+                check_item_id("item", &body.item)?;
+                check_text("text", &body.text, limits::TEXT_CHARS)?;
+                if let Some(since) = &body.since {
+                    since.check()?;
+                }
                 check_because(&body.because)?;
             }
             Self::Intent(body) => {
@@ -947,6 +1011,7 @@ impl Body {
             | Self::Revised(Revised { sync, said_by, .. })
             | Self::ViewChanged(ViewChanged { sync, said_by, .. })
             | Self::OpenItem(OpenItem { sync, said_by, .. })
+            | Self::Standing(Standing { sync, said_by, .. })
             | Self::Intent(Intent { sync, said_by, .. })
             | Self::Span(Span { sync, said_by, .. })
             | Self::Entry(Entry { sync, said_by, .. })
@@ -967,6 +1032,7 @@ impl Body {
             | Self::Revised(Revised { base, .. })
             | Self::ViewChanged(ViewChanged { base, .. })
             | Self::OpenItem(OpenItem { base, .. })
+            | Self::Standing(Standing { base, .. })
             | Self::Intent(Intent { base, .. })
             | Self::Unrelated(Unrelated { base, .. })
             | Self::DoneWhen(DoneWhen { base, .. }) => base,
@@ -989,6 +1055,7 @@ impl Body {
             Self::Revised(body) => serde_json::to_value(body),
             Self::ViewChanged(body) => serde_json::to_value(body),
             Self::OpenItem(body) => serde_json::to_value(body),
+            Self::Standing(body) => serde_json::to_value(body),
             Self::Intent(body) => serde_json::to_value(body),
             Self::Span(body) => serde_json::to_value(body),
             Self::Entry(body) => serde_json::to_value(body),

@@ -550,6 +550,12 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("an entry state too long", "state is a word or two"),
         ("an entry state with two spaces", "state is a word or two"),
         ("an entry state empty", "state is a word or two"),
+        (
+            "a standing since no day",
+            "since is a moment, a day, a month or a year",
+        ),
+        ("a standing without evidence", "because is empty"),
+        ("a standing with a field it does not know", "unknown field"),
         // nodes.sort_input, nodes.standing_read, nodes.range_dates, nodes.list
         ("a said day that is not a day", "said and today are a day"),
         ("no item", "missing field `item`"),

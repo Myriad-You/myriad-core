@@ -111,6 +111,8 @@ const KINDS: &[(&str, Object, Rule)] = &[
     ("node.span", Some("node"), Rule::Event),
     ("node.split", Some("node"), Rule::Event),
     ("node.split_off", Some("node"), Rule::Event),
+    // How one thing on a node stands now; a new version replaces it.
+    ("node.standing", Some("node"), Rule::Event),
     ("node.talked", Some("node"), Rule::Event),
     ("node.unrelated", Some("node"), Rule::Event),
     ("node.upkept", Some("node"), Rule::Event),

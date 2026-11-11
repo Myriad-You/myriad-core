@@ -93,7 +93,7 @@ use crate::{
     NodeError,
     body::{
         Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged, OpenItem,
-        Related, Relation, Revised, Sentence, Span, SplitOff, Status, Unrelated, Upkept,
+        Related, Relation, Revised, Sentence, Span, SplitOff, Standing, Status, Unrelated, Upkept,
         ViewChanged,
     },
     check_token,
@@ -941,6 +941,10 @@ pub enum HeldWhy {
     /// A view that does not rest only on what counts (算数): the partner's
     /// or her own words, outside a group, shown to her as they are.
     NotCounted,
+    /// How something on it stands is kept where this run does not write
+    /// (a local standing, on a shared run): going into another node would
+    /// carry it where it may not go, or leave it behind.
+    KeptElsewhere,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -1200,7 +1204,7 @@ impl<'a> Reader<'a> {
                     .iter()
                     .find(|span| span.row == *row)
                     .ok_or(Fallback::NoEvidence)?;
-                counted &= counts(&span.said_by, &span.audience);
+                counted &= counts(Some(span.author), &span.said_by, &span.audience);
                 ids.insert(format!("span:{row}"));
             } else if let Some(row) = self.context.entries.get(label) {
                 let entry = self
@@ -1209,11 +1213,11 @@ impl<'a> Reader<'a> {
                     .iter()
                     .find(|entry| entry.row == *row)
                     .ok_or(Fallback::NoEvidence)?;
-                counted &= counts(&entry.said_by, &entry.audience);
+                counted &= counts(Some(entry.author), &entry.said_by, &entry.audience);
                 ids.insert(format!("entry:{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
                 let item = &self.context.items[at];
-                counted &= counts(&item.said_by, item.said_in(&self.context.audience));
+                counted &= counts(None, &item.said_by, item.said_in(&self.context.audience));
                 ids.insert(item.id.clone());
             } else if let Some(rests_on) = self.context.heads.get(label) {
                 counted = false;
@@ -1235,6 +1239,7 @@ impl<'a> Reader<'a> {
             Body::Revised(_) => "node.revised",
             Body::ViewChanged(_) => "node.view_changed",
             Body::OpenItem(_) => "node.open_item",
+            Body::Standing(_) => "node.standing",
             Body::Intent(_) => "node.intent",
             Body::Span(_) => "node.span",
             Body::Entry(_) => "node.entry",
@@ -1784,9 +1789,23 @@ impl<'a> Reader<'a> {
                 .intents
                 .values()
                 .filter(|said| said.current.value.status == IntentStatus::Waiting)
+                .any(partners)
+            || me
+                .standing
+                .values()
+                .filter(|standing| !standing.current.value.ended)
                 .any(partners);
         if me.created_by == Some(Author::Owner) || partner_rows || partner_items {
             self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        // Her standing goes on with the node (below), under this run's tag:
+        // one kept under another (local on a shared run) holds the merge.
+        if me.standing.values().any(|standing| {
+            let current = &standing.current;
+            !current.value.ended && current.author != Author::Rule && current.sync != self.sync
+        }) {
+            self.hold(n, HeldWhy::KeptElsewhere);
             return Ok(());
         }
         let id = me.id.clone();
@@ -1840,6 +1859,29 @@ impl<'a> Reader<'a> {
                     trigger: said.current.value.trigger.clone(),
                     origin: said.current.value.origin,
                     action: said.current.value.action,
+                }),
+            )?;
+        }
+        // How things stand goes on too (hers: the partner's held the merge
+        // above), but not a rule's: the rule writes its own again where the
+        // thing is now.
+        for (item, standing) in &me.standing {
+            let current = &standing.current;
+            if current.value.ended || current.author == Author::Rule {
+                continue;
+            }
+            self.write(
+                &into.id,
+                Body::Standing(Standing {
+                    version: 1,
+                    sync: self.sync.clone(),
+                    said_by: current.said_by.clone(),
+                    base: Vec::new(),
+                    item: format!("m{}", minted(&format!("standing\u{1f}{id}\u{1f}{item}"))),
+                    text: current.value.text.clone(),
+                    since: current.value.since.clone(),
+                    because: current.value.because.clone(),
+                    ended: false,
                 }),
             )?;
         }

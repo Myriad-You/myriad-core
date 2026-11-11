@@ -26,6 +26,15 @@
 //! A piece said by several is as low as its lowest sayer. One the person
 //! denied is void (no tier): never taken again.
 //!
+//! **A rule's rows** (author `rule`: what a device reported, laid out on
+//! nodes by a fixed rule, no model) are seen, whoever their `saidBy` names,
+//! until the person confirms them: a device saying the partner asked
+//! something is not the partner saying it to her. What a rule wrote is
+//! never her view and never evidence for one. How a thing stands
+//! (`node.standing`) weighs as any piece does: by who wrote it and who said
+//! it. Whether a piece may be used in private talk at all
+//! ([`usable_in_private`]) is where it was said, not who wrote it down.
+//!
 //! What the host supplies, never the core:
 //!
 //! - **provenance** (on each piece it keeps): `together` (the person was
@@ -39,7 +48,7 @@
 
 use std::collections::BTreeSet;
 
-use myriad_persona_log::row::Audience;
+use myriad_persona_log::row::{Audience, Author};
 use serde::{Deserialize, Serialize};
 
 use crate::tags::SaidBy;
@@ -104,6 +113,22 @@ pub fn tier(
             SaidBy::ThirdParty | SaidBy::OtherPerson => Tier::Seen,
         })
         .min()
+}
+
+/// The tier of a piece as written down by `author`: a rule's is seen until
+/// the person answers (confirmed: counts; denied: void), whoever `said_by`
+/// names; anyone else's is [`tier`].
+pub fn written_tier(
+    author: Option<Author>,
+    said_by: &[SaidBy],
+    provenance: Option<&Provenance>,
+    about_partner: bool,
+) -> Option<Tier> {
+    let answer = provenance.and_then(|provenance| provenance.answer);
+    if author == Some(Author::Rule) && answer.is_none() {
+        return Some(Tier::Seen);
+    }
+    tier(said_by, provenance, about_partner)
 }
 
 /// Whether `private` is a private audience of one person (`personal:<one>`).
@@ -215,11 +240,13 @@ pub fn intent_may_rest(because: &[String], known: &Known) -> bool {
 }
 
 /// Whether a piece her upkeep was shown counts as evidence for a view: it
-/// counts by its tier (no provenance travels in a body), and was said
-/// where the person's words are theirs, not in a group (as a host's
-/// [`Known`] never names a group's message as the person's).
-pub(crate) fn counts_for_view(said_by: &[SaidBy], audience: &str) -> bool {
-    tier(said_by, None, false) == Some(Tier::Counts)
+/// was not written by a rule, counts by its tier (no provenance travels in
+/// a body), and was said where the person's words are theirs, not in a
+/// group (as a host's [`Known`] never names a group's message as the
+/// person's). An inbox item has no row yet, so no author: `None`.
+pub(crate) fn counts_for_view(author: Option<Author>, said_by: &[SaidBy], audience: &str) -> bool {
+    author != Some(Author::Rule)
+        && tier(said_by, None, false) == Some(Tier::Counts)
         && matches!(
             Audience::parse(audience),
             Ok(Audience::Personal(_) | Audience::Own)
@@ -228,12 +255,15 @@ pub(crate) fn counts_for_view(said_by: &[SaidBy], audience: &str) -> bool {
 
 // MARK: The calls
 
-/// One piece to weigh: who said it, where it came from, and whether it was
-/// noted about the one person of the private audience.
+/// One piece to weigh: who said it, who wrote it down (its row's author;
+/// absent: not a rule), where it came from, and whether it was noted about
+/// the one person of the private audience.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Piece {
     pub said_by: Vec<SaidBy>,
+    #[serde(default)]
+    pub author: Option<Author>,
     #[serde(default)]
     pub provenance: Option<Provenance>,
     #[serde(default)]
@@ -260,7 +290,8 @@ pub fn tiers(input: TierInput) -> Tiers {
             .items
             .iter()
             .map(|piece| {
-                tier(
+                written_tier(
+                    piece.author,
                     &piece.said_by,
                     piece.provenance.as_ref(),
                     piece.about_partner,
