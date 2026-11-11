@@ -181,6 +181,23 @@ pub struct SessionInput {
     /// The task, when the host keeps it.
     #[serde(default)]
     pub task: Option<TaskKnown>,
+    /// The rows' sync tag: shared when not given. Local (the host's own
+    /// side) until every side it syncs with reads node.standing and rows a
+    /// rule wrote (her link's `log3`).
+    #[serde(default = "shared")]
+    pub sync: Sync,
+}
+
+fn shared() -> Sync {
+    Sync::Shared
+}
+
+/// The key of the repository a session with no remote is in: `minted:l`
+/// and 24 hex of the device and its folder, so it is that device's alone,
+/// never one with another device's folder of the same name.
+pub fn folder_key(device: &str, folder: &str) -> String {
+    let seed = format!("folder\u{1f}{device}\u{1f}{folder}");
+    format!("minted:l{}", &sha256_hex(seed.as_bytes())[..24])
 }
 
 /// One row to write and the node it is about.
@@ -235,12 +252,16 @@ pub fn standing(session: &Session) -> (&'static str, String) {
                 Some(WaitingOn::Checks) => "waiting checks",
                 Some(WaitingOn::Program) => "waiting program",
                 Some(WaitingOn::Owner) => "waiting owner",
+                Some(WaitingOn::Session) => "waiting session",
                 _ => "quiet",
             },
             match session.waiting_on {
                 Some(WaitingOn::Checks) => "quiet for long, its tests or builds still running",
                 Some(WaitingOn::Program) => "quiet for long, waiting on another program",
                 Some(WaitingOn::Owner) => "quiet for long, waiting on the owner",
+                Some(WaitingOn::Session) => {
+                    "quiet for long, to report back to the session that sent it on"
+                }
                 _ => "quiet for long, neither asking nor moving",
             }
             .to_string(),
@@ -261,6 +282,7 @@ fn state_word(state: CheckState) -> &'static str {
         CheckState::Running => "running",
         CheckState::Passed => "passed",
         CheckState::Failed => "failed",
+        CheckState::Ended => "ended",
     }
 }
 
@@ -303,6 +325,7 @@ struct Writer<'a> {
     reference: String,
     /// The grant's and the session's references, sorted.
     names: Vec<String>,
+    sync: Sync,
 }
 
 impl Writer<'_> {
@@ -349,7 +372,7 @@ impl Writer<'_> {
             &revision,
             Body::Entry(Entry {
                 version: BODY_VERSION,
-                sync: Sync::Shared,
+                sync: self.sync.clone(),
                 said_by: vec![said_by],
                 audience: self.audience.to_string(),
                 text,
@@ -371,12 +394,30 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         session,
         repo_known,
         task,
+        sync,
     } = input;
     crate::check_token("device", &device)?;
-    let repo_key = repo_key(&session.remote)?;
-    if repo_key != format!("repo:{}", session.remote) {
-        return Err(NodeError::new("remote is not as repoKey writes it"));
-    }
+    sync.check()?;
+    // The repository: by its remote on every device, or this device's own
+    // folder.
+    let (repo_key, name, object) = match (&session.remote, &session.folder) {
+        (Some(remote), _) => {
+            let key = repo_key(remote)?;
+            if key != format!("repo:{remote}") {
+                return Err(NodeError::new("remote is not as repoKey writes it"));
+            }
+            let object = Object {
+                kind: ObjectKind::Repo,
+                name: cut(remote, limits::NAME_CHARS),
+                aliases: Vec::new(),
+            };
+            (key, repo_name(remote), Some(object))
+        }
+        (None, Some(folder)) => (folder_key(&device, folder), folder.clone(), None),
+        (None, None) => {
+            return Err(NodeError::new("a session with no remote names its folder"));
+        }
+    };
     let repo = node_id(&audience, &repo_key)?;
     let task_key = task_key(&device, &session.grant, &session.session);
     let task_node = node_id(&audience, &task_key)?;
@@ -388,10 +429,10 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         audience: &audience,
         reference: reference.clone(),
         names: because.clone(),
+        sync: sync.clone(),
     };
     // A change's own rows: the same frame again is the same rows.
     let changed = session.occurred_at.to_string();
-    let name = repo_name(&session.remote);
 
     if !repo_known {
         writer.push(
@@ -400,16 +441,12 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             "",
             Body::Created(Created {
                 version: BODY_VERSION,
-                sync: Sync::Shared,
+                sync: sync.clone(),
                 said_by: vec![SaidBy::ThirdParty],
                 kind: Kind::Topic,
                 key: repo_key.clone(),
                 name: cut(&name, limits::NAME_CHARS),
-                object: Some(Object {
-                    kind: ObjectKind::Repo,
-                    name: cut(&session.remote, limits::NAME_CHARS),
-                    aliases: Vec::new(),
-                }),
+                object,
             }),
         )?;
     }
@@ -426,7 +463,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             "",
             Body::Created(Created {
                 version: BODY_VERSION,
-                sync: Sync::Shared,
+                sync: sync.clone(),
                 said_by: vec![SaidBy::ThirdParty],
                 kind: Kind::Task,
                 key: task_key.clone(),
@@ -440,7 +477,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             "",
             Body::Related(Related {
                 version: BODY_VERSION,
-                sync: Sync::Shared,
+                sync: sync.clone(),
                 said_by: vec![SaidBy::ThirdParty],
                 relation: Relation::PartOf,
                 to: repo_key.clone(),
@@ -454,6 +491,21 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
     if let Some(asked) = session.from_owner.as_deref().and_then(text) {
         let revision = digest(&asked);
         writer.entry(&task_node, "owner", SaidBy::Partner, asked, None, revision)?;
+    }
+    // What another session sent it on with: that session's, not theirs.
+    if let Some(sent) = session.from_peer.as_deref().and_then(text) {
+        let sent = match session
+            .asked_by_title
+            .as_deref()
+            .map(|title| clean(title, true))
+        {
+            Some(title) if !title.is_empty() => {
+                cut(&format!("sent on by «{title}»: {sent}"), limits::TEXT_CHARS)
+            }
+            _ => sent,
+        };
+        let revision = digest(&sent);
+        writer.entry(&task_node, "peer", SaidBy::ThirdParty, sent, None, revision)?;
     }
     if let Some(said) = session.from_agent.as_deref().and_then(text) {
         let revision = digest(&said);
@@ -500,7 +552,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         &changed,
         Body::Standing(Standing {
             version: BODY_VERSION,
-            sync: Sync::Shared,
+            sync: sync.clone(),
             said_by: vec![SaidBy::ThirdParty],
             base: task
                 .as_ref()
@@ -520,7 +572,10 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         .as_ref()
         .map(|task| task.items.as_slice())
         .unwrap_or(&[]);
-    let asking = (session.change == Change::Asked).then(|| {
+    // Waiting on them, whatever the change: it asked, or says so.
+    let waits_on_owner =
+        session.change == Change::Asked || session.waiting_on == Some(WaitingOn::Owner);
+    let asking = waits_on_owner.then(|| {
         let question = session
             .from_agent
             .as_deref()
@@ -536,7 +591,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             &changed,
             Body::OpenItem(OpenItem {
                 version: BODY_VERSION,
-                sync: Sync::Shared,
+                sync: sync.clone(),
                 said_by: vec![SaidBy::ThirdParty],
                 base,
                 item: item.to_string(),
@@ -546,7 +601,8 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             }),
         )
     };
-    if !keeps_open {
+    // A new question replaces the ones before it; going on closes them.
+    if asking.is_some() || !keeps_open {
         for known in items.iter().filter(|known| !known.closed) {
             if asking.as_ref().is_some_and(|(item, _)| item == &known.item) {
                 continue;
@@ -580,7 +636,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             &format!("{changed}-{}", status_word(status)),
             Body::Revised(Revised {
                 version: BODY_VERSION,
-                sync: Sync::Shared,
+                sync: sync.clone(),
                 said_by: vec![SaidBy::ThirdParty],
                 base,
                 field: Field::Status,
@@ -674,6 +730,7 @@ mod tests {
             session: session(change),
             repo_known,
             task,
+            sync: Sync::Shared,
         }
     }
 
@@ -1030,5 +1087,68 @@ mod tests {
         // The same frame again: the same rows.
         let again = session_rows(at("asked", 3, Some(known(&[&one, &two])))).unwrap();
         assert_eq!(again, three);
+    }
+
+    /// No remote: the repository is this device's folder, never another
+    /// device's of the same name; the rows stay on the host while it says so.
+    #[test]
+    fn a_repository_with_no_remote_is_its_devices_own() {
+        let mut here = input("started", false, None);
+        here.session.remote = None;
+        here.session.folder = Some("notes".into());
+        here.sync = Sync::Local("site".into());
+        let mut there = here.clone();
+        there.device = "dev_pc".into();
+        let here = session_rows(here).unwrap();
+        let there = session_rows(there).unwrap();
+        assert!(here.repo_key.starts_with("minted:l"));
+        assert_ne!(here.repo_key, there.repo_key);
+        assert_eq!(here.rows[0].row.body["name"], "notes");
+        assert!(here.rows[0].row.body.get("object").is_none());
+        assert!(
+            here.rows
+                .iter()
+                .all(|placed| placed.row.body["sync"] == json!({"local": "site"}))
+        );
+        let mut neither = input("started", false, None);
+        neither.session.remote = None;
+        assert!(session_rows(neither).is_err());
+    }
+
+    /// Whatever the change, waiting on the owner keeps a question open;
+    /// what another session sent it on with is that session's.
+    #[test]
+    fn waiting_on_the_owner_always_has_its_item() {
+        let mut quiet = input("quiet", true, None);
+        quiet.session.waiting_on = Some(WaitingOn::Owner);
+        let rows = session_rows(quiet).unwrap();
+        assert!(
+            rows.rows
+                .iter()
+                .any(|placed| placed.row.kind == "node.open_item")
+        );
+        let mut sent = input("started", true, None);
+        sent.session.asked_by = Some(myriad_her_link::now::AskedBy::Session);
+        sent.session.asked_by_title = Some("plan the release".into());
+        sent.session.from_peer = Some("split it, then report back".into());
+        let rows = session_rows(sent).unwrap();
+        let peer = rows
+            .rows
+            .iter()
+            .find(|placed| {
+                placed.row.body["text"]
+                    == "sent on by «plan the release»: split it, then report back"
+            })
+            .unwrap();
+        assert_eq!(peer.row.body["saidBy"], json!(["third_party"]));
+        let mut back = input("quiet", true, None);
+        back.session.waiting_on = Some(WaitingOn::Session);
+        let rows = session_rows(back).unwrap();
+        assert!(
+            !rows
+                .rows
+                .iter()
+                .any(|placed| placed.row.kind == "node.open_item")
+        );
     }
 }

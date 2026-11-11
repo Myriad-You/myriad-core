@@ -187,6 +187,203 @@
       "input": {
         "audience": "personal:7",
         "device": "dev_mac",
+        "session": {
+          "change": "started",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "folder": "notes",
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ]
+        },
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a repository with no remote is its device's folder, kept on the host's side only",
+      "output": {
+        "repo": "44394ce34a5953c51c065cd348622d87",
+        "repoKey": "minted:l9a9e5c4c1b12175293aff07c",
+        "rows": [
+          {
+            "body": {
+              "key": "minted:l9a9e5c4c1b12175293aff07c",
+              "kind": "topic",
+              "name": "notes",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "version": 1
+            },
+            "id": "u45a2e0a861e529e7de6cf322",
+            "kind": "node.created",
+            "node": "44394ce34a5953c51c065cd348622d87"
+          },
+          {
+            "body": {
+              "key": "minted:s1fa465ebd5f9b41e95a74e4e",
+              "kind": "task",
+              "name": "Split the store",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "version": 1
+            },
+            "id": "u3626ddcf4689ed0115b97fa7",
+            "kind": "node.created",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "reason": "a coding-agent session in this repository",
+              "relation": "part_of",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "to": "minted:l9a9e5c4c1b12175293aff07c",
+              "version": 1
+            },
+            "id": "u60c4a284ccccfbbef8d8f32b",
+            "kind": "node.related",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": {
+                "local": "site"
+              },
+              "text": "started working",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
         "repoKnown": true,
         "session": {
           "change": "asked",

@@ -18,6 +18,7 @@ use crate::{CONTRACT_JSON, Refusal, refuse};
 pub struct Rules {
     pub changes: Vec<String>,
     pub waiting_on: Vec<String>,
+    pub asked_by: Vec<String>,
     pub check_kinds: Vec<String>,
     pub check_states: Vec<String>,
     pub remote_bytes: usize,
@@ -28,6 +29,7 @@ pub struct Rules {
     pub touched_at_most: usize,
     pub checks_at_most: usize,
     pub keep_ms: u64,
+    pub quiet_after_ms: u64,
 }
 
 #[derive(Deserialize)]
@@ -62,6 +64,8 @@ pub enum Change {
 #[serde(rename_all = "snake_case")]
 pub enum WaitingOn {
     Owner,
+    /// The session that sent it on, to report back to.
+    Session,
     Checks,
     Program,
     Unknown,
@@ -81,6 +85,18 @@ pub enum CheckState {
     Running,
     Passed,
     Failed,
+    /// It ended and whether it passed is not known, or it was stopped.
+    Ended,
+}
+
+/// Who gave a session its work.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AskedBy {
+    Owner,
+    /// Another of the owner's sessions sent it on.
+    Session,
+    None,
 }
 
 /// One test or build of a session.
@@ -101,13 +117,20 @@ pub struct Session {
     pub change: Change,
     pub occurred_at: i64,
     pub tool: String,
-    pub remote: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub remote: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub folder: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub asked_by: Option<AskedBy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub asked_by_title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_owner: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from_peer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_agent: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -242,8 +265,15 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
     if !valid_tool(&session.tool) {
         return Err(bad("tool does not match sessions.toolPattern"));
     }
-    if !valid_remote(&session.remote) {
+    if session
+        .remote
+        .as_deref()
+        .is_some_and(|remote| !valid_remote(remote))
+    {
         return Err(bad("remote is not a normalized remote"));
+    }
+    if session.remote.is_none() && session.folder.is_none() {
+        return Err(bad("a session with no remote names its folder"));
     }
     if let Some(folder) = &session.folder
         && (folder.is_empty()
@@ -256,7 +286,12 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
         return Err(bad("folder is not one folder's name"));
     }
     words("title", &session.title, rules.title_chars)?;
+    words("askedByTitle", &session.asked_by_title, rules.title_chars)?;
+    if session.asked_by_title.is_some() && session.asked_by != Some(AskedBy::Session) {
+        return Err(bad("askedByTitle goes only with askedBy session"));
+    }
     words("fromOwner", &session.from_owner, rules.words_chars)?;
+    words("fromPeer", &session.from_peer, rules.words_chars)?;
     words("fromAgent", &session.from_agent, rules.words_chars)?;
     if session.touched.len() > rules.touched_at_most {
         return Err(refuse(
@@ -312,7 +347,10 @@ mod tests {
             "remote": "github.com/me/repo",
             "folder": "repo",
             "title": "split the store",
+            "askedBy": "session",
+            "askedByTitle": "plan the release",
             "fromOwner": "commit the split",
+            "fromPeer": "split the store, then report back",
             "fromAgent": "Committed locally. Push now? (yes / later)",
             "touched": ["src/store.rs", "src/lib.rs"],
             "checks": [{"kind": "test", "state": "passed", "at": 1_760_140_880_000_i64}],
@@ -334,6 +372,10 @@ mod tests {
         for waiting in &rules.waiting_on {
             serde_json::from_value::<WaitingOn>(json!(waiting)).unwrap();
         }
+        for asked_by in &rules.asked_by {
+            serde_json::from_value::<AskedBy>(json!(asked_by)).unwrap();
+        }
+        assert_eq!(rules.quiet_after_ms, 20 * 60 * 1000);
         for kind in &rules.check_kinds {
             serde_json::from_value::<CheckKind>(json!(kind)).unwrap();
         }
@@ -402,12 +444,29 @@ mod tests {
             ("fromAgent", json!("x".repeat(2001))),
             ("title", json!("x".repeat(201))),
             ("output", json!("ok")),
+            ("askedBy", json!("someone")),
+            ("fromPeer", json!(" ")),
         ] {
             let mut bad = body();
             bad[field] = value.clone();
             let refused = read_session(&bad).unwrap_err();
             assert_eq!(refused.code, "bad_frame", "{field} {value}");
         }
+        // A title of who sent it on goes only with askedBy session.
+        let mut owner = body();
+        owner["askedBy"] = json!("owner");
+        assert_eq!(read_session(&owner).unwrap_err().code, "bad_frame");
+        // No remote: the folder names it; neither is refused.
+        let mut local = body();
+        local.as_object_mut().unwrap().remove("remote");
+        assert!(read_session(&local).is_ok());
+        local.as_object_mut().unwrap().remove("folder");
+        assert_eq!(read_session(&local).unwrap_err().code, "bad_frame");
+        let mut ended = body();
+        ended["checks"] = json!([{"kind": "test", "state": "ended", "at": 1}]);
+        ended["change"] = json!("quiet");
+        ended["waitingOn"] = json!("session");
+        assert!(read_session(&ended).is_ok());
         let mut many = body();
         many["touched"] = json!(vec!["a.rs"; 65]);
         assert_eq!(read_session(&many).unwrap_err().code, "too_many");
