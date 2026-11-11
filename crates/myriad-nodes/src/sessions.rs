@@ -110,6 +110,21 @@ pub struct TaskKnown {
     /// The rows where it stands now ([`NOW`]) stands at.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub standing_base: Vec<String>,
+    /// The sync of the row that made it ([`created_sync`]), when known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sync: Option<Sync>,
+}
+
+/// The sync of the row that made a node, from the node as the fold gives
+/// it: its kind's first version is that row's.
+pub fn created_sync(node: &Value) -> Option<Sync> {
+    let kind = node.get("kind")?;
+    let first = kind
+        .get("history")
+        .and_then(Value::as_array)
+        .and_then(|history| history.first())
+        .unwrap_or(kind);
+    serde_json::from_value(first.get("sync")?.clone()).ok()
 }
 
 /// What the host keeps of a task, from its node as the fold gives it
@@ -162,6 +177,7 @@ pub fn task_known(node: &Value) -> Option<TaskKnown> {
         status_base,
         items,
         standing_base,
+        sync: created_sync(node),
     })
 }
 
@@ -178,6 +194,10 @@ pub struct SessionInput {
     /// Whether the host keeps a node of the repository's key.
     #[serde(default)]
     pub repo_known: bool,
+    /// The sync of the row that made that node ([`created_sync`]), when
+    /// known: what is written on a node keeps the sync it was made with.
+    #[serde(default)]
+    pub repo_sync: Option<Sync>,
     /// The task, when the host keeps it.
     #[serde(default)]
     pub task: Option<TaskKnown>,
@@ -325,7 +345,10 @@ struct Writer<'a> {
     reference: String,
     /// The grant's and the session's references, sorted.
     names: Vec<String>,
+    /// The task's sync.
     sync: Sync,
+    /// The repository's node and its sync.
+    repo: (String, Sync),
 }
 
 impl Writer<'_> {
@@ -372,7 +395,11 @@ impl Writer<'_> {
             &revision,
             Body::Entry(Entry {
                 version: BODY_VERSION,
-                sync: self.sync.clone(),
+                sync: if node == self.repo.0 {
+                    self.repo.1.clone()
+                } else {
+                    self.sync.clone()
+                },
                 said_by: vec![said_by],
                 audience: self.audience.to_string(),
                 text,
@@ -393,6 +420,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         device,
         session,
         repo_known,
+        repo_sync,
         task,
         sync,
     } = input;
@@ -419,6 +447,18 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         }
     };
     let repo = node_id(&audience, &repo_key)?;
+    // What is written on a node keeps the sync it was made with; a task
+    // under a repository kept on one side is kept there too.
+    let repo_sync = repo_sync
+        .filter(|_| repo_known)
+        .unwrap_or_else(|| sync.clone());
+    let sync = match task.as_ref().and_then(|task| task.sync.clone()) {
+        Some(made) => made,
+        None if matches!(repo_sync, Sync::Local(_)) => repo_sync.clone(),
+        None => sync,
+    };
+    sync.check()?;
+    repo_sync.check()?;
     let task_key = task_key(&device, &session.grant, &session.session);
     let task_node = node_id(&audience, &task_key)?;
     let reference = session_ref(&device, &session.grant, &session.session);
@@ -430,6 +470,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         reference: reference.clone(),
         names: because.clone(),
         sync: sync.clone(),
+        repo: (repo.clone(), repo_sync.clone()),
     };
     // A change's own rows: the same frame again is the same rows.
     let changed = session.occurred_at.to_string();
@@ -441,7 +482,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             "",
             Body::Created(Created {
                 version: BODY_VERSION,
-                sync: sync.clone(),
+                sync: repo_sync.clone(),
                 said_by: vec![SaidBy::ThirdParty],
                 kind: Kind::Topic,
                 key: repo_key.clone(),
@@ -729,6 +770,7 @@ mod tests {
             device: "dev_mac".into(),
             session: session(change),
             repo_known,
+            repo_sync: None,
             task,
             sync: Sync::Shared,
         }
@@ -809,6 +851,7 @@ mod tests {
             status_base: Vec::new(),
             items: Vec::new(),
             standing_base: Vec::new(),
+            sync: None,
         };
         let asked = session_rows(input("asked", true, Some(task))).unwrap();
         let item = asked
@@ -851,6 +894,7 @@ mod tests {
                 status_base: Vec::new(),
                 items: vec![open.clone()],
                 standing_base: Vec::new(),
+                sync: None,
             }),
         ))
         .unwrap();
@@ -869,6 +913,7 @@ mod tests {
                 status_base: Vec::new(),
                 items: vec![open.clone()],
                 standing_base: Vec::new(),
+                sync: None,
             }),
         ))
         .unwrap();
@@ -887,6 +932,7 @@ mod tests {
                 status_base: Vec::new(),
                 items: vec![open.clone()],
                 standing_base: Vec::new(),
+                sync: None,
             }),
         ))
         .unwrap();
@@ -1000,22 +1046,24 @@ mod tests {
                 continue;
             }
             let at = 1_760_000_000_000_u64 + log.len() as u64;
-            log.push(
-                serde_json::from_value(json!({
-                    "version": 1,
-                    "id": placed.row.id,
-                    "origin": "site",
-                    "author": "rule",
-                    "dseq": log.len() + 1,
-                    "hlc": format!("{at:015}-000000-site"),
-                    "audience": "personal:7",
-                    "object": format!("node:{}", placed.node),
-                    "kind": placed.row.kind,
-                    "replicate": "shared",
-                    "payload": {"ref": format!("body:{}", placed.row.id)},
-                }))
-                .unwrap(),
-            );
+            // A row kept on one side has no place in the shared order.
+            let shared = placed.row.body["sync"] == json!("shared");
+            let mut row = json!({
+                "version": 1,
+                "id": placed.row.id,
+                "origin": "site",
+                "author": "rule",
+                "hlc": format!("{at:015}-000000-site"),
+                "audience": "personal:7",
+                "object": format!("node:{}", placed.node),
+                "kind": placed.row.kind,
+                "replicate": if shared { "shared" } else { "local" },
+                "payload": {"ref": format!("body:{}", placed.row.id)},
+            });
+            if shared {
+                row["dseq"] = json!(log.len() + 1);
+            }
+            log.push(serde_json::from_value(row).unwrap());
             bodies.insert(placed.row.id.clone(), placed.row.body.clone());
         }
         let folded = crate::fold(crate::FoldInput {
@@ -1150,5 +1198,43 @@ mod tests {
                 .iter()
                 .any(|placed| placed.row.kind == "node.open_item")
         );
+    }
+
+    /// What is written on a node keeps the sync it was made with: a
+    /// repository and a task made on the host's side alone stay there when
+    /// later changes come shared, and a task under such a repository too.
+    #[test]
+    fn a_node_keeps_the_sync_it_was_made_with() {
+        let site = Sync::Local("site".into());
+        let mut later = input("finished", true, None);
+        later.repo_sync = Some(site.clone());
+        let rows = session_rows(later).unwrap();
+        assert!(
+            rows.rows
+                .iter()
+                .all(|placed| placed.row.body["sync"] == json!({"local": "site"}))
+        );
+        let mut task_local = input("asked", true, None);
+        task_local.task = Some(TaskKnown {
+            status: Status::Active,
+            status_base: Vec::new(),
+            items: Vec::new(),
+            standing_base: Vec::new(),
+            sync: Some(site.clone()),
+        });
+        let rows = session_rows(task_local).unwrap();
+        assert!(
+            rows.rows
+                .iter()
+                .all(|placed| placed.row.body["sync"] == json!({"local": "site"}))
+        );
+        // The fold says what made a node.
+        let made = session_rows(SessionInput {
+            sync: site.clone(),
+            ..input("started", false, None)
+        })
+        .unwrap();
+        let folded = known(&[&made]);
+        assert_eq!(folded.sync, Some(site));
     }
 }

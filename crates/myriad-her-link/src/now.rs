@@ -277,6 +277,7 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
     }
     if let Some(folder) = &session.folder
         && (folder.is_empty()
+            || folder.trim() != folder
             || folder.chars().count() > rules.folder_chars
             || folder.contains(['/', '\\'])
             || folder == "."
@@ -317,6 +318,9 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
             .is_some_and(|waiting| waiting != WaitingOn::Owner)
     {
         return Err(bad("an asked session waits on the owner"));
+    }
+    if session.change == Change::Finished && session.waiting_on == Some(WaitingOn::Owner) {
+        return Err(bad("a finished session waits on nobody's answer"));
     }
     Ok(session)
 }
@@ -435,6 +439,8 @@ mod tests {
             ("touched", json!(["C:/x.rs"])),
             ("touched", json!(["src/../../x"])),
             ("folder", json!("me/repo")),
+            ("folder", json!("notes ")),
+            ("folder", json!("   ")),
             ("grant", json!("short")),
             ("session", json!("has space")),
             ("tool", json!("Tool")),
@@ -467,6 +473,9 @@ mod tests {
         ended["change"] = json!("quiet");
         ended["waitingOn"] = json!("session");
         assert!(read_session(&ended).is_ok());
+        let mut finished = body();
+        finished["change"] = json!("finished");
+        assert_eq!(read_session(&finished).unwrap_err().code, "bad_frame");
         let mut many = body();
         many["touched"] = json!(vec!["a.rs"; 65]);
         assert_eq!(read_session(&many).unwrap_err().code, "too_many");
