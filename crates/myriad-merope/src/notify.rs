@@ -79,6 +79,15 @@ pub fn said_only_in_person(kind: &str) -> bool {
         || TOLD_EVENTS.contains(&kind)
 }
 
+/// Decided only while she is there with them (her page shown, and on an end
+/// with a face, her face), as everything said only in person is, but for a
+/// look at their screen: that is hers to take in or let go whether or not
+/// she is on screen then (the owner decided so on 2026-11-11). What she
+/// would say of it still goes as she speaks in person, never a notification.
+pub fn needs_presence(kind: &str) -> bool {
+    said_only_in_person(kind) && kind != SCREEN_EVENT
+}
+
 pub fn is_task_outcome(kind: &str) -> bool {
     TASK_OUTCOMES.contains(&kind)
 }
@@ -115,7 +124,9 @@ mod tests {
                 said_only_in_person(kind) && !worth_notifying(kind),
                 "{kind}"
             );
+            assert_eq!(needs_presence(kind), kind != SCREEN_EVENT, "{kind}");
         }
+        assert!(needs_presence(wander::THOUGHT_EVENT) && !needs_presence(TOUCH));
     }
 
     #[test]
