@@ -26,6 +26,9 @@ base64 = "0.23"
 # reads too; this crate carries them as node rules. Already below this
 # crate (through `myriad-persona-sync`), so no cycle.
 myriad-merope = { path = "../myriad-merope" }
+# What a coding-agent session's change on her link puts on her nodes
+# (`sessions`) reads the `now.session` body as the link's rules read it.
+myriad-her-link = { path = "../myriad-her-link" }
 # Reading the times in her intents in the zone they were said in: the
 # zone rules are compiled in, no clock is read.
 chrono = { version = "0.4", default-features = false, features = ["std"] }

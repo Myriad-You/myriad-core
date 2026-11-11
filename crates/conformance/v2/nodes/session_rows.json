@@ -1,0 +1,1357 @@
+{
+  "call": "nodes.session_rows",
+  "cases": [
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "session": {
+          "change": "started",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ]
+        }
+      },
+      "name": "a new session starts a task under a new repository",
+      "output": {
+        "repo": "b0469c3a5acc39ff80f59377d91d05d6",
+        "repoKey": "repo:github.com/me/repo",
+        "rows": [
+          {
+            "body": {
+              "key": "repo:github.com/me/repo",
+              "kind": "topic",
+              "name": "repo",
+              "object": {
+                "kind": "repo",
+                "name": "github.com/me/repo"
+              },
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "id": "u94951307d303975d276ed9f1",
+            "kind": "node.created",
+            "node": "b0469c3a5acc39ff80f59377d91d05d6"
+          },
+          {
+            "body": {
+              "key": "minted:s1fa465ebd5f9b41e95a74e4e",
+              "kind": "task",
+              "name": "Split the store",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "id": "u3626ddcf4689ed0115b97fa7",
+            "kind": "node.created",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "reason": "a coding-agent session in this repository",
+              "relation": "part_of",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "to": "repo:github.com/me/repo",
+              "version": 1
+            },
+            "id": "u60c4a284ccccfbbef8d8f32b",
+            "kind": "node.related",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": "shared",
+              "text": "started working",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "session": {
+          "change": "started",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "folder": "notes",
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ]
+        },
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a repository with no remote is its device's folder, kept on the host's side only",
+      "output": {
+        "repo": "44394ce34a5953c51c065cd348622d87",
+        "repoKey": "minted:l9a9e5c4c1b12175293aff07c",
+        "rows": [
+          {
+            "body": {
+              "key": "minted:l9a9e5c4c1b12175293aff07c",
+              "kind": "topic",
+              "name": "notes",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "version": 1
+            },
+            "id": "u45a2e0a861e529e7de6cf322",
+            "kind": "node.created",
+            "node": "44394ce34a5953c51c065cd348622d87"
+          },
+          {
+            "body": {
+              "key": "minted:s1fa465ebd5f9b41e95a74e4e",
+              "kind": "task",
+              "name": "Split the store",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "version": 1
+            },
+            "id": "u3626ddcf4689ed0115b97fa7",
+            "kind": "node.created",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "reason": "a coding-agent session in this repository",
+              "relation": "part_of",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "to": "minted:l9a9e5c4c1b12175293aff07c",
+              "version": 1
+            },
+            "id": "u60c4a284ccccfbbef8d8f32b",
+            "kind": "node.related",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": {
+                "local": "site"
+              },
+              "text": "started working",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "repoKnown": true,
+        "session": {
+          "change": "asked",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ],
+          "waitingOn": "owner"
+        },
+        "task": {
+          "items": [],
+          "status": "active"
+        }
+      },
+      "name": "a session asks: an open item, and where it stands",
+      "output": {
+        "repo": "b0469c3a5acc39ff80f59377d91d05d6",
+        "repoKey": "repo:github.com/me/repo",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": "shared",
+              "text": "waiting on the owner's answer to what it asked",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "ask-e33fc05f16bbae80",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "u37a1b803737a1abb0d7108c8",
+            "kind": "node.open_item",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "repoKnown": true,
+        "session": {
+          "change": "finished",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ]
+        },
+        "task": {
+          "items": [
+            {
+              "base": [
+                "u000000000000000000000002"
+              ],
+              "item": "ask-0123456789abcdef",
+              "text": "Push now?"
+            }
+          ],
+          "status": "active",
+          "statusBase": [
+            "u000000000000000000000001"
+          ]
+        }
+      },
+      "name": "a session finishes: its item closed, done, its result on the repository",
+      "output": {
+        "repo": "b0469c3a5acc39ff80f59377d91d05d6",
+        "repoKey": "repo:github.com/me/repo",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": "shared",
+              "text": "finished, nothing waits on the owner",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [
+                "u000000000000000000000002"
+              ],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "closed": true,
+              "item": "ask-0123456789abcdef",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Push now?",
+              "version": 1
+            },
+            "id": "ufe07dc22a270d5714ab62af7",
+            "kind": "node.open_item",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [
+                "u000000000000000000000001"
+              ],
+              "field": "status",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "value": "done",
+              "version": 1
+            },
+            "id": "ua2b9f7c5b50c8601b86cbc1c",
+            "kind": "node.revised",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Split the store: finished; tests passed; 2 files changed",
+              "version": 1
+            },
+            "id": "uadcae34ef1d8f4918016149b",
+            "kind": "node.entry",
+            "node": "b0469c3a5acc39ff80f59377d91d05d6"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "repoKnown": true,
+        "repoSync": {
+          "local": "site"
+        },
+        "session": {
+          "change": "finished",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ]
+        },
+        "sync": "shared",
+        "task": {
+          "items": [
+            {
+              "base": [
+                "u000000000000000000000002"
+              ],
+              "item": "ask-0123456789abcdef",
+              "text": "Push now?"
+            }
+          ],
+          "status": "active",
+          "statusBase": [
+            "u000000000000000000000001"
+          ]
+        }
+      },
+      "name": "rows on a repository made on the host's side alone stay there",
+      "output": {
+        "repo": "b0469c3a5acc39ff80f59377d91d05d6",
+        "repoKey": "repo:github.com/me/repo",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": {
+                "local": "site"
+              },
+              "text": "finished, nothing waits on the owner",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [
+                "u000000000000000000000002"
+              ],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "closed": true,
+              "item": "ask-0123456789abcdef",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "Push now?",
+              "version": 1
+            },
+            "id": "ufe07dc22a270d5714ab62af7",
+            "kind": "node.open_item",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [
+                "u000000000000000000000001"
+              ],
+              "field": "status",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "value": "done",
+              "version": 1
+            },
+            "id": "ua2b9f7c5b50c8601b86cbc1c",
+            "kind": "node.revised",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": {
+                "local": "site"
+              },
+              "text": "Split the store: finished; tests passed; 2 files changed",
+              "version": 1
+            },
+            "id": "uadcae34ef1d8f4918016149b",
+            "kind": "node.entry",
+            "node": "b0469c3a5acc39ff80f59377d91d05d6"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "repoKnown": true,
+        "session": {
+          "change": "quiet",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ],
+          "waitingOn": "checks"
+        },
+        "task": {
+          "items": [
+            {
+              "base": [
+                "u000000000000000000000002"
+              ],
+              "item": "ask-0123456789abcdef",
+              "text": "Push now?"
+            }
+          ],
+          "status": "active"
+        }
+      },
+      "name": "a quiet session waiting on its checks keeps its item open",
+      "output": {
+        "repo": "b0469c3a5acc39ff80f59377d91d05d6",
+        "repoKey": "repo:github.com/me/repo",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Committed locally. Push now? (push / wait)",
+              "version": 1
+            },
+            "id": "ua418f8d84ce110395e2c3f0e",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": "shared",
+              "text": "quiet for long, its tests or builds still running",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "repoKnown": true,
+        "session": {
+          "change": "asked",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Push now?",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ],
+          "waitingOn": "owner"
+        },
+        "task": {
+          "items": [
+            {
+              "base": [
+                "u000000000000000000000004"
+              ],
+              "closed": true,
+              "item": "ask-2d6c791804dc2c3a",
+              "text": "Push now?"
+            }
+          ],
+          "status": "done",
+          "statusBase": [
+            "u000000000000000000000003"
+          ]
+        }
+      },
+      "name": "a question asked again after it was closed opens again on the row it was closed at",
+      "output": {
+        "repo": "b0469c3a5acc39ff80f59377d91d05d6",
+        "repoKey": "repo:github.com/me/repo",
+        "rows": [
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "split the store and commit it",
+              "version": 1
+            },
+            "id": "uccd0ca1dd4915acf3178e6b8",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Push now?",
+              "version": 1
+            },
+            "id": "u8d3097883a12aa7ad226917a",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "changed src/a.rs, src/b.rs",
+              "version": 1
+            },
+            "id": "u8531af95e69281a1cdad53cb",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "audience": "personal:7",
+              "refs": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "tests passed",
+              "version": 1
+            },
+            "id": "u08928e867a5bb06682fd2567",
+            "kind": "node.entry",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "now",
+              "saidBy": [
+                "third_party"
+              ],
+              "since": 1760000000000000,
+              "sync": "shared",
+              "text": "waiting on the owner's answer to what it asked",
+              "version": 1
+            },
+            "id": "ueb2dec2a5f52c4e6ed0d47cf",
+            "kind": "node.standing",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [
+                "u000000000000000000000004"
+              ],
+              "because": [
+                "grant:gd30b104b040e8927cfd8bafa",
+                "session:s1fa465ebd5f9b41e95a74e4e"
+              ],
+              "item": "ask-2d6c791804dc2c3a",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "text": "Push now?",
+              "version": 1
+            },
+            "id": "u1e012458852ceef1706f935f",
+            "kind": "node.open_item",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          },
+          {
+            "body": {
+              "base": [
+                "u000000000000000000000003"
+              ],
+              "field": "status",
+              "saidBy": [
+                "third_party"
+              ],
+              "sync": "shared",
+              "value": "active",
+              "version": 1
+            },
+            "id": "ufe7b515752dfb42025566b88",
+            "kind": "node.revised",
+            "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
+          }
+        ],
+        "task": "15a4346f70cb5a96bc1a2e97b6c01b03",
+        "taskKey": "minted:s1fa465ebd5f9b41e95a74e4e"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "dev_mac",
+        "session": {
+          "change": "asked",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/Me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ],
+          "waitingOn": "owner"
+        }
+      },
+      "name": "refused: a remote not as repoKey writes it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "device": "",
+        "session": {
+          "change": "asked",
+          "checks": [
+            {
+              "at": 1,
+              "kind": "test",
+              "state": "passed"
+            }
+          ],
+          "fromAgent": "Committed locally. Push now? (push / wait)",
+          "fromOwner": "split the store and commit it",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/me/repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "touched": [
+            "src/a.rs",
+            "src/b.rs"
+          ],
+          "waitingOn": "owner"
+        }
+      },
+      "name": "refused: a device that is not a token",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

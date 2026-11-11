@@ -93,6 +93,7 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.sort_read" => json_of(&entries::sort_read(input(raw)?)?),
         "nodes.under_read" => json_of(&entries::under_read(input(raw)?)?),
         "nodes.fact_rows" => json_of(&entries::fact_rows(input(raw)?)?),
+        "nodes.session_rows" => json_of(&sessions::session_rows(input(raw)?)?),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
@@ -132,7 +133,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 33, "{files:?}");
+    assert_eq!(files.len(), 34, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -472,6 +473,12 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "refused: a row id of a kind the core does not read",
             "the core reads",
         ),
+        // nodes.session_rows
+        (
+            "refused: a remote not as repoKey writes it",
+            "not as repoKey writes it",
+        ),
+        ("refused: a device that is not a token", "device must be"),
         // nodes.pick
         ("refused: node ids that repeat", "node ids repeat"),
         // nodes.body: intents
