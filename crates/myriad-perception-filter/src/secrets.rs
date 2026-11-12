@@ -209,6 +209,14 @@ static SLASHED: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[A-Za-z0-9/+]+=*
 /// passwords use, no `/` (a path) and no `.` (a file, a version).
 static WORD: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"[A-Za-z0-9!#$%&*+=?@^_~\-]{6,32}").unwrap());
+/// The account and machine a remote shell is opened on (`ssh deploy@build-01`):
+/// the word right after the command, `name@host`, is where it goes, not a
+/// password (2026-11-12, measured on native's synthetic samples).
+static REMOTE_TARGET: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^[A-Za-z_][A-Za-z0-9._-]*@[A-Za-z0-9][A-Za-z0-9-]*$").unwrap());
+static REMOTE_COMMAND: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?i)\b(?:ssh|scp|sftp|mosh|rsync)(?:\s+-[A-Za-z]+(?:\s+\d+)?)*\s+$").unwrap()
+});
 /// An account's name, `/`, then its password (`admin / …`).
 static PAIR: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
@@ -595,6 +603,10 @@ fn signing_in(text: &str) -> Vec<(usize, usize)> {
             continue;
         }
         let line_start = text[..word.start()].rfind('\n').map_or(0, |i| i + 1);
+        if REMOTE_TARGET.is_match(value) && REMOTE_COMMAND.is_match(&text[line_start..word.start()])
+        {
+            continue;
+        }
         let line_end = text[word.end()..]
             .find('\n')
             .map_or(text.len(), |i| word.end() + i);
