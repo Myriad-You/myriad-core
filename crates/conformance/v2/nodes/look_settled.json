@@ -85,7 +85,7 @@
           "facts": [
             {
               "ref": "session:s1fa465ebd5f9b41e95a74e4e",
-              "text": "coding-agent 会话，在 sample-repo"
+              "text": "sample-repo 里的 coding-agent 会话"
             },
             {
               "ref": "session:s1fa465ebd5f9b41e95a74e4e",

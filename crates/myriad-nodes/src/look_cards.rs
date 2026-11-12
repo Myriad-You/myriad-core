@@ -15,6 +15,7 @@ use serde::Deserialize;
 
 use crate::NodeError;
 use crate::cards::{self, OPEN};
+use crate::place::clean;
 use crate::session_look::{Judgment, Material, Told, Verdict};
 use crate::sessions::{self, session_ref};
 
@@ -35,8 +36,10 @@ enum Says {
 }
 
 impl Says {
-    /// The kind of fact a piece of the material is told by, if any: what
-    /// another session or a memory of hers says is not this session's.
+    /// The kind of fact a piece of the material is told by, if any. What
+    /// another session did or hit, what she remembers and what she made of
+    /// it before is not one of this session's facts: a card lists no
+    /// grounds for it.
     fn of_piece(what: &str) -> Option<Self> {
         Some(match what {
             "the session" => Self::Session,
@@ -47,10 +50,8 @@ impl Says {
             }
             "files it changed" => Self::Files,
             "its tests and builds" => Self::Checks,
-            "a failure it keeps hitting" | "a failure another session hits too" => Self::Failing,
-            "what it did to another session's work" | "what another session did to its work" => {
-                Self::Overwrote
-            }
+            "a failure it keeps hitting" => Self::Failing,
+            "what it did to another session's work" => Self::Overwrote,
             _ => return None,
         })
     }
@@ -150,7 +151,7 @@ const EN: Words = Words {
 
 const ZH_CN: Words = Words {
     session: "{tool} 会话",
-    session_in: "{tool} 会话，在 {repo}",
+    session_in: "{repo} 里的 {tool} 会话",
     given_owner: "你亲自派的活",
     given_by: "「{by}」派的活，做完要回那边",
     given_session: "另一个会话派的活，做完要回那边",
@@ -187,7 +188,7 @@ const ZH_CN: Words = Words {
 
 const ZH_TW: Words = Words {
     session: "{tool} 工作階段",
-    session_in: "{tool} 工作階段，在 {repo}",
+    session_in: "{repo} 裡的 {tool} 工作階段",
     given_owner: "你親自交辦的工作",
     given_by: "「{by}」交辦的工作，做完要回報那邊",
     given_session: "另一個工作階段交辦的，做完要回報那邊",
@@ -230,7 +231,7 @@ const JA: Words = Words {
     given_session: "別のセッションから回された作業。終わったらそちらに戻る",
     now: "今：{stands}",
     started: "作業を始めた",
-    asked: "止まって、質問を待っている",
+    asked: "止まって、あなたに質問がある",
     finished: "ひと区切りついた。答えることはない",
     failed: "行き詰まっている（エラーが続くか、チェックが通らない）",
     quiet: "長いあいだ動きがない",
@@ -267,7 +268,7 @@ const KO: Words = Words {
     given_session: "다른 세션에서 넘긴 작업, 끝나면 그쪽으로 보고",
     now: "지금: {stands}",
     started: "작업 시작",
-    asked: "멈추고 질문을 기다리는 중",
+    asked: "멈추고 당신에게 질문이 있음",
     finished: "한 차례 끝남, 답할 것 없음",
     failed: "막힘 (오류가 계속되거나 검사 실패)",
     quiet: "오랫동안 움직임 없음",
@@ -317,7 +318,7 @@ const FR: Words = Words {
     list: ", ",
     checks: ["Tests", "Compilation", "Vérification"],
     check: "{kind} : {state}",
-    states: ["en cours", "réussi", "échec", "terminé, résultat inconnu"],
+    states: ["en cours", "succès", "échec", "terminé, résultat inconnu"],
     between: " ; ",
     failing: "La même erreur {n} fois, dernière {ago}",
     undid: "A annulé ce qu'une autre session venait d'écrire ({n} fichier(s), {ago})",
@@ -353,9 +354,9 @@ const DE: Words = Words {
     files: "{n} Datei(en) geändert: {list}",
     list: ", ",
     checks: ["Tests", "Build", "Prüfung"],
-    check: "{kind} {state}",
+    check: "{kind}: {state}",
     states: [
-        "laufen",
+        "läuft",
         "bestanden",
         "fehlgeschlagen",
         "beendet, Ergebnis unbekannt",
@@ -367,7 +368,7 @@ const DE: Words = Words {
     just_now: "gerade eben",
     minutes: "vor {n} Min.",
     hours: "vor {n} Std.",
-    days: "vor {n} Tg.",
+    days: "vor {n} Tagen",
     missing: "Es fehlt: {missing}",
     open: "Öffnen",
     agree: "Ja, so",
@@ -402,7 +403,7 @@ fn fill(template: &str, values: &[(&str, &str)]) -> String {
 /// The card's title: the session's own, or what it is.
 fn title(session: &Session, words: &Words) -> String {
     let title = match &session.title {
-        Some(title) if !title.trim().is_empty() => title.trim().to_string(),
+        Some(title) if !clean(title, true).is_empty() => clean(title, true),
         _ => fill(words.session, &[("tool", &session.tool)]),
     };
     cut(&title, cards::TITLE_CHARS)
@@ -462,9 +463,10 @@ fn facts(told: &Told, at: i64, words: &Words) -> Vec<(Says, CardFact)> {
     );
     match (session.asked_by, &session.asked_by_title) {
         (Some(AskedBy::Owner), _) => add(Says::Given, words.given_owner.to_string()),
-        (Some(AskedBy::Session), Some(by)) => {
-            add(Says::Given, fill(words.given_by, &[("by", &cut(by, 40))]))
-        }
+        (Some(AskedBy::Session), Some(by)) => add(
+            Says::Given,
+            fill(words.given_by, &[("by", &cut(&clean(by, true), 40))]),
+        ),
         (Some(AskedBy::Session), None) => add(Says::Given, words.given_session.to_string()),
         (Some(AskedBy::None) | None, _) => {}
     }
@@ -616,7 +618,17 @@ pub fn decision(input: DecisionInput) -> Result<CardVersion, NodeError> {
         .collect();
     because.sort();
     because.dedup();
-    let mut text = judgment.about.trim().to_string();
+    // A judgment with no grounds and nothing to suggest is not hers: the
+    // program's own card when no answer of hers came (`card_only`), whose
+    // about is the material's heading. Its facts say it; it has no view.
+    let hers = !judgment.because.is_empty()
+        || !judgment.suggestion.trim().is_empty()
+        || judgment.missing.is_some();
+    let mut text = if hers {
+        judgment.about.trim().to_string()
+    } else {
+        String::new()
+    };
     for more in [
         judgment.suggestion.trim().to_string(),
         judgment
@@ -725,10 +737,8 @@ pub fn settled(input: SettledInput) -> Result<CardVersion, NodeError> {
     if let Some(view) = &mut card.view {
         view.because.clear();
     }
-    card.actions.retain(|action| action.id == OPEN);
-    if card.actions.is_empty() {
-        card.actions.push(action(OPEN, words.open));
-    }
+    // Nothing to answer but going to it, said in the owner's language now.
+    card.actions = vec![action(OPEN, words.open)];
     cards::check(&card)?;
     Ok(card)
 }
@@ -769,6 +779,8 @@ mod tests {
     fn every_piece_of_a_change_is_a_fact_or_never_one() {
         let never = [
             "another session in this repository",
+            "a failure another session hits too",
+            "what another session did to its work",
             "what you know of the owner (how they decided before)",
             "what you made of this session last time",
         ];
