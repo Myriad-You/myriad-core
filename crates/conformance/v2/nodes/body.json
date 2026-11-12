@@ -2510,6 +2510,70 @@
       }
     },
     {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "session:s1"
+          ],
+          "item": "now",
+          "saidBy": [
+            "third_party"
+          ],
+          "since": 1762840920000000,
+          "state": "waiting_owner",
+          "sync": "shared",
+          "text": "在等你：问要不要推送",
+          "version": 1
+        },
+        "kind": "node.standing"
+      },
+      "name": "a standing a rule wrote, with where its task stands",
+      "output": {
+        "body": {
+          "base": [],
+          "because": [
+            "session:s1"
+          ],
+          "item": "now",
+          "saidBy": [
+            "third_party"
+          ],
+          "since": 1762840920000000,
+          "state": "waiting_owner",
+          "sync": "shared",
+          "text": "在等你：问要不要推送",
+          "version": 1
+        },
+        "canonical": "{\"base\":[],\"because\":[\"session:s1\"],\"item\":\"now\",\"saidBy\":[\"third_party\"],\"since\":1762840920000000,\"state\":\"waiting_owner\",\"sync\":\"shared\",\"text\":\"在等你：问要不要推送\",\"version\":1}",
+        "digest": "aef6d2923cf427fe96b1c299f5f37fd1"
+      }
+    },
+    {
+      "input": {
+        "body": {
+          "base": [],
+          "because": [
+            "session:s1"
+          ],
+          "item": "now",
+          "saidBy": [
+            "third_party"
+          ],
+          "since": 1762840920000000,
+          "state": "waiting for you",
+          "sync": "shared",
+          "text": "在等你：问要不要推送",
+          "version": 1
+        },
+        "kind": "node.standing"
+      },
+      "name": "a standing in a state no end says",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
       "name": "a standing that ended",
       "input": {
         "kind": "node.standing",

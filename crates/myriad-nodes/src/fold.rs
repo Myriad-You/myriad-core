@@ -199,6 +199,8 @@ pub struct StandingValue {
     pub text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub since: Option<Since>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub state: Option<crate::body::StandingState>,
     pub because: Vec<String>,
     #[serde(skip_serializing_if = "is_false")]
     pub ended: bool,
@@ -1616,6 +1618,7 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                     meta.version(StandingValue {
                         text: body.text,
                         since: body.since,
+                        state: body.state,
                         because: body.because,
                         ended: body.ended,
                     }),

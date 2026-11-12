@@ -170,6 +170,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "working",
               "sync": "shared",
               "text": "started working",
               "version": 1
@@ -365,6 +366,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "working",
               "sync": {
                 "local": "site"
               },
@@ -502,6 +504,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "waiting_owner",
               "sync": "shared",
               "text": "waiting on the owner's answer to what it asked",
               "version": 1
@@ -666,6 +669,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "finished",
               "sync": "shared",
               "text": "finished, nothing waits on the owner",
               "version": 1
@@ -880,6 +884,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "finished",
               "sync": {
                 "local": "site"
               },
@@ -1088,6 +1093,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "waiting_checks",
               "sync": "shared",
               "text": "quiet for long, its tests or builds still running",
               "version": 1
@@ -1235,6 +1241,7 @@
                 "third_party"
               ],
               "since": 1760000000000000,
+              "state": "waiting_owner",
               "sync": "shared",
               "text": "waiting on the owner's answer to what it asked",
               "version": 1

@@ -14,7 +14,7 @@
 //! | `node.revised` | `base`, `field` (`name`, `aliases`, `summary`, `status`, `who_knows`, `object`, `progress`), `person?` (progress only), `value` |
 //! | `node.view_changed` | `base`, `view`, `text`, `because` |
 //! | `node.open_item` | `base`, `item`, `text`, `because`, `closed?` |
-//! | `node.standing` | `base`, `item`, `text`, `since?` (Unix microseconds, or a day, a month or a year), `because`, `ended?` |
+//! | `node.standing` | `base`, `item`, `text`, `since?` (Unix microseconds, or a day, a month or a year), `state?` (one of [`StandingState`]: where a task stands, for an end to say in its own words), `because`, `ended?` |
 //! | `node.intent` | `base`, `intent`, `text`, `because`, `status`, `trigger?` (`{at, zone}` or `{node, change}`), `origin?` (`partner`, `her`: who said it), `action?` (`say`, `work`: only the partner's) |
 //! | `node.span` | `audience`, `text`, `refs?`, `from?`, `to?` |
 //! | `node.entry` | `audience`, `text`, `refs?` (`memory:<id>`: the memory row it is the place of), `quoteOnly?`, `happened?` (`{from, to?, about?}`: when what it tells of happened, not when it was said), `state?` (where it stands, a word or two), `open?` (only beside `state`) |
@@ -466,9 +466,36 @@ pub struct Standing {
     pub text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub since: Option<Since>,
+    /// Where a task stands, as a word an end says in its own language;
+    /// `text` says it in a line. Only a few: a body with another is
+    /// refused.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<StandingState>,
     pub because: Vec<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub ended: bool,
+}
+
+/// Where a task stands (`node.standing` `state`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum StandingState {
+    /// It is working.
+    Working,
+    /// Its next step waits on the owner.
+    WaitingOwner,
+    /// It finished; nothing waits on the owner.
+    Finished,
+    /// It kept failing, or its checks failed.
+    Stuck,
+    /// Quiet for long, its tests or builds running.
+    WaitingChecks,
+    /// Quiet for long, waiting on another program.
+    WaitingProgram,
+    /// Quiet for long, to report back to the session that sent it on.
+    WaitingSession,
+    /// Quiet for long, neither asking nor moving.
+    Quiet,
 }
 
 /// When something began standing so: a moment (Unix microseconds, as a
