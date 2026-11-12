@@ -408,7 +408,7 @@
       }
     },
     {
-      "v": 1, "t": "card.answer", "seq": 17, "ack": 19, "at": 1760140931000,
+      "v": 1, "t": "card.answer", "seq": 17, "id": "ca_0123456789abcdef0123456789abcdef", "ack": 19, "at": 1760140931000,
       "body": { "card": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "action": "agree", "version": "v_0123456789abcdef" }
     },
     {
