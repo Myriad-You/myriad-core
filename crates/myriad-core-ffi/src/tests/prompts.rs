@@ -15,6 +15,7 @@ pub(super) const TESTED: &[&str] = &[
     "chat_days.day_system",
     "chat_days.pick_system",
     "chat_remember.already_system",
+    "chat_remember.extract_schema",
     "chat_remember.extract_system",
     "chat_remember.settle_system",
     "curiosity.digest_system",
@@ -214,6 +215,31 @@ fn the_texts_with_their_input_are_the_crates() {
     }
     let known = vec!["养了一只猫".to_string(), "在上海工作".to_string()];
     use chat_remember::Examples;
+    // Dated, for an end that goes over no stretch: when each fact happened
+    // too; undated, as it always was.
+    assert_eq!(
+        ok("chat_remember.extract_schema", json!({}))["schema"],
+        chat_remember::extract_schema()
+    );
+    let dated = ok("chat_remember.extract_schema", json!({ "dated": true }))["schema"].clone();
+    assert_eq!(dated, chat_remember::extract_schema_dated());
+    assert_eq!(
+        dated["properties"]["facts"]["items"]["properties"]["happened"],
+        myriad_merope::happened::happened_schema()
+    );
+    let asked = text(
+        "chat_remember.extract_system",
+        json!({ "existing": known, "dated": true }),
+    )
+    .unwrap();
+    assert!(asked.contains("happened is when") && asked.ends_with("- 在上海工作"));
+    assert_eq!(
+        Some(asked),
+        Some(chat_remember::extract_system_prompt_dated(
+            &known,
+            Examples::Chinese
+        ))
+    );
     for kept in [known.clone(), vec![]] {
         assert_eq!(
             text("chat_remember.extract_system", json!({ "existing": kept })),

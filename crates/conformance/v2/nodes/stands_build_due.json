@@ -1,0 +1,59 @@
+{
+  "call": "nodes.stands_build_due",
+  "cases": [
+    {
+      "input": {
+        "facts": 2,
+        "standing": []
+      },
+      "name": "due while none of hers stands",
+      "output": {
+        "due": true
+      }
+    },
+    {
+      "input": {
+        "facts": 1,
+        "standing": [
+          {
+            "author": "rule"
+          },
+          {
+            "author": "rule"
+          }
+        ]
+      },
+      "name": "a rule's rows do not count",
+      "output": {
+        "due": true
+      }
+    },
+    {
+      "input": {
+        "facts": 1,
+        "standing": [
+          {
+            "author": "rule"
+          },
+          {
+            "author": "her"
+          }
+        ]
+      },
+      "name": "not once one of hers stands",
+      "output": {
+        "due": false
+      }
+    },
+    {
+      "input": {
+        "facts": 0
+      },
+      "name": "not when the stretch kept nothing",
+      "output": {
+        "due": false
+      }
+    }
+  ],
+  "version": 1
+}

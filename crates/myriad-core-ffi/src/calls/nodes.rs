@@ -9,7 +9,7 @@
 
 use myriad_nodes::{
     Body, NodeError, entries, fold as fold_rows, home, intents, limits as node_limits, listing,
-    place, queue as due, recall, trust, upkeep, wire,
+    place, queue as due, recall, stands, trust, upkeep, wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -277,6 +277,37 @@ pub(super) fn pick(raw: &[u8]) -> Result<Value, Failure> {
 /// answer happened and where it stands; what does not read is left out.
 pub(super) fn standing_read(raw: &[u8]) -> Result<Value, Failure> {
     answer(&entries::standing_read(quiet_input(raw)?))
+}
+
+/// `{fact, known?, nodes?}` → `{skip?, system, schema, input}`: what to ask
+/// of one fact she just kept about how their life stands now (「现在」).
+pub(super) fn stands_step_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&stands::step_prepare(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{output, sync, fact, known?, nodes?}` → `{rows, left, setAside,
+/// unreadable?}`: the rows of hers the answer comes to, and each item left
+/// as another person's (ids and keys only).
+pub(super) fn stands_step_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&stands::step_read(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{facts, standing?: [{author}]}` → `{due}`: whether to build 「现在」 from
+/// what she knew before a stretch's facts are read.
+pub(super) fn stands_build_due(raw: &[u8]) -> Result<Value, Failure> {
+    let input: stands::BuildDueInput = quiet_input(raw)?;
+    Ok(json!({ "due": stands::build_due(&input) }))
+}
+
+/// `{node, held?, learned?}` → `{skip?, system, schema, input}`.
+pub(super) fn stands_build_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&stands::build_prepare(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{output, sync, node, held?, learned?}` → `{rows, left, setAside,
+/// unreadable?}`.
+pub(super) fn stands_build_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&stands::build_read(quiet_input(raw)?).map_err(refused)?)
 }
 
 /// `{range, now, zone}` → `{today, from?, to?}`: the days of the stretch

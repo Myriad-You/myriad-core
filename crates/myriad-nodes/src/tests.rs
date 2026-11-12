@@ -107,6 +107,13 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
+        "nodes.stands_step_input" => json_of(&crate::stands::step_prepare(input(raw)?)?),
+        "nodes.stands_step_read" => json_of(&crate::stands::step_read(input(raw)?)?),
+        "nodes.stands_build_due" => {
+            json!({ "due": crate::stands::build_due(&input(raw)?) })
+        }
+        "nodes.stands_build_input" => json_of(&crate::stands::build_prepare(input(raw)?)?),
+        "nodes.stands_build_read" => json_of(&crate::stands::build_read(input(raw)?)?),
         "nodes.range_dates" => json_of(&listing::range_dates(input(raw)?)?),
         "nodes.list" => json_of(&listing::list(input(raw)?)?),
         "nodes.trust_tier" => json_of(&trust::tiers(input(raw)?)),
@@ -143,7 +150,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 44, "{files:?}");
+    assert_eq!(files.len(), 49, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -571,6 +578,7 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "a standing since no day",
             "since is a moment, a day, a month or a year",
         ),
+        ("a node given twice is refused", "node ids repeat"),
         ("a standing without evidence", "because is empty"),
         ("a standing with a field it does not know", "unknown field"),
         ("a standing in a state no end says", "body does not fit its kind"),

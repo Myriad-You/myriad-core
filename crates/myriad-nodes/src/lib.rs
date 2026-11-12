@@ -95,6 +95,7 @@ pub mod queue;
 pub mod recall;
 pub mod session_look;
 pub mod sessions;
+pub mod stands;
 pub mod tags;
 pub mod trust;
 pub mod upkeep;

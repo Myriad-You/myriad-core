@@ -83,6 +83,33 @@ pub fn extract_schema() -> serde_json::Value {
     })
 }
 
+/// [`extract_schema`] with when each fact happened (`happened`, as going over
+/// a stretch has it), for an end that keeps what someone says as they say
+/// it and goes over no stretch: it then knows since when what a fact tells
+/// of holds. Read each fact's with `happened::read_standing`.
+pub fn extract_schema_dated() -> serde_json::Value {
+    let mut schema = extract_schema();
+    let fact = &mut schema["properties"]["facts"]["items"];
+    fact["properties"]["happened"] = crate::happened::happened_schema();
+    if let Some(required) = fact["required"].as_array_mut() {
+        required.push(json!("happened"));
+    }
+    schema
+}
+
+/// [`extract_system_prompt`] asking also when each fact happened
+/// ([`extract_schema_dated`]).
+pub fn extract_system_prompt_dated(existing: &[String], examples: Examples) -> String {
+    let prompt = extract_system_prompt(existing, examples);
+    let at = prompt.rfind("Known:\n").unwrap_or(prompt.len());
+    format!(
+        "{}{} {}",
+        &prompt[..at],
+        crate::happened::happened_only(),
+        &prompt[at..]
+    )
+}
+
 /// Which language the examples in what she is asked are in. The rules ask
 /// for each fact in the language they spoke; examples in another language
 /// are still copied now and then, a whole answer at a time.
