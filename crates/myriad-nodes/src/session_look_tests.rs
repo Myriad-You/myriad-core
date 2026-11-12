@@ -177,6 +177,7 @@ fn two() -> Material {
             piece(Some(1), "Push now?"),
             piece(Some(2), "Write the docs"),
         ],
+        choices: vec![vec!["push".into(), "wait".into()], Vec::new()],
     }
 }
 
@@ -418,4 +419,77 @@ fn the_form_with_nothing_in_it_is_hollow() {
     assert!(!hollow(&empty.replace("\" \"", "\"push?\"")));
     assert!(!hollow("not json"));
     assert!(!hollow(r#"{"changes":[],"say":null}"#));
+}
+
+/// What she leans to is one of the change's choices, or none; her
+/// suggestion answers only when there is one.
+#[test]
+fn a_lean_is_one_of_the_choices_and_an_answer_is_a_suggestion() {
+    let answer = good(
+        r#"{"changes":[{"change":1,"verdict":"decide","about":"push","suggestion":"wait","because":[2],"missing":null,"ownerMustSay":true,"leans":2,"answers":true},{"change":2,"verdict":"nod","about":"docs","suggestion":"","because":[3],"missing":null,"ownerMustSay":false,"leans":1,"answers":true}],"say":null}"#,
+    );
+    let first = answer.judgments[0].as_ref().unwrap();
+    assert_eq!((first.leans, first.answers), (Some(2), true));
+    // The second change gave no choices, and its suggestion is empty.
+    let second = answer.judgments[1].as_ref().unwrap();
+    assert_eq!((second.leans, second.answers), (None, false));
+    for leans in ["3", "0", "\"x\"", "null"] {
+        let raw = format!(
+            r#"{{"changes":[{{"change":1,"verdict":"decide","about":"push","suggestion":"wait","because":[2],"missing":null,"ownerMustSay":true,"leans":{leans},"answers":false}}],"say":null}}"#
+        );
+        let answer = good(&raw);
+        assert_eq!(answer.judgments[0].as_ref().unwrap().leans, None, "{leans}");
+    }
+    // An answer of the old shape reads as leaning to none.
+    let answer = good(
+        r#"{"changes":[{"change":1,"verdict":"nod","about":"push","suggestion":"push","because":[2],"missing":null,"ownerMustSay":false}],"say":null}"#,
+    );
+    let first = answer.judgments[0].as_ref().unwrap();
+    assert_eq!((first.leans, first.answers), (None, false));
+}
+
+/// A session's choices are shown in one line each, numbered for her lean,
+/// and kept with the material for reading her answer.
+#[test]
+fn the_choices_are_shown_numbered() {
+    let asked = session(
+        "asked",
+        json!({"waitingOn": "owner", "choices": ["push\nnow", "wait"]}),
+    );
+    let shown = material(
+        &[Shown {
+            told: told(asked),
+            memories: Vec::new(),
+            before: None,
+        }],
+        &[],
+        &[],
+        AT,
+    );
+    assert!(
+        shown
+            .numbered()
+            .contains("its choices: choice 1: «push now»; choice 2: «wait»"),
+        "{}",
+        shown.numbered()
+    );
+    assert_eq!(shown.choices_of(1), ["push now", "wait"]);
+    assert!(shown.choices_of(2).is_empty());
+    // A change with none keeps none, and the material says nothing of it.
+    let plain = material(
+        &[Shown {
+            told: told(session("asked", json!({"waitingOn": "owner"}))),
+            memories: Vec::new(),
+            before: None,
+        }],
+        &[],
+        &[],
+        AT,
+    );
+    assert!(
+        serde_json::to_value(&plain)
+            .unwrap()
+            .get("choices")
+            .is_none()
+    );
 }

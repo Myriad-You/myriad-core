@@ -35,6 +35,8 @@ pub struct Rules {
     pub overwrote_at_most: usize,
     pub error_span_ms: i64,
     pub repeated_error_at: u32,
+    pub choices_at_most: usize,
+    pub choice_chars: usize,
     pub look: Look,
 }
 
@@ -188,6 +190,11 @@ pub struct Session {
     pub checks: Vec<Check>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub waiting_on: Option<WaitingOn>,
+    /// The labels of the choices its question came with, as the session
+    /// gave them, in its order. Only with change asked, and only from a
+    /// device whose welcome listed `now.choices`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub choices: Vec<String>,
 }
 
 /// One `now.drop` body, read.
@@ -422,16 +429,53 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
     if session.change == Change::Finished && session.waiting_on == Some(WaitingOn::Owner) {
         return Err(bad("a finished session waits on nobody's answer"));
     }
+    if session.choices.len() > rules.choices_at_most {
+        return Err(refuse(
+            "too_many",
+            format!("choices holds more than {}", rules.choices_at_most),
+        ));
+    }
+    for choice in &session.choices {
+        words("a choice", &Some(choice.clone()), rules.choice_chars)?;
+    }
+    if !session.choices.is_empty() && session.change != Change::Asked {
+        return Err(bad("choices go only with change asked"));
+    }
     Ok(session)
 }
 
 /// A `now.session` body as a device told it on a link: with `sessions2`
 /// false (the host's welcome did not list `now.sessions2`), one that holds
-/// `ownerSaidAt`, `errors` or `overwrote` is refused.
+/// `ownerSaidAt`, `errors` or `overwrote` is refused; and one that holds
+/// `choices`, always (see [`read_listed`]).
 pub fn read_told(body: &Value, sessions2: bool) -> Result<Session, Refusal> {
+    read_listed(
+        body,
+        Listed {
+            sessions2,
+            choices: false,
+        },
+    )
+}
+
+/// What the host's welcome listed of the `now` family's later fields.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Listed {
+    /// `now.sessions2`: `ownerSaidAt`, `errors`, `overwrote`.
+    pub sessions2: bool,
+    /// `now.choices`: `choices`.
+    pub choices: bool,
+}
+
+/// A `now.session` body as a device told it on a link whose welcome listed
+/// `listed`: a field it did not list is refused.
+pub fn read_listed(body: &Value, listed: Listed) -> Result<Session, Refusal> {
     let session = read_session(body)?;
-    if !sessions2 && session.needs_sessions2() {
+    if !listed.sessions2 && session.needs_sessions2() {
         return Err(bad("ownerSaidAt, errors and overwrote need now.sessions2"));
+    }
+    if !listed.choices && !session.choices.is_empty() {
+        return Err(bad("choices need now.choices"));
     }
     Ok(session)
 }
@@ -479,7 +523,8 @@ mod tests {
             "overwrote": [{"session": "s-other", "files": 2, "undid": true, "at": 1_760_140_700_000_i64}],
             "touched": ["src/store.rs", "src/lib.rs"],
             "checks": [{"kind": "test", "state": "passed", "at": 1_760_140_880_000_i64}],
-            "waitingOn": "owner"
+            "waitingOn": "owner",
+            "choices": ["yes", "later"]
         })
     }
 
@@ -522,6 +567,7 @@ mod tests {
             frame["maxItems"]["overwrote"],
             json!(rules.overwrote_at_most)
         );
+        assert_eq!(frame["maxItems"]["choices"], json!(rules.choices_at_most));
         assert_eq!(rules.sig_pattern, "^[0-9a-f]{16}$");
         assert!(rules.repeated_error_at >= 2 && rules.error_span_ms > 0);
         let mut fields: Vec<String> = frame["required"]
@@ -586,6 +632,10 @@ mod tests {
             ("output", json!("ok")),
             ("askedBy", json!("someone")),
             ("fromPeer", json!(" ")),
+            ("choices", json!(["yes", " "])),
+            ("choices", json!(["x".repeat(81)])),
+            ("choices", json!(["yes\u{7}"])),
+            ("choices", json!("yes")),
             ("ownerSaidAt", json!(0)),
             ("ownerSaidAt", json!("soon")),
             (
@@ -653,6 +703,7 @@ mod tests {
         ended["checks"] = json!([{"kind": "test", "state": "ended", "at": 1}]);
         ended["change"] = json!("quiet");
         ended["waitingOn"] = json!("session");
+        ended.as_object_mut().unwrap().remove("choices");
         assert!(read_session(&ended).is_ok());
         let mut finished = body();
         finished["change"] = json!("finished");
@@ -678,19 +729,50 @@ mod tests {
                 .collect::<Vec<_>>()
         );
         assert_eq!(read_session(&many).unwrap_err().code, "too_many");
-        // Only to a host that listed now.sessions2.
-        assert!(read_told(&body(), true).is_ok());
-        assert_eq!(read_told(&body(), false).unwrap_err().code, "bad_frame");
+        let mut many = body();
+        many["choices"] = json!(["a", "b", "c", "d", "e"]);
+        assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        // Choices are of a question.
+        let mut started = body();
+        started["change"] = json!("started");
+        started["waitingOn"] = json!("checks");
+        assert_eq!(read_session(&started).unwrap_err().code, "bad_frame");
+        started.as_object_mut().unwrap().remove("choices");
+        assert!(read_session(&started).is_ok());
+        // Only to a host that listed now.sessions2, and now.choices.
+        let both = Listed {
+            sessions2: true,
+            choices: true,
+        };
+        assert!(read_listed(&body(), both).is_ok());
+        let mut no_choices = body();
+        no_choices.as_object_mut().unwrap().remove("choices");
+        assert!(read_told(&no_choices, true).is_ok());
+        assert_eq!(read_told(&no_choices, false).unwrap_err().code, "bad_frame");
+        assert_eq!(read_told(&body(), true).unwrap_err().code, "bad_frame");
         let mut plain = body();
         for field in ["ownerSaidAt", "errors", "overwrote"] {
             plain.as_object_mut().unwrap().remove(field);
         }
+        assert_eq!(read_told(&plain, false).unwrap_err().code, "bad_frame");
+        assert!(
+            read_listed(
+                &plain,
+                Listed {
+                    sessions2: false,
+                    choices: true
+                }
+            )
+            .is_ok()
+        );
+        plain.as_object_mut().unwrap().remove("choices");
         assert!(read_told(&plain, false).is_ok());
         // A quiet session may wait on anything; 2000 characters are kept.
         let mut quiet = body();
         quiet["change"] = json!("quiet");
         quiet["waitingOn"] = json!("checks");
         quiet["fromAgent"] = json!("字".repeat(2000));
+        quiet.as_object_mut().unwrap().remove("choices");
         assert!(read_session(&quiet).is_ok());
     }
 

@@ -16,7 +16,7 @@ use serde::Deserialize;
 use crate::NodeError;
 use crate::cards::{self, OPEN};
 use crate::place::clean;
-use crate::session_look::{Judgment, Material, Told, Verdict};
+use crate::session_look::{Judgment, Material, Told, Verdict, one_line};
 use crate::sessions::{self, session_ref};
 
 /// The scene of these cards.
@@ -44,7 +44,7 @@ impl Says {
         Some(match what {
             "the session" => Self::Session,
             "who gave it this work" | "what the session that sent it on told it" => Self::Given,
-            "what it last said or asked" | "what its choices hold" => Self::Stands,
+            "what it last said or asked" | "its choices" | "what its choices hold" => Self::Stands,
             "what the owner last told it" | "when the owner last spoke to it themselves" => {
                 Self::OwnerSaid
             }
@@ -108,7 +108,6 @@ struct Words {
     missing: &'static str,
     open: &'static str,
     agree: &'static str,
-    seen: &'static str,
     ok: &'static str,
 }
 
@@ -145,7 +144,6 @@ const EN: Words = Words {
     missing: "Missing: {missing}",
     open: "Open session",
     agree: "Go with it",
-    seen: "Got it",
     ok: "OK",
 };
 
@@ -182,7 +180,6 @@ const ZH_CN: Words = Words {
     missing: "还缺：{missing}",
     open: "去会话里说",
     agree: "按建议办",
-    seen: "知道了",
     ok: "可以",
 };
 
@@ -219,7 +216,6 @@ const ZH_TW: Words = Words {
     missing: "還缺：{missing}",
     open: "去工作階段裡說",
     agree: "照建議辦",
-    seen: "知道了",
     ok: "可以",
 };
 
@@ -256,7 +252,6 @@ const JA: Words = Words {
     missing: "足りないもの：{missing}",
     open: "セッションで話す",
     agree: "提案どおりに",
-    seen: "了解",
     ok: "OK",
 };
 
@@ -293,7 +288,6 @@ const KO: Words = Words {
     missing: "부족한 것: {missing}",
     open: "세션에서 말하기",
     agree: "제안대로",
-    seen: "확인",
     ok: "좋아요",
 };
 
@@ -330,7 +324,6 @@ const FR: Words = Words {
     missing: "Manque : {missing}",
     open: "Ouvrir",
     agree: "D'accord",
-    seen: "Vu",
     ok: "OK",
 };
 
@@ -372,7 +365,6 @@ const DE: Words = Words {
     missing: "Es fehlt: {missing}",
     open: "Öffnen",
     agree: "Ja, so",
-    seen: "Gesehen",
     ok: "OK",
 };
 
@@ -573,6 +565,68 @@ fn action(id: &str, label: &str) -> CardAction {
     }
 }
 
+/// The action of a session's choice `number` (from 1).
+fn choice_id(number: usize) -> String {
+    format!("choice_{number}")
+}
+
+/// A session's choice as a card's label: what the scans take out of it
+/// marked, in one line, cut to [`cards::LABEL_CHARS`] with a mark where it
+/// was cut. None when nothing is left.
+fn choice_label(choice: &str) -> Option<String> {
+    let scrubbed = myriad_perception_filter::secrets::scan(choice).text;
+    let scrubbed = myriad_perception_filter::identifiers::scan(&scrubbed).text;
+    let label = cut(&clean(&one_line(&scrubbed), true), cards::LABEL_CHARS);
+    (!label.trim().is_empty()).then_some(label)
+}
+
+/// What the owner may answer a card of `judgment` with, and the one she
+/// leans to. A session that gave choices is answered with them, as it gave
+/// them, the one she leans to first; one that gave none, with her
+/// suggestion when it is one answer. Going to the session is always last.
+fn answers(
+    session: &Session,
+    judgment: &Judgment,
+    words: &Words,
+) -> (Vec<CardAction>, Option<String>) {
+    let mut actions = Vec::new();
+    let mut leans = None;
+    let choices: Vec<(usize, String)> = if session.change == Change::Asked {
+        session
+            .choices
+            .iter()
+            .enumerate()
+            .filter_map(|(at, choice)| Some((at + 1, choice_label(choice)?)))
+            .take(cards::ACTIONS - 1)
+            .collect()
+    } else {
+        Vec::new()
+    };
+    if !choices.is_empty() {
+        let leaned = judgment
+            .leans
+            .filter(|number| choices.iter().any(|(at, _)| at == number));
+        if let Some(number) = leaned {
+            leans = Some(choice_id(number));
+        }
+        let (first, rest): (Vec<_>, Vec<_>) = choices
+            .into_iter()
+            .partition(|(number, _)| Some(*number) == leaned);
+        for (number, label) in first.into_iter().chain(rest) {
+            actions.push(action(&choice_id(number), &label));
+        }
+    } else if judgment.answers && !judgment.suggestion.trim().is_empty() {
+        let (id, label) = match judgment.verdict {
+            Verdict::Nod => ("ok", words.ok),
+            _ => ("agree", words.agree),
+        };
+        actions.push(action(id, label));
+        leans = Some(id.to_string());
+    }
+    actions.push(action(OPEN, words.open));
+    (actions, leans)
+}
+
 /// `nodes.look_card`: the card of one change of her look.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -646,15 +700,12 @@ pub fn decision(input: DecisionInput) -> Result<CardVersion, NodeError> {
             text.push_str(&more);
         }
     }
+    let (actions, leans) = answers(&input.told.session, judgment, words);
     let view = (!text.is_empty()).then(|| CardView {
         text: cut(&text, cards::VIEW_CHARS),
         because,
+        leans,
     });
-    let answer = match judgment.verdict {
-        Verdict::Nod => action("ok", words.ok),
-        _ if judgment.suggestion.trim().is_empty() => action("seen", words.seen),
-        _ => action("agree", words.agree),
-    };
     let card = CardVersion {
         at: input.at,
         id: cards::card_id(SCENE, kind, &format!("node:{}", input.task))?,
@@ -665,7 +716,7 @@ pub fn decision(input: DecisionInput) -> Result<CardVersion, NodeError> {
         state: state(&input.told.session),
         facts: facts.into_iter().map(|(_, fact)| fact).collect(),
         view,
-        actions: vec![answer, action(OPEN, words.open)],
+        actions,
     };
     cards::check(&card)?;
     Ok(card)
@@ -733,9 +784,11 @@ pub fn settled(input: SettledInput) -> Result<CardVersion, NodeError> {
         .into_iter()
         .map(|(_, fact)| fact)
         .collect();
-    // Her view stood on the facts as they were: kept, its grounds gone.
+    // Her view stood on the facts as they were: kept, its grounds and
+    // what she leaned to answer gone.
     if let Some(view) = &mut card.view {
         view.because.clear();
+        view.leans = None;
     }
     // Nothing to answer but going to it, said in the owner's language now.
     card.actions = vec![action(OPEN, words.open)];

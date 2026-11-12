@@ -46,6 +46,7 @@
         "judgments": [
           {
             "about": "它问要不要推送",
+            "answers": false,
             "because": [
               2
             ],
@@ -54,6 +55,7 @@
               "session:s1"
             ],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": true,
             "suggestion": "推，测试都过了",
@@ -61,10 +63,12 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [],
             "card": "不用你管：文档写完了",
             "evidence": [],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -127,10 +131,12 @@
         "judgments": [
           {
             "about": "它问要不要推送",
+            "answers": false,
             "because": [],
             "card": "你点头就行：它问要不要推送",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": true,
             "suggestion": "",
@@ -138,10 +144,12 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [],
             "card": "不用你管：文档写完了",
             "evidence": [],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -203,6 +211,7 @@
         "judgments": [
           {
             "about": "它问要不要推送",
+            "answers": false,
             "because": [
               2
             ],
@@ -211,6 +220,7 @@
               "session:s1"
             ],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": true,
             "suggestion": "推，测试都过了",
@@ -218,10 +228,12 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [],
             "card": "不用你管：文档写完了",
             "evidence": [],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -271,10 +283,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -282,6 +296,7 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [
               2
             ],
@@ -290,6 +305,7 @@
               "session:s2"
             ],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -337,10 +353,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "要你定：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -389,10 +407,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -400,10 +420,12 @@
           },
           {
             "about": "failed (kept erring, or its checks failed)",
+            "answers": false,
             "because": [],
             "card": "不用你管：failed (kept erring, or its checks failed)",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -459,10 +481,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -519,10 +543,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -579,10 +605,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",

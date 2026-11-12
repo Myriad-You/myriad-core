@@ -88,6 +88,19 @@ fn now_bodies_are_read_by_the_sessions_rules() {
         json!({"t": "now.session", "body": newer, "sessions2": true}),
     );
     assert_eq!(taken["session"]["ownerSaidAt"], 1_760_000_000_000_i64);
+    // choices only where it listed now.choices.
+    let mut asked = body("now.session");
+    asked["choices"] = json!(["push", "wait"]);
+    let refused = ok(
+        "link.now_read",
+        json!({"t": "now.session", "body": asked.clone()}),
+    );
+    assert_eq!(refused["refused"]["code"], "bad_frame");
+    let taken = ok(
+        "link.now_read",
+        json!({"t": "now.session", "body": asked, "choices": true}),
+    );
+    assert_eq!(taken["session"]["choices"], json!(["push", "wait"]));
     let (status, _) = ffi("link.now_read", &json!({"t": "moment", "body": {}}));
     assert_eq!(status, STATUS_BAD_INPUT);
 }
