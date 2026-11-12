@@ -1,0 +1,240 @@
+{
+  "call": "nodes.look_settled",
+  "cases": [
+    {
+      "input": {
+        "at": 1760000000000,
+        "card": {
+          "actions": [
+            {
+              "id": "agree",
+              "label": "按建议办"
+            },
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1759999400000,
+          "facts": [
+            {
+              "ref": "session:dev_mac/g_0123456789/s-1",
+              "text": "coding-agent 会话，在 sample-repo"
+            },
+            {
+              "ref": "session:dev_mac/g_0123456789/s-1",
+              "text": "现在：停下来，有问题要问你"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              2
+            ],
+            "text": "要不要现在推送\n推"
+          }
+        },
+        "language": "zh-CN",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "finished",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ]
+          }
+        }
+      },
+      "name": "a card whose session went on keeps only going to it, in the state it is in",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "coding-agent 会话，在 sample-repo"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：做完了这一轮，没有要你回答的"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "finished",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "text": "要不要现在推送\n推"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "card": {
+          "actions": [
+            {
+              "id": "agree",
+              "label": "按建议办"
+            }
+          ],
+          "at": 1759999400000,
+          "facts": [
+            {
+              "ref": "session:dev_mac/g_0123456789/s-1",
+              "text": "coding-agent 会话，在 sample-repo"
+            },
+            {
+              "ref": "session:dev_mac/g_0123456789/s-1",
+              "text": "现在：停下来，有问题要问你"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              2
+            ],
+            "text": "要不要现在推送\n推"
+          }
+        },
+        "language": "en-US",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "finished",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ]
+          }
+        }
+      },
+      "name": "a card that had no way to the session gets one",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "Open session"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "coding-agent session in sample-repo"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "You assigned this work yourself"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Now: finished a turn, nothing for you to answer"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Your last word to the session: 3 min ago"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Changed 2 file(s): mod.rs, split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Tests passed; Build passed"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "finished",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "text": "要不要现在推送\n推"
+          }
+        }
+      }
+    }
+  ],
+  "version": 1
+}

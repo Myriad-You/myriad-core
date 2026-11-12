@@ -233,6 +233,29 @@ pub(super) fn card_check(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_nodes::cards::check_call(quiet_input(raw)?).map_err(refused)?)
 }
 
+/// `{task, told, judgment, material, change, at, language}` → `{card}`: the card her
+/// judgment of one change of her look puts before the owner (`decide` or
+/// `nod`); a change that needs nothing of them is `bad_input`. What the
+/// program says on it is in `language` (the owner's).
+pub(super) fn look_card(raw: &[u8]) -> Result<Value, Failure> {
+    let card = myriad_nodes::look_cards::decision(quiet_input(raw)?).map_err(refused)?;
+    Ok(json!({ "card": card }))
+}
+
+/// `{task, told, at, language}` → `{card}`: the card of where a session came to when
+/// it finished or failed; `card` is null otherwise.
+pub(super) fn look_status(raw: &[u8]) -> Result<Value, Failure> {
+    let card = myriad_nodes::look_cards::status(quiet_input(raw)?).map_err(refused)?;
+    Ok(json!({ "card": card }))
+}
+
+/// `{card, told, at, language}` → `{card}`: a card's next version once its session
+/// went on without the owner's answer on it: nothing left to answer.
+pub(super) fn look_settled(raw: &[u8]) -> Result<Value, Failure> {
+    let card = myriad_nodes::look_cards::settled(quiet_input(raw)?).map_err(refused)?;
+    Ok(json!({ "card": card }))
+}
+
 /// `{rows, bodies}` → `{cards: [{card, version, answered?, waiting}]}`:
 /// every card as it stands now, latest first.
 pub(super) fn cards_fold(raw: &[u8]) -> Result<Value, Failure> {
