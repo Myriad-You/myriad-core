@@ -37,6 +37,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 现在是 `ABI_VERSION` 4（2026-11-12 起：日志多了卡片的两种行 `card.version`、`card.answered`，`segment.line` 多了可选的 `card`。ABI 4 以下的核心不认这两种行，并且会把带 `card` 的消息正文当成 `bad_body` 一直扣着，所以这三样只发给 hello 列了 `log4` 的一端（`nodes.wire_send` 遇到它们而 `peerAbi` 小于 4 时，回 `tooOld`）。各端都钉上、都报出 `log4` 之前，宿主把卡片行和带卡的消息都写成 `local`，之后再补发一次。见「卡片」一节）。ABI 3（2026-11-11 起：日志多了作者 `rule` 和种类 `node.standing`，ABI 3 以下的核心整批拒收，所以只发给 hello 列了 `log3` 的一端；`nodes.pick` 的节点多了可选的 `standing`。各端都钉上、都报出 `log3` 之前，宿主把这两种行都写成 `local`，不发出去，旧的行字节不变。2026-11-12 起 `node.standing` 多了可选的 `state`（任务现在在哪一步，`working`、`waiting_owner`、`finished`、`stuck`、`waiting_checks`、`waiting_program`、`waiting_session`、`quiet` 之一，给各端用自己的话说）：钉在这以前的 ABI 3 核心会拒收带它的行，而这时还没有哪一端发出过 shared 的 `node.standing`，所以不升 ABI，只要求先钉核心、再钉原生、最后站点）。ABI 2（2026-10-31 起：`nodes.fold`、`nodes.wire_send` 的 `ledger` 必填，`nodes.wire_send` 的 `peerAbi` 必填；并入、拆出的行必须在信封里带 `to`（拆出还要 `takes`），没有的拒收；撤回带它够到的别的节点的行（`takes`）；`nodes.fold` 的 `forgets` 改叫 `reached`，只给调用方自己清理、不写成行；`log.admit`、`log.answer` 的 `holder` 必填；钉第 1 版的端照 `crates/conformance/v1/nodes`、`v1/log` 对照）。
 
+`shared/her_link_contract.json` 的 `capabilities` 给 2 起的每一级 ABI 列一个 `logN`（现在是 `log2`、`log3`、`log4`）：各端只报契约里有的能力，对端也会丢掉不认识的，契约漏了哪一级，就没有哪两端能谈成它。升 ABI 时同步补上，`every_log_capability_the_contract_lists_is_an_abi_this_core_reads` 会查。
+
 `meta.version` 返回 `abi`（`ABI_VERSION`）、`upstreamCommit`（构建时的 `MYRIAD_CORE_UPSTREAM_COMMIT`，没设为 `unknown`）和全部调用名。调用表在 `src/calls.rs` 的 `CALLS`。
 
 ## 加一个调用
