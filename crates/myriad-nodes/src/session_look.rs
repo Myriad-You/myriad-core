@@ -231,15 +231,20 @@ pub fn owner_said(said_at: i64, session: &Session, at: i64) -> String {
         return when;
     }
     let asked = session.occurred_at;
-    if asked >= said_at {
+    if asked == said_at {
+        return format!("{when}; it asked this question at that same moment");
+    }
+    if asked > said_at {
         let later = match minutes(asked, said_at) {
             0 => "less than a minute".to_string(),
             1 => "a minute".to_string(),
             gap => format!("{gap} minutes"),
         };
-        format!("{when}; it asked this question after that, {later} later")
+        format!("{when}; it asked this question {later} after that")
     } else {
-        format!("{when}; it had asked this question before that, and has asked nothing since")
+        format!(
+            "{when}; it had asked this question before that, and no later question has been told"
+        )
     }
 }
 
