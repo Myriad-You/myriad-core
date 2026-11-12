@@ -4090,6 +4090,297 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s1",
+                "text": "会话停下来问：现在推送吗"
+              }
+            ],
+            "id": "dev_mac_1",
+            "kind": "nod",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "title": "它问要不要推送",
+            "view": {
+              "because": [
+                1
+              ],
+              "text": "检查都过了，可以推。"
+            }
+          },
+          "k2": {
+            "at": 1760000000001,
+            "card": "dev_mac_1",
+            "text": ""
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 3,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k1",
+            "kind": "card.version",
+            "object": "card:dev_mac_1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "k2",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a side whose core is ABI 3 gets nothing while a card or a line that carries one would go to it",
+      "output": {
+        "batches": [],
+        "tooOld": true
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s1",
+                "text": "会话停下来问：现在推送吗"
+              }
+            ],
+            "id": "dev_mac_1",
+            "kind": "nod",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "title": "它问要不要推送",
+            "view": {
+              "because": [
+                1
+              ],
+              "text": "检查都过了，可以推。"
+            }
+          },
+          "k2": {
+            "at": 1760000000001,
+            "card": "dev_mac_1",
+            "text": ""
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 4,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k1",
+            "kind": "card.version",
+            "object": "card:dev_mac_1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "k2",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "once that side reads ABI 4 the card and its line go",
+      "output": {
+        "batches": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "payloads": [
+              {
+                "data": "eyJhY3Rpb25zIjpbeyJpZCI6Im9wZW4iLCJsYWJlbCI6IuWOu+S8muivnemHjOivtCJ9LHsiaWQiOiJwdXNoIiwibGFiZWwiOiLmjqjpgIEifV0sImF0IjoxNzYwMDAwMDAwMDAwLCJmYWN0cyI6W3sicmVmIjoic2Vzc2lvbjpzMSIsInRleHQiOiLkvJror53lgZzkuIvmnaXpl67vvJrnjrDlnKjmjqjpgIHlkJcifV0sImlkIjoiZGV2X21hY18xIiwia2luZCI6Im5vZCIsInNjZW5lIjoiYWdlbnRzIiwic3RhdGUiOiJ3YWl0aW5nX293bmVyIiwidGl0bGUiOiLlroPpl67opoHkuI3opoHmjqjpgIEiLCJ2aWV3Ijp7ImJlY2F1c2UiOlsxXSwidGV4dCI6IuajgOafpemDvei/h+S6hu+8jOWPr+S7peaOqOOAgiJ9fQ==",
+                "ref": "doc:k1"
+              },
+              {
+                "data": "eyJhdCI6MTc2MDAwMDAwMDAwMSwiY2FyZCI6ImRldl9tYWNfMSIsInRleHQiOiIifQ==",
+                "ref": "doc:k2"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000000-000000-dev_mac",
+                "id": "k1",
+                "kind": "card.version",
+                "object": "card:dev_mac_1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-dev_mac",
+                "id": "k2",
+                "kind": "segment.line",
+                "object": "segment:g1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k2"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k3": {
+            "at": 1760000000002,
+            "text": "推好了"
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 3,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "k3",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a line without a card still goes to a side of ABI 3",
+      "output": {
+        "batches": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "payloads": [
+              {
+                "data": "eyJhdCI6MTc2MDAwMDAwMDAwMiwidGV4dCI6IuaOqOWlveS6hiJ9",
+                "ref": "doc:k3"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000002-000000-dev_mac",
+                "id": "k3",
+                "kind": "segment.line",
+                "object": "segment:g1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k3"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1

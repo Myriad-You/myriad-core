@@ -168,10 +168,12 @@ pub fn answer_to(
             // Local rows never go, so a local rule's row or standing is
             // no reason to refuse.
             || (row.replicate == Replicate::Shared
-                && (row.author == crate::row::Author::Rule || row.kind == "node.standing"))
+                && (row.author == crate::row::Author::Rule
+                    || row.kind == "node.standing"
+                    || row.kind.starts_with("card.")))
     }) {
         return Err(LogError::new(
-            "a row names another node, is a retract, a rule's row or a node.standing: \
+            "a row names another node, is a retract, a rule's row, a node.standing or a card: \
              it goes by nodes.wire_send",
         ));
     }

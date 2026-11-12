@@ -1,0 +1,573 @@
+{
+  "call": "nodes.card_check",
+  "cases": [
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a card that asks the owner",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "seen",
+              "label": "知道了"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "site_w1",
+          "kind": "weather",
+          "scene": "home",
+          "title": "它问你：现在推送吗"
+        }
+      },
+      "name": "a card of a kind no side knows yet is still a card",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "seen",
+              "label": "知道了"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "site_w1",
+          "kind": "weather",
+          "scene": "home",
+          "title": "它问你：现在推送吗"
+        }
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_0000",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a card about a node under another id is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              3
+            ],
+            "text": "先等。"
+          }
+        }
+      },
+      "name": "a view resting on a fact it does not have is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "pending",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a state no standing says is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "push",
+              "label": "推"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "an action twice is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "text": "事实 0"
+            },
+            {
+              "text": "事实 1"
+            },
+            {
+              "text": "事实 2"
+            },
+            {
+              "text": "事实 3"
+            },
+            {
+              "text": "事实 4"
+            },
+            {
+              "text": "事实 5"
+            },
+            {
+              "text": "事实 6"
+            },
+            {
+              "text": "事实 7"
+            },
+            {
+              "text": "事实 8"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗"
+        }
+      },
+      "name": "too many facts is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a title too long is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "text": "key sk-ant-api03-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗"
+        }
+      },
+      "name": "a key in a fact is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1
+            ],
+            "text": "用 ghp_AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 推"
+          }
+        }
+      },
+      "name": "a key in its view is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "extra": 1,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a field the card does not name is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

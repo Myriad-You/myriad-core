@@ -1,0 +1,1192 @@
+{
+  "call": "nodes.cards_fold",
+  "cases": [
+    {
+      "input": {
+        "bodies": {
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a card that asks waits on the owner",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它问你：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c1",
+            "waiting": true
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "a1": {
+            "action": "push",
+            "at": 1760000100000,
+            "version": "c1"
+          },
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000100000-000000-dev_mac",
+            "id": "a1",
+            "kind": "card.answered",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "an answer after it stops it waiting",
+      "output": {
+        "cards": [
+          {
+            "answered": {
+              "action": "push",
+              "at": 1760000100000,
+              "version": "c1"
+            },
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它问你：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c1",
+            "waiting": false
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "a1": {
+            "action": "merge",
+            "at": 1760000100000,
+            "version": "c1"
+          },
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000100000-000000-dev_mac",
+            "id": "a1",
+            "kind": "card.answered",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "an answer that names no action of it is passed by",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它问你：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c1",
+            "waiting": true
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "a1": {
+            "action": "open",
+            "at": 1760000100000,
+            "version": "c1"
+          },
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000100000-000000-dev_mac",
+            "id": "a1",
+            "kind": "card.answered",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "opening the session answers nothing",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它问你：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c1",
+            "waiting": true
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          },
+          "c2": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              }
+            ],
+            "at": 1760000300000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "working",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它在推送",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "rule",
+            "dseq": 2,
+            "hlc": "001760000300000-000000-dev_mac",
+            "id": "c2",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a new version ends it by itself with only open left",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                }
+              ],
+              "at": 1760000300000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "working",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它在推送",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c2",
+            "waiting": false
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "a1": {
+            "action": "push",
+            "at": 1760000100000,
+            "version": "c1"
+          },
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          },
+          "c3": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000300000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它又问：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000100000-000000-dev_mac",
+            "id": "a1",
+            "kind": "card.answered",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:a1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000300000-000000-dev_mac",
+            "id": "c3",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "an answer before the latest version counts for none",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000300000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它又问：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c3",
+            "waiting": true
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          },
+          "c2": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000300000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "pending",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000300000-000000-dev_mac",
+            "id": "c2",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a version whose body does not hold leaves the one before",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它问你：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c1",
+            "waiting": true
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "c1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "id": "push",
+                "label": "推送"
+              },
+              {
+                "id": "wait",
+                "label": "等等"
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s-1",
+                "text": "会话停下来问：现在推送吗（推送 / 等等）"
+              },
+              {
+                "ref": "session:s-1",
+                "text": "这件事是你亲自派的"
+              }
+            ],
+            "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "kind": "decide",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "它问你：现在推送吗",
+            "view": {
+              "because": [
+                1,
+                2
+              ],
+              "text": "先等检查跑完再推。"
+            }
+          },
+          "p1": {
+            "actions": [],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "text": "完成 2 件，在做 1 件"
+              }
+            ],
+            "id": "c_e4391bd747d68bbf54c5395ca653d122",
+            "kind": "progress",
+            "scene": "agents",
+            "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+            "title": "sample-repo 今天"
+          }
+        },
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "c1",
+            "kind": "card.version",
+            "object": "card:c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:c1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "rule",
+            "dseq": 2,
+            "hlc": "001760000200000-000000-dev_mac",
+            "id": "p1",
+            "kind": "card.version",
+            "object": "card:c_e4391bd747d68bbf54c5395ca653d122",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:p1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "latest first",
+      "output": {
+        "cards": [
+          {
+            "card": {
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "text": "完成 2 件，在做 1 件"
+                }
+              ],
+              "id": "c_e4391bd747d68bbf54c5395ca653d122",
+              "kind": "progress",
+              "scene": "agents",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "sample-repo 今天"
+            },
+            "version": "p1",
+            "waiting": false
+          },
+          {
+            "card": {
+              "actions": [
+                {
+                  "id": "open",
+                  "label": "去会话里说"
+                },
+                {
+                  "id": "push",
+                  "label": "推送"
+                },
+                {
+                  "id": "wait",
+                  "label": "等等"
+                }
+              ],
+              "at": 1760000000000,
+              "facts": [
+                {
+                  "ref": "session:s-1",
+                  "text": "会话停下来问：现在推送吗（推送 / 等等）"
+                },
+                {
+                  "ref": "session:s-1",
+                  "text": "这件事是你亲自派的"
+                }
+              ],
+              "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+              "kind": "decide",
+              "scene": "agents",
+              "state": "waiting_owner",
+              "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "title": "它问你：现在推送吗",
+              "view": {
+                "because": [
+                  1,
+                  2
+                ],
+                "text": "先等检查跑完再推。"
+              }
+            },
+            "version": "c1",
+            "waiting": true
+          }
+        ]
+      }
+    }
+  ],
+  "version": 1
+}

@@ -2824,3 +2824,74 @@ fn a_local_standing_never_holds_an_older_side_up() {
         "在等测试"
     );
 }
+
+/// A row of `kind` about the card `id`, of the owner's (`owner`) or hers.
+fn card_row(id: &str, dseq: u64, at: u64, card: &str, kind: &str, owner: bool) -> Row {
+    let mut row = row(id, "dev_mac", dseq, at, MINE, KEY, kind);
+    row.object = format!("card:{card}");
+    if owner {
+        row.author = myriad_persona_log::row::Author::Owner;
+        row.epoch = None;
+    }
+    row
+}
+
+fn a_card(at: u64) -> Value {
+    json!({
+        "at": at, "id": "dev_mac_1", "kind": "nod", "scene": "agents",
+        "title": "它问要不要推送", "state": "waiting_owner",
+        "facts": [{"text": "会话停下来问：现在推送吗", "ref": "session:s1"}],
+        "view": {"text": "检查都过了，可以推。", "because": [1]},
+        "actions": [{"id": "open", "label": "去会话里说"}, {"id": "push", "label": "推送"}],
+    })
+}
+
+#[test]
+fn a_card_and_her_line_that_carries_it_go_only_to_a_side_that_reads_them() {
+    let (mut mac, mut site) = shared_node();
+    let line = json!({"at": T as i64 + 20, "text": "", "card": "dev_mac_1"});
+    let mut said = row("l1", "dev_mac", 4, T + 20, MINE, KEY, "segment.line");
+    said.object = "segment:g1".into();
+    mac.write(said, Some(line));
+    // A core below ABI 4 would withhold a line with a card for good: none
+    // of it goes, the card neither.
+    site.abi = 3;
+    let sent = mac.send_to(&site, MINE);
+    assert!(sent.too_old && sent.batches.is_empty());
+    mac.write(
+        card_row("c1", 5, T + 10, "dev_mac_1", "card.version", false),
+        Some(a_card(T + 10)),
+    );
+    site.abi = 4;
+    site.sync_from(&mac, MINE);
+    let folded = crate::cards::fold(crate::cards::FoldInput {
+        rows: site.of(MINE),
+        bodies: site.bodies.clone(),
+    })
+    .unwrap();
+    assert_eq!(folded.cards.len(), 1);
+    assert!(folded.cards[0].waiting);
+    // The owner's answer goes the same way, and it waits no more.
+    mac.write(
+        card_row("a1", 6, T + 30, "dev_mac_1", "card.answered", true),
+        Some(json!({"at": T as i64 + 30, "action": "push", "version": "c1"})),
+    );
+    site.sync_from(&mac, MINE);
+    let folded = crate::cards::fold(crate::cards::FoldInput {
+        rows: site.of(MINE),
+        bodies: site.bodies.clone(),
+    })
+    .unwrap();
+    assert!(!folded.cards[0].waiting);
+    assert_eq!(folded.cards[0].answered.as_ref().unwrap().action, "push");
+}
+
+#[test]
+fn a_line_without_a_card_still_goes_to_an_older_side() {
+    let (mut mac, mut site) = shared_node();
+    let mut said = row("l1", "dev_mac", 4, T + 20, MINE, KEY, "segment.line");
+    said.object = "segment:g1".into();
+    mac.write(said, Some(json!({"at": T as i64 + 20, "text": "推好了"})));
+    site.abi = 3;
+    assert!(!mac.send_to(&site, MINE).too_old);
+}

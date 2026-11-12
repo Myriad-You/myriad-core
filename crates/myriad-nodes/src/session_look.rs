@@ -95,6 +95,39 @@ pub fn due(first_at: i64, last_at: i64) -> i64 {
         .min(first_at.saturating_add(look.at_most_ms))
 }
 
+/// Whether a change waits on the owner's own answer (`waitingOn: owner`),
+/// whoever gave the work: theirs to decide, whatever her answer came to.
+pub fn decides(session: &Session) -> bool {
+    session.waiting_on == Some(WaitingOn::Owner)
+}
+
+/// Whether an answer holds to the schema with nothing in it: every change
+/// it gives says nothing of what it is about. Read as a failure; kept
+/// apart in an end's ledger, so how often it comes can be counted.
+pub fn hollow(raw: &str) -> bool {
+    serde_json::from_str::<Value>(strip_fence(raw))
+        .ok()
+        .and_then(|answer| answer["changes"].as_array().cloned())
+        .is_some_and(|changes| {
+            !changes.is_empty()
+                && changes.iter().all(|change| {
+                    change["about"]
+                        .as_str()
+                        .is_none_or(|about| about.trim().is_empty())
+                })
+        })
+}
+
+/// An answer without the code fence a model may put around it.
+fn strip_fence(raw: &str) -> &str {
+    let raw = raw.trim();
+    raw.strip_prefix("```json")
+        .or_else(|| raw.strip_prefix("```"))
+        .and_then(|rest| rest.strip_suffix("```"))
+        .unwrap_or(raw)
+        .trim()
+}
+
 /// Whether a change waits on the owner: it asks them, or says its next
 /// step is theirs.
 pub fn waits_on_owner(session: &Session) -> bool {
@@ -703,13 +736,7 @@ fn numbers(values: &[Value], most: usize) -> Option<Vec<usize>> {
 
 /// Her answer, `raw`, read against the material she was shown.
 pub fn read(raw: &str, material: &Material) -> Read {
-    let raw = raw.trim();
-    let raw = raw
-        .strip_prefix("```json")
-        .or_else(|| raw.strip_prefix("```"))
-        .and_then(|rest| rest.strip_suffix("```"))
-        .unwrap_or(raw)
-        .trim();
+    let raw = strip_fence(raw);
     let Ok(answer) = serde_json::from_str::<Raw>(raw) else {
         return Read::Unreadable;
     };
@@ -765,8 +792,8 @@ pub fn read(raw: &str, material: &Material) -> Read {
 }
 
 /// Her answer held to itself: what waits on the owner (`waits`, by change)
-/// is never left to itself, and what she says is of a card with her answer
-/// on it.
+/// is never left to itself. What she says goes as she said it, of a card
+/// or not: it is hers to say.
 pub fn settle(mut answer: Answer, waits: &[bool]) -> Answer {
     for (judgment, waits) in answer.judgments.iter_mut().zip(waits) {
         if let Some(judgment) = judgment
@@ -775,16 +802,6 @@ pub fn settle(mut answer: Answer, waits: &[bool]) -> Answer {
         {
             judgment.verdict = Verdict::Nod;
         }
-    }
-    let of_a_card = answer.line.as_ref().is_some_and(|line| {
-        answer
-            .judgments
-            .get(line.change.wrapping_sub(1))
-            .and_then(Option::as_ref)
-            .is_some_and(|judgment| has_card(judgment) && !judgment.suggestion.is_empty())
-    });
-    if !of_a_card {
-        answer.line = None;
     }
     answer
 }
@@ -816,10 +833,18 @@ pub fn card_text(judgment: &Judgment) -> String {
 
 /// Her card when no answer with grounds came for a change that waits on
 /// them, or failed (`heading`, where it stands as the material says): it
-/// waits on them (`waits`) or not, and she has nothing to add.
-pub fn card_only(heading: &str, waits: bool) -> Judgment {
+/// waits on them (`waits`) or not, and she has nothing to add. One that
+/// waits on the owner's own answer (`decides`) is theirs to decide, never
+/// a nod: that much is known without her.
+pub fn card_only(heading: &str, waits: bool, decides: bool) -> Judgment {
     Judgment {
-        verdict: if waits { Verdict::Nod } else { Verdict::NoNeed },
+        verdict: if decides {
+            Verdict::Decide
+        } else if waits {
+            Verdict::Nod
+        } else {
+            Verdict::NoNeed
+        },
         about: heading.chars().take(ABOUT_CHARS).collect(),
         suggestion: String::new(),
         because: Vec::new(),
@@ -984,6 +1009,8 @@ pub struct LookInput {
 pub struct LookAsk {
     pub material: Material,
     pub waits: Vec<bool>,
+    /// Which changes wait on the owner's own answer ([`decides`]).
+    pub decides: Vec<bool>,
     /// Which changes failed: each keeps a card.
     pub failed: Vec<bool>,
     pub system: String,
@@ -1003,6 +1030,11 @@ pub fn look_input(input: LookInput) -> Result<LookAsk, crate::NodeError> {
             .changes
             .iter()
             .map(|shown| waits_on_owner(&shown.told.session))
+            .collect(),
+        decides: input
+            .changes
+            .iter()
+            .map(|shown| decides(&shown.told.session))
             .collect(),
         failed: input
             .changes
@@ -1025,6 +1057,8 @@ pub fn look_input(input: LookInput) -> Result<LookAsk, crate::NodeError> {
 pub struct ReadInput {
     pub material: Material,
     pub waits: Vec<bool>,
+    #[serde(default)]
+    pub decides: Vec<bool>,
     #[serde(default)]
     pub failed: Vec<bool>,
     pub raw: String,
@@ -1065,6 +1099,10 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
     if !input.failed.is_empty() && input.failed.len() != changes {
         return Err(crate::NodeError::new("failed is not one per change"));
     }
+    let decides = |at: usize| input.decides.get(at).copied().unwrap_or(false);
+    if !input.decides.is_empty() && input.decides.len() != changes {
+        return Err(crate::NodeError::new("decides is not one per change"));
+    }
     let kept = |judgment: Judgment, failed: bool| Kept {
         has_card: keeps_card(&judgment, failed),
         card: card_text(&judgment),
@@ -1076,6 +1114,8 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
             let answer = settle(answer, &input.waits);
             ("good", answer.judgments, answer.line)
         }
+        Read::BadGrounds if hollow(&input.raw) => ("hollow", Vec::new(), None),
+        Read::Unreadable if hollow(&input.raw) => ("hollow", Vec::new(), None),
         Read::BadGrounds => ("bad_grounds", Vec::new(), None),
         Read::Unreadable => ("unreadable", Vec::new(), None),
     };
@@ -1086,8 +1126,9 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
                 .cloned()
                 .flatten()
                 .or_else(|| {
-                    (input.waits[at] || failed(at))
-                        .then(|| card_only(&input.material.changes[at], input.waits[at]))
+                    (input.waits[at] || failed(at)).then(|| {
+                        card_only(&input.material.changes[at], input.waits[at], decides(at))
+                    })
                 })
                 .map(|judgment| kept(judgment, failed(at)))
         })

@@ -178,6 +178,11 @@ fn check_token(what: &str, value: &str) -> Result<(), LogError> {
     Ok(())
 }
 
+/// Whether `value` would pass as a token of an envelope (an id, an object).
+pub(crate) fn is_token(value: &str) -> bool {
+    check_token("", value).is_ok()
+}
+
 /// The type of an object: the part before `:`.
 pub fn object_type(object: &str) -> Option<&str> {
     let (kind, id) = object.split_once(':')?;
@@ -266,10 +271,23 @@ impl Row {
         if object == kinds::ROW && rule != Rule::Forget {
             return Err(LogError::new("only a forget is about one row"));
         }
-        if self.author == Author::Rule && (object != "node" || rule != Rule::Event) {
+        if self.author == Author::Rule
+            && self.kind != "card.version"
+            && (object != "node" || rule != Rule::Event)
+        {
             return Err(LogError::new(
                 "a rule's row is about a node, and only adds to it (no forget, no retract)",
             ));
+        }
+        // A card is hers or a rule's; the answer to it is the owner's.
+        match (self.kind.as_str(), self.author) {
+            ("card.version", Author::Owner) => {
+                return Err(LogError::new("a card is hers or a rule's, not the owner's"));
+            }
+            ("card.answered", Author::Her | Author::Rule) => {
+                return Err(LogError::new("only the owner answers a card"));
+            }
+            _ => {}
         }
         // What an envelope names counts whoever wrote it (forgetting follows
         // it), so a rule names no other node.

@@ -20,7 +20,7 @@ mod calls;
 /// removed, or her log gains rows an older core refuses (2: a merge's or a
 /// split's names, a retract; 3: a rule's rows, `node.standing`). Adding a
 /// call or an optional field does not bump it.
-pub const ABI_VERSION: u32 = 3;
+pub const ABI_VERSION: u32 = 4;
 
 /// The upstream commit this library was built from (see `build.rs`).
 pub const UPSTREAM_COMMIT: &str = env!("MYRIAD_CORE_UPSTREAM_COMMIT");

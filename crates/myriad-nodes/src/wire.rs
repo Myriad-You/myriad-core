@@ -269,9 +269,16 @@ pub struct Sent {
 /// or a `node.standing` (a core below 3 refuses the author and the kind,
 /// stub or not); 2 for one with a name in its envelope (`to`, `takes`) or
 /// a retract.
-fn needs_abi(row: &Row) -> u32 {
+fn needs_abi(row: &Row, body: Option<&Value>) -> u32 {
     let retract = matches!(row.rule(), myriad_persona_log::Rule::Retract);
-    if row.author == myriad_persona_log::row::Author::Rule || row.kind == "node.standing" {
+    // A card, and a line that carries one: a core below 4 holds no card
+    // kind and takes no `card` field in a line (it would withhold the
+    // line's body for good).
+    let carries_card = row.kind == "segment.line"
+        && body.is_some_and(|body| body.get("card").is_some_and(|card| !card.is_null()));
+    if row.kind.starts_with("card.") || carries_card {
+        4
+    } else if row.author == myriad_persona_log::row::Author::Rule || row.kind == "node.standing" {
         3
     } else if row.to.is_some() || !row.takes.is_empty() || retract {
         2
@@ -489,15 +496,27 @@ fn judge(texts: &[&str], ids: &[&str], whole: &Value) -> Result<(), Why> {
     Ok(())
 }
 
+/// [`judge`], for a card checked before it is written (`cards`).
+pub(crate) fn judge_parts(texts: &[&str], ids: &[&str], whole: &Value) -> Result<(), Why> {
+    judge(texts, ids, whole)
+}
+
 /// The fields each payload shape names (`myriad_persona_log::payloads`).
 /// On the wire a payload holds no other: a field the core does not know is
 /// one it cannot check.
-const PAYLOAD_FIELDS: [(&str, &[&str]); 19] = [
+const PAYLOAD_FIELDS: [(&str, &[&str]); 21] = [
     ("segment.open", &["at", "place"]),
     (
         "segment.line",
-        &["at", "text", "line", "replyTo", "pictures"],
+        &["at", "text", "line", "replyTo", "pictures", "card"],
     ),
+    (
+        "card.version",
+        &[
+            "at", "id", "kind", "scene", "subject", "title", "state", "facts", "view", "actions",
+        ],
+    ),
+    ("card.answered", &["at", "action", "version"]),
     ("segment.close", &["at"]),
     (
         "memory.write",
@@ -564,7 +583,10 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 19] = [
 
 /// The payload fields that are ids, not words: held to the path rule and
 /// the known-key rule, not the random-run one.
-const PAYLOAD_IDS: [&str; 13] = [
+const PAYLOAD_IDS: [&str; 16] = [
+    "card",
+    "action",
+    "version",
     "line",
     "replyTo",
     "replaces",
@@ -596,6 +618,14 @@ fn payload(kind: &str, body: &Value) -> Result<(), Why> {
     let fields = body.as_object().ok_or(Why::BadBody)?;
     if fields.keys().any(|key| !names.contains(&key.as_str())) {
         return Err(Why::BadBody);
+    }
+    // A card's words and ids sit deeper than its fields: read as a card.
+    if kind == "card.version" {
+        let card: payloads::CardVersion =
+            serde_json::from_value(body.clone()).map_err(|_| Why::BadBody)?;
+        crate::cards::check(&card).map_err(|_| Why::BadBody)?;
+        let (texts, ids) = crate::cards::parts(&card);
+        return judge(&texts, &ids, body);
     }
     let mut texts: Vec<&str> = Vec::new();
     let mut ids: Vec<&str> = Vec::new();
@@ -690,6 +720,7 @@ fn carry_as(row: &Row, body: &Value, shared_only: bool) -> Result<(Vec<u8>, Valu
                 "persona:{}",
                 body["field"].as_str().unwrap_or_default()
             )),
+            "card.version" => Some(format!("card:{}", body["id"].as_str().unwrap_or_default())),
             _ => None,
         };
         if about.is_some_and(|about| about != row.object) {
@@ -819,7 +850,7 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     if answered
         .iter()
         .chain(&again)
-        .any(|row| needs_abi(row) > peer_abi)
+        .any(|row| needs_abi(row, bodies.get(&row.id)) > peer_abi)
     {
         return Ok(Sent {
             batches: Vec::new(),
@@ -1151,6 +1182,39 @@ mod tests {
                     line: Some("m_1".into()),
                     reply_to: Some("m_0".into()),
                     pictures: Some(2),
+                    card: Some("c_1".into()),
+                }),
+            ),
+            (
+                "card.version",
+                serde_json::to_value(CardVersion {
+                    at: 1,
+                    id: "c_1".into(),
+                    kind: "decide".into(),
+                    scene: "agents".into(),
+                    subject: Some("node:n1".into()),
+                    title: "推送吗".into(),
+                    state: Some("waiting_owner".into()),
+                    facts: vec![CardFact {
+                        text: "它在问".into(),
+                        reference: Some("session:s-1".into()),
+                    }],
+                    view: Some(CardView {
+                        text: "先等".into(),
+                        because: vec![1],
+                    }),
+                    actions: vec![CardAction {
+                        id: "push".into(),
+                        label: "推送".into(),
+                    }],
+                }),
+            ),
+            (
+                "card.answered",
+                serde_json::to_value(CardAnswered {
+                    at: 1,
+                    action: "push".into(),
+                    version: "r1".into(),
                 }),
             ),
             (

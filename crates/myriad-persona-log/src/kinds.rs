@@ -59,6 +59,11 @@ type Object = Option<&'static str>;
 /// Sorted by kind.
 const KINDS: &[(&str, Object, Rule)] = &[
     ("affect.change", Some("affect"), Rule::Event),
+    // The owner's answer to a card: which of its actions, on which version.
+    ("card.answered", Some("card"), Rule::Event),
+    // One card as it stands now (`myriad_nodes::cards`); the earlier rows
+    // are its history.
+    ("card.version", Some("card"), Rule::Latest),
     ("case.disagreed", Some("case"), Rule::Event),
     ("case.insisted", Some("case"), Rule::Event),
     ("case.outcome", Some("case"), Rule::Event),

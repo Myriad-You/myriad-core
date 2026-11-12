@@ -35,7 +35,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - 时间是 Unix 微秒（`i64`）。她的时区是 IANA 名（`Asia/Shanghai`）或固定偏移（`+08:00`）。用名字，是因为夏令时会挪动一天的边界，而且各平台要拿同一个名字。
 - 浮点按位一致：`serde_json` 开了 `float_roundtrip`，平台侧用最短往返表示编码即可。
 
-现在是 `ABI_VERSION` 3（2026-11-11 起：日志多了作者 `rule` 和种类 `node.standing`，ABI 3 以下的核心整批拒收，所以只发给 hello 列了 `log3` 的一端；`nodes.pick` 的节点多了可选的 `standing`。各端都钉上、都报出 `log3` 之前，宿主把这两种行都写成 `local`，不发出去，旧的行字节不变。2026-11-12 起 `node.standing` 多了可选的 `state`（任务现在在哪一步，`working`、`waiting_owner`、`finished`、`stuck`、`waiting_checks`、`waiting_program`、`waiting_session`、`quiet` 之一，给各端用自己的话说）：钉在这以前的 ABI 3 核心会拒收带它的行，而这时还没有哪一端发出过 shared 的 `node.standing`，所以不升 ABI，只要求先钉核心、再钉原生、最后站点）。ABI 2（2026-10-31 起：`nodes.fold`、`nodes.wire_send` 的 `ledger` 必填，`nodes.wire_send` 的 `peerAbi` 必填；并入、拆出的行必须在信封里带 `to`（拆出还要 `takes`），没有的拒收；撤回带它够到的别的节点的行（`takes`）；`nodes.fold` 的 `forgets` 改叫 `reached`，只给调用方自己清理、不写成行；`log.admit`、`log.answer` 的 `holder` 必填；钉第 1 版的端照 `crates/conformance/v1/nodes`、`v1/log` 对照）。
+现在是 `ABI_VERSION` 4（2026-11-12 起：日志多了卡片的两种行 `card.version`、`card.answered`，`segment.line` 多了可选的 `card`。ABI 4 以下的核心不认这两种行，并且会把带 `card` 的消息正文当成 `bad_body` 一直扣着，所以这三样只发给 hello 列了 `log4` 的一端（`nodes.wire_send` 遇到它们而 `peerAbi` 小于 4 时，回 `tooOld`）。各端都钉上、都报出 `log4` 之前，宿主把卡片行和带卡的消息都写成 `local`，之后再补发一次。见「卡片」一节）。ABI 3（2026-11-11 起：日志多了作者 `rule` 和种类 `node.standing`，ABI 3 以下的核心整批拒收，所以只发给 hello 列了 `log3` 的一端；`nodes.pick` 的节点多了可选的 `standing`。各端都钉上、都报出 `log3` 之前，宿主把这两种行都写成 `local`，不发出去，旧的行字节不变。2026-11-12 起 `node.standing` 多了可选的 `state`（任务现在在哪一步，`working`、`waiting_owner`、`finished`、`stuck`、`waiting_checks`、`waiting_program`、`waiting_session`、`quiet` 之一，给各端用自己的话说）：钉在这以前的 ABI 3 核心会拒收带它的行，而这时还没有哪一端发出过 shared 的 `node.standing`，所以不升 ABI，只要求先钉核心、再钉原生、最后站点）。ABI 2（2026-10-31 起：`nodes.fold`、`nodes.wire_send` 的 `ledger` 必填，`nodes.wire_send` 的 `peerAbi` 必填；并入、拆出的行必须在信封里带 `to`（拆出还要 `takes`），没有的拒收；撤回带它够到的别的节点的行（`takes`）；`nodes.fold` 的 `forgets` 改叫 `reached`，只给调用方自己清理、不写成行；`log.admit`、`log.answer` 的 `holder` 必填；钉第 1 版的端照 `crates/conformance/v1/nodes`、`v1/log` 对照）。
 
 `meta.version` 返回 `abi`（`ABI_VERSION`）、`upstreamCommit`（构建时的 `MYRIAD_CORE_UPSTREAM_COMMIT`，没设为 `unknown`）和全部调用名。调用表在 `src/calls.rs` 的 `CALLS`。
 
@@ -160,8 +160,10 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | kind | 对象 | 载荷 |
 | --- | --- | --- |
 | `segment.open` | `segment:<id>` | `{at, place}`：`place` 是 `web`、`app`、`group` 或别的界面 |
-| `segment.line` | `segment:<id>` | `{at, text, line?, replyTo?, pictures?}`：`line` 是写它的那一端自己的消息 id；`pictures` 是这句带了几张图（图本身不同步），只有图的一句 `text` 为空 |
+| `segment.line` | `segment:<id>` | `{at, text, line?, replyTo?, pictures?, card?}`：`line` 是写它的那一端自己的消息 id；`pictures` 是这句带了几张图（图本身不同步），只有图的一句 `text` 为空；`card` 是和这句一起的卡片 id（她的话和卡是一条消息），只有卡的一句 `text` 为空（ABI 4 起） |
 | `segment.close` | `segment:<id>` | `{at}` |
+| `card.version` | `card:<id>` | 一张卡现在的样子，见「卡片」：`{at, id, kind, scene, subject?, title, state?, facts?, view?, actions?}`；作者是她或 `rule`，不是主人 |
+| `card.answered` | `card:<id>` | `{at, action, version}`：主人点了哪个 action，点的是哪一版（那一版 `card.version` 行的 id）；作者只能是主人 |
 | `memory.write` | `memory:<id>` | `{at, text, kind, replaces?, cues?, speaker?, source?, when?}`：`replaces` 是它取代的 `memory:<id>`；`cues` 是写的那一端当时给它的找回线索（模型生成，别的端不重算）；`speaker` 是它从谁那里来：`her`（她说的、她自己想到的）或 `partner`（伙伴告诉她的），它当不当得了关于伙伴的事实看这个，各端照写的保留；`source` 是写的那一端自己的来路词（小写字母、数字、`_`，最多 32 个），核心不列清单，谁也不用讲别的端的词：认识的端照原样保留，不认识的端当成「别的端记下的」那一种；`when` 是它什么时候该被想起（最多 3 条、每条不空且最多 60 个字，就是写它那一端抽取时 `chat_remember` 给的 `whenFor`；`cues` 是找它用的词，`when` 是该想起它的场合），别的端照收、不再问模型，没带的只靠它的词被想起 |
 | `memory.retire` | `memory:<id>` | `{at, why, by?}`：`by` 是现在说着这件事的那条 |
 | `memory.restore` | `memory:<id>` | `{at}` |
@@ -462,6 +464,23 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **时间范围**：回想判断那一次（`remembering.system`，就是答 `thorough` 的那一次）多答一个 `range` 和 `open`（`happened::RANGE_RULE`）。`range` 的 `how`：`this`（这一天、周、月、年的整段：今年以来、这个月）、`previous`（这一个之前的 `count` 个整周、整月、整年：上个月、前两周、去年）、`past`（到今天为止最近 `count` 天、周、月、年：最近三周、这几天）、`dates`（`from`、`to` 各是天、月或年，可以只给一头：十月、九月以来）、`none`。周从周一算。`open` 是只问还没结束的（`true`）还是只问已经结束的（`false`）。只在 `thorough` 时才有，读不出就是没有（`remembering::parse`；别的端用 `remembering.read`，schema 是 `remembering.schema`）。`nodes.range_dates` 按宿主给的 `now` 和她的时区算出今天，再换成具体的第一天和最后一天（`happened::Range::dates`），不读钟。
 - **列出来**（`nodes.list`）：`nodes` 是这一类的节点和它们的条目（`gone` 的跳过；在 Rust 里 `ListNode::of` 从折好的节点算，原话由宿主补：只给对方自己说的话）；退役的宿主先去掉。按同一行记忆（没有就是条目自己的行）算一件，同样的文字加同样的原话也算一件（只是同一句原话不算：一句话可以说两件事），互相连着的都并成一件，最新的那条代表它，它没写的发生时间、状态、原话从旧的补。按新取最多 `limit`（默认 80）件，`looked` 是看了几件，`of` 是一共几件。给了 `from`/`to`：发生时间完全落在外面的去掉（`outside`），部分落在里面的标 `partly`，完全在里面的 `in`，没写发生时间的留着标 `unknown`，让她按内容和哪天说的判断。给了 `open`：已知是另一种状态的去掉（`otherState`），没写的留着。按发生时间（没有就按哪天说的）从早到晚排；`said` 是按她的时区哪天说的。原话只在有用时附（不为空、事实里没有原样包含它），最多 160 字（`speaking::THEIR_WORDS_CHARS`）。
 - **作答规矩**：`section` 是她作答前读的那一节（`speaking::format_listed_section`，每条 `speaking::listed_line`）：看了几件、一共几件、按什么时间和状态去掉了几件，然后一条条列出；里面带 `speaking::LISTED_RULE`：清单给出时就照着数，给出最可能的答案，拿不准的那一项单独说明。站点和原生作答、以及记忆测评（站点 `tests/merope/memory-bench.json` 的作答提示读的 `goingThroughAll`）都放同一节，所以规矩只写在这里一次。她什么都没记这一类时没有这一节。
+
+## 卡片（`nodes.card_id`、`nodes.card_check`、`nodes.cards_fold`）
+
+她在和主人的私聊里放到主人面前的一件事：程序能核对的事实、她的看法、主人能怎么回答。规则在 `crates/myriad-nodes/src/cards.rs`。
+
+- **是她日志里的行**，受众 `personal:<主人>`。`card.version` 是卡现在的样子（Latest：日志顺序里最后一行就是这张卡，之前的是历史），作者是她或 `rule`（规则写的卡不需要执笔权，`rule` 只能写节点之外的这一种）；`card.answered` 是主人的回答，作者只能是主人。她的一条消息用 `segment.line` 的 `card` 带上卡：话和卡是一条消息，话可以没有。同一张卡出现在几条消息里时，整卡画在最新的那条，更早的收成一行。
+- **开放**：`kind`、`scene` 是开放的词（小写字母、数字、`_`，最多 32 字节）。不认识这个 kind 的一端照通用样式画 `title`、`facts`、`actions`，新的卡不用等各端发版。第一版的 kind 是 `decide`、`nod`、`progress`、`status`，scene 是 `agents`。
+- **一件事一张卡**：同一 scene、kind、节点的卡永远是同一个 id（`nodes.card_id`：`card\u{1f}scene\u{1f}kind\u{1f}subject` 的 sha256 前 16 字节，前缀 `c_`），新的一版替换它。不关于节点的卡由写它的一端起 id，以这一端的名字开头（`<origin>_…`），各端不会撞。id 是 1 到 80 字节的字母、数字、`_`、`-`、`.`。
+- **字段**：`title`（不空，最多 60 字）；`state`（可空，就是 `node.standing` 的那组状态词）；`facts`（最多 8 条，每条 `text` 不空、最多 120 字，`ref` 是它说的节点或会话）；`view`（她的话：`text` 最多 1000 字，`because` 是 facts 的编号，从 1 起、不重复、落在 facts 里）；`actions`（最多 4 个，`id` 是词、不重复，`label` 不空、最多 12 字）。`open` 是保留的 action：打开卡说的那个会话，不写回答。
+- **只放事实**：卡里没有对话原文。title、facts、view、label 过密钥扫描，id 和 ref 过路径和已知密钥的检查（和别的正文一样，在 `nodes.wire_send` 里；`nodes.card_check` 写之前先查一遍，查不过的理由按字段给）。卡超限或查不过时，宿主照常发她的那句话，并记下拒收的理由。
+- **还等主人**（`nodes.cards_fold`）：最新一版有 `open` 以外的 action，并且这一版之后没有回答。回答只算在它之后的那一版上，并且必须是那一版的一个 action（`open` 不算）。卡说的事不再需要主人时（主人在会话里直接答了、会话往下走了或结束了），写它的一端写一个新版本：没有 action 或只剩 `open`，`state` 写它现在的样子，卡就不再等。正文缺了或查不过的一版跳过，上一版照旧。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `nodes.card_id` | `{scene, kind, subject}` → `{id}`；`subject` 必须是 `node:<id>` |
+| `nodes.card_check` | `{card}` → `{card}`：写之前查一张卡（形状、字段、词、id、上限、依据、密钥）；查不过是 `bad_input`，理由说是哪一项 |
+| `nodes.cards_fold` | `{rows, bodies}` → `{cards: [{card, version, answered?, waiting}]}`：每张卡现在的样子，最新的一版在前；`version` 是最新一版的行 id，`answered` 是它之后的回答 |
 
 ## 交办（`handoff.*`）
 

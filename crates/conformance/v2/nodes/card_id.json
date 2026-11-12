@@ -1,0 +1,50 @@
+{
+  "call": "nodes.card_id",
+  "cases": [
+    {
+      "input": {
+        "kind": "decide",
+        "scene": "agents",
+        "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c"
+      },
+      "name": "the card of a scene and kind about a node",
+      "output": {
+        "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb"
+      }
+    },
+    {
+      "input": {
+        "kind": "progress",
+        "scene": "agents",
+        "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c"
+      },
+      "name": "another kind about the same node is another card",
+      "output": {
+        "id": "c_e4391bd747d68bbf54c5395ca653d122"
+      }
+    },
+    {
+      "input": {
+        "kind": "decide",
+        "scene": "agents",
+        "subject": "session:s-1"
+      },
+      "name": "a subject that is not a node is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "kind": "Decide",
+        "scene": "agents",
+        "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c"
+      },
+      "name": "a kind that is not a word is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
