@@ -1,0 +1,750 @@
+{
+  "call": "nodes.stands_step_read",
+  "cases": [
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [{\"item\": 1, \"text\": \"十月起在游戏公司做策划\"}], \"end\": [2], \"add\": [{\"topic\": \"新工作\", \"text\": \"每天坐地铁去新公司\"}]}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "their own fact changes their item, starts one where asked, and leaves another person's",
+      "output": {
+        "left": [
+          {
+            "factWhose": "them",
+            "item": "pe5a688e5a688-abcdef0123",
+            "itemWhose": "pe5a688e5a688"
+          }
+        ],
+        "rows": [
+          {
+            "body": {
+              "base": [
+                "u-them-0123456789"
+              ],
+              "because": [
+                "memory:m1"
+              ],
+              "item": "them-0123456789",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-10",
+              "sync": {
+                "local": "site"
+              },
+              "text": "十月起在游戏公司做策划",
+              "version": 1
+            },
+            "id": "ufc5c5cbefeb47b0c000e00f2",
+            "kind": "node.standing",
+            "node": "work"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m1"
+              ],
+              "item": "them-69758444e0",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-10",
+              "sync": {
+                "local": "site"
+              },
+              "text": "每天坐地铁去新公司",
+              "version": 1
+            },
+            "id": "ub9d2368c13c600cf7369c074",
+            "kind": "node.standing",
+            "node": "own"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [], \"end\": [1], \"add\": []}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "an end stands on the fact's own words",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [
+                "u-them-0123456789"
+              ],
+              "because": [
+                "memory:m1"
+              ],
+              "ended": true,
+              "item": "them-0123456789",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-10",
+              "sync": {
+                "local": "site"
+              },
+              "text": "我换工作了，十月起在游戏公司",
+              "version": 1
+            },
+            "id": "ufc5c5cbefeb47b0c000e00f2",
+            "kind": "node.standing",
+            "node": "work"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"妈妈\", \"set\": [{\"item\": 1, \"text\": \"x\"}], \"end\": [], \"add\": []}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "something they share with someone is theirs: an item of the other person's is left",
+      "output": {
+        "left": [
+          {
+            "factWhose": "pe5a688e5a688",
+            "item": "them-0123456789",
+            "itemWhose": "them"
+          }
+        ],
+        "rows": [],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [{\"item\": 9, \"text\": \"x\"}], \"end\": [], \"add\": []}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a number nothing has is set aside",
+      "output": {
+        "left": [],
+        "rows": [],
+        "setAside": 1
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "抱歉",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "an answer that is no JSON object is unreadable",
+      "output": {
+        "left": [],
+        "rows": [],
+        "setAside": 0,
+        "unreadable": true
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [], \"end\": [], \"add\": [{\"topic\": \"新工作\", \"text\": \"在游戏公司\"}]}",
+        "sync": "shared"
+      },
+      "name": "shared rows when the end shares them",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m1"
+              ],
+              "item": "them-69758444e0",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-10",
+              "sync": "shared",
+              "text": "在游戏公司",
+              "version": 1
+            },
+            "id": "ub9d2368c13c600cf7369c074",
+            "kind": "node.standing",
+            "node": "own"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "node": {},
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [{\"item\": 1, \"text\": \"十月起在游戏公司做策划\"}], \"end\": [2], \"add\": [{\"topic\": \"新工作\", \"text\": \"每天坐地铁去新公司\"}]}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a field the call does not name is refused (node)",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

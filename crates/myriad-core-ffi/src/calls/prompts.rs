@@ -307,12 +307,34 @@ pub(super) fn remember_extract_system(raw: &[u8]) -> Result<Value, Failure> {
         existing: Vec<String>,
         #[serde(default)]
         theirs: Option<String>,
+        /// Ask also when each fact happened ([`remember_extract_schema`]).
+        #[serde(default)]
+        dated: bool,
     }
     let req: In = input(raw)?;
-    Ok(text(Some(chat_remember::extract_system_prompt(
-        &req.existing,
-        examples(req.theirs.as_deref()),
-    ))))
+    let examples = examples(req.theirs.as_deref());
+    Ok(text(Some(if req.dated {
+        chat_remember::extract_system_prompt_dated(&req.existing, examples)
+    } else {
+        chat_remember::extract_system_prompt(&req.existing, examples)
+    })))
+}
+
+/// `{dated?}` → `{schema}`: what keeping what they said answers in; dated,
+/// with when each fact happened.
+pub(super) fn remember_extract_schema(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        #[serde(default)]
+        dated: bool,
+    }
+    let req: In = input(raw)?;
+    Ok(serde_json::json!({ "schema": if req.dated {
+        chat_remember::extract_schema_dated()
+    } else {
+        chat_remember::extract_schema()
+    } }))
 }
 
 /// `known`: what she knows of them for good; `theirs`: their lines in the

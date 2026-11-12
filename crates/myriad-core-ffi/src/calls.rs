@@ -83,6 +83,10 @@ const CALLS: &[(&str, Call)] = &[
         prompts::remember_already_system,
     ),
     (
+        "chat_remember.extract_schema",
+        prompts::remember_extract_schema,
+    ),
+    (
         "chat_remember.extract_system",
         prompts::remember_extract_system,
     ),
@@ -256,6 +260,11 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.sort_input", nodes::sort_input),
     ("nodes.sort_read", nodes::sort_read),
     ("nodes.standing_read", nodes::standing_read),
+    ("nodes.stands_build_due", nodes::stands_build_due),
+    ("nodes.stands_build_input", nodes::stands_build_input),
+    ("nodes.stands_build_read", nodes::stands_build_read),
+    ("nodes.stands_step_input", nodes::stands_step_input),
+    ("nodes.stands_step_read", nodes::stands_step_read),
     ("nodes.trust_tier", nodes::trust_tier),
     ("nodes.under_read", nodes::under_read),
     ("nodes.upkeep_input", nodes::upkeep_input),

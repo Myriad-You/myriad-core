@@ -165,6 +165,15 @@ state is where it stands now, in a word or two in the language of the fact ", $w
 
 pub const HAPPENED_AND_STATE: &str = happened_and_state!("(待取, 已退, 已完成, 还在用, picked up)");
 
+/// When a fact happened, the first half of [`HAPPENED_AND_STATE`], for an
+/// end that asks when each fact happened and not where it stands.
+pub fn happened_only() -> &'static str {
+    HAPPENED_AND_STATE
+        .split(" state is where")
+        .next()
+        .unwrap_or(HAPPENED_AND_STATE)
+}
+
 /// [`HAPPENED_AND_STATE`] with the state words in the examples' language.
 pub fn happened_and_state(examples: crate::chat_remember::Examples) -> &'static str {
     match examples {
