@@ -1,0 +1,416 @@
+{
+  "call": "nodes.look_read",
+  "cases": [
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [2], \"missing\": null, \"ownerMustSay\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": {\"change\": 1, \"text\": \"要推吗\", \"because\": [2, 4]}}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a card for each that is theirs, one line of her choosing",
+      "output": {
+        "judgments": [
+          {
+            "about": "它问要不要推送",
+            "because": [
+              2
+            ],
+            "card": "要你定：它问要不要推送\n推，测试都过了",
+            "evidence": [
+              "session:s1"
+            ],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": true,
+            "suggestion": "推，测试都过了",
+            "verdict": "decide"
+          },
+          {
+            "about": "文档写完了",
+            "because": [],
+            "card": "不用你管：文档写完了",
+            "evidence": [],
+            "hasCard": false,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": {
+          "because": [
+            2,
+            4
+          ],
+          "change": 1,
+          "text": "要推吗"
+        },
+        "status": "good"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"no_need\", \"about\": \"它问要不要推送\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": {\"change\": 1, \"text\": \"没事\", \"because\": [2]}}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "what waits on the owner is never left to itself, and a bare card is unsaid",
+      "output": {
+        "judgments": [
+          {
+            "about": "它问要不要推送",
+            "because": [],
+            "card": "你点头就行：它问要不要推送",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": true,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          {
+            "about": "文档写完了",
+            "because": [],
+            "card": "不用你管：文档写完了",
+            "evidence": [],
+            "hasCard": false,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": null,
+        "status": "good"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [2], \"missing\": null, \"ownerMustSay\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": {\"change\": 2, \"text\": \"文档好了\", \"because\": [3]}}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a line of what is not theirs is never said",
+      "output": {
+        "judgments": [
+          {
+            "about": "它问要不要推送",
+            "because": [
+              2
+            ],
+            "card": "要你定：它问要不要推送\n推，测试都过了",
+            "evidence": [
+              "session:s1"
+            ],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": true,
+            "suggestion": "推，测试都过了",
+            "verdict": "decide"
+          },
+          {
+            "about": "文档写完了",
+            "because": [],
+            "card": "不用你管：文档写完了",
+            "evidence": [],
+            "hasCard": false,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": null,
+        "status": "good"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [9], \"missing\": null, \"ownerMustSay\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": null}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "grounds that are not shown",
+      "output": {
+        "judgments": [],
+        "line": null,
+        "status": "bad_grounds"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 3, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [2], \"missing\": null, \"ownerMustSay\": true}], \"say\": null}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a change that is not there",
+      "output": {
+        "judgments": [],
+        "line": null,
+        "status": "bad_grounds"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "I think you should push.",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "not her answer's shape",
+      "output": {
+        "judgments": [],
+        "line": null,
+        "status": "unreadable"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [], \"say\": null}",
+        "waits": [
+          true
+        ]
+      },
+      "name": "waits not one per change",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

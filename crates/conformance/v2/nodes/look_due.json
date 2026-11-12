@@ -1,0 +1,26 @@
+{
+  "call": "nodes.look_due",
+  "cases": [
+    {
+      "input": {
+        "firstAt": 1760000000000,
+        "lastAt": 1760000005000
+      },
+      "name": "quiet after the last",
+      "output": {
+        "at": 1760000025000
+      }
+    },
+    {
+      "input": {
+        "firstAt": 1760000000000,
+        "lastAt": 1760000050000
+      },
+      "name": "held long enough after the first",
+      "output": {
+        "at": 1760000060000
+      }
+    }
+  ],
+  "version": 1
+}

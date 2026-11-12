@@ -30,6 +30,17 @@ pub struct Rules {
     pub checks_at_most: usize,
     pub keep_ms: u64,
     pub quiet_after_ms: u64,
+    pub look: Look,
+}
+
+/// The contract's `sessions.look`: how her host looks at what it is told.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Look {
+    pub verdicts: Vec<String>,
+    pub late_after_ms: i64,
+    pub quiet_ms: i64,
+    pub at_most_ms: i64,
 }
 
 #[derive(Deserialize)]
@@ -133,6 +144,10 @@ pub struct Session {
     pub from_peer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_agent: Option<String>,
+    /// When the owner last spoke to the session themselves (only from a
+    /// device whose welcome listed `now.ownerSaidAt`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner_said_at: Option<i64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub touched: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -294,6 +309,9 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
     words("fromOwner", &session.from_owner, rules.words_chars)?;
     words("fromPeer", &session.from_peer, rules.words_chars)?;
     words("fromAgent", &session.from_agent, rules.words_chars)?;
+    if session.owner_said_at.is_some_and(|at| at <= 0) {
+        return Err(bad("ownerSaidAt is not a time"));
+    }
     if session.touched.len() > rules.touched_at_most {
         return Err(refuse(
             "too_many",
@@ -356,6 +374,7 @@ mod tests {
             "fromOwner": "commit the split",
             "fromPeer": "split the store, then report back",
             "fromAgent": "Committed locally. Push now? (yes / later)",
+            "ownerSaidAt": 1_760_140_000_000_i64,
             "touched": ["src/store.rs", "src/lib.rs"],
             "checks": [{"kind": "test", "state": "passed", "at": 1_760_140_880_000_i64}],
             "waitingOn": "owner"
@@ -380,6 +399,12 @@ mod tests {
             serde_json::from_value::<AskedBy>(json!(asked_by)).unwrap();
         }
         assert_eq!(rules.quiet_after_ms, 20 * 60 * 1000);
+        assert_eq!(rules.look.verdicts, names(&["no_need", "nod", "decide"]));
+        assert_eq!(rules.look.late_after_ms, 10 * 60 * 1000);
+        assert_eq!(
+            (rules.look.quiet_ms, rules.look.at_most_ms),
+            (20_000, 60_000)
+        );
         for kind in &rules.check_kinds {
             serde_json::from_value::<CheckKind>(json!(kind)).unwrap();
         }
@@ -452,6 +477,8 @@ mod tests {
             ("output", json!("ok")),
             ("askedBy", json!("someone")),
             ("fromPeer", json!(" ")),
+            ("ownerSaidAt", json!(0)),
+            ("ownerSaidAt", json!("soon")),
         ] {
             let mut bad = body();
             bad[field] = value.clone();

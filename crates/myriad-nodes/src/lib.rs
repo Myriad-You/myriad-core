@@ -91,6 +91,7 @@ pub mod migrate;
 pub mod place;
 pub mod queue;
 pub mod recall;
+pub mod session_look;
 pub mod sessions;
 pub mod tags;
 pub mod trust;
@@ -148,3 +149,6 @@ mod sync_tests;
 
 #[cfg(test)]
 mod standing_tests;
+
+#[cfg(test)]
+mod session_look_tests;

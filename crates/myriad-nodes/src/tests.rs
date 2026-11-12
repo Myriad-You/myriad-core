@@ -94,6 +94,10 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.under_read" => json_of(&entries::under_read(input(raw)?)?),
         "nodes.fact_rows" => json_of(&entries::fact_rows(input(raw)?)?),
         "nodes.session_rows" => json_of(&sessions::session_rows(input(raw)?)?),
+        "nodes.look_route" => json_of(&crate::session_look::route_call(input(raw)?)?),
+        "nodes.look_due" => crate::session_look::due_call(input(raw)?),
+        "nodes.look_input" => json_of(&crate::session_look::look_input(input(raw)?)?),
+        "nodes.look_read" => json_of(&crate::session_look::look_read(input(raw)?)?),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
@@ -133,7 +137,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 34, "{files:?}");
+    assert_eq!(files.len(), 38, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -578,6 +582,13 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("refused: a limit of none", "limit is at least 1"),
         ("refused: to before from", "to comes before from"),
         ("refused: nodes that repeat in a list", "node ids repeat"),
+        // nodes.look_route, nodes.look_input, nodes.look_read
+        (
+            "a body the contract refuses",
+            "tool does not match sessions.toolPattern",
+        ),
+        ("nothing to look at", "no change to look at"),
+        ("waits not one per change", "waits is not one per change"),
     ];
     let mut seen = 0;
     for path in case_files() {

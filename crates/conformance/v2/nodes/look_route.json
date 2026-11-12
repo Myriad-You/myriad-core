@@ -1,0 +1,152 @@
+{
+  "call": "nodes.look_route",
+  "cases": [
+    {
+      "input": {
+        "at": 1760000001000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "asked",
+          "fromAgent": "Q: Push now? (push / wait)",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "waitingOn": "owner"
+        },
+        "linkedAt": 1759999940000
+      },
+      "name": "a question told on its link",
+      "output": {
+        "late": false,
+        "route": "look",
+        "waitsOnOwner": true
+      }
+    },
+    {
+      "input": {
+        "at": 1760000061000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "asked",
+          "fromAgent": "Q: Push now? (push / wait)",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "waitingOn": "owner"
+        },
+        "linkedAt": 1760000060000
+      },
+      "name": "a question held while the link was away",
+      "output": {
+        "late": true,
+        "route": "kept",
+        "waitsOnOwner": true
+      }
+    },
+    {
+      "input": {
+        "at": 1760000660000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "finished",
+          "fromAgent": "Done.",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent"
+        },
+        "linkedAt": 0
+      },
+      "name": "a finished turn told eleven minutes on",
+      "output": {
+        "late": true,
+        "route": "kept",
+        "waitsOnOwner": false
+      }
+    },
+    {
+      "input": {
+        "at": 1760000001000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "failed",
+          "fromAgent": "Tests failed.",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "waitingOn": "checks"
+        },
+        "linkedAt": 0
+      },
+      "name": "a failure told on time",
+      "output": {
+        "late": false,
+        "route": "look",
+        "waitsOnOwner": false
+      }
+    },
+    {
+      "input": {
+        "at": 1760000001000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "started",
+          "fromAgent": "Q: Push now? (push / wait)",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent"
+        },
+        "linkedAt": 0
+      },
+      "name": "a start is only kept",
+      "output": {
+        "late": false,
+        "route": "kept",
+        "waitsOnOwner": false
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "asked",
+          "fromAgent": "Q: Push now? (push / wait)",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "Coding Agent",
+          "waitingOn": "owner"
+        },
+        "linkedAt": 0
+      },
+      "name": "a body the contract refuses",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

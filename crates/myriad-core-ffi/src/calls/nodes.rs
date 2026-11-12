@@ -193,6 +193,32 @@ pub(super) fn session_rows(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_nodes::sessions::session_rows(quiet_input(raw)?).map_err(refused)?)
 }
 
+/// `{frame, linkedAt, at}` → `{route: look|kept, late, waitsOnOwner}`: what
+/// becomes of one `now.session` as it came (`sessions.look`).
+pub(super) fn look_route(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::session_look::route_call(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{firstAt, lastAt}` → `{at}`: when what came together is looked at.
+pub(super) fn look_due(raw: &[u8]) -> Result<Value, Failure> {
+    Ok(myriad_nodes::session_look::due_call(quiet_input(raw)?))
+}
+
+/// `{changes: [{told: {device, session}, memories?, before?}], others?,
+/// said?, at, soul?}` → `{material, waits, system, prompt, again, schema}`:
+/// her one look at what came together, to ask of the model.
+pub(super) fn look_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::session_look::look_input(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{material, waits, raw}` → `{status: good|bad_grounds|unreadable,
+/// judgments: [{verdict, about, suggestion, because, missing, ownerMustSay,
+/// hasCard, card, evidence} | null], line: {change, text, because} | null}`:
+/// her answer read and held to itself.
+pub(super) fn look_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::session_look::look_read(quiet_input(raw)?).map_err(refused)?)
+}
+
 /// `{kind, node, source, revision?}` → `{id}`.
 pub(super) fn row_id(raw: &[u8]) -> Result<Value, Failure> {
     answer(&entries::row_id(quiet_input(raw)?).map_err(refused)?)
