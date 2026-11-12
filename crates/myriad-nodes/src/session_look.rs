@@ -200,6 +200,13 @@ fn minutes(at: i64, then: i64) -> i64 {
     at.saturating_sub(then) / 60_000
 }
 
+fn span(minutes: i64) -> String {
+    match minutes {
+        ..=1 => "a minute".to_string(),
+        minutes => format!("{minutes} minutes"),
+    }
+}
+
 fn times(count: u32) -> String {
     match count {
         1 => "once".to_string(),
@@ -458,15 +465,19 @@ fn failures(material: &mut Material, told: &Told, others: &[Told], at: i64, refe
             material.add(
                 "a failure it keeps hitting",
                 format!(
-                    "the same failure {} times in {} minutes, the latest {}",
+                    "the same failure {} times within {}, the latest {}",
                     failure.count,
-                    minutes(failure.last_at, failure.first_at).max(1),
+                    span(minutes(failure.last_at, failure.first_at)),
                     ago(minutes(at, failure.last_at))
                 ),
                 reference,
             );
         }
-        for other in others.iter().filter(|other| beside(told, other)) {
+        for other in others
+            .iter()
+            .filter(|other| beside(told, other))
+            .take(OTHERS)
+        {
             if let Some(theirs) = other
                 .session
                 .errors
@@ -508,7 +519,11 @@ fn overwritten(material: &mut Material, told: &Told, others: &[Told], at: i64, r
             reference,
         );
     }
-    for other in others.iter().filter(|other| beside(told, other)) {
+    for other in others
+        .iter()
+        .filter(|other| beside(told, other))
+        .take(OTHERS)
+    {
         for overwrote in other
             .session
             .overwrote
@@ -753,6 +768,12 @@ pub fn has_card(judgment: &Judgment) -> bool {
     judgment.verdict != Verdict::NoNeed
 }
 
+/// Whether a change keeps a card: it waits on them by her answer, or it
+/// failed (a failure keeps one, whatever she made of it).
+pub fn keeps_card(judgment: &Judgment, failed: bool) -> bool {
+    failed || has_card(judgment)
+}
+
 /// What she keeps of it on the task, as the card shows it.
 pub fn card_text(judgment: &Judgment) -> String {
     let mut text = format!("{}：{}", judgment.verdict.label(), judgment.about);
@@ -768,11 +789,11 @@ pub fn card_text(judgment: &Judgment) -> String {
 }
 
 /// Her card when no answer with grounds came for a change that waits on
-/// them (`heading`, where it stands as the material says): it does, and
-/// she has nothing to add.
-pub fn card_only(heading: &str) -> Judgment {
+/// them, or failed (`heading`, where it stands as the material says): it
+/// waits on them (`waits`) or not, and she has nothing to add.
+pub fn card_only(heading: &str, waits: bool) -> Judgment {
     Judgment {
-        verdict: Verdict::Nod,
+        verdict: if waits { Verdict::Nod } else { Verdict::NoNeed },
         about: heading.chars().take(ABOUT_CHARS).collect(),
         suggestion: String::new(),
         because: Vec::new(),
@@ -936,6 +957,8 @@ pub struct LookInput {
 pub struct LookAsk {
     pub material: Material,
     pub waits: Vec<bool>,
+    /// Which changes failed: each keeps a card.
+    pub failed: Vec<bool>,
     pub system: String,
     pub prompt: String,
     pub again: String,
@@ -954,6 +977,11 @@ pub fn look_input(input: LookInput) -> Result<LookAsk, crate::NodeError> {
             .iter()
             .map(|shown| waits_on_owner(&shown.told.session))
             .collect(),
+        failed: input
+            .changes
+            .iter()
+            .map(|shown| shown.told.session.change == Change::Failed)
+            .collect(),
         system: system(&input.soul),
         prompt: prompt(&material),
         again: again(&material),
@@ -963,12 +991,15 @@ pub fn look_input(input: LookInput) -> Result<LookAsk, crate::NodeError> {
 }
 
 /// `nodes.look_read`: the material she was shown, which of its changes wait
-/// on the owner, and what the model answered.
+/// on the owner and which failed (as `nodes.look_input` gave them), and what
+/// the model answered.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReadInput {
     pub material: Material,
     pub waits: Vec<bool>,
+    #[serde(default)]
+    pub failed: Vec<bool>,
     pub raw: String,
 }
 
@@ -986,8 +1017,9 @@ pub struct Kept {
 /// Her answer read and settled: `good` with each change and at most one
 /// line; `bad_grounds` (ask once more with `again`); `unreadable`. Where she
 /// gave no answer on a change (all of them, unless `good`), one that waits
-/// on the owner keeps only its card ([`card_only`]) and the rest nothing:
-/// what an end keeps when it gives up asking.
+/// on the owner or failed keeps only its card ([`card_only`]) and the rest
+/// nothing: what an end keeps when it gives up asking. `hasCard` is
+/// [`keeps_card`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LookRead {
@@ -998,11 +1030,16 @@ pub struct LookRead {
 
 /// `nodes.look_read`.
 pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
-    if input.waits.len() != input.material.changes.len() {
+    let changes = input.material.changes.len();
+    if input.waits.len() != changes {
         return Err(crate::NodeError::new("waits is not one per change"));
     }
-    let kept = |judgment: Judgment| Kept {
-        has_card: has_card(&judgment),
+    let failed = |at: usize| input.failed.get(at).copied().unwrap_or(false);
+    if !input.failed.is_empty() && input.failed.len() != changes {
+        return Err(crate::NodeError::new("failed is not one per change"));
+    }
+    let kept = |judgment: Judgment, failed: bool| Kept {
+        has_card: keeps_card(&judgment, failed),
         card: card_text(&judgment),
         evidence: input.material.evidence(&judgment.because),
         judgment,
@@ -1021,8 +1058,11 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
                 .get(at)
                 .cloned()
                 .flatten()
-                .or_else(|| input.waits[at].then(|| card_only(&input.material.changes[at])))
-                .map(kept)
+                .or_else(|| {
+                    (input.waits[at] || failed(at))
+                        .then(|| card_only(&input.material.changes[at], input.waits[at]))
+                })
+                .map(|judgment| kept(judgment, failed(at)))
         })
         .collect();
     Ok(LookRead {

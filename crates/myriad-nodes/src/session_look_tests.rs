@@ -238,7 +238,7 @@ fn failures_and_undone_lines_are_said_by_counts_and_ids_alone() {
     ));
     let mut shares = told(session(
         "finished",
-        json!({"fromAgent": "done", "title": "Rename the types",
+        json!({"fromAgent": "OTHERS-OWN-WORDS", "title": "Rename the types",
                "errors": [{"sig": sig, "count": 1, "firstAt": AT - 5 * 60_000, "lastAt": AT - 5 * 60_000}]}),
     ));
     shares.session.session = "s-3".into();
@@ -247,10 +247,14 @@ fn failures_and_undone_lines_are_said_by_counts_and_ids_alone() {
         json!({"title": "Tidy the docs", "session": "s-4",
                "overwrote": [{"session": "s-1", "files": 1, "undid": false, "at": AT - 3 * 60_000}]}),
     ));
-    // Under another grant, or on another computer: never compared.
+    // Under another grant, or on another computer: never compared, from
+    // either side, though their ids and failures are the same.
     let mut elsewhere = shares.clone();
     elsewhere.device = "dev_pc".into();
-    let mut regranted = shares.clone();
+    elsewhere.session.title = Some("ELSEWHERE".into());
+    elsewhere.session.overwrote = rewrote.session.overwrote.clone();
+    let mut regranted = elsewhere.clone();
+    regranted.device = "dev_mac".into();
     regranted.session.grant = "g_9876543210".into();
     let numbered = material(
         &[Shown {
@@ -258,13 +262,13 @@ fn failures_and_undone_lines_are_said_by_counts_and_ids_alone() {
             memories: Vec::new(),
             before: None,
         }],
-        &[failed, shares, rewrote, elsewhere, regranted],
+        &[elsewhere, regranted, failed, shares, rewrote],
         &[],
         AT,
     )
     .numbered();
     for line in [
-        "a failure it keeps hitting: the same failure 3 times in 9 minutes, the latest a minute ago",
+        "a failure it keeps hitting: the same failure 3 times within 9 minutes, the latest a minute ago",
         "a failure another session hits too: «Rename the types (coding-agent in repo)» failed the same way (once, the latest 5 minutes ago)",
         "what it did to another session's work: it put back what «Rename the types (coding-agent in repo)» had just replaced, in 2 file(s), 2 minutes ago",
         "what another session did to its work: «Tidy the docs (coding-agent in repo)» rewrote lines this one had just written, in 1 file(s), 3 minutes ago",
@@ -273,6 +277,17 @@ fn failures_and_undone_lines_are_said_by_counts_and_ids_alone() {
     }
     assert_eq!(numbered.matches("keeps hitting").count(), 1, "{numbered}");
     assert_eq!(numbered.matches("hits too").count(), 1, "{numbered}");
+    assert_eq!(
+        numbered.matches("another session did").count(),
+        1,
+        "{numbered}"
+    );
+    // Of the others: their titles, counts and times, never their words.
+    assert!(!numbered.contains("OTHERS-OWN-WORDS"), "{numbered}");
+    assert!(
+        !numbered.contains("ELSEWHERE («") && !numbered.contains("«ELSEWHERE"),
+        "{numbered}"
+    );
 }
 
 #[test]
@@ -283,6 +298,7 @@ fn what_got_no_answer_keeps_its_card_if_it_waits_on_them() {
         let read = look_read(ReadInput {
             material: material.clone(),
             waits: vec![true, false],
+            failed: Vec::new(),
             raw: raw.into(),
         })
         .unwrap();
@@ -292,6 +308,28 @@ fn what_got_no_answer_keeps_its_card_if_it_waits_on_them() {
         assert_eq!(card.card, "你点头就行：asks");
         assert_eq!(read.judgments[1].is_some(), status == "good");
     }
+    // A failure keeps its card, answered or not.
+    for (raw, verdict) in [(raw, Verdict::NoNeed), ("not json", Verdict::NoNeed)] {
+        let read = look_read(ReadInput {
+            material: material.clone(),
+            waits: vec![true, false],
+            failed: vec![false, true],
+            raw: raw.into(),
+        })
+        .unwrap();
+        let card = read.judgments[1].as_ref().unwrap();
+        assert!(card.has_card);
+        assert_eq!(card.judgment.verdict, verdict);
+    }
+    assert!(
+        look_read(ReadInput {
+            material,
+            waits: vec![true, false],
+            failed: vec![true],
+            raw: raw.into(),
+        })
+        .is_err()
+    );
 }
 
 #[test]

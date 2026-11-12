@@ -263,8 +263,6 @@ pub fn valid_remote(remote: &str) -> bool {
         && !remote.split('/').any(|part| part == "." || part == "..")
 }
 
-/// A path relative to the repository's root: not empty, not absolute (no
-/// leading `/`, `\`, `~` or drive), no `.` or `..` part, no control.
 /// `sessions.sigPattern`: 16 lowercase hex digits.
 pub fn valid_sig(sig: &str) -> bool {
     sig.len() == 16
@@ -273,6 +271,8 @@ pub fn valid_sig(sig: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+/// A path relative to the repository's root: not empty, not absolute (no
+/// leading `/`, `\`, `~` or drive), no `.` or `..` part, no control.
 pub fn valid_relative_path(path: &str) -> bool {
     let rules = rules();
     if path.is_empty() || path.len() > rules.path_bytes {
@@ -367,6 +367,18 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
         if failures.count == 0 || failures.first_at <= 0 || failures.last_at < failures.first_at {
             return Err(bad("an error is not counted between two times"));
         }
+        if failures.last_at - failures.first_at > rules.error_span_ms {
+            return Err(bad("an error spans more than sessions.errorSpanMs"));
+        }
+    }
+    let mut sigs: Vec<&str> = session
+        .errors
+        .iter()
+        .map(|failures| failures.sig.as_str())
+        .collect();
+    sigs.sort_unstable();
+    if sigs.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(bad("errors holds one sig twice"));
     }
     if session.overwrote.len() > rules.overwrote_at_most {
         return Err(refuse(
@@ -411,6 +423,24 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
         return Err(bad("a finished session waits on nobody's answer"));
     }
     Ok(session)
+}
+
+/// A `now.session` body as a device told it on a link: with `sessions2`
+/// false (the host's welcome did not list `now.sessions2`), one that holds
+/// `ownerSaidAt`, `errors` or `overwrote` is refused.
+pub fn read_told(body: &Value, sessions2: bool) -> Result<Session, Refusal> {
+    let session = read_session(body)?;
+    if !sessions2 && session.needs_sessions2() {
+        return Err(bad("ownerSaidAt, errors and overwrote need now.sessions2"));
+    }
+    Ok(session)
+}
+
+impl Session {
+    /// It holds what only a host that listed `now.sessions2` takes.
+    pub fn needs_sessions2(&self) -> bool {
+        self.owner_said_at.is_some() || !self.errors.is_empty() || !self.overwrote.is_empty()
+    }
 }
 
 /// A `now.drop` body.
@@ -594,6 +624,15 @@ mod tests {
                 "overwrote",
                 json!([{"session": "0199d5c0-9000-7333-8333-333333333333", "files": 1, "undid": false, "at": 1}]),
             ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 1, "lastAt": 3_600_002}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 1, "lastAt": 1},
+                       {"sig": "0123456789abcdef", "count": 2, "firstAt": 1, "lastAt": 2}]),
+            ),
         ] {
             let mut bad = body();
             bad[field] = value.clone();
@@ -621,6 +660,32 @@ mod tests {
         let mut many = body();
         many["touched"] = json!(vec!["a.rs"; 65]);
         assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        let mut many = body();
+        many["errors"] = json!(
+            (0..17_u64)
+                .map(
+                    |at| json!({"sig": format!("{at:016x}"), "count": 1, "firstAt": 1, "lastAt": 1})
+                )
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        let mut many = body();
+        many["overwrote"] = json!(
+            (0..17)
+                .map(
+                    |at| json!({"session": format!("s-{at}"), "files": 1, "undid": false, "at": 1})
+                )
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        // Only to a host that listed now.sessions2.
+        assert!(read_told(&body(), true).is_ok());
+        assert_eq!(read_told(&body(), false).unwrap_err().code, "bad_frame");
+        let mut plain = body();
+        for field in ["ownerSaidAt", "errors", "overwrote"] {
+            plain.as_object_mut().unwrap().remove(field);
+        }
+        assert!(read_told(&plain, false).is_ok());
         // A quiet session may wait on anything; 2000 characters are kept.
         let mut quiet = body();
         quiet["change"] = json!("quiet");
