@@ -1273,3 +1273,85 @@ fn account_paths_need_an_account_word() {
         );
     }
 }
+
+/// Lines a coding agent's session holds (2026-11-11, the synthetic set the
+/// native client's probe measured): what signs in goes, what analysis needs
+/// (commits, paths with lines, test results) stays.
+#[test]
+fn an_agent_sessions_lines_lose_what_signs_in_and_keep_what_analysis_needs() {
+    let aws = synthetic::named()
+        .into_iter()
+        .find(|(name, _)| *name == "aws")
+        .unwrap()
+        .1;
+    let b64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let secret = [
+        synthetic::random(13, b64, 61),
+        "/".to_string(),
+        synthetic::random(7, b64, 62),
+        "/".to_string(),
+        synthetic::random(18, b64, 63),
+    ]
+    .concat();
+    assert_eq!(secret.len(), 40);
+    let hash = synthetic::random(40, "0123456789abcdef", 64);
+    for (text, value, kind) in [
+        (
+            format!("AWS 用的是 {aws} 和 {secret}"),
+            secret.clone(),
+            SecretKind::HighEntropy,
+        ),
+        (
+            format!("新的那串是 {secret}，旧的作废"),
+            secret.clone(),
+            SecretKind::HighEntropy,
+        ),
+        (
+            "试了 sakura2024 登不进去，可能后台改过了".to_string(),
+            "sakura2024".to_string(),
+            SecretKind::Labelled,
+        ),
+        (
+            "管理后台还是 admin / Passw0rd! 那套，回头再改".to_string(),
+            "Passw0rd!".to_string(),
+            SecretKind::Labelled,
+        ),
+        (
+            "ssh 上去之后 sudo 输 hunter22 就行".to_string(),
+            "hunter22".to_string(),
+            SecretKind::Labelled,
+        ),
+        (
+            "ログインは taro2024x でできた".to_string(),
+            "taro2024x".to_string(),
+            SecretKind::Labelled,
+        ),
+        (
+            format!("deploy key {hash} rotated"),
+            hash.clone(),
+            SecretKind::HighEntropy,
+        ),
+    ] {
+        let scan = secrets::scan(&text);
+        assert!(!scan.text.contains(&value), "漏抹：{text}");
+        assert!(scan.wiped.contains(&kind), "{text}: {:?}", scan.wiped);
+    }
+    for text in [
+        format!("回退到 {hash} 再试"),
+        format!("commit {hash}"),
+        format!("git show {hash} 看看"),
+        "139539c4 之后 decide_event 少了很多".to_string(),
+        "cherry-pick a1b2c3d onto preview，登录页没动".to_string(),
+        "改了 Sources/MyriadCore/AgentWatch/PeerAgentWatch.swift 和 docs/CHILD-MOMENTS.md"
+            .to_string(),
+        "backend/src/services/agent/chat_prompt.rs:359 那里把屏幕条目丢了".to_string(),
+        "Tests/MyriadCoreTests/ChildMomentPacingTests.swift 5 个测试全过".to_string(),
+        "✔ Test run with 154 tests in 15 suites passed after 14.419 seconds.".to_string(),
+        "登录页的 Button2x 改成主题色".to_string(),
+        "user / group 的权限都看过了".to_string(),
+        "login flow 在 v2 里重写了".to_string(),
+    ] {
+        let scan = secrets::scan(&text);
+        assert_eq!(scan.text, text, "误抹：{text}");
+    }
+}
