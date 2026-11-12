@@ -408,6 +408,14 @@
       }
     },
     {
+      "v": 1, "t": "card.answer", "seq": 30, "id": "ca_0123456789abcdef0123456789abcdef", "ack": 19, "at": 1760140931000,
+      "body": { "card": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "action": "agree", "version": "v_0123456789abcdef" }
+    },
+    {
+      "v": 1, "t": "card.answered", "seq": 30, "ack": 30, "at": 1760140931200,
+      "body": { "card": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "kept": true }
+    },
+    {
       "v": 1, "t": "act.request", "seq": 20, "id": "act_0123456789abcdef0123456789abcdef", "ack": 16, "at": 1760140940000,
       "body": {
         "proposalId": "int_1123456789abcdef0123456789abcdef",
@@ -459,7 +467,27 @@
             { "id": "msg_101", "role": "user", "text": "周末去哪走走？", "at": 1760140850000 },
             { "id": "msg_102", "role": "assistant", "text": "去河边吧，风正好。", "at": 1760140860000 },
             { "id": "say_say_0123456789abcdef", "role": "assistant", "text": "刚想起来，河边那家书店周末开门。", "at": 1760140950000, "kind": "proactive" },
-            { "id": "msg_103", "role": "user", "text": "那就去书店。", "at": 1760141005000 }
+            { "id": "msg_103", "role": "user", "text": "那就去书店。", "at": 1760141005000 },
+            { "id": "pro_41", "role": "assistant", "text": "", "at": 1760141006000, "kind": "proactive", "cardId": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "line": "card_0123456789abcdef" },
+            {
+              "id": "say_say_1123456789abcdef", "role": "assistant", "text": "拆库那边停下来问要不要现在推送，测试都过了。", "at": 1760141007000,
+              "kind": "proactive", "cardId": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "line": "spk_0123456789abcdef0123456789abcdef",
+              "card": {
+                "card": {
+                  "at": 1760141006000, "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "kind": "decide", "scene": "agents",
+                  "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c", "title": "Split the store", "state": "waiting_owner",
+                  "facts": [
+                    { "text": "sample-repo 里的 coding-agent 会话", "ref": "session:dev_mac/g_0123456789/s-1" },
+                    { "text": "现在：停下来，有问题要问你", "ref": "session:dev_mac/g_0123456789/s-1" },
+                    { "text": "测试通过；构建通过", "ref": "session:dev_mac/g_0123456789/s-1" }
+                  ],
+                  "view": { "text": "要不要现在推送\n推：测试和构建都过了", "because": [2, 3] },
+                  "actions": [{ "id": "agree", "label": "按建议办" }, { "id": "open", "label": "去会话里说" }]
+                },
+                "version": "v_0123456789abcdef",
+                "waiting": true
+              }
+            }
           ]
         }
       }
