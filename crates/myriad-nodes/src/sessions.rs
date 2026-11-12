@@ -45,7 +45,7 @@ use crate::{
     NodeError,
     body::{
         BODY_VERSION, Body, Created, Entry, Field, Object, ObjectKind, OpenItem, Related, Relation,
-        Revised, Since, Standing, Status,
+        Revised, Since, Standing, StandingState, Status,
     },
     entries::{RowOut, row_id_from},
     key::{Kind, node_id, repo_key},
@@ -250,27 +250,28 @@ pub struct SessionRows {
     pub rows: Vec<Placed>,
 }
 
-/// Where a session stands, a word or two, and the line that says it.
-pub fn standing(session: &Session) -> (&'static str, String) {
+/// Where a session stands, as a word an end says in its own language, and
+/// the line that says it.
+pub fn standing(session: &Session) -> (StandingState, String) {
     let failed = session
         .checks
         .iter()
         .find(|check| check.state == CheckState::Failed);
     match session.change {
-        Change::Started => ("working", "started working".to_string()),
+        Change::Started => (StandingState::Working, "started working".to_string()),
         Change::Asked => (
-            "waiting owner",
+            StandingState::WaitingOwner,
             match &session.from_agent {
                 Some(_) => "waiting on the owner's answer to what it asked".to_string(),
                 None => "waiting on the owner".to_string(),
             },
         ),
         Change::Finished => (
-            "finished",
+            StandingState::Finished,
             "finished, nothing waits on the owner".to_string(),
         ),
         Change::Failed => (
-            "stuck",
+            StandingState::Stuck,
             match failed {
                 Some(check) => format!("stuck: its {} failed", check_word(check.kind)),
                 None => "stuck: it kept failing".to_string(),
@@ -278,11 +279,11 @@ pub fn standing(session: &Session) -> (&'static str, String) {
         ),
         Change::Quiet => (
             match session.waiting_on {
-                Some(WaitingOn::Checks) => "waiting checks",
-                Some(WaitingOn::Program) => "waiting program",
-                Some(WaitingOn::Owner) => "waiting owner",
-                Some(WaitingOn::Session) => "waiting session",
-                _ => "quiet",
+                Some(WaitingOn::Checks) => StandingState::WaitingChecks,
+                Some(WaitingOn::Program) => StandingState::WaitingProgram,
+                Some(WaitingOn::Owner) => StandingState::WaitingOwner,
+                Some(WaitingOn::Session) => StandingState::WaitingSession,
+                _ => StandingState::Quiet,
             },
             match session.waiting_on {
                 Some(WaitingOn::Checks) => "quiet for long, its tests or builds still running",
@@ -595,7 +596,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         )?;
     }
     // Where it stands now (现在), one line rewritten with each change.
-    let (_, line) = standing(&session);
+    let (state, line) = standing(&session);
     writer.push(
         &task_node,
         &format!("{reference}/{NOW}"),
@@ -611,6 +612,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             item: NOW.to_string(),
             text: line,
             since: Some(Since::At(session.occurred_at.saturating_mul(1000))),
+            state: Some(state),
             because: because.clone(),
             ended: false,
         }),
@@ -1017,11 +1019,11 @@ mod tests {
             at: 2,
         }];
         let (state, line) = standing(&failed.session);
-        assert_eq!(state, "stuck");
+        assert_eq!(state, StandingState::Stuck);
         assert_eq!(line, "stuck: its build failed");
         let mut quiet = session("quiet");
         quiet.waiting_on = Some(WaitingOn::Checks);
-        assert_eq!(standing(&quiet).0, "waiting checks");
+        assert_eq!(standing(&quiet).0, StandingState::WaitingChecks);
         for change in ["started", "asked", "finished", "failed", "quiet"] {
             assert!(!standing(&session(change)).1.is_empty());
         }

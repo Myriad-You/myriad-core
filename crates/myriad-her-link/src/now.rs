@@ -30,6 +30,22 @@ pub struct Rules {
     pub checks_at_most: usize,
     pub keep_ms: u64,
     pub quiet_after_ms: u64,
+    pub sig_pattern: String,
+    pub errors_at_most: usize,
+    pub overwrote_at_most: usize,
+    pub error_span_ms: i64,
+    pub repeated_error_at: u32,
+    pub look: Look,
+}
+
+/// The contract's `sessions.look`: how her host looks at what it is told.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Look {
+    pub verdicts: Vec<String>,
+    pub late_after_ms: i64,
+    pub quiet_ms: i64,
+    pub at_most_ms: i64,
 }
 
 #[derive(Deserialize)]
@@ -108,6 +124,30 @@ pub struct Check {
     pub at: i64,
 }
 
+/// Failures of one kind in a session, as the device groups them (`sessions`
+/// says how `sig` is made: no one can read the failure back from it).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Failures {
+    pub sig: String,
+    pub count: u32,
+    pub first_at: i64,
+    pub last_at: i64,
+}
+
+/// Lines another session on the device had just written, that this one
+/// lately changed.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Overwrote {
+    /// The other session's id on the device.
+    pub session: String,
+    pub files: u32,
+    /// It put back what the other had replaced, not only rewrote it.
+    pub undid: bool,
+    pub at: i64,
+}
+
 /// One `now.session` body, read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -133,6 +173,15 @@ pub struct Session {
     pub from_peer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_agent: Option<String>,
+    /// When the owner last spoke to the session themselves. This, `errors`
+    /// and `overwrote` come only from a device whose welcome listed
+    /// `now.sessions2`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner_said_at: Option<i64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub errors: Vec<Failures>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub overwrote: Vec<Overwrote>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub touched: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -212,6 +261,14 @@ pub fn valid_remote(remote: &str) -> bool {
             byte.is_ascii_lowercase() || byte.is_ascii_digit() || b"._~/-".contains(&byte)
         })
         && !remote.split('/').any(|part| part == "." || part == "..")
+}
+
+/// `sessions.sigPattern`: 16 lowercase hex digits.
+pub fn valid_sig(sig: &str) -> bool {
+    sig.len() == 16
+        && sig
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 /// A path relative to the repository's root: not empty, not absolute (no
@@ -294,6 +351,49 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
     words("fromOwner", &session.from_owner, rules.words_chars)?;
     words("fromPeer", &session.from_peer, rules.words_chars)?;
     words("fromAgent", &session.from_agent, rules.words_chars)?;
+    if session.owner_said_at.is_some_and(|at| at <= 0) {
+        return Err(bad("ownerSaidAt is not a time"));
+    }
+    if session.errors.len() > rules.errors_at_most {
+        return Err(refuse(
+            "too_many",
+            format!("errors holds more than {}", rules.errors_at_most),
+        ));
+    }
+    for failures in &session.errors {
+        if !valid_sig(&failures.sig) {
+            return Err(bad("an error's sig does not match sessions.sigPattern"));
+        }
+        if failures.count == 0 || failures.first_at <= 0 || failures.last_at < failures.first_at {
+            return Err(bad("an error is not counted between two times"));
+        }
+        if failures.last_at - failures.first_at > rules.error_span_ms {
+            return Err(bad("an error spans more than sessions.errorSpanMs"));
+        }
+    }
+    let mut sigs: Vec<&str> = session
+        .errors
+        .iter()
+        .map(|failures| failures.sig.as_str())
+        .collect();
+    sigs.sort_unstable();
+    if sigs.windows(2).any(|pair| pair[0] == pair[1]) {
+        return Err(bad("errors holds one sig twice"));
+    }
+    if session.overwrote.len() > rules.overwrote_at_most {
+        return Err(refuse(
+            "too_many",
+            format!("overwrote holds more than {}", rules.overwrote_at_most),
+        ));
+    }
+    for overwrote in &session.overwrote {
+        if !valid_session(&overwrote.session) || overwrote.session == session.session {
+            return Err(bad("overwrote names no other session"));
+        }
+        if overwrote.files == 0 || overwrote.at <= 0 {
+            return Err(bad("overwrote counts no file, or no time"));
+        }
+    }
     if session.touched.len() > rules.touched_at_most {
         return Err(refuse(
             "too_many",
@@ -323,6 +423,24 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
         return Err(bad("a finished session waits on nobody's answer"));
     }
     Ok(session)
+}
+
+/// A `now.session` body as a device told it on a link: with `sessions2`
+/// false (the host's welcome did not list `now.sessions2`), one that holds
+/// `ownerSaidAt`, `errors` or `overwrote` is refused.
+pub fn read_told(body: &Value, sessions2: bool) -> Result<Session, Refusal> {
+    let session = read_session(body)?;
+    if !sessions2 && session.needs_sessions2() {
+        return Err(bad("ownerSaidAt, errors and overwrote need now.sessions2"));
+    }
+    Ok(session)
+}
+
+impl Session {
+    /// It holds what only a host that listed `now.sessions2` takes.
+    pub fn needs_sessions2(&self) -> bool {
+        self.owner_said_at.is_some() || !self.errors.is_empty() || !self.overwrote.is_empty()
+    }
 }
 
 /// A `now.drop` body.
@@ -356,6 +474,9 @@ mod tests {
             "fromOwner": "commit the split",
             "fromPeer": "split the store, then report back",
             "fromAgent": "Committed locally. Push now? (yes / later)",
+            "ownerSaidAt": 1_760_140_000_000_i64,
+            "errors": [{"sig": "0123456789abcdef", "count": 3, "firstAt": 1_760_140_000_000_i64, "lastAt": 1_760_140_800_000_i64}],
+            "overwrote": [{"session": "s-other", "files": 2, "undid": true, "at": 1_760_140_700_000_i64}],
             "touched": ["src/store.rs", "src/lib.rs"],
             "checks": [{"kind": "test", "state": "passed", "at": 1_760_140_880_000_i64}],
             "waitingOn": "owner"
@@ -380,6 +501,12 @@ mod tests {
             serde_json::from_value::<AskedBy>(json!(asked_by)).unwrap();
         }
         assert_eq!(rules.quiet_after_ms, 20 * 60 * 1000);
+        assert_eq!(rules.look.verdicts, names(&["no_need", "nod", "decide"]));
+        assert_eq!(rules.look.late_after_ms, 10 * 60 * 1000);
+        assert_eq!(
+            (rules.look.quiet_ms, rules.look.at_most_ms),
+            (20_000, 60_000)
+        );
         for kind in &rules.check_kinds {
             serde_json::from_value::<CheckKind>(json!(kind)).unwrap();
         }
@@ -390,6 +517,13 @@ mod tests {
         let frame = &contract["frames"]["now.session"];
         assert_eq!(frame["maxItems"]["touched"], json!(rules.touched_at_most));
         assert_eq!(frame["maxItems"]["checks"], json!(rules.checks_at_most));
+        assert_eq!(frame["maxItems"]["errors"], json!(rules.errors_at_most));
+        assert_eq!(
+            frame["maxItems"]["overwrote"],
+            json!(rules.overwrote_at_most)
+        );
+        assert_eq!(rules.sig_pattern, "^[0-9a-f]{16}$");
+        assert!(rules.repeated_error_at >= 2 && rules.error_span_ms > 0);
         let mut fields: Vec<String> = frame["required"]
             .as_array()
             .unwrap()
@@ -452,6 +586,53 @@ mod tests {
             ("output", json!("ok")),
             ("askedBy", json!("someone")),
             ("fromPeer", json!(" ")),
+            ("ownerSaidAt", json!(0)),
+            ("ownerSaidAt", json!("soon")),
+            (
+                "errors",
+                json!([{"sig": "0123456789ABCDEF", "count": 1, "firstAt": 1, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcde", "count": 1, "firstAt": 1, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 0, "firstAt": 1, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 2, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 1, "lastAt": 1, "text": "x"}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "s/x", "files": 1, "undid": false, "at": 1}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "s-other", "files": 0, "undid": false, "at": 1}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "s-other", "files": 1, "undid": false, "at": 0}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "0199d5c0-9000-7333-8333-333333333333", "files": 1, "undid": false, "at": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 1, "lastAt": 3_600_002}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 1, "lastAt": 1},
+                       {"sig": "0123456789abcdef", "count": 2, "firstAt": 1, "lastAt": 2}]),
+            ),
         ] {
             let mut bad = body();
             bad[field] = value.clone();
@@ -479,6 +660,32 @@ mod tests {
         let mut many = body();
         many["touched"] = json!(vec!["a.rs"; 65]);
         assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        let mut many = body();
+        many["errors"] = json!(
+            (0..17_u64)
+                .map(
+                    |at| json!({"sig": format!("{at:016x}"), "count": 1, "firstAt": 1, "lastAt": 1})
+                )
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        let mut many = body();
+        many["overwrote"] = json!(
+            (0..17)
+                .map(
+                    |at| json!({"session": format!("s-{at}"), "files": 1, "undid": false, "at": 1})
+                )
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(read_session(&many).unwrap_err().code, "too_many");
+        // Only to a host that listed now.sessions2.
+        assert!(read_told(&body(), true).is_ok());
+        assert_eq!(read_told(&body(), false).unwrap_err().code, "bad_frame");
+        let mut plain = body();
+        for field in ["ownerSaidAt", "errors", "overwrote"] {
+            plain.as_object_mut().unwrap().remove(field);
+        }
+        assert!(read_told(&plain, false).is_ok());
         // A quiet session may wait on anything; 2000 characters are kept.
         let mut quiet = body();
         quiet["change"] = json!("quiet");

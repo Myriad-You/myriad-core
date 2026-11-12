@@ -74,6 +74,20 @@ fn now_bodies_are_read_by_the_sessions_rules() {
     bad["remote"] = json!("https://token@github.com/me/repo");
     let refused = ok("link.now_read", json!({"t": "now.session", "body": bad}));
     assert_eq!(refused["refused"]["code"], "bad_frame");
+    // ownerSaidAt, errors and overwrote only where the welcome listed
+    // now.sessions2.
+    let mut newer = body("now.session");
+    newer["ownerSaidAt"] = json!(1_760_000_000_000_i64);
+    let refused = ok(
+        "link.now_read",
+        json!({"t": "now.session", "body": newer.clone()}),
+    );
+    assert_eq!(refused["refused"]["code"], "bad_frame");
+    let taken = ok(
+        "link.now_read",
+        json!({"t": "now.session", "body": newer, "sessions2": true}),
+    );
+    assert_eq!(taken["session"]["ownerSaidAt"], 1_760_000_000_000_i64);
     let (status, _) = ffi("link.now_read", &json!({"t": "moment", "body": {}}));
     assert_eq!(status, STATUS_BAD_INPUT);
 }

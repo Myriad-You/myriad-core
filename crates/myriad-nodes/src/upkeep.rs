@@ -1880,6 +1880,7 @@ impl<'a> Reader<'a> {
                     item: format!("m{}", minted(&format!("standing\u{1f}{id}\u{1f}{item}"))),
                     text: current.value.text.clone(),
                     since: current.value.since.clone(),
+                    state: current.value.state,
                     because: current.value.because.clone(),
                     ended: false,
                 }),
