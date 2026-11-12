@@ -4381,6 +4381,48 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k3": {
+            "at": 1760000000002,
+            "card": null,
+            "text": "推好了"
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 3,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "k3",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a line that names a card as null still waits for a side of ABI 4",
+      "output": {
+        "batches": [],
+        "tooOld": true
+      }
     }
   ],
   "version": 1

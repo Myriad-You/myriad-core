@@ -613,6 +613,7 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a key in a fact is refused", "withheld on the wire (Secret)"),
         ("a key in its view is refused", "withheld on the wire (Secret)"),
         ("a field the card does not name is refused", "unknown field"),
+        ("a field a fact does not name is refused", "not of its shape"),
         // nodes.look_route, nodes.look_input, nodes.look_read
         (
             "a body the contract refuses",

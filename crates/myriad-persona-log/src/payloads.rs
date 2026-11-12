@@ -77,9 +77,11 @@ pub struct SegmentLine {
 /// owner in her talk with them, as facts the program can check, her view of
 /// it, and what they may answer. An open shape: a side that knows no
 /// `kind` shows its `title`, `facts` and `actions` all the same
-/// (`myriad_nodes::cards` holds the rules: words, bounds, ids).
+/// (`myriad_nodes::cards` holds the rules: words, bounds, ids). Unlike the
+/// other shapes here, no part of a card takes a field it does not name:
+/// every string in it is one the wire checks by name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardVersion {
     pub at: i64,
     pub id: String,
@@ -101,7 +103,7 @@ pub struct CardVersion {
 /// One fact on a card, and what it is about when that is a node or a
 /// session (`ref`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardFact {
     pub text: String,
     #[serde(default, rename = "ref", skip_serializing_if = "Option::is_none")]
@@ -110,7 +112,7 @@ pub struct CardFact {
 
 /// Her view on a card, on the facts it rests on (`because`, numbered from 1).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardView {
     pub text: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -119,7 +121,7 @@ pub struct CardView {
 
 /// One thing the owner may answer a card with.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardAction {
     pub id: String,
     pub label: String,
@@ -128,7 +130,7 @@ pub struct CardAction {
 /// The owner's answer to a card (`card.answered`): which action, on which
 /// version of it (that version's row id).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardAnswered {
     pub at: i64,
     pub action: String,
@@ -575,7 +577,13 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
         }
         "card.answered" => {
             let answered: CardAnswered = read(kind, payload)?;
-            if answered.action.is_empty() || !crate::row::is_token(&answered.version) {
+            let word = !answered.action.is_empty()
+                && answered.action.len() <= 32
+                && answered
+                    .action
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_');
+            if !word || !crate::row::is_token(&answered.version) {
                 return Err(LogError::new(
                     "a card.answered payload names no action or version",
                 ));

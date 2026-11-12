@@ -28,8 +28,9 @@
 //! secret scan, its ids the path and known-key rules (`wire`).
 //!
 //! **Waiting on the owner** ([`fold`]): a card waits on them while its
-//! latest version has an action other than [`OPEN`] and no answer came
-//! after that version. A card stops waiting by itself when what it is
+//! latest version has an action other than [`OPEN`] and no answer to that
+//! very version came after it (an answer to an older one, however late,
+//! is to what the owner saw then). A card stops waiting by itself when what it is
 //! about no longer needs them (they answered in the session, it went on or
 //! ended): its writer writes a new version with no action but `open` and
 //! the state it is in.
@@ -286,7 +287,10 @@ pub struct Folded {
 /// `nodes.cards_fold`: every card of the rows as it stands now. A version
 /// whose body is missing or does not hold is passed by, so the one before
 /// it stands; an answer counts for the latest version when it came after
-/// that version in log order and names one of its actions.
+/// that version in log order, answers that very version (`version`: what
+/// the owner saw), and names one of its actions. The rows are given with
+/// forgets already taken in (as a host folds its log): a forgotten latest
+/// version leaves the one before it standing.
 pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
     let mut rows: Vec<Row> = input
         .rows
@@ -326,6 +330,7 @@ pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
                     continue;
                 };
                 if let Some((_, now)) = cards.get_mut(&row.object)
+                    && answer.version == now.version
                     && answer.action != OPEN
                     && now
                         .card

@@ -274,8 +274,8 @@ fn needs_abi(row: &Row, body: Option<&Value>) -> u32 {
     // A card, and a line that carries one: a core below 4 holds no card
     // kind and takes no `card` field in a line (it would withhold the
     // line's body for good).
-    let carries_card = row.kind == "segment.line"
-        && body.is_some_and(|body| body.get("card").is_some_and(|card| !card.is_null()));
+    let carries_card =
+        row.kind == "segment.line" && body.is_some_and(|body| body.get("card").is_some());
     if row.kind.starts_with("card.") || carries_card {
         4
     } else if row.author == myriad_persona_log::row::Author::Rule || row.kind == "node.standing" {

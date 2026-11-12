@@ -567,6 +567,55 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "id": "push",
+              "label": "推送"
+            },
+            {
+              "id": "wait",
+              "label": "等等"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "note": "/Users/me/secret-notes.txt",
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "它问你：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a field a fact does not name is refused",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1
