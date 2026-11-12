@@ -653,6 +653,97 @@
         ],
         "setAside": 0
       }
+    },
+    {
+      "input": {
+        "fact": {
+          "happened": "2026-10",
+          "learned": "2026-11-12",
+          "memory": "m1",
+          "on": [
+            "own"
+          ],
+          "text": "我换工作了，十月起在游戏公司"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "node": {},
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [{\"item\": 1, \"text\": \"十月起在游戏公司做策划\"}], \"end\": [2], \"add\": [{\"topic\": \"新工作\", \"text\": \"每天坐地铁去新公司\"}]}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a field the call does not name is refused (node)",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

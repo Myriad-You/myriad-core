@@ -579,6 +579,14 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "since is a moment, a day, a month or a year",
         ),
         ("a node given twice is refused", "node ids repeat"),
+        (
+            "a field the call does not name is refused (node)",
+            "unknown field",
+        ),
+        (
+            "a field the call does not name is refused (nodes)",
+            "unknown field",
+        ),
         ("a standing without evidence", "because is empty"),
         ("a standing with a field it does not know", "unknown field"),
         ("a standing in a state no end says", "body does not fit its kind"),

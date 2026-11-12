@@ -273,16 +273,19 @@ pub struct RowOut {
 }
 
 /// The rows of `changes`, each because of `memory`, since a change's own
-/// `since`, else `since` when it is a day. Checked by the core's rules.
+/// `since`, else `since` when it is a day. Checked by the core's rules: a
+/// change they refuse (a control character in its words) is set aside, and
+/// how many were is said; the others are written.
 fn rows(
     changes: &[Change],
     memory: &str,
     since: Option<&str>,
     sync: &Sync,
-) -> Result<Vec<RowOut>, NodeError> {
-    changes
+) -> (Vec<RowOut>, usize) {
+    let mut refused = 0;
+    let rows = changes
         .iter()
-        .map(|change| {
+        .filter_map(|change| {
             let since = change
                 .since
                 .as_deref()
@@ -303,15 +306,19 @@ fn rows(
             if change.ended {
                 body["ended"] = json!(true);
             }
-            let body = Body::read(KIND, &body)?.to_value();
-            Ok(RowOut {
+            let Ok(body) = Body::read(KIND, &body) else {
+                refused += 1;
+                return None;
+            };
+            Some(RowOut {
                 id: row_id_from(KIND, &change.node, &change.item, memory),
                 node: change.node.clone(),
                 kind: KIND.into(),
-                body,
+                body: body.to_value(),
             })
         })
-        .collect()
+        .collect();
+    (rows, refused)
 }
 
 /// A change's `because`: the memories it rests on, typed, sorted, each once
@@ -345,7 +352,8 @@ pub struct FactIn {
     /// Its memory's id.
     pub memory: String,
     pub text: String,
-    /// When what it tells of happened (`happened.from`), when known.
+    /// When what it tells of happened: `happened.from` (a day, a month or a
+    /// year), when known; not the `{from, to, about}` object.
     #[serde(default)]
     pub happened: Option<String>,
     /// The day she was told it (`YYYY-MM-DD`, her zone), when known.
@@ -493,16 +501,18 @@ pub fn step_prepare(input: StepInput) -> Result<StepPrepared, NodeError> {
     })
 }
 
-/// [`step_prepare`]'s input again with the model's answer and how the rows
-/// are tagged on this end.
-/// (Unknown fields are refused by the flattened input.)
+/// [`step_prepare`]'s input again (`fact`, `known`, `nodes`) with the
+/// model's answer and how the rows are tagged on this end.
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StepReadInput {
     pub output: String,
     pub sync: Sync,
-    #[serde(flatten)]
-    pub step: StepInput,
+    pub fact: FactIn,
+    #[serde(default)]
+    pub known: Vec<KnownIn>,
+    #[serde(default)]
+    pub nodes: Vec<NodeIn>,
 }
 
 /// What an answer comes to: the rows to write, the items left as another
@@ -520,7 +530,14 @@ pub struct StepRead {
 
 /// What the answer to one fact's step does, as rows.
 pub fn step_read(input: StepReadInput) -> Result<StepRead, NodeError> {
-    let StepReadInput { output, sync, step } = input;
+    let StepReadInput {
+        output,
+        sync,
+        fact,
+        known,
+        nodes,
+    } = input;
+    let step = StepInput { fact, known, nodes };
     check_step(&step)?;
     let Some(answer) = answer_of(&output) else {
         return Ok(StepRead {
@@ -544,10 +561,11 @@ pub fn step_read(input: StepReadInput) -> Result<StepRead, NodeError> {
         .as_deref()
         .filter(|day| is_day(day))
         .or(fact.learned.as_deref());
+    let (rows, refused) = rows(&decided.changes, &fact.memory, since, &sync);
     Ok(StepRead {
-        rows: rows(&decided.changes, &fact.memory, since, &sync)?,
+        rows,
         left: decided.left,
-        set_aside: decided.set_aside,
+        set_aside: decided.set_aside + refused,
         unreadable: false,
     })
 }
@@ -630,9 +648,14 @@ fn decide(
             decided.set_aside += 1;
             return;
         };
+        let item = item_id(&whose, node, memory, started);
+        if item.len() > ITEM_BYTES {
+            decided.set_aside += 1;
+            return;
+        }
         decided.changes.push(Change {
             node: node.to_string(),
-            item: item_id(&whose, node, memory, started),
+            item,
             text,
             ended: false,
             base: Vec::new(),
@@ -690,7 +713,8 @@ pub fn build_due(input: &BuildDueInput) -> bool {
 /// One node to build: the node, which of the memories on it she still holds
 /// and goes by (`held`: not replaced, faded or let go, and not what the
 /// stretch just kept, which the step reads as new), and the day she learned
-/// each (`learned`, `YYYY-MM-DD`, her zone).
+/// each (`learned`, `YYYY-MM-DD`, her zone): one for every id in `held`, or
+/// a memory with no `happened` on its entry is shown with no day.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BuildInput {
@@ -781,16 +805,18 @@ pub fn build_prepare(input: BuildInput) -> Result<BuildPrepared, NodeError> {
     })
 }
 
-/// [`build_prepare`]'s input again with the model's answer and how the
-/// rows are tagged on this end.
-/// (Unknown fields are refused by the flattened input.)
+/// [`build_prepare`]'s input again (`node`, `held`, `learned`) with the
+/// model's answer and how the rows are tagged on this end.
 #[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BuildReadInput {
     pub output: String,
     pub sync: Sync,
-    #[serde(flatten)]
-    pub build: BuildInput,
+    pub node: NodeIn,
+    #[serde(default)]
+    pub held: Vec<String>,
+    #[serde(default)]
+    pub learned: BTreeMap<String, String>,
 }
 
 /// What a node's answer starts, as rows; each item rests on the memories
@@ -800,8 +826,15 @@ pub fn build_read(input: BuildReadInput) -> Result<StepRead, NodeError> {
     let BuildReadInput {
         output,
         sync,
-        build,
+        node,
+        held,
+        learned,
     } = input;
+    let build = BuildInput {
+        node,
+        held,
+        learned,
+    };
     let Some(answer) = answer_of(&output) else {
         return Ok(StepRead {
             unreadable: true,
@@ -812,8 +845,10 @@ pub fn build_read(input: BuildReadInput) -> Result<StepRead, NodeError> {
         return Ok(StepRead::default());
     };
     let changes = built_changes(&answer, &build.node.id, &built.memories, &built.days);
+    let (rows, refused) = rows(&changes, BUILT, None, &sync);
     Ok(StepRead {
-        rows: rows(&changes, BUILT, None, &sync)?,
+        rows,
+        set_aside: refused,
         ..StepRead::default()
     })
 }

@@ -89,7 +89,9 @@ fn read(step: &StepInput, answer: Value) -> StepRead {
     step_read(StepReadInput {
         output: answer.to_string(),
         sync: site(),
-        step: step.clone(),
+        fact: step.fact.clone(),
+        known: step.known.clone(),
+        nodes: step.nodes.clone(),
     })
     .unwrap()
 }
@@ -186,10 +188,39 @@ fn a_change_is_written_where_the_item_stands_and_only_of_whose_life_it_is() {
     let got = step_read(StepReadInput {
         output: "not json".into(),
         sync: site(),
-        step: step.clone(),
+        fact: step.fact.clone(),
+        known: step.known.clone(),
+        nodes: step.nodes.clone(),
     })
     .unwrap();
     assert!(got.unreadable && got.rows.is_empty());
+}
+
+#[test]
+fn a_change_the_rules_refuse_is_set_aside_and_the_rest_are_written() {
+    let run = item_id("them", "run", "m0", 0);
+    let step = StepInput {
+        // A control character in the fact's words: an end in them is no row.
+        fact: fact("m1", "膝盖伤了\u{7}不跑了", &["run"]),
+        known: Vec::new(),
+        nodes: vec![node("run", "跑步", folded(&[(&run, "每周三夜跑", false)]))],
+    };
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [1],
+            "add": [{"topic": "跑步", "text": "三个月内只散步"}]}),
+    );
+    assert_eq!(got.rows.len(), 1);
+    assert_eq!(got.rows[0].body["text"], json!("三个月内只散步"));
+    assert_eq!(got.set_aside, 1);
+    // A name too long for an item's id starts nothing.
+    let long = "👩‍👩‍👧‍👦👩‍👩‍👧‍👦👩‍👩‍👧‍👦";
+    let got = read(
+        &step,
+        json!({"whose": long, "set": [], "end": [], "add": [{"topic": "跑步", "text": "x"}]}),
+    );
+    assert!(got.rows.is_empty());
+    assert_eq!(got.set_aside, 1);
 }
 
 #[test]
@@ -360,7 +391,9 @@ fn what_stands_on_a_node_rests_on_the_memories_it_names_since_their_latest_day()
         ]})
         .to_string(),
         sync: site(),
-        build: input.clone(),
+        node: input.node.clone(),
+        held: input.held.clone(),
+        learned: input.learned.clone(),
     })
     .unwrap();
     assert_eq!(got.rows.len(), 2);

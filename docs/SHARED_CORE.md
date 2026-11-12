@@ -420,10 +420,10 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.sort_input` | `{topics?: [{id, name, aliases?, holds?}], facts: [{id, text, said?}], today?}` → `{system, schema, input, offered: [id], taken}` |
 | `nodes.sort_read` | `{output, offered?: [id], facts: [id], known?: [{id, name, aliases?}]}` → `{facts: [{fact, to, …, happened?, state?, open?}], unreadable?}` |
 | `nodes.standing_read` | `{item}` → `{happened?, state?, open?}`：整理回答里一条事实的发生时间和状态 |
-| `nodes.stands_step_input` | `{fact: {memory, text, happened?, learned?, replaced?, on?: [node]}, known?: [{text, on?}], nodes?: [{id, name?, kind?, folded}]}` → `{skip?, system, schema, input}`：她刚记下的一条事实对「现在」做了什么，要问什么（见下「现在」） |
-| `nodes.stands_step_read` | `{output, sync, <stands_step_input 的输入>}` → `{rows: [{id, node, kind, body}], left: [{item, itemWhose, factWhose}], setAside, unreadable?}` |
+| `nodes.stands_step_input` | `{fact: {memory, text, happened?, learned?, replaced?, on?: [node]}, known?: [{text, on?}], nodes?: [{id, name?, kind?, folded}]}` → `{skip?, system, schema, input}`：她刚记下的一条事实对「现在」做了什么，要问什么（见下「现在」）；`happened` 是 `happened.from` 那个日子字符串，不是整个对象 |
+| `nodes.stands_step_read` | `{output, sync, <stands_step_input 的输入>}` → `{rows: [{id, node, kind, body}], left: [{item, itemWhose, factWhose}], setAside, unreadable?}`；核心规则不收的一项（文字里有控制字符、id 太长）算进 `setAside`，别的照写 |
 | `nodes.stands_build_due` | `{facts, standing?: [{author}]}` → `{due}`：这一段记下了事实、受众里还没有一行她写的「现在」时为真；规则写的（`rule`）不算 |
-| `nodes.stands_build_input` | `{node: {id, name?, kind?, folded}, held?: [memory], learned?: {memory: day}}` → `{skip?, system, schema, input}` |
+| `nodes.stands_build_input` | `{node: {id, name?, kind?, folded}, held?: [memory], learned?: {memory: day}}` → `{skip?, system, schema, input}`；`learned` 要给 `held` 里每一条（条目上没有 `happened` 的记忆，缺了就不带日子） |
 | `nodes.stands_build_read` | `{output, sync, <stands_build_input 的输入>}` → `{rows, left, setAside, unreadable?}` |
 | `nodes.trust_tier` | `{items: [{saidBy, author?, provenance?: {together?, typed?, verified?, answer?}, aboutPartner?}]}` → `{tiers: [seen \| heard \| counts \| null]}` |
 | `nodes.under_read` | `{value?, offered?: [id], known?}` → `{to, …}` |
