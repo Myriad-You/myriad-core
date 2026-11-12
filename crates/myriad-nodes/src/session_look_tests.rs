@@ -111,7 +111,7 @@ fn she_is_shown_each_change_whole_and_what_is_around_it() {
         "[1] the session: Split the store (coding-agent in repo)",
         "[2] who gave it this work: the owner, in person",
         "[3] what the owner last told it: split the store and commit it",
-        "[4] when the owner last spoke to it themselves: 3 minutes ago",
+        "[4] when the owner last spoke to it themselves: 3 minutes ago; it asked this question after that, 3 minutes later",
         "[5] what it last said or asked: Q: Push now? (push / wait)",
         "[6] what its choices hold: only its question and the names of its choices come up",
         "[7] files it changed: src/a.rs, src/b.rs",
@@ -130,6 +130,21 @@ fn she_is_shown_each_change_whole_and_what_is_around_it() {
     let evidence = material.evidence(&[5, 9, last]);
     assert!(evidence.contains(&"memory:m1".to_string()));
     assert!(evidence.contains(&"proactive:7".to_string()));
+}
+
+#[test]
+fn whether_a_question_came_after_the_owner_spoke_is_said_from_the_times() {
+    let asked = session("asked", json!({}));
+    assert_eq!(
+        owner_said(AT - 30_000, &asked, AT + 20_000),
+        "just now; it asked this question after that, less than a minute later"
+    );
+    assert_eq!(
+        owner_said(AT + 5_000, &asked, AT + 65_000),
+        "a minute ago; it had asked this question before that, and has asked nothing since"
+    );
+    let finished = session("finished", json!({"fromAgent": "done"}));
+    assert_eq!(owner_said(AT - 120_000, &finished, AT), "2 minutes ago");
 }
 
 #[test]

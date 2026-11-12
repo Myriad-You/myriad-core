@@ -290,6 +290,68 @@
     },
     {
       "input": {
+        "failed": [
+          false,
+          true
+        ],
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "failed (kept erring, or its checks failed)"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            }
+          ]
+        },
+        "raw": "not json",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a failure keeps its card when her answer cannot be read",
+      "output": {
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "because": [],
+            "card": "你点头就行：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          {
+            "about": "failed (kept erring, or its checks failed)",
+            "because": [],
+            "card": "不用你管：failed (kept erring, or its checks failed)",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": null,
+        "status": "unreadable"
+      }
+    },
+    {
+      "input": {
         "material": {
           "changes": [
             "stopped and asks the owner; waits on the owner",

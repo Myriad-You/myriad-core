@@ -222,6 +222,27 @@ fn ago(minutes: i64) -> String {
     }
 }
 
+/// When the owner last spoke to `session` themselves (`said_at`), as of
+/// `at`; of a question, also whether it came after that or was there
+/// before: what the device's times say, nothing more.
+pub fn owner_said(said_at: i64, session: &Session, at: i64) -> String {
+    let when = ago(minutes(at, said_at));
+    if session.change != Change::Asked {
+        return when;
+    }
+    let asked = session.occurred_at;
+    if asked >= said_at {
+        let later = match minutes(asked, said_at) {
+            0 => "less than a minute".to_string(),
+            1 => "a minute".to_string(),
+            gap => format!("{gap} minutes"),
+        };
+        format!("{when}; it asked this question after that, {later} later")
+    } else {
+        format!("{when}; it had asked this question before that, and has asked nothing since")
+    }
+}
+
 /// One session as a device last told it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -371,7 +392,7 @@ fn one(material: &mut Material, shown: &Shown, others: &[Told], at: i64) {
     if let Some(said_at) = session.owner_said_at {
         material.add(
             "when the owner last spoke to it themselves",
-            ago(minutes(at, said_at)),
+            owner_said(said_at, session, at),
             &reference,
         );
     }
