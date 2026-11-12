@@ -844,6 +844,8 @@ Mind who gave each its work: a session another session sent on reports back ther
 Weigh what the owner decided before about things like this (the numbered memories): an answer that goes against how they already work is wrong. \
 Every ground must be the numbers of what you were shown; if you cannot point at one, choose decide and say what you are missing. \
 ownerMustSay: true when its words want the owner's own say (a deploy, a push, an install, a spend).\n\
+Each nod or decide becomes a card the owner sees on its own, holding what you wrote in about, suggestion and missing. \
+What you say goes to the chat as a line apart from the cards; whether you say anything, and what, is yours to choose.\n\
 say: at most one thing you would tell the owner now, in your own voice and briefly, of the change you choose, with the numbers it rests on; or null to keep it all to the cards. \
 What you already told them is numbered too.\n\
 Answer only the JSON."
