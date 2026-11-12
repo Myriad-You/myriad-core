@@ -1322,6 +1322,11 @@ fn an_agent_sessions_lines_lose_what_signs_in_and_keep_what_analysis_needs() {
             SecretKind::Labelled,
         ),
         (
+            "sudo 输 p@ssw0rd9 就行".to_string(),
+            "p@ssw0rd9".to_string(),
+            SecretKind::Labelled,
+        ),
+        (
             "ログインは taro2024x でできた".to_string(),
             "taro2024x".to_string(),
             SecretKind::Labelled,
@@ -1350,6 +1355,9 @@ fn an_agent_sessions_lines_lose_what_signs_in_and_keep_what_analysis_needs() {
         "登录页的 Button2x 改成主题色".to_string(),
         "user / group 的权限都看过了".to_string(),
         "login flow 在 v2 里重写了".to_string(),
+        "ssh deploy@build-01.lan then curl the health check".to_string(),
+        "deploy failed: ssh ops@build7 retrying".to_string(),
+        "ssh -p 2222 admin2@stage-3 之后再登录后台".to_string(),
     ] {
         let scan = secrets::scan(&text);
         assert_eq!(scan.text, text, "误抹：{text}");
