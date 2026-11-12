@@ -48,9 +48,11 @@
 //! **An older side** ([`SendInput::peer_abi`]): a core of ABI 1 refuses a
 //! batch with a row that names another node (`to`, `takes`) and reads a
 //! retract as nothing; one below ABI 3 refuses a rule's row and a
-//! `node.standing`. Nothing goes to it while one of those would
-//! ([`Sent::too_old`]). Until every side of hers reads ABI 3, hosts write
-//! those two as local rows, which never go.
+//! `node.standing`; one below ABI 4 refuses a card row (`card.version`,
+//! `card.answered`) and holds a `segment.line` that carries a card as a bad
+//! body. Nothing goes to it while one of those would ([`Sent::too_old`]).
+//! Until every side of hers reads the ABI a row needs, hosts write it as a
+//! local row, which never goes.
 //!
 //! What a body must be to travel:
 //!
@@ -223,12 +225,13 @@ pub struct SendInput {
     /// The id this side goes by: a side under another id gets nothing
     /// ([`myriad_persona_log::partner::exchange`]).
     pub here: String,
-    /// The other side's core ABI (`meta.version` `abi`): 3 when its link's
-    /// `hello` or `welcome` lists the `log3` capability, 2 when `log2`, 1
-    /// when neither. A side below 2 gets nothing that carries a merge's or
-    /// a split's names or a retract, and one below 3 nothing with a rule's
-    /// row or a `node.standing` (`tooOld`): its core would refuse the whole
-    /// batch.
+    /// The other side's core ABI (`meta.version` `abi`): the highest N for
+    /// which its link's `hello` or `welcome` lists the `logN` capability
+    /// (`log4`, `log3`, `log2`), 1 when none. A side below 2 gets nothing
+    /// that carries a merge's or a split's names or a retract, one below 3
+    /// nothing with a rule's row or a `node.standing`, and one below 4 no
+    /// card row and no `segment.line` that carries a card (`tooOld`): its
+    /// core would refuse the whole batch.
     pub peer_abi: u32,
     /// This side's ledger, required: a node it forgot or took back from
     /// sync goes as stubs under every name it has, whatever rows are given.
@@ -265,10 +268,11 @@ pub struct Sent {
     pub held_back: Vec<String>,
 }
 
-/// The core ABI a row needs on the side that takes it: 3 for a rule's row
-/// or a `node.standing` (a core below 3 refuses the author and the kind,
-/// stub or not); 2 for one with a name in its envelope (`to`, `takes`) or
-/// a retract.
+/// The core ABI a row needs on the side that takes it: 4 for a card row
+/// or a `segment.line` that carries a card; 3 for a rule's row or a
+/// `node.standing` (a core below 3 refuses the author and the kind, stub or
+/// not); 2 for one with a name in its envelope (`to`, `takes`) or a
+/// retract.
 fn needs_abi(row: &Row, body: Option<&Value>) -> u32 {
     let retract = matches!(row.rule(), myriad_persona_log::Rule::Retract);
     // A card, and a line that carries one: a core below 4 holds no card

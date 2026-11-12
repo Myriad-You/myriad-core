@@ -200,3 +200,30 @@ fn a_wire_batch_fits_one_log_rows_frame() {
     let body = myriad_nodes::wire::MAX_BODY_BYTES.div_ceil(3) * 4;
     assert!(body + (16 << 10) <= myriad_nodes::wire::BATCH_BYTES);
 }
+
+/// Every log capability the contract lists names an ABI this core reads,
+/// and every ABI from 2 up to this core's has its own: an end lists only
+/// what the contract has and the other drops what it does not know, so an
+/// ABI the contract leaves out is one no two ends ever agree on.
+#[test]
+fn every_log_capability_the_contract_lists_is_an_abi_this_core_reads() {
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../shared/her_link_contract.json");
+    let contract: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let listed: Vec<u32> = contract["capabilities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|capability| capability.as_str()?.strip_prefix("log")?.parse().ok())
+        .collect();
+    for abi in &listed {
+        assert!(
+            (2..=crate::ABI_VERSION).contains(abi),
+            "log{abi} is listed but this core is ABI {}",
+            crate::ABI_VERSION
+        );
+    }
+    for abi in 2..=crate::ABI_VERSION {
+        assert!(listed.contains(&abi), "the contract does not list log{abi}");
+    }
+}
