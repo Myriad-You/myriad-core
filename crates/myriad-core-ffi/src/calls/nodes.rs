@@ -205,18 +205,38 @@ pub(super) fn look_due(raw: &[u8]) -> Result<Value, Failure> {
 }
 
 /// `{changes: [{told: {device, session}, memories?, before?}], others?,
-/// said?, at, soul?}` → `{material, waits, system, prompt, again, schema}`:
+/// said?, at, soul?}` → `{material, waits, decides, failed, system, prompt,
+/// again, schema}`:
 /// her one look at what came together, to ask of the model.
 pub(super) fn look_input(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_nodes::session_look::look_input(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{material, waits, raw}` → `{status: good|bad_grounds|unreadable,
+/// `{material, waits, decides?, failed?, raw}` → `{status:
+/// good|bad_grounds|unreadable|hollow,
 /// judgments: [{verdict, about, suggestion, because, missing, ownerMustSay,
 /// hasCard, card, evidence} | null], line: {change, text, because} | null}`:
 /// her answer read and held to itself.
 pub(super) fn look_read(raw: &[u8]) -> Result<Value, Failure> {
     answer(&myriad_nodes::session_look::look_read(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{scene, kind, subject}` → `{id}`: the card of that scene and kind
+/// about the node `subject`, the same on every side.
+pub(super) fn card_id(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::cards::card_id_call(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{card}` → `{card}`: a card read and checked before a side writes it
+/// (its words, ids, bounds, grounds, and what the wire would withhold).
+pub(super) fn card_check(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::cards::check_call(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{rows, bodies}` → `{cards: [{card, version, answered?, waiting}]}`:
+/// every card as it stands now, latest first.
+pub(super) fn cards_fold(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::cards::fold(quiet_input(raw)?).map_err(refused)?)
 }
 
 /// `{kind, node, source, revision?}` → `{id}`.

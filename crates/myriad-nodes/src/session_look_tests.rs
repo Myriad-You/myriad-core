@@ -207,22 +207,27 @@ fn every_ground_must_be_shown_and_every_change_there() {
 }
 
 #[test]
-fn she_says_one_thing_of_a_card_with_her_answer_on_it() {
+fn what_she_says_goes_whatever_card_it_is_of() {
     let raw = r#"{"changes":[
         {"change":1,"verdict":"decide","about":"asks whether to push","suggestion":"推","because":[2],"missing":null,"ownerMustSay":true},
         {"change":2,"verdict":"no_need","about":"docs done","suggestion":null,"because":[],"missing":null,"ownerMustSay":false}
     ],"say":{"change":CHANGE,"text":"要推吗","because":[2]}}"#;
     let said = settle(good(&raw.replace("CHANGE", "1")), &[true, false]);
     assert_eq!(said.line.unwrap().text, "要推吗");
+    // Of a change that has no card, or of a card with no suggestion: it
+    // goes all the same.
     assert_eq!(
-        settle(good(&raw.replace("CHANGE", "2")), &[true, false]).line,
-        None
+        settle(good(&raw.replace("CHANGE", "2")), &[true, false])
+            .line
+            .unwrap()
+            .text,
+        "要推吗"
     );
     let bare = settle(
         good(&raw.replace("CHANGE", "1").replace("\"推\"", "null")),
         &[true, false],
     );
-    assert_eq!(bare.line, None);
+    assert_eq!(bare.line.unwrap().text, "要推吗");
     // Never left to itself when it waits on them.
     let left = settle(
         good(
@@ -321,6 +326,7 @@ fn what_got_no_answer_keeps_its_card_if_it_waits_on_them() {
         let read = look_read(ReadInput {
             material: material.clone(),
             waits: vec![true, false],
+            decides: Vec::new(),
             failed: Vec::new(),
             raw: raw.into(),
         })
@@ -336,6 +342,7 @@ fn what_got_no_answer_keeps_its_card_if_it_waits_on_them() {
         let read = look_read(ReadInput {
             material: material.clone(),
             waits: vec![true, false],
+            decides: Vec::new(),
             failed: vec![false, true],
             raw: raw.into(),
         })
@@ -348,6 +355,7 @@ fn what_got_no_answer_keeps_its_card_if_it_waits_on_them() {
         look_read(ReadInput {
             material,
             waits: vec![true, false],
+            decides: Vec::new(),
             failed: vec![true],
             raw: raw.into(),
         })
@@ -378,4 +386,36 @@ fn times_at_the_edges_never_overflow() {
         }
         .late(i64::MAX)
     );
+}
+
+#[test]
+fn what_waits_on_the_owners_answer_is_theirs_to_decide_without_her() {
+    assert!(decides(&session("asked", json!({"waitingOn": "owner"}))));
+    // Whoever gave the work: another session's, waiting on the owner.
+    let sent_on = session(
+        "asked",
+        json!({"askedBy": "session", "askedByTitle": "Plan", "waitingOn": "owner"}),
+    );
+    assert!(decides(&sent_on));
+    // Waiting on the session that sent it on is not theirs to decide (an
+    // asked session always waits on the owner: the contract says so).
+    let reports_back = session(
+        "quiet",
+        json!({"askedBy": "session", "askedByTitle": "Plan", "waitingOn": "session"}),
+    );
+    assert!(!decides(&reports_back));
+    assert!(!decides(&session("finished", json!({"fromAgent": "done"}))));
+    assert_eq!(card_only("asks", true, true).verdict, Verdict::Decide);
+    assert_eq!(card_only("asks", true, false).verdict, Verdict::Nod);
+    assert_eq!(card_only("failed", false, false).verdict, Verdict::NoNeed);
+}
+
+#[test]
+fn the_form_with_nothing_in_it_is_hollow() {
+    let empty = r#"{"changes":[{"change":1,"verdict":"decide","about":" ","suggestion":null,"because":[],"missing":null,"ownerMustSay":false}],"say":null}"#;
+    assert!(hollow(empty));
+    assert!(hollow(&format!("```json\n{empty}\n```")));
+    assert!(!hollow(&empty.replace("\" \"", "\"push?\"")));
+    assert!(!hollow("not json"));
+    assert!(!hollow(r#"{"changes":[],"say":null}"#));
 }

@@ -122,7 +122,7 @@
           false
         ]
       },
-      "name": "what waits on the owner is never left to itself, and a bare card is unsaid",
+      "name": "what waits on the owner is never left to itself, and her line of a bare card is said all the same",
       "output": {
         "judgments": [
           {
@@ -148,7 +148,13 @@
             "verdict": "no_need"
           }
         ],
-        "line": null,
+        "line": {
+          "because": [
+            2
+          ],
+          "change": 1,
+          "text": "没事"
+        },
         "status": "good"
       }
     },
@@ -192,7 +198,7 @@
           false
         ]
       },
-      "name": "a line of what is not theirs is never said",
+      "name": "a line of what is not theirs is said all the same",
       "output": {
         "judgments": [
           {
@@ -222,7 +228,13 @@
             "verdict": "no_need"
           }
         ],
-        "line": null,
+        "line": {
+          "because": [
+            3
+          ],
+          "change": 2,
+          "text": "文档好了"
+        },
         "status": "good"
       }
     },
@@ -286,6 +298,58 @@
         ],
         "line": null,
         "status": "good"
+      }
+    },
+    {
+      "input": {
+        "decides": [
+          true,
+          false
+        ],
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": null}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "what waits on the owner's own answer is theirs to decide when her answer is hollow",
+      "output": {
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "because": [],
+            "card": "要你定：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "decide"
+          },
+          null
+        ],
+        "line": null,
+        "status": "hollow"
       }
     },
     {
@@ -570,6 +634,54 @@
         ]
       },
       "name": "waits not one per change",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "decides": [
+          true
+        ],
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [], \"say\": null}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "decides not one per change",
       "output": {
         "error": "bad_input"
       }

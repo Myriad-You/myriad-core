@@ -98,6 +98,9 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.look_due" => crate::session_look::due_call(input(raw)?),
         "nodes.look_input" => json_of(&crate::session_look::look_input(input(raw)?)?),
         "nodes.look_read" => json_of(&crate::session_look::look_read(input(raw)?)?),
+        "nodes.card_id" => json_of(&crate::cards::card_id_call(input(raw)?)?),
+        "nodes.card_check" => json_of(&crate::cards::check_call(input(raw)?)?),
+        "nodes.cards_fold" => json_of(&crate::cards::fold(input(raw)?)?),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
@@ -137,7 +140,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 38, "{files:?}");
+    assert_eq!(files.len(), 41, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -583,6 +586,34 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("refused: a limit of none", "limit is at least 1"),
         ("refused: to before from", "to comes before from"),
         ("refused: nodes that repeat in a list", "node ids repeat"),
+        // nodes.card_id, nodes.card_check
+        (
+            "a subject that is not a node is refused",
+            "a card's subject is node:<id>",
+        ),
+        (
+            "a kind that is not a word is refused",
+            "a card's scene and kind are words",
+        ),
+        (
+            "a card about a node under another id is refused",
+            "goes by that node's card id",
+        ),
+        (
+            "a view resting on a fact it does not have is refused",
+            "rests on a fact it does not have",
+        ),
+        (
+            "a state no standing says is refused",
+            "no word a standing says",
+        ),
+        ("an action twice is refused", "comes twice"),
+        ("too many facts is refused", "too many facts"),
+        ("a title too long is refused", "title is empty or too long"),
+        ("a key in a fact is refused", "withheld on the wire (Secret)"),
+        ("a key in its view is refused", "withheld on the wire (Secret)"),
+        ("a field the card does not name is refused", "unknown field"),
+        ("a field a fact does not name is refused", "not of its shape"),
         // nodes.look_route, nodes.look_input, nodes.look_read
         (
             "a body the contract refuses",
@@ -594,6 +625,7 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         ("nothing to look at", "no change to look at"),
         ("waits not one per change", "waits is not one per change"),
+        ("decides not one per change", "decides is not one per change"),
     ];
     let mut seen = 0;
     for path in case_files() {

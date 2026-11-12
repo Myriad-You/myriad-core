@@ -80,6 +80,7 @@
 use std::fmt;
 
 pub mod body;
+pub mod cards;
 pub mod entries;
 pub mod fold;
 pub mod home;

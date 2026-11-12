@@ -17,6 +17,8 @@
 //! | `segment.open` | `segment:<id>` | [`SegmentOpen`] |
 //! | `segment.line` | `segment:<id>` | [`SegmentLine`] |
 //! | `segment.close` | `segment:<id>` | [`SegmentClose`] |
+//! | `card.version` | `card:<id>` | [`CardVersion`] |
+//! | `card.answered` | `card:<id>` | [`CardAnswered`] |
 //! | `memory.write` | `memory:<id>` | [`MemoryWrite`] |
 //! | `memory.retire` | `memory:<id>` | [`MemoryRetire`] |
 //! | `memory.restore` | `memory:<id>` | [`MemoryRestore`] |
@@ -65,6 +67,88 @@ pub struct SegmentLine {
     /// pictures only has no `text`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pictures: Option<u32>,
+    /// The card that comes with it (`card.version`, by its id): her line and
+    /// the card are one message. A line of a card only has no `text`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub card: Option<String>,
+}
+
+/// One card as it stands now (`card.version`): a thing put before the
+/// owner in her talk with them, as facts the program can check, her view of
+/// it, and what they may answer. An open shape: a side that knows no
+/// `kind` shows its `title`, `facts` and `actions` all the same
+/// (`myriad_nodes::cards` holds the rules: words, bounds, ids). Unlike the
+/// other shapes here, no part of a card takes a field it does not name:
+/// every string in it is one the wire checks by name.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardVersion {
+    pub at: i64,
+    pub id: String,
+    pub kind: String,
+    pub scene: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<String>,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub facts: Vec<CardFact>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub view: Option<CardView>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub actions: Vec<CardAction>,
+}
+
+/// At most this many bytes of a card's word (`kind`, `scene`, an action's
+/// id).
+pub const CARD_WORD_BYTES: usize = 32;
+
+/// A word of a card: 1 to [`CARD_WORD_BYTES`] bytes of `a`–`z`, `0`–`9`,
+/// `_`.
+pub fn card_word(text: &str) -> bool {
+    !text.is_empty()
+        && text.len() <= CARD_WORD_BYTES
+        && text
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+}
+
+/// One fact on a card, and what it is about when that is a node or a
+/// session (`ref`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardFact {
+    pub text: String,
+    #[serde(default, rename = "ref", skip_serializing_if = "Option::is_none")]
+    pub reference: Option<String>,
+}
+
+/// Her view on a card, on the facts it rests on (`because`, numbered from 1).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardView {
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub because: Vec<u32>,
+}
+
+/// One thing the owner may answer a card with.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardAction {
+    pub id: String,
+    pub label: String,
+}
+
+/// The owner's answer to a card (`card.answered`): which action, on which
+/// version of it (that version's row id).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardAnswered {
+    pub at: i64,
+    pub action: String,
+    pub version: String,
 }
 
 /// A stretch of talk is over.
@@ -490,12 +574,28 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
             if line.pictures == Some(0) {
                 return Err(LogError::new("a segment.line payload counts no pictures"));
             }
-            if line.pictures.is_none() {
+            if let Some(card) = &line.card
+                && !crate::row::is_token(card)
+            {
+                return Err(LogError::new("a segment.line payload names no card"));
+            }
+            if line.pictures.is_none() && line.card.is_none() {
                 check_text(kind, &line.text)?;
             }
         }
         "segment.close" => {
             read::<SegmentClose>(kind, payload)?;
+        }
+        "card.version" => {
+            read::<CardVersion>(kind, payload)?;
+        }
+        "card.answered" => {
+            let answered: CardAnswered = read(kind, payload)?;
+            if !card_word(&answered.action) || !crate::row::is_token(&answered.version) {
+                return Err(LogError::new(
+                    "a card.answered payload names no action or version",
+                ));
+            }
         }
         "memory.write" => {
             let memory: MemoryWrite = read(kind, payload)?;
