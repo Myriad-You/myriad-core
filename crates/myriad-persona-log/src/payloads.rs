@@ -100,6 +100,20 @@ pub struct CardVersion {
     pub actions: Vec<CardAction>,
 }
 
+/// At most this many bytes of a card's word (`kind`, `scene`, an action's
+/// id).
+pub const CARD_WORD_BYTES: usize = 32;
+
+/// A word of a card: 1 to [`CARD_WORD_BYTES`] bytes of `a`–`z`, `0`–`9`,
+/// `_`.
+pub fn card_word(text: &str) -> bool {
+    !text.is_empty()
+        && text.len() <= CARD_WORD_BYTES
+        && text
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+}
+
 /// One fact on a card, and what it is about when that is a node or a
 /// session (`ref`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -577,13 +591,7 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
         }
         "card.answered" => {
             let answered: CardAnswered = read(kind, payload)?;
-            let word = !answered.action.is_empty()
-                && answered.action.len() <= 32
-                && answered
-                    .action
-                    .bytes()
-                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_');
-            if !word || !crate::row::is_token(&answered.version) {
+            if !card_word(&answered.action) || !crate::row::is_token(&answered.version) {
                 return Err(LogError::new(
                     "a card.answered payload names no action or version",
                 ));

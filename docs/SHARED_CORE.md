@@ -470,7 +470,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 她在和主人的私聊里放到主人面前的一件事：程序能核对的事实、她的看法、主人能怎么回答。规则在 `crates/myriad-nodes/src/cards.rs`。
 
 - **是她日志里的行**，受众 `personal:<主人>`。`card.version` 是卡现在的样子（Latest：日志顺序里最后一行就是这张卡，之前的是历史），作者是她或 `rule`（规则写的卡不需要执笔权，`rule` 只能写节点之外的这一种）；`card.answered` 是主人的回答，作者只能是主人。她的一条消息用 `segment.line` 的 `card` 带上卡：话和卡是一条消息，话可以没有。同一张卡出现在几条消息里时，整卡画在最新的那条，更早的收成一行。
-- **开放**：`kind`、`scene` 是开放的词（小写字母、数字、`_`，最多 32 字节）。不认识这个 kind 的一端照通用样式画 `title`、`facts`、`actions`，新的卡不用等各端发版。第一版的 kind 是 `decide`、`nod`、`progress`、`status`，scene 是 `agents`。
+- **开放**：`kind`、`scene` 是开放的词（小写字母、数字、`_`，最多 32 字节）。不认识这个 kind 的一端照通用样式画 `title`、`facts`、`actions`，新的卡不用等各端发版。开放的是这两个词，不是字段：卡的每一层都不收没列出的字段，给卡的任何一层加字段都要升 ABI（和别的行一样，见 `wire` 的字段表）。第一版的 kind 是 `decide`、`nod`、`progress`、`status`，scene 是 `agents`。
 - **一件事一张卡**：同一 scene、kind、节点的卡永远是同一个 id（`nodes.card_id`：`card\u{1f}scene\u{1f}kind\u{1f}subject` 的 sha256 前 16 字节，前缀 `c_`），新的一版替换它。不关于节点的卡由写它的一端起 id，以这一端的名字开头（`<origin>_…`），各端不会撞。id 是 1 到 80 字节的字母、数字、`_`、`-`、`.`。
 - **字段**（卡的每一层都不收没列出的字段：卡里每个字符串都按名字查过）：`title`（不空，最多 60 字）；`state`（可空，就是 `node.standing` 的那组状态词）；`facts`（最多 8 条，每条 `text` 不空、最多 120 字，`ref` 是它说的节点或会话）；`view`（她的话：`text` 最多 1000 字，`because` 是 facts 的编号，从 1 起、不重复、落在 facts 里）；`actions`（最多 4 个，`id` 是词、不重复，`label` 不空、最多 12 字）。`open` 是保留的 action：打开卡说的那个会话，不写回答。
 - **只放事实**：卡里没有对话原文。title、facts、view、label 过密钥扫描，id 和 ref 过路径和已知密钥的检查（和别的正文一样，在 `nodes.wire_send` 里；`nodes.card_check` 写之前先查一遍，查不过的理由按字段给）。卡超限或查不过时，宿主照常发她的那句话，并记下拒收的理由。

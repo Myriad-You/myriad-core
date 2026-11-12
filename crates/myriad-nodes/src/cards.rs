@@ -59,7 +59,7 @@ pub const ACTIONS: usize = 4;
 /// At most this many characters of an action's label.
 pub const LABEL_CHARS: usize = 12;
 /// At most this many bytes of a word (`kind`, `scene`, an action's id).
-pub const WORD_BYTES: usize = 32;
+pub const WORD_BYTES: usize = myriad_persona_log::payloads::CARD_WORD_BYTES;
 /// At most this many bytes of a card's id.
 pub const ID_BYTES: usize = 80;
 /// The fields of a card (`card.version`), as the wire takes them.
@@ -72,11 +72,7 @@ pub const OPEN: &str = "open";
 
 /// A word of a card: 1 to [`WORD_BYTES`] bytes of `a`–`z`, `0`–`9`, `_`.
 pub fn word(text: &str) -> bool {
-    !text.is_empty()
-        && text.len() <= WORD_BYTES
-        && text
-            .bytes()
-            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+    myriad_persona_log::payloads::card_word(text)
 }
 
 /// A card's id: 1 to [`ID_BYTES`] bytes of ASCII letters, digits, `_`,
