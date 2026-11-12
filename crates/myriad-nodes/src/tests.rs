@@ -101,6 +101,9 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.card_id" => json_of(&crate::cards::card_id_call(input(raw)?)?),
         "nodes.card_check" => json_of(&crate::cards::check_call(input(raw)?)?),
         "nodes.cards_fold" => json_of(&crate::cards::fold(input(raw)?)?),
+        "nodes.look_card" => json!({ "card": crate::look_cards::decision(input(raw)?)? }),
+        "nodes.look_status" => json!({ "card": crate::look_cards::status(input(raw)?)? }),
+        "nodes.look_settled" => json!({ "card": crate::look_cards::settled(input(raw)?)? }),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
@@ -140,7 +143,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 41, "{files:?}");
+    assert_eq!(files.len(), 44, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -626,6 +629,15 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("nothing to look at", "no change to look at"),
         ("waits not one per change", "waits is not one per change"),
         ("decides not one per change", "decides is not one per change"),
+        // nodes.look_card
+        (
+            "a change that needs nothing of them has no card",
+            "a change that needs nothing has no card",
+        ),
+        (
+            "a change the material does not have is refused",
+            "change is not one of the material",
+        ),
     ];
     let mut seen = 0;
     for path in case_files() {

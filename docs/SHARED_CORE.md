@@ -484,6 +484,22 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.card_check` | `{card}` → `{card}`：写之前查一张卡（形状、字段、词、id、上限、依据、密钥）；查不过是 `bad_input`，理由说是哪一项 |
 | `nodes.cards_fold` | `{rows, bodies}` → `{cards: [{card, version, answered?, waiting}]}`：每张卡现在的样子，最新的一版在前；`version` 是最新一版的行 id，`answered` 是它之后的回答 |
 
+### 会话判断出的卡（`nodes.look_card`、`nodes.look_status`、`nodes.look_settled`）
+
+她看站长的会话时出的卡，scene 是 `agents`，规则在 `crates/myriad-nodes/src/look_cards.rs`。看会话的可能是站点，也可能是 Mac，所以卡在 core 里生成，哪一端出的都一样。
+
+- **facts 由程序说**：从设备报来的会话字段生成（会话和仓库、谁派的活、现在怎样、站长上次亲自发话、改了哪些文件、测试和构建、反复出的错、改了别的会话刚写的内容），不放任何对话原文：站长、会话、别的会话说过的话都不是 fact。文字按传入的 `language`（站长的语言）出：简中、繁中、英、日、韩、法、德，别的语言用英文。
+- **她的依据落到 facts 上**：判断里的 `because` 是材料的编号，按材料那一条的类别换成说同一件事的 fact 编号；别的会话、她的记忆、她以前说过的话不是这张卡的 fact，换不过来的就不列。
+- `nodes.look_card`：`decide` 的回答键是 `agree`（有建议时）或 `seen`（没有建议时），`nod` 的是 `ok`，都另带 `open`。判为不用管的（`no_need`）没有卡，是 `bad_input`。id 是 `nodes.card_id {agents, kind, node:<任务节点>}`。
+- `nodes.look_status`：会话做完或失败时出一张 `status`，只有 `open`，不等站长；别的时候 `card` 是 null。
+- `nodes.look_settled`：会话没经过卡就往下走了（站长在会话里答了、它接着做了或结束了），卡的下一版：facts 和 `state` 按会话现在的样子，依据清空，只留 `open`，卡不再等站长。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `nodes.look_card` | `{task, told, judgment, material, change, at, language}` → `{card}` |
+| `nodes.look_status` | `{task, told, at, language}` → `{card}`（不是做完或失败时为 null） |
+| `nodes.look_settled` | `{card, told, at, language}` → `{card}` |
+
 ## 交办（`handoff.*`）
 
 她在聊天里以自己的身份说话；要办事时在回复末尾单占一行写 `[[work: …]]` 交给助手。交出去的每一件按对话编号（`#1`、`#2`……），几件可以同时办；之后给某一件的话写 `[[work #N: …]]`，`[[stop #N]]` 只停那一件。规则在 `myriad_merope::handoff`，取自站点 2026-11-02 的 `delegate.rs`、`channel_work/works.rs`、`agent/panel_work.rs`（只挪不改）；跑各件、存各件、计时和投递仍各端自己写。

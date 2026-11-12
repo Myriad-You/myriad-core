@@ -1,0 +1,438 @@
+{
+  "call": "nodes.look_status",
+  "cases": [
+    {
+      "input": {
+        "at": 1760000000000,
+        "language": "zh-CN",
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "finished",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ]
+          }
+        }
+      },
+      "name": "a session that finished has a status card",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：做完了这一轮，没有要你回答的"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_0a275de711c6f1671abff2682b516c13",
+          "kind": "status",
+          "scene": "agents",
+          "state": "finished",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "language": "zh-CN",
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "failed",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "failed"
+              }
+            ],
+            "errors": [
+              {
+                "count": 5,
+                "firstAt": 1759999400000,
+                "lastAt": 1759999880000,
+                "sig": "e1"
+              }
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "overwrote": [
+              {
+                "at": 1759999700000,
+                "files": 2,
+                "session": "s-2",
+                "undid": true
+              }
+            ],
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ]
+          }
+        }
+      },
+      "name": "a session that failed says how",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：卡住了（一直出错，或检查没过）"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试没过"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "同一个错误出了 5 次，最近一次：2 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改回了另一个会话刚写的内容（2 个文件，5 分钟前）"
+            }
+          ],
+          "id": "c_0a275de711c6f1671abff2682b516c13",
+          "kind": "status",
+          "scene": "agents",
+          "state": "stuck",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "language": "en-US",
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "failed",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "failed"
+              }
+            ],
+            "errors": [
+              {
+                "count": 5,
+                "firstAt": 1759999400000,
+                "lastAt": 1759999880000,
+                "sig": "e1"
+              }
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "overwrote": [
+              {
+                "at": 1759999700000,
+                "files": 2,
+                "session": "s-2",
+                "undid": true
+              }
+            ],
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ]
+          }
+        }
+      },
+      "name": "a session that failed, in English",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "Open session"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "coding-agent session in sample-repo"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "You assigned this work yourself"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Now: stuck (kept erring, or its checks failed)"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Your last word to the session: 3 min ago"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Changed 2 file(s): mod.rs, split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Tests failed"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "The same failure 5 times, latest 2 min ago"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "Put back what another session had just written (2 file(s), 5 min ago)"
+            }
+          ],
+          "id": "c_0a275de711c6f1671abff2682b516c13",
+          "kind": "status",
+          "scene": "agents",
+          "state": "stuck",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "language": "zh-CN",
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "a session that asks has no status card: its decision says it",
+      "output": {
+        "card": null
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "language": "zh-CN",
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "started",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ]
+          }
+        }
+      },
+      "name": "a session that started has no status card",
+      "output": {
+        "card": null
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "language": "zh-CN",
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "quiet",
+            "checks": [
+              {
+                "at": 1760000000000,
+                "kind": "test",
+                "state": "running"
+              },
+              {
+                "at": 1760000000000,
+                "kind": "other",
+                "state": "ended"
+              }
+            ],
+            "errors": [
+              {
+                "count": 4,
+                "firstAt": 1759740800000,
+                "lastAt": 1759827200000,
+                "sig": "e1"
+              }
+            ],
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "overwrote": [
+              {
+                "at": 1759992800000,
+                "files": 1,
+                "session": "s-2",
+                "undid": false
+              }
+            ],
+            "ownerSaidAt": 1759989200000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "checks"
+          }
+        }
+      },
+      "name": "a quiet session has no status card",
+      "output": {
+        "card": null
+      }
+    }
+  ],
+  "version": 1
+}
