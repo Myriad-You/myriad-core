@@ -241,6 +241,68 @@
               "what": "the session"
             },
             {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [2], \"missing\": null, \"ownerMustSay\": false}], \"say\": null}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a change that waits on the owner and got no answer keeps only its card",
+      "output": {
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "because": [],
+            "card": "你点头就行：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          {
+            "about": "文档写完了",
+            "because": [
+              2
+            ],
+            "card": "不用你管：文档写完了",
+            "evidence": [
+              "session:s2"
+            ],
+            "hasCard": false,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": null,
+        "status": "good"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
               "change": 1,
               "evidence": "session:s1",
               "text": "Q: Push now? (push / wait)",
@@ -268,7 +330,20 @@
       },
       "name": "grounds that are not shown",
       "output": {
-        "judgments": [],
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "because": [],
+            "card": "你点头就行：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          null
+        ],
         "line": null,
         "status": "bad_grounds"
       }
@@ -315,7 +390,20 @@
       },
       "name": "a change that is not there",
       "output": {
-        "judgments": [],
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "because": [],
+            "card": "你点头就行：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          null
+        ],
         "line": null,
         "status": "bad_grounds"
       }
@@ -362,7 +450,20 @@
       },
       "name": "not her answer's shape",
       "output": {
-        "judgments": [],
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "because": [],
+            "card": "你点头就行：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          null
+        ],
         "line": null,
         "status": "unreadable"
       }

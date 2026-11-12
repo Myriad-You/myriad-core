@@ -30,6 +30,11 @@ pub struct Rules {
     pub checks_at_most: usize,
     pub keep_ms: u64,
     pub quiet_after_ms: u64,
+    pub sig_pattern: String,
+    pub errors_at_most: usize,
+    pub overwrote_at_most: usize,
+    pub error_span_ms: i64,
+    pub repeated_error_at: u32,
     pub look: Look,
 }
 
@@ -119,6 +124,30 @@ pub struct Check {
     pub at: i64,
 }
 
+/// Failures of one kind in a session, as the device groups them (`sessions`
+/// says how `sig` is made: no one can read the failure back from it).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Failures {
+    pub sig: String,
+    pub count: u32,
+    pub first_at: i64,
+    pub last_at: i64,
+}
+
+/// Lines another session on the device had just written, that this one
+/// lately changed.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Overwrote {
+    /// The other session's id on the device.
+    pub session: String,
+    pub files: u32,
+    /// It put back what the other had replaced, not only rewrote it.
+    pub undid: bool,
+    pub at: i64,
+}
+
 /// One `now.session` body, read.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -144,10 +173,15 @@ pub struct Session {
     pub from_peer: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub from_agent: Option<String>,
-    /// When the owner last spoke to the session themselves (only from a
-    /// device whose welcome listed `now.ownerSaidAt`).
+    /// When the owner last spoke to the session themselves. This, `errors`
+    /// and `overwrote` come only from a device whose welcome listed
+    /// `now.sessions2`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub owner_said_at: Option<i64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub errors: Vec<Failures>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub overwrote: Vec<Overwrote>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub touched: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -231,6 +265,14 @@ pub fn valid_remote(remote: &str) -> bool {
 
 /// A path relative to the repository's root: not empty, not absolute (no
 /// leading `/`, `\`, `~` or drive), no `.` or `..` part, no control.
+/// `sessions.sigPattern`: 16 lowercase hex digits.
+pub fn valid_sig(sig: &str) -> bool {
+    sig.len() == 16
+        && sig
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
 pub fn valid_relative_path(path: &str) -> bool {
     let rules = rules();
     if path.is_empty() || path.len() > rules.path_bytes {
@@ -312,6 +354,34 @@ pub fn read_session(body: &Value) -> Result<Session, Refusal> {
     if session.owner_said_at.is_some_and(|at| at <= 0) {
         return Err(bad("ownerSaidAt is not a time"));
     }
+    if session.errors.len() > rules.errors_at_most {
+        return Err(refuse(
+            "too_many",
+            format!("errors holds more than {}", rules.errors_at_most),
+        ));
+    }
+    for failures in &session.errors {
+        if !valid_sig(&failures.sig) {
+            return Err(bad("an error's sig does not match sessions.sigPattern"));
+        }
+        if failures.count == 0 || failures.first_at <= 0 || failures.last_at < failures.first_at {
+            return Err(bad("an error is not counted between two times"));
+        }
+    }
+    if session.overwrote.len() > rules.overwrote_at_most {
+        return Err(refuse(
+            "too_many",
+            format!("overwrote holds more than {}", rules.overwrote_at_most),
+        ));
+    }
+    for overwrote in &session.overwrote {
+        if !valid_session(&overwrote.session) || overwrote.session == session.session {
+            return Err(bad("overwrote names no other session"));
+        }
+        if overwrote.files == 0 || overwrote.at <= 0 {
+            return Err(bad("overwrote counts no file, or no time"));
+        }
+    }
     if session.touched.len() > rules.touched_at_most {
         return Err(refuse(
             "too_many",
@@ -375,6 +445,8 @@ mod tests {
             "fromPeer": "split the store, then report back",
             "fromAgent": "Committed locally. Push now? (yes / later)",
             "ownerSaidAt": 1_760_140_000_000_i64,
+            "errors": [{"sig": "0123456789abcdef", "count": 3, "firstAt": 1_760_140_000_000_i64, "lastAt": 1_760_140_800_000_i64}],
+            "overwrote": [{"session": "s-other", "files": 2, "undid": true, "at": 1_760_140_700_000_i64}],
             "touched": ["src/store.rs", "src/lib.rs"],
             "checks": [{"kind": "test", "state": "passed", "at": 1_760_140_880_000_i64}],
             "waitingOn": "owner"
@@ -415,6 +487,13 @@ mod tests {
         let frame = &contract["frames"]["now.session"];
         assert_eq!(frame["maxItems"]["touched"], json!(rules.touched_at_most));
         assert_eq!(frame["maxItems"]["checks"], json!(rules.checks_at_most));
+        assert_eq!(frame["maxItems"]["errors"], json!(rules.errors_at_most));
+        assert_eq!(
+            frame["maxItems"]["overwrote"],
+            json!(rules.overwrote_at_most)
+        );
+        assert_eq!(rules.sig_pattern, "^[0-9a-f]{16}$");
+        assert!(rules.repeated_error_at >= 2 && rules.error_span_ms > 0);
         let mut fields: Vec<String> = frame["required"]
             .as_array()
             .unwrap()
@@ -479,6 +558,42 @@ mod tests {
             ("fromPeer", json!(" ")),
             ("ownerSaidAt", json!(0)),
             ("ownerSaidAt", json!("soon")),
+            (
+                "errors",
+                json!([{"sig": "0123456789ABCDEF", "count": 1, "firstAt": 1, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcde", "count": 1, "firstAt": 1, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 0, "firstAt": 1, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 2, "lastAt": 1}]),
+            ),
+            (
+                "errors",
+                json!([{"sig": "0123456789abcdef", "count": 1, "firstAt": 1, "lastAt": 1, "text": "x"}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "s/x", "files": 1, "undid": false, "at": 1}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "s-other", "files": 0, "undid": false, "at": 1}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "s-other", "files": 1, "undid": false, "at": 0}]),
+            ),
+            (
+                "overwrote",
+                json!([{"session": "0199d5c0-9000-7333-8333-333333333333", "files": 1, "undid": false, "at": 1}]),
+            ),
         ] {
             let mut bad = body();
             bad[field] = value.clone();

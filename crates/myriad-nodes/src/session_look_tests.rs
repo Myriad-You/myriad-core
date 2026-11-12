@@ -223,3 +223,98 @@ fn the_contract_names_her_verdicts() {
         json!(rules().look.verdicts)
     );
 }
+
+#[test]
+fn failures_and_undone_lines_are_said_by_counts_and_ids_alone() {
+    let sig = "0123456789abcdef";
+    let failed = told(session(
+        "failed",
+        json!({
+            "fromAgent": "the build keeps failing",
+            "errors": [{"sig": sig, "count": 3, "firstAt": AT - 10 * 60_000, "lastAt": AT - 60_000},
+                       {"sig": "fedcba9876543210", "count": 2, "firstAt": AT - 60_000, "lastAt": AT - 60_000}],
+            "overwrote": [{"session": "s-3", "files": 2, "undid": true, "at": AT - 2 * 60_000}],
+        }),
+    ));
+    let mut shares = told(session(
+        "finished",
+        json!({"fromAgent": "done", "title": "Rename the types",
+               "errors": [{"sig": sig, "count": 1, "firstAt": AT - 5 * 60_000, "lastAt": AT - 5 * 60_000}]}),
+    ));
+    shares.session.session = "s-3".into();
+    let rewrote = told(session(
+        "quiet",
+        json!({"title": "Tidy the docs", "session": "s-4",
+               "overwrote": [{"session": "s-1", "files": 1, "undid": false, "at": AT - 3 * 60_000}]}),
+    ));
+    // Under another grant, or on another computer: never compared.
+    let mut elsewhere = shares.clone();
+    elsewhere.device = "dev_pc".into();
+    let mut regranted = shares.clone();
+    regranted.session.grant = "g_9876543210".into();
+    let numbered = material(
+        &[Shown {
+            told: failed.clone(),
+            memories: Vec::new(),
+            before: None,
+        }],
+        &[failed, shares, rewrote, elsewhere, regranted],
+        &[],
+        AT,
+    )
+    .numbered();
+    for line in [
+        "a failure it keeps hitting: the same failure 3 times in 9 minutes, the latest a minute ago",
+        "a failure another session hits too: «Rename the types (coding-agent in repo)» failed the same way (once, the latest 5 minutes ago)",
+        "what it did to another session's work: it put back what «Rename the types (coding-agent in repo)» had just replaced, in 2 file(s), 2 minutes ago",
+        "what another session did to its work: «Tidy the docs (coding-agent in repo)» rewrote lines this one had just written, in 1 file(s), 3 minutes ago",
+    ] {
+        assert!(numbered.contains(line), "{line}\n{numbered}");
+    }
+    assert_eq!(numbered.matches("keeps hitting").count(), 1, "{numbered}");
+    assert_eq!(numbered.matches("hits too").count(), 1, "{numbered}");
+}
+
+#[test]
+fn what_got_no_answer_keeps_its_card_if_it_waits_on_them() {
+    let material = two();
+    let raw = r#"{"changes":[{"change":2,"verdict":"no_need","about":"docs done","suggestion":null,"because":[3],"missing":null,"ownerMustSay":false}],"say":null}"#;
+    for (raw, status) in [(raw, "good"), ("not json", "unreadable")] {
+        let read = look_read(ReadInput {
+            material: material.clone(),
+            waits: vec![true, false],
+            raw: raw.into(),
+        })
+        .unwrap();
+        assert_eq!(read.status, status);
+        let card = read.judgments[0].as_ref().unwrap();
+        assert_eq!(card.judgment.verdict, Verdict::Nod);
+        assert_eq!(card.card, "你点头就行：asks");
+        assert_eq!(read.judgments[1].is_some(), status == "good");
+    }
+}
+
+#[test]
+fn a_refused_body_is_never_quoted_back() {
+    let mut frame = serde_json::to_value(session("asked", json!({}))).unwrap();
+    frame["change"] = json!("token-sk-123");
+    let refused = route_call(RouteInput {
+        frame,
+        linked_at: 0,
+        at: AT,
+    })
+    .unwrap_err();
+    assert!(!format!("{refused:?}").contains("sk-123"), "{refused:?}");
+}
+
+#[test]
+fn times_at_the_edges_never_overflow() {
+    assert_eq!(due(i64::MAX, i64::MAX), i64::MAX);
+    assert!(
+        !Arrival {
+            linked_at: i64::MIN,
+            at: i64::MIN
+        }
+        .late(i64::MAX)
+    );
+}

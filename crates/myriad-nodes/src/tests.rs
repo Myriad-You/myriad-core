@@ -587,6 +587,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "a body the contract refuses",
             "tool does not match sessions.toolPattern",
         ),
+        (
+            "a body that does not parse is refused",
+            "now.session: a body the contract refuses",
+        ),
         ("nothing to look at", "no change to look at"),
         ("waits not one per change", "waits is not one per change"),
     ];

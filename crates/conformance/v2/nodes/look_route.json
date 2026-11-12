@@ -146,6 +146,29 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "at": 1760000001000,
+        "frame": {
+          "askedBy": "owner",
+          "change": "pushed",
+          "fromAgent": "Q: Push now? (push / wait)",
+          "fromOwner": "split it and commit",
+          "grant": "g_0123456789",
+          "occurredAt": 1760000000000,
+          "remote": "github.com/demo/sample-repo",
+          "session": "s-1",
+          "title": "Split the store",
+          "tool": "coding-agent",
+          "waitingOn": "owner"
+        },
+        "linkedAt": 1759999940000
+      },
+      "name": "a body that does not parse is refused",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

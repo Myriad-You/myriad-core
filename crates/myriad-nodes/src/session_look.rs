@@ -61,7 +61,8 @@ impl Arrival {
     /// its link opened, or more than `sessions.look.lateAfterMs` before it
     /// came.
     pub fn late(self, occurred_at: i64) -> bool {
-        occurred_at < self.linked_at || self.at - occurred_at > rules().look.late_after_ms
+        occurred_at < self.linked_at
+            || self.at.saturating_sub(occurred_at) > rules().look.late_after_ms
     }
 }
 
@@ -89,7 +90,9 @@ pub fn route(session: &Session, arrival: Arrival) -> Route {
 /// has come for `sessions.look.quietMs`, or `atMostMs` after the first.
 pub fn due(first_at: i64, last_at: i64) -> i64 {
     let look = &rules().look;
-    (last_at + look.quiet_ms).min(first_at + look.at_most_ms)
+    last_at
+        .saturating_add(look.quiet_ms)
+        .min(first_at.saturating_add(look.at_most_ms))
 }
 
 /// Whether a change waits on the owner: it asks them, or says its next
@@ -190,6 +193,17 @@ pub fn quoted(words: &str) -> String {
         format!("{words} [the original is longer: only its first {most} characters are here]")
     } else {
         words.to_string()
+    }
+}
+
+fn minutes(at: i64, then: i64) -> i64 {
+    at.saturating_sub(then) / 60_000
+}
+
+fn times(count: u32) -> String {
+    match count {
+        1 => "once".to_string(),
+        count => format!("{count} times"),
     }
 }
 
@@ -313,7 +327,7 @@ pub fn material(changes: &[Shown], others: &[Told], said: &[Said], at: i64) -> M
     for line in said.iter().take(SAID) {
         material.add_around(
             "what you already told the owner of their sessions",
-            format!("{}: {}", ago((at - line.at) / 60_000), line.text),
+            format!("{}: {}", ago(minutes(at, line.at)), line.text),
             &format!("proactive:{}", line.id),
         );
     }
@@ -350,7 +364,7 @@ fn one(material: &mut Material, shown: &Shown, others: &[Told], at: i64) {
     if let Some(said_at) = session.owner_said_at {
         material.add(
             "when the owner last spoke to it themselves",
-            ago((at - said_at) / 60_000),
+            ago(minutes(at, said_at)),
             &reference,
         );
     }
@@ -369,6 +383,8 @@ what each choice is (written in a file, or earlier in its conversation with the 
         material.add("files it changed", session.touched.join(", "), &reference);
     }
     material.add("its tests and builds", checks_line(session), &reference);
+    failures(material, told, others, at, &reference);
+    overwritten(material, told, others, at, &reference);
     for other in others
         .iter()
         .filter(|other| {
@@ -411,6 +427,110 @@ what each choice is (written in a file, or earlier in its conversation with the 
             before.clone(),
             &reference,
         );
+    }
+}
+
+/// Whether `other` is another session under the same grant on the same
+/// device as `told` (what `errors` and `overwrote` can be compared with).
+fn beside(told: &Told, other: &Told) -> bool {
+    other.device == told.device
+        && other.session.grant == told.session.grant
+        && other.session.session != told.session.session
+}
+
+fn spoken_title(told: &Told, id: &str, others: &[Told]) -> String {
+    others
+        .iter()
+        .find(|other| beside(told, other) && other.session.session == id)
+        .map_or_else(
+            || "another session on this computer".to_string(),
+            |other| format!("«{}»", title(&other.session)),
+        )
+}
+
+/// What its failures say by counts and ids alone: one it keeps hitting
+/// (`sessions.repeatedErrorAt` times or more), and one another session
+/// under the same grant hits too.
+fn failures(material: &mut Material, told: &Told, others: &[Told], at: i64, reference: &str) {
+    let rules = rules();
+    for failure in &told.session.errors {
+        if failure.count >= rules.repeated_error_at {
+            material.add(
+                "a failure it keeps hitting",
+                format!(
+                    "the same failure {} times in {} minutes, the latest {}",
+                    failure.count,
+                    minutes(failure.last_at, failure.first_at).max(1),
+                    ago(minutes(at, failure.last_at))
+                ),
+                reference,
+            );
+        }
+        for other in others.iter().filter(|other| beside(told, other)) {
+            if let Some(theirs) = other
+                .session
+                .errors
+                .iter()
+                .find(|theirs| theirs.sig == failure.sig)
+            {
+                material.add(
+                    "a failure another session hits too",
+                    format!(
+                        "«{}» failed the same way ({}, the latest {})",
+                        title(&other.session),
+                        times(theirs.count),
+                        ago(minutes(at, theirs.last_at))
+                    ),
+                    &session_ref(&other.device, &other.session.grant, &other.session.session),
+                );
+            }
+        }
+    }
+}
+
+/// What it did to another session's lines, and what another did to its own
+/// (`overwrote`, from either side).
+fn overwritten(material: &mut Material, told: &Told, others: &[Told], at: i64, reference: &str) {
+    for overwrote in &told.session.overwrote {
+        let whose = spoken_title(told, &overwrote.session, others);
+        let did = if overwrote.undid {
+            format!("it put back what {whose} had just replaced")
+        } else {
+            format!("it rewrote lines {whose} had just written")
+        };
+        material.add(
+            "what it did to another session's work",
+            format!(
+                "{did}, in {} file(s), {}",
+                overwrote.files,
+                ago(minutes(at, overwrote.at))
+            ),
+            reference,
+        );
+    }
+    for other in others.iter().filter(|other| beside(told, other)) {
+        for overwrote in other
+            .session
+            .overwrote
+            .iter()
+            .filter(|overwrote| overwrote.session == told.session.session)
+        {
+            let whose = format!("«{}»", title(&other.session));
+            let did = if overwrote.undid {
+                format!("{whose} put back what this one had just replaced")
+            } else {
+                format!("{whose} rewrote lines this one had just written")
+            };
+            material.add(
+                "what another session did to its work",
+                format!(
+                    "{did}, in {} file(s), {}",
+                    overwrote.files,
+                    ago(minutes(at, overwrote.at))
+                ),
+                &session_ref(&other.device, &other.session.grant, &other.session.session),
+            );
+        }
     }
 }
 
@@ -648,11 +768,12 @@ pub fn card_text(judgment: &Judgment) -> String {
 }
 
 /// Her card when no answer with grounds came for a change that waits on
-/// them: it does, and she has nothing to add.
-pub fn card_only(session: &Session) -> Judgment {
+/// them (`heading`, where it stands as the material says): it does, and
+/// she has nothing to add.
+pub fn card_only(heading: &str) -> Judgment {
     Judgment {
         verdict: Verdict::Nod,
-        about: now_line(session).chars().take(ABOUT_CHARS).collect(),
+        about: heading.chars().take(ABOUT_CHARS).collect(),
         suggestion: String::new(),
         because: Vec::new(),
         missing: None,
@@ -759,10 +880,17 @@ pub struct Routed {
     pub waits_on_owner: bool,
 }
 
-/// `nodes.look_route`; a body the contract refuses is refused.
+/// `nodes.look_route`; a body the contract refuses is refused, saying which
+/// rule and never the device's words (a body that does not parse at all is
+/// only said to be refused).
 pub fn route_call(input: RouteInput) -> Result<Routed, crate::NodeError> {
-    let session = myriad_her_link::now::read_session(&input.frame)
-        .map_err(|refusal| crate::NodeError::new(refusal.detail))?;
+    let session = myriad_her_link::now::read_session(&input.frame).map_err(|refusal| {
+        crate::NodeError::new(if refusal.detail.starts_with("now.session:") {
+            "now.session: a body the contract refuses".to_string()
+        } else {
+            refusal.detail
+        })
+    })?;
     let arrival = Arrival {
         linked_at: input.linked_at,
         at: input.at,
@@ -855,9 +983,11 @@ pub struct Kept {
     pub evidence: Vec<String>,
 }
 
-/// Her answer read and settled: `good` with each change (null where she
-/// gave none) and at most one line; `bad_grounds` (ask once more with
-/// `again`); `unreadable`.
+/// Her answer read and settled: `good` with each change and at most one
+/// line; `bad_grounds` (ask once more with `again`); `unreadable`. Where she
+/// gave no answer on a change (all of them, unless `good`), one that waits
+/// on the owner keeps only its card ([`card_only`]) and the rest nothing:
+/// what an end keeps when it gives up asking.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LookRead {
@@ -871,35 +1001,33 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
     if input.waits.len() != input.material.changes.len() {
         return Err(crate::NodeError::new("waits is not one per change"));
     }
-    Ok(match read(&input.raw, &input.material) {
+    let kept = |judgment: Judgment| Kept {
+        has_card: has_card(&judgment),
+        card: card_text(&judgment),
+        evidence: input.material.evidence(&judgment.because),
+        judgment,
+    };
+    let (status, judgments, line) = match read(&input.raw, &input.material) {
         Read::Good(answer) => {
             let answer = settle(answer, &input.waits);
-            LookRead {
-                status: "good",
-                judgments: answer
-                    .judgments
-                    .into_iter()
-                    .map(|judgment| {
-                        judgment.map(|judgment| Kept {
-                            has_card: has_card(&judgment),
-                            card: card_text(&judgment),
-                            evidence: input.material.evidence(&judgment.because),
-                            judgment,
-                        })
-                    })
-                    .collect(),
-                line: answer.line,
-            }
+            ("good", answer.judgments, answer.line)
         }
-        Read::BadGrounds => LookRead {
-            status: "bad_grounds",
-            judgments: Vec::new(),
-            line: None,
-        },
-        Read::Unreadable => LookRead {
-            status: "unreadable",
-            judgments: Vec::new(),
-            line: None,
-        },
+        Read::BadGrounds => ("bad_grounds", Vec::new(), None),
+        Read::Unreadable => ("unreadable", Vec::new(), None),
+    };
+    let judgments = (0..input.waits.len())
+        .map(|at| {
+            judgments
+                .get(at)
+                .cloned()
+                .flatten()
+                .or_else(|| input.waits[at].then(|| card_only(&input.material.changes[at])))
+                .map(kept)
+        })
+        .collect();
+    Ok(LookRead {
+        status,
+        judgments,
+        line,
     })
 }
