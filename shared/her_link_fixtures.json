@@ -408,6 +408,14 @@
       }
     },
     {
+      "v": 1, "t": "card.answer", "seq": 17, "ack": 19, "at": 1760140931000,
+      "body": { "card": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "action": "agree", "version": "v_0123456789abcdef" }
+    },
+    {
+      "v": 1, "t": "card.answered", "seq": 20, "ack": 17, "at": 1760140931200,
+      "body": { "card": "c_7e0ee5eea0ebcf879fd1985fb080c2bb", "kept": true }
+    },
+    {
       "v": 1, "t": "act.request", "seq": 20, "id": "act_0123456789abcdef0123456789abcdef", "ack": 16, "at": 1760140940000,
       "body": {
         "proposalId": "int_1123456789abcdef0123456789abcdef",
