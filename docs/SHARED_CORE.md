@@ -409,7 +409,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.intents_due` | `{rows, bodies?, ledger, now}` → `{due: [{audience, node, intent, why}], next?}` |
 | `nodes.limits` | `{}` → 每个上限 |
 | `nodes.list` | `{nodes: [{id, gone?, entries?: [{id, at, text, memory?, quote?, happened?, state?, open?}]}], zone, from?, to?, open?, limit?}` → `{items: [{id, node, text, said, memory?, happened?, state?, open?, quote?, fit?}], looked, of, outside, otherState, section?}`（见下面「列全一类」） |
-| `nodes.pick` | `{ranked: [{id, named?}], nodes: [{id, status?, gone?, entries?: [{id, at}], standing?: [{item, at, ended?}]}], aboutThem?, her?, thorough?, budget?: {picked?, entries?, aboutThem?, together?}}` → `{picked?: [{node, standing?, entries}], aboutThem?, aboutThemStanding?, loose?, together?: [{node, entries?, shown, of}]}`（见下面「回想挑节点」） |
+| `nodes.pick` | `{ranked: [{id, named?}], nodes: [{id, name?, status?, gone?, entries?: [{id, at}], standing?: [{item, at, ended?, text?}]}], aboutThem?, her?, thorough?, budget?: {picked?, entries?, aboutThem?, together?, resident?, residentChars?}}` → `{picked?: [{node, standing?, entries}], aboutThem?, aboutThemStanding?, resident?: [{node, item}], loose?, together?: [{node, entries?, shown, of}]}`（见下面「回想挑节点」） |
 | `nodes.place_input` | `{items: [{id, saidBy, text}], candidates?: [{id, kind, name, summary?}]}` → `{items: [{n, id, saidBy, text}], taken, candidates?: [{label, id, kind, name, summary?}]}` |
 | `nodes.place_read` | `{items: [id], candidates?: [{label, id}], output}` → `{spans: [{items, node?, gist}], fallback?}` |
 | `nodes.queue` | `{rows, bodies?, ledger?, max}` → `{due: [{audience, node, since, why}], more?}` |
@@ -468,6 +468,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 **回想挑节点**（`nodes.pick`，`myriad_nodes::recall`）：她回话之前想起哪几个节点、每个带哪几条。条目照旧由宿主自己排（最相关的在前；这句话找到的标 `named`，只是补位的不标）；退役的（被取代、淡了、忘掉的）宿主先去掉再给。`nodes` 是这个受众的节点（`gone` 是忘掉了或并进别处了，条目的 id 是记忆行的 id，没有就是条目行的 id；在 Rust 里 `PickNode::of` 从折好的节点算）。
 - **挑节点**：只有标了 `named` 的条目能把它的节点带进来（补位的不是这句话要的）。进行中和一直在做的先，歇着的其次，做完和放下的最后；同一档里按它第一条 `named` 条目排在第几。没了的节点永远不挑；做完和放下的只有被直接找到时才来（任何节点都只能这样被挑），排在还在进行的后面。这个人自己的节点（`aboutThem`）和她自己（`her`）不挑：前者有自己的位置，后者的头宿主每次都带。最多 `budget.picked`（默认 3）个。
 - **「现在」排第一**（`node.standing`）：挑中的节点和这个人自己的节点，没结束的「现在」全部带上，新的在前（`picked[].standing`、`aboutThemStanding`，是 item），放在条目前面，不占条目的名额。排名从来找不到它们：它们就是现在怎么样，条目只是讲到过。
+- **常驻「他现在的生活」**（`resident`）：每次都带，不看这句话找到了什么。原因是这句话找到的节点上可能只有旧状态，新状态写在别的节点上。从所有没 `gone` 的节点里取：没结束、有字（`text`）、item 说得出是谁的生活（规则写的 `now`、仓库的进度行都不算）、上面挑中的节点和这个人自己的节点已经带上的不重复，每个 item 一次。活跃和进行中节点上的在前，其余在后；同一档里新写的在前。最多 `budget.resident` 项（默认 24）、`budget.residentChars` 字（默认 600），按宿主显示的样子算（`节点名：text`），第一条放不下就停。没带 `text` 的项从不进清单，所以旧调用的输出不变。群里不显示，由宿主决定。
 - **每个节点带哪几条**：先是排进来的、在它上面的条目（按排名），再按新补满，最多 `budget.entries`（默认 3）条。
 - **关于这个人**：他自己节点上的条目，排进来的先，再按新，最多 `budget.aboutThem`（默认 5）条。
 - **`loose`**：排进来、上面都没带出的条目，按排名：没挂节点的、节点没被挑的、超出一个节点名额的。宿主照以前带记忆的办法带出，排进来的什么都不丢。
