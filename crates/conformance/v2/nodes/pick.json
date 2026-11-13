@@ -823,6 +823,104 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "budget": {
+          "residentChars": 20
+        },
+        "nodes": [
+          {
+            "entries": [
+              {
+                "at": 1760000000000001,
+                "id": "r1"
+              }
+            ],
+            "id": "run",
+            "name": "跑步",
+            "standing": [
+              {
+                "at": 1760000000000009,
+                "item": "them-1a2b3c4d5e",
+                "text": "膝盖伤了，三个月不跑"
+              }
+            ]
+          },
+          {
+            "id": "job",
+            "name": "工作",
+            "standing": [
+              {
+                "at": 1760000000000005,
+                "item": "them-2b3c4d5e6f",
+                "text": "在宠物医疗公司做品牌"
+              },
+              {
+                "at": 1760000000000002,
+                "ended": true,
+                "item": "them-3c4d5e6f7a",
+                "text": "在趣养做运营"
+              },
+              {
+                "at": 1760000000000008,
+                "item": "now",
+                "text": "规则写的"
+              }
+            ]
+          },
+          {
+            "id": "mom",
+            "name": "妈妈",
+            "standing": [
+              {
+                "at": 1760000000000007,
+                "item": "pe5a688e5a688-0a1b2c3d4e",
+                "text": "每周六中午打电话"
+              }
+            ],
+            "status": "resting"
+          },
+          {
+            "gone": true,
+            "id": "old",
+            "name": "旧",
+            "standing": [
+              {
+                "at": 1760000000000006,
+                "item": "them-4d5e6f7a8b",
+                "text": "并走了"
+              }
+            ]
+          }
+        ],
+        "ranked": [
+          {
+            "id": "r1",
+            "named": true
+          }
+        ]
+      },
+      "name": "how their life stands comes every time, apart from what is shown above",
+      "output": {
+        "picked": [
+          {
+            "entries": [
+              "r1"
+            ],
+            "node": "run",
+            "standing": [
+              "them-1a2b3c4d5e"
+            ]
+          }
+        ],
+        "resident": [
+          {
+            "item": "them-2b3c4d5e6f",
+            "node": "job"
+          }
+        ]
+      }
     }
   ],
   "version": 1

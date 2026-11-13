@@ -26,6 +26,17 @@
 //!   their own node's, come before its entries and take none of their
 //!   places: every one that has not ended, newest first. Ranking never
 //!   finds them; they are how things are now, which entries only tell of.
+//! - **How their life stands, every time** (`resident`): what stands in
+//!   someone's life on any of her nodes not gone, shown whatever the words
+//!   found, since an old way of things on a node the words did find says
+//!   the opposite of what is now. Each item once, not ended, with words,
+//!   not a rule's or a repository's (only an item whose id says whose life
+//!   it is), not on her own node (`her`, whose head the host shows every
+//!   time), and not shown above already. Items on active and ongoing nodes
+//!   first, then the rest; within each, the newest written first. At most
+//!   [`Budget::resident`] items and [`Budget::resident_chars`] chars, each
+//!   counted as the host shows it (`node name：text`): the first that does
+//!   not fit ends the list.
 //! - **About them**: the entries of their own node, ranked first, then the
 //!   newest, at most [`Budget::about_them`]; its newest always among them
 //!   too.
@@ -67,6 +78,10 @@ pub struct Budget {
     pub about_them: usize,
     /// Entries added in all when going through all of a kind.
     pub together: usize,
+    /// Items of how their life stands shown every time, at most.
+    pub resident: usize,
+    /// The chars those items take, at most.
+    pub resident_chars: usize,
 }
 
 impl Default for Budget {
@@ -76,6 +91,8 @@ impl Default for Budget {
             entries: 3,
             about_them: 5,
             together: 24,
+            resident: 24,
+            resident_chars: 600,
         }
     }
 }
@@ -108,6 +125,10 @@ pub struct PickStanding {
     pub at: i64,
     #[serde(default)]
     pub ended: bool,
+    /// Its words, as the host shows them. Without them it is never among
+    /// how their life stands every time.
+    #[serde(default)]
+    pub text: String,
 }
 
 /// A node of the audience as recall sees it.
@@ -115,6 +136,9 @@ pub struct PickStanding {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PickNode {
     pub id: String,
+    /// Its name, as the host shows it before an item of how things stand.
+    #[serde(default)]
+    pub name: Option<String>,
     /// Absent reads as active.
     #[serde(default)]
     pub status: Option<Status>,
@@ -133,6 +157,7 @@ impl PickNode {
     pub fn of(node: &Node) -> Self {
         Self {
             id: node.id.clone(),
+            name: node.name.as_ref().map(|name| name.current.value.clone()),
             status: node.status.as_ref().map(|status| status.current.value),
             gone: node.forgotten || node.absorbed_into.is_some(),
             entries: node
@@ -155,6 +180,7 @@ impl PickNode {
                     item: item.clone(),
                     at: standing.current.at,
                     ended: standing.current.value.ended,
+                    text: standing.current.value.text.clone(),
                 })
                 .collect(),
         }
@@ -192,6 +218,14 @@ pub struct Picked {
     pub entries: Vec<String>,
 }
 
+/// One item of how their life stands, shown every time: on which node.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Resident {
+    pub node: String,
+    pub item: String,
+}
+
 /// One node gone through when they ask for all of a kind.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -216,6 +250,9 @@ pub struct Pick {
     /// before its entries.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub about_them_standing: Vec<String>,
+    /// How their life stands, shown every time, in order.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub resident: Vec<Resident>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub loose: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -252,6 +289,57 @@ fn standing(node: &PickNode) -> Vec<String> {
         .filter(|one| seen.insert(one.item.as_str()))
         .map(|one| one.item.clone())
         .collect()
+}
+
+/// How their life stands across `nodes` (not `her` own node), shown every
+/// time, leaving out what `shown` (node, item) already has; within `budget`.
+fn resident(
+    nodes: &[PickNode],
+    her: Option<&str>,
+    shown: &BTreeSet<(&str, &str)>,
+    budget: &Budget,
+) -> Vec<Resident> {
+    let mut candidates: Vec<(u8, i64, &PickNode, &PickStanding)> = Vec::new();
+    // Her own node's head is the host's to show every time already.
+    for node in nodes
+        .iter()
+        .filter(|node| !node.gone && Some(node.id.as_str()) != her)
+    {
+        let tier = u8::from(tier(node.status) > 0);
+        let mut seen = BTreeSet::new();
+        for one in &node.standing {
+            if one.ended
+                || one.text.trim().is_empty()
+                || crate::stands::whose_of(&one.item).is_none()
+                || shown.contains(&(node.id.as_str(), one.item.as_str()))
+                || !seen.insert(one.item.as_str())
+            {
+                continue;
+            }
+            candidates.push((tier, one.at, node, one));
+        }
+    }
+    candidates.sort_by(|a, b| {
+        a.0.cmp(&b.0)
+            .then_with(|| b.1.cmp(&a.1))
+            .then_with(|| a.2.id.cmp(&b.2.id))
+            .then_with(|| a.3.item.cmp(&b.3.item))
+    });
+    let mut out = Vec::new();
+    let mut chars = 0;
+    for (_, _, node, one) in candidates {
+        let name = node.name.as_deref().unwrap_or_default().trim();
+        let line = name.chars().count() + 1 + one.text.trim().chars().count();
+        if out.len() >= budget.resident || chars + line > budget.resident_chars {
+            break;
+        }
+        chars += line;
+        out.push(Resident {
+            node: node.id.clone(),
+            item: one.item.clone(),
+        });
+    }
+    out
 }
 
 /// Of `node`, the ranked entries on it in rank order, then its newest, at
@@ -371,6 +459,22 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     let about_them_standing = about_them_at
         .map(|at| standing(&input.nodes[at]))
         .unwrap_or_default();
+    let nodes = &input.nodes;
+    let shown_standing: BTreeSet<(&str, &str)> = picked
+        .iter()
+        .flat_map(|picked| {
+            picked
+                .standing
+                .iter()
+                .map(|item| (picked.node.as_str(), item.as_str()))
+        })
+        .chain(about_them_at.into_iter().flat_map(|at| {
+            about_them_standing
+                .iter()
+                .map(move |item| (nodes[at].id.as_str(), item.as_str()))
+        }))
+        .collect();
+    let resident = resident(nodes, input.her.as_deref(), &shown_standing, &input.budget);
     let mut shown: BTreeSet<String> = picked
         .iter()
         .flat_map(|picked| picked.entries.iter().cloned())
@@ -408,6 +512,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         picked,
         about_them,
         about_them_standing,
+        resident,
         loose,
         together,
     })
@@ -527,5 +632,89 @@ mod tests {
         assert_eq!(out.together[1].entries[0], "s28");
         assert_eq!((out.together[1].shown, out.together[1].of), (12, 30));
         assert_eq!(out.loose, ["f1"]);
+    }
+
+    /// How their life stands comes every time, from every node not gone:
+    /// not what is shown above already, not ended, not a rule's, active
+    /// nodes first and the newest first within them, until it is full.
+    #[test]
+    fn how_their_life_stands_comes_every_time_within_its_room() {
+        let item = |node: &str, n: usize| crate::stands::item_id("them", node, "memory:m", n);
+        let (run1, run2) = (item("run", 1), item("run", 2));
+        let (job, old_job, mom) = (item("job", 1), item("job", 2), item("mom", 1));
+        let (pause, gone, you) = (item("pause", 1), item("gone", 1), item("you", 1));
+        let mine = item("me", 1);
+        let out = run(json!({
+            "ranked": [{"id": "r1", "named": true}],
+            "nodes": [
+                {"id": "run", "name": "跑步", "entries": entries("r", 1), "standing": [
+                    {"item": run1, "at": 9, "text": "膝盖伤了，三个月不跑"},
+                    {"item": run2, "at": 1, "text": "每周三夜跑", "ended": true}
+                ]},
+                {"id": "job", "name": "工作", "standing": [
+                    {"item": job, "at": 5, "text": "在宠物医疗公司做品牌"},
+                    {"item": old_job, "at": 2, "text": "在趣养做运营", "ended": true},
+                    {"item": "now", "at": 8, "text": "规则写的"}
+                ]},
+                {"id": "mom", "name": "妈妈", "standing": [
+                    {"item": mom, "at": 3, "text": "每周六中午给妈妈打电话"},
+                    {"item": item("mom", 2), "at": 4, "text": "  "}
+                ]},
+                {"id": "pause", "name": "吉他", "status": "resting", "standing": [
+                    {"item": pause, "at": 7, "text": "在家对着教程练"}
+                ]},
+                {"id": "gone", "gone": true, "name": "旧", "standing": [
+                    {"item": gone, "at": 6, "text": "已并走的"}
+                ]},
+                {"id": "you", "name": "你", "standing": [
+                    {"item": you, "at": 6, "text": "住在双楠"}
+                ]},
+                {"id": "me", "name": "她自己", "standing": [
+                    {"item": mine, "at": 9, "text": "她自己节点上的"}
+                ]}
+            ],
+            "aboutThem": "you",
+            "her": "me"
+        }));
+        let resident: Vec<(&str, &str)> = out
+            .resident
+            .iter()
+            .map(|one| (one.node.as_str(), one.item.as_str()))
+            .collect();
+        // Shown above already: the picked node's, and their own node's.
+        assert_eq!(out.picked[0].standing, std::slice::from_ref(&run1));
+        assert_eq!(out.about_them_standing, std::slice::from_ref(&you));
+        assert_eq!(
+            resident,
+            [
+                ("job", job.as_str()),
+                ("mom", mom.as_str()),
+                ("pause", pause.as_str())
+            ]
+        );
+        // The room ends it: the first that does not fit, and all after.
+        let tight = |budget: serde_json::Value| {
+            run(json!({
+                "ranked": [],
+                "nodes": [
+                    {"id": "job", "name": "工作", "standing": [
+                        {"item": job, "at": 5, "text": "在宠物医疗公司做品牌"}
+                    ]},
+                    {"id": "mom", "name": "妈妈", "standing": [
+                        {"item": mom, "at": 3, "text": "每周六中午给妈妈打电话"}
+                    ]}
+                ],
+                "budget": budget
+            }))
+            .resident
+            .len()
+        };
+        assert_eq!(tight(json!({})), 2);
+        assert_eq!(tight(json!({"resident": 1})), 1);
+        // 「工作：在宠物医疗公司做品牌」 is 13 chars; the next one 14 more.
+        assert_eq!(tight(json!({"residentChars": 13})), 1);
+        assert_eq!(tight(json!({"residentChars": 26})), 1);
+        assert_eq!(tight(json!({"residentChars": 27})), 2);
+        assert_eq!(tight(json!({"residentChars": 12})), 0);
     }
 }
