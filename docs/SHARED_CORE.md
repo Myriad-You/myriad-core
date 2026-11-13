@@ -424,7 +424,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.stands_step_read` | `{output, sync, <stands_step_input 的输入>}` → `{rows: [{id, node, kind, body}], left: [{item, itemWhose, factWhose}], setAside, unreadable?}`；核心规则不收的一项（文字里有控制字符、id 太长）算进 `setAside`，别的照写 |
 | `nodes.stands_build_due` | `{facts, standing?: [{author, item?}]}` → `{due}`：这一段记下了事实、受众里还没有一行她写的「现在」时为真；规则写的（`rule`）不算；给了 `item` 时，只算谁的生活的那种项（她对仓库说的 `progress` 不算），宿主应当给 |
 | `nodes.stands_build_input` | `{node: {id, name?, kind?, folded}, held?: [memory], learned?: {memory: day}}` → `{skip?, system, schema, input}`；`learned` 要给 `held` 里每一条（条目上没有 `happened` 的记忆，缺了就不带日子） |
-| `nodes.stands_build_read` | `{output, sync, <stands_build_input 的输入>}` → `{rows, left, setAside, unreadable?}` |
+| `nodes.stands_build_read` | `{output, sync, <stands_build_input 的输入>}` → `{rows, left, setAside, dropped?, unreadable?}`；`dropped` 是读法丢掉的项按原因计数（`no_whose`、`no_text`、`rests_on_nothing`、`too_long`），只有数没有原话，供宿主记日志，空时不写出 |
 | `nodes.trust_tier` | `{items: [{saidBy, author?, provenance?: {together?, typed?, verified?, answer?}, aboutPartner?}]}` → `{tiers: [seen \| heard \| counts \| null]}` |
 | `nodes.under_read` | `{value?, offered?: [id], known?}` → `{to, …}` |
 | `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?}], ledger?}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken, local?}`；`local` 为真时这个节点被撤回、这一端是它的家，这一次整理只写 `local` 行 |
