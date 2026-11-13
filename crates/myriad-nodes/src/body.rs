@@ -484,7 +484,8 @@ pub enum StandingState {
     Working,
     /// Its next step waits on the owner.
     WaitingOwner,
-    /// It finished; nothing waits on the owner.
+    /// It finished a turn: it stopped with no question of its own (its
+    /// last words may still ask the owner something).
     Finished,
     /// It kept failing, or its checks failed.
     Stuck,

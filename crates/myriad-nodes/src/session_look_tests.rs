@@ -118,7 +118,7 @@ fn she_is_shown_each_change_whole_and_what_is_around_it() {
         "[8] another session in this repository: Split the store (coding-agent in repo): quiet for long; also changed src/b.rs",
         "[9] what you know of the owner (how they decided before): pushes need their own word",
         "[10] what you made of this session last time: 你点头就行：上次也问过",
-        "Change 2 of 2: finished a turn, nothing to answer",
+        "Change 2 of 2: finished a turn",
         "Around them:",
         "what you already told the owner of their sessions: 2 minutes ago: 测试都过了",
     ] {

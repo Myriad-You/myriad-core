@@ -671,7 +671,7 @@
               "since": 1760000000000000,
               "state": "finished",
               "sync": "shared",
-              "text": "finished, nothing waits on the owner",
+              "text": "finished a turn",
               "version": 1
             },
             "id": "ueb2dec2a5f52c4e6ed0d47cf",
@@ -888,7 +888,7 @@
               "sync": {
                 "local": "site"
               },
-              "text": "finished, nothing waits on the owner",
+              "text": "finished a turn",
               "version": 1
             },
             "id": "ueb2dec2a5f52c4e6ed0d47cf",
