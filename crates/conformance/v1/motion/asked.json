@@ -2233,48 +2233,6 @@
             "instructions": "Her face's standing expression while she says it.",
             "type": "choice"
           },
-          "move0": {
-            "criteria": {
-              "none": "no movement of its own on this sentence"
-            },
-            "instructions": "Which movement that goes and comes back by itself lands as she says 「还有点难受。」, if any. A person explaining or stressing a point often beats a hand; an unsure one shrugs.",
-            "type": "choice"
-          },
-          "move1": {
-            "criteria": {
-              "none": "no movement of its own on this sentence"
-            },
-            "instructions": "Which movement that goes and comes back by itself lands as she says 「不过我愿意慢慢说。」, if any. A person explaining or stressing a point often beats a hand; an unsure one shrugs.",
-            "type": "choice"
-          },
-          "move2": {
-            "criteria": {
-              "none": "no movement of its own on this sentence"
-            },
-            "instructions": "Which movement that goes and comes back by itself lands as she says 「其实可以先把原因说清楚。」, if any. A person explaining or stressing a point often beats a hand; an unsure one shrugs.",
-            "type": "choice"
-          },
-          "move3": {
-            "criteria": {
-              "none": "no movement of its own on this sentence"
-            },
-            "instructions": "Which movement that goes and comes back by itself lands as she says 「你觉得呢？」, if any. A person explaining or stressing a point often beats a hand; an unsure one shrugs.",
-            "type": "choice"
-          },
-          "move4": {
-            "criteria": {
-              "none": "no movement of its own on this sentence"
-            },
-            "instructions": "Which movement that goes and comes back by itself lands as she says 「嗯……」, if any. A person explaining or stressing a point often beats a hand; an unsure one shrugs.",
-            "type": "choice"
-          },
-          "move5": {
-            "criteria": {
-              "none": "no movement of its own on this sentence"
-            },
-            "instructions": "Which movement that goes and comes back by itself lands as she says 「也许吧！」, if any. A person explaining or stressing a point often beats a hand; an unsure one shrugs.",
-            "type": "choice"
-          },
           "own": {
             "criteria": {
               "false": "quoting or describing someone else, or a story",
@@ -7354,48 +7312,6 @@
               "withdrawn": "drawn in, avoiding, not opening up"
             },
             "instructions": "Her face's standing expression while she is at it.",
-            "type": "choice"
-          },
-          "move0": {
-            "criteria": {
-              "none": "nothing of its own at this moment"
-            },
-            "instructions": "Which movement that goes and comes back by itself she makes about 0.6 s into each 20 s stretch of it, if any. Someone busy on their own still moves now and then: a nod with a song, a sigh, a glance up from a page, a blink.",
-            "type": "choice"
-          },
-          "move1": {
-            "criteria": {
-              "none": "nothing of its own at this moment"
-            },
-            "instructions": "Which movement that goes and comes back by itself she makes about 5.0 s into each 20 s stretch of it, if any. Someone busy on their own still moves now and then: a nod with a song, a sigh, a glance up from a page, a blink.",
-            "type": "choice"
-          },
-          "move2": {
-            "criteria": {
-              "none": "nothing of its own at this moment"
-            },
-            "instructions": "Which movement that goes and comes back by itself she makes about 6.9 s into each 20 s stretch of it, if any. Someone busy on their own still moves now and then: a nod with a song, a sigh, a glance up from a page, a blink.",
-            "type": "choice"
-          },
-          "move3": {
-            "criteria": {
-              "none": "nothing of its own at this moment"
-            },
-            "instructions": "Which movement that goes and comes back by itself she makes about 10.7 s into each 20 s stretch of it, if any. Someone busy on their own still moves now and then: a nod with a song, a sigh, a glance up from a page, a blink.",
-            "type": "choice"
-          },
-          "move4": {
-            "criteria": {
-              "none": "nothing of its own at this moment"
-            },
-            "instructions": "Which movement that goes and comes back by itself she makes about 13.3 s into each 20 s stretch of it, if any. Someone busy on their own still moves now and then: a nod with a song, a sigh, a glance up from a page, a blink.",
-            "type": "choice"
-          },
-          "move5": {
-            "criteria": {
-              "none": "nothing of its own at this moment"
-            },
-            "instructions": "Which movement that goes and comes back by itself she makes about 18.7 s into each 20 s stretch of it, if any. Someone busy on their own still moves now and then: a nod with a song, a sigh, a glance up from a page, a blink.",
             "type": "choice"
           },
           "posture": {
