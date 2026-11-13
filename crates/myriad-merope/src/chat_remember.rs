@@ -305,6 +305,7 @@ Each lasting fact's evidence is verbatim from their lines where they stated it: 
 from lists the indexes (from 0) in lately of the notes a lasting fact puts together or says again; [] if none. moment lists the indexes of the notes that belong to the moment and stay in lately, and known those that only say again what you know for good. Every note is in one of them: a note in none is kept for good as it is. \
 concepts lists 1-5 things a fact is about (a person, pet, work, place, activity, food), each with its usual name and up to 5 other names people use for it. They only help find the fact again. \
 whenFor lists 1-3 moments the fact would be worth remembering: what someone might say or ask that it answers or bears on, a few words each, in the language of the chat ({when_for}); not a restatement of the fact. They only help it come to mind later. \
+changes is true when the fact turns something in their life so that other things you know of them may no longer hold for now, or hold again, or are tied together in a way they were not before; you judge it by what it means for the rest of their life, not by how it was said. Otherwise false. \
 {happened_and_state} \
 When topics is given, it is what you already keep facts about them under: each a kind of thing in their life they come back to (their plants, seeing doctors, their work, a show they follow), with its label, its names, and a little of what is under it. Then topic says where a lasting fact goes: on is the label of the topic whose kind it is of; when it is of none of them but of such a kind of thing, on is empty and name names that kind, in the language of their lines, with up to {aliases} other names people use for it in aliases (in any other language the facts are in too). {of_a_kind} \
 replaces copies, verbatim, what you know for good that this stretch shows has changed, or that they took back. For a change, a lasting fact then says how it is now and how it was, and keeps everything else that entry said that is still true ({still_true}). A plan is not yet a change: 'moving to another city at the end of the month' is kept beside where they live now and replaces nothing until they have moved; once a plan has happened (they went, they moved), what happened replaces the plan. Something added on the same topic is not a change. What they took back ({took_back_words}) is let go as a friend would: when that entry said more than what they took back, a lasting fact keeps only the rest and never says what was taken back or that anything was ({took_back}). \
@@ -341,12 +342,13 @@ pub fn settle_schema() -> serde_json::Value {
                         "from": { "type": "array", "items": {"type":"integer", "minimum":0}, "maxItems": 24 },
                         "concepts": concepts_schema(),
                         "whenFor": { "type": "array", "items": { "type": "string", "maxLength": 60 }, "maxItems": 3 },
+                        "changes": { "type": "boolean" },
                         "topic": crate::topics::under_schema(),
                         "happened": crate::happened::happened_schema(),
                         "state": crate::happened::state_schema(),
                         "open": crate::happened::open_schema()
                     },
-                    "required": ["fact", "evidence", "from", "concepts", "whenFor", "topic", "happened", "state", "open"],
+                    "required": ["fact", "evidence", "from", "concepts", "whenFor", "changes", "topic", "happened", "state", "open"],
                     "additionalProperties": false
                 }
             },
@@ -383,6 +385,10 @@ pub struct Lasting {
     /// When it would be worth remembering, as the model gave them; cleaned
     /// where they are kept.
     pub when_for: Vec<String>,
+    /// It turns something in their life: what else she knows of them may
+    /// not hold for now, or holds again, or is tied to it. What follows is
+    /// hers to infer ([`crate::inferring`]).
+    pub changes: bool,
     /// The topic it goes under, or about them, or nowhere
     /// (`crate::topics::read_under`).
     pub topic: crate::topics::Under,
@@ -440,6 +446,10 @@ pub fn parse_settle(
                     .filter_map(serde_json::Value::as_str)
                     .map(str::to_string)
                     .collect(),
+                changes: item
+                    .get("changes")
+                    .and_then(serde_json::Value::as_bool)
+                    .unwrap_or(false),
                 topic: crate::topics::read_under(item.get("topic"), offered),
                 standing: crate::happened::read_standing(item),
             })
@@ -811,9 +821,32 @@ mod tests {
             "so one person met under two names is plainly one",
             "a 他, 她 or 他们 in a fact is always someone else",
             "a lasting fact keeps only the rest and never says what was taken back",
+            "changes is true when the fact turns something in their life",
         ] {
             assert!(prompt.contains(rule), "{rule}");
         }
+        assert!(
+            settle_schema()["properties"]["lasting"]["items"]["required"]
+                .as_array()
+                .unwrap()
+                .contains(&serde_json::json!("changes"))
+        );
+    }
+
+    /// A fact that turns something in their life is read as such, for her
+    /// to infer from (`crate::inferring`); one that does not say is not.
+    #[test]
+    fn a_fact_that_turns_something_is_told_apart() {
+        let theirs = "打球把腿摔断了，医生说要养三个月。";
+        let raw = r#"{"lasting":[
+            {"fact":"打球把腿摔断了，医生说要养三个月","evidence":"打球把腿摔断了，医生说要养三个月","from":[0],"concepts":[],"whenFor":[],"changes":true,
+             "happened":{"from":"","to":"","about":false},"state":"","open":null}
+        ],"replaces":[],"moment":[],"known":[]}"#;
+        let (lasting, _) = parse_settle(raw, theirs, &[], 1, 0).unwrap();
+        assert!(lasting[0].changes);
+        let unsaid = raw.replace(r#""changes":true,"#, "");
+        let (lasting, _) = parse_settle(&unsaid, theirs, &[], 1, 0).unwrap();
+        assert!(!lasting[0].changes);
     }
 
     /// Something they did and what came of it are kept together: the
