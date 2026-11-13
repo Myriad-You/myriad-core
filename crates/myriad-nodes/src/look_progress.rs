@@ -188,6 +188,11 @@ pub struct ProgressInput {
     pub sync: Sync,
     #[serde(default)]
     pub told: Vec<Told>,
+    /// The tasks (node ids) her card about still waits on the owner: one
+    /// she judged needs them (`decide`, `nod`), neither answered nor put
+    /// away. A session that finished a turn on one still waits on them.
+    #[serde(default)]
+    pub asking: Vec<String>,
     pub since: i64,
     pub at: i64,
     pub language: String,
@@ -214,7 +219,7 @@ struct Today {
     failed: usize,
 }
 
-fn today(told: &[&Told], since: i64) -> Today {
+fn today(told: &[&Told], since: i64, waits_on_them: impl Fn(&Told) -> bool) -> Today {
     let mut today = Today::default();
     for told in told {
         let session = &told.session;
@@ -222,6 +227,8 @@ fn today(told: &[&Told], since: i64) -> Today {
             continue;
         }
         match session.change {
+            // Her card says whether it needs them, not the words it ended on.
+            Change::Finished if waits_on_them(told) => today.waits += 1,
             Change::Finished => today.done += 1,
             Change::Failed => today.stuck += 1,
             Change::Asked => today.waits += 1,
@@ -372,7 +379,15 @@ pub fn progress(input: ProgressInput) -> Result<Progress, NodeError> {
             cards::TITLE_CHARS,
         ),
         state: None,
-        facts: facts(&today(&moved, input.since), words, &subject),
+        facts: facts(
+            &today(&moved, input.since, |told| {
+                let session = &told.session;
+                let key = crate::sessions::task_key(&told.device, &session.grant, &session.session);
+                node_id(&input.audience, &key).is_ok_and(|task| input.asking.contains(&task))
+            }),
+            words,
+            &subject,
+        ),
         view: Some(CardView {
             text: cut(&text, cards::VIEW_CHARS),
             because: Vec::new(),
@@ -417,10 +432,35 @@ mod tests {
             base: vec!["u_before".into()],
             sync: Sync::Shared,
             told,
+            asking: vec![],
             since: SINCE,
             at: AT,
             language: "zh-CN".into(),
         }
+    }
+
+    #[test]
+    fn a_finished_turn_her_card_still_asks_about_waits_on_them() {
+        let sessions = || {
+            vec![
+                told("s-1", "finished", json!({})),
+                told("s-2", "finished", json!({})),
+            ]
+        };
+        let facts = |input: ProgressInput| progress(input).unwrap().card.facts[0].text.clone();
+        assert_eq!(facts(input(sessions())), "今天：做完一轮 2 个");
+        // Her card about s-1 still asks them: that one waits on them.
+        let task = |session: &str| {
+            let key = crate::sessions::task_key("dev_mac", "g_0123456789", session);
+            node_id("personal:7", &key).unwrap()
+        };
+        let mut asking = input(sessions());
+        asking.asking = vec![task("s-1")];
+        assert_eq!(facts(asking), "今天：做完一轮 1 个、在等你 1 个");
+        // A card about a task of no session told here changes nothing.
+        let mut elsewhere = input(sessions());
+        elsewhere.asking = vec![task("s-9")];
+        assert_eq!(facts(elsewhere), "今天：做完一轮 2 个");
     }
 
     #[test]
