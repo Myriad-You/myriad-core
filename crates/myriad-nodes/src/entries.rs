@@ -75,6 +75,7 @@ impl TopicIn {
             name: &self.name,
             aliases: &self.aliases,
             holds: &self.holds,
+            stands: &[],
         }
     }
 }
@@ -220,6 +221,7 @@ pub fn placement(under: &Under, offered: &[String], known: &[Known]) -> Placemen
                         name: &topic.name,
                         aliases: &topic.aliases,
                         holds: &[],
+                        stands: &[],
                     },
                 )
             })

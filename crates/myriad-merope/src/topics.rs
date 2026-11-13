@@ -36,6 +36,8 @@ pub const NAME_CHARS: usize = 40;
 pub const ALIASES: usize = 5;
 /// What is already under a topic, as she sees it.
 pub const HOLDS_CHARS: usize = 160;
+/// How things stand on a topic, as she sees it.
+pub const STANDS_CHARS: usize = 240;
 /// Facts she sorts under topics in one go, at most ([`sort_system_prompt`]).
 pub const SORT_BATCH: usize = 40;
 /// A fact as she sees it when sorting.
@@ -60,6 +62,9 @@ pub struct Topic<'a> {
     pub name: &'a str,
     pub aliases: &'a [String],
     pub holds: &'a [String],
+    /// How things stand there now (her 「现在」 on it, `node.standing`),
+    /// when the host shows it: who someone there is to them reads from it.
+    pub stands: &'a [String],
 }
 
 /// Which topics to offer for a stretch of `talk`, most likely first, at
@@ -128,12 +133,16 @@ pub fn shown(topics: &[Topic], offered: &[usize]) -> Value {
             .enumerate()
             .map(|(n, index)| {
                 let topic = &topics[*index];
-                json!({
+                let mut shown = json!({
                     "label": format!("t{}", n + 1),
                     "name": cut(topic.name, NAME_CHARS),
                     "aliases": topic.aliases.iter().map(|alias| cut(alias, NAME_CHARS)).collect::<Vec<_>>(),
                     "holds": cut(&topic.holds.join(" / "), HOLDS_CHARS),
-                })
+                });
+                if !topic.stands.is_empty() {
+                    shown["stands"] = json!(cut(&topic.stands.join(" / "), STANDS_CHARS));
+                }
+                shown
             })
             .collect(),
     )
@@ -555,6 +564,7 @@ mod tests {
             name,
             aliases,
             holds,
+            stands: &[],
         }
     }
 
@@ -596,6 +606,27 @@ mod tests {
             shown[0]["holds"].as_str().unwrap().chars().count(),
             HOLDS_CHARS
         );
+    }
+
+    #[test]
+    fn how_things_stand_on_a_topic_is_shown_only_when_there_is_some() {
+        let none: Vec<String> = Vec::new();
+        let stands = vec![
+            "lives apart from Mei, who is in Shenzhen".to_string(),
+            "b".repeat(300),
+        ];
+        let topics = [
+            Topic {
+                stands: &stands,
+                ..topic("Mei", &none, &none)
+            },
+            topic("houseplants", &none, &none),
+        ];
+        let shown = shown(&topics, &[0, 1]);
+        let first = shown[0]["stands"].as_str().unwrap();
+        assert!(first.starts_with("lives apart from Mei, who is in Shenzhen / b"));
+        assert_eq!(first.chars().count(), STANDS_CHARS);
+        assert!(shown[1].get("stands").is_none());
     }
 
     #[test]
