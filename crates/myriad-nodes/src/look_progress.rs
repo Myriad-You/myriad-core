@@ -8,7 +8,7 @@
 //!
 //! Pure: what time it is and when today began come in.
 
-use myriad_her_link::now::{Change, CheckKind, CheckState, WaitingOn};
+use myriad_her_link::now::{Change, CheckKind, CheckState, WaitingOn, rules};
 use myriad_persona_log::payloads::{CardFact, CardVersion, CardView};
 use serde::{Deserialize, Serialize};
 
@@ -228,12 +228,15 @@ fn today(told: &[&Told], since: i64) -> Today {
             _ if session.waiting_on == Some(WaitingOn::Owner) => today.waits += 1,
             _ => today.going += 1,
         }
-        // The errors it kept running into today: how often each came
+        // The errors it kept running into (the same one again and again,
+        // as the rules count it) that came today: how often each came
         // before today is not told apart, so each counts once.
         today.failures += session
             .errors
             .iter()
-            .filter(|failure| failure.last_at >= since)
+            .filter(|failure| {
+                failure.last_at >= since && failure.count >= rules().repeated_error_at
+            })
             .count();
         // Its latest tests today, as they ended.
         match session
@@ -423,7 +426,8 @@ mod tests {
     #[test]
     fn the_day_is_counted_from_the_sessions_of_the_repository() {
         let made = progress(input(vec![
-            told("s-1", "finished", json!({"checks": [{"kind": "test", "state": "passed", "at": AT - 70_000}]})),
+            // An error that came once is not one it keeps running into.
+            told("s-1", "finished", json!({"checks": [{"kind": "test", "state": "passed", "at": AT - 70_000}], "errors": [{"sig": "aaaaaaaaaaaaaaaa", "count": 1, "firstAt": AT - 75_000, "lastAt": AT - 75_000}]})),
             // Tests that ended yesterday are not today's.
             told("s-2", "asked", json!({"waitingOn": "owner", "errors": [{"sig": "0123456789abcdef", "count": 3, "firstAt": AT - 90_000, "lastAt": AT - 80_000}], "checks": [{"kind": "test", "state": "failed", "at": SINCE - 1}]})),
             // An error it ran into until yesterday is not today's.
