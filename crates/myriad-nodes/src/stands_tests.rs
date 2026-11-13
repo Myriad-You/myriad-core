@@ -48,6 +48,8 @@ fn whose_life_an_item_is_reads_back_from_its_id() {
     assert_eq!(whose_key("them（和妈妈）"), Some("them".into()));
     assert_ne!(whose_key("Themis"), Some("them".into()));
     assert_ne!(whose_key("them们"), Some("them".into()));
+    assert_ne!(whose_key("them's mom"), Some("them".into()));
+    assert_ne!(whose_key("them’s 妈妈"), Some("them".into()));
     assert_eq!(whose_key("  "), None);
     // A rule's item is not one of hers.
     assert_eq!(whose_of("now"), None);

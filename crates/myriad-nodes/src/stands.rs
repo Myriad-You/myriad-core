@@ -130,7 +130,8 @@ pub fn where_it_starts<'a>(asked: &str, may: &'a [String], own: &'a [String]) ->
 /// for the person themselves, else `p` and the hex of the name's first
 /// characters. `None` for no name. `them` with more after it (「them，与朋友」,
 /// `them and Mei`: something they share, said with whom) is still them;
-/// a name that only begins so (`Themis`) is not.
+/// a name that only begins so (`Themis`), or someone of theirs
+/// (`them's mom`), is not.
 pub fn whose_key(whose: &str) -> Option<String> {
     let whose = whose.trim();
     if whose.is_empty() {
@@ -142,7 +143,7 @@ pub fn whose_key(whose: &str) -> Option<String> {
         && whose[4..]
             .chars()
             .next()
-            .is_none_or(|next| !next.is_alphanumeric());
+            .is_none_or(|next| !next.is_alphanumeric() && !matches!(next, '\'' | '’'));
     if them {
         return Some("them".into());
     }
