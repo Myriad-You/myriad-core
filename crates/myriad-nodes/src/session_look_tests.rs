@@ -498,3 +498,32 @@ fn the_choices_are_shown_numbered() {
             .is_none()
     );
 }
+
+/// Her lines on the repositories are read one by one: one that does not
+/// read is passed by, never the rest of her answer; `R1` is the first.
+#[test]
+fn a_line_on_a_repository_that_does_not_read_is_passed_by() {
+    let judged = r#"{"change":1,"verdict":"nod","about":"push","suggestion":"push","because":[1],"missing":null,"ownerMustSay":false}"#;
+    for repos in [
+        r#"null"#,
+        r#"[{"now":"no number"}]"#,
+        r#"[{"repo":1,"now":3}]"#,
+        r#""all""#,
+    ] {
+        let answer = good(&format!(
+            r#"{{"changes":[{judged}],"say":null,"repos":{repos}}}"#
+        ));
+        assert!(answer.judgments[0].is_some(), "{repos}");
+        assert!(answer.repos.is_empty(), "{repos}");
+    }
+    let answer = good(&format!(
+        r#"{{"changes":[{judged}],"say":null,"repos":[{{"repo":"R1","now":"拆到一半"}},{{"repo":1,"now":"又一句"}}]}}"#
+    ));
+    assert_eq!(
+        answer.repos,
+        vec![RepoNow {
+            repo: 1,
+            text: "拆到一半".into()
+        }]
+    );
+}

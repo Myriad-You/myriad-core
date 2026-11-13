@@ -21,7 +21,7 @@ use crate::limits::{self, cut};
 use crate::look_cards::SCENE;
 use crate::place::clean;
 use crate::session_look::{Told, repo_of};
-use crate::sessions::session_ref;
+use crate::sessions::{grant_ref, session_ref};
 use crate::tags::{SaidBy, Sync};
 
 /// The one thing on a repository her progress line is about.
@@ -54,7 +54,7 @@ const EN: Words = Words {
     stuck: "{n} stuck",
     list: ", ",
     none: "No session has moved here today",
-    failing: "Failures today: {n}",
+    failing: "Repeated errors today: {n}",
     tests: "Tests: {list}",
     passed: "{n} passed",
     failed: "{n} failed",
@@ -68,7 +68,7 @@ const ZH_CN: Words = Words {
     stuck: "卡住 {n} 个",
     list: "、",
     none: "今天这里还没有会话动过",
-    failing: "今天出错 {n} 次",
+    failing: "今天反复出错 {n} 处",
     tests: "测试：{list}",
     passed: "{n} 个通过",
     failed: "{n} 个没过",
@@ -82,7 +82,7 @@ const ZH_TW: Words = Words {
     stuck: "卡住 {n} 個",
     list: "、",
     none: "今天這裡還沒有工作階段動過",
-    failing: "今天出錯 {n} 次",
+    failing: "今天反覆出錯 {n} 處",
     tests: "測試：{list}",
     passed: "{n} 個通過",
     failed: "{n} 個沒過",
@@ -96,7 +96,7 @@ const JA: Words = Words {
     stuck: "行き詰まり {n}",
     list: "、",
     none: "今日はまだどのセッションも動いていない",
-    failing: "今日のエラー {n} 回",
+    failing: "今日くり返したエラー {n} 件",
     tests: "テスト：{list}",
     passed: "成功 {n}",
     failed: "失敗 {n}",
@@ -110,7 +110,7 @@ const KO: Words = Words {
     stuck: "막힘 {n}",
     list: ", ",
     none: "오늘은 아직 움직인 세션이 없음",
-    failing: "오늘 오류 {n}회",
+    failing: "오늘 반복된 오류 {n}건",
     tests: "테스트: {list}",
     passed: "통과 {n}",
     failed: "실패 {n}",
@@ -124,7 +124,7 @@ const FR: Words = Words {
     stuck: "{n} bloquée(s)",
     list: ", ",
     none: "Aucune session n'a bougé ici aujourd'hui",
-    failing: "Erreurs aujourd'hui : {n}",
+    failing: "Erreurs répétées aujourd'hui : {n}",
     tests: "Tests : {list}",
     passed: "{n} réussi(s)",
     failed: "{n} en échec",
@@ -138,7 +138,7 @@ const DE: Words = Words {
     stuck: "{n} stecken fest",
     list: ", ",
     none: "Heute hat sich hier noch keine Sitzung bewegt",
-    failing: "Fehler heute: {n}",
+    failing: "Wiederholte Fehler heute: {n}",
     tests: "Tests: {list}",
     passed: "{n} bestanden",
     failed: "{n} fehlgeschlagen",
@@ -228,17 +228,18 @@ fn today(told: &[&Told], since: i64) -> Today {
             _ if session.waiting_on == Some(WaitingOn::Owner) => today.waits += 1,
             _ => today.going += 1,
         }
+        // The errors it kept running into today: how often each came
+        // before today is not told apart, so each counts once.
         today.failures += session
             .errors
             .iter()
             .filter(|failure| failure.last_at >= since)
-            .map(|failure| failure.count as usize)
-            .sum::<usize>();
-        // Its latest tests, as they ended.
+            .count();
+        // Its latest tests today, as they ended.
         match session
             .checks
             .iter()
-            .filter(|check| check.kind == CheckKind::Test)
+            .filter(|check| check.kind == CheckKind::Test && check.at >= since)
             .max_by_key(|check| check.at)
             .map(|check| check.state)
         {
@@ -308,19 +309,35 @@ pub fn progress(input: ProgressInput) -> Result<Progress, NodeError> {
         .copied()
         .filter(|told| told.session.occurred_at >= input.since)
         .collect();
-    let mut because: Vec<String> = (if moved.is_empty() { &ofs } else { &moved })
+    if ofs.is_empty() {
+        return Err(NodeError::new("no session of the repository was told"));
+    }
+    // Every grant whose sessions of it she was told of, whole: forgetting
+    // any of them forgets her line (a grant's rows are found by its name).
+    let mut grants: Vec<String> = ofs
+        .iter()
+        .map(|told| grant_ref(&told.device, &told.session.grant))
+        .collect();
+    grants.sort();
+    grants.dedup();
+    if grants.len() > limits::BECAUSE_IDS {
+        return Err(NodeError::new(
+            "the repository's sessions come under more grants than a row names",
+        ));
+    }
+    let mut sessions: Vec<String> = (if moved.is_empty() { &ofs } else { &moved })
         .iter()
         .map(|told| {
             let session = &told.session;
             session_ref(&told.device, &session.grant, &session.session)
         })
         .collect();
+    sessions.sort();
+    sessions.dedup();
+    sessions.truncate(BECAUSE.min(limits::BECAUSE_IDS - grants.len()));
+    let mut because = grants;
+    because.extend(sessions);
     because.sort();
-    because.dedup();
-    because.truncate(BECAUSE);
-    if because.is_empty() {
-        return Err(NodeError::new("no session of the repository was told"));
-    }
     let body = Body::Standing(Standing {
         version: BODY_VERSION,
         sync: input.sync,
@@ -407,8 +424,10 @@ mod tests {
     fn the_day_is_counted_from_the_sessions_of_the_repository() {
         let made = progress(input(vec![
             told("s-1", "finished", json!({"checks": [{"kind": "test", "state": "passed", "at": AT - 70_000}]})),
-            told("s-2", "asked", json!({"waitingOn": "owner", "errors": [{"sig": "0123456789abcdef", "count": 3, "firstAt": AT - 90_000, "lastAt": AT - 80_000}]})),
-            told("s-3", "started", json!({"checks": [{"kind": "test", "state": "failed", "at": AT - 70_000}]})),
+            // Tests that ended yesterday are not today's.
+            told("s-2", "asked", json!({"waitingOn": "owner", "errors": [{"sig": "0123456789abcdef", "count": 3, "firstAt": AT - 90_000, "lastAt": AT - 80_000}], "checks": [{"kind": "test", "state": "failed", "at": SINCE - 1}]})),
+            // An error it ran into until yesterday is not today's.
+            told("s-3", "started", json!({"checks": [{"kind": "test", "state": "failed", "at": AT - 70_000}], "errors": [{"sig": "fedcba9876543210", "count": 5, "firstAt": SINCE - 9_000, "lastAt": SINCE - 5_000}]})),
             // Yesterday's, and another repository's: not counted.
             told("s-4", "failed", json!({"occurredAt": SINCE - 1})),
             told("s-5", "failed", json!({"remote": "github.com/demo/other"})),
@@ -424,7 +443,7 @@ mod tests {
             facts,
             [
                 "今天：做完 1 个、在做 1 个、在等你 1 个",
-                "今天出错 3 次",
+                "今天反复出错 1 处",
                 "测试：1 个通过、1 个没过"
             ]
         );
@@ -440,7 +459,13 @@ mod tests {
         assert_eq!(made.row.body["saidBy"], json!(["her"]));
         assert_eq!(made.row.body["item"], json!(ITEM));
         assert_eq!(made.row.body["base"], json!(["u_before"]));
-        assert_eq!(made.row.body["because"].as_array().unwrap().len(), 3);
+        // The grant whole, so forgetting it forgets her line.
+        let because = made.row.body["because"].as_array().unwrap();
+        assert_eq!(because.len(), 4);
+        assert!(because.contains(&json!(crate::sessions::grant_ref(
+            "dev_mac",
+            "g_0123456789"
+        ))));
         assert_eq!(
             made.card.subject.as_deref(),
             Some(format!("node:{}", made.node).as_str())
@@ -457,7 +482,7 @@ mod tests {
         .unwrap();
         assert_eq!(made.card.facts.len(), 1);
         assert_eq!(made.card.facts[0].text, "今天这里还没有会话动过");
-        assert_eq!(made.row.body["because"].as_array().unwrap().len(), 1);
+        assert_eq!(made.row.body["because"].as_array().unwrap().len(), 2);
         // No session of it at all, or nothing she said: none.
         assert!(progress(input(Vec::new())).is_err());
         let mut empty = input(vec![told("s-1", "finished", json!({}))]);

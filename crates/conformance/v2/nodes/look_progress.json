@@ -106,7 +106,7 @@
             },
             {
               "ref": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-              "text": "今天出错 3 次"
+              "text": "今天反复出错 1 处"
             },
             {
               "ref": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
@@ -129,6 +129,7 @@
               "u_before"
             ],
             "because": [
+              "grant:gd30b104b040e8927cfd8bafa",
               "session:s1fa465ebd5f9b41e95a74e4e",
               "session:s6cd3363fcce4d0d6c582b73c",
               "session:s79ef21d53b72dc9126511c45"
@@ -200,6 +201,7 @@
               "u_before"
             ],
             "because": [
+              "grant:gd30b104b040e8927cfd8bafa",
               "session:s13fda1e3042e06eab02bc6d1"
             ],
             "item": "progress",

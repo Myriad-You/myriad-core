@@ -817,9 +817,10 @@ struct RawLine {
 
 #[derive(Deserialize)]
 struct RawRepo {
+    #[serde(default)]
     repo: Value,
     #[serde(default)]
-    now: Option<String>,
+    now: Value,
 }
 
 #[derive(Deserialize)]
@@ -828,8 +829,10 @@ struct Raw {
     changes: Vec<RawJudgment>,
     #[serde(default)]
     say: Option<RawLine>,
+    /// Read one by one: a line of hers on a repository that does not read
+    /// is passed by, never the whole answer.
     #[serde(default)]
-    repos: Vec<RawRepo>,
+    repos: Value,
 }
 
 fn kept(text: Option<String>, most: usize) -> Option<String> {
@@ -844,6 +847,16 @@ fn number(value: &Value) -> Option<usize> {
         Value::Number(number) => number.as_u64().map(|number| number as usize),
         Value::String(text) => text.trim().trim_matches(['[', ']']).parse().ok(),
         _ => None,
+    }
+}
+
+/// A repository's number she wrote, as a number, `"R3"` or `"[3]"`.
+fn repo_number(value: &Value) -> Option<usize> {
+    match value {
+        Value::String(text) => number(&Value::String(
+            text.trim().trim_start_matches(['R', 'r']).to_string(),
+        )),
+        other => number(other),
     }
 }
 
@@ -921,13 +934,16 @@ pub fn read(raw: &str, material: &Material) -> Read {
     // A repository not in the material, or said with nothing, is none;
     // the first she gave of one is hers.
     let mut repos: Vec<RepoNow> = Vec::new();
-    for said in answer.repos {
+    for said in answer.repos.as_array().into_iter().flatten() {
+        let Ok(said) = serde_json::from_value::<RawRepo>(said.clone()) else {
+            continue;
+        };
         let Some(repo) =
-            number(&said.repo).filter(|repo| (1..=material.repos.len()).contains(repo))
+            repo_number(&said.repo).filter(|repo| (1..=material.repos.len()).contains(repo))
         else {
             continue;
         };
-        let Some(text) = kept(said.now, LINE_CHARS) else {
+        let Some(text) = kept(said.now.as_str().map(str::to_string), LINE_CHARS) else {
             continue;
         };
         if !repos.iter().any(|known| known.repo == repo) {
@@ -1325,7 +1341,7 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
                 .repos
                 .iter()
                 .filter_map(|said| {
-                    let repo = input.material.repos.get(said.repo - 1)?;
+                    let repo = input.material.repos.get(said.repo.checked_sub(1)?)?;
                     Some(RepoSaid {
                         key: repo.key.clone(),
                         name: repo.name.clone(),

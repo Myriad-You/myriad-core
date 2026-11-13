@@ -27,8 +27,10 @@
 //! grant by forgetting each task it made (the whole node: its created row
 //! and status rows name nothing) and every other row that names the grant
 //! ([`grant_ref`]): the only ones elsewhere are the results folded back onto
-//! a repository. Every row that can name something names the grant and the
-//! session ([`session_ref`]), in `because` or `refs`.
+//! a repository, and her line on a repository (`look_progress`), which
+//! names every grant whose sessions of it she was told of. Every row that
+//! can name something names the grant and the session ([`session_ref`]), in
+//! `because` or `refs`.
 //!
 //! The host gives what it keeps of the task as it stands after the rows of
 //! the last change it took were written: two changes of one session are
