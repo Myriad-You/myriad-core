@@ -584,9 +584,12 @@ fn choice_label(choice: &str) -> Option<String> {
 /// leans to. A session that gave choices is answered with them, as it gave
 /// them, the one she leans to first; one that gave none, with her
 /// suggestion when it is one answer. Going to the session is always last.
+/// `hers` says she has a view on the card: with none, she leans to
+/// nothing and the choices keep the session's order.
 fn answers(
     session: &Session,
     judgment: &Judgment,
+    hers: bool,
     words: &Words,
 ) -> (Vec<CardAction>, Option<String>) {
     let mut actions = Vec::new();
@@ -596,8 +599,21 @@ fn answers(
             .choices
             .iter()
             .enumerate()
-            .filter_map(|(at, choice)| Some((at + 1, choice_label(choice)?)))
+            .filter_map(|(at, choice)| Some((at + 1, choice, choice_label(choice)?)))
             .take(cards::ACTIONS - 1)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .scan(Vec::<String>::new(), |seen, (number, choice, label)| {
+                // Two choices cut to the same words are told apart by
+                // their numbers in the session.
+                let label = if seen.contains(&label) {
+                    choice_label(&format!("{number}. {choice}")).unwrap_or(label)
+                } else {
+                    label
+                };
+                seen.push(label.clone());
+                Some((number, label))
+            })
             .collect()
     } else {
         Vec::new()
@@ -605,6 +621,7 @@ fn answers(
     if !choices.is_empty() {
         let leaned = judgment
             .leans
+            .filter(|_| hers)
             .filter(|number| choices.iter().any(|(at, _)| at == number));
         if let Some(number) = leaned {
             leans = Some(choice_id(number));
@@ -615,7 +632,7 @@ fn answers(
         for (number, label) in first.into_iter().chain(rest) {
             actions.push(action(&choice_id(number), &label));
         }
-    } else if judgment.answers && !judgment.suggestion.trim().is_empty() {
+    } else if hers && judgment.answers && !judgment.suggestion.trim().is_empty() {
         let (id, label) = match judgment.verdict {
             Verdict::Nod => ("ok", words.ok),
             _ => ("agree", words.agree),
@@ -700,7 +717,12 @@ pub fn decision(input: DecisionInput) -> Result<CardVersion, NodeError> {
             text.push_str(&more);
         }
     }
-    let (actions, leans) = answers(&input.told.session, judgment, words);
+    let (actions, leans) = answers(
+        &input.told.session,
+        judgment,
+        hers && !text.is_empty(),
+        words,
+    );
     let view = (!text.is_empty()).then(|| CardView {
         text: cut(&text, cards::VIEW_CHARS),
         because,
@@ -824,6 +846,13 @@ mod tests {
             device: "dev_mac".to_string(),
             session: serde_json::from_value(session).unwrap(),
         }
+    }
+
+    /// A card holds every choice a session may give, and the way to it.
+    #[test]
+    fn a_card_holds_every_choice_and_open() {
+        assert_eq!(cards::ACTIONS, rules().choices_at_most + 1);
+        assert!(cards::LABEL_CHARS < rules().choice_chars);
     }
 
     /// Every piece the material shows of a change is told by a fact, or is

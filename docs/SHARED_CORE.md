@@ -486,7 +486,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **是她日志里的行**，受众 `personal:<主人>`。`card.version` 是卡现在的样子（Latest：日志顺序里最后一行就是这张卡，之前的是历史），作者是她或 `rule`（规则写的卡不需要执笔权，`rule` 只能写节点之外的这一种）；`card.answered` 是主人的回答，作者只能是主人。她的一条消息用 `segment.line` 的 `card` 带上卡：话和卡是一条消息，话可以没有。同一张卡出现在几条消息里时，整卡画在最新的那条，更早的收成一行。
 - **开放**：`kind`、`scene` 是开放的词（小写字母、数字、`_`，最多 32 字节）。不认识这个 kind 的一端照通用样式画 `title`、`facts`、`actions`，新的卡不用等各端发版。开放的是这两个词，不是字段：卡的每一层都不收没列出的字段，给卡的任何一层加字段都要升 ABI（和别的行一样，见 `wire` 的字段表）。第一版的 kind 是 `decide`、`nod`、`progress`、`status`，scene 是 `agents`。
 - **一件事一张卡**：同一 scene、kind、节点的卡永远是同一个 id（`nodes.card_id`：`card\u{1f}scene\u{1f}kind\u{1f}subject` 的 sha256 前 16 字节，前缀 `c_`），新的一版替换它。不关于节点的卡由写它的一端起 id，以这一端的名字开头（`<origin>_…`），各端不会撞。id 是 1 到 80 字节的字母、数字、`_`、`-`、`.`。
-- **字段**（卡的每一层都不收没列出的字段：卡里每个字符串都按名字查过）：`title`（不空，最多 60 字）；`state`（可空，就是 `node.standing` 的那组状态词）；`facts`（最多 8 条，每条 `text` 不空、最多 120 字，`ref` 是它说的节点或会话）；`view`（她的话：`text` 最多 1000 字，`because` 是 facts 的编号，从 1 起、不重复、落在 facts 里；`leans` 可空，是她倾向的那个 action 的 id，必须是这张卡上 `open` 以外的一个，各端把它画成主按钮）；`actions`（最多 5 个，`id` 是词、不重复，`label` 不空、最多 40 字）。`open` 是保留的 action：打开卡说的那个会话，不写回答。`leans` 和放宽的两个上限是 11-13 在 ABI 4 里原地补的：那时还没有哪一端在跑 ABI 4（线上站点早于它，日志同步没开），所以没有升 ABI；以后再改卡的字段照上一条升。
+- **字段**（卡的每一层都不收没列出的字段：卡里每个字符串都按名字查过）：`title`（不空，最多 60 字）；`state`（可空，就是 `node.standing` 的那组状态词）；`facts`（最多 8 条，每条 `text` 不空、最多 120 字，`ref` 是它说的节点或会话）；`view`（她的话：`text` 最多 1000 字，`because` 是 facts 的编号，从 1 起、不重复、落在 facts 里；`leans` 可空，是她倾向的那个 action 的 id，必须是这张卡上 `open` 以外的一个，各端把它画成主按钮）；`actions`（最多 5 个，`id` 是词、不重复，`label` 不空、最多 40 字）。`open` 是保留的 action：打开卡说的那个会话，不写回答。`leans` 和放宽的两个上限是 11-13 在 ABI 4 里原地补的，没有升 ABI。理由：线上站点早于 ABI 4，日志同步没开；卡的另一条路是 `conversations` 帧（`cards` 能力），那时还没有子端在 hello 里列 `cards`，站点在任何子端列它之前钉到这一版。代价是回不去：这一版写的卡（带 `leans`、长 label、5 个 action）和带 `choices` 的会话，更早的 ABI 4 核心都读不了。以后再改卡的字段照上一条升。
 - **只放事实**：卡里没有对话原文。title、facts、view、label 过密钥扫描，id 和 ref 过路径和已知密钥的检查（和别的正文一样，在 `nodes.wire_send` 里；`nodes.card_check` 写之前先查一遍，查不过的理由按字段给）。卡超限或查不过时，宿主照常发她的那句话，并记下拒收的理由。
 - **还等主人**（`nodes.cards_fold`）：最新一版有 `open` 以外的 action，并且这一版之后没有回答它的回答。回答只算在它点的那一版上（`version` 等于那一版的行 id），必须在那一版之后，并且是那一版的一个 action（`open` 不算）；主人在旧版上点的回答，哪怕晚到，也不关掉他没见过的新版。调用方先把忘掉吸收进行里再给（和折叠日志一样），忘掉了最新一版，上一版就重新是这张卡。卡说的事不再需要主人时（主人在会话里直接答了、会话往下走了或结束了），写它的一端写一个新版本：没有 action 或只剩 `open`，`state` 写它现在的样子，卡就不再等。正文缺了或查不过的一版跳过，上一版照旧。
 
@@ -505,6 +505,9 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - `nodes.look_card` 的回答键：
   - 会话给了选项（`now.session` 的 `choices`，宿主的 welcome 列了 `now.choices` 设备才报）：就用这些选项，文字照会话给的，先过密钥和证件号扫描（抹掉的地方留标记）、压成一行、超过 40 字截断并以「…」标出；id 是 `choice_<会话里的序号>`。她倾向的那个（判断里的 `leans`）排第一，并写进 `view.leans`；她没有倾向、或说替站长答不了时不标，按会话的顺序排。不加通用的「按建议办」。
   - 会话没给选项（开放问题）：她的建议是一个能照办的回答时（判断里的 `answers`），加一个 `agree`（`decide`）或 `ok`（`nod`），并写进 `view.leans`；否则只有 `open`，这张卡也就不算等站长（站长在会话里答）。
+  - 截断后撞成同样文字的两个选项，后一个前面加上它在会话里的序号。她没有看法（`view` 为空）时不标倾向、不重排。
+  - 宿主要把 `nodes.look_input` 给的 `material` 原样（含 `choices`）交回 `nodes.look_read`：少了 `choices`，她的 `leans` 都读成 null。
+  - 点了选项只是站长的回答，记成 `card.answered` 告诉她；把答案送回会话不在契约里。
   - 最后都带 `open`。判为不用管的（`no_need`）没有卡，是 `bad_input`。id 是 `nodes.card_id {agents, kind, node:<任务节点>}`。
 - `nodes.look_status`：会话做完或失败时出一张 `status`，只有 `open`，不等站长；别的时候 `card` 是 null。
 - `nodes.look_settled`：会话没经过卡就往下走了（站长在会话里答了、它接着做了或结束了），卡的下一版：facts 和 `state` 按会话现在的样子，依据和 `view.leans` 清空，只留 `open`，卡不再等站长。

@@ -713,6 +713,98 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "choices": [
+            [
+              "push",
+              "wait"
+            ],
+            []
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [2], \"missing\": null, \"ownerMustSay\": true, \"leans\": 2, \"answers\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": {\"change\": 1, \"text\": \"要推吗\", \"because\": [2, 4]}}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a lean read against the choices the material came back with",
+      "output": {
+        "judgments": [
+          {
+            "about": "它问要不要推送",
+            "answers": true,
+            "because": [
+              2
+            ],
+            "card": "要你定：它问要不要推送\n推，测试都过了",
+            "evidence": [
+              "session:s1"
+            ],
+            "hasCard": true,
+            "leans": 2,
+            "missing": null,
+            "ownerMustSay": true,
+            "suggestion": "推，测试都过了",
+            "verdict": "decide"
+          },
+          {
+            "about": "文档写完了",
+            "answers": false,
+            "because": [],
+            "card": "不用你管：文档写完了",
+            "evidence": [],
+            "hasCard": false,
+            "leans": null,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": {
+          "because": [
+            2,
+            4
+          ],
+          "change": 1,
+          "text": "要推吗"
+        },
+        "status": "good"
+      }
     }
   ],
   "version": 1
