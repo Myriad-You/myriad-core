@@ -104,7 +104,7 @@ const JA: Words = Words {
 
 const KO: Words = Words {
     today: "오늘: {list}",
-    done: "한 차례 마침 {n}",
+    done: "일단락 {n}",
     going: "진행 중 {n}",
     waits: "당신을 기다림 {n}",
     stuck: "막힘 {n}",
@@ -118,7 +118,7 @@ const KO: Words = Words {
 
 const FR: Words = Words {
     today: "Aujourd'hui : {list}",
-    done: "{n} ont fini un tour",
+    done: "{n} a (ont) fini un tour",
     going: "{n} en cours",
     waits: "{n} vous attend(ent)",
     stuck: "{n} bloquée(s)",
@@ -132,7 +132,7 @@ const FR: Words = Words {
 
 const DE: Words = Words {
     today: "Heute: {list}",
-    done: "{n} mit einer Runde fertig",
+    done: "{n} vorerst fertig",
     going: "{n} in Arbeit",
     waits: "{n} warten auf dich",
     stuck: "{n} stecken fest",

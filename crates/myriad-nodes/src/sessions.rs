@@ -6,7 +6,7 @@
 //! | --- | --- |
 //! | started | the task, under the repository |
 //! | asked | an open item: what it asked; where it stands: waiting on the owner |
-//! | finished | open items closed; the task done; one line of its result on the repository |
+//! | finished | open items closed; the task resting (a turn ended, not the task); one line of its result on the repository |
 //! | failed | where it stands: stuck, and why |
 //! | quiet | where it stands only |
 //!
@@ -1199,6 +1199,12 @@ mod tests {
         assert_eq!(known(&[&one, &two, &three]).status, Status::Active);
         assert!(after.items.iter().all(|item| item.closed));
         assert_eq!(after.items.len(), 1, "one question, one item");
+        // A session that starts again after a finished turn is under way.
+        let five = session_rows(at("started", 5, Some(after.clone()))).unwrap();
+        assert_eq!(
+            known(&[&one, &two, &three, &four, &five]).status,
+            Status::Active
+        );
         // Where it stands moved on with each change, one version current.
         let now = four
             .rows

@@ -580,7 +580,7 @@
           ]
         }
       },
-      "name": "a session finishes: its item closed, done, its result on the repository",
+      "name": "a session finishes a turn: its item closed, the task resting, its result on the repository",
       "output": {
         "repo": "b0469c3a5acc39ff80f59377d91d05d6",
         "repoKey": "repo:github.com/me/repo",
