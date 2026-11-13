@@ -244,6 +244,7 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.look_card", nodes::look_card),
     ("nodes.look_due", nodes::look_due),
     ("nodes.look_input", nodes::look_input),
+    ("nodes.look_progress", nodes::look_progress),
     ("nodes.look_read", nodes::look_read),
     ("nodes.look_route", nodes::look_route),
     ("nodes.look_settled", nodes::look_settled),

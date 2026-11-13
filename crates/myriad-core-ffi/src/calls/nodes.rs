@@ -249,6 +249,14 @@ pub(super) fn look_status(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "card": card }))
 }
 
+/// `{audience, key, name, text, base?, sync, told?, since, at, language}` →
+/// `{node, row, card}`: her line on a repository (`nodes.look_read`'s
+/// `repos`) as a `node.standing` row of hers on its node, and the
+/// repository's `progress` card, the day's counts its facts.
+pub(super) fn look_progress(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&myriad_nodes::look_progress::progress(quiet_input(raw)?).map_err(refused)?)
+}
+
 /// `{card, told, at, language}` → `{card}`: a card's next version once its session
 /// went on without the owner's answer on it: nothing left to answer.
 pub(super) fn look_settled(raw: &[u8]) -> Result<Value, Failure> {

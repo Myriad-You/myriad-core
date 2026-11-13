@@ -178,6 +178,11 @@ fn two() -> Material {
             piece(Some(2), "Write the docs"),
         ],
         choices: vec![vec!["push".into(), "wait".into()], Vec::new()],
+        repos: vec![RepoOf {
+            key: "repo:github.com/me/repo".into(),
+            name: "repo".into(),
+            changes: vec![1, 2],
+        }],
     }
 }
 

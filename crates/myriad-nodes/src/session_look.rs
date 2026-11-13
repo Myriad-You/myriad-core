@@ -158,6 +158,41 @@ pub struct Material {
     /// a change whose session gave none.
     #[serde(default, skip_serializing_if = "no_choices")]
     pub choices: Vec<Vec<String>>,
+    /// The repositories the changes are in, in the order they first come:
+    /// she says where each stands now (`R1`, `R2`, …).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub repos: Vec<RepoOf>,
+}
+
+/// A repository the changes are in: its key (`repo:<remote>`, or a
+/// device's folder, [`crate::sessions::folder_key`]), its name, and which
+/// changes are in it (from 1).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RepoOf {
+    pub key: String,
+    pub name: String,
+    #[serde(default)]
+    pub changes: Vec<usize>,
+}
+
+/// The repository `told` is in: by its remote on every device, or its
+/// device's own folder (as the rules key it, [`crate::sessions`]).
+pub fn repo_of(told: &Told) -> Option<RepoOf> {
+    let session = &told.session;
+    match (&session.remote, &session.folder) {
+        (Some(remote), _) => Some(RepoOf {
+            key: format!("repo:{remote}"),
+            name: remote.rsplit('/').next().unwrap_or(remote).to_string(),
+            changes: Vec::new(),
+        }),
+        (None, Some(folder)) => Some(RepoOf {
+            key: crate::sessions::folder_key(&told.device, folder),
+            name: folder.clone(),
+            changes: Vec::new(),
+        }),
+        (None, None) => None,
+    }
 }
 
 fn no_choices(choices: &[Vec<String>]) -> bool {
@@ -411,6 +446,20 @@ pub fn material(changes: &[Shown], others: &[Told], said: &[Said], at: i64) -> M
     let mut material = Material::default();
     for shown in changes {
         one(&mut material, shown, others, at);
+        let change = material.changes.len();
+        if let Some(repo) = repo_of(&shown.told) {
+            match material
+                .repos
+                .iter_mut()
+                .find(|known| known.key == repo.key)
+            {
+                Some(known) => known.changes.push(change),
+                None => material.repos.push(RepoOf {
+                    changes: vec![change],
+                    ..repo
+                }),
+            }
+        }
     }
     for line in said.iter().take(SAID) {
         material.add_around(
@@ -712,6 +761,18 @@ pub struct Line {
 pub struct Answer {
     pub judgments: Vec<Option<Judgment>>,
     pub line: Option<Line>,
+    /// Where each repository stands now, in her words (`repos`, from 1).
+    #[serde(default)]
+    pub repos: Vec<RepoNow>,
+}
+
+/// Her line of where one repository of the material stands now.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RepoNow {
+    /// The repository, from 1 (`material.repos`).
+    pub repo: usize,
+    pub text: String,
 }
 
 /// What became of her answer.
@@ -755,11 +816,20 @@ struct RawLine {
 }
 
 #[derive(Deserialize)]
+struct RawRepo {
+    repo: Value,
+    #[serde(default)]
+    now: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct Raw {
     #[serde(default)]
     changes: Vec<RawJudgment>,
     #[serde(default)]
     say: Option<RawLine>,
+    #[serde(default)]
+    repos: Vec<RawRepo>,
 }
 
 fn kept(text: Option<String>, most: usize) -> Option<String> {
@@ -848,7 +918,27 @@ pub fn read(raw: &str, material: &Material) -> Read {
             }
         },
     };
-    Read::Good(Answer { judgments, line })
+    // A repository not in the material, or said with nothing, is none;
+    // the first she gave of one is hers.
+    let mut repos: Vec<RepoNow> = Vec::new();
+    for said in answer.repos {
+        let Some(repo) =
+            number(&said.repo).filter(|repo| (1..=material.repos.len()).contains(repo))
+        else {
+            continue;
+        };
+        let Some(text) = kept(said.now, LINE_CHARS) else {
+            continue;
+        };
+        if !repos.iter().any(|known| known.repo == repo) {
+            repos.push(RepoNow { repo, text });
+        }
+    }
+    Read::Good(Answer {
+        judgments,
+        line,
+        repos,
+    })
 }
 
 /// Her answer held to itself: what waits on the owner (`waits`, by change)
@@ -933,6 +1023,7 @@ Every ground must be the numbers of what you were shown; if you cannot point at 
 ownerMustSay: true when its words want the owner's own say (a deploy, a push, an install, a spend).\n\
 leans: when the session gave choices (numbered choice 1, choice 2, ...), the number of the one you would take; null when you lean to none, or when it is not yours to answer for the owner. \
 answers: true when your suggestion is one answer the owner could give as it is; false when it lays out the ways, leans to none, or is not yours to give.\n\
+repos: for each repository listed (R1, R2, ...), one line of where its work stands now as you see it, in the language you speak with the owner: what got done, what is going, what waits on them. Your own words, never a session's; it goes on the repository as yours.\n\
 say: at most one thing you would tell the owner now, in your own voice and briefly, of the change you choose, with the numbers it rests on; or null to keep it all to the cards. \
 What you already told them is numbered too. \
 The owner sees the cards on their own, with your about, suggestion and missing, and answers them with the session's choices (the one you lean to first) or, where it gave none, with your suggestion when it answers; what you say goes to the chat apart from them.\n\
@@ -942,11 +1033,39 @@ Answer only the JSON."
 
 /// What she is asked, with the material.
 pub fn prompt(material: &Material) -> String {
-    format!(
-        "The material, numbered:\n{}\n\nAnswer as the schema says: one entry in changes for each of the {} changes.",
-        material.numbered(),
+    let repos: Vec<String> = material
+        .repos
+        .iter()
+        .enumerate()
+        .map(|(at, repo)| {
+            let changes: Vec<String> = repo.changes.iter().map(usize::to_string).collect();
+            format!(
+                "R{} «{}»: changes {}",
+                at + 1,
+                repo.name,
+                changes.join(", ")
+            )
+        })
+        .collect();
+    let mut prompt = format!("The material, numbered:\n{}", material.numbered());
+    if !repos.is_empty() {
+        prompt.push_str(&format!(
+            "\n\nThe repositories they are in:\n{}",
+            repos.join("\n")
+        ));
+    }
+    prompt.push_str(&format!(
+        "\n\nAnswer as the schema says: one entry in changes for each of the {} changes",
         material.changes.len()
-    )
+    ));
+    if !repos.is_empty() {
+        prompt.push_str(&format!(
+            ", and one in repos for each of the {} repositories",
+            repos.len()
+        ));
+    }
+    prompt.push('.');
+    prompt
 }
 
 /// The prompt again after an answer whose grounds named what is not there.
@@ -965,7 +1084,7 @@ pub fn schema() -> Value {
     json!({
         "type": "object",
         "additionalProperties": false,
-        "required": ["changes", "say"],
+        "required": ["changes", "say", "repos"],
         "properties": {
             "changes": {
                 "type": "array",
@@ -983,6 +1102,18 @@ pub fn schema() -> Value {
                         "ownerMustSay": {"type": "boolean"},
                         "leans": {"type": ["integer", "null"]},
                         "answers": {"type": "boolean"}
+                    }
+                }
+            },
+            "repos": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["repo", "now"],
+                    "properties": {
+                        "repo": {"type": "integer"},
+                        "now": {"type": "string"}
                     }
                 }
             },
@@ -1153,6 +1284,18 @@ pub struct LookRead {
     pub status: &'static str,
     pub judgments: Vec<Option<Kept>>,
     pub line: Option<Line>,
+    /// Where each repository stands now, in her words, as `good` gave it
+    /// (`nodes.look_progress` puts each on its repository).
+    pub repos: Vec<RepoSaid>,
+}
+
+/// Her line on one repository of the material: its key and name with it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RepoSaid {
+    pub key: String,
+    pub name: String,
+    pub text: String,
 }
 
 /// `nodes.look_read`.
@@ -1175,15 +1318,27 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
         evidence: input.material.evidence(&judgment.because),
         judgment,
     };
-    let (status, judgments, line) = match read(&input.raw, &input.material) {
+    let (status, judgments, line, repos) = match read(&input.raw, &input.material) {
         Read::Good(answer) => {
             let answer = settle(answer, &input.waits);
-            ("good", answer.judgments, answer.line)
+            let repos = answer
+                .repos
+                .iter()
+                .filter_map(|said| {
+                    let repo = input.material.repos.get(said.repo - 1)?;
+                    Some(RepoSaid {
+                        key: repo.key.clone(),
+                        name: repo.name.clone(),
+                        text: said.text.clone(),
+                    })
+                })
+                .collect();
+            ("good", answer.judgments, answer.line, repos)
         }
-        Read::BadGrounds if hollow(&input.raw) => ("hollow", Vec::new(), None),
-        Read::Unreadable if hollow(&input.raw) => ("hollow", Vec::new(), None),
-        Read::BadGrounds => ("bad_grounds", Vec::new(), None),
-        Read::Unreadable => ("unreadable", Vec::new(), None),
+        Read::BadGrounds if hollow(&input.raw) => ("hollow", Vec::new(), None, Vec::new()),
+        Read::Unreadable if hollow(&input.raw) => ("hollow", Vec::new(), None, Vec::new()),
+        Read::BadGrounds => ("bad_grounds", Vec::new(), None, Vec::new()),
+        Read::Unreadable => ("unreadable", Vec::new(), None, Vec::new()),
     };
     let judgments = (0..input.waits.len())
         .map(|at| {
@@ -1203,5 +1358,6 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
         status,
         judgments,
         line,
+        repos,
     })
 }

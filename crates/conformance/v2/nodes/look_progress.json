@@ -1,0 +1,273 @@
+{
+  "call": "nodes.look_progress",
+  "cases": [
+    {
+      "input": {
+        "at": 1760000000000,
+        "audience": "personal:7",
+        "base": [
+          "u_before"
+        ],
+        "key": "repo:github.com/demo/sample-repo",
+        "language": "zh-CN",
+        "name": "sample-repo",
+        "since": 1759996400000,
+        "sync": "shared",
+        "text": "拆仓库做完一半，剩下的在等你定推不推",
+        "told": [
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "finished",
+              "checks": [
+                {
+                  "at": 1759999930000,
+                  "kind": "test",
+                  "state": "passed"
+                }
+              ],
+              "grant": "g_0123456789",
+              "occurredAt": 1759999940000,
+              "remote": "github.com/demo/sample-repo",
+              "session": "s-1",
+              "tool": "coding-agent"
+            }
+          },
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "asked",
+              "errors": [
+                {
+                  "count": 3,
+                  "firstAt": 1759999910000,
+                  "lastAt": 1759999920000,
+                  "sig": "0123456789abcdef"
+                }
+              ],
+              "grant": "g_0123456789",
+              "occurredAt": 1759999940000,
+              "remote": "github.com/demo/sample-repo",
+              "session": "s-2",
+              "tool": "coding-agent",
+              "waitingOn": "owner"
+            }
+          },
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "started",
+              "checks": [
+                {
+                  "at": 1759999930000,
+                  "kind": "test",
+                  "state": "failed"
+                }
+              ],
+              "grant": "g_0123456789",
+              "occurredAt": 1759999940000,
+              "remote": "github.com/demo/sample-repo",
+              "session": "s-3",
+              "tool": "coding-agent"
+            }
+          },
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "failed",
+              "grant": "g_0123456789",
+              "occurredAt": 1759996399999,
+              "remote": "github.com/demo/sample-repo",
+              "session": "s-4",
+              "tool": "coding-agent"
+            }
+          },
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "failed",
+              "grant": "g_0123456789",
+              "occurredAt": 1759999940000,
+              "remote": "github.com/demo/other",
+              "session": "s-5",
+              "tool": "coding-agent"
+            }
+          }
+        ]
+      },
+      "name": "the day is counted from the sessions of the repository, her line on it is hers",
+      "output": {
+        "card": {
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "text": "今天：做完 1 个、在做 1 个、在等你 1 个"
+            },
+            {
+              "ref": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "text": "今天出错 3 次"
+            },
+            {
+              "ref": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "text": "测试：1 个通过、1 个没过"
+            }
+          ],
+          "id": "c_e4391bd747d68bbf54c5395ca653d122",
+          "kind": "progress",
+          "scene": "agents",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "sample-repo",
+          "view": {
+            "text": "拆仓库做完一半，剩下的在等你定推不推"
+          }
+        },
+        "node": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "row": {
+          "body": {
+            "base": [
+              "u_before"
+            ],
+            "because": [
+              "session:s1fa465ebd5f9b41e95a74e4e",
+              "session:s6cd3363fcce4d0d6c582b73c",
+              "session:s79ef21d53b72dc9126511c45"
+            ],
+            "item": "progress",
+            "saidBy": [
+              "her"
+            ],
+            "since": 1760000000000000,
+            "sync": "shared",
+            "text": "拆仓库做完一半，剩下的在等你定推不推",
+            "version": 1
+          },
+          "id": "u325ef89c7641562b12eea4b6",
+          "kind": "node.standing"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "audience": "personal:7",
+        "base": [
+          "u_before"
+        ],
+        "key": "repo:github.com/demo/sample-repo",
+        "language": "en-US",
+        "name": "sample-repo",
+        "since": 1759996400000,
+        "sync": "shared",
+        "text": "拆仓库做完一半，剩下的在等你定推不推",
+        "told": [
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "finished",
+              "grant": "g_0123456789",
+              "occurredAt": 1759996399999,
+              "remote": "github.com/demo/sample-repo",
+              "session": "s-4",
+              "tool": "coding-agent"
+            }
+          }
+        ]
+      },
+      "name": "a quiet day says so, in the owner's language",
+      "output": {
+        "card": {
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+              "text": "No session has moved here today"
+            }
+          ],
+          "id": "c_e4391bd747d68bbf54c5395ca653d122",
+          "kind": "progress",
+          "scene": "agents",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "sample-repo",
+          "view": {
+            "text": "拆仓库做完一半，剩下的在等你定推不推"
+          }
+        },
+        "node": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "row": {
+          "body": {
+            "base": [
+              "u_before"
+            ],
+            "because": [
+              "session:s13fda1e3042e06eab02bc6d1"
+            ],
+            "item": "progress",
+            "saidBy": [
+              "her"
+            ],
+            "since": 1760000000000000,
+            "sync": "shared",
+            "text": "拆仓库做完一半，剩下的在等你定推不推",
+            "version": 1
+          },
+          "id": "u325ef89c7641562b12eea4b6",
+          "kind": "node.standing"
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "audience": "personal:7",
+        "base": [
+          "u_before"
+        ],
+        "key": "repo:github.com/demo/sample-repo",
+        "language": "zh-CN",
+        "name": "sample-repo",
+        "since": 1759996400000,
+        "sync": "shared",
+        "text": "拆仓库做完一半，剩下的在等你定推不推",
+        "told": []
+      },
+      "name": "no session of the repository was told",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "audience": "personal:7",
+        "base": [
+          "u_before"
+        ],
+        "key": "repo:github.com/demo/sample-repo",
+        "language": "zh-CN",
+        "name": "sample-repo",
+        "since": 1759996400000,
+        "sync": "shared",
+        "text": "  ",
+        "told": [
+          {
+            "device": "dev_mac",
+            "session": {
+              "change": "finished",
+              "grant": "g_0123456789",
+              "occurredAt": 1759999940000,
+              "remote": "github.com/demo/sample-repo",
+              "session": "s-1",
+              "tool": "coding-agent"
+            }
+          }
+        ]
+      },
+      "name": "her line is empty",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

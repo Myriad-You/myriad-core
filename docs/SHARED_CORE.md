@@ -518,6 +518,24 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.look_status` | `{task, told, at, language}` → `{card}`（不是做完或失败时为 null） |
 | `nodes.look_settled` | `{card, told, at, language}` → `{card}` |
 
+### 仓库的进度（`nodes.look_progress`）
+
+她看会话变化时，顺带给这批变化涉及的每个仓库各说一句「现在」：做完了什么、在做什么、什么在等站长。这句话是她的，不是规则写的。规则在 `crates/myriad-nodes/src/look_progress.rs`。
+
+- **问法**：`nodes.look_input` 的材料里多了 `repos`，按在变化里出现的先后列出这批变化的仓库，每个带 `key`、`name` 和属于它的变化编号。提示里写成 `R1 «name»: changes 1, 2`。她的回答多了 `repos: [{repo, now}]`（`repo` 是 R 后面的编号）。
+- **读法**：`nodes.look_read` 读 `good` 时，多给 `repos: [{key, name, text}]`。编号不在材料里、或话为空的不要；同一个仓库只取第一句。宿主要把 `material` 原样交回（含 `repos`），否则读不出。
+- **写下和出卡**：`nodes.look_progress` 由宿主对每一句调一次，返回 `{node, row, card}`。
+  - `row` 是仓库节点上一行她的 `node.standing`：item 是 `progress`，`saidBy` 是 her，盖在 `base` 之上，依据是今天动过的这个仓库的会话（今天一个都没动就用知道的全部）。宿主用她的执笔权写，作者是她。
+  - `card` 是 `progress` 卡：
+    - id 是 `nodes.card_id {agents, progress, node:<仓库节点>}`，标题是仓库名。
+    - facts 是程序按 `since`（站长这一天开始的时刻）以后告诉过的这个仓库的会话数出来的：做完、在做、在等你、卡住各几个，今天出错几次，最近一次测试通过、没过各几个。没有会话动过时只有一条「今天这里还没有会话动过」。
+    - view 是她那句话，没有按钮，不等站长。
+- 别的仓库的会话不算；一个会话也没告诉过、或者她的话为空，都是 `bad_input`。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `nodes.look_progress` | `{audience, key, name, text, base?, sync, told?, since, at, language}` → `{node, row, card}` |
+
 ## 交办（`handoff.*`）
 
 她在聊天里以自己的身份说话；要办事时在回复末尾单占一行写 `[[work: …]]` 交给助手。交出去的每一件按对话编号（`#1`、`#2`……），几件可以同时办；之后给某一件的话写 `[[work #N: …]]`，`[[stop #N]]` 只停那一件。规则在 `myriad_merope::handoff`，取自站点 2026-11-02 的 `delegate.rs`、`channel_work/works.rs`、`agent/panel_work.rs`（只挪不改）；跑各件、存各件、计时和投递仍各端自己写。
