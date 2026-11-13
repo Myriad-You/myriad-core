@@ -268,10 +268,7 @@ pub fn standing(session: &Session) -> (StandingState, String) {
                 None => "waiting on the owner".to_string(),
             },
         ),
-        Change::Finished => (
-            StandingState::Finished,
-            "finished, nothing waits on the owner".to_string(),
-        ),
+        Change::Finished => (StandingState::Finished, "finished a turn".to_string()),
         Change::Failed => (
             StandingState::Stuck,
             match failed {

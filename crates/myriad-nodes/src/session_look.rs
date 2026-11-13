@@ -409,7 +409,9 @@ pub fn now_line(session: &Session) -> String {
     let change = match session.change {
         Change::Started => "started",
         Change::Asked => "stopped and asks the owner",
-        Change::Finished => "finished a turn, nothing to answer",
+        // The device knows it stopped with no question of its own, not
+        // whether its last words ask the owner something.
+        Change::Finished => "finished a turn",
         Change::Failed => "failed (kept erring, or its checks failed)",
         Change::Quiet => "quiet for long",
     };
