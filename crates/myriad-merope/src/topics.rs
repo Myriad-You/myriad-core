@@ -64,6 +64,8 @@ pub struct Topic<'a> {
     pub holds: &'a [String],
     /// How things stand there now (her 「现在」 on it, `node.standing`),
     /// when the host shows it: who someone there is to them reads from it.
+    /// Only going over a stretch (`chat_remember::settle_system_prompt`)
+    /// speaks of it; sorting and tidying give none.
     pub stands: &'a [String],
 }
 
@@ -139,8 +141,14 @@ pub fn shown(topics: &[Topic], offered: &[usize]) -> Value {
                     "aliases": topic.aliases.iter().map(|alias| cut(alias, NAME_CHARS)).collect::<Vec<_>>(),
                     "holds": cut(&topic.holds.join(" / "), HOLDS_CHARS),
                 });
-                if !topic.stands.is_empty() {
-                    shown["stands"] = json!(cut(&topic.stands.join(" / "), STANDS_CHARS));
+                let stands: Vec<&str> = topic
+                    .stands
+                    .iter()
+                    .map(|line| line.trim())
+                    .filter(|line| !line.is_empty())
+                    .collect();
+                if !stands.is_empty() {
+                    shown["stands"] = json!(cut(&stands.join(" / "), STANDS_CHARS));
                 }
                 shown
             })
@@ -613,14 +621,19 @@ mod tests {
         let none: Vec<String> = Vec::new();
         let stands = vec![
             "lives apart from Mei, who is in Shenzhen".to_string(),
+            " ".to_string(),
             "b".repeat(300),
         ];
+        let blank = vec![String::new()];
         let topics = [
             Topic {
                 stands: &stands,
                 ..topic("Mei", &none, &none)
             },
-            topic("houseplants", &none, &none),
+            Topic {
+                stands: &blank,
+                ..topic("houseplants", &none, &none)
+            },
         ];
         let shown = shown(&topics, &[0, 1]);
         let first = shown[0]["stands"].as_str().unwrap();
