@@ -10,6 +10,33 @@ fn site() -> Sync {
     Sync::Local("site".into())
 }
 
+/// A plan is due on a day still to come: it stands since the day she was
+/// told, not since then. A day already past, or a month she was told in,
+/// is when it happened.
+#[test]
+fn since_is_not_a_day_still_to_come() {
+    let told = Some("2026-11-13");
+    for (happened, since) in [
+        // A plan for tomorrow, the month after, the year after.
+        (Some("2026-11-14"), Some("2026-11-13")),
+        (Some("2026-12"), Some("2026-11-13")),
+        (Some("2027"), Some("2026-11-13")),
+        // In the past, on the day, in the month or the year she was told.
+        (Some("2026-10-03"), Some("2026-10-03")),
+        (Some("2026-11-13"), Some("2026-11-13")),
+        (Some("2026-11"), Some("2026-11")),
+        (Some("2026"), Some("2026")),
+        // None, or none that reads.
+        (None, Some("2026-11-13")),
+        (Some("下个月"), Some("2026-11-13")),
+    ] {
+        assert_eq!(since_of(happened, told), since, "{happened:?}");
+    }
+    // Not told when: a day still to come cannot be told apart, so it is kept.
+    assert_eq!(since_of(Some("2026-11-14"), None), Some("2026-11-14"));
+    assert_eq!(since_of(None, None), None);
+}
+
 #[test]
 fn a_fact_on_a_node_of_its_own_still_reaches_the_node_it_changes() {
     // 「新工作」 is the fact's own node; what it brought to mind is on 「工作」.
@@ -246,6 +273,23 @@ fn since_is_when_it_happened_else_the_day_she_was_told() {
         json!({"whose": "them", "set": [], "end": [], "add": [{"topic": "通勤", "text": "坐地铁上班"}]}),
     );
     assert_eq!(got.rows[0].body["since"], json!("2026-10"));
+    let planned = StepInput {
+        fact: FactIn {
+            happened: Some("2026-11-14".into()),
+            ..fact("m1", "定了 11-14 前做完", &["commute"])
+        },
+        ..step.clone()
+    };
+    assert_eq!(
+        read(
+            &planned,
+            json!({"whose": "them", "set": [], "end": [], "add": [{"topic": "通勤", "text": "在赶，11-14 前做完"}]})
+        )
+        .rows[0]
+            .body["since"],
+        json!("2026-11-12"),
+        "a plan stands since the day she was told"
+    );
     let none = StepInput {
         fact: FactIn {
             learned: None,
@@ -412,6 +456,10 @@ fn what_stands_on_a_node_rests_on_the_memories_it_names_since_their_latest_day()
     .unwrap();
     assert_eq!(got.rows.len(), 2);
     assert_eq!(
+        serde_json::to_value(&got.dropped).unwrap(),
+        json!({"no_text": 1, "no_whose": 1, "rests_on_nothing": 1})
+    );
+    assert_eq!(
         got.rows[0].body["because"],
         json!(["memory:m1", "memory:m4"])
     );
@@ -451,4 +499,36 @@ fn what_stands_on_a_node_rests_on_the_memories_it_names_since_their_latest_day()
         ..input
     };
     assert!(build_prepare(nothing).unwrap().skip);
+}
+
+/// What she knew of a plan is shown on the day she learned it, not on the
+/// day it is due; one with no day she learned keeps the day it gives.
+#[test]
+fn a_plan_she_knew_is_shown_on_the_day_she_learned_it() {
+    let on_node = json!({"standing": {}, "entries": [
+        entry("定了下个月搬家", &["m1"], Some("2026-12")),
+        entry("十月搬过一次", &["m2"], Some("2026-10-03")),
+        entry("说好明年去东京", &["m3"], Some("2027")),
+    ]});
+    let input = BuildInput {
+        node: NodeIn {
+            id: "home".into(),
+            name: Some("住处".into()),
+            kind: Some("topic".into()),
+            folded: on_node,
+        },
+        held: names(&["m1", "m2", "m3"]),
+        learned: [("m1", "2026-11-13"), ("m2", "2026-11-13")]
+            .into_iter()
+            .map(|(id, day)| (id.to_string(), day.to_string()))
+            .collect(),
+    };
+    let shown: Value = serde_json::from_str(&build_prepare(input).unwrap().input).unwrap();
+    let days: Vec<&str> = shown["memories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|memory| memory["day"].as_str().unwrap())
+        .collect();
+    assert_eq!(days, ["2026-11-13", "2026-10-03", "2027"]);
 }
