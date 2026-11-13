@@ -128,13 +128,22 @@ pub fn where_it_starts<'a>(asked: &str, may: &'a [String], own: &'a [String]) ->
 
 /// Whose life an answer's `whose` names, as an item's id keeps it: `them`
 /// for the person themselves, else `p` and the hex of the name's first
-/// characters. `None` for no name.
+/// characters. `None` for no name. `them` with more after it (「them，与朋友」,
+/// `them and Mei`: something they share, said with whom) is still them;
+/// a name that only begins so (`Themis`) is not.
 pub fn whose_key(whose: &str) -> Option<String> {
     let whose = whose.trim();
     if whose.is_empty() {
         return None;
     }
-    if whose.eq_ignore_ascii_case("them") {
+    let them = whose
+        .get(..4)
+        .is_some_and(|head| head.eq_ignore_ascii_case("them"))
+        && whose[4..]
+            .chars()
+            .next()
+            .is_none_or(|next| !next.is_alphanumeric());
+    if them {
         return Some("them".into());
     }
     let name: String = whose.chars().take(NAME_CHARS).collect();
