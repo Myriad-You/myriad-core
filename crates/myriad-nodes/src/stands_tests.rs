@@ -318,18 +318,24 @@ fn a_rule_s_now_is_not_shown_and_an_ended_item_is_not_either() {
 fn building_is_due_while_none_of_hers_stands_whatever_a_rule_wrote() {
     let rule = || StandingRowIn {
         author: "rule".into(),
+        item: None,
+    };
+    let hers = |item: Option<&str>| StandingRowIn {
+        author: "her".into(),
+        item: item.map(str::to_string),
     };
     let due = |facts, standing| build_due(&BuildDueInput { facts, standing });
     assert!(due(1, vec![]));
     assert!(due(2, vec![rule(), rule()]));
     assert!(!due(0, vec![]));
+    assert!(!due(1, vec![rule(), hers(None)]));
+    // Her line on a repository is no one's life: it does not count.
+    assert!(due(1, vec![hers(Some(crate::look_progress::ITEM))]));
     assert!(!due(
         1,
         vec![
-            rule(),
-            StandingRowIn {
-                author: "her".into()
-            }
+            hers(Some(crate::look_progress::ITEM)),
+            hers(Some("them-0123456789"))
         ]
     ));
 }

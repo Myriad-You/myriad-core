@@ -422,7 +422,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.standing_read` | `{item}` → `{happened?, state?, open?}`：整理回答里一条事实的发生时间和状态 |
 | `nodes.stands_step_input` | `{fact: {memory, text, happened?, learned?, replaced?, on?: [node]}, known?: [{text, on?}], nodes?: [{id, name?, kind?, folded}]}` → `{skip?, system, schema, input}`：她刚记下的一条事实对「现在」做了什么，要问什么（见下「现在」）；`happened` 是 `happened.from` 那个日子字符串，不是整个对象 |
 | `nodes.stands_step_read` | `{output, sync, <stands_step_input 的输入>}` → `{rows: [{id, node, kind, body}], left: [{item, itemWhose, factWhose}], setAside, unreadable?}`；核心规则不收的一项（文字里有控制字符、id 太长）算进 `setAside`，别的照写 |
-| `nodes.stands_build_due` | `{facts, standing?: [{author}]}` → `{due}`：这一段记下了事实、受众里还没有一行她写的「现在」时为真；规则写的（`rule`）不算 |
+| `nodes.stands_build_due` | `{facts, standing?: [{author, item?}]}` → `{due}`：这一段记下了事实、受众里还没有一行她写的「现在」时为真；规则写的（`rule`）不算；给了 `item` 时，只算谁的生活的那种项（她对仓库说的 `progress` 不算），宿主应当给 |
 | `nodes.stands_build_input` | `{node: {id, name?, kind?, folded}, held?: [memory], learned?: {memory: day}}` → `{skip?, system, schema, input}`；`learned` 要给 `held` 里每一条（条目上没有 `happened` 的记忆，缺了就不带日子） |
 | `nodes.stands_build_read` | `{output, sync, <stands_build_input 的输入>}` → `{rows, left, setAside, unreadable?}` |
 | `nodes.trust_tier` | `{items: [{saidBy, author?, provenance?: {together?, typed?, verified?, answer?}, aboutPartner?}]}` → `{tiers: [seen \| heard \| counts \| null]}` |
@@ -517,6 +517,24 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `nodes.look_card` | `{task, told, judgment, material, change, at, language}` → `{card}` |
 | `nodes.look_status` | `{task, told, at, language}` → `{card}`（不是做完或失败时为 null） |
 | `nodes.look_settled` | `{card, told, at, language}` → `{card}` |
+
+### 仓库的进度（`nodes.look_progress`）
+
+她看会话变化时，顺带给这批变化涉及的每个仓库各说一句「现在」：做完了什么、在做什么、什么在等站长。这句话是她的，不是规则写的。规则在 `crates/myriad-nodes/src/look_progress.rs`。
+
+- **问法**：`nodes.look_input` 的材料里多了 `repos`，按在变化里出现的先后列出这批变化的仓库，每个带 `key`、`name` 和属于它的变化编号。提示里写成 `R1 «name»: changes 1, 2`。她的回答多了 `repos: [{repo, now}]`（`repo` 是 R 后面的编号）。
+- **读法**：`nodes.look_read` 读 `good` 时，多给 `repos: [{key, name, text}]`。`repos` 一句一句读：读不出的一句（编号不在材料里、话为空或不是字符串）跳过，不连累整份回答；编号写成 `R1` 也认；同一个仓库只取第一句。宿主要把 `material` 原样交回（含 `repos`），否则读不出。
+- **写下和出卡**：`nodes.look_progress` 由宿主对每一句调一次，返回 `{node, row, card}`。
+  - `row` 是仓库节点上一行她的 `node.standing`：item 是 `progress`，`saidBy` 是 her，盖在 `base` 之上，依据是今天动过的这个仓库的会话（今天一个都没动就用知道的全部），再加上告诉过的这个仓库的会话所在的每个授权（`grant_ref`，一个不落：忘掉其中任何一个授权，这句话就跟着忘掉）。宿主用她的执笔权写，作者是她。她的这一项不是谁的生活，不算 `stands_build_due` 里「她写的现在」。
+  - `card` 是 `progress` 卡：
+    - id 是 `nodes.card_id {agents, progress, node:<仓库节点>}`，标题是仓库名。
+    - facts 是程序按 `since`（站长这一天开始的时刻）以后告诉过的这个仓库的会话数出来的：做完、在做、在等你、卡住各几个，今天反复出过几处错（同一个错达到 `repeated_error_at` 次才算反复，和别处一样；每处只算一次：会话报来的次数分不出哪天），今天最近一次测试通过、没过各几个。没有会话动过时只有一条「今天这里还没有会话动过」。
+    - view 是她那句话，没有按钮，不等站长。
+- 别的仓库的会话不算；一个会话也没告诉过、或者她的话为空，都是 `bad_input`。
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `nodes.look_progress` | `{audience, key, name, text, base?, sync, told?, since, at, language}` → `{node, row, card}` |
 
 ## 交办（`handoff.*`）
 

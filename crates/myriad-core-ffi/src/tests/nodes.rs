@@ -33,6 +33,7 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.look_card",
     "nodes.look_due",
     "nodes.look_input",
+    "nodes.look_progress",
     "nodes.look_read",
     "nodes.look_route",
     "nodes.look_settled",

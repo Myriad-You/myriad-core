@@ -47,6 +47,40 @@
     },
     {
       "input": {
+        "facts": 1,
+        "standing": [
+          {
+            "author": "her",
+            "item": "progress"
+          }
+        ]
+      },
+      "name": "her line on a repository does not count",
+      "output": {
+        "due": true
+      }
+    },
+    {
+      "input": {
+        "facts": 1,
+        "standing": [
+          {
+            "author": "her",
+            "item": "progress"
+          },
+          {
+            "author": "her",
+            "item": "them-0123456789"
+          }
+        ]
+      },
+      "name": "her item of their life counts",
+      "output": {
+        "due": false
+      }
+    },
+    {
+      "input": {
         "facts": 0
       },
       "name": "not when the stretch kept nothing",

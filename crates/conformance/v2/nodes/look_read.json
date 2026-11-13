@@ -83,6 +83,7 @@
           "change": 1,
           "text": "要推吗"
         },
+        "repos": [],
         "status": "good"
       }
     },
@@ -163,6 +164,7 @@
           "change": 1,
           "text": "没事"
         },
+        "repos": [],
         "status": "good"
       }
     },
@@ -247,6 +249,7 @@
           "change": 2,
           "text": "文档好了"
         },
+        "repos": [],
         "status": "good"
       }
     },
@@ -313,6 +316,7 @@
           }
         ],
         "line": null,
+        "repos": [],
         "status": "good"
       }
     },
@@ -367,6 +371,7 @@
           null
         ],
         "line": null,
+        "repos": [],
         "status": "hollow"
       }
     },
@@ -433,6 +438,7 @@
           }
         ],
         "line": null,
+        "repos": [],
         "status": "unreadable"
       }
     },
@@ -495,6 +501,7 @@
           null
         ],
         "line": null,
+        "repos": [],
         "status": "bad_grounds"
       }
     },
@@ -557,6 +564,7 @@
           null
         ],
         "line": null,
+        "repos": [],
         "status": "bad_grounds"
       }
     },
@@ -619,6 +627,7 @@
           null
         ],
         "line": null,
+        "repos": [],
         "status": "unreadable"
       }
     },
@@ -803,6 +812,109 @@
           "change": 1,
           "text": "要推吗"
         },
+        "repos": [],
+        "status": "good"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ],
+          "repos": [
+            {
+              "changes": [
+                1,
+                2
+              ],
+              "key": "repo:github.com/demo/sample-repo",
+              "name": "sample-repo"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [2], \"missing\": null, \"ownerMustSay\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": {\"change\": 1, \"text\": \"要推吗\", \"because\": [2, 4]}, \"repos\": [{\"repo\": 1, \"now\": \"拆仓库做完一半，剩下的在等你\"}, {\"repo\": 1, \"now\": \"又一句\"}, {\"repo\": 2, \"now\": \"不在材料里\"}, {\"repo\": \"R1\", \"now\": \" \"}]}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "her line on each repository is read, the first of one and only those in the material",
+      "output": {
+        "judgments": [
+          {
+            "about": "它问要不要推送",
+            "answers": false,
+            "because": [
+              2
+            ],
+            "card": "要你定：它问要不要推送\n推，测试都过了",
+            "evidence": [
+              "session:s1"
+            ],
+            "hasCard": true,
+            "leans": null,
+            "missing": null,
+            "ownerMustSay": true,
+            "suggestion": "推，测试都过了",
+            "verdict": "decide"
+          },
+          {
+            "about": "文档写完了",
+            "answers": false,
+            "because": [],
+            "card": "不用你管：文档写完了",
+            "evidence": [],
+            "hasCard": false,
+            "leans": null,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": {
+          "because": [
+            2,
+            4
+          ],
+          "change": 1,
+          "text": "要推吗"
+        },
+        "repos": [
+          {
+            "key": "repo:github.com/demo/sample-repo",
+            "name": "sample-repo",
+            "text": "拆仓库做完一半，剩下的在等你"
+          }
+        ],
         "status": "good"
       }
     }

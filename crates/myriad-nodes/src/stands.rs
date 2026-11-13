@@ -24,7 +24,8 @@
 //!   [`build_read`]): in a talk where none of hers stands yet, each of her
 //!   topic and person nodes with none of hers on it is gone over once, from
 //!   the memories on it, before a new fact is read. A rule's item (where a
-//!   session is `now`) is not hers and counts for neither.
+//!   session is `now`) is not hers and counts for neither; nor does an
+//!   item of hers that is no one's life (her line on a repository).
 //! - **No ledger of its own**: the rows are ordinary `node.standing` rows,
 //!   folded as every head field is (two current versions of one item that
 //!   differ are `bothChanged`).
@@ -691,6 +692,11 @@ fn decide(
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StandingRowIn {
     pub author: String,
+    /// Its item, when the host gives it: only her items of someone's life
+    /// ([`whose_of`]) count, not her line on a repository
+    /// (`look_progress::ITEM`). Without it the row counts by its author.
+    #[serde(default)]
+    pub item: Option<String>,
 }
 
 /// [`build_due`]'s input: how many facts the stretch kept, and the
@@ -705,9 +711,18 @@ pub struct BuildDueInput {
 
 /// Whether to build before reading a stretch's facts: it kept some, and
 /// none of hers stands in the audience yet. A rule's rows do not count: in
-/// the site owner's talk they are there from the start.
+/// the site owner's talk they are there from the start. Nor do her items
+/// that are no one's life (her line on a repository): they come from her
+/// look at the owner's sessions, not from what she knew of them.
 pub fn build_due(input: &BuildDueInput) -> bool {
-    input.facts > 0 && !input.standing.iter().any(|row| row.author == "her")
+    input.facts > 0
+        && !input.standing.iter().any(|row| {
+            row.author == "her"
+                && row
+                    .item
+                    .as_deref()
+                    .is_none_or(|item| whose_of(item).is_some())
+        })
 }
 
 /// One node to build: the node, which of the memories on it she still holds
