@@ -11,7 +11,9 @@ use super::control::{is_own, look_means, offered_faces, sure, taken_face};
 use super::{Moment, MotionPhase};
 
 /// The change of look the answers make, from the one she holds: each a
-/// preset's name, or her ordinary face. None when the look stays. The new
+/// preset's name, or her ordinary face. None when the look stays, or when
+/// there is no other look to pass through: the way can only go straight, and
+/// a choice of `none` alone is refused by a decisions endpoint (422). The new
 /// look is the one the plan takes (`control::lay_face`): someone else's
 /// feeling she quotes, or a name the contract does not know, leaves her
 /// ordinary face.
@@ -26,17 +28,11 @@ pub fn change(
     let to = taken_face(answers, is_own(answers, context))
         .unwrap_or(PLAIN_FACE)
         .to_owned();
-    (from != to).then_some((from, to))
+    (from != to && looks(&from, &to, state).len() >= 2).then_some((from, to))
 }
 
-/// The two questions of the way there: a look passed through first, and
-/// rarely a second; her ordinary face is one of the looks.
-pub fn questions(
-    from: &str,
-    to: &str,
-    context: &Moment,
-    state: Option<&RigStateSummary>,
-) -> (Value, Value) {
+/// The looks the way from `from` to `to` may pass through, `none` first.
+fn looks(from: &str, to: &str, state: Option<&RigStateSummary>) -> Map<String, Value> {
     let mut looks = Map::new();
     looks.insert(
         "none".into(),
@@ -53,6 +49,18 @@ pub fn questions(
             looks.insert(name.into(), json!(means));
         }
     }
+    looks
+}
+
+/// The two questions of the way there: a look passed through first, and
+/// rarely a second; her ordinary face is one of the looks.
+pub fn questions(
+    from: &str,
+    to: &str,
+    context: &Moment,
+    state: Option<&RigStateSummary>,
+) -> (Value, Value) {
+    let looks = looks(from, to, state);
     let unprompted = context.user_text.trim().is_empty();
     let moment = match (&context.phase, context.response_text.as_deref()) {
         (MotionPhase::Presence, _) => format!("While she is {}", context.activity),
@@ -128,6 +136,28 @@ mod tests {
                 "delta": 0.0, "cause": "test", "revision": 1},
             "activity": "thinking", "userText": "tell me about that", "motionStyle": "even"}))
         .unwrap()
+    }
+
+    #[test]
+    fn a_body_with_no_other_look_is_not_asked_the_way() {
+        // Only a mouth: no face is offered, so from a held look to her
+        // ordinary face the way could only go straight.
+        let mouth =
+            crate::sanitize_rig_state(&json!({"face": "drowsy", "capabilities": ["mouth-shapes"]}))
+                .unwrap();
+        assert!(offered_faces(Some(&mouth)).is_empty());
+        let plain = json!({"face": answer(PLAIN_FACE, 0.9)});
+        assert_eq!(change(&plain, &moment("reaction"), Some(&mouth)), None);
+        // A body with faces is still asked, every choice with two options or more.
+        let drowsy = state(Some("drowsy"));
+        let (from, to) = change(&plain, &moment("reaction"), Some(&drowsy)).unwrap();
+        let (_, asked) = questions(&from, &to, &moment("reaction"), Some(&drowsy));
+        for key in ["first", "then"] {
+            assert!(
+                asked[key]["criteria"].as_object().unwrap().len() >= 2,
+                "{asked}"
+            );
+        }
     }
 
     #[test]
