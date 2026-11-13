@@ -31,7 +31,8 @@
 //!   found, since an old way of things on a node the words did find says
 //!   the opposite of what is now. Each item once, not ended, with words,
 //!   not a rule's or a repository's (only an item whose id says whose life
-//!   it is), and not shown above already. Items on active and ongoing nodes
+//!   it is), not on her own node (`her`, whose head the host shows every
+//!   time), and not shown above already. Items on active and ongoing nodes
 //!   first, then the rest; within each, the newest written first. At most
 //!   [`Budget::resident`] items and [`Budget::resident_chars`] chars, each
 //!   counted as the host shows it (`node name：text`): the first that does
@@ -290,11 +291,20 @@ fn standing(node: &PickNode) -> Vec<String> {
         .collect()
 }
 
-/// How their life stands across `nodes`, shown every time, leaving out what
-/// `shown` (node, item) already has; within `budget`.
-fn resident(nodes: &[PickNode], shown: &BTreeSet<(&str, &str)>, budget: &Budget) -> Vec<Resident> {
+/// How their life stands across `nodes` (not `her` own node), shown every
+/// time, leaving out what `shown` (node, item) already has; within `budget`.
+fn resident(
+    nodes: &[PickNode],
+    her: Option<&str>,
+    shown: &BTreeSet<(&str, &str)>,
+    budget: &Budget,
+) -> Vec<Resident> {
     let mut candidates: Vec<(u8, i64, &PickNode, &PickStanding)> = Vec::new();
-    for node in nodes.iter().filter(|node| !node.gone) {
+    // Her own node's head is the host's to show every time already.
+    for node in nodes
+        .iter()
+        .filter(|node| !node.gone && Some(node.id.as_str()) != her)
+    {
         let tier = u8::from(tier(node.status) > 0);
         let mut seen = BTreeSet::new();
         for one in &node.standing {
@@ -449,6 +459,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     let about_them_standing = about_them_at
         .map(|at| standing(&input.nodes[at]))
         .unwrap_or_default();
+    let nodes = &input.nodes;
     let shown_standing: BTreeSet<(&str, &str)> = picked
         .iter()
         .flat_map(|picked| {
@@ -460,10 +471,10 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         .chain(about_them_at.into_iter().flat_map(|at| {
             about_them_standing
                 .iter()
-                .map(move |item| (input.nodes[at].id.as_str(), item.as_str()))
+                .map(move |item| (nodes[at].id.as_str(), item.as_str()))
         }))
         .collect();
-    let resident = resident(&input.nodes, &shown_standing, &input.budget);
+    let resident = resident(nodes, input.her.as_deref(), &shown_standing, &input.budget);
     let mut shown: BTreeSet<String> = picked
         .iter()
         .flat_map(|picked| picked.entries.iter().cloned())
@@ -632,6 +643,7 @@ mod tests {
         let (run1, run2) = (item("run", 1), item("run", 2));
         let (job, old_job, mom) = (item("job", 1), item("job", 2), item("mom", 1));
         let (pause, gone, you) = (item("pause", 1), item("gone", 1), item("you", 1));
+        let mine = item("me", 1);
         let out = run(json!({
             "ranked": [{"id": "r1", "named": true}],
             "nodes": [
@@ -656,9 +668,13 @@ mod tests {
                 ]},
                 {"id": "you", "name": "你", "standing": [
                     {"item": you, "at": 6, "text": "住在双楠"}
+                ]},
+                {"id": "me", "name": "她自己", "standing": [
+                    {"item": mine, "at": 9, "text": "她自己节点上的"}
                 ]}
             ],
-            "aboutThem": "you"
+            "aboutThem": "you",
+            "her": "me"
         }));
         let resident: Vec<(&str, &str)> = out
             .resident
