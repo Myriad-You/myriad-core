@@ -480,6 +480,39 @@ pub fn asked(
     persona: Option<&str>,
     direct: bool,
 ) -> (Value, Value) {
+    let (state, questions) = asked_all(context, state, persona, direct);
+    (state, answerable(questions))
+}
+
+/// Only the questions there is something to choose in. A choice left with
+/// one option (a body that offers no move leaves only `none`) is refused by
+/// a decisions endpoint for the whole call (`A Choice needs at least 2
+/// options`, 422), and asks nothing: unasked, it is read as its last option
+/// would be, no answer.
+fn answerable(questions: Value) -> Value {
+    let Value::Object(questions) = questions else {
+        return questions;
+    };
+    questions
+        .into_iter()
+        .filter(|(_, question)| {
+            question["type"] != "choice"
+                || match &question["criteria"] {
+                    Value::Object(options) => options.len() >= 2,
+                    Value::Array(options) => options.len() >= 2,
+                    _ => false,
+                }
+        })
+        .collect::<Map<_, _>>()
+        .into()
+}
+
+fn asked_all(
+    context: &Moment,
+    state: Option<&RigStateSummary>,
+    persona: Option<&str>,
+    direct: bool,
+) -> (Value, Value) {
     if context.phase == super::MotionPhase::Presence {
         // Standing acting waits for no reply: any judgment model has the
         // time to answer for every control; a decisions model chooses the
@@ -545,6 +578,45 @@ mod tests {
     fn bust() -> RigStateSummary {
         crate::sanitize_rig_state(&json!({"speaking": true, "capabilities":
             ["head-body", "torso-volume", "independent-eyes", "mouth-shapes", "left-arm", "right-arm"]})).unwrap()
+    }
+
+    #[test]
+    fn a_body_that_offers_no_move_is_not_asked_to_choose_one() {
+        // Only a mouth: no score move is offered, so each move question would
+        // have one option (`none`), which a decisions endpoint refuses.
+        let mouth =
+            crate::sanitize_rig_state(&json!({"speaking": true, "capabilities": ["mouth-shapes"]}))
+                .unwrap();
+        assert!(offered_score_moves(Some(&mouth)).is_empty());
+        let reply = "诶？这我怎么猜得到嘛……是拉面吗？";
+        for phase in [MotionPhase::Delivery, MotionPhase::Presence] {
+            for direct in [true, false] {
+                let mut moment = context(reply);
+                moment.phase = phase;
+                let (_, questions) = asked(&moment, Some(&mouth), None, direct);
+                let questions = questions.as_object().unwrap();
+                for (name, question) in questions {
+                    if question["type"] == "choice" {
+                        let options = match &question["criteria"] {
+                            Value::Object(options) => options.len(),
+                            Value::Array(options) => options.len(),
+                            other => panic!("{name}: {other}"),
+                        };
+                        assert!(
+                            options >= 2,
+                            "{name} ({phase:?}, direct {direct}): {question}"
+                        );
+                    }
+                }
+                if direct && phase == MotionPhase::Delivery {
+                    assert!(!questions.contains_key("move0"), "{questions:?}");
+                    assert!(questions.contains_key("say0"), "the rest is still asked");
+                }
+            }
+        }
+        // A body with moves is still asked about them.
+        let (_, questions) = asked(&context(reply), Some(&bust()), None, true);
+        assert!(questions["move0"]["criteria"].as_object().unwrap().len() >= 2);
     }
 
     #[test]
