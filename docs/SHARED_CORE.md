@@ -166,7 +166,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `segment.close` | `segment:<id>` | `{at}` |
 | `card.version` | `card:<id>` | 一张卡现在的样子，见「卡片」：`{at, id, kind, scene, subject?, title, state?, facts?, view?, actions?}`；作者是她或 `rule`，不是主人 |
 | `card.answered` | `card:<id>` | `{at, action, version}`：主人点了哪个 action，点的是哪一版（那一版 `card.version` 行的 id）；作者只能是主人 |
-| `memory.write` | `memory:<id>` | `{at, text, kind, replaces?, cues?, speaker?, source?, when?}`：`replaces` 是它取代的 `memory:<id>`；`cues` 是写的那一端当时给它的找回线索（模型生成，别的端不重算）；`speaker` 是它从谁那里来：`her`（她说的、她自己想到的）或 `partner`（伙伴告诉她的），它当不当得了关于伙伴的事实看这个，各端照写的保留；`source` 是写的那一端自己的来路词（小写字母、数字、`_`，最多 32 个），核心不列清单，谁也不用讲别的端的词：认识的端照原样保留，不认识的端当成「别的端记下的」那一种；`when` 是它什么时候该被想起（最多 3 条、每条不空且最多 60 个字，就是写它那一端抽取时 `chat_remember` 给的 `whenFor`；`cues` 是找它用的词，`when` 是该想起它的场合），别的端照收、不再问模型，没带的只靠它的词被想起 |
+| `memory.write` | `memory:<id>` | `{at, text, kind, replaces?, cues?, speaker?, source?, when?, happened?}`：`replaces` 是它取代的 `memory:<id>`；`cues` 是写的那一端当时给它的找回线索（模型生成，别的端不重算）；`speaker` 是它从谁那里来：`her`（她说的、她自己想到的）或 `partner`（伙伴告诉她的），它当不当得了关于伙伴的事实看这个，各端照写的保留；`source` 是写的那一端自己的来路词（小写字母、数字、`_`，最多 32 个），核心不列清单，谁也不用讲别的端的词：认识的端照原样保留，不认识的端当成「别的端记下的」那一种；`when` 是它什么时候该被想起（最多 3 条、每条不空且最多 60 个字，就是写它那一端抽取时 `chat_remember` 给的 `whenFor`；`cues` 是找它用的词，`when` 是该想起它的场合），别的端照收、不再问模型，没带的只靠它的词被想起；`happened` 是它说的事什么时候发生（`{from, to?, about?}`，和留下的事实身上那份同形同规则：`from`/`to` 是日、月或年，`to` 只在延续过 `from` 时有、且不早于它，`about` 是时间只是大概），别的端照收放在这条记忆旁边，「现在」从同一天算起；没带的只能按写下那天算 |
 | `memory.retire` | `memory:<id>` | `{at, why, by?}`：`by` 是现在说着这件事的那条 |
 | `memory.restore` | `memory:<id>` | `{at}` |
 | `affect.change` | `affect:<subject>` | `{at, valence, arousal, band, cause}`：变化之后的心情，0 到 100；`cause` 是类别，不是原话 |

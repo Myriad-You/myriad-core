@@ -525,7 +525,7 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 21] = [
     (
         "memory.write",
         &[
-            "at", "text", "kind", "replaces", "cues", "speaker", "source", "when",
+            "at", "text", "kind", "replaces", "cues", "speaker", "source", "when", "happened",
         ],
     ),
     ("memory.retire", &["at", "why", "by"]),
@@ -1145,6 +1145,53 @@ fn strings(value: &Value, out: &mut BTreeSet<String>) {
 mod tests {
     use super::*;
 
+    /// A memory carries when it happened in the shape a kept fact does, by
+    /// the same rule: what one side keeps beside a fact, another takes in.
+    #[test]
+    fn a_memory_says_when_it_happened_as_a_fact_does() {
+        use myriad_merope::happened::Happened;
+        use myriad_persona_log::payloads::MemoryHappened;
+        let whens = [
+            "2026",
+            "2026-10",
+            "2026-10-03",
+            "2028-02-29",
+            "2026-02-29",
+            "2000-02-29",
+            "1900-02-29",
+            "2026-13",
+            "2026-00",
+            "2026-04-31",
+            "2026-1-3",
+            "26",
+            "",
+            "十月",
+            "2026-10-03-01",
+            "2026-10-00",
+        ];
+        for from in whens {
+            for to in std::iter::once(None).chain(whens.iter().map(|to| Some(to.to_string()))) {
+                for about in [false, true] {
+                    let fact = Happened {
+                        from: from.into(),
+                        to: to.clone(),
+                        about,
+                    };
+                    let memory: MemoryHappened =
+                        serde_json::from_value(serde_json::to_value(&fact).unwrap()).unwrap();
+                    assert_eq!(
+                        memory.holds(),
+                        fact.check().is_ok(),
+                        "{from} {to:?} {about}"
+                    );
+                    let back: Happened =
+                        serde_json::from_value(serde_json::to_value(&memory).unwrap()).unwrap();
+                    assert_eq!(back, fact);
+                }
+            }
+        }
+    }
+
     #[test]
     fn a_path_is_local_and_an_id_is_not() {
         for id in [
@@ -1237,6 +1284,11 @@ mod tests {
                     speaker: Some(MemorySpeaker::Partner),
                     source: Some("chat".into()),
                     when: vec!["有人问喝什么时".into()],
+                    happened: Some(MemoryHappened {
+                        from: "2026-10".into(),
+                        to: None,
+                        about: true,
+                    }),
                 }),
             ),
             (

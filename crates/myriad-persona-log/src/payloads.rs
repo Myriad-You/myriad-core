@@ -200,6 +200,87 @@ pub struct MemoryWrite {
     /// at most [`MEMORY_WHEN_CHARS`] chars.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub when: Vec<String>,
+    /// When what it tells of happened, as the writing side worked it out
+    /// when it kept it (not when it was said: the row's clock says that).
+    /// Another side keeps it beside the memory, so where the memory stands
+    /// now is counted from the same day on every side; one without it has
+    /// only the day it was written to go by.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub happened: Option<MemoryHappened>,
+}
+
+/// When what a memory tells of happened ([`MemoryWrite::happened`]): the
+/// same shape and the same rule as the one a kept fact carries
+/// (`myriad_merope::happened::Happened`). `from` is a day (`2026-10-03`),
+/// a month (`2026-10`) or a year (`2026`), every digit written; `to` the
+/// last one when it went on past `from`, absent when it did not (never the
+/// same as `from`, never ending before it); `about` when the time is only
+/// rough.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MemoryHappened {
+    pub from: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub about: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+impl MemoryHappened {
+    /// Whether it holds: `from` and `to` each a day, a month or a year, and
+    /// `to`, when given, a later one.
+    pub fn holds(&self) -> bool {
+        let Some((first, last)) = span_of(&self.from) else {
+            return false;
+        };
+        match &self.to {
+            None => true,
+            Some(to) => span_of(to).is_some_and(|(to_first, to_last)| {
+                *to != self.from && to_first >= first && to_last >= last
+            }),
+        }
+    }
+}
+
+/// The first and last day of a day, a month or a year, each as
+/// `year * 10000 + month * 100 + day` so that later is larger. None for
+/// anything else.
+fn span_of(when: &str) -> Option<(u32, u32)> {
+    let parts: Vec<&str> = when.split('-').collect();
+    let digits =
+        |part: &str, len: usize| part.len() == len && part.bytes().all(|b| b.is_ascii_digit());
+    let year: u32 = parts.first().filter(|year| digits(year, 4))?.parse().ok()?;
+    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let days = |month: u32| match month {
+        2 if leap => 29,
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
+    };
+    let month = |part: &str| {
+        digits(part, 2)
+            .then(|| part.parse::<u32>().ok())
+            .flatten()
+            .filter(|month| (1..=12).contains(month))
+    };
+    let day = |year: u32, month: u32, day: u32| year * 10_000 + month * 100 + day;
+    match parts.as_slice() {
+        [_] => Some((day(year, 1, 1), day(year, 12, 31))),
+        [_, m] => {
+            let m = month(m)?;
+            Some((day(year, m, 1), day(year, m, days(m))))
+        }
+        [_, m, d] if digits(d, 2) => {
+            let m = month(m)?;
+            let d: u32 = d.parse().ok().filter(|d| (1..=days(m)).contains(d))?;
+            Some((day(year, m, d), day(year, m, d)))
+        }
+        _ => None,
+    }
 }
 
 /// Who a memory came from ([`MemoryWrite::speaker`]).
@@ -631,6 +712,15 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
                     "a memory.write payload says when it would come to mind out of its bounds",
                 ));
             }
+            if memory
+                .happened
+                .as_ref()
+                .is_some_and(|happened| !happened.holds())
+            {
+                return Err(LogError::new(
+                    "a memory.write payload says when it happened in a form no side reads",
+                ));
+            }
         }
         "memory.retire" => {
             let retire: MemoryRetire = read(kind, payload)?;
@@ -770,6 +860,21 @@ mod tests {
                     "speaker": "her", "source": "spoke_up", "when": ["有人说起下雨天时"]}),
             ),
             (
+                "memory.write",
+                json!({"at": 4, "text": "十月去了趟京都", "kind": "fact",
+                    "happened": {"from": "2026-10-03", "to": "2026-10-20"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "前年开始跑步", "kind": "fact",
+                    "happened": {"from": "2024", "about": true}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "二月底搬了家", "kind": "fact",
+                    "happened": {"from": "2028-02-29"}}),
+            ),
+            (
                 "memory.retire",
                 json!({"at": 5, "why": "superseded", "by": "memory:m-2"}),
             ),
@@ -829,6 +934,46 @@ mod tests {
             (
                 "memory.write",
                 json!({"at": 4, "text": "x", "kind": "fact", "when": [" "]}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": ""}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-13"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-02-29"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-1-3"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "十月"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-10", "to": "2026-10"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-10", "to": "2026-09-30"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-10-20", "to": "2026-10"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": {"from": "2026-10", "state": "已完成"}}),
+            ),
+            (
+                "memory.write",
+                json!({"at": 4, "text": "x", "kind": "fact", "happened": "2026-10"}),
             ),
             ("memory.retire", json!({"at": 5, "why": ""})),
             (
