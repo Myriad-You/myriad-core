@@ -42,6 +42,14 @@ fn whose_life_an_item_is_reads_back_from_its_id() {
     assert!(long.len() <= 64);
     assert_eq!(whose_of(&long).unwrap().1, "一二三四五六七八");
     assert_eq!(whose_key("Them"), Some("them".into()));
+    // Them, said with whom: still theirs; a name that begins so is a name.
+    assert_eq!(whose_key("them，与朋友"), Some("them".into()));
+    assert_eq!(whose_key("them and Mei"), Some("them".into()));
+    assert_eq!(whose_key("them（和妈妈）"), Some("them".into()));
+    assert_ne!(whose_key("Themis"), Some("them".into()));
+    assert_ne!(whose_key("them们"), Some("them".into()));
+    assert_ne!(whose_key("them's mom"), Some("them".into()));
+    assert_ne!(whose_key("them’s 妈妈"), Some("them".into()));
     assert_eq!(whose_key("  "), None);
     // A rule's item is not one of hers.
     assert_eq!(whose_of("now"), None);
