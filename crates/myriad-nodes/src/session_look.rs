@@ -154,11 +154,28 @@ pub struct Material {
     /// Each change's heading: where it stands.
     pub changes: Vec<String>,
     pub pieces: Vec<Piece>,
+    /// Each change's choices, as she is shown them (`choice N`): none for
+    /// a change whose session gave none.
+    #[serde(default, skip_serializing_if = "no_choices")]
+    pub choices: Vec<Vec<String>>,
+}
+
+fn no_choices(choices: &[Vec<String>]) -> bool {
+    choices.iter().all(Vec::is_empty)
 }
 
 impl Material {
     fn change(&mut self, heading: impl Into<String>) {
         self.changes.push(heading.into());
+        self.choices.push(Vec::new());
+    }
+
+    /// The choices change `change` (from 1) gave: none when it gave none.
+    pub fn choices_of(&self, change: usize) -> &[String] {
+        change
+            .checked_sub(1)
+            .and_then(|at| self.choices.get(at))
+            .map_or(&[], Vec::as_slice)
     }
 
     fn add(&mut self, what: &str, text: impl Into<String>, evidence: &str) {
@@ -216,6 +233,11 @@ impl Material {
         ids.dedup();
         ids
     }
+}
+
+/// A choice in one line: its whitespace, line breaks among it, one space.
+pub fn one_line(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// What someone said in a session, as she is shown it: when it is as long
@@ -437,6 +459,26 @@ fn one(material: &mut Material, shown: &Shown, others: &[Told], at: i64) {
     if let Some(words) = &session.from_agent {
         material.add("what it last said or asked", quoted(words), &reference);
     }
+    if session.change == Change::Asked && !session.choices.is_empty() {
+        let choices: Vec<String> = session
+            .choices
+            .iter()
+            .map(|choice| one_line(choice))
+            .collect();
+        material.add(
+            "its choices",
+            choices
+                .iter()
+                .enumerate()
+                .map(|(at, choice)| format!("choice {}: «{choice}»", at + 1))
+                .collect::<Vec<_>>()
+                .join("; "),
+            &reference,
+        );
+        if let Some(last) = material.choices.last_mut() {
+            *last = choices;
+        }
+    }
     if session.change == Change::Asked {
         material.add(
             "what its choices hold",
@@ -643,6 +685,14 @@ pub struct Judgment {
     pub missing: Option<String>,
     /// Its words want the owner's own say.
     pub owner_must_say: bool,
+    /// Of a change whose session gave choices, the one she leans to (its
+    /// number, from 1); none when she leans to none, or it is not hers to
+    /// answer for them.
+    #[serde(default)]
+    pub leans: Option<usize>,
+    /// Her suggestion is one answer the owner could give as it is.
+    #[serde(default)]
+    pub answers: bool,
 }
 
 /// What she would say to the owner now, and of which change.
@@ -689,6 +739,10 @@ struct RawJudgment {
     missing: Option<String>,
     #[serde(default)]
     owner_must_say: bool,
+    #[serde(default)]
+    leans: Value,
+    #[serde(default)]
+    answers: bool,
 }
 
 #[derive(Deserialize)]
@@ -757,14 +811,20 @@ pub fn read(raw: &str, material: &Material) -> Read {
         let Some(about) = kept(Some(judgment.about), ABOUT_CHARS) else {
             return Read::Unreadable;
         };
+        // A lean to a choice the change does not have is none.
+        let choices = material.choices_of(change).len();
+        let leans = number(&judgment.leans).filter(|choice| (1..=choices).contains(choice));
+        let suggestion = kept(judgment.suggestion, SUGGESTION_CHARS).unwrap_or_default();
         // The first she gave of a change is hers.
         judgments[change - 1].get_or_insert(Judgment {
             verdict: judgment.verdict,
             about,
-            suggestion: kept(judgment.suggestion, SUGGESTION_CHARS).unwrap_or_default(),
+            answers: judgment.answers && !suggestion.is_empty(),
+            suggestion,
             because,
             missing: kept(judgment.missing, SUGGESTION_CHARS),
             owner_must_say: judgment.owner_must_say,
+            leans,
         });
     }
     let line = match answer.say {
@@ -850,6 +910,8 @@ pub fn card_only(heading: &str, waits: bool, decides: bool) -> Judgment {
         because: Vec::new(),
         missing: None,
         owner_must_say: false,
+        leans: None,
+        answers: false,
     }
 }
 
@@ -869,9 +931,11 @@ Mind who gave each its work: a session another session sent on reports back ther
 Weigh what the owner decided before about things like this (the numbered memories): an answer that goes against how they already work is wrong. \
 Every ground must be the numbers of what you were shown; if you cannot point at one, choose decide and say what you are missing. \
 ownerMustSay: true when its words want the owner's own say (a deploy, a push, an install, a spend).\n\
+leans: when the session gave choices (numbered choice 1, choice 2, ...), the number of the one you would take; null when you lean to none, or when it is not yours to answer for the owner. \
+answers: true when your suggestion is one answer the owner could give as it is; false when it lays out the ways, leans to none, or is not yours to give.\n\
 say: at most one thing you would tell the owner now, in your own voice and briefly, of the change you choose, with the numbers it rests on; or null to keep it all to the cards. \
 What you already told them is numbered too. \
-The owner sees the cards on their own, with your about, suggestion and missing; what you say goes to the chat apart from them.\n\
+The owner sees the cards on their own, with your about, suggestion and missing, and answers them with the session's choices (the one you lean to first) or, where it gave none, with your suggestion when it answers; what you say goes to the chat apart from them.\n\
 Answer only the JSON."
     )
 }
@@ -908,7 +972,7 @@ pub fn schema() -> Value {
                 "items": {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": ["change", "verdict", "about", "suggestion", "because", "missing", "ownerMustSay"],
+                    "required": ["change", "verdict", "about", "suggestion", "because", "missing", "ownerMustSay", "leans", "answers"],
                     "properties": {
                         "change": {"type": "integer"},
                         "verdict": {"type": "string", "enum": rules().look.verdicts},
@@ -916,7 +980,9 @@ pub fn schema() -> Value {
                         "suggestion": {"type": ["string", "null"]},
                         "because": {"type": "array", "items": {"type": "integer"}},
                         "missing": {"type": ["string", "null"]},
-                        "ownerMustSay": {"type": "boolean"}
+                        "ownerMustSay": {"type": "boolean"},
+                        "leans": {"type": ["integer", "null"]},
+                        "answers": {"type": "boolean"}
                     }
                 }
             },

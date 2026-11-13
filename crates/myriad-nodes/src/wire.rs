@@ -1206,6 +1206,7 @@ mod tests {
                     view: Some(CardView {
                         text: "先等".into(),
                         because: vec![1],
+                        leans: None,
                     }),
                     actions: vec![CardAction {
                         id: "push".into(),

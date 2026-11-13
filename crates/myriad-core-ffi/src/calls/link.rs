@@ -41,12 +41,13 @@ pub(super) fn encode(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "text": checked.canonical }))
 }
 
-/// `{t, body, sessions2?}` → `{session}` (`now.session`), `{drop}`
+/// `{t, body, sessions2?, choices?}` → `{session}` (`now.session`), `{drop}`
 /// (`now.drop`) or `{refused: {code, detail}}`: a `now` family body read by
 /// the contract's `sessions` rules. `sessions2` says the welcome listed
 /// `now.sessions2` (false when left out): without it a body with
-/// `ownerSaidAt`, `errors` or `overwrote` is refused. Another `t` is bad
-/// input.
+/// `ownerSaidAt`, `errors` or `overwrote` is refused. `choices` says it
+/// listed `now.choices`: without it a body with `choices` is refused.
+/// Another `t` is bad input.
 pub(super) fn now_read(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -55,10 +56,18 @@ pub(super) fn now_read(raw: &[u8]) -> Result<Value, Failure> {
         body: Value,
         #[serde(default)]
         sessions2: bool,
+        #[serde(default)]
+        choices: bool,
     }
-    let In { t, body, sessions2 } = input(raw)?;
+    let In {
+        t,
+        body,
+        sessions2,
+        choices,
+    } = input(raw)?;
+    let listed = myriad_her_link::now::Listed { sessions2, choices };
     let answer = match t.as_str() {
-        "now.session" => myriad_her_link::now::read_told(&body, sessions2)
+        "now.session" => myriad_her_link::now::read_listed(&body, listed)
             .map(|session| json!({ "session": session })),
         "now.drop" => myriad_her_link::now::read_drop(&body).map(|drop| json!({ "drop": drop })),
         _ => return Err(Failure::BadInput("t is not now.session or now.drop".into())),

@@ -124,13 +124,17 @@ pub struct CardFact {
     pub reference: Option<String>,
 }
 
-/// Her view on a card, on the facts it rests on (`because`, numbered from 1).
+/// Her view on a card, on the facts it rests on (`because`, numbered from
+/// 1), and the action she leans to (`leans`, one of the card's actions'
+/// ids other than `open`), when she leans to one.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardView {
     pub text: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub because: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub leans: Option<String>,
 }
 
 /// One thing the owner may answer a card with.

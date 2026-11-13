@@ -46,6 +46,7 @@
         "judgments": [
           {
             "about": "它问要不要推送",
+            "answers": false,
             "because": [
               2
             ],
@@ -54,6 +55,7 @@
               "session:s1"
             ],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": true,
             "suggestion": "推，测试都过了",
@@ -61,10 +63,12 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [],
             "card": "不用你管：文档写完了",
             "evidence": [],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -127,10 +131,12 @@
         "judgments": [
           {
             "about": "它问要不要推送",
+            "answers": false,
             "because": [],
             "card": "你点头就行：它问要不要推送",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": true,
             "suggestion": "",
@@ -138,10 +144,12 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [],
             "card": "不用你管：文档写完了",
             "evidence": [],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -203,6 +211,7 @@
         "judgments": [
           {
             "about": "它问要不要推送",
+            "answers": false,
             "because": [
               2
             ],
@@ -211,6 +220,7 @@
               "session:s1"
             ],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": true,
             "suggestion": "推，测试都过了",
@@ -218,10 +228,12 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [],
             "card": "不用你管：文档写完了",
             "evidence": [],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -271,10 +283,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -282,6 +296,7 @@
           },
           {
             "about": "文档写完了",
+            "answers": false,
             "because": [
               2
             ],
@@ -290,6 +305,7 @@
               "session:s2"
             ],
             "hasCard": false,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -337,10 +353,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "要你定：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -389,10 +407,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -400,10 +420,12 @@
           },
           {
             "about": "failed (kept erring, or its checks failed)",
+            "answers": false,
             "because": [],
             "card": "不用你管：failed (kept erring, or its checks failed)",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -459,10 +481,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -519,10 +543,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -579,10 +605,12 @@
         "judgments": [
           {
             "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
             "because": [],
             "card": "你点头就行：stopped and asks the owner; waits on the owner",
             "evidence": [],
             "hasCard": true,
+            "leans": null,
             "missing": null,
             "ownerMustSay": false,
             "suggestion": "",
@@ -684,6 +712,98 @@
       "name": "decides not one per change",
       "output": {
         "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "choices": [
+            [
+              "push",
+              "wait"
+            ],
+            []
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Q: Push now? (push / wait)",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"decide\", \"about\": \"它问要不要推送\", \"suggestion\": \"推，测试都过了\", \"because\": [2], \"missing\": null, \"ownerMustSay\": true, \"leans\": 2, \"answers\": true}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \"文档写完了\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": {\"change\": 1, \"text\": \"要推吗\", \"because\": [2, 4]}}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a lean read against the choices the material came back with",
+      "output": {
+        "judgments": [
+          {
+            "about": "它问要不要推送",
+            "answers": true,
+            "because": [
+              2
+            ],
+            "card": "要你定：它问要不要推送\n推，测试都过了",
+            "evidence": [
+              "session:s1"
+            ],
+            "hasCard": true,
+            "leans": 2,
+            "missing": null,
+            "ownerMustSay": true,
+            "suggestion": "推，测试都过了",
+            "verdict": "decide"
+          },
+          {
+            "about": "文档写完了",
+            "answers": false,
+            "because": [],
+            "card": "不用你管：文档写完了",
+            "evidence": [],
+            "hasCard": false,
+            "leans": null,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": {
+          "because": [
+            2,
+            4
+          ],
+          "change": 1,
+          "text": "要推吗"
+        },
+        "status": "good"
       }
     }
   ],

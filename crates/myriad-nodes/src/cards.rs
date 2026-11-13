@@ -54,10 +54,12 @@ pub const FACTS: usize = 8;
 pub const FACT_CHARS: usize = 120;
 /// At most this many characters of her view.
 pub const VIEW_CHARS: usize = crate::limits::TEXT_CHARS;
-/// At most this many actions on a card.
-pub const ACTIONS: usize = 4;
-/// At most this many characters of an action's label.
-pub const LABEL_CHARS: usize = 12;
+/// At most this many actions on a card: a question's choices
+/// (`sessions.choicesAtMost`) and `open`.
+pub const ACTIONS: usize = 5;
+/// At most this many characters of an action's label: a session's choice
+/// is said as the session gave it, cut to this.
+pub const LABEL_CHARS: usize = 40;
 /// At most this many bytes of a word (`kind`, `scene`, an action's id).
 pub const WORD_BYTES: usize = myriad_persona_log::payloads::CARD_WORD_BYTES;
 /// At most this many bytes of a card's id.
@@ -159,6 +161,11 @@ pub fn check(card: &CardVersion) -> Result<(), NodeError> {
     if card.actions.len() > ACTIONS {
         return bad("it has too many actions");
     }
+    if let Some(leans) = card.view.as_ref().and_then(|view| view.leans.as_deref())
+        && (leans == OPEN || !card.actions.iter().any(|action| action.id == leans))
+    {
+        return bad("its view leans to an action it does not have");
+    }
     let mut ids = BTreeSet::new();
     for action in &card.actions {
         if !word(&action.id) || !ids.insert(action.id.as_str()) {
@@ -183,6 +190,7 @@ pub(crate) fn parts(card: &CardVersion) -> (Vec<&str>, Vec<&str>) {
     }
     if let Some(view) = &card.view {
         texts.push(&view.text);
+        ids.extend(view.leans.as_deref());
     }
     for action in &card.actions {
         texts.push(&action.label);

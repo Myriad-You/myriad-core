@@ -7,6 +7,7 @@
         "change": 1,
         "judgment": {
           "about": "要不要现在推送",
+          "answers": true,
           "because": [
             4,
             5,
@@ -167,6 +168,7 @@
               5,
               6
             ],
+            "leans": "agree",
             "text": "要不要现在推送\n推：测试和构建都过了；再等就和发版撞上"
           }
         }
@@ -178,6 +180,7 @@
         "change": 1,
         "judgment": {
           "about": "问能不能按拆好的提交",
+          "answers": true,
           "because": [
             2,
             5
@@ -336,6 +339,7 @@
               2,
               5
             ],
+            "leans": "ok",
             "text": "问能不能按拆好的提交\n可以"
           }
         }
@@ -453,14 +457,10 @@
           }
         }
       },
-      "name": "a decision with no suggestion is only seen",
+      "name": "a decision with no answer of hers is only gone to in the session",
       "output": {
         "card": {
           "actions": [
-            {
-              "id": "seen",
-              "label": "知道了"
-            },
             {
               "id": "open",
               "label": "去会话里说"
@@ -514,6 +514,7 @@
         "change": 1,
         "judgment": {
           "about": "要不要现在推送",
+          "answers": true,
           "because": [
             7,
             8,
@@ -669,6 +670,7 @@
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
           "title": "Split the store",
           "view": {
+            "leans": "agree",
             "text": "要不要现在推送\n推"
           }
         }
@@ -680,6 +682,7 @@
         "change": 1,
         "judgment": {
           "about": "要不要现在推送",
+          "answers": true,
           "because": [
             3
           ],
@@ -836,6 +839,7 @@
             "because": [
               4
             ],
+            "leans": "agree",
             "text": "要不要现在推送\n推"
           }
         }
@@ -847,6 +851,7 @@
         "change": 1,
         "judgment": {
           "about": "问能不能推",
+          "answers": true,
           "because": [
             1
           ],
@@ -1002,6 +1007,7 @@
             "because": [
               1
             ],
+            "leans": "ok",
             "text": "问能不能推\n可以"
           }
         }
@@ -1013,6 +1019,7 @@
         "change": 1,
         "judgment": {
           "about": "问能不能推",
+          "answers": true,
           "because": [
             1
           ],
@@ -1169,6 +1176,7 @@
             "because": [
               1
             ],
+            "leans": "ok",
             "text": "问能不能推\n可以"
           }
         }
@@ -1180,6 +1188,7 @@
         "change": 1,
         "judgment": {
           "about": "问能不能推",
+          "answers": true,
           "because": [
             2
           ],
@@ -1337,6 +1346,7 @@
             "because": [
               2
             ],
+            "leans": "ok",
             "text": "问能不能推\n可以"
           }
         }
@@ -1348,6 +1358,7 @@
         "change": 1,
         "judgment": {
           "about": "Push now?",
+          "answers": true,
           "because": [
             4,
             5,
@@ -1508,6 +1519,7 @@
               5,
               6
             ],
+            "leans": "agree",
             "text": "Push now?\nPush: tests and build passed"
           }
         }
@@ -1519,6 +1531,7 @@
         "change": 1,
         "judgment": {
           "about": "このまま進めていいか",
+          "answers": true,
           "because": [
             2,
             5
@@ -1677,6 +1690,7 @@
               2,
               5
             ],
+            "leans": "ok",
             "text": "このまま進めていいか\nいい"
           }
         }
@@ -1688,6 +1702,7 @@
         "change": 1,
         "judgment": {
           "about": "可不可以照拆好的提交",
+          "answers": true,
           "because": [
             5
           ],
@@ -1844,6 +1859,7 @@
             "because": [
               5
             ],
+            "leans": "ok",
             "text": "可不可以照拆好的提交\n可以"
           }
         }
@@ -1855,6 +1871,7 @@
         "change": 1,
         "judgment": {
           "about": "이대로 커밋해도 되는지",
+          "answers": true,
           "because": [
             6
           ],
@@ -2011,6 +2028,7 @@
             "because": [
               6
             ],
+            "leans": "ok",
             "text": "이대로 커밋해도 되는지\n네"
           }
         }
@@ -2022,6 +2040,7 @@
         "change": 1,
         "judgment": {
           "about": "On pousse ?",
+          "answers": true,
           "because": [
             6
           ],
@@ -2178,6 +2197,7 @@
             "because": [
               6
             ],
+            "leans": "ok",
             "text": "On pousse ?\nOui"
           }
         }
@@ -2189,6 +2209,7 @@
         "change": 1,
         "judgment": {
           "about": "Jetzt pushen?",
+          "answers": true,
           "because": [
             6
           ],
@@ -2345,6 +2366,7 @@
             "because": [
               6
             ],
+            "leans": "ok",
             "text": "Jetzt pushen?\nJa"
           }
         }
@@ -2356,6 +2378,7 @@
         "change": 1,
         "judgment": {
           "about": "ok?",
+          "answers": true,
           "because": [
             1
           ],
@@ -2512,6 +2535,7 @@
             "because": [
               1
             ],
+            "leans": "ok",
             "text": "ok?\nok"
           }
         }
@@ -2523,6 +2547,7 @@
         "change": 1,
         "judgment": {
           "about": "能不能提交",
+          "answers": true,
           "because": [
             5
           ],
@@ -2689,6 +2714,7 @@
             "because": [
               5
             ],
+            "leans": "ok",
             "text": "能不能提交\n可以"
           }
         }
@@ -2700,6 +2726,7 @@
         "change": 1,
         "judgment": {
           "about": "能不能提交",
+          "answers": true,
           "because": [
             1
           ],
@@ -2856,6 +2883,7 @@
             "because": [
               1
             ],
+            "leans": "ok",
             "text": "能不能提交\n可以"
           }
         }
@@ -2867,6 +2895,7 @@
         "change": 1,
         "judgment": {
           "about": "要不要再等等测试",
+          "answers": true,
           "because": [
             6
           ],
@@ -3046,6 +3075,7 @@
             "because": [
               6
             ],
+            "leans": "ok",
             "text": "要不要再等等测试\n等"
           }
         }
@@ -3057,6 +3087,7 @@
         "change": 1,
         "judgment": {
           "about": "能不能推",
+          "answers": true,
           "because": [
             2
           ],
@@ -3214,6 +3245,7 @@
             "because": [
               2
             ],
+            "leans": "ok",
             "text": "能不能推\n可以"
           }
         }
@@ -3225,6 +3257,7 @@
         "change": 1,
         "judgment": {
           "about": "要不要现在推送",
+          "answers": true,
           "because": [
             7
           ],
@@ -3384,6 +3417,7 @@
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
           "title": "Split the store",
           "view": {
+            "leans": "agree",
             "text": "要不要现在推送\n推"
           }
         }
@@ -3504,10 +3538,6 @@
         "card": {
           "actions": [
             {
-              "id": "seen",
-              "label": "知道了"
-            },
-            {
               "id": "open",
               "label": "去会话里说"
             }
@@ -3554,6 +3584,7 @@
         "change": 1,
         "judgment": {
           "about": "可以嗎",
+          "answers": true,
           "because": [
             1
           ],
@@ -3710,6 +3741,7 @@
             "because": [
               1
             ],
+            "leans": "ok",
             "text": "可以嗎\n可以"
           }
         }
@@ -3721,6 +3753,7 @@
         "change": 1,
         "judgment": {
           "about": "可以嗎",
+          "answers": true,
           "because": [
             1
           ],
@@ -3877,6 +3910,7 @@
             "because": [
               1
             ],
+            "leans": "ok",
             "text": "可以嗎\n可以"
           }
         }
@@ -4003,6 +4037,7 @@
         "change": 3,
         "judgment": {
           "about": "问能不能推",
+          "answers": true,
           "because": [
             1
           ],
@@ -4112,6 +4147,1083 @@
       "name": "a change the material does not have is refused",
       "output": {
         "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "change": 1,
+        "judgment": {
+          "about": "要不要现在推送",
+          "answers": true,
+          "because": [
+            4,
+            5,
+            6
+          ],
+          "leans": 2,
+          "missing": null,
+          "ownerMustSay": true,
+          "suggestion": "先等：发版前别推",
+          "verdict": "decide"
+        },
+        "language": "zh-CN",
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "the owner, in person",
+              "what": "who gave it this work"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«split it and commit»",
+              "what": "what the owner last told it"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«Q: Push now? (push / wait)»",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "src/store/mod.rs, src/store/split.rs",
+              "what": "files it changed"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "tests passed; build passed",
+              "what": "its tests and builds"
+            },
+            {
+              "change": 1,
+              "evidence": "memory:m1",
+              "text": "pushes need their own word",
+              "what": "what you know of the owner (how they decided before)"
+            },
+            {
+              "change": 2,
+              "evidence": "session:dev_mac/g_0123456789/s-2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "choices": [
+              "push",
+              "wait"
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "the session's choices are the answers, the one she leans to first",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "choice_2",
+              "label": "wait"
+            },
+            {
+              "id": "choice_1",
+              "label": "push"
+            },
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：停下来，有问题要问你"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              3,
+              5,
+              6
+            ],
+            "leans": "choice_2",
+            "text": "要不要现在推送\n先等：发版前别推"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "change": 1,
+        "judgment": {
+          "about": "要不要现在推送",
+          "answers": false,
+          "because": [
+            4,
+            5,
+            6
+          ],
+          "leans": null,
+          "missing": null,
+          "ownerMustSay": true,
+          "suggestion": "推和等各有代价，我替你定不了",
+          "verdict": "decide"
+        },
+        "language": "zh-CN",
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "the owner, in person",
+              "what": "who gave it this work"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«split it and commit»",
+              "what": "what the owner last told it"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«Q: Push now? (push / wait)»",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "src/store/mod.rs, src/store/split.rs",
+              "what": "files it changed"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "tests passed; build passed",
+              "what": "its tests and builds"
+            },
+            {
+              "change": 1,
+              "evidence": "memory:m1",
+              "text": "pushes need their own word",
+              "what": "what you know of the owner (how they decided before)"
+            },
+            {
+              "change": 2,
+              "evidence": "session:dev_mac/g_0123456789/s-2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "choices": [
+              "push",
+              "wait"
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "with no lean the choices keep the session's order and none is hers",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "choice_1",
+              "label": "push"
+            },
+            {
+              "id": "choice_2",
+              "label": "wait"
+            },
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：停下来，有问题要问你"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              3,
+              5,
+              6
+            ],
+            "text": "要不要现在推送\n推和等各有代价，我替你定不了"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "change": 1,
+        "judgment": {
+          "about": "要不要现在推送",
+          "answers": true,
+          "because": [
+            4,
+            5,
+            6
+          ],
+          "leans": 3,
+          "missing": null,
+          "ownerMustSay": true,
+          "suggestion": "推：测试和构建都过了；再等就和发版撞上",
+          "verdict": "decide"
+        },
+        "language": "zh-CN",
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "the owner, in person",
+              "what": "who gave it this work"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«split it and commit»",
+              "what": "what the owner last told it"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«Q: Push now? (push / wait)»",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "src/store/mod.rs, src/store/split.rs",
+              "what": "files it changed"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "tests passed; build passed",
+              "what": "its tests and builds"
+            },
+            {
+              "change": 1,
+              "evidence": "memory:m1",
+              "text": "pushes need their own word",
+              "what": "what you know of the owner (how they decided before)"
+            },
+            {
+              "change": 2,
+              "evidence": "session:dev_mac/g_0123456789/s-2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "choices": [
+              "push",
+              "wait"
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "a lean to a choice it does not have is none",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "choice_1",
+              "label": "push"
+            },
+            {
+              "id": "choice_2",
+              "label": "wait"
+            },
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：停下来，有问题要问你"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              3,
+              5,
+              6
+            ],
+            "text": "要不要现在推送\n推：测试和构建都过了；再等就和发版撞上"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "change": 1,
+        "judgment": {
+          "about": "要不要现在推送",
+          "answers": false,
+          "because": [
+            4,
+            5,
+            6
+          ],
+          "leans": null,
+          "missing": null,
+          "ownerMustSay": true,
+          "suggestion": "推了和发版撞上，等了要再看一遍",
+          "verdict": "decide"
+        },
+        "language": "zh-CN",
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "the owner, in person",
+              "what": "who gave it this work"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«split it and commit»",
+              "what": "what the owner last told it"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«Q: Push now? (push / wait)»",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "src/store/mod.rs, src/store/split.rs",
+              "what": "files it changed"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "tests passed; build passed",
+              "what": "its tests and builds"
+            },
+            {
+              "change": 1,
+              "evidence": "memory:m1",
+              "text": "pushes need their own word",
+              "what": "what you know of the owner (how they decided before)"
+            },
+            {
+              "change": 2,
+              "evidence": "session:dev_mac/g_0123456789/s-2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "an open question with no answer of hers has only going to the session",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：停下来，有问题要问你"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              3,
+              5,
+              6
+            ],
+            "text": "要不要现在推送\n推了和发版撞上，等了要再看一遍"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "change": 1,
+        "judgment": {
+          "about": "要不要现在推送",
+          "answers": true,
+          "because": [
+            4,
+            5,
+            6
+          ],
+          "leans": 2,
+          "missing": null,
+          "ownerMustSay": true,
+          "suggestion": "推：测试和构建都过了；再等就和发版撞上",
+          "verdict": "decide"
+        },
+        "language": "zh-CN",
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "the owner, in person",
+              "what": "who gave it this work"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«split it and commit»",
+              "what": "what the owner last told it"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«Q: Push now? (push / wait)»",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "src/store/mod.rs, src/store/split.rs",
+              "what": "files it changed"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "tests passed; build passed",
+              "what": "its tests and builds"
+            },
+            {
+              "change": 1,
+              "evidence": "memory:m1",
+              "text": "pushes need their own word",
+              "what": "what you know of the owner (how they decided before)"
+            },
+            {
+              "change": 2,
+              "evidence": "session:dev_mac/g_0123456789/s-2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "choices": [
+              "use key sk-ant-api03-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nnow",
+              "keep the old crate layout around for another release so nothing breaks",
+              " "
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "a choice is scanned, put in one line and cut with a mark",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "choice_2",
+              "label": "keep the old crate layout around for an…"
+            },
+            {
+              "id": "choice_1",
+              "label": "use key [密钥已抹去] now"
+            },
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：停下来，有问题要问你"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              3,
+              5,
+              6
+            ],
+            "leans": "choice_2",
+            "text": "要不要现在推送\n推：测试和构建都过了；再等就和发版撞上"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "at": 1760000000000,
+        "change": 1,
+        "judgment": {
+          "about": "要不要现在推送",
+          "answers": true,
+          "because": [
+            4,
+            5,
+            6
+          ],
+          "leans": null,
+          "missing": null,
+          "ownerMustSay": true,
+          "suggestion": "推：测试和构建都过了；再等就和发版撞上",
+          "verdict": "decide"
+        },
+        "language": "zh-CN",
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "the owner, in person",
+              "what": "who gave it this work"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«split it and commit»",
+              "what": "what the owner last told it"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "«Q: Push now? (push / wait)»",
+              "what": "what it last said or asked"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "src/store/mod.rs, src/store/split.rs",
+              "what": "files it changed"
+            },
+            {
+              "change": 1,
+              "evidence": "session:dev_mac/g_0123456789/s-1",
+              "text": "tests passed; build passed",
+              "what": "its tests and builds"
+            },
+            {
+              "change": 1,
+              "evidence": "memory:m1",
+              "text": "pushes need their own word",
+              "what": "what you know of the owner (how they decided before)"
+            },
+            {
+              "change": 2,
+              "evidence": "session:dev_mac/g_0123456789/s-2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": null,
+              "evidence": "proactive:7",
+              "text": "2 minutes ago: 测试都过了",
+              "what": "what you already told the owner of their sessions"
+            }
+          ]
+        },
+        "task": "98ef5969e985afd6bc0eb702cd1ffe5c",
+        "told": {
+          "device": "dev_mac",
+          "session": {
+            "askedBy": "owner",
+            "change": "asked",
+            "checks": [
+              {
+                "at": 1759999940000,
+                "kind": "test",
+                "state": "passed"
+              },
+              {
+                "at": 1759999950000,
+                "kind": "build",
+                "state": "passed"
+              }
+            ],
+            "choices": [
+              "keep the old crate layout around for another release",
+              "keep the old crate layout around for another two releases"
+            ],
+            "fromAgent": "Q: Push now? (push / wait)",
+            "fromOwner": "split it and commit",
+            "grant": "g_0123456789",
+            "occurredAt": 1760000000000,
+            "ownerSaidAt": 1759999820000,
+            "remote": "github.com/demo/sample-repo",
+            "session": "s-1",
+            "title": "Split the store",
+            "tool": "coding-agent",
+            "touched": [
+              "src/store/mod.rs",
+              "src/store/split.rs"
+            ],
+            "waitingOn": "owner"
+          }
+        }
+      },
+      "name": "two choices cut to the same words are told apart by their numbers",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "id": "choice_1",
+              "label": "keep the old crate layout around for an…"
+            },
+            {
+              "id": "choice_2",
+              "label": "2. keep the old crate layout around for…"
+            },
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "sample-repo 里的 coding-agent 会话"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你亲自派的活"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "现在：停下来，有问题要问你"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "你上次亲自发话：3 分钟前"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "改了 2 个文件：mod.rs、split.rs"
+            },
+            {
+              "ref": "session:s1fa465ebd5f9b41e95a74e4e",
+              "text": "测试通过；构建通过"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "Split the store",
+          "view": {
+            "because": [
+              3,
+              5,
+              6
+            ],
+            "text": "要不要现在推送\n推：测试和构建都过了；再等就和发版撞上"
+          }
+        }
       }
     }
   ],
