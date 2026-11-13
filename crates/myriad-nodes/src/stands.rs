@@ -594,7 +594,7 @@ pub fn step_read(input: StepReadInput) -> Result<StepRead, NodeError> {
         rows,
         left: decided.left,
         set_aside: decided.set_aside + refused,
-        unreadable: false,
+        ..StepRead::default()
     })
 }
 

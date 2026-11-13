@@ -72,6 +72,10 @@
       },
       "name": "each item rests on the memories it names, since the latest of their days",
       "output": {
+        "dropped": {
+          "no_whose": 1,
+          "rests_on_nothing": 1
+        },
         "left": [],
         "rows": [
           {
