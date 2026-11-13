@@ -1129,7 +1129,7 @@ mod tests {
                 .nodes
                 .iter()
                 .find(|node| node.id == finished.repo)
-                .and_then(|node| node.parts.clone())
+                .and_then(|node| node.parts)
                 .map(|parts| (parts.total, parts.done))
         };
         assert_eq!(parts(&fold_of(&[&finished], &[])), Some((1, 0)));
