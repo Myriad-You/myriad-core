@@ -669,9 +669,11 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
         }
     }
 
-    // Done or not.
+    // Resting or under way. A finished turn is only that this turn stopped
+    // (its last words may still ask the owner something): the task rests
+    // until the session goes on, and is done only when she marks it so.
     let status = if session.change == Change::Finished {
-        Status::Done
+        Status::Resting
     } else {
         Status::Active
     };
@@ -705,7 +707,7 @@ pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
             .map(|title| clean(title, true))
             .filter(|title| !title.is_empty())
             .unwrap_or_else(|| format!("a {} session", session.tool));
-        let mut result = format!("{title}: finished");
+        let mut result = format!("{title}: finished a turn");
         if let Some(checks) = checks_line(&session) {
             result.push_str(&format!("; {checks}"));
         }
@@ -958,7 +960,7 @@ mod tests {
             .iter()
             .find(|placed| placed.row.kind == "node.revised")
             .unwrap();
-        assert_eq!(status.row.body["value"], "done");
+        assert_eq!(status.row.body["value"], "resting");
         let result = finished
             .rows
             .iter()
@@ -966,7 +968,7 @@ mod tests {
             .unwrap();
         assert_eq!(
             result.row.body["text"],
-            "Split the store: finished; tests passed; 2 files changed"
+            "Split the store: finished a turn; tests passed; 2 files changed"
         );
     }
 
@@ -1046,6 +1048,15 @@ mod tests {
     /// The task as the fold keeps it, from every row written so far, each
     /// written by the rule on the site.
     fn known(rows: &[&SessionRows]) -> TaskKnown {
+        let folded = fold_of(rows, &[]);
+        let task = rows[0].task.clone();
+        let node = folded.nodes.iter().find(|node| node.id == task).unwrap();
+        task_known(&serde_json::to_value(node).unwrap()).unwrap()
+    }
+
+    /// The rows folded as a host holds them, with `hers` (node, kind, body)
+    /// written after them by her.
+    fn fold_of(rows: &[&SessionRows], hers: &[(String, &str, Value)]) -> crate::Folded {
         use myriad_persona_log::Row;
         let mut log: Vec<Row> = Vec::new();
         let mut bodies = std::collections::BTreeMap::new();
@@ -1076,6 +1087,28 @@ mod tests {
             log.push(serde_json::from_value(row).unwrap());
             bodies.insert(placed.row.id.clone(), placed.row.body.clone());
         }
+        for (n, (node, kind, body)) in hers.iter().enumerate() {
+            let at = 1_760_000_000_000_u64 + log.len() as u64;
+            let id = format!("her_{n}");
+            log.push(
+                serde_json::from_value(json!({
+                    "version": 1,
+                    "id": id,
+                    "origin": "site",
+                    "author": "her",
+                    "epoch": 1,
+                    "hlc": format!("{at:015}-000000-site"),
+                    "audience": "personal:7",
+                    "object": format!("node:{node}"),
+                    "kind": kind,
+                    "replicate": "shared",
+                    "dseq": log.len() + 1,
+                    "payload": {"ref": format!("body:{id}")},
+                }))
+                .unwrap(),
+            );
+            bodies.insert(id, body.clone());
+        }
         let folded = crate::fold(crate::FoldInput {
             rows: log,
             bodies,
@@ -1083,9 +1116,37 @@ mod tests {
         })
         .unwrap();
         assert!(folded.skipped.is_empty(), "{:?}", folded.skipped);
-        let task = rows[0].task.clone();
-        let node = folded.nodes.iter().find(|node| node.id == task).unwrap();
-        task_known(&serde_json::to_value(node).unwrap()).unwrap()
+        folded
+    }
+
+    /// A finished turn rests its task, and the repository does not count it
+    /// done: only she marks it done, and then it counts.
+    #[test]
+    fn a_finished_turn_rests_and_is_done_only_when_she_marks_it() {
+        let finished = session_rows(at("finished", 1, None)).unwrap();
+        let parts = |folded: &crate::Folded| {
+            folded
+                .nodes
+                .iter()
+                .find(|node| node.id == finished.repo)
+                .and_then(|node| node.parts.clone())
+                .map(|parts| (parts.total, parts.done))
+        };
+        assert_eq!(parts(&fold_of(&[&finished], &[])), Some((1, 0)));
+        let done = Body::Revised(Revised {
+            version: BODY_VERSION,
+            sync: crate::Sync::Shared,
+            said_by: vec![SaidBy::Her],
+            base: known(&[&finished]).status_base,
+            field: Field::Status,
+            person: None,
+            value: serde_json::to_value(Status::Done).unwrap(),
+        });
+        let marked = fold_of(
+            &[&finished],
+            &[(finished.task.clone(), "node.revised", done.to_value())],
+        );
+        assert_eq!(parts(&marked), Some((1, 1)));
     }
 
     fn at(change: &str, when: i64, task: Option<TaskKnown>) -> SessionInput {
@@ -1132,7 +1193,10 @@ mod tests {
             .unwrap();
         assert_eq!(reopened.row.body["base"], json!([closed_at.row.id]));
         let after = known(&[&one, &two, &three, &four]);
-        assert_eq!(after.status, Status::Done);
+        assert_eq!(after.status, Status::Resting);
+        // Going on wakes it; the next finished turn rests it again.
+        assert_eq!(known(&[&one, &two]).status, Status::Resting);
+        assert_eq!(known(&[&one, &two, &three]).status, Status::Active);
         assert!(after.items.iter().all(|item| item.closed));
         assert_eq!(after.items.len(), 1, "one question, one item");
         // Where it stands moved on with each change, one version current.

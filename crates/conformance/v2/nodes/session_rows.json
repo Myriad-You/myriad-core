@@ -710,10 +710,10 @@
                 "third_party"
               ],
               "sync": "shared",
-              "value": "done",
+              "value": "resting",
               "version": 1
             },
-            "id": "ua2b9f7c5b50c8601b86cbc1c",
+            "id": "ueb437769cf32f0ce91995539",
             "kind": "node.revised",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           },
@@ -728,7 +728,7 @@
                 "third_party"
               ],
               "sync": "shared",
-              "text": "Split the store: finished; tests passed; 2 files changed",
+              "text": "Split the store: finished a turn; tests passed; 2 files changed",
               "version": 1
             },
             "id": "uadcae34ef1d8f4918016149b",
@@ -931,10 +931,10 @@
               "sync": {
                 "local": "site"
               },
-              "value": "done",
+              "value": "resting",
               "version": 1
             },
-            "id": "ua2b9f7c5b50c8601b86cbc1c",
+            "id": "ueb437769cf32f0ce91995539",
             "kind": "node.revised",
             "node": "15a4346f70cb5a96bc1a2e97b6c01b03"
           },
@@ -951,7 +951,7 @@
               "sync": {
                 "local": "site"
               },
-              "text": "Split the store: finished; tests passed; 2 files changed",
+              "text": "Split the store: finished a turn; tests passed; 2 files changed",
               "version": 1
             },
             "id": "uadcae34ef1d8f4918016149b",
