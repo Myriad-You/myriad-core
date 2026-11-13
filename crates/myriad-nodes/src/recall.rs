@@ -682,8 +682,8 @@ mod tests {
             .map(|one| (one.node.as_str(), one.item.as_str()))
             .collect();
         // Shown above already: the picked node's, and their own node's.
-        assert_eq!(out.picked[0].standing, [run1.clone()]);
-        assert_eq!(out.about_them_standing, [you.clone()]);
+        assert_eq!(out.picked[0].standing, std::slice::from_ref(&run1));
+        assert_eq!(out.about_them_standing, std::slice::from_ref(&you));
         assert_eq!(
             resident,
             [
