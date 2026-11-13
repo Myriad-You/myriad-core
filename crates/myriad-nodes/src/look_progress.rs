@@ -48,7 +48,7 @@ struct Words {
 
 const EN: Words = Words {
     today: "Today: {list}",
-    done: "{n} finished",
+    done: "{n} finished a turn",
     going: "{n} under way",
     waits: "{n} waiting on you",
     stuck: "{n} stuck",
@@ -62,7 +62,7 @@ const EN: Words = Words {
 
 const ZH_CN: Words = Words {
     today: "今天：{list}",
-    done: "做完 {n} 个",
+    done: "做完一轮 {n} 个",
     going: "在做 {n} 个",
     waits: "在等你 {n} 个",
     stuck: "卡住 {n} 个",
@@ -76,7 +76,7 @@ const ZH_CN: Words = Words {
 
 const ZH_TW: Words = Words {
     today: "今天：{list}",
-    done: "做完 {n} 個",
+    done: "做完一輪 {n} 個",
     going: "在做 {n} 個",
     waits: "在等你 {n} 個",
     stuck: "卡住 {n} 個",
@@ -90,7 +90,7 @@ const ZH_TW: Words = Words {
 
 const JA: Words = Words {
     today: "今日：{list}",
-    done: "完了 {n}",
+    done: "ひと区切り {n}",
     going: "作業中 {n}",
     waits: "あなた待ち {n}",
     stuck: "行き詰まり {n}",
@@ -104,7 +104,7 @@ const JA: Words = Words {
 
 const KO: Words = Words {
     today: "오늘: {list}",
-    done: "완료 {n}",
+    done: "일단락 {n}",
     going: "진행 중 {n}",
     waits: "당신을 기다림 {n}",
     stuck: "막힘 {n}",
@@ -118,7 +118,7 @@ const KO: Words = Words {
 
 const FR: Words = Words {
     today: "Aujourd'hui : {list}",
-    done: "{n} terminée(s)",
+    done: "{n} a (ont) fini un tour",
     going: "{n} en cours",
     waits: "{n} vous attend(ent)",
     stuck: "{n} bloquée(s)",
@@ -132,7 +132,7 @@ const FR: Words = Words {
 
 const DE: Words = Words {
     today: "Heute: {list}",
-    done: "{n} fertig",
+    done: "{n} vorerst fertig",
     going: "{n} in Arbeit",
     waits: "{n} warten auf dich",
     stuck: "{n} stecken fest",
@@ -446,7 +446,7 @@ mod tests {
         assert_eq!(
             facts,
             [
-                "今天：做完 1 个、在做 1 个、在等你 1 个",
+                "今天：做完一轮 1 个、在做 1 个、在等你 1 个",
                 "今天反复出错 1 处",
                 "测试：1 个通过、1 个没过"
             ]
@@ -504,6 +504,6 @@ mod tests {
         made.name = "notes".into();
         let made = progress(made).unwrap();
         assert_eq!(made.card.title, "notes");
-        assert_eq!(made.card.facts[0].text, "今天：做完 1 个");
+        assert_eq!(made.card.facts[0].text, "今天：做完一轮 1 个");
     }
 }
