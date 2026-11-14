@@ -559,7 +559,33 @@ fn due_only_when_all_it_rests_on_was_still_to_come() {
         .as_deref(),
         Some("2026-12")
     );
-    // What had begun when she learned it, or on that very day: not due.
+    // Of a day and the month it is in, the month: it ends later.
+    assert_eq!(
+        due_of(&[
+            on("2026-12", None, "2026-11-13"),
+            on("2026-12-05", None, "2026-11-13")
+        ])
+        .as_deref(),
+        Some("2026-12")
+    );
+    assert_eq!(
+        due_of(&[
+            on("2027-03-01", None, "2026-11-13"),
+            on("2027", None, "2026-11-13")
+        ])
+        .as_deref(),
+        Some("2027")
+    );
+    // Begun before she learned it, going on past it: due on its last day.
+    assert_eq!(
+        due_of(&[on("2026-11-01", Some("2026-11-20"), "2026-11-10")]).as_deref(),
+        Some("2026-11-20")
+    );
+    // A month or year the day she learned it falls in: it may have been so
+    // for long; not due.
+    assert_eq!(due_of(&[on("2026-12", None, "2026-12-01")]), None);
+    assert_eq!(due_of(&[on("2026", None, "2026-05-01")]), None);
+    // Over by the day she learned it, or on that very day: not due.
     assert_eq!(due_of(&[on("2026-09-01", None, "2026-09-03")]), None);
     assert_eq!(due_of(&[on("2026-11-13", None, "2026-11-13")]), None);
     // A plan and something already so: not due, it holds until changed.

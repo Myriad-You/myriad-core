@@ -37,10 +37,12 @@
 //!   [`Budget::resident`] items and [`Budget::resident_chars`] chars, each
 //!   counted as the host shows it (`node name：text`). One that does not
 //!   fit in the room left is left out and the next one tried; one longer
-//!   than all the room alone is cut short to the room left (ending in `…`).
+//!   than all the room alone is cut short (ending in `…`) to the room left,
+//!   and to half of all the room at most, keeping 12 chars of its words at
+//!   least, else left out.
 //!   How many were left out and how many cut is said.
-//! - **What is due**: an item resting only on what was still to come when
-//!   she learned it (a plan, a deadline) is due on that day
+//! - **What is due**: an item resting only on what goes on past the day
+//!   she learned it (a plan, a deadline) is due on its last day
 //!   ([`crate::stands::due_of`]); once the day has gone by
 //!   ([`PickInput::today`]) it is no longer how things stand, above or every
 //!   time. Nothing is written for it: its rows are as they were.
@@ -388,11 +390,17 @@ fn resident(
             None
         } else if line <= room {
             Some(words.to_string())
-        } else if line > budget.resident_chars && room > head + RESIDENT_CUT_LEAST {
-            // Longer than all the room alone: cut to what is left, rather
-            // than leave it out (or, when it comes first, leave none).
+        } else if line > budget.resident_chars
+            && room.min(budget.resident_chars / 2) > head + RESIDENT_CUT_LEAST
+        {
+            // Longer than all the room alone: cut, rather than leave it out
+            // (or, when it comes first, leave none); to half the room at
+            // most, so one does not take the place of all the rest.
             cut += 1;
-            let kept: String = words.chars().take(room - head - 1).collect();
+            let kept: String = words
+                .chars()
+                .take(room.min(budget.resident_chars / 2) - head - 1)
+                .collect();
             Some(format!("{kept}…"))
         } else {
             None
@@ -770,7 +778,7 @@ mod tests {
                 ("pause", pause.as_str())
             ]
         );
-        // The room ends it: the first that does not fit, and all after.
+        // Within the room: one that does not fit is left out.
         let tight = |budget: serde_json::Value| {
             run(json!({
                 "ranked": [],
@@ -815,12 +823,50 @@ mod tests {
             ],
             "budget": {"residentChars": 30}
         }));
-        // The newest is longer than all the room: cut to 30 chars, 「长：」 and
-        // 27 of its words and 「…」. Nothing is left for the others.
-        assert_eq!(out.resident.len(), 1);
-        assert_eq!(out.resident[0].item, long);
-        assert_eq!(out.resident[0].text, format!("{}…", "很".repeat(27)));
-        assert_eq!((out.resident_left_out, out.resident_cut), (2, 1));
+        // The newest is longer than all the room: cut to half of it, 15
+        // chars: 「长：」, 12 of its words and 「…」. 「工作：…」 (13) fits in
+        // the 15 left; 「妈妈：周六打电话」 (8) does not.
+        let shown: Vec<&str> = out.resident.iter().map(|one| one.item.as_str()).collect();
+        assert_eq!(shown, [long.as_str(), job.as_str()]);
+        assert_eq!(out.resident[0].text, format!("{}…", "很".repeat(12)));
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 1));
+        // After others, cut to the room they left: 50 chars, 「工作：…」 13,
+        // then 「长」 to half (25): 「长：」, 22 words and 「…」; 12 left, and
+        // 「妈妈：周六打电话」 fits in them.
+        let after = |chars: usize| {
+            run(json!({
+                "ranked": [],
+                "nodes": [
+                    {"id": "job", "name": "工作", "standing": [
+                        {"item": job, "at": 9, "text": "在宠物医疗公司做品牌"}
+                    ]},
+                    {"id": "long", "name": "长", "standing": [
+                        {"item": long, "at": 5, "text": "很".repeat(60)}
+                    ]},
+                    {"id": "mom", "name": "妈妈", "standing": [
+                        {"item": mom, "at": 3, "text": "周六打电话"}
+                    ]}
+                ],
+                "budget": {"residentChars": chars}
+            }))
+        };
+        let out = after(50);
+        let texts: Vec<&str> = out.resident.iter().map(|one| one.text.as_str()).collect();
+        let cut_words = format!("{}…", "很".repeat(22));
+        assert_eq!(
+            texts,
+            ["在宠物医疗公司做品牌", cut_words.as_str(), "周六打电话"]
+        );
+        assert_eq!((out.resident_left_out, out.resident_cut), (0, 1));
+        // Too little room left to keep 12 of its words: left out, not cut.
+        // 28 chars: 13 for 「工作：…」, 15 left (and half is 14); 「长：」 and 12
+        // words and 「…」 would take 15, more than 14.
+        let out = after(28);
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 0));
+        assert_eq!(out.resident.len(), 2);
+        // 30 chars: half is 15, room 17: 「长：」, 12 words and 「…」.
+        let out = after(30);
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 1));
         // With room for more, the one that does not fit is passed, not the
         // end of the list: 「工作：…」 (13) fits, 「长」 alone is 42, more
         // than the room left but not than all of it; 「妈妈：周六打电话」 (8)
@@ -904,6 +950,21 @@ mod tests {
         // The day after, it is no longer how things stand; the job still is.
         let today = Some("2026-11-15");
         assert!(out(found(), today).picked[0].standing.is_empty());
+        // On their own node too.
+        let about = |today: Option<&str>| {
+            run(json!({
+                "ranked": [],
+                "nodes": [{"id": "you", "name": "你", "standing": [
+                    {"item": work, "at": 9, "text": "在做这一轮，定于 11-14 前做完",
+                     "restsOn": rests("2026-11-14", "2026-11-13")}
+                ]}],
+                "aboutThem": "you",
+                "today": today
+            }))
+            .about_them_standing
+        };
+        assert_eq!(about(Some("2026-11-14")), std::slice::from_ref(&work));
+        assert!(about(today).is_empty());
         assert_eq!(every(&out(json!([]), today)), std::slice::from_ref(&job));
     }
 }

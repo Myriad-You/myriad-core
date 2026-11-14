@@ -972,11 +972,16 @@
           {
             "item": "them-5e6f7a8b9c",
             "node": "long",
-            "text": "很很很很很很很很很很很很很很很很很很很很很很很很很很很…"
+            "text": "很很很很很很很很很很很很…"
+          },
+          {
+            "item": "them-2b3c4d5e6f",
+            "node": "job",
+            "text": "在宠物医疗公司做品牌"
           }
         ],
         "residentCut": 1,
-        "residentLeftOut": 2
+        "residentLeftOut": 1
       }
     },
     {
