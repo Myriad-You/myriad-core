@@ -214,6 +214,50 @@ pub fn since_of<'a>(happened: Option<&'a str>, learned: Option<&'a str>) -> Opti
     }
 }
 
+/// One memory a 「现在」 rests on, as the host knows it: the days of what
+/// it tells of (`from`, and `to` when it went on past `from`) and the day
+/// she learned it. Days as [`is_day`] reads them.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RestsOn {
+    #[serde(default)]
+    pub from: Option<String>,
+    #[serde(default)]
+    pub to: Option<String>,
+    #[serde(default)]
+    pub learned: Option<String>,
+}
+
+/// When what stands is due, from what it rests on: when every memory it
+/// rests on was still to come when she learned it (a plan, a deadline: the
+/// last day it tells of is after the day she learned it), the latest of
+/// those days. Anything it rests on that had already begun when she learned
+/// it, or whose days are not known, and it is not due: what stands holds
+/// until something changes it.
+pub fn due_of(rests_on: &[RestsOn]) -> Option<String> {
+    let mut due: Option<&str> = None;
+    for one in rests_on {
+        let last = one
+            .to
+            .as_deref()
+            .or(one.from.as_deref())
+            .filter(|day| is_day(day))?;
+        let learned = one.learned.as_deref().filter(|day| is_day(day))?;
+        if last <= learned {
+            return None;
+        }
+        due = Some(due.map_or(last, |due| due.max(last)));
+    }
+    due.map(str::to_string)
+}
+
+/// Whether `due` has gone by on `today`: a day before it, or a month or a
+/// year that ended before it. On the day itself, and within its month or
+/// year, it has not.
+pub fn due_passed(due: &str, today: &str) -> bool {
+    is_day(due) && is_day(today) && due < today && !today.starts_with(due)
+}
+
 /// An item of hers on a node, as the step is shown it: where it stands, its
 /// words, and the rows it stands on now (the `base` of a change).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

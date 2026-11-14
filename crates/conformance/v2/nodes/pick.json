@@ -917,7 +917,138 @@
         "resident": [
           {
             "item": "them-2b3c4d5e6f",
-            "node": "job"
+            "node": "job",
+            "text": "在宠物医疗公司做品牌"
+          }
+        ],
+        "residentLeftOut": 1
+      }
+    },
+    {
+      "input": {
+        "budget": {
+          "residentChars": 30
+        },
+        "nodes": [
+          {
+            "id": "long",
+            "name": "长",
+            "standing": [
+              {
+                "at": 1760000000000009,
+                "item": "them-5e6f7a8b9c",
+                "text": "很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很"
+              }
+            ]
+          },
+          {
+            "id": "job",
+            "name": "工作",
+            "standing": [
+              {
+                "at": 1760000000000005,
+                "item": "them-2b3c4d5e6f",
+                "text": "在宠物医疗公司做品牌"
+              }
+            ]
+          },
+          {
+            "id": "mom",
+            "name": "妈妈",
+            "standing": [
+              {
+                "at": 1760000000000003,
+                "item": "them-6f7a8b9c0d",
+                "text": "周六打电话"
+              }
+            ]
+          }
+        ],
+        "ranked": []
+      },
+      "name": "one that does not fit is passed for the next, one longer than all the room is cut short, and how many is said",
+      "output": {
+        "resident": [
+          {
+            "item": "them-5e6f7a8b9c",
+            "node": "long",
+            "text": "很很很很很很很很很很很很很很很很很很很很很很很很很很很…"
+          }
+        ],
+        "residentCut": 1,
+        "residentLeftOut": 2
+      }
+    },
+    {
+      "input": {
+        "nodes": [
+          {
+            "id": "work",
+            "name": "myriad",
+            "standing": [
+              {
+                "at": 1760000000000009,
+                "item": "them-7a8b9c0d1e",
+                "restsOn": [
+                  {
+                    "from": "2026-11-14",
+                    "learned": "2026-11-13"
+                  }
+                ],
+                "text": "在做这一轮，定于 11-14 前做完"
+              }
+            ]
+          },
+          {
+            "id": "trip",
+            "name": "旅行",
+            "standing": [
+              {
+                "at": 1760000000000007,
+                "item": "them-8b9c0d1e2f",
+                "restsOn": [
+                  {
+                    "from": "2026-12-05",
+                    "learned": "2026-11-10"
+                  }
+                ],
+                "text": "在准备去东京，12 月 5 日出发"
+              }
+            ]
+          },
+          {
+            "id": "job",
+            "name": "工作",
+            "standing": [
+              {
+                "at": 1760000000000005,
+                "item": "them-2b3c4d5e6f",
+                "restsOn": [
+                  {
+                    "from": "2026-09-01",
+                    "learned": "2026-09-03"
+                  }
+                ],
+                "text": "在宠物医疗公司做品牌"
+              }
+            ]
+          }
+        ],
+        "ranked": [],
+        "today": "2026-11-15"
+      },
+      "name": "what was still to come when she learned it stands until its day has gone by",
+      "output": {
+        "resident": [
+          {
+            "item": "them-8b9c0d1e2f",
+            "node": "trip",
+            "text": "在准备去东京，12 月 5 日出发"
+          },
+          {
+            "item": "them-2b3c4d5e6f",
+            "node": "job",
+            "text": "在宠物医疗公司做品牌"
           }
         ]
       }
