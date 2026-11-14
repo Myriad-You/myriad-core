@@ -59,7 +59,7 @@ const MEMORY_REF: &str = "memory:";
 /// What is asked once a fact is kept, saying whose life the fact tells of.
 pub const STEP_SYSTEM: &str = "You keep what you know of someone. fact is something new they told you. list is how life stands now, numbered: each item one standing part of a life (a habit or routine, where someone lives or works, something they use or keep, an arrangement with someone, an aim), with whose life it is: \"them\" for the person themselves, else the other person as they called them. What stands on one topic may have been written on two devices before they synced, so two items can say the same thing; both are in list. known are other things you knew of them, numbered. topics are the names your memories of them are kept under. \
 whose: whose life fact tells of: \"them\" when it is the person's own, or something they share with someone else (calls, visits, living apart, a regular meetup), else the other person as fact calls them (a name, or 妈妈, 男朋友) when it is that person's own life alone. \
-What does fact do to how things stand? set: items fact changes, each with its number and its new text, one line in the language of the list saying how it is now, with since when if known. end: numbers of items that no longer hold at all, with nothing in their place. add: a standing part of that life fact starts that no item holds, with a topic (one of topics when one fits) and its text, one line in the language of fact. Change only items of the life fact tells of. \
+What does fact do to how things stand? set: items fact changes, each with its number and its new text, one line in the language of the list saying how it is now, with since when if known. end: numbers of items that no longer hold at all, with nothing in their place. add: a standing part of that life fact starts that no item holds, with a topic (one of topics when one fits) and its text, one line in the language of fact. Change only items of the life fact tells of. An item on a topic fact is not kept under is changed or ended only when fact itself says that part of their life changed or no longer holds. \
 Leave all three empty when fact is a new detail of an item, something that adds to it without changing it, a one-off, or about something else. \
 A plan itself is not how things stand, nor is one thing of a kind (an order, a purchase) or a liking. \
 What they are working toward by a date is written as under way, with when it is due, never as done. \
@@ -514,6 +514,44 @@ struct Step<'a> {
     own: &'a [String],
 }
 
+/// How their life stands on the nodes given that fact does not reach (the
+/// host's other nodes): what is shown every time in a private talk
+/// ([`crate::recall`]'s `resident`), newest first, at most as many items
+/// and chars, so that a change written on another topic can end or change
+/// what stands on this one. Not where an item is added.
+fn elsewhere(input: &StepInput, reach: &[String]) -> Vec<Shown> {
+    let room = crate::recall::Budget::default();
+    let mut found: Vec<(i64, Option<&str>, Shown)> = Vec::new();
+    for node in input.nodes.iter().filter(|node| !reach.contains(&node.id)) {
+        for one in shown_on(&node.id, &node.folded) {
+            let at = node
+                .folded
+                .get("standing")
+                .and_then(|standing| standing.get(&one.item))
+                .and_then(|held| held.get("at"))
+                .and_then(Value::as_i64)
+                .unwrap_or_default();
+            found.push((at, node.name.as_deref(), one));
+        }
+    }
+    found.sort_by(|a, b| {
+        b.0.cmp(&a.0)
+            .then_with(|| a.2.node.cmp(&b.2.node))
+            .then_with(|| a.2.item.cmp(&b.2.item))
+    });
+    let mut chars = 0;
+    let mut out = Vec::new();
+    for (_, name, one) in found {
+        let line = name.unwrap_or_default().trim().chars().count() + 1 + one.text.chars().count();
+        if out.len() >= room.resident || chars + line > room.resident_chars {
+            continue;
+        }
+        chars += line;
+        out.push(one);
+    }
+    out
+}
+
 fn step_of(input: &StepInput) -> Step<'_> {
     let known: Vec<&KnownIn> = input.known.iter().take(KNOWN).collect();
     let known_on: Vec<Vec<String>> = known.iter().map(|known| known.on.clone()).collect();
@@ -525,6 +563,7 @@ fn step_of(input: &StepInput) -> Step<'_> {
             shown.extend(shown_on(id, &node.folded));
         }
     }
+    shown.extend(elsewhere(input, &reach));
     let may = reach
         .iter()
         .filter_map(|id| Some((id.clone(), node(id)?.name.clone()?)))
@@ -561,10 +600,10 @@ pub fn step_prepare(input: StepInput) -> Result<StepPrepared, NodeError> {
             input: String::new(),
         });
     }
-    let names: BTreeMap<&str, &str> = step
-        .may
+    let names: BTreeMap<&str, &str> = input
+        .nodes
         .iter()
-        .map(|(id, name)| (id.as_str(), name.as_str()))
+        .filter_map(|node| Some((node.id.as_str(), node.name.as_deref()?)))
         .collect();
     let asked = json!({
         "fact": input.fact.text,

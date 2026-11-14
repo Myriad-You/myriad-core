@@ -614,3 +614,55 @@ fn due_only_when_all_it_rests_on_was_still_to_come() {
     assert!(!due_passed("2026-11-14", "2026-11-13"));
     assert!(!due_passed("someday", "2026-11-15"));
 }
+
+#[test]
+fn what_stands_on_a_topic_the_fact_is_not_on_can_be_ended_but_not_added_to() {
+    // 阿Ken moved away: the fact is kept on 「阿Ken」; Fridays at the bar
+    // stand on 「喝酒聚会」, which neither it nor what it brought to mind is on.
+    let bar = item_id("them", "bar", "m0", 0);
+    let books = item_id("them", "books", "m0", 0);
+    let mut drinks = folded(&[(&bar, "每周五跑完步和阿Ken去鹿角喝一杯", false)]);
+    drinks["standing"][&bar]["at"] = json!(5);
+    let mut reading = folded(&[(&books, "周日去春山看书", false)]);
+    reading["standing"][&books]["at"] = json!(9);
+    let step = StepInput {
+        fact: fact("m1", "阿Ken调去北京总行了，下周一就走", &["ken"]),
+        known: Vec::new(),
+        nodes: vec![
+            node("ken", "阿Ken", folded(&[])),
+            node("bar", "喝酒聚会", drinks),
+            node("books", "看书", reading),
+        ],
+    };
+    let asked = step_prepare(step.clone()).unwrap();
+    let shown: Value = serde_json::from_str(&asked.input).unwrap();
+    // After what the fact reaches (nothing here), newest first, under their
+    // own topics; still only its own topics to add to.
+    assert_eq!(shown["list"][0]["text"], "周日去春山看书");
+    assert_eq!(shown["list"][1]["topic"], "喝酒聚会");
+    assert_eq!(shown["topics"], json!(["阿Ken"]));
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [2], "add": []}),
+    );
+    assert_eq!(got.rows.len(), 1);
+    assert_eq!(got.rows[0].node, "bar");
+    assert_eq!(got.rows[0].body["ended"], true);
+    // Only as many as are shown every time: past the room, none.
+    let many: Vec<NodeIn> = (0..40)
+        .map(|n| {
+            let id = format!("n{n}");
+            let one = item_id("them", &id, "m0", 0);
+            node(&id, "话题", folded(&[(&one, "一件持续在做的事情", false)]))
+        })
+        .collect();
+    let step = StepInput {
+        fact: fact("m1", "我搬家了", &["n0"]),
+        known: Vec::new(),
+        nodes: many,
+    };
+    let shown: Value = serde_json::from_str(&step_prepare(step).unwrap().input).unwrap();
+    // One on its own node, then 24 (each 「话题：一件持续在做的事情」, 12
+    // chars, 288 in all) of the other 39.
+    assert_eq!(shown["list"].as_array().unwrap().len(), 1 + 24);
+}
