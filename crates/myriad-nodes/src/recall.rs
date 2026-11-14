@@ -35,8 +35,17 @@
 //!   time), and not shown above already. Items on active and ongoing nodes
 //!   first, then the rest; within each, the newest written first. At most
 //!   [`Budget::resident`] items and [`Budget::resident_chars`] chars, each
-//!   counted as the host shows it (`node name：text`): the first that does
-//!   not fit ends the list.
+//!   counted as the host shows it (`node name：text`). One that does not
+//!   fit in the room left is left out and the next one tried; one longer
+//!   than all the room alone is cut short (ending in `…`) to the room left,
+//!   and to half of all the room at most, keeping 12 chars of its words at
+//!   least, else left out.
+//!   How many were left out and how many cut is said.
+//! - **What is due**: an item resting only on what goes on past the day
+//!   she learned it (a plan, a deadline) is due on its last day
+//!   ([`crate::stands::due_of`]); once the day has gone by
+//!   ([`PickInput::today`]) it is no longer how things stand, above or every
+//!   time. Nothing is written for it: its rows are as they were.
 //! - **About them**: the entries of their own node, ranked first, then the
 //!   newest, at most [`Budget::about_them`]; its newest always among them
 //!   too.
@@ -84,6 +93,13 @@ pub struct Budget {
     pub resident_chars: usize,
 }
 
+/// The fewest chars of an item's words worth showing cut short.
+const RESIDENT_CUT_LEAST: usize = 12;
+
+fn is_zero(value: &usize) -> bool {
+    *value == 0
+}
+
 impl Default for Budget {
     fn default() -> Self {
         Self {
@@ -129,6 +145,23 @@ pub struct PickStanding {
     /// how their life stands every time.
     #[serde(default)]
     pub text: String,
+    /// The memories its current version rests on, with their days
+    /// ([`crate::stands::due_of`]): what was still to come when she learned
+    /// it is due on that day, and once it has gone by it is no longer how
+    /// things stand. Without them it is never due.
+    #[serde(default)]
+    pub rests_on: Vec<crate::stands::RestsOn>,
+}
+
+impl PickStanding {
+    /// Whether it stands on `today`: not ended, and not due before it.
+    fn holds(&self, today: Option<&str>) -> bool {
+        !self.ended
+            && !today.is_some_and(|today| {
+                crate::stands::due_of(&self.rests_on)
+                    .is_some_and(|due| crate::stands::due_passed(&due, today))
+            })
+    }
 }
 
 /// A node of the audience as recall sees it.
@@ -181,6 +214,7 @@ impl PickNode {
                     at: standing.current.at,
                     ended: standing.current.value.ended,
                     text: standing.current.value.text.clone(),
+                    rests_on: Vec::new(),
                 })
                 .collect(),
         }
@@ -205,6 +239,10 @@ pub struct PickInput {
     pub thorough: bool,
     #[serde(default)]
     pub budget: Budget,
+    /// The day it is (`2026-11-15`), for what is due ([`PickStanding::rests_on`]).
+    /// Without it nothing is due.
+    #[serde(default)]
+    pub today: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -224,6 +262,9 @@ pub struct Picked {
 pub struct Resident {
     pub node: String,
     pub item: String,
+    /// Its words as counted: the host shows these, cut short (ending in
+    /// `…`) when the item alone is longer than all the room.
+    pub text: String,
 }
 
 /// One node gone through when they ask for all of a kind.
@@ -253,6 +294,12 @@ pub struct Pick {
     /// How their life stands, shown every time, in order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub resident: Vec<Resident>,
+    /// How many of those were left out for want of room.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub resident_left_out: usize,
+    /// How many of those were cut short.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub resident_cut: usize,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub loose: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -281,8 +328,12 @@ fn newest(node: &PickNode) -> Vec<&str> {
 
 /// How things on `node` stand: every one not ended, newest first (the same
 /// time: by item).
-fn standing(node: &PickNode) -> Vec<String> {
-    let mut now: Vec<&PickStanding> = node.standing.iter().filter(|one| !one.ended).collect();
+fn standing(node: &PickNode, today: Option<&str>) -> Vec<String> {
+    let mut now: Vec<&PickStanding> = node
+        .standing
+        .iter()
+        .filter(|one| one.holds(today))
+        .collect();
     now.sort_by(|a, b| b.at.cmp(&a.at).then_with(|| a.item.cmp(&b.item)));
     let mut seen = BTreeSet::new();
     now.into_iter()
@@ -292,13 +343,15 @@ fn standing(node: &PickNode) -> Vec<String> {
 }
 
 /// How their life stands across `nodes` (not `her` own node), shown every
-/// time, leaving out what `shown` (node, item) already has; within `budget`.
+/// time, leaving out what `shown` (node, item) already has; within `budget`:
+/// with how many were left out for want of room, and how many cut short.
 fn resident(
     nodes: &[PickNode],
     her: Option<&str>,
     shown: &BTreeSet<(&str, &str)>,
     budget: &Budget,
-) -> Vec<Resident> {
+    today: Option<&str>,
+) -> (Vec<Resident>, usize, usize) {
     let mut candidates: Vec<(u8, i64, &PickNode, &PickStanding)> = Vec::new();
     // Her own node's head is the host's to show every time already.
     for node in nodes
@@ -308,7 +361,7 @@ fn resident(
         let tier = u8::from(tier(node.status) > 0);
         let mut seen = BTreeSet::new();
         for one in &node.standing {
-            if one.ended
+            if !one.holds(today)
                 || one.text.trim().is_empty()
                 || crate::stands::whose_of(&one.item).is_none()
                 || shown.contains(&(node.id.as_str(), one.item.as_str()))
@@ -325,21 +378,45 @@ fn resident(
             .then_with(|| a.2.id.cmp(&b.2.id))
             .then_with(|| a.3.item.cmp(&b.3.item))
     });
-    let mut out = Vec::new();
+    let (mut out, mut left_out, mut cut) = (Vec::new(), 0, 0);
     let mut chars = 0;
     for (_, _, node, one) in candidates {
         let name = node.name.as_deref().unwrap_or_default().trim();
-        let line = name.chars().count() + 1 + one.text.trim().chars().count();
-        if out.len() >= budget.resident || chars + line > budget.resident_chars {
-            break;
-        }
-        chars += line;
+        let words = one.text.trim();
+        let head = name.chars().count() + 1;
+        let line = head + words.chars().count();
+        let room = budget.resident_chars.saturating_sub(chars);
+        let text = if out.len() >= budget.resident {
+            None
+        } else if line <= room {
+            Some(words.to_string())
+        } else if line > budget.resident_chars
+            && room.min(budget.resident_chars / 2) > head + RESIDENT_CUT_LEAST
+        {
+            // Longer than all the room alone: cut, rather than leave it out
+            // (or, when it comes first, leave none); to half the room at
+            // most, so one does not take the place of all the rest.
+            cut += 1;
+            let kept: String = words
+                .chars()
+                .take(room.min(budget.resident_chars / 2) - head - 1)
+                .collect();
+            Some(format!("{kept}…"))
+        } else {
+            None
+        };
+        let Some(text) = text else {
+            left_out += 1;
+            continue;
+        };
+        chars += head + text.chars().count();
         out.push(Resident {
             node: node.id.clone(),
             item: one.item.clone(),
+            text,
         });
     }
-    out
+    (out, left_out, cut)
 }
 
 /// Of `node`, the ranked entries on it in rank order, then its newest, at
@@ -380,6 +457,7 @@ fn best(
 }
 
 pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
+    let today = input.today.as_deref();
     let mut ids = BTreeSet::new();
     for node in &input.nodes {
         check_token("node id", &node.id)?;
@@ -443,7 +521,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         .iter()
         .map(|at| Picked {
             node: input.nodes[*at].id.clone(),
-            standing: standing(&input.nodes[*at]),
+            standing: standing(&input.nodes[*at], today),
             entries: best(&input.nodes[*at], &ranked, &on, *at, input.budget.entries),
         })
         .collect();
@@ -457,7 +535,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         .map(|at| best(&input.nodes[at], &ranked, &on, at, input.budget.about_them))
         .unwrap_or_default();
     let about_them_standing = about_them_at
-        .map(|at| standing(&input.nodes[at]))
+        .map(|at| standing(&input.nodes[at], today))
         .unwrap_or_default();
     let nodes = &input.nodes;
     let shown_standing: BTreeSet<(&str, &str)> = picked
@@ -474,7 +552,13 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
                 .map(move |item| (nodes[at].id.as_str(), item.as_str()))
         }))
         .collect();
-    let resident = resident(nodes, input.her.as_deref(), &shown_standing, &input.budget);
+    let (resident, resident_left_out, resident_cut) = resident(
+        nodes,
+        input.her.as_deref(),
+        &shown_standing,
+        &input.budget,
+        today,
+    );
     let mut shown: BTreeSet<String> = picked
         .iter()
         .flat_map(|picked| picked.entries.iter().cloned())
@@ -513,6 +597,8 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         about_them,
         about_them_standing,
         resident,
+        resident_left_out,
+        resident_cut,
         loose,
         together,
     })
@@ -692,7 +778,7 @@ mod tests {
                 ("pause", pause.as_str())
             ]
         );
-        // The room ends it: the first that does not fit, and all after.
+        // Within the room: one that does not fit is left out.
         let tight = |budget: serde_json::Value| {
             run(json!({
                 "ranked": [],
@@ -716,5 +802,169 @@ mod tests {
         assert_eq!(tight(json!({"residentChars": 26})), 1);
         assert_eq!(tight(json!({"residentChars": 27})), 2);
         assert_eq!(tight(json!({"residentChars": 12})), 0);
+    }
+
+    #[test]
+    fn one_that_does_not_fit_is_passed_and_one_too_long_is_cut() {
+        let item = |node: &str| crate::stands::item_id("them", node, "memory:m", 1);
+        let (long, job, mom) = (item("long"), item("job"), item("mom"));
+        let out = run(json!({
+            "ranked": [],
+            "nodes": [
+                {"id": "long", "name": "长", "standing": [
+                    {"item": long, "at": 9, "text": "很".repeat(40)}
+                ]},
+                {"id": "job", "name": "工作", "standing": [
+                    {"item": job, "at": 5, "text": "在宠物医疗公司做品牌"}
+                ]},
+                {"id": "mom", "name": "妈妈", "standing": [
+                    {"item": mom, "at": 3, "text": "周六打电话"}
+                ]}
+            ],
+            "budget": {"residentChars": 30}
+        }));
+        // The newest is longer than all the room: cut to half of it, 15
+        // chars: 「长：」, 12 of its words and 「…」. 「工作：…」 (13) fits in
+        // the 15 left; 「妈妈：周六打电话」 (8) does not.
+        let shown: Vec<&str> = out.resident.iter().map(|one| one.item.as_str()).collect();
+        assert_eq!(shown, [long.as_str(), job.as_str()]);
+        assert_eq!(out.resident[0].text, format!("{}…", "很".repeat(12)));
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 1));
+        // After others, cut to the room they left: 50 chars, 「工作：…」 13,
+        // then 「长」 to half (25): 「长：」, 22 words and 「…」; 12 left, and
+        // 「妈妈：周六打电话」 fits in them.
+        let after = |chars: usize| {
+            run(json!({
+                "ranked": [],
+                "nodes": [
+                    {"id": "job", "name": "工作", "standing": [
+                        {"item": job, "at": 9, "text": "在宠物医疗公司做品牌"}
+                    ]},
+                    {"id": "long", "name": "长", "standing": [
+                        {"item": long, "at": 5, "text": "很".repeat(60)}
+                    ]},
+                    {"id": "mom", "name": "妈妈", "standing": [
+                        {"item": mom, "at": 3, "text": "周六打电话"}
+                    ]}
+                ],
+                "budget": {"residentChars": chars}
+            }))
+        };
+        let out = after(50);
+        let texts: Vec<&str> = out.resident.iter().map(|one| one.text.as_str()).collect();
+        let cut_words = format!("{}…", "很".repeat(22));
+        assert_eq!(
+            texts,
+            ["在宠物医疗公司做品牌", cut_words.as_str(), "周六打电话"]
+        );
+        assert_eq!((out.resident_left_out, out.resident_cut), (0, 1));
+        // Too little room left to keep 12 of its words: left out, not cut.
+        // 28 chars: 13 for 「工作：…」, 15 left (and half is 14); 「长：」 and 12
+        // words and 「…」 would take 15, more than 14.
+        let out = after(28);
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 0));
+        assert_eq!(out.resident.len(), 2);
+        // 30 chars: half is 15, room 17: 「长：」, 12 words and 「…」.
+        let out = after(30);
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 1));
+        // With room for more, the one that does not fit is passed, not the
+        // end of the list: 「工作：…」 (13) fits, 「长」 alone is 42, more
+        // than the room left but not than all of it; 「妈妈：周六打电话」 (8)
+        // fits after it.
+        let out = run(json!({
+            "ranked": [],
+            "nodes": [
+                {"id": "job", "name": "工作", "standing": [
+                    {"item": job, "at": 9, "text": "在宠物医疗公司做品牌"}
+                ]},
+                {"id": "long", "name": "长", "standing": [
+                    {"item": long, "at": 5, "text": "很".repeat(40)}
+                ]},
+                {"id": "mom", "name": "妈妈", "standing": [
+                    {"item": mom, "at": 3, "text": "周六打电话"}
+                ]}
+            ],
+            "budget": {"residentChars": 50}
+        }));
+        let shown: Vec<&str> = out.resident.iter().map(|one| one.item.as_str()).collect();
+        assert_eq!(shown, [job.as_str(), mom.as_str()]);
+        assert_eq!(out.resident[1].text, "周六打电话");
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 0));
+        // Past the count, the rest are left out and said so.
+        let out = run(json!({
+            "ranked": [],
+            "nodes": [
+                {"id": "job", "name": "工作", "standing": [
+                    {"item": job, "at": 9, "text": "在宠物医疗公司做品牌"}
+                ]},
+                {"id": "mom", "name": "妈妈", "standing": [
+                    {"item": mom, "at": 3, "text": "周六打电话"}
+                ]}
+            ],
+            "budget": {"resident": 1}
+        }));
+        assert_eq!(out.resident.len(), 1);
+        assert_eq!((out.resident_left_out, out.resident_cut), (1, 0));
+    }
+
+    #[test]
+    fn what_is_due_stands_until_its_day_has_gone_by() {
+        let item = |node: &str| crate::stands::item_id("them", node, "memory:m", 1);
+        let (work, job) = (item("work"), item("job"));
+        let rests = |from: &str, learned: &str| json!([{"from": from, "learned": learned}]);
+        let out = |ranked: serde_json::Value, today: Option<&str>| {
+            run(json!({
+                "ranked": ranked,
+                "nodes": [
+                    {"id": "work", "name": "myriad", "entries": entries("w", 1), "standing": [
+                        // A deadline: learned 11-13, due 11-14.
+                        {"item": work, "at": 9, "text": "在做这一轮，定于 11-14 前做完",
+                         "restsOn": rests("2026-11-14", "2026-11-13")}
+                    ]},
+                    {"id": "job", "name": "工作", "standing": [
+                        // Begun before it was learned: never due.
+                        {"item": job, "at": 5, "text": "在宠物医疗公司做品牌",
+                         "restsOn": rests("2026-09-01", "2026-09-03")}
+                    ]}
+                ],
+                "today": today
+            }))
+        };
+        let found = || json!([{"id": "w1", "named": true}]);
+        let every = |pick: &Pick| -> Vec<String> {
+            pick.resident.iter().map(|one| one.item.clone()).collect()
+        };
+        // On its day, and without a day, it stands: above when its node is
+        // picked, else every time.
+        for today in [None, Some("2026-11-14")] {
+            assert_eq!(
+                out(found(), today).picked[0].standing,
+                std::slice::from_ref(&work)
+            );
+            assert_eq!(
+                every(&out(json!([]), today)),
+                [work.clone(), job.clone()],
+                "{today:?}"
+            );
+        }
+        // The day after, it is no longer how things stand; the job still is.
+        let today = Some("2026-11-15");
+        assert!(out(found(), today).picked[0].standing.is_empty());
+        // On their own node too.
+        let about = |today: Option<&str>| {
+            run(json!({
+                "ranked": [],
+                "nodes": [{"id": "you", "name": "你", "standing": [
+                    {"item": work, "at": 9, "text": "在做这一轮，定于 11-14 前做完",
+                     "restsOn": rests("2026-11-14", "2026-11-13")}
+                ]}],
+                "aboutThem": "you",
+                "today": today
+            }))
+            .about_them_standing
+        };
+        assert_eq!(about(Some("2026-11-14")), std::slice::from_ref(&work));
+        assert!(about(today).is_empty());
+        assert_eq!(every(&out(json!([]), today)), std::slice::from_ref(&job));
     }
 }

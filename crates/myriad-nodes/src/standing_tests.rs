@@ -275,6 +275,7 @@ fn recall_puts_how_things_stand_first_and_leaves_what_ended_out() {
         her: None,
         thorough: false,
         budget: Default::default(),
+        today: None,
     })
     .unwrap();
     assert_eq!(picked.picked[0].standing, ["new", "old"]);
@@ -289,6 +290,7 @@ fn recall_puts_how_things_stand_first_and_leaves_what_ended_out() {
         her: None,
         thorough: false,
         budget: Default::default(),
+        today: None,
     })
     .unwrap();
     assert!(

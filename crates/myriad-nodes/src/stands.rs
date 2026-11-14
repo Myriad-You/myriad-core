@@ -214,6 +214,65 @@ pub fn since_of<'a>(happened: Option<&'a str>, learned: Option<&'a str>) -> Opti
     }
 }
 
+/// One memory a 「现在」 rests on, as the host knows it: the days of what
+/// it tells of (`from`, and `to` when it went on past `from`) and the day
+/// she learned it. Days as [`is_day`] reads them.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RestsOn {
+    #[serde(default)]
+    pub from: Option<String>,
+    #[serde(default)]
+    pub to: Option<String>,
+    #[serde(default)]
+    pub learned: Option<String>,
+}
+
+/// When what stands is due, from what it rests on: when every memory it
+/// rests on tells of what goes on past the day she learned it (its last
+/// day, `to` else `from`, a day, month or year wholly after that day: a
+/// plan, a deadline, a trip she was told of on its way), the last of those.
+/// Anything it rests on that was over by the day she learned it, a month
+/// or year that day falls in (it may have been so for long), or whose days
+/// are not known, and it is not due: what stands holds until something
+/// changes it.
+pub fn due_of(rests_on: &[RestsOn]) -> Option<String> {
+    let mut due: Option<&str> = None;
+    for one in rests_on {
+        let last = one
+            .to
+            .as_deref()
+            .or(one.from.as_deref())
+            .filter(|day| is_day(day))?;
+        let learned = one.learned.as_deref().filter(|day| is_day(day))?;
+        if last <= learned || learned.starts_with(last) {
+            return None;
+        }
+        due = Some(due.map_or(last, |due| ends_later(due, last)));
+    }
+    due.map(str::to_string)
+}
+
+/// Of two days as [`is_day`] writes them, the one that ends later: a
+/// month or a year ends after every day in it, so of a day and the month it
+/// is in, the month.
+fn ends_later<'a>(a: &'a str, b: &'a str) -> &'a str {
+    if b.starts_with(a) {
+        a
+    } else if a.starts_with(b) {
+        b
+    } else {
+        a.max(b)
+    }
+}
+
+/// Whether `due` has gone by on `today`: a day before it, or a month or a
+/// year that ended before it. On the day itself, and within its month or
+/// year, it has not.
+pub fn due_passed(due: &str, today: &str) -> bool {
+    is_day(due) && is_day(today) && due < today && !today.starts_with(due)
+}
+
 /// An item of hers on a node, as the step is shown it: where it stands, its
 /// words, and the rows it stands on now (the `base` of a change).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

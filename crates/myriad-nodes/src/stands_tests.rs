@@ -532,3 +532,85 @@ fn a_plan_she_knew_is_shown_on_the_day_she_learned_it() {
         .collect();
     assert_eq!(days, ["2026-11-13", "2026-10-03", "2027"]);
 }
+
+#[test]
+fn due_only_when_all_it_rests_on_was_still_to_come() {
+    let on = |from: &str, to: Option<&str>, learned: &str| RestsOn {
+        from: Some(from.into()),
+        to: to.map(str::to_string),
+        learned: Some(learned.into()),
+    };
+    // A deadline she was told of the day before.
+    assert_eq!(
+        due_of(&[on("2026-11-14", None, "2026-11-13")]).as_deref(),
+        Some("2026-11-14")
+    );
+    // Its last day, when it goes on past its first.
+    assert_eq!(
+        due_of(&[on("2026-12-01", Some("2026-12-05"), "2026-11-13")]).as_deref(),
+        Some("2026-12-05")
+    );
+    // The latest of two plans.
+    assert_eq!(
+        due_of(&[
+            on("2026-12", None, "2026-11-13"),
+            on("2026-11-20", None, "2026-11-10")
+        ])
+        .as_deref(),
+        Some("2026-12")
+    );
+    // Of a day and the month it is in, the month: it ends later.
+    assert_eq!(
+        due_of(&[
+            on("2026-12", None, "2026-11-13"),
+            on("2026-12-05", None, "2026-11-13")
+        ])
+        .as_deref(),
+        Some("2026-12")
+    );
+    assert_eq!(
+        due_of(&[
+            on("2027-03-01", None, "2026-11-13"),
+            on("2027", None, "2026-11-13")
+        ])
+        .as_deref(),
+        Some("2027")
+    );
+    // Begun before she learned it, going on past it: due on its last day.
+    assert_eq!(
+        due_of(&[on("2026-11-01", Some("2026-11-20"), "2026-11-10")]).as_deref(),
+        Some("2026-11-20")
+    );
+    // A month or year the day she learned it falls in: it may have been so
+    // for long; not due.
+    assert_eq!(due_of(&[on("2026-12", None, "2026-12-01")]), None);
+    assert_eq!(due_of(&[on("2026", None, "2026-05-01")]), None);
+    // Over by the day she learned it, or on that very day: not due.
+    assert_eq!(due_of(&[on("2026-09-01", None, "2026-09-03")]), None);
+    assert_eq!(due_of(&[on("2026-11-13", None, "2026-11-13")]), None);
+    // A plan and something already so: not due, it holds until changed.
+    assert_eq!(
+        due_of(&[
+            on("2026-11-14", None, "2026-11-13"),
+            on("2026-09-01", None, "2026-09-03")
+        ]),
+        None
+    );
+    // Days not known: not due. Nothing it rests on: not due.
+    assert_eq!(
+        due_of(&[RestsOn {
+            from: Some("2026-11-14".into()),
+            ..RestsOn::default()
+        }]),
+        None
+    );
+    assert_eq!(due_of(&[on("下周", None, "2026-11-13")]), None);
+    assert_eq!(due_of(&[]), None);
+    // Gone by: the day after; a month, once it has ended.
+    assert!(!due_passed("2026-11-14", "2026-11-14"));
+    assert!(due_passed("2026-11-14", "2026-11-15"));
+    assert!(!due_passed("2026-12", "2026-12-31"));
+    assert!(due_passed("2026-12", "2027-01-01"));
+    assert!(!due_passed("2026-11-14", "2026-11-13"));
+    assert!(!due_passed("someday", "2026-11-15"));
+}
