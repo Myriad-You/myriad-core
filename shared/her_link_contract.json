@@ -817,6 +817,7 @@
     "agent_access_denied": "The site owner may not use the agent now.",
     "host_frozen": "run.rejected: she is moving between her ends; nothing reaches her until the move is done or cancelled.",
     "host_moved": "run.rejected: she does not live on this site now.",
+    "mind_elsewhere": "run.rejected: she is not thinking here now: her mind is on another of your devices, or was just handed back and the site is still catching up on what that device wrote. The turn did not reach her; the child shows the owner it was not sent.",
     "internal_error": "Something failed on the host; trying again later may work.",
     "not_this_device": "A runId that is not one this device's turns started.",
     "too_large": "Over limits.maxFrameBytes, or a field longer than its limit (playback.observe: upcomingText 7200 bytes, rig 16 KiB; work.recall: query limits.maxTextChars characters).",
