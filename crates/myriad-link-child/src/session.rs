@@ -942,7 +942,10 @@ impl Session {
             }
             turn.last_sequence = sequence;
         }
+        // A turn asked for by its turn alone is answered by its run's events, with no
+        // `run.accepted`: the first of them says which run it is.
         turn.run_id = Some(run_id.clone());
+        turn.answered = true;
         vec![Output::Deliver(Delivery::Event {
             turn_id: id,
             run_id,
@@ -1134,6 +1137,13 @@ impl Session {
             if frame.iter().any(|o| matches!(o, Output::Send(_))) {
                 self.outbox[index].seq = Some(self.sent);
             } else {
+                // An input that can never go is a turn that will never be answered: it ends
+                // here, with the `Unsent` that tells the shell.
+                if t == "input"
+                    && let Some(turn) = self.turns.get_mut(&id)
+                {
+                    turn.ended = true;
+                }
                 refused.insert(id);
             }
             out.extend(frame);
