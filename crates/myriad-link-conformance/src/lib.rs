@@ -56,7 +56,7 @@ pub struct Step {
     #[serde(default)]
     pub at: Option<i64>,
     /// The child's shell does something: `"connect"`, `"disconnect"`, `"tick"`,
-    /// `{say: {turnId, text, sessionId?}}` or `{delivered: {id, body}}`.
+    /// `{say: {turnId, text, sessionId?, rigState?, images?}}` or `{delivered: {id, body}}`.
     #[serde(default, rename = "do")]
     pub act: Option<Value>,
     /// The child sends this frame: `{t, id?, seq?, ack?, body?}`, each given part matched.
@@ -79,8 +79,8 @@ pub struct Step {
     /// The socket closed with `{code?, reason?}`; with `after`.
     #[serde(default)]
     pub close: Option<Value>,
-    /// The upgrade was refused with `{status, body?}`, the HTTP status and the JSON body as
-    /// the site answers it (contract `auth`: `{error, code, host?}`); with `after`.
+    /// The upgrade was refused with `{status, body?}`, the HTTP status and the JSON body
+    /// her host answers with (contract `auth`: `{error, code, host?}`); with `after`.
     #[serde(default)]
     pub http: Option<Value>,
     /// What the child does after a `close` or `http` (`After::json`), matched whole.
@@ -105,7 +105,8 @@ impl std::fmt::Display for Fault {
 /// from then on. A script played against a real end learns the ids that end makes this way.
 pub type Vars = BTreeMap<String, Value>;
 
-/// In an expected object, the value of a key that must not be there.
+/// In an expected object, the value of a key that must not be there. It is for frames: a
+/// delivery leaves no field out (one with nothing to say is null).
 pub const ABSENT: &str = "$absent";
 
 /// Whether `actual` is what `expected` asks: an object's given keys match (others are free;
@@ -167,7 +168,7 @@ fn sender(t: &str) -> Option<&'static str> {
 }
 
 /// The stand-in host's side of one link: its numbering and what the script has named.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Host {
     sent: u64,
     heard: u64,
@@ -245,16 +246,21 @@ impl Host {
     /// frame the contract takes and a child sends, numbered one after its last, acking no
     /// less than before and no more than the host sent, and what the step asks.
     pub fn takes(&mut self, expected: &Value, text: &str) -> Result<(), String> {
-        myriad_her_link::check_bytes(text.as_bytes(), &[]).map_err(|refusal| {
+        let checked = myriad_her_link::check_bytes(text.as_bytes(), &[]).map_err(|refusal| {
             format!(
                 "the child sent what the contract refuses ({}): {}",
                 refusal.code, refusal.detail
             )
         })?;
+        if text != checked.canonical {
+            return Err(format!(
+                "the child's {} is not in its one byte form (canonical JSON)",
+                checked.t
+            ));
+        }
         let frame: Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-        let t = frame["t"].as_str().unwrap_or_default();
-        if !matches!(sender(t), Some("child" | "device" | "either")) {
-            return Err(format!("{t} is not a frame a child sends"));
+        if !matches!(sender(&checked.t), Some("child" | "device" | "either")) {
+            return Err(format!("{} is not a frame a child sends", checked.t));
         }
         let (seq, ack) = (
             frame["seq"].as_u64().unwrap_or(0),
@@ -272,13 +278,16 @@ impl Host {
                 self.acked, self.sent
             ));
         }
-        self.heard = seq;
-        self.acked = ack;
-        if !matches(expected, &frame, &mut self.vars) {
+        // Nothing of the host moves unless the frame is what the step asks.
+        let mut vars = self.vars.clone();
+        if !matches(expected, &frame, &mut vars) {
             return Err(format!(
                 "the child sent {frame}, the script expects {expected}"
             ));
         }
+        self.vars = vars;
+        self.heard = seq;
+        self.acked = ack;
         Ok(())
     }
 }
@@ -386,19 +395,25 @@ impl Child {
                 let text = |key: &str| with.get(key).and_then(Value::as_str);
                 match name.as_str() {
                     "say" => {
-                        let images: Vec<String> = with
-                            .get("images")
-                            .and_then(Value::as_array)
-                            .into_iter()
-                            .flatten()
-                            .filter_map(|image| image.as_str().map(str::to_string))
-                            .collect();
+                        #[derive(Deserialize)]
+                        #[serde(rename_all = "camelCase", deny_unknown_fields)]
+                        struct Say {
+                            turn_id: String,
+                            text: String,
+                            #[serde(default)]
+                            session_id: Option<String>,
+                            #[serde(default)]
+                            rig_state: Option<Value>,
+                            #[serde(default)]
+                            images: Vec<String>,
+                        }
+                        let say = Say::deserialize(with).map_err(|error| error.to_string())?;
                         self.session.say(
-                            text("turnId").ok_or("say needs turnId")?,
-                            text("text").ok_or("say needs text")?,
-                            text("sessionId"),
-                            None,
-                            &images,
+                            &say.turn_id,
+                            &say.text,
+                            say.session_id.as_deref(),
+                            say.rig_state.as_ref(),
+                            &say.images,
                             now_ms,
                         )
                     }
@@ -463,7 +478,8 @@ pub fn run(script: &Script) -> Result<(), Fault> {
     play(script, &mut Child::new(&script.capabilities))
 }
 
-/// Plays `script` to `child` against the stand-in host, in memory. Every frame the child
+/// Plays `script` to `child` against the stand-in host, in memory. The caller makes `child`
+/// an end that says the script's `capabilities` in its hello. Every frame the child
 /// sends and everything its shell is handed must be a step, in order: nothing may be waiting
 /// when the script moves on to the next thing that happens, and nothing left over at the end.
 /// `close` and `http` steps ask the child core what it would do, not `child`: an end checks

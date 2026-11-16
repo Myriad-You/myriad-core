@@ -207,6 +207,18 @@ fn the_stand_in_host_holds_the_child_to_the_links_numbering() {
             .unwrap_err()
             .contains("not a frame a child sends")
     );
+    // The same frame not in its one byte form.
+    let loose = "{ \"t\":\"ping\", \"v\":1, \"seq\":2, \"ack\":1, \"at\":0, \"body\":{} }";
+    assert!(
+        host.takes(&any, loose)
+            .unwrap_err()
+            .contains("one byte form")
+    );
+    // A frame that is not what the step asks leaves the host where it was.
+    let before = host.clone();
+    let other = json!({ "t": "pong", "seq": "$n" });
+    assert!(host.takes(&other, &frame("ping", 2, 1, json!({}))).is_err());
+    assert_eq!(host, before);
     // An ack that goes back.
     host.takes(&any, &frame("ping", 2, 1, json!({}))).unwrap();
     assert!(
@@ -236,6 +248,14 @@ fn the_stand_in_child_holds_a_host_to_the_contract_and_the_numbering() {
         "capabilities": [], "turns": [], "serverTime": T0, "sync": "off",
     });
     let mut child = Child::new(&[]);
+    assert!(
+        child
+            .act(
+                &json!({ "say": { "turnId": "t", "text": "x", "sesionId": "typo" } }),
+                T0
+            )
+            .is_err()
+    );
     child.act(&json!("connect"), T0).unwrap();
     // Acking more than the child sent, a seq that skips, a frame only a child sends, and one
     // the contract refuses.
