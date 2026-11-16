@@ -318,7 +318,7 @@ func step(_ event: JSON) throws {
 
 - 某一步失败（`bad_input` 之类）时没有新状态：留着旧的，不要清掉，也不要拿错误的回答去换。
 - JSON 库把所有数都当双精度的端（把 3 写成 `3.0` 的那种），两个调用都带上 `text: true`。带了以后：状态改为一段 JSON 文本、装在字符串里交回，原样存着、原样传回，不要解码；`event` 里写成 `4.0` 的整数，核心先读回 `4` 再拼帧。原因：待发的帧的正文是原样留着、原样发出去的，而主机只从整数读计数，`"spokenChars": 4.0` 它不认。不带 `text` 的端要自己保证交进来的整数不带小数点，状态也不能经这种库解码再编码。`now`、关闭码这些调用自己的数，带不带 `text` 写成 `3.0` 都认（`now` 写成双精度时不能超过 2^53 微秒）。
-- `event`：`"connected"`、`"disconnected"`、`"tick"`、`{received: 文本}`，以及外壳做的事：`{say: {turnId, text, sessionId?, rigState?, images?}}`、`{presence: body}`、`{observePlayback: {runId, upcomingText, rig}}`、`{endPlayback: {runId}}`、`{delivered: {id, body}}`、`{appraiseTouch: {touchId, touch, rigState?}}`、`{touched: {touchId, touch}}`、`{wear: {outfitId}}`、`{setCapabilities: [..]}`（下一次 hello 用）。
+- `event`：`"connected"`、`"disconnected"`、`"tick"`、`{received: 文本}`，以及外壳做的事：`{say: {turnId, text, sessionId?, rigState?, images?}}`、`{presence: body}`、`{observePlayback: {runId, upcomingText, rig}}`、`{endPlayback: {runId}}`、`{delivered: {id, body}}`、`{appraiseTouch: {touchId, touch, rigState?}}`、`{touched: {touchId, touch}}`、`{wear: {outfitId}}`、`{setCapabilities: [..]}`（下一次 hello 用）；主机调来的事：`{callDone: {callId, result, blobs?}}`、`{callFailed: {callId, code}}`、`{callProgress: {callId, phase, waiting?}}`、`{callPiece: {callId, piece}}`、`{callsLost: [{callId, action, version}]}`。
 - `outputs` 里每一项是 `{send: 文本}`、`{deliver: {kind, …}}` 或 `{drop: {why, …}}`。字段是 camelCase；没有值的字段是 `null`，不会缺。`phase`（`closed`、`greeting`、`open`）给界面显示连没连上用。`hostCapabilities` 是主机接受了这一端的哪些能力。
 - `deliver` 按 `kind`（定义在 `crates/myriad-link-child/src/wire.rs`，Rust 的 `Delivery` 是同一批）：
 
@@ -339,6 +339,8 @@ func step(_ event: JSON) throws {
   | `conversations` | `sessions` | 最近的对话 |
   | `conversation` | `session` | 其中一场变了 |
   | `notice` | `body` | 一条通知 |
+  | `call` | `callId`、`action`、`version`、`args`、`for`、`deadlineAt` | 主机要这一端做一件事，已经过了会话的检查。先把前三样写到盘上再做，做完用 `callDone` 或 `callFailed` 答一次 |
+  | `call_stop` | `callId`、`why` | 停下这个调用：`cancelled`（主机不要了）或 `timeout`（到期了）。会话已经替外壳答过主机 |
   | `host_versions` | `body` | 主机自己的 `link.versions`：它的契约版本、核心、app、动作。给主人看、和自己的对照 |
   | `verdict` | `usable`、`stopped` | 主机读了这一端的版本后的结论（`link.verdict`）：`full`、`partial`（`stopped` 列出这条连接不带的东西）或 `refused`（主机随后关掉连接）。给主人看 |
   | `granted` | `actions`、`providing`，各是 `[{name, version}]` | 现在能调什么（`call.granted`）：`actions` 是这一端报的动作里主人批准了、此刻也授予的；`providing` 是主机自己的、这一端可以调的。以最新一次为准 |
@@ -349,6 +351,7 @@ func step(_ event: JSON) throws {
 - `drop` 的 `why`、`link.child_after` 里 `down.why` 是同一批：`network`、`silent`（没等到心跳或 welcome）、`host_unavailable`、`no_owner`、`replaced`（同一设备的另一条连接顶替了）、`unsupported_protocol`（要更新）、`refused_handshake`、`host_moved`（多一项 `device`：她现在住的那台的名字或 `null`）、`host_frozen`（她在搬家）、`redirected`、`unsupported_site`、`removed`（多一项 `removal`）。`removal` 是 `revoked`、`owner_changed`、`token_unknown`。
 - 状态是一段不透明的 JSON，只在进程里拿着就行（进程没了连接也没了）。它里面有主人说了还没被确认的话，所以要落盘的话，放在这一端放那些话的地方。落了盘的状态跨得过升级：契约管的那几项（协议号、能力名）恢复时按新的契约重写。里面的计数和时间都是不超过 2^53 的整数；`moodRevision` 是主机给的数，原样留着，不一定是整数。格式不对、数出了界、hello 里的东西不像样的状态是 `bad_input`，不会带着错的数往下走。`now` 也有界：早于纪元、或毫秒数超过 2^53 的是 `bad_input`，所以一步不会留下下一步不认的状态。
 - 关闭和重连：`link.child_after`。套接字关了给 `{close: {code?, reason?}}`（两样都没有就给 `{close: {}}`），升级被拒给 `{http: {status, body?}}`（`body` 是主机答的 JSON，读不出来就不给）。带上 `attempt`（第几次重试，从 0 起），答 `reconnect` 时一并给出 `backoffMs`。`code` 写成字符串之类的是 `bad_input`，不会被当成不认识的关闭码。
+- 状态里还留着最近答过的 64 个调用的结果（同一个调用再问时照原样答），结果大的话状态也跟着大；下面的数是没有调用时量的。
 - **开销**（M 系列笔记本，release，状态出去再回来一次）：平常约 1 KB、0.03 到 0.04 毫秒；留满 64 个回合和 256 个已收 id 时约 33 KB、0.3 到 0.45 毫秒；最坏是断线时待发箱里压着带图的话，4 句各两张图约 1 MB、1.6 到 2.3 毫秒。最坏的情形只在重连后的头几步出现（发出去、被确认后就没了），断线期间没有帧进来。真要压低它，改法是把待发箱里的正文留在外壳、状态里只放 id，等有一端量出这确实是问题再做。
 
 ### 版本和能做的事（一端按能力名调另一端，第一步）
@@ -361,7 +364,31 @@ func step(_ event: JSON) throws {
 - 主机拒绝这条连接时（`verdict` 的 `usable` 是 `refused`），随后的关闭码是 `unsupported_protocol`。给主人的话以先到的 `verdict` 为准：是这一端和主机对不上，不一定是「站点该更新了」。
 - **报能做的事**：列 `calls`，并给出这一端会做的动作（Rust：`session.offer(&[(name, version)])`；C 入口：`link.child_new` 的 `offers`）。只留契约目录里有、版本对得上、而且是子机做的（`by: child`）；别的不报。主机也接受了 `calls` 的连接上，每次 `welcome` 之后会话发 `call.offer`。主人批准了哪些、主机提供哪些，以 `granted` 交付。
 - 报的是「会做」，不是「主人允许」：允许与否是主机那边按设备记的，以 `granted` 为准。
-- **还没有**：主机真的来调（`call.ask`）时会话还不读，声明了 `calls` 的端，`link.child_claims` / `capabilities::unread` 会把 `call.ask` 等列出来，这是如实的。
+
+**主机来调这一端**（`call.ask`）。会话统一做掉的：
+
+- 确认，并按 `callId` 去重：同一个调用重发过来，不会第二次交给外壳；已经答过的，照原样再答一遍。
+- 只在两边都列了 `calls` 的连接上读；别的连接上的 `call.ask` 照不认识的帧放过。
+- 不该这一端做的，当场替外壳答掉，不打扰外壳：没报过的动作（`call_unknown`）、版本不对（`version_unsupported`，并说出这一端做的是哪一版）、这个动作不是给这个对象的（`wrong_audience`）、主机没说现在授予它（`call_not_granted`）、到的时候已经过期（`call_timeout`）。交到外壳手里的调用过了这几样；这一端自己的授予、勿扰、要不要问主人，仍是外壳的事。
+- **授予只认这条连接上主机说的。** 每条新连接上，主机发来这条连接的第一个 `call.granted` 之前，到达的调用（包括主机重发的）先搁着：确认收到，但不交给外壳，也不答。`call.granted` 一到，逐个按它判：授予的交给外壳，没授予的答 `call_not_granted`。所以主人在断线期间收回的动作，重连后不会按旧的授予去做；主机重发的、子机没收到过的调用，也不会被误答成没授予。搁着的调用照样受自己的期限管（过期答 `call_timeout`），可以被取消（答 `call_cancelled`）；外壳没接过它，所以没有 `call_stop`。搁着时连接断了，它接着等下一条连接上主机的话。已经交到外壳手里的调用，之后主机把授予收窄了也照做完：授予管的是「调」的那一刻。授予只在两边都列了 `calls` 的连接上算数。
+- 同一个调用还在做的时候又被问到（主机没收到上一次的确认）：只确认，不再交给外壳；长动作再说一次接下了。
+- 期限：`deadlineAt` 是主机的钟。会话在每次 `welcome` 记下主机的钟比外壳给的时间快多少，之后按主机的钟算。到期还没答的，会话让外壳停下（`call_stop`，`why` 是 `timeout`）并替它答 `call_timeout`。连接断着也照算，所以断线时也要照常 `tick`。
+- 长动作（契约里 `long` 的）一交给外壳，会话就发 `call.accepted`。
+- 主机取消（`call.cancel`）：让外壳停下（`call_stop`，`why` 是 `cancelled`）并答 `call_cancelled`。
+- 结果是可靠帧，没被确认就留着，重连后再发。
+
+外壳做的：
+
+- 拿到 `call` 交付后，**先把 `callId`、`action`、`version` 写到盘上，再开始做**。做完交回一次：`call_done`（带结果的字段，大块数据先传到主机、这里只带它的 id）或 `call_failed`（契约 `calls.failCodes` 里的一个：主人在设备上拒了或没理是 `declined`，勿扰是 `not_now`，这一端自己的授予不让是 `call_not_granted`，出错是 `internal_error`）。答完把盘上那一条划掉。
+- 结果不合契约里这个动作的字段时，会话交回 `unsent` 并替外壳答 `internal_error`，主机不会干等。
+- 长动作做到哪了用 `call_progress`（阶段名，不是内容；在等主人时 `waiting` 给 `true`），分段的结果用 `call_piece`。这两样只在连着时发，断线时不留；分段的序号照数，主机从序号的空档看得出丢了几段。
+- 拿到 `call_stop` 就停下。之后再对这个调用说什么，会话都不发，交回 `unsent`。
+- 回合 id 和别的可靠帧的 id 不要以 `.result` 结尾：那是调用的答复用的，会话不收。
+- 进程重启后、从落盘的状态接着用时（不是 C 入口每一步传回的那一份），先 `disconnected`，再做别的：存下来时那条连接已经没了，它上面的授予不能接着用。
+- **进程重启后**，把盘上还没划掉的那些交回会话（Rust：`session.lost(&[(callId, action, version)])`；C 入口：事件 `callsLost`）。会话对每一个答 `unknown`（「不知道做没做」，这是实话），以后主机用同一个 `callId` 再问、再取消，都照答 `unknown`，不会再交给外壳做一遍。会话的状态是不是留着都一样：留着的状态里它还算「在做」，交回以后才改成 `unknown`。要在连上之前交回：连上以后主机重发的调用先到的话，一个新建的会话不认得这个 id，会把它当新的交给外壳。没有例外：只读的动作也一样。主机要不要再看一次，是它用新 `callId` 做的新决定。
+- 一句话的次序：**先写后做，做完再划；重启先交回，再连。**
+
+- **还没有**：这一端去调主机（`call.ask` 往上发）和 stream。声明了 `calls` 的端，`link.child_claims` / `capabilities::unread` 会把 `call.accepted`、`call.event`、`call.progress`、`call.result` 列出来（那是主机答这一端的调用时发的），这是如实的。
 
 ### 能力清单要是真的
 
@@ -372,7 +399,7 @@ func step(_ event: JSON) throws {
 - `idle` 列出声明了也不起作用的：主机今天不读的（`rig`、`voice.out`、`panel`、`pi`、`cua`），和少了搭档的（`reminders` 要有 `notify`，`cards` 要有 `conversations.live`）。
 - 这张「能力带来哪些帧」的表在 `myriad-link-child` 的 `capabilities` 里，是照契约的描述和主机今天的开关写的，还没进契约。
 
-会话今天读的下行帧是 `Session::READS` 那些（握手、回合、`perform`、`mood`、`say`、`outfit`、`wardrobe`、`touch.reaction`、`conversations`、`conversation`、`notice`、`error`，以及 `link.versions`、`link.verdict`、`call.granted`）。电脑上才有的那些（`act.*`、`proposals`、`nodes`、`experience.*`、`moment.*`、`now.*`、`card.*`）它还不读：声明了这些能力的端，`unread` 会把它们列出来。
+会话今天读的下行帧是 `Session::READS` 那些（握手、回合、`perform`、`mood`、`say`、`outfit`、`wardrobe`、`touch.reaction`、`conversations`、`conversation`、`notice`、`error`，以及 `link.versions`、`link.verdict`、`call.granted`、`call.ask`、`call.cancel`）。电脑上才有的那些（`act.*`、`proposals`、`nodes`、`experience.*`、`moment.*`、`now.*`、`card.*`）它还不读：声明了这些能力的端，`unread` 会把它们列出来。
 
 ### 测自己
 
@@ -932,7 +959,7 @@ func step(_ event: JSON) throws {
 上面的对照是一个调用一份输入输出。连接是一来一回的，所以另用剧本：一份剧本是从外面看到的一次连接。`crates/myriad-link-conformance` 在内存里演它，不开套接字、不读时钟（时间是剧本自己的 `at`，从 `T0` 起的毫秒，只增不减）。
 
 - 文件是 `{version, name, about, capabilities, steps}`。`capabilities` 是子机在 hello 里说的能力。每一步恰好是一件事：
-  - `do`：子机的外壳做了什么。`"connect"`、`"disconnect"`、`"tick"`、`{say: {turnId, text, sessionId?, images?}}`、`{delivered: {id, body}}`。
+  - `do`：子机的外壳做了什么。`"connect"`、`"disconnect"`、`"tick"`、`{say: {turnId, text, sessionId?, images?}}`、`{delivered: {id, body}}`，以及主机调来的事：`callDone`、`callFailed`、`callProgress`、`callPiece`、`callsLost`（形状同 `link.child_step` 的事件）。
   - `child`：子机必须发出这一帧，`{t, id?, seq?, ack?, body?}`。
   - `host`：主机发这一帧，`{t, id?, body}`，编号由假主机填，发出去的是它的规范文本。它必须是契约收的、主机发的帧；要造一帧子机读不了的，写明 `unchecked: true`（这时它必须真的过不了契约），可以再用 `envelope` 盖掉信封字段（`{"v": 2}`，`null` 是去掉）。
   - `raw`：主机发一段不是帧的文本。
@@ -940,7 +967,7 @@ func step(_ event: JSON) throws {
   - `close`（`{code?, reason?}`）、`http`（`{status, body?}`，`body` 是主机拒绝升级时答的 JSON，契约 `auth` 的 `{error, code, host?}`）加 `after`：之后子机做什么（重连、停下等主人重试、忘掉凭据）。`after` 要整个相同。
 - 比对：`child`、`deliver`、`drop` 里写了的键都要对上，没写的不管；值写成 `"$absent"` 的键必须没有（给帧用：交付里没有值的字段是 `null`，不会缺）；写成 `"$名字"` 的，第一次出现时记下实际的值，以后必须相同。
 - 顺序是严的：子机发的每一帧、外壳拿到的每一样都必须是剧本里的一步；剧本往下「发生」下一件事（`do`、`host`、`raw`）时，子机不能还有没被对上的输出，演完也不能有剩的。所以「这一下什么都不该发生」也是被检查的。
-- 十份：`handshake`（握手、重连后从 1 编号并带上次的 lineage 和 epoch、等不到 welcome）、`capabilities`（只说契约认识的能力；主机没接受 `images` 就不带图）、`turn`（回合、按序、断线后续传、没确认的 input 重发、确认了没答复的按回合去问）、`reliable`（可靠帧的确认、重发和按 id 去重）、`heartbeat`、`close`（契约的每个关闭码和每种升级被拒；测试保证一个不漏，而且和契约里 `forgetCredentials`、`reconnect` 两个标记一致）、`versions`（版本不合）、`unreadable`（读不了的帧告诉外壳、连接不断）、`offer`（握手后报版本和能做的事，主机的结论和授予交给外壳）、`dropped`（读不了的帧报给主机，一种只报一次）。文件里可以多两项：`offers`（子机会做的动作）和 `core`（它说自己跑的核心），演给自己的端时照着建。
+- 十五份：`handshake`（握手、重连后从 1 编号并带上次的 lineage 和 epoch、等不到 welcome）、`capabilities`（只说契约认识的能力；主机没接受 `images` 就不带图）、`turn`（回合、按序、断线后续传、没确认的 input 重发、确认了没答复的按回合去问）、`reliable`（可靠帧的确认、重发和按 id 去重）、`heartbeat`、`close`（契约的每个关闭码和每种升级被拒；测试保证一个不漏，而且和契约里 `forgetCredentials`、`reconnect` 两个标记一致）、`versions`（版本不合）、`unreadable`（读不了的帧告诉外壳、连接不断）、`offer`（握手后报版本和能做的事，主机的结论和授予交给外壳）、`dropped`（读不了的帧报给主机，一种只报一次）、`called`（主机来调：不该做的当场答掉、该做的交给外壳一次、重复问照原样答、到期）、`called-clock`（期限按主机的钟：主机的钟比外壳给的时间快一小时）、`called-granted`（授予只认这条连接上主机说的：先到的调用搁到 `call.granted` 来再判，断线期间被收回的动作答 `call_not_granted`、外壳没被叫到）、`called-long`（长动作：接下、进度、分段、断线后结果照发、取消）、`called-lost`（重启后交回在做的调用，一律答 `unknown`，不再做）。文件里可以多三项：`offers`（子机会做的动作）、`core`（它说自己跑的核心），演给自己的端时照着建；`hostAheadMs`（假主机的钟比剧本的时间快多少，它发的帧的 `at`、剧本里的 `serverTime` 和期限都按它的钟），Rust 是 `Host::ahead`，经 `conformance.host` 的端第一步给 `host: {"aheadMs": …}`。
 - **子机端测自己**（「我对假主机」）：给自己的连接代码实现 `ChildEnd`（三个方法：外壳做一件事、收到主机的一段文本、取出自己接下来的一个输出），对每份剧本调 `play`（这一端要按剧本的 `capabilities` 建）。`Host` 是假主机：给主机的帧编号、写出文本，并拿子机发来的每一帧对剧本、对契约、对写法（必须是规范文本）、对方向（是不是子机发的帧）、对编号（`seq` 逐一递增，`ack` 不回退、不超过主机发过的）。本仓库的测试用 `run`（就是 `play` 对子机核心自己）演每一份。`close`、`http` 两种步问的是子机核心，不经 `ChildEnd`：一端要查自己怎么处理关闭，用 `after_close`、`after_http` 对自己的结果。输出的先后以这一端自己的连接代码给出的为准；套接字和外壳分两路的端，取出时照剧本的先后合成一路。
 - **主机测自己**（「假子机对我」）：主机答什么是它自己的（它造的 id、一段回复有几个事件），所以剧本不拿去对主机重放。主机在自己的测试里用 `Child`（假子机，就是子机核心）写自己的场景：`Child::act` 让它连上、说话，把它发出的帧送进自己真的连接处理，自己答的每一帧交给 `Child::hears`。`hears` 先查这一帧过不过契约、是不是主机发的帧、编号对不对（`seq` 逐一递增，`ack` 不回退、不超过子机发过的），再让子机核心读；主机再看 `Child` 的输出是不是它想让子机做的。`Child` 不在只给测试编的代码里，也不开套接字：演练环境里给它包一层套接字，就能让真的主机对它跑。主机发的帧是不是规范文本 `hears` 不查（契约说每帧只有一种写法，主机今天是不是都这样发还没核过）。
 - 两个替身都不是她：假主机只照剧本答。

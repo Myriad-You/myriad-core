@@ -206,13 +206,19 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
 /// microseconds since the epoch (her link's own frames, and `myriad_link_child` used from
 /// Rust, count milliseconds: a caller that passes those here is not told, and the heartbeat
 /// goes wrong). `event` is `"connected"` (the socket is up),
-/// `"disconnected"`, `"tick"` (call it several times a heartbeat while the socket is up),
+/// `"disconnected"`, `"tick"` (call it several times a heartbeat; also while the socket is down when the end
+/// may have calls in hand, whose deadlines pass all the same),
 /// `{received: text}` (a text frame from her host), or something the shell does:
 /// `{say: {turnId, text, sessionId?, rigState?, images?}}`, `{presence: body}`,
 /// `{observePlayback: {runId, upcomingText, rig}}`, `{endPlayback: {runId}}`,
 /// `{delivered: {id, body}}`, `{appraiseTouch: {touchId, touch, rigState?}}`,
 /// `{touched: {touchId, touch}}`, `{wear: {outfitId}}`, `{setCapabilities: [..]}` (for the
-/// next hello). `outputs` is what the shell does now, in order: `{send: text}`,
+/// next hello); and of a call her host asked this end to do (a `call` delivery):
+/// `{callDone: {callId, result, blobs?}}`, `{callFailed: {callId, code}}`,
+/// `{callProgress: {callId, phase, waiting?}}` (`waiting` is true while it waits for the
+/// owner on the device), `{callPiece: {callId, piece}}`, and
+/// `{callsLost: [{callId, action, version}]}` for calls it had in hand when it was
+/// restarted, handed back before `"connected"`. `outputs` is what the shell does now, in order: `{send: text}`,
 /// `{deliver: {kind, …}}`, `{drop: {why, …}}` (close the socket). `phase` is `closed`,
 /// `greeting` or `open`. `hostCapabilities` is what her host accepted of this end's
 /// capabilities in its last welcome (empty before a first, and from a new connection's
@@ -264,6 +270,42 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
     }
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct CallDone {
+        call_id: String,
+        result: Value,
+        #[serde(default)]
+        blobs: Vec<String>,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct CallFailed {
+        call_id: String,
+        code: String,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct CallProgress {
+        call_id: String,
+        phase: String,
+        #[serde(default)]
+        waiting: bool,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct CallPiece {
+        call_id: String,
+        piece: Value,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct Lost {
+        call_id: String,
+        action: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
     enum Event {
         Connected,
         Disconnected,
@@ -278,6 +320,11 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         Touched(Touch),
         Wear(Wear),
         SetCapabilities(Vec<String>),
+        CallDone(CallDone),
+        CallFailed(CallFailed),
+        CallProgress(CallProgress),
+        CallPiece(CallPiece),
+        CallsLost(Vec<Lost>),
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -338,6 +385,19 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
             let capabilities: Vec<&str> = capabilities.iter().map(String::as_str).collect();
             session.set_capabilities(&capabilities);
             Vec::new()
+        }
+        Event::CallDone(done) => session.call_done(&done.call_id, &done.result, &done.blobs, now),
+        Event::CallFailed(failed) => session.call_failed(&failed.call_id, &failed.code, now),
+        Event::CallProgress(progress) => {
+            session.call_progress(&progress.call_id, &progress.phase, progress.waiting, now)
+        }
+        Event::CallPiece(piece) => session.call_piece(&piece.call_id, &piece.piece, now),
+        Event::CallsLost(lost) => {
+            let lost: Vec<(&str, &str, u64)> = lost
+                .iter()
+                .map(|call| (call.call_id.as_str(), call.action.as_str(), call.version))
+                .collect();
+            session.lost(&lost, now)
         }
     };
     Ok(json!({
