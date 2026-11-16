@@ -401,13 +401,23 @@ fn check_result(frame: &Value, body: &Value) -> Result<(), Refusal> {
     Ok(())
 }
 
-/// `call.progress`: its phase is a stage name, never content.
+/// `call.progress`: its phase is a stage name, never content, and what it
+/// waits for, if anything, the owner.
 fn check_progress(body: &Value) -> Result<(), Refusal> {
     check_call_id(body)?;
     if !body["phase"].as_str().is_some_and(valid_id) {
         return Err(refuse(
             "bad_frame",
             "call.progress's phase is a stage name (limits.idPattern)",
+        ));
+    }
+    if body
+        .get("waiting")
+        .is_some_and(|waiting| waiting != "owner")
+    {
+        return Err(refuse(
+            "bad_frame",
+            "call.progress waits only for the owner",
         ));
     }
     Ok(())
@@ -659,6 +669,9 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
         "call.ask" => check_ask(frame, body)?,
         "call.result" => check_result(frame, body)?,
         "call.progress" => check_progress(body)?,
+        "call.accepted" | "call.event" | "call.cancel" => {
+            check_call_id(body)?;
+        }
         _ => {}
     }
     Ok(Checked {

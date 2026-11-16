@@ -292,6 +292,12 @@ fn a_call_is_allowed_only_for_whom_its_action_says() {
             );
         }
         assert!(spec.blob <= spec.long, "{name}: a blob waits for the owner");
+        for (field, list) in spec.args.enums.iter().chain(&spec.result.enums) {
+            assert!(
+                raw[list.as_str()].is_array() && super::named_list(list).is_some(),
+                "{name}.{field}: {list} is a list the rules read"
+            );
+        }
         assert!(action["description"].is_string(), "{name}");
     }
     for group in calls_default_approved() {
