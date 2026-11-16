@@ -461,7 +461,7 @@
     }
   },
   "screenFields": {
-    "description": "The one list of what a look at the owner's screen may say, wherever it goes: a presence perception row of kind screen, a moment of kind agent.merope.screen (moments), screen.look's result and input.glance. facts are the only keys its facts may have (screen_text the text of an app that is not a chat, as the child's filters let it through; consented, pixels and observed only on the row that says the owner allowed looking); a host deletes any other it finds and counts, per frame type and key, how many times (never the value). summary is what its one line of text may be.",
+    "description": "The one list of what a look at the owner's screen may say, wherever it goes: a presence perception row of kind screen, a moment of kind agent.merope.screen (moments), screen.look's result and input.glance. facts are the only keys its facts may have (screen_text the text of an app that is not a chat, as the child's filters let it through, only on a presence row or in screen.look's result and input.glance: a moment's facts never carry it, its text is in the summary there (moments.factKey refuses text); consented, pixels and observed only on the row that says the owner allowed looking); a host deletes any other it finds and counts, per frame type and key, how many times (never the value). summary is what its one line of text may be.",
     "facts": [
       "app",
       "window_title",
@@ -481,7 +481,7 @@
       "pixels",
       "observed"
     ],
-    "summary": "For a chat window, only who the owner is talking with and about what: never what anyone else wrote there. For any other app, the app, the window and what of its text the child's filters let through. A host keeps only the first line of the summary of a presence screen row whose facts carry who: a child from before put others' words after it."
+    "summary": "For a chat window, only who the owner is talking with and about what: never what anyone else wrote there. For any other app, the app, the window and what of its text the child's filters let through. A host keeps only the first line of the summary of a presence screen row whose facts carry who, and deletes its screen_text: a child from before put others' words after it."
   },
   "streams": {
     "description": "Every stream.state frame (only its newest value counts) and stream.event frame (each one kept and acked) names one of these, with the version of its value or body; from now on a new thing told as it changes, or as it happens, is one of these, not a frame of its own. Only on a link where both ends listed the capability streams. Each says who sends it, which audience it belongs to, and its fields, checked like an action's. The core checks only that name matches limits.idPattern and version is at least 1; an end ignores a name or version it has not registered.",
@@ -880,7 +880,7 @@
       "delivery": "reliable",
       "idempotency": "id is the callId: made by the caller once, the same on every resend.",
       "required": ["callId", "action", "version", "args", "for", "deadlineAt"],
-      "description": "Ask the other end to do action (calls) at version with args; callId is the frame's id, at most 57 characters so that its result's id (callId.result) fits limits.idPattern, for for ({kind, groupId?}: kind one of callAudiences, groupId only and always for group), answered by deadlineAt at the latest, milliseconds since the epoch: at most callDeadlineMaxMs after the frame's at, longCallMaxMs for a long action. A resend carries the same deadlineAt, so an ask that comes after it is answered call_timeout and not done, and a long action still running then is stopped and answered call_timeout. The caller counts it call_timeout a minute after deadlineAt; a result that comes later is still what happened, and she is told it did after all, but no end does it again. The caller checks for first (calls); the receiver checks it again, and answers every ask with one call.result."
+      "description": "Ask the other end to do action (calls) at version with args; callId is the frame's id, at most 57 characters so that its result's id (callId.result) fits limits.idPattern, for for ({kind, groupId?}: kind one of callAudiences, groupId only and always for group), answered by deadlineAt at the latest, milliseconds since the epoch (never seconds: at least 10^12), which a child reads by its clock as set right by welcome.serverTime: at most callDeadlineMaxMs after the frame's at, longCallMaxMs for a long action. A resend carries the same deadlineAt, so an ask that comes after it is answered call_timeout and not done, and a long action still running then is stopped and answered call_timeout. The caller counts it call_timeout a minute after deadlineAt; a result that comes later is still what happened, and she is told it did after all, but no end does it again. The caller checks for first (calls); the receiver checks it again, and answers every ask with one call.result."
     },
     "call.accepted": {
       "from": "either",

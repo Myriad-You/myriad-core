@@ -160,6 +160,10 @@ fn named_list(name: &str) -> Option<&'static [String]> {
 /// matches `limits.idPattern`.
 const CALL_ID_CHARS: usize = 64 - ".result".len();
 
+/// The earliest a time in milliseconds since the epoch may be (2001): one
+/// below it was written in seconds.
+const EPOCH_MS_FLOOR: u64 = 1_000_000_000_000;
+
 static CONTRACT: LazyLock<Contract> =
     LazyLock::new(|| serde_json::from_str(CONTRACT_JSON).expect("her_link_contract.json"));
 
@@ -299,11 +303,11 @@ fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
     let at = frame["at"].as_u64().unwrap_or(0);
     if !body["deadlineAt"]
         .as_u64()
-        .is_some_and(|by| by >= 1 && by <= at.saturating_add(most))
+        .is_some_and(|by| by >= EPOCH_MS_FLOOR && by <= at.saturating_add(most))
     {
         return Err(refuse(
             "bad_frame",
-            format!("call.ask's deadlineAt is at most {most} ms after its at"),
+            format!("call.ask's deadlineAt is milliseconds, at most {most} after its at"),
         ));
     }
     match spec {
