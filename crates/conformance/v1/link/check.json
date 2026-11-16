@@ -2680,6 +2680,128 @@
           "code": "bad_frame"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_frame",
+              "t": "unnamed"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_unnamed",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a dropped frame whose type was not a frame type is told as unnamed",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"at\":1760141100000,\"body\":{\"reason\":\"bad_frame\",\"t\":\"unnamed\"},\"name\":\"link.dropped\",\"version\":1},\"id\":\"drop_unnamed\",\"seq\":17,\"t\":\"stream.event\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "stream",
+          "t": "stream.event"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_sealed",
+              "t": "lease.yield"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_sealed",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame told with the code the core refused it with",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "t": "say"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_noreason",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame with no reason",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": 3,
+              "t": "say"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_reason3",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame whose reason is not a word",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
     }
   ],
   "version": 1
