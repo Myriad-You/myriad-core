@@ -92,6 +92,29 @@ pub const RULES: &[Rule] = &[
     // Her host takes an `act.result` whatever the link said: a run may end after the switch
     // was turned off.
     frames("act", &[], &["act.result"], &["act.cancel", "act.request"]),
+    // One end asking another to do one thing for her (calls); the frames go both ways.
+    frames(
+        "calls",
+        &[],
+        &[
+            "call.accepted",
+            "call.ask",
+            "call.cancel",
+            "call.event",
+            "call.offer",
+            "call.progress",
+            "call.result",
+        ],
+        &[
+            "call.accepted",
+            "call.ask",
+            "call.cancel",
+            "call.event",
+            "call.granted",
+            "call.progress",
+            "call.result",
+        ],
+    ),
     frames(
         "cards",
         &["conversations.live"],
@@ -107,6 +130,8 @@ pub const RULES: &[Rule] = &[
         &["experience", "work.recall"],
         &["experience.taken", "work.recalled"],
     ),
+    // `input.glance`: what the child saw on the screen as the owner spoke.
+    bare("glance", Kind::Fields),
     bare("images", Kind::Fields),
     // Lent only to the end that holds her pen, so these do not flow while that is her host.
     frames(
@@ -155,10 +180,22 @@ pub const RULES: &[Rule] = &[
     bare("rig", Kind::Unheeded),
     frames("say", &[], &[], &["say"]),
     frames(
+        "streams",
+        &[],
+        &["stream.event", "stream.state"],
+        &["stream.event", "stream.state"],
+    ),
+    frames(
         "touch",
         &[],
         &["touch", "touch.appraise"],
         &["touch.reaction"],
+    ),
+    frames(
+        "versions",
+        &[],
+        &["link.versions"],
+        &["link.verdict", "link.versions"],
     ),
     bare("voice.in", Kind::Fields),
     bare("voice.out", Kind::Unheeded),

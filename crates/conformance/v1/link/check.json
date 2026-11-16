@@ -1433,6 +1433,994 @@
           "code": "too_many"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "unknown",
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 5,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a work.run whose outcome is unknown: the Mac lost track midway",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"unknown\",\"version\":1},\"id\":\"call_work_0123456789ab.result\",\"seq\":5,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "status": "completed"
+            },
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 6,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a work.run done says only how it ended",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"done\",\"result\":{\"status\":\"completed\"},\"version\":1},\"id\":\"call_work_0123456789ab.result\",\"seq\":6,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "status": "completed",
+              "summary": "桌面上的 12 张截图都移到「截图」文件夹了。"
+            },
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 7,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a work.run result that carries what was done",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "unknown",
+            "result": {
+              "status": "completed"
+            },
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 8,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: an unknown outcome that still carries a result",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "error": {
+              "code": "busy_now"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 9,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a failed call with a code the contract does not name",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "camera.take",
+            "callId": "call_cam_0123456789ab",
+            "error": {
+              "code": "declined"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_cam_0123456789ab.result",
+          "seq": 10,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a call the owner declined on the device",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"camera.take\",\"callId\":\"call_cam_0123456789ab\",\"error\":{\"code\":\"declined\"},\"outcome\":\"failed\",\"version\":1},\"id\":\"call_cam_0123456789ab.result\",\"seq\":10,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {
+              "windowText": true
+            },
+            "callId": "call_look_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789a",
+          "seq": 11,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a screen.look asked with an arg it does not take",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "group.read",
+            "args": {},
+            "callId": "call_grp_0123456789ab",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "group"
+            },
+            "version": 1
+          },
+          "id": "call_grp_0123456789ab",
+          "seq": 12,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call for a group that names no group",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.record",
+            "args": {
+              "seconds": 5
+            },
+            "callId": "call_new_0123456789ab",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_new_0123456789ab",
+          "seq": 13,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "an action from a newer end passes, for its receiver to answer call_unknown",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.record\",\"args\":{\"seconds\":5},\"callId\":\"call_new_0123456789ab\",\"deadlineAt\":1760141110000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_new_0123456789ab\",\"seq\":13,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "error": {
+              "code": "host_frozen"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 14,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a failed call with a code that is not one a call fails with",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "status": "cancelled"
+            },
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 15,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a work.run done as cancelled: a stopped run is failed, not done",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "groupId": "",
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call for the owner that names a group",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "callId": "call_work_0123456789ab",
+            "phase": "正在把截图移到文件夹"
+          },
+          "seq": 17,
+          "t": "call.progress",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a phase that says what is being done",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.record",
+            "callId": "call_new_0123456789ab",
+            "outcome": "unknown",
+            "version": 1
+          },
+          "id": "call_new_0123456789ab.result",
+          "seq": 18,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: an action this end does not know cannot end unknown",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789c",
+            "deadlineAt": 1760141220000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789c",
+          "seq": 19,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a screen.look that asks to wait as long as only a long call may",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789d",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_other",
+          "seq": 20,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call.ask whose id is not its callId",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "callId": "call_look_0123456789e",
+            "outcome": "done",
+            "result": {
+              "facts": {
+                "app": "Xcode"
+              },
+              "region": "left"
+            },
+            "version": 2
+          },
+          "id": "call_look_0123456789e.result",
+          "seq": 21,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a done result at a version this end does not know passes for the ends to read",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.look\",\"callId\":\"call_look_0123456789e\",\"outcome\":\"done\",\"result\":{\"facts\":{\"app\":\"Xcode\"},\"region\":\"left\"},\"version\":2},\"id\":\"call_look_0123456789e.result\",\"seq\":21,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 1760141040000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a call.ask that comes after its deadline passes, for its receiver to answer call_timeout",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.look\",\"args\":{},\"callId\":\"call_look_0123456789b\",\"deadlineAt\":1760141040000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_look_0123456789b\",\"seq\":16,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "args": {
+              "instruction": "把桌面上的截图移到「截图」文件夹",
+              "proposalId": "int_1123456789abcdef0123456789abcdef",
+              "title": "收截图"
+            },
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 1760142900000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a long work.run may wait up to longCallMaxMs",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"args\":{\"instruction\":\"把桌面上的截图移到「截图」文件夹\",\"proposalId\":\"int_1123456789abcdef0123456789abcdef\",\"title\":\"收截图\"},\"callId\":\"call_look_0123456789b\",\"deadlineAt\":1760142900000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_look_0123456789b\",\"seq\":16,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "args": {
+              "instruction": "把桌面上的截图移到「截图」文件夹",
+              "maxRunMs": 1800000,
+              "proposalId": "int_1123456789abcdef0123456789abcdef",
+              "title": "收截图"
+            },
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 1760142900000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a work.run that still names maxRunMs",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call whose callId is one character too long",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "stranger"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call for a kind of audience the contract does not name",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineMs": 10000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call.ask with a deadline relative to now",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "callId": "call_look_0123456789e",
+            "error": {
+              "code": "internal_error"
+            },
+            "outcome": "done",
+            "result": {
+              "facts": {
+                "app": "Xcode"
+              },
+              "summary": "Xcode"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789e.result",
+          "seq": 21,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a done call that also carries an error",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "callId": "call_look_0123456789e",
+            "error": {
+              "code": "internal_error"
+            },
+            "outcome": "failed",
+            "result": {
+              "facts": {
+                "app": "Xcode"
+              },
+              "summary": "Xcode"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789e.result",
+          "seq": 21,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a failed call that also carries a result",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "blobs": [
+              "blob_0123456789abcdef"
+            ],
+            "callId": "call_look_0123456789e",
+            "outcome": "done",
+            "result": {
+              "facts": {
+                "app": "Xcode"
+              },
+              "summary": "Xcode"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789e.result",
+          "seq": 21,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: blobs on an action that has none",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "error": {
+              "code": "declined"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 21,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a work.run stopped by the owner on the device is declined",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"error\":{\"code\":\"declined\"},\"outcome\":\"failed\",\"version\":1},\"id\":\"call_work_0123456789ab.result\",\"seq\":21,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "callId": "call_work_0123456789ab",
+            "phase": "confirming",
+            "waiting": "group"
+          },
+          "seq": 17,
+          "t": "call.progress",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call that waits for someone other than the owner",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "name": "what she sees now",
+            "value": {},
+            "version": 1
+          },
+          "seq": 17,
+          "t": "stream.state",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a stream state whose name is not an id",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140802000,
+          "body": {
+            "glance": {
+              "facts": {
+                "app": "Xcode",
+                "window_title": "Pen.swift"
+              },
+              "summary": "Xcode · Pen.swift"
+            },
+            "images": [
+              "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBARXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/+ICGElDQ19QUk9GSUxFAAEBAAACCAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAABkclhZWgAAAVQAAAAUZ1hZWgAAAWgAAAAUYlhZWgAAAXwAAAAUd3RwdAAAAZAAAAAUclRSQwAAAaQAAAAoZ1RSQwAAAaQAAAAoYlRSQwAAAaQAAAAoY3BydAAAAcwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAABGAAAAHABEAGkAcwBwAGwAYQB5ACAAUAAzACAARwBhAG0AdQB0ACAAdwBpAHQAaAAgAHMAUgBHAEIAIABUAHIAYQBuAHMAZgBlAHIAAFhZWiAAAAAAAACD3gAAPb7///+7WFlaIAAAAAAAAEq+AACxNgAACrlYWVogAAAAAAAAKDsAABEMAADIzVhZWiAAAAAAAAD21gABAAAAANMtcGFyYQAAAAAABAAAAAJmZgAA8qcAAA1ZAAAT0AAAClsAAAAAAAAAAG1sdWMAAAAAAAAAAQAAAAxlblVTAAAAIAAAABwARwBvAG8AZwBsAGUAIABJAG4AYwAuACAAMgAwADEANv/AABEIAAIAAgMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2wBDAAQEBAQEBAYEBAYJBgYGCQwJCQkJDA8MDAwMDA8SDw8PDw8PEhISEhISEhIVFRUVFRUZGRkZGRwcHBwcHBwcHBz/2wBDAQQFBQcHBwwHBwwdFBAUHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR3/3QAEAAH/2gAMAwEAAhEDEQA/AKpvr3P/AB8Sf99n/Gj7de/8/En/AH2f8arHrSV6BJ//2Q=="
+            ],
+            "sessionId": "sess_1",
+            "surface": "app",
+            "text": "你看。"
+          },
+          "id": "t_03",
+          "seq": 3,
+          "t": "input",
+          "v": 1
+        }
+      },
+      "name": "an input that brings what was on the screen as the owner spoke",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140802000,\"body\":{\"glance\":{\"facts\":{\"app\":\"Xcode\",\"window_title\":\"Pen.swift\"},\"summary\":\"Xcode · Pen.swift\"},\"images\":[\"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBARXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/+ICGElDQ19QUk9GSUxFAAEBAAACCAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAABkclhZWgAAAVQAAAAUZ1hZWgAAAWgAAAAUYlhZWgAAAXwAAAAUd3RwdAAAAZAAAAAUclRSQwAAAaQAAAAoZ1RSQwAAAaQAAAAoYlRSQwAAAaQAAAAoY3BydAAAAcwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAABGAAAAHABEAGkAcwBwAGwAYQB5ACAAUAAzACAARwBhAG0AdQB0ACAAdwBpAHQAaAAgAHMAUgBHAEIAIABUAHIAYQBuAHMAZgBlAHIAAFhZWiAAAAAAAACD3gAAPb7///+7WFlaIAAAAAAAAEq+AACxNgAACrlYWVogAAAAAAAAKDsAABEMAADIzVhZWiAAAAAAAAD21gABAAAAANMtcGFyYQAAAAAABAAAAAJmZgAA8qcAAA1ZAAAT0AAAClsAAAAAAAAAAG1sdWMAAAAAAAAAAQAAAAxlblVTAAAAIAAAABwARwBvAG8AZwBsAGUAIABJAG4AYwAuACAAMgAwADEANv/AABEIAAIAAgMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2wBDAAQEBAQEBAYEBAYJBgYGCQwJCQkJDA8MDAwMDA8SDw8PDw8PEhISEhISEhIVFRUVFRUZGRkZGRwcHBwcHBwcHBz/2wBDAQQFBQcHBwwHBwwdFBAUHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR3/3QAEAAH/2gAMAwEAAhEDEQA/AKpvr3P/AB8Sf99n/Gj7de/8/En/AH2f8arHrSV6BJ//2Q==\"],\"sessionId\":\"sess_1\",\"surface\":\"app\",\"text\":\"你看。\"},\"id\":\"t_03\",\"seq\":3,\"t\":\"input\",\"v\":1}",
+          "delivery": "reliable",
+          "family": null,
+          "t": "input"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 1760141110,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call.ask whose deadline is written in seconds",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
     }
   ],
   "version": 1
