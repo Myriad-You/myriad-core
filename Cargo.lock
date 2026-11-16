@@ -622,6 +622,8 @@ dependencies = [
  "chrono-tz",
  "myriad-agent-rules",
  "myriad-her-link",
+ "myriad-link-child",
+ "myriad-link-conformance",
  "myriad-merope",
  "myriad-nodes",
  "myriad-perception-filter",

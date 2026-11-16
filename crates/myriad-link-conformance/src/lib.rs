@@ -168,7 +168,8 @@ fn sender(t: &str) -> Option<&'static str> {
 }
 
 /// The stand-in host's side of one link: its numbering and what the script has named.
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields, default)]
 pub struct Host {
     sent: u64,
     heard: u64,
@@ -177,6 +178,13 @@ pub struct Host {
 }
 
 impl Host {
+    /// Whether its counts are ones a link reaches (a state handed back by a caller may not be).
+    pub fn sound(&self) -> bool {
+        [self.sent, self.heard, self.acked]
+            .into_iter()
+            .all(|count| count <= 1 << 53)
+    }
+
     /// A socket came up: numbering starts again. What the script named stays.
     pub fn connected(&mut self) {
         self.sent = 0;
