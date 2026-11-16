@@ -85,7 +85,7 @@ pub struct CallFields {
     pub required: Vec<String>,
     pub optional: Vec<String>,
     /// Fields whose value is one of a contract list: field → the list's
-    /// name (`actStatuses`, `noticeKinds`, `sayKinds`).
+    /// name (`actStatuses`, `noticeKinds`, `sayKinds`, `workStatuses`).
     #[serde(default)]
     pub enums: BTreeMap<String, String>,
 }
@@ -134,6 +134,7 @@ struct Contract {
     say_kinds: Vec<String>,
     notice_kinds: Vec<String>,
     act_statuses: Vec<String>,
+    work_statuses: Vec<String>,
 }
 
 /// The longest a call may ask to be answered in.
@@ -150,6 +151,7 @@ fn named_list(name: &str) -> Option<&'static [String]> {
         "actStatuses" => Some(&CONTRACT.act_statuses),
         "noticeKinds" => Some(&CONTRACT.notice_kinds),
         "sayKinds" => Some(&CONTRACT.say_kinds),
+        "workStatuses" => Some(&CONTRACT.work_statuses),
         _ => None,
     }
 }
@@ -247,8 +249,8 @@ fn check_call_id(body: &Value) -> Result<&str, Refusal> {
 }
 
 /// `call.ask`: its id is its callId, its `for` a kind of `callAudiences` (a
-/// group's naming it, and only a group's), its deadline within the
-/// contract's, its args those of its action at that version. An action or
+/// group's naming it, and only a group's), its deadline no further
+/// from its `at` than the contract's, its args those of its action at that version. An action or
 /// version this end does not know passes: the receiver answers it with
 /// `call_unknown` or `version_unsupported`.
 fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
@@ -292,13 +294,16 @@ fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
     } else {
         CONTRACT.timing.long_call_max_ms
     };
-    if !body["deadlineMs"]
+    // An ask that comes after its deadline passes: its receiver answers it
+    // call_timeout.
+    let at = frame["at"].as_u64().unwrap_or(0);
+    if !body["deadlineAt"]
         .as_u64()
-        .is_some_and(|ms| (1..=most).contains(&ms))
+        .is_some_and(|by| by >= 1 && by <= at.saturating_add(most))
     {
         return Err(refuse(
             "bad_frame",
-            format!("call.ask's deadlineMs is from 1 to {most}"),
+            format!("call.ask's deadlineAt is at most {most} ms after its at"),
         ));
     }
     match spec {
@@ -397,6 +402,20 @@ fn check_result(frame: &Value, body: &Value) -> Result<(), Refusal> {
     }
     if body.get("blobs").is_some() && !spec.is_some_and(|spec| spec.blob) {
         return Err(refuse("bad_frame", format!("{action} has no blobs")));
+    }
+    Ok(())
+}
+
+/// `stream.state` / `stream.event`: a name and a version, which an end that
+/// has not registered them ignores (`streams`).
+fn check_stream(body: &Value) -> Result<(), Refusal> {
+    if !body["name"].as_str().is_some_and(valid_id)
+        || !body["version"].as_u64().is_some_and(|version| version >= 1)
+    {
+        return Err(refuse(
+            "bad_frame",
+            "a stream's name matches limits.idPattern and its version is at least 1",
+        ));
     }
     Ok(())
 }
@@ -669,6 +688,7 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
         "call.ask" => check_ask(frame, body)?,
         "call.result" => check_result(frame, body)?,
         "call.progress" => check_progress(body)?,
+        "stream.state" | "stream.event" => check_stream(body)?,
         "call.accepted" | "call.event" | "call.cancel" => {
             check_call_id(body)?;
         }

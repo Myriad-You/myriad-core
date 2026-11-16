@@ -449,7 +449,7 @@
     },
     {
       "v": 1, "t": "call.ask", "seq": 33, "ack": 20, "id": "call_0123456789abcdef", "at": 1760141100000,
-      "body": {"callId": "call_0123456789abcdef", "action": "screen.look", "version": 1, "args": {}, "for": {"kind": "owner"}, "deadlineMs": 10000}
+      "body": {"callId": "call_0123456789abcdef", "action": "screen.look", "version": 1, "args": {}, "for": {"kind": "owner"}, "deadlineAt": 1760141110000}
     },
     {
       "v": 1, "t": "call.accepted", "seq": 34, "ack": 20, "at": 1760141100000,
