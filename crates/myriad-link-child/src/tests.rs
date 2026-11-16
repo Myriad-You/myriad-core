@@ -2782,7 +2782,8 @@ mod calling {
         assert!(delivered(&out).is_empty());
         assert!(matches!(&sent(&out)[..], [frame]
             if frame["t"] == "call.cancel" && frame["body"]["callId"] == "ask_1"));
-        // Acked, then the link goes: nothing is kept, and the shell is told to cancel again.
+        // Acked, then the link goes: the shell is told to cancel again when linked. The ask
+        // was not acked when it was stopped, so her host is told once more on the next link.
         let seq = sent(&out)[0]["seq"].as_u64().unwrap();
         s.received(&host("ping", 3, seq, |_| {}), T0 + 1400);
         s.disconnected();
@@ -2792,7 +2793,8 @@ mod calling {
             "call_unavailable"
         ));
         relinked(&mut s, T0 + 2000);
-        assert!(sent(&provides(&mut s, T0 + 2060)).is_empty());
+        assert!(matches!(&sent(&provides(&mut s, T0 + 2060))[..], [frame]
+            if frame["t"] == "call.cancel" && frame["body"]["callId"] == "ask_1"));
         // Its ask waits to go again when it is cancelled: taken back, ended here, and on the
         // next link with calls her host is told to stop after its word on what it provides.
         ask(&mut s, "ask_2", 30_000, T0 + 3000);
@@ -2820,6 +2822,74 @@ mod calling {
                 .iter()
                 .all(|frame| frame["t"] != "call.cancel")
         );
+    }
+
+    #[test]
+    fn a_stop_that_waits_goes_after_her_hosts_word_and_a_stopped_ask_never_goes_again() {
+        let long = |s: &Session| {
+            let mut state = s.state();
+            for call in state["asking"].as_array_mut().unwrap() {
+                call.as_object_mut().unwrap().remove("action");
+            }
+            Session::restore(contract(), &state).unwrap()
+        };
+        // Cancelled while its ask waited; cancelled again on the next link before her host's
+        // word on what it provides: the stop still waits for that word, and goes once.
+        let mut s = linked(0);
+        ask(&mut s, "ask_1", 30_000, T0 + 1000);
+        let mut s = long(&s);
+        s.disconnected();
+        assert!(told_here(
+            &s.call_cancel("ask_1", T0 + 1500),
+            "ask_1",
+            "call_cancelled"
+        ));
+        relinked(&mut s, T0 + 2000);
+        assert!(untold(
+            &s.call_cancel("ask_1", T0 + 2055),
+            "ask_1",
+            "call_ended"
+        ));
+        let stops = |out: &[Output]| {
+            sent(out)
+                .iter()
+                .filter(|frame| frame["t"] == "call.cancel")
+                .count()
+        };
+        let out = provides(&mut s, T0 + 2060);
+        assert_eq!(stops(&out), 1);
+        assert!(sent(&out).iter().all(|frame| frame["t"] != "call.ask"));
+        // Stops are kept in the order made, across a state.
+        let mut s = linked(0);
+        ask(&mut s, "ask_b", 30_000, T0 + 1000);
+        ask(&mut s, "ask_a", 30_000, T0 + 1100);
+        let mut s = long(&s);
+        s.disconnected();
+        s.call_cancel("ask_b", T0 + 1500);
+        s.call_cancel("ask_a", T0 + 1600);
+        let state = s.state();
+        assert_eq!(state["cancels"], json!(["ask_b", "ask_a"]));
+        assert_eq!(Session::restore(contract(), &state).unwrap().state(), state);
+        // Sent on this link, not acked, and stopped: the link goes, and on the next the ask
+        // does not go again; her host, which may have had it, is told to stop once more,
+        // after its word on what it provides and not before, though the shell asks again.
+        let mut s = linked(0);
+        ask(&mut s, "ask_2", 30_000, T0 + 1000);
+        let mut s = long(&s);
+        assert_eq!(stops(&s.call_cancel("ask_2", T0 + 1100)), 1);
+        relinked(&mut s, T0 + 2000);
+        assert!(untold(
+            &s.call_cancel("ask_2", T0 + 2055),
+            "ask_2",
+            "call_unavailable"
+        ));
+        let out = provides(&mut s, T0 + 2060);
+        assert!(sent(&out).iter().all(|frame| frame["t"] != "call.ask"));
+        assert_eq!(stops(&out), 1);
+        relinked(&mut s, T0 + 3000);
+        assert_eq!(stops(&provides(&mut s, T0 + 3060)), 0);
+        // With no answer it is told timed out here, once, like any call.
+        assert!(told_here(&s.tick(T0 + 200_000), "ask_2", "call_timeout"));
     }
 
     #[test]

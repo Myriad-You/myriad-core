@@ -1171,14 +1171,17 @@ impl Session {
                 .into_iter()
                 .map(|named| (named.name, named.version))
                 .collect(),
-            // Only of a call still asked, each once.
-            cancels: state
-                .cancels
-                .into_iter()
-                .filter(|id| state.asking.iter().any(|call| call.call_id == *id))
-                .collect::<BTreeSet<_>>()
-                .into_iter()
-                .collect(),
+            // Only of a call still asked, each once, in the order kept.
+            cancels: {
+                let mut cancels: Vec<String> = Vec::new();
+                for id in state.cancels {
+                    if state.asking.iter().any(|call| call.call_id == id) && !cancels.contains(&id)
+                    {
+                        cancels.push(id);
+                    }
+                }
+                cancels
+            },
             asking: state.asking,
         })
     }
@@ -2423,7 +2426,8 @@ impl Session {
     /// the same deadline until her host acks it. Not asked, and told `Unsent`, when there is
     /// no open link (`call_unavailable`), when the two ends did not both list `calls` on it
     /// or her host has not said it provides the action at that version here
-    /// (`call_not_granted`), when the action is not for `of` (`wrong_audience`), when the
+    /// (`call_not_granted`), when the action is not one the contract registers
+    /// (`call_unknown`) or not for `of` (`wrong_audience`), when the
     /// id is already a call's or another frame's (`bad_id`), or when the frame is not one
     /// the contract takes. An ask not acked when the link goes waits for the next link's
     /// word on what her host provides there: it goes again if it does, and ends
@@ -2581,9 +2585,11 @@ impl Session {
     ///   one it is told to stop on the next link where both ends listed `calls`, after its
     ///   word on what it provides there, and a result that still comes is delivered.
     /// - Its ask went on this link, or her host acked it, and the action is long: her host
-    ///   is told to stop (`call.cancel`) now, on a link where both ends listed `calls`;
-    ///   with no such link nothing is kept and the shell is told `Unsent` `call.cancel`
-    ///   `call_unavailable`, to cancel again when linked. Its result still comes.
+    ///   is told to stop (`call.cancel`) now, on a link where both ends listed `calls`
+    ///   (an ask not acked yet is taken back, so that it cannot go again after the stop,
+    ///   and her host is told to stop once more on the next link);
+    ///   with no such link the shell is told `Unsent` `call.cancel` `call_unavailable`, to
+    ///   cancel again when linked. Its result still comes.
     /// - It went and the action is not long: there is no stopping it (the contract cancels
     ///   long calls only). `Unsent` `call.cancel` `call_sent`; its result still comes.
     /// - Cancelled again after it was taken back, or after it was told ended here, with
@@ -2629,15 +2635,29 @@ impl Session {
         if !long {
             return untold(if told { "call_ended" } else { "call_sent" });
         }
-        if self.phase != Phase::Open || !self.both("calls") {
-            let waits = self.cancels.iter().any(|id| id == call_id);
-            return untold(if waits {
+        let queued = self.cancels.iter().any(|id| id == call_id);
+        // No link to tell her host on, or the stop already waits for her host's word on
+        // what it provides on this link (it goes then, not before): nothing goes now.
+        let open = self.phase == Phase::Open && self.both("calls");
+        if !open || (queued && !self.heard_granted) {
+            return untold(if told {
                 "call_ended"
             } else {
                 "call_unavailable"
             });
         }
-        self.cancels.retain(|id| id != call_id);
+        // Its ask went on this link and is not acked: were the link to go now, the ask would
+        // go again on the next with nothing to stop it. It does not: the ask is taken back,
+        // and her host, which may have it, is told to stop once more on the next link.
+        let unacked = |pending: &Pending| pending.t == "call.ask" && pending.id == call_id;
+        if self.outbox.iter().any(unacked) {
+            self.outbox.retain(|pending| !unacked(pending));
+            if !queued {
+                self.cancels.push(call_id.to_string());
+            }
+        } else {
+            self.cancels.retain(|id| id != call_id);
+        }
         self.send("call.cancel", &json!({ "callId": call_id }), None, now_ms)
     }
 
