@@ -269,8 +269,10 @@ pub struct Picked {
     /// newest first: shown before its entries.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub standing: Vec<String>,
-    /// How many more stand on it than [`Budget::standing`] let in, and
-    /// not shown in [`Pick::resident`] either.
+    /// How many more stand on it than [`Budget::standing`] let in: all of
+    /// them, whether shown or not; those [`Pick::resident`] has (its items
+    /// of this node, which are never ones shown here) a host showing it
+    /// takes off.
     #[serde(skip_serializing_if = "is_zero")]
     pub standing_left_out: usize,
     pub entries: Vec<String>,
@@ -311,8 +313,10 @@ pub struct Pick {
     /// found first, then newest first: shown before its entries.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub about_them_standing: Vec<String>,
-    /// How many more stand there than [`Budget::resident`] let in, and
-    /// not shown in [`Pick::resident`] either.
+    /// How many more stand there than [`Budget::resident`] let in: all of
+    /// them, whether shown or not; those [`Pick::resident`] has (its items
+    /// of this node, which are never ones shown here) a host showing it
+    /// takes off.
     #[serde(skip_serializing_if = "is_zero")]
     pub about_them_standing_left_out: usize,
     /// How their life stands, shown every time, in order.
@@ -562,19 +566,15 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     // Stable: within a tier, the rank order stands.
     order.sort_by_key(|at| tier(input.nodes[*at].status));
     order.truncate(input.budget.picked);
-    // What did not fit on each, counted once `resident` has taken what it
-    // shows anyway.
-    let mut rest: Vec<(usize, Vec<String>)> = Vec::new();
-    let mut picked: Vec<Picked> = order
+    let picked: Vec<Picked> = order
         .iter()
         .map(|at| {
             let (standing, more) =
                 standing(&input.nodes[*at], today, &named, input.budget.standing);
-            rest.push((*at, more));
             Picked {
                 node: input.nodes[*at].id.clone(),
                 standing,
-                standing_left_out: 0,
+                standing_left_out: more.len(),
                 entries: best(&input.nodes[*at], &ranked, &on, *at, input.budget.entries),
             }
         })
@@ -591,6 +591,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     let (about_them_standing, about_them_rest) = about_them_at
         .map(|at| standing(&input.nodes[at], today, &named, input.budget.resident))
         .unwrap_or_default();
+    let about_them_standing_left_out = about_them_rest.len();
     let nodes = &input.nodes;
     let shown_standing: BTreeSet<(&str, &str)> = picked
         .iter()
@@ -613,21 +614,6 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         &input.budget,
         today,
     );
-    let carried: BTreeSet<(&str, &str)> = resident
-        .iter()
-        .map(|one| (one.node.as_str(), one.item.as_str()))
-        .collect();
-    let unseen = |at: usize, more: &[String]| {
-        more.iter()
-            .filter(|item| !carried.contains(&(nodes[at].id.as_str(), item.as_str())))
-            .count()
-    };
-    for (picked, (at, more)) in picked.iter_mut().zip(&rest) {
-        picked.standing_left_out = unseen(*at, more);
-    }
-    let about_them_standing_left_out = about_them_at
-        .map(|at| unseen(at, &about_them_rest))
-        .unwrap_or_default();
     let mut shown: BTreeSet<String> = picked
         .iter()
         .flat_map(|picked| picked.entries.iter().cloned())
@@ -744,8 +730,8 @@ mod tests {
             shown["picked"][0].get("standingLeftOut").is_none(),
             "{shown}"
         );
-        // One left out that the list of how their life stands shows anyway
-        // is not counted as unseen; one it cannot show (no words) is.
+        // All left out are counted; one with words goes on to the list of
+        // how their life stands, the only item of this node there.
         let mut many: Vec<serde_json::Value> = (3..=10)
             .map(|n| json!({"item": format!("g-s{n}"), "at": n}))
             .collect();
@@ -763,7 +749,7 @@ mod tests {
                 .collect::<Vec<_>>(),
             [("garden", "them-0000000001")]
         );
-        assert_eq!(out.picked[0].standing_left_out, 1);
+        assert_eq!(out.picked[0].standing_left_out, 2);
     }
 
     #[test]
