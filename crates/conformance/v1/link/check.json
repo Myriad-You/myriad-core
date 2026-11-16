@@ -1442,7 +1442,8 @@
           "body": {
             "action": "work.run",
             "callId": "call_work_0123456789ab",
-            "outcome": "unknown"
+            "outcome": "unknown",
+            "version": 1
           },
           "id": "call_work_0123456789ab.result",
           "seq": 5,
@@ -1456,7 +1457,7 @@
       "name": "a work.run whose outcome is unknown: the Mac lost track midway",
       "output": {
         "accepted": {
-          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"unknown\"},\"id\":\"call_work_0123456789ab.result\",\"seq\":5,\"t\":\"call.result\",\"v\":1}",
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"unknown\",\"version\":1},\"id\":\"call_work_0123456789ab.result\",\"seq\":5,\"t\":\"call.result\",\"v\":1}",
           "delivery": "reliable",
           "family": "call",
           "t": "call.result"
@@ -1474,7 +1475,8 @@
             "outcome": "done",
             "result": {
               "status": "completed"
-            }
+            },
+            "version": 1
           },
           "id": "call_work_0123456789ab.result",
           "seq": 6,
@@ -1488,7 +1490,7 @@
       "name": "a work.run done says only how it ended",
       "output": {
         "accepted": {
-          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"done\",\"result\":{\"status\":\"completed\"}},\"id\":\"call_work_0123456789ab.result\",\"seq\":6,\"t\":\"call.result\",\"v\":1}",
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"done\",\"result\":{\"status\":\"completed\"},\"version\":1},\"id\":\"call_work_0123456789ab.result\",\"seq\":6,\"t\":\"call.result\",\"v\":1}",
           "delivery": "reliable",
           "family": "call",
           "t": "call.result"
@@ -1507,7 +1509,8 @@
             "result": {
               "status": "completed",
               "summary": "桌面上的 12 张截图都移到「截图」文件夹了。"
-            }
+            },
+            "version": 1
           },
           "id": "call_work_0123456789ab.result",
           "seq": 7,
@@ -1536,7 +1539,8 @@
             "outcome": "unknown",
             "result": {
               "status": "completed"
-            }
+            },
+            "version": 1
           },
           "id": "call_work_0123456789ab.result",
           "seq": 8,
@@ -1565,7 +1569,8 @@
             "error": {
               "code": "busy_now"
             },
-            "outcome": "failed"
+            "outcome": "failed",
+            "version": 1
           },
           "id": "call_work_0123456789ab.result",
           "seq": 9,
@@ -1594,7 +1599,8 @@
             "error": {
               "code": "declined"
             },
-            "outcome": "failed"
+            "outcome": "failed",
+            "version": 1
           },
           "id": "call_cam_0123456789ab.result",
           "seq": 10,
@@ -1608,7 +1614,7 @@
       "name": "a call the owner declined on the device",
       "output": {
         "accepted": {
-          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"camera.take\",\"callId\":\"call_cam_0123456789ab\",\"error\":{\"code\":\"declined\"},\"outcome\":\"failed\"},\"id\":\"call_cam_0123456789ab.result\",\"seq\":10,\"t\":\"call.result\",\"v\":1}",
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"camera.take\",\"callId\":\"call_cam_0123456789ab\",\"error\":{\"code\":\"declined\"},\"outcome\":\"failed\",\"version\":1},\"id\":\"call_cam_0123456789ab.result\",\"seq\":10,\"t\":\"call.result\",\"v\":1}",
           "delivery": "reliable",
           "family": "call",
           "t": "call.result"
@@ -1712,6 +1718,247 @@
           "delivery": "reliable",
           "family": "call",
           "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "error": {
+              "code": "host_frozen"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 14,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a failed call with a code that is not one a call fails with",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "status": "桌面上的 12 张截图都移到「截图」文件夹了。"
+            },
+            "version": 1
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 15,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a work.run status that is not one of actStatuses",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineMs": 10000,
+            "for": {
+              "groupId": "",
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call for the owner that names a group",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "callId": "call_work_0123456789ab",
+            "phase": "正在把截图移到文件夹"
+          },
+          "seq": 17,
+          "t": "call.progress",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a phase that says what is being done",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.record",
+            "callId": "call_new_0123456789ab",
+            "outcome": "unknown",
+            "version": 1
+          },
+          "id": "call_new_0123456789ab.result",
+          "seq": 18,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: an action this end does not know cannot end unknown",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789c",
+            "deadlineMs": 3600000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789c",
+          "seq": 19,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call that asks to wait longer than its kind may",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789d",
+            "deadlineMs": 10000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_other",
+          "seq": 20,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call.ask whose id is not its callId",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "callId": "call_look_0123456789e",
+            "outcome": "done",
+            "result": {
+              "facts": {
+                "app": "Xcode"
+              },
+              "region": "left"
+            },
+            "version": 2
+          },
+          "id": "call_look_0123456789e.result",
+          "seq": 21,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a done result at a version this end does not know passes for the ends to read",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.look\",\"callId\":\"call_look_0123456789e\",\"outcome\":\"done\",\"result\":{\"facts\":{\"app\":\"Xcode\"},\"region\":\"left\"},\"version\":2},\"id\":\"call_look_0123456789e.result\",\"seq\":21,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
         }
       }
     }

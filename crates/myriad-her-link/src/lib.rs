@@ -84,6 +84,10 @@ struct Sync {
 pub struct CallFields {
     pub required: Vec<String>,
     pub optional: Vec<String>,
+    /// Fields whose value is one of a contract list: field → the list's
+    /// name (`actStatuses`, `noticeKinds`, `sayKinds`).
+    #[serde(default)]
+    pub enums: BTreeMap<String, String>,
 }
 
 /// One action of `calls`: what one end may ask another to do for her.
@@ -108,6 +112,7 @@ pub struct CallSpec {
 #[serde(rename_all = "camelCase")]
 struct Calls {
     default_approved: Vec<String>,
+    fail_codes: Vec<String>,
     actions: BTreeMap<String, CallSpec>,
 }
 
@@ -125,7 +130,33 @@ struct Contract {
     error_codes: BTreeMap<String, String>,
     call_audiences: Vec<String>,
     calls: Calls,
+    timing: CallTiming,
+    say_kinds: Vec<String>,
+    notice_kinds: Vec<String>,
+    act_statuses: Vec<String>,
 }
+
+/// The longest a call may ask to be answered in.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CallTiming {
+    call_deadline_max_ms: u64,
+    long_call_max_ms: u64,
+}
+
+/// The contract list a call's field value is one of, by its name.
+fn named_list(name: &str) -> Option<&'static [String]> {
+    match name {
+        "actStatuses" => Some(&CONTRACT.act_statuses),
+        "noticeKinds" => Some(&CONTRACT.notice_kinds),
+        "sayKinds" => Some(&CONTRACT.say_kinds),
+        _ => None,
+    }
+}
+
+/// The longest a call id may be: its result's id (`<callId>.result`) still
+/// matches `limits.idPattern`.
+const CALL_ID_CHARS: usize = 64 - ".result".len();
 
 static CONTRACT: LazyLock<Contract> =
     LazyLock::new(|| serde_json::from_str(CONTRACT_JSON).expect("her_link_contract.json"));
@@ -180,13 +211,59 @@ pub fn call_allowed(action: &str, of: &Value) -> Result<(), &'static str> {
     }
 }
 
-/// `call.ask`: its `for` is a kind of `callAudiences` (a group's naming
-/// it), its args those of its action at that version. An action or version
-/// this end does not know passes: the receiver answers it with
+/// An action's args or result: exactly its fields, each of `enums` one of
+/// its list.
+fn check_call_fields(what: &str, value: &Value, fields_of: &CallFields) -> Result<(), Refusal> {
+    let have = fields(value, what)?;
+    check_fields(what, &have, &fields_of.required, &fields_of.optional)?;
+    for (field, list) in &fields_of.enums {
+        let Some(given) = value.get(field) else {
+            continue;
+        };
+        let known = named_list(list).unwrap_or(&[]);
+        if !given
+            .as_str()
+            .is_some_and(|given| known.iter().any(|one| one == given))
+        {
+            return Err(refuse(
+                "bad_frame",
+                format!("{what}.{field} is one of {list}"),
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// A call id: the frame's own id (`call.ask`) or the call it answers, short
+/// enough for its result's id.
+fn check_call_id(body: &Value) -> Result<&str, Refusal> {
+    match body["callId"].as_str() {
+        Some(id) if valid_id(id) && id.chars().count() <= CALL_ID_CHARS => Ok(id),
+        _ => Err(refuse(
+            "bad_frame",
+            format!("a callId matches limits.idPattern in at most {CALL_ID_CHARS} characters"),
+        )),
+    }
+}
+
+/// `call.ask`: its id is its callId, its `for` a kind of `callAudiences` (a
+/// group's naming it, and only a group's), its deadline within the
+/// contract's, its args those of its action at that version. An action or
+/// version this end does not know passes: the receiver answers it with
 /// `call_unknown` or `version_unsupported`.
-fn check_ask(body: &Value) -> Result<(), Refusal> {
+fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
+    let id = check_call_id(body)?;
+    if frame["id"].as_str() != Some(id) {
+        return Err(refuse("bad_frame", "call.ask's id is its callId"));
+    }
     let of = &body["for"];
     let of_fields = fields(of, "call.ask's for")?;
+    check_fields(
+        "call.ask's for",
+        &of_fields,
+        &["kind".to_string()],
+        &["groupId".to_string()],
+    )?;
     let Some(kind) = of["kind"].as_str() else {
         return Err(refuse("bad_frame", "call.ask's for has no kind"));
     };
@@ -196,75 +273,86 @@ fn check_ask(body: &Value) -> Result<(), Refusal> {
             format!("call.ask's for is of no kind {kind:?}"),
         ));
     }
-    let group = kind == "group";
-    check_fields(
-        "call.ask's for",
-        &of_fields,
-        &["kind".to_string()],
-        &["groupId".to_string()],
-    )?;
-    if group
-        != of
-            .get("groupId")
-            .is_some_and(|id| id.as_str().is_some_and(valid_id))
-    {
-        return Err(refuse(
-            "bad_frame",
-            "call.ask's for names a groupId only and always for a group",
-        ));
+    match of.get("groupId") {
+        Some(group) if kind == "group" && group.as_str().is_some_and(valid_id) => {}
+        None if kind != "group" => {}
+        _ => {
+            return Err(refuse(
+                "bad_frame",
+                "call.ask's for names a groupId only and always for a group",
+            ));
+        }
     }
-    if !body["deadlineMs"].as_u64().is_some_and(|ms| ms > 0) {
-        return Err(refuse(
-            "bad_frame",
-            "call.ask's deadlineMs is a whole number from 1",
-        ));
-    }
-    let args = fields(&body["args"], "call.ask's args")?;
     let (Some(action), Some(version)) = (body["action"].as_str(), body["version"].as_u64()) else {
         return Err(refuse("bad_frame", "call.ask names its action and version"));
     };
-    match call_spec(action) {
-        Some(spec) if spec.version == version => check_fields(
-            &format!("{action}'s args"),
-            &args,
-            &spec.args.required,
-            &spec.args.optional,
-        ),
-        _ => Ok(()),
+    let spec = call_spec(action);
+    let most = if spec.is_some_and(|spec| !spec.long) {
+        CONTRACT.timing.call_deadline_max_ms
+    } else {
+        CONTRACT.timing.long_call_max_ms
+    };
+    if !body["deadlineMs"]
+        .as_u64()
+        .is_some_and(|ms| (1..=most).contains(&ms))
+    {
+        return Err(refuse(
+            "bad_frame",
+            format!("call.ask's deadlineMs is from 1 to {most}"),
+        ));
+    }
+    match spec {
+        Some(spec) if spec.version == version => {
+            check_call_fields(&format!("{action}'s args"), &body["args"], &spec.args)
+        }
+        _ => fields(&body["args"], "call.ask's args").map(|_| ()),
     }
 }
 
-/// `call.result`: done carries exactly its action's result fields, failed
-/// an error with a code the contract names, unknown neither. An action
-/// this end does not know only fails.
-fn check_result(body: &Value) -> Result<(), Refusal> {
-    let Some(action) = body["action"].as_str() else {
-        return Err(refuse("bad_frame", "call.result names its action"));
+/// `call.result`: its id is its callId's and `.result`; done carries
+/// exactly the result fields of its action at that version (another
+/// version passes), failed an error with one of `calls.failCodes`, unknown
+/// neither. An action this end does not know only fails.
+fn check_result(frame: &Value, body: &Value) -> Result<(), Refusal> {
+    let id = check_call_id(body)?;
+    if frame["id"].as_str() != Some(format!("{id}.result").as_str()) {
+        return Err(refuse(
+            "bad_frame",
+            "call.result's id is its callId and .result",
+        ));
+    }
+    let (Some(action), Some(version)) = (body["action"].as_str(), body["version"].as_u64()) else {
+        return Err(refuse(
+            "bad_frame",
+            "call.result names its action and version",
+        ));
     };
     let spec = call_spec(action);
     let result = body.get("result");
     let error = body.get("error");
-    match body["outcome"].as_str() {
+    let outcome = body["outcome"].as_str();
+    if spec.is_none() && outcome != Some("failed") {
+        return Err(refuse(
+            "bad_frame",
+            format!("{action} is not an action: its call only fails"),
+        ));
+    }
+    match outcome {
         Some("done") => {
-            let Some(spec) = spec else {
-                return Err(refuse(
-                    "bad_frame",
-                    format!("{action} is not an action: its call only fails"),
-                ));
-            };
             if error.is_some() {
                 return Err(refuse("bad_frame", "a done call.result has no error"));
             }
             let Some(result) = result else {
                 return Err(refuse("bad_frame", "a done call.result carries its result"));
             };
-            let have = fields(result, "call.result's result")?;
-            check_fields(
-                &format!("{action}'s result"),
-                &have,
-                &spec.result.required,
-                &spec.result.optional,
-            )?;
+            match spec {
+                Some(spec) if spec.version == version => {
+                    check_call_fields(&format!("{action}'s result"), result, &spec.result)?;
+                }
+                _ => {
+                    fields(result, "call.result's result")?;
+                }
+            }
         }
         Some("failed") => {
             if result.is_some() {
@@ -284,11 +372,11 @@ fn check_result(body: &Value) -> Result<(), Refusal> {
             )?;
             if !error["code"]
                 .as_str()
-                .is_some_and(|code| CONTRACT.error_codes.contains_key(code))
+                .is_some_and(|code| CONTRACT.calls.fail_codes.iter().any(|one| one == code))
             {
                 return Err(refuse(
                     "bad_frame",
-                    "call.result's error is a code the contract names",
+                    "call.result's error is one of calls.failCodes",
                 ));
             }
         }
@@ -309,6 +397,18 @@ fn check_result(body: &Value) -> Result<(), Refusal> {
     }
     if body.get("blobs").is_some() && !spec.is_some_and(|spec| spec.blob) {
         return Err(refuse("bad_frame", format!("{action} has no blobs")));
+    }
+    Ok(())
+}
+
+/// `call.progress`: its phase is a stage name, never content.
+fn check_progress(body: &Value) -> Result<(), Refusal> {
+    check_call_id(body)?;
+    if !body["phase"].as_str().is_some_and(valid_id) {
+        return Err(refuse(
+            "bad_frame",
+            "call.progress's phase is a stage name (limits.idPattern)",
+        ));
     }
     Ok(())
 }
@@ -556,8 +656,9 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
         }
     }
     match t {
-        "call.ask" => check_ask(body)?,
-        "call.result" => check_result(body)?,
+        "call.ask" => check_ask(frame, body)?,
+        "call.result" => check_result(frame, body)?,
+        "call.progress" => check_progress(body)?,
         _ => {}
     }
     Ok(Checked {
