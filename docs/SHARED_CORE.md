@@ -8,7 +8,7 @@
 
 ## 边界
 
-- **只收纯 crate。** 现在是 `myriad-merope` 和它依赖的 `myriad-agent-rules`，以及同步她的数据用的 `myriad-persona-sync`（格式、规范字节、时钟、比对），其中规范字节在 `myriad-canonical`（单独一个 crate：只保持她的连接的一端链接它和 `myriad-her-link` 就够，不带她的规则）和多端的日志规则 `myriad-persona-log`（信封、版本向量、合并、遗忘、折叠、执笔权、时钟），「她的连接」帧的规则 `myriad-her-link`，子机核心 `myriad-link-child`（任何一端接上她的主机都要的连接层，只依赖 `myriad-her-link`，不带她的规则；还没有 C 入口的调用，用 Rust 的端直接依赖它），以及客户端看屏幕时的宿主过滤 `myriad-perception-filter`，她的节点 `myriad-nodes`。不引入 tokio、reqwest、sea-orm，也不读写文件或网络。
+- **只收纯 crate。** 现在是 `myriad-merope` 和它依赖的 `myriad-agent-rules`，以及同步她的数据用的 `myriad-persona-sync`（格式、规范字节、时钟、比对），其中规范字节在 `myriad-canonical`（单独一个 crate：只保持她的连接的一端链接它和 `myriad-her-link` 就够，不带她的规则）和多端的日志规则 `myriad-persona-log`（信封、版本向量、合并、遗忘、折叠、执笔权、时钟），「她的连接」帧的规则 `myriad-her-link`，子机核心 `myriad-link-child`（任何一端接上她的主机都要的连接层，只依赖 `myriad-her-link`，不带她的规则；见「子机核心」），以及客户端看屏幕时的宿主过滤 `myriad-perception-filter`，她的节点 `myriad-nodes`。不引入 tokio、reqwest、sea-orm，也不读写文件或网络。
 - **每个调用都是输入的纯函数。** 现在几点、她的时区、心情这些状态都在输入里；库不读进程的时钟、时区和环境。crate 里的规则因此不用 `chrono::Local`：她的时区由调用方传入，后端传 `merope::clock::zone()`，现在就是进程时区（容器里 `TZ=Asia/Shanghai`）。
 - **一个二进制里只能有一个 Rust 静态库。** 两个 Rust staticlib 会在 std 符号上冲突。别的平台将来要用的纯 crate，都并进这一个库，不另建。
 - **密钥不进来。** 规则拿不到任何宿主密钥或凭据，错误信息里也没有。
@@ -210,6 +210,152 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | --- | --- |
 | `link.check` | `{frame, roles?}` → `{accepted: {t, family, delivery, canonical}}` 或 `{refused: {code, detail}}`；`code` 是契约 `errorCodes` 里的一个；`roles` 是发送方的角色（`device`、`host`、`mind`、`server`），不给就不查 |
 | `link.encode` | `{frame}` → `{text}`：要发的帧检查过后的规范文本；不通过是 `bad_input` |
+| `link.child_new` | `{capabilities, app: {name, version}, lineage?, hostEpoch?}` → `{state}`：子机的一个连接会话，还没连上（见「子机核心」） |
+| `link.child_step` | `{state, now, event}` → `{state, outputs, phase}`：会话遇到一件事。`now` 是微秒；`event` 和 `outputs` 见「子机核心」 |
+| `link.child_after` | `{close: {code?, reason?}}` 或 `{http: {status, body?}}`，可带 `attempt` → `{then: "reconnect" \| "stop", down}` 或 `{then: "forget", removal}`，带了 `attempt` 就多一项 `backoffMs` |
+| `link.child_claims` | `{capabilities, reads}` → `{unread: [{capability, t}], idle, sends, takes}`：一端声明的能力里，主机可能发来而它不读的帧（`reads` 是它自己的代码处理的主机帧类型）；一端的测试断言 `unread` 是空的 |
+| `conformance.host` | `{host?, event}` → `{host, text?, fault?}`：对照剧本的假主机走一步，给不用 Rust 的端演剧本用（见「她的连接：子机一侧的剧本」）；产品不调它 |
+
+## 子机核心（`myriad-link-child`）：各端怎么接上她
+
+她只有一个主机，住在主机上。别的每一端都是子机：拨到主机，把这一端听到的、看到的送上去，把主机发下来的演出来。带主机核心的端（她的规则、记忆、判断）同时也带子机核心。子机核心是任何一端接上主机都要的那一小块，各端用同一份，不各抄一份：
+
+- 握手（`hello`、`welcome`），报这一端的能力；
+- 信封的编号和确认（`seq`、`ack`），心跳和超时；
+- 可靠帧的待发箱：没被确认的，重连后同一个 id、新的编号再发；主机的可靠帧按 id 只交付一次；
+- 回合：主人说的一句是一条可靠的 `input`，回复按序交付，断线后续传；
+- 关闭码和升级被拒各意味着什么；
+- 主机发来而这一端读不了的帧，把原因交给外壳（版本不齐看得见）。
+
+它不带她的规则：只当子机的端链接 `myriad-link-child`、`myriad-her-link`、`myriad-canonical` 就够（25 个包）。它是纯的：不开套接字、不读时钟、不存东西。**外壳**（各端自己写的那一层）拥有套接字、时钟和凭据，把发生的事连同现在几点喂给它，照它交回的去做。主机在哪里、是不是总是同一个，是外壳的事：会话只知道「套接字起来了」「套接字没了」。
+
+### 外壳做的事
+
+```text
+会话 = 新建(这一端的能力, app 名和版本, 上次 welcome 给的 lineage 和 hostEpoch)
+
+循环：
+    用设备令牌向主机发起 WebSocket 升级（路径是契约的 path，令牌的写法是契约的 auth）
+    升级被拒   → 之后 = after(http 状态, 应答的 JSON)；跳到「之后」
+    升级成功   → 做(会话.连上(现在))
+    套接字开着时，这些事哪件先来做哪件：
+        收到一段文本     → 做(会话.收到(文本, 现在))
+        收到二进制       → 不交给会话（这条连接没有二进制帧，契约 encoding.text）
+        每隔几秒         → 做(会话.到点(现在))          一个心跳里要有好几次
+        主人说了一句     → 做(会话.说(回合 id, 文本, …, 现在))
+        别的外壳事件     → 做(会话.对应的方法(…, 现在))
+        套接字关了       → 会话.断开()；之后 = after(关闭码, 理由)；跳到「之后」
+    之后：
+        reconnect → 等 backoff(第几次重试) 再回到循环开头；网络恢复、机器醒来时立刻重试
+        stop      → 不自动重连，告诉主人为什么，等主人重试
+        forget    → 删掉凭据，不再连
+
+做(输出们)：按顺序
+    send(文本)     → 作为一条文本消息写进套接字
+    deliver(交付)  → 交给界面、语音、形象……这一端自己的代码
+    drop(原因)     → 关掉套接字，然后照「套接字关了」走
+```
+
+几条容易错的：
+
+- 输出要按顺序做完，`send` 的文本原样发，不重新编码。
+- 断线期间主人说的话照样交给会话：它留在待发箱，下次 `welcome` 之后自己发出去。外壳不自己排队。
+- 回合 id、可靠帧的 id 由外壳造（契约的 `limits.idPattern`），同一件事重试时用同一个 id。
+- `lineage` 和 `hostEpoch` 是每次 `welcome` 交付里给的；外壳存下最新的，下次新建会话时传回。
+- `deliver` 的 `unread` 是「主机发了一帧这一端读不了的」：只有类型（契约认识时）和原因码，没有内容。外壳记日志、提示版本不齐，自己控制频率（每帧来一次）。读不了的 `welcome` 会紧跟一个 `drop`。
+- 时间一律由外壳给。Rust 接口是毫秒（连接自己的单位）；经 C 入口是微秒（那里的规矩）。
+
+### 用 Rust 的端（桌面，Android XR）
+
+直接依赖 crate，按提交钉住（和站点后端依赖别的 crate 一样）：
+
+```toml
+myriad-link-child = { git = "https://github.com/Myriad-You/myriad-core", rev = "<钉住的提交>" }
+```
+
+```rust
+use myriad_link_child::{Output, Refusal, Session, contract};
+
+let mut session = Session::new(contract(), CAPABILITIES, ("MyApp", "1.0"), lineage, host_epoch);
+for output in session.connected(now_ms) {          // 套接字起来了
+    match output {
+        Output::Send(text) => socket.send_text(text),
+        Output::Deliver(delivery) => ui.handle(delivery),
+        Output::Drop(_why) => socket.close(),
+    }
+}
+// 之后：session.received(&text, now_ms)、session.tick(now_ms)、session.say(…)、
+// session.disconnected()；Session::after_close(contract(), code, reason)、
+// Session::after_http(status, Refusal::read(&body).as_ref())；contract().timing.backoff_ms(attempt)。
+```
+
+要经另一种语言用它的 Rust 端（XR 经 UniFFI 给 Kotlin）在自己的库里包一层；一个程序里只能有一个 Rust 静态库，所以不另建。
+
+### 经 C 入口的端（Swift：macOS、iOS）
+
+会话是有状态的，而 C 入口的每个调用是输入的纯函数。所以状态由外壳拿着：每次把它连同发生的事交进去，拿回新的状态和要做的事。
+
+```swift
+var state = try core("link.child_new", [
+    "capabilities": capabilities, "app": ["name": "MyApp", "version": "1.0"],
+    "lineage": lineage, "hostEpoch": hostEpoch,       // 没有就不写
+])["state"]
+
+func step(_ event: JSON) throws {
+    let out = try core("link.child_step", ["state": state, "now": nowMicroseconds(), "event": event])
+    state = out["state"]                               // 整个换掉，不要改它、不要读它
+    for output in out["outputs"].array {
+        if let text = output["send"].string { socket.send(text) }
+        else if let delivery = output["deliver"].object { handle(delivery) }   // delivery["kind"]
+        else if output["drop"] != nil { socket.close() }
+    }
+}
+```
+
+- `event`：`"connected"`、`"disconnected"`、`"tick"`、`{received: 文本}`，以及外壳做的事：`{say: {turnId, text, sessionId?, rigState?, images?}}`、`{presence: body}`、`{observePlayback: {runId, upcomingText, rig}}`、`{endPlayback: {runId}}`、`{delivered: {id, body}}`、`{appraiseTouch: {touchId, touch, rigState?}}`、`{touched: {touchId, touch}}`、`{wear: {outfitId}}`、`{setCapabilities: [..]}`（下一次 hello 用）。
+- `outputs` 里每一项是 `{send: 文本}`、`{deliver: {kind, …}}` 或 `{drop: {why, …}}`。字段是 camelCase；没有值的字段是 `null`，不会缺。`phase`（`closed`、`greeting`、`open`）给界面显示连没连上用。
+- `deliver` 按 `kind`（定义在 `crates/myriad-link-child/src/wire.rs`，Rust 的 `Delivery` 是同一批）：
+
+  | `kind` | 字段 | 什么时候 |
+  | --- | --- | --- |
+  | `welcome` | `deviceId`、`host`、`lineage`、`hostEpoch` | 连上了。后两个存下来，下次新建会话时传回 |
+  | `accepted` | `turnId`、`runId`、`sessionId`、`duplicate` | 主机接了这一轮。`sessionId` 是这场对话，下一句带上它 |
+  | `rejected` | `turnId`、`code` | 这一轮没送到她那里；`code` 是契约的 `errorCodes` |
+  | `event` | `turnId`、`runId`、`sequence`、`event` | 回复的一个事件，按序、不重复 |
+  | `end` | `turnId`、`runId` | 这一轮结束 |
+  | `perform` | `turnId`、`runId`、`directive`、`live` | 她怎么演这一轮；`live` 有值时是说话过程中的修正 |
+  | `perform_say` | `sayId`、`directive` | 她怎么演自己开口的那一句 |
+  | `say` | `id`、`body` | 她自己开口说的一句（`body` 是 `say` 帧的正文），每个 id 只来一次 |
+  | `mood` | `body` | 她的心情 |
+  | `outfit` | `outfitId`、`rigAssetId`、`portraitAssetId` | 她在这一端穿哪一套 |
+  | `wardrobe` | `outfits: [{outfitId, name, fullBody, wearable, rigAssetId, portraitAssetId}]` | 她的衣柜 |
+  | `touch_reaction` | `touchId`、`reaction` | 她对这次触碰的反应 |
+  | `conversations` | `sessions` | 最近的对话 |
+  | `conversation` | `session` | 其中一场变了 |
+  | `notice` | `body` | 一条通知 |
+  | `host_error` | `code` | 主机没收下这一端的某一帧，连接还在 |
+  | `unsent` | `t`、`code` | 这一端的一帧核心不肯发（太大之类）；是 `input` 的话那一轮已结束 |
+  | `unread` | `t`、`code` | 主机的一帧这一端读不了（版本不齐）；`t` 在契约不认识这个类型时是 `null` |
+
+- `drop` 的 `why`、`link.child_after` 里 `down.why` 是同一批：`network`、`silent`（没等到心跳或 welcome）、`host_unavailable`、`no_owner`、`replaced`（同一设备的另一条连接顶替了）、`unsupported_protocol`（要更新）、`refused_handshake`、`host_moved`（多一项 `device`：她现在住的那台的名字或 `null`）、`host_frozen`（她在搬家）、`redirected`、`unsupported_site`、`removed`（多一项 `removal`）。`removal` 是 `revoked`、`owner_changed`、`token_unknown`。
+- 状态是一段不透明的 JSON，只在进程里拿着就行（进程没了连接也没了）。它里面有主人说了还没被确认的话，所以要落盘的话，放在这一端放那些话的地方。落了盘的状态跨得过升级：契约管的那几项（协议号、能力名）恢复时按新的契约重写。里面的数都是不超过 2^53 的整数，按双精度读写也不会走样；格式不对或数出了界的状态是 `bad_input`，不会带着错的数往下走。
+- 关闭和重连：`link.child_after`。套接字关了给 `{close: {code?, reason?}}`（两样都没有就给 `{close: {}}`），升级被拒给 `{http: {status, body?}}`（`body` 是主机答的 JSON，读不出来就不给）。带上 `attempt`（第几次重试，从 0 起），答 `reconnect` 时一并给出 `backoffMs`。`code` 写成字符串之类的是 `bad_input`，不会被当成不认识的关闭码。
+- **开销**（M 系列笔记本，release，状态出去再回来一次）：平常约 1 KB、0.03 到 0.04 毫秒；留满 64 个回合和 256 个已收 id 时约 33 KB、0.3 到 0.45 毫秒；最坏是断线时待发箱里压着带图的话，4 句各两张图约 1 MB、1.6 到 2.3 毫秒。最坏的情形只在重连后的头几步出现（发出去、被确认后就没了），断线期间没有帧进来。真要压低它，改法是把待发箱里的正文留在外壳、状态里只放 id，等有一端量出这确实是问题再做。
+
+### 能力清单要是真的
+
+能力清单由这一端自己传入，说了什么主机就按什么发。每一端要有一道测试：声明的每项能力带来的每种下行帧，这一端都有处理代码。
+
+- Rust：`myriad_link_child::capabilities::unread(声明的, |t| 这一端读不读 t)` 必须是空的。「读不读」要一直算到外壳：从 `Session::READS`（会话会交付的帧类型）里去掉外壳拿到交付却什么都不做的。
+- C 入口：`link.child_claims`，断言 `unread` 是空的。
+- `idle` 列出声明了也不起作用的：主机今天不读的（`rig`、`voice.out`、`panel`、`pi`、`cua`），和少了搭档的（`reminders` 要有 `notify`，`cards` 要有 `conversations.live`）。
+- 这张「能力带来哪些帧」的表在 `myriad-link-child` 的 `capabilities` 里，是照契约的描述和主机今天的开关写的，还没进契约。
+
+会话今天读的下行帧是 `Session::READS` 那些（握手、回合、`perform`、`mood`、`say`、`outfit`、`wardrobe`、`touch.reaction`、`conversations`、`conversation`、`notice`、`error`）。电脑上才有的那些（`act.*`、`proposals`、`nodes`、`experience.*`、`moment.*`、`now.*`、`card.*`）它还不读：声明了这些能力的端，`unread` 会把它们列出来。
+
+### 测自己
+
+照「她的连接：子机一侧的剧本」把八份剧本演给自己的子机：Rust 的端实现 `ChildEnd` 调 `play`；别的端照 `play` 的走法自己走剧本，假主机的每一步问 `conformance.host`（那里的 `now` 是剧本的时间，毫秒：`T0` 即 1760140800000 加上这一步的 `at`；喂给 `link.child_step` 时换成微秒）。本仓库的测试里有一个只经 C 入口的子机（`crates/myriad-core-ffi/src/tests/link.rs` 的 `AcrossTheEntry`）把八份都演过，可以照着写。
 
 ## 授予和听众（`grants.*`、`audience.*`）
 
@@ -777,8 +923,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 - **子机端测自己**（「我对假主机」）：给自己的连接代码实现 `ChildEnd`（三个方法：外壳做一件事、收到主机的一段文本、取出自己接下来的一个输出），对每份剧本调 `play`（这一端要按剧本的 `capabilities` 建）。`Host` 是假主机：给主机的帧编号、写出文本，并拿子机发来的每一帧对剧本、对契约、对写法（必须是规范文本）、对方向（是不是子机发的帧）、对编号（`seq` 逐一递增，`ack` 不回退、不超过主机发过的）。本仓库的测试用 `run`（就是 `play` 对子机核心自己）演每一份。`close`、`http` 两种步问的是子机核心，不经 `ChildEnd`：一端要查自己怎么处理关闭，用 `after_close`、`after_http` 对自己的结果。输出的先后以这一端自己的连接代码给出的为准；套接字和外壳分两路的端，取出时照剧本的先后合成一路。
 - **主机测自己**（「假子机对我」）：主机答什么是它自己的（它造的 id、一段回复有几个事件），所以剧本不拿去对主机重放。主机在自己的测试里用 `Child`（假子机，就是子机核心）写自己的场景：`Child::act` 让它连上、说话，把它发出的帧送进自己真的连接处理，自己答的每一帧交给 `Child::hears`。`hears` 先查这一帧过不过契约、是不是主机发的帧、编号对不对（`seq` 逐一递增，`ack` 不回退、不超过子机发过的），再让子机核心读；主机再看 `Child` 的输出是不是它想让子机做的。`Child` 不在只给测试编的代码里，也不开套接字：演练环境里给它包一层套接字，就能让真的主机对它跑。主机发的帧是不是规范文本 `hears` 不查（契约说每帧只有一种写法，主机今天是不是都这样发还没核过）。
 - 两个替身都不是她：假主机只照剧本答。
-- 这个 crate 只给测试用，没有一端把它装进产品。它不带套接字：要连同自己的套接字外壳一起测的端，自己在 `Host` 外面包一层（把 `Host::frame` 的文本写进套接字，把读到的交给 `Host::takes`）。
-- 还没有经 C 入口的调用：不用 Rust 的端现在演不了，要等子机核心的调用进 `myriad-core-ffi`。
+- 这个 crate 只给测试用。它跟着 `myriad-core-ffi` 编进静态库，只有 `conformance.host` 这一个调用够得到它（假主机的那几个函数会留在产品里，很小；`play`、`Child` 不会）。产品不调这个调用；它的 `fault` 会引用出错的那一帧，所以也不该在产品里调。它不带套接字：要连同自己的套接字外壳一起测的端，自己在 `Host` 外面包一层（把 `Host::frame` 的文本写进套接字，把读到的交给 `Host::takes`）。
+- 不用 Rust 的端：自己照 `play` 的走法走剧本（每一步恰好一件事、往下发生之前子机不能有没对上的输出、演完不能有剩的），假主机的三种动作问 `conformance.host`（`"connected"`、`{frame: {spec, now}}`、`{takes: {expected, text}}`），`close`、`http` 两种步问 `link.child_after`。
 - 不兼容的改动另开 `v2/child/`，和别的对照一样。
 
 ## 宿主过滤（`filter.*`）

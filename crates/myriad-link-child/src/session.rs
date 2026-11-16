@@ -8,6 +8,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use myriad_her_link::valid_id;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 
 use crate::contract::{Contract, Timing};
@@ -221,7 +222,8 @@ pub enum Output {
     Drop(Down),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Turn {
     pub turn_id: String,
     pub run_id: Option<String>,
@@ -254,7 +256,8 @@ impl Turn {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct Pending {
     id: String,
     t: String,
@@ -299,15 +302,47 @@ impl Envelope {
 
 /// A whole number JSON can carry exactly.
 fn unsigned(value: &Value) -> Option<u64> {
-    value.as_u64().or_else(|| {
-        let n = value.as_f64()?;
-        (n.is_finite() && n >= 0.0 && n.fract() == 0.0 && n <= 9_007_199_254_740_992.0)
-            .then_some(n as u64)
-    })
+    match value.as_u64() {
+        Some(n) => (n <= WHOLE).then_some(n),
+        None => {
+            let n = value.as_f64()?;
+            (n.is_finite() && n >= 0.0 && n.fract() == 0.0 && n <= WHOLE as f64).then_some(n as u64)
+        }
+    }
 }
+
+/// The largest whole number every JSON reader keeps exactly (2^53). No count or time of the
+/// link is past it: a frame that says one is no envelope, and a state that holds one is not
+/// a session's, so what a session gives back survives a reader that keeps numbers as doubles.
+const WHOLE: u64 = 1 << 53;
 
 fn string(value: &Value, key: &str) -> Option<String> {
     value.get(key)?.as_str().map(str::to_string)
+}
+
+/// [`Session::state`]: every field that is not the contract's, turns in the order said.
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct State {
+    version: u32,
+    hello: Map<String, Value>,
+    phase: String,
+    sent: u64,
+    heard: u64,
+    opened_at_ms: i64,
+    last_heard_ms: i64,
+    last_sent_ms: i64,
+    heartbeat_ms: i64,
+    outbox: Vec<Pending>,
+    turns: Vec<Turn>,
+    current_turn: Option<String>,
+    mood_revision: Option<f64>,
+    taken: Vec<String>,
+    host_capabilities: Vec<String>,
+}
+
+impl State {
+    const VERSION: u32 = 1;
 }
 
 pub struct Session {
@@ -424,8 +459,9 @@ impl Session {
 
     /// What this end says it can do, as its hello says it.
     pub fn capabilities(&self) -> Vec<String> {
-        self.hello["capabilities"]
-            .as_array()
+        self.hello
+            .get("capabilities")
+            .and_then(Value::as_array)
             .map(|all| {
                 all.iter()
                     .filter_map(|c| c.as_str().map(str::to_string))
@@ -458,6 +494,125 @@ impl Session {
             .filter_map(|id| self.turns.get(id))
             .filter(|turn| !turn.ended)
             .collect()
+    }
+
+    // As a value
+
+    /// The whole session as JSON, for an end that keeps it between calls (the C entry's
+    /// `link.child_step`): [`Session::restore`] of it is this session again. What comes from
+    /// the contract is read again from the contract when it is restored. It holds what the
+    /// owner said and has not been acked; an end keeps it where it keeps that. Every number
+    /// in it is a whole number no greater than 2^53.
+    pub fn state(&self) -> Value {
+        let state = State {
+            version: State::VERSION,
+            hello: self.hello.clone(),
+            phase: self.phase.name().to_string(),
+            sent: self.sent,
+            heard: self.heard,
+            opened_at_ms: self.opened_at_ms,
+            last_heard_ms: self.last_heard_ms,
+            last_sent_ms: self.last_sent_ms,
+            heartbeat_ms: self.heartbeat_ms,
+            outbox: self.outbox.clone(),
+            turns: self
+                .order
+                .iter()
+                .filter_map(|id| self.turns.get(id).cloned())
+                .collect(),
+            current_turn: self.current_turn.clone(),
+            mood_revision: self.mood_revision,
+            taken: self.taken.clone(),
+            host_capabilities: self.host_capabilities.iter().cloned().collect(),
+        };
+        serde_json::to_value(state).expect("a session is plain data")
+    }
+
+    /// The session [`Session::state`] gave, under `contract`. Why not, when `state` is not
+    /// one: never with anything of what it holds.
+    pub fn restore(contract: &Contract, state: &Value) -> Result<Self, String> {
+        let no = || "not a session's state".to_string();
+        let mut state = State::deserialize(state).map_err(|_| no())?;
+        if state.version != State::VERSION {
+            return Err("a session's state of another version".into());
+        }
+        let phase = [Phase::Closed, Phase::Greeting, Phase::Open]
+            .into_iter()
+            .find(|phase| phase.name() == state.phase)
+            .ok_or_else(no)?;
+        // Every count and time is one a session could have reached, so no step after this
+        // overflows or reads a time before the epoch.
+        let time = |ms: i64| u64::try_from(ms).is_ok_and(|ms| ms <= WHOLE);
+        let counts = [state.sent, state.heard]
+            .into_iter()
+            .chain(state.outbox.iter().filter_map(|pending| pending.seq))
+            .chain(state.turns.iter().flat_map(|turn| {
+                [Some(turn.last_sequence), turn.performed, turn.live]
+                    .into_iter()
+                    .flatten()
+            }));
+        let beat = 50..=contract.timing.heartbeat_ms.max(50);
+        let mut ids = BTreeSet::new();
+        if counts.into_iter().any(|count| count > WHOLE)
+            || ![state.opened_at_ms, state.last_heard_ms, state.last_sent_ms]
+                .into_iter()
+                .all(time)
+            || !beat.contains(&state.heartbeat_ms)
+            || !state.turns.iter().all(|turn| ids.insert(&turn.turn_id))
+            || !state.hello.get("app").is_some_and(Value::is_object)
+        {
+            return Err(no());
+        }
+        // What the hello says of the contract is this contract's, whichever one the state
+        // was kept under: a state kept across an update says the new protocol.
+        let said: Vec<Value> = state
+            .hello
+            .get("capabilities")
+            .and_then(Value::as_array)
+            .ok_or_else(no)?
+            .iter()
+            .filter(|said| {
+                said.as_str()
+                    .is_some_and(|said| contract.capabilities.iter().any(|known| known == said))
+            })
+            .cloned()
+            .collect();
+        state
+            .hello
+            .insert("capabilities".into(), Value::Array(said));
+        state
+            .hello
+            .insert("protocol".into(), json!(contract.protocol));
+        state.hello.insert("role".into(), json!("child"));
+        state.hello.insert("surface".into(), json!("app"));
+        Ok(Self {
+            timing: contract.timing,
+            hello: state.hello,
+            contract_capabilities: contract.capabilities.clone(),
+            known_frames: contract.frames.keys().cloned().collect(),
+            phase,
+            sent: state.sent,
+            heard: state.heard,
+            opened_at_ms: state.opened_at_ms,
+            last_heard_ms: state.last_heard_ms,
+            last_sent_ms: state.last_sent_ms,
+            heartbeat_ms: state.heartbeat_ms,
+            outbox: state.outbox,
+            order: state
+                .turns
+                .iter()
+                .map(|turn| turn.turn_id.clone())
+                .collect(),
+            turns: state
+                .turns
+                .into_iter()
+                .map(|turn| (turn.turn_id.clone(), turn))
+                .collect(),
+            current_turn: state.current_turn,
+            mood_revision: state.mood_revision,
+            taken: state.taken,
+            host_capabilities: state.host_capabilities.into_iter().collect(),
+        })
     }
 
     // Connection
@@ -1042,18 +1197,20 @@ impl Session {
         match self.phase {
             Phase::Closed => Vec::new(),
             Phase::Greeting => {
-                if now_ms - self.opened_at_ms >= self.timing.hello_timeout_ms {
+                if now_ms.saturating_sub(self.opened_at_ms) >= self.timing.hello_timeout_ms {
                     vec![Output::Drop(Down::Silent)]
                 } else {
                     Vec::new()
                 }
             }
             Phase::Open => {
-                if now_ms - self.last_heard_ms
-                    >= self.heartbeat_ms * self.timing.missed_heartbeats.max(1)
+                if now_ms.saturating_sub(self.last_heard_ms)
+                    >= self
+                        .heartbeat_ms
+                        .saturating_mul(self.timing.missed_heartbeats.max(1))
                 {
                     vec![Output::Drop(Down::Silent)]
-                } else if now_ms - self.last_sent_ms >= self.heartbeat_ms {
+                } else if now_ms.saturating_sub(self.last_sent_ms) >= self.heartbeat_ms {
                     self.send("ping", &json!({}), None, now_ms)
                 } else {
                     Vec::new()

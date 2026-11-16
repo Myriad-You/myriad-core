@@ -761,3 +761,197 @@ mod capabilities {
         assert_eq!(rule("pi").map(|rule| rule.kind), Some(Kind::Unheeded));
     }
 }
+
+mod state {
+    use std::time::Instant;
+
+    use super::*;
+
+    /// The state through its text and back, as an end across the C entry keeps it.
+    fn kept(s: &Session) -> (Session, usize) {
+        let text = s.state().to_string();
+        let back = Session::restore(contract(), &serde_json::from_str(&text).unwrap()).unwrap();
+        (back, text.len())
+    }
+
+    #[test]
+    fn a_session_kept_as_its_state_is_the_same_session() {
+        let mut s = open();
+        s.say(
+            "t_02",
+            "今天过得怎么样？",
+            Some("sess_1"),
+            None,
+            &[],
+            T0 + 1000,
+        );
+        s.received(&host("run.accepted", 2, 2, |_| {}), T0 + 1020);
+        s.received(&host("run.event", 3, 2, |_| {}), T0 + 1100);
+        s.received(&host("mood", 4, 2, |_| {}), T0 + 1150);
+        s.received(&host("say", 5, 2, |_| {}), T0 + 1200);
+        s.delivered("sd_1", &fixture("speech.delivered")["body"], T0 + 1300);
+        let (mut back, _) = kept(&s);
+        assert_eq!(back.state(), s.state());
+        // And goes on as the one it was kept from: the same frames for the same events.
+        for step in 0..3 {
+            let now = T0 + 20_000 * (step + 1);
+            assert_eq!(back.tick(now), s.tick(now));
+            let again = host("say", 6 + step as u64, 2, |_| {});
+            assert_eq!(back.received(&again, now + 1), s.received(&again, now + 1));
+        }
+        s.disconnected();
+        back.disconnected();
+        assert_eq!(back.connected(T0 + 90_000), s.connected(T0 + 90_000));
+        let welcome = host("welcome", 1, 1, |_| {});
+        assert_eq!(
+            back.received(&welcome, T0 + 90_050),
+            s.received(&welcome, T0 + 90_050)
+        );
+        assert_eq!(back.state(), s.state());
+    }
+
+    #[test]
+    fn what_is_not_a_state_is_told_without_what_it_holds() {
+        let mut state = open().state();
+        state["hello"]["app"]["name"] = json!("secret-looking");
+        state["later"] = json!(1);
+        let why = Session::restore(contract(), &state).err().unwrap();
+        assert!(!why.contains("secret") && !why.contains("later"), "{why}");
+        let mut other = open().state();
+        other["version"] = json!(2);
+        assert!(Session::restore(contract(), &other).is_err());
+        assert!(Session::restore(contract(), &json!(null)).is_err());
+        // Numbers no session reaches, a turn twice, a hello with nothing to say.
+        let broken = |edit: &dyn Fn(&mut Value)| {
+            let mut state = open().state();
+            edit(&mut state);
+            Session::restore(contract(), &state).is_err()
+        };
+        assert!(broken(&|s| s["sent"] = json!(u64::MAX)));
+        assert!(broken(&|s| s["heard"] = json!((1u64 << 53) + 1)));
+        assert!(broken(&|s| s["openedAtMs"] = json!(i64::MIN)));
+        assert!(broken(&|s| s["lastHeardMs"] = json!(-1)));
+        assert!(broken(&|s| s["heartbeatMs"] = json!(i64::MAX)));
+        assert!(broken(&|s| s["heartbeatMs"] = json!(0)));
+        assert!(broken(&|s| s["hello"] = json!({})));
+        let mut twice = open();
+        twice.say("t_02", "在吗", None, None, &[], T0 + 1000);
+        assert!(broken(&|s| {
+            *s = twice.state();
+            let turn = s["turns"][0].clone();
+            s["turns"].as_array_mut().unwrap().push(turn);
+        }));
+    }
+
+    #[test]
+    fn a_state_kept_under_another_contract_says_this_contracts_hello() {
+        let mut state = session().state();
+        state["hello"]["protocol"] = json!(1);
+        state["hello"]["role"] = json!("host");
+        state["hello"]["capabilities"] = json!(["say", "from.an.older.contract", 7]);
+        let mut back = Session::restore(contract(), &state).unwrap();
+        assert_eq!(back.capabilities(), ["say"]);
+        let hello = &sent(&back.connected(T0))[0];
+        assert_eq!(hello["body"]["protocol"], contract().protocol);
+        assert_eq!(hello["body"]["role"], "child");
+    }
+
+    #[test]
+    fn a_count_no_reader_keeps_exactly_is_no_envelope() {
+        let mut s = open();
+        let mut far: Value = serde_json::from_str(&host("ping", 2, 1, |_| {})).unwrap();
+        far["seq"] = json!(u64::MAX);
+        let out = s.received(&far.to_string(), T0 + 100);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Unread { t: None, code }] if code == "bad_frame"
+        ));
+        assert_eq!(s.state()["heard"], 1);
+        // And a clock far off moves nothing past what a number holds.
+        assert!(
+            s.tick(i64::MAX)
+                .iter()
+                .any(|o| matches!(o, Output::Drop(_)))
+        );
+        assert!(s.tick(i64::MIN).is_empty());
+    }
+
+    /// What keeping the session as its state costs per frame. Run in release:
+    /// `cargo test -p myriad-link-child --release -- --ignored --nocapture cost`.
+    #[test]
+    #[ignore = "a measurement, not a check"]
+    fn the_cost_of_keeping_a_session_as_its_state() {
+        // The quietest of several batches: other work on the machine only ever adds.
+        let measure = |name: &str, s: &Session| {
+            let (batches, rounds) = (7, 50);
+            let mut bytes = 0;
+            let mut best = f64::MAX;
+            let mut worst = 0.0_f64;
+            for _ in 0..batches {
+                let started = Instant::now();
+                for _ in 0..rounds {
+                    bytes = kept(s).1;
+                }
+                let each = started.elapsed().as_secs_f64() * 1e6 / f64::from(rounds);
+                best = best.min(each);
+                worst = worst.max(each);
+            }
+            println!(
+                "{name}: {bytes} bytes; {best:.0} to {worst:.0} µs per frame, out and back in"
+            );
+        };
+        // Typical: open, a few turns, nothing waiting.
+        let mut typical = open();
+        for turn in 0..3 {
+            let id = format!("t_{turn}");
+            typical.say(&id, "今天过得怎么样？", None, None, &[], T0 + 1000);
+            typical.received(
+                &host("run.accepted", 2 + turn, 2, |b| b["turnId"] = json!(id)),
+                T0 + 1020,
+            );
+        }
+        measure("typical", &typical);
+        // Full: every turn and every taken id it keeps, nothing waiting.
+        let mut full = open();
+        for turn in 0..Session::KEPT_TURNS as u64 {
+            let id = format!("turn_{turn:058}");
+            full.say(&id, "在吗", None, None, &[], T0 + 1000);
+            full.received(
+                &host("run.accepted", 2 + turn, 2 + turn, |b| {
+                    b["turnId"] = json!(id)
+                }),
+                T0 + 1020,
+            );
+        }
+        for line in 0..Session::KEPT_TAKEN as u64 {
+            let mut say: Value = serde_json::from_str(&host("say", 100 + line, 2, |_| {})).unwrap();
+            say["id"] = json!(format!("spk_{line:060}"));
+            full.received(&say.to_string(), T0 + 2000);
+        }
+        measure("full", &full);
+        // Worst: that, and the link down with pictures waiting to go (two of 120 KB each in
+        // one input is about what a frame holds; four such inputs said while offline).
+        let mut worst = Session::restore(contract(), &full.state()).unwrap();
+        worst.disconnected();
+        worst.connected(T0 + 2900);
+        worst.received(
+            &host("welcome", 1, 1, |b| b["capabilities"] = json!(["images"])),
+            T0 + 3000,
+        );
+        assert!(worst.shows());
+        worst.disconnected();
+        let picture = format!("data:image/jpeg;base64,{}", "A".repeat(120_000));
+        for turn in 0..4 {
+            let id = format!("offline_{turn}");
+            worst.say(
+                &id,
+                "你看",
+                None,
+                None,
+                &[picture.clone(), picture.clone()],
+                T0 + 4000,
+            );
+        }
+        measure("worst", &worst);
+    }
+}

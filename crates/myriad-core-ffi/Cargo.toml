@@ -19,6 +19,10 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "std"
 chrono-tz = "0.10"
 myriad-agent-rules = { path = "../myriad-agent-rules" }
 myriad-her-link = { path = "../myriad-her-link" }
+myriad-link-child = { path = "../myriad-link-child" }
+# The stand-in host of her link's conformance scripts, for ends that play them across the
+# C entry. Only the call `conformance.host` reaches it; no product calls that.
+myriad-link-conformance = { path = "../myriad-link-conformance" }
 myriad-merope = { path = "../myriad-merope" }
 myriad-nodes = { path = "../myriad-nodes" }
 myriad-perception-filter = { path = "../myriad-perception-filter" }
