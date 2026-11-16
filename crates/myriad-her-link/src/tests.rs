@@ -349,3 +349,29 @@ fn a_call_is_allowed_only_for_whom_its_action_says() {
         assert!(CONTRACT.error_codes.contains_key(code), "{code}");
     }
 }
+
+#[test]
+fn a_call_is_held_to_its_deadline_or_the_most_its_action_may_be_given() {
+    let taken = 1_760_141_100_000;
+    // Within the most: as asked.
+    assert_eq!(
+        super::call_deadline("screen.look", taken + 10_000, taken),
+        taken + 10_000
+    );
+    // Past it: held to the most from when it was taken, not refused.
+    assert_eq!(
+        super::call_deadline("screen.look", taken + 120_000, taken),
+        taken + CONTRACT.timing.call_deadline_max_ms
+    );
+    assert_eq!(
+        super::call_deadline("work.run", taken + 3_600_000, taken),
+        taken + CONTRACT.timing.long_call_max_ms
+    );
+    // An action this end does not know is given a long call's most.
+    assert_eq!(
+        super::call_most_ms("screen.record"),
+        CONTRACT.timing.long_call_max_ms
+    );
+    // Already passed: the receiver answers it call_timeout.
+    assert!(super::call_deadline("screen.look", taken - 1, taken) < taken);
+}
