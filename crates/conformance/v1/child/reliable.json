@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "name": "reliable",
+  "about": "A reliable frame from her host is acked every time it comes and delivered once per id. A reliable frame of the child's is kept until the host's ack covers its seq: not acked when the link goes, it is sent again on the next one with the same id and a new seq; once acked it is not sent again.",
+  "capabilities": ["say", "playback"],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": ["say", "playback"]}}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["say", "playback"], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome", "deviceId": "dev_0123456789abcdef0123456789abcdef", "host": "site"}},
+    {"at": 100, "host": {"t": "say", "id": "spk_01", "body": {"text": "你回来啦。", "kind": "greeting", "saidAt": 1760140819950}}},
+    {"deliver": {"kind": "say", "id": "spk_01"}},
+    {"child": {"t": "ack", "seq": 2, "ack": 2}},
+    {"at": 200, "host": {"t": "say", "id": "spk_01", "body": {"text": "你回来啦。", "kind": "greeting", "saidAt": 1760140819950}}},
+    {"child": {"t": "ack", "seq": 3, "ack": 3}},
+    {"at": 300, "do": {"delivered": {"id": "sd_01", "body": {"turnId": "t_02", "runId": "run_fedcba9876543210fedcba9876543210", "spokenChars": 4, "totalChars": 11, "interrupted": true, "by": "stop"}}}},
+    {"child": {"t": "speech.delivered", "id": "sd_01", "seq": 4, "ack": 3, "body": {"spokenChars": 4}}},
+    {"at": 400, "do": "disconnect"},
+    {"at": 5000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 5050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["say", "playback"], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome"}},
+    {"child": {"t": "speech.delivered", "id": "sd_01", "seq": 2, "ack": 1, "body": {"spokenChars": 4}}},
+    {"at": 5100, "host": {"t": "ping"}},
+    {"child": {"t": "pong", "seq": 3, "ack": 2}},
+    {"at": 5200, "do": "disconnect"},
+    {"at": 9000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 9050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["say", "playback"], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome"}}
+  ]
+}

@@ -60,6 +60,14 @@ pub enum Refusal {
 }
 
 impl Refusal {
+    /// What the body of a refused upgrade says (contract `auth`): `{error, code}`, with
+    /// `host: {kind, name}` when the code is `host_moved` and the site knows where she lives.
+    /// None for a body that is not that, or a code the link does not act on.
+    pub fn read(body: &Value) -> Option<Self> {
+        let name = body.get("host").and_then(|host| host.get("name"));
+        Self::of(body.get("code")?.as_str()?, name.and_then(Value::as_str))
+    }
+
     /// The contract's `refusals` code, and the device she lives on when `host_moved` names it.
     pub fn of(code: &str, device_name: Option<&str>) -> Option<Self> {
         Some(match code {

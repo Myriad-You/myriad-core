@@ -1,0 +1,17 @@
+[package]
+name = "myriad-link-conformance"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Her link's conformance scripts played in memory: a stand-in host and a stand-in child, so each end can test its side of the link without another end."
+authors = ["Myriad Contributors"]
+license = "AGPL-3.0-only"
+
+# Pure, like every crate here: no socket and no clock. A script is played by
+# handing texts back and forth; an end that wants its own socket shell tested
+# wraps one around `Host` (docs/SHARED_CORE.md). For tests only: no end ships it.
+[dependencies]
+myriad-her-link = { path = "../myriad-her-link" }
+myriad-link-child = { path = "../myriad-link-child" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }

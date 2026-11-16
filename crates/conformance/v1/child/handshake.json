@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "handshake",
+  "about": "Hello goes first and is numbered 1; the welcome opens the link; a second connection numbers from 1 again and says the lineage and epoch the last welcome gave. A ping before the welcome is answered. No welcome within helloTimeoutMs drops the link.",
+  "capabilities": [],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": [], "lineage": null, "hostEpoch": null}}},
+    {"at": 20, "host": {"t": "ping"}},
+    {"child": {"t": "pong", "seq": 2, "ack": 1}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140800050, "sync": "off", "lineage": "ln_01", "hostEpoch": 3}}},
+    {"deliver": {"kind": "welcome", "deviceId": "dev_0123456789abcdef0123456789abcdef", "host": "site", "lineage": "ln_01", "hostEpoch": 3}},
+    {"at": 4000, "do": "disconnect"},
+    {"at": 5000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": [], "lineage": "ln_01", "hostEpoch": 3}}},
+    {"at": 5050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140800050, "sync": "off", "lineage": "ln_01", "hostEpoch": 4}}},
+    {"deliver": {"kind": "welcome", "lineage": "ln_01", "hostEpoch": 4}},
+    {"at": 6000, "do": "disconnect"},
+    {"at": 7000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": [], "hostEpoch": 4}}},
+    {"at": 16999, "do": "tick"},
+    {"at": 17000, "do": "tick"},
+    {"drop": {"why": "silent"}}
+  ]
+}

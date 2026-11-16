@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "versions",
+  "about": "Ends that are not of one version say so and stop, never guess. A welcome in a frame format this child does not read is told to its shell and drops the link; her host closes a hello of another protocol with unsupported_protocol, and a frame of another format with version_unsupported: after either the child does not reconnect, and its shell asks for an update.",
+  "capabilities": [],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "body": {"protocol": 2}}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140800050, "sync": "off"}, "envelope": {"v": 2}, "unchecked": true}},
+    {"deliver": {"kind": "unread", "t": "welcome", "code": "version_unsupported"}},
+    {"drop": {"why": "refused_handshake"}},
+    {"close": {"code": 4415, "reason": null}, "after": {"then": "stop", "down": {"why": "unsupported_protocol"}}},
+    {"close": {"code": 4406, "reason": null}, "after": {"then": "stop", "down": {"why": "unsupported_protocol"}}},
+    {"at": 1000, "do": "disconnect"},
+    {"at": 2000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 2050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140800050, "sync": "off", "later": true}, "unchecked": true}},
+    {"deliver": {"kind": "unread", "t": "welcome", "code": "bad_frame"}},
+    {"drop": {"why": "refused_handshake"}}
+  ]
+}
