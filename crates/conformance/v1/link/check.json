@@ -1888,10 +1888,13 @@
           "device"
         ]
       },
-      "name": "bad_frame: a screen.look that asks to wait as long as only a long call may",
+      "name": "a screen.look that asks to wait as long as only a long call may passes: its receiver holds it to its own most",
       "output": {
-        "refused": {
-          "code": "bad_frame"
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.look\",\"args\":{},\"callId\":\"call_look_0123456789c\",\"deadlineAt\":1760141220000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_look_0123456789c\",\"seq\":19,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
         }
       }
     },
@@ -2797,6 +2800,71 @@
         ]
       },
       "name": "bad_frame: a dropped frame whose reason is not a word",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789c",
+            "deadlineAt": 1760144710000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789c",
+          "seq": 19,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a call from a child whose own clock is an hour behind the host deadline it names passes",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.look\",\"args\":{},\"callId\":\"call_look_0123456789c\",\"deadlineAt\":1760144710000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_look_0123456789c\",\"seq\":19,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 9007199254740992,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call.ask whose deadline is past what every end reads exactly",
       "output": {
         "refused": {
           "code": "bad_frame"

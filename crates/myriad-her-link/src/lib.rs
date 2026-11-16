@@ -187,6 +187,10 @@ const CALL_ID_CHARS: usize = 64 - ".result".len();
 /// below it was written in seconds.
 const EPOCH_MS_FLOOR: u64 = 1_000_000_000_000;
 
+/// The largest whole number an end that reads every number as a double
+/// reads exactly (2^53 - 1).
+const WHOLE_MOST: u64 = (1 << 53) - 1;
+
 static CONTRACT: LazyLock<Contract> =
     LazyLock::new(|| serde_json::from_str(CONTRACT_JSON).expect("her_link_contract.json"));
 
@@ -316,21 +320,16 @@ fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
         return Err(refuse("bad_frame", "call.ask names its action and version"));
     };
     let spec = call_spec(action);
-    let most = if spec.is_some_and(|spec| !spec.long) {
-        CONTRACT.timing.call_deadline_max_ms
-    } else {
-        CONTRACT.timing.long_call_max_ms
-    };
-    // An ask that comes after its deadline passes: its receiver answers it
-    // call_timeout.
-    let at = frame["at"].as_u64().unwrap_or(0);
+    // On the host's clock, which the frame's at (the sender's) need not be:
+    // only that it is milliseconds. Its receiver holds it to the contract's
+    // most ([`call_deadline`]), and answers one that has passed call_timeout.
     if !body["deadlineAt"]
         .as_u64()
-        .is_some_and(|by| by >= EPOCH_MS_FLOOR && by <= at.saturating_add(most))
+        .is_some_and(|by| (EPOCH_MS_FLOOR..=WHOLE_MOST).contains(&by))
     {
         return Err(refuse(
             "bad_frame",
-            format!("call.ask's deadlineAt is milliseconds, at most {most} after its at"),
+            "call.ask's deadlineAt is milliseconds since the epoch, a whole number every end reads exactly",
         ));
     }
     match spec {
@@ -339,6 +338,26 @@ fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
         }
         _ => fields(&body["args"], "call.ask's args").map(|_| ()),
     }
+}
+
+/// The longest a call of `action` may be given, from its ask to its
+/// deadline: `timing.longCallMaxMs` for a long action (or one this end does
+/// not know), `callDeadlineMaxMs` for any other.
+pub fn call_most_ms(action: &str) -> u64 {
+    if call_spec(action).is_some_and(|spec| !spec.long) {
+        CONTRACT.timing.call_deadline_max_ms
+    } else {
+        CONTRACT.timing.long_call_max_ms
+    }
+}
+
+/// The deadline a call's receiver holds an ask to, on the host's clock: its
+/// `deadlineAt`, but no later than the most a call of its action may be
+/// given from `taken_at`, when the receiver took the ask (the host's clock,
+/// or a device's as set right by `welcome.serverTime`). A caller gives no
+/// more than that from when it asks, so both ends hold the same deadline.
+pub fn call_deadline(action: &str, deadline_at: u64, taken_at: u64) -> u64 {
+    deadline_at.min(taken_at.saturating_add(call_most_ms(action)))
 }
 
 /// `call.result`: its id is its callId's and `.result`; done carries
@@ -437,7 +456,11 @@ fn check_result(frame: &Value, body: &Value) -> Result<(), Refusal> {
 /// its name, at the version registered.
 pub fn stream_spec(event: bool, name: &str) -> Option<&'static StreamSpec> {
     let streams = &CONTRACT.streams;
-    let of = if event { &streams.event } else { &streams.state };
+    let of = if event {
+        &streams.event
+    } else {
+        &streams.state
+    };
     of.get(name)
 }
 
