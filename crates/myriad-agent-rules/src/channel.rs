@@ -3489,12 +3489,26 @@ pub fn discord_group_message_from_create(
     data: &serde_json::Value,
     bot_user_id: &str,
 ) -> Option<DiscordGroupMessage> {
+    discord_group_message_from_create_with_bots(data, bot_user_id, false)
+}
+
+/// Server-channel `MESSAGE_CREATE`, with whether other bots' and webhooks'
+/// lines are kept. The bot's own lines and lines without text always drop.
+///
+/// A line from another bot or a webhook is read as what the group said, never
+/// as calling her: [`DiscordGroupMessage::addressed`] stays false even when it
+/// mentions her, so whether she joins in stays with the usual timing.
+pub fn discord_group_message_from_create_with_bots(
+    data: &serde_json::Value,
+    bot_user_id: &str,
+    hear_other_bots: bool,
+) -> Option<DiscordGroupMessage> {
     let guild_id = json_snowflake(data.get("guild_id"))?;
-    if data.get("webhook_id").is_some_and(|value| !value.is_null()) {
-        return None;
-    }
+    let webhook = data.get("webhook_id").is_some_and(|value| !value.is_null());
     let author = data.get("author")?;
-    if author.get("bot").and_then(|value| value.as_bool()) == Some(true) {
+    let author_is_bot = author.get("bot").and_then(|value| value.as_bool()) == Some(true);
+    let other_bot = webhook || author_is_bot;
+    if other_bot && !hear_other_bots {
         return None;
     }
     let author_id = json_snowflake(author.get("id"))?;
@@ -3561,7 +3575,7 @@ pub fn discord_group_message_from_create(
         author_id,
         display_name,
         text,
-        addressed: mentions_her,
+        addressed: mentions_her && !other_bot,
         reply_to,
         images,
     })

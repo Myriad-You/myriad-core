@@ -1995,6 +1995,73 @@ fn discord_server_lines_are_heard_and_those_to_her_are_marked() {
     assert_eq!(discord_identify_intents(false) & DISCORD_MESSAGE_CONTENT, 0);
 }
 
+#[test]
+fn discord_server_lines_from_other_bots_are_heard_only_when_asked() {
+    use myriad_agent_rules::channel::{
+        discord_group_message_from_create, discord_group_message_from_create_with_bots,
+    };
+
+    let bot = serde_json::json!({
+        "id": "21", "channel_id": "22", "guild_id": "33",
+        "author": { "id": "44", "username": "war_bot", "bot": true },
+        "content": "战报：蓝队拿下第三局"
+    });
+    assert!(discord_group_message_from_create(&bot, "99").is_none());
+    let line = discord_group_message_from_create_with_bots(&bot, "99", true)
+        .expect("another bot's line when asked for");
+    assert_eq!(line.text, "战报：蓝队拿下第三局");
+    assert_eq!(line.display_name, "war_bot");
+    assert!(!line.addressed);
+
+    let webhook = serde_json::json!({
+        "id": "23", "channel_id": "22", "guild_id": "33",
+        "webhook_id": "7",
+        "author": { "id": "45", "username": "播报" },
+        "content": "今晚八点开赛"
+    });
+    assert!(discord_group_message_from_create(&webhook, "99").is_none());
+    let line = discord_group_message_from_create_with_bots(&webhook, "99", true)
+        .expect("a webhook's line when asked for");
+    assert_eq!(line.text, "今晚八点开赛");
+    assert!(!line.addressed);
+
+    let calling = serde_json::json!({
+        "id": "24", "channel_id": "22", "guild_id": "33",
+        "author": { "id": "44", "username": "war_bot", "bot": true },
+        "mentions": [{ "id": "99" }],
+        "content": "<@99> 来不来"
+    });
+    let line = discord_group_message_from_create_with_bots(&calling, "99", true).unwrap();
+    assert_eq!(line.text, "来不来");
+    assert!(
+        !line.addressed,
+        "a bot line is read as what the group said, not as calling her"
+    );
+
+    let own = serde_json::json!({
+        "id": "25", "channel_id": "22", "guild_id": "33",
+        "author": { "id": "99", "username": "her", "bot": true },
+        "content": "her own line"
+    });
+    assert!(
+        discord_group_message_from_create_with_bots(&own, "99", true).is_none(),
+        "never her own line, even with other bots heard"
+    );
+    assert!(discord_group_message_from_create_with_bots(&bot, "99", false).is_none());
+
+    let human = serde_json::json!({
+        "id": "26", "channel_id": "22", "guild_id": "33",
+        "author": { "id": "45", "username": "hong" },
+        "content": "今天好热"
+    });
+    assert_eq!(
+        discord_group_message_from_create_with_bots(&human, "99", true)
+            .unwrap()
+            .text,
+        "今天好热"
+    );
+}
+
 /// OneBot v11 wire 层：宽松解析是移植的核心价值。
 /// 各协议端（SnowLuma / Lagrange / LLOneBot）随时加字段，解不开的事件必须降级，绝不报错。
 mod onebot_wire {
