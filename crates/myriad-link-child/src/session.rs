@@ -2655,9 +2655,9 @@ impl Session {
             if !queued {
                 self.cancels.push(call_id.to_string());
             }
-        } else {
-            self.cancels.retain(|id| id != call_id);
         }
+        // A stop that waits for the next link is not undone by another made on this one: it
+        // leaves when it goes, when her host's result comes, or with the call.
         self.send("call.cancel", &json!({ "callId": call_id }), None, now_ms)
     }
 

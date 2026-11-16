@@ -2877,6 +2877,8 @@ mod calling {
         ask(&mut s, "ask_2", 30_000, T0 + 1000);
         let mut s = long(&s);
         assert_eq!(stops(&s.call_cancel("ask_2", T0 + 1100)), 1);
+        // Stopped again on the same link: told again, and the one for the next link stays.
+        assert_eq!(stops(&s.call_cancel("ask_2", T0 + 1200)), 1);
         relinked(&mut s, T0 + 2000);
         assert!(untold(
             &s.call_cancel("ask_2", T0 + 2055),
