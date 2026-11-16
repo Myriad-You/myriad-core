@@ -1468,8 +1468,12 @@ impl Session {
                 }
                 _ => Vec::new(),
             },
-            // One the core refuses is acked, so her host stops sending it again, but it is not
-            // taken: its id stays free for a line this end can read.
+            // One the core refuses is not handed to the shell with nothing in it. Her host
+            // counts it delivered all the same: the link's ack is of everything heard (the
+            // `ack` every frame of this end's carries, and the one sent here), so it is not
+            // sent again. That this end could not read it reaches her host only as
+            // `link.dropped`, where both ends listed `streams`. Its id is not kept, which
+            // matters only to a host that would send the line anew under it.
             "say" if !taken => match envelope.id.as_deref().filter(|id| valid_id(id)) {
                 Some(_) => self.send("ack", &json!({}), None, now_ms),
                 None => Vec::new(),

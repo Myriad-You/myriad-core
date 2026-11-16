@@ -1,7 +1,7 @@
 {
   "version": 1,
   "name": "unreadable",
-  "about": "A frame this child cannot read is told to its shell with why (the shared core's refusal code), never with what it carried, and the link stays up: a type from a newer contract, a field this contract does not know, another frame format, a text that is no frame. A reliable one is still acked, not delivered, and its id stays free. What comes after is read as before.",
+  "about": "A frame this child cannot read is told to its shell with why (the shared core's refusal code), never with what it carried, and the link stays up: a type from a newer contract, a field this contract does not know, another frame format, a text that is no frame. A reliable one is acked like any frame heard (the link's ack is of everything heard), so her host counts it delivered and does not send it again; it is not delivered to the shell, and that it was not read reaches her host only as link.dropped, on a link with streams. What comes after is read as before.",
   "capabilities": ["say"],
   "steps": [
     {"at": 0, "do": "connect"},

@@ -546,7 +546,7 @@ fn a_frame_the_core_refuses_carries_nothing() {
 }
 
 #[test]
-fn a_line_the_core_refuses_is_acked_and_its_id_stays_free() {
+fn a_line_the_core_refuses_is_acked_so_her_host_counts_it_delivered() {
     let mut s = open();
     let bad = host("say", 2, 1, |b| b["later"] = json!(true));
     let out = s.received(&bad, T0 + 2000);
@@ -554,8 +554,11 @@ fn a_line_the_core_refuses_is_acked_and_its_id_stays_free() {
         delivered(&out)[..],
         [Delivery::Unread { t: Some(t), code }] if t == "say" && code == "bad_frame"
     ));
-    assert_eq!(sent(&out)[0]["t"], "ack");
-    // The same id in a frame this end reads is still taken.
+    // The ack that goes back covers the frame it could not read (seq 2): by the link's
+    // rules her host has delivered it, and will not send it again.
+    let ack = &sent(&out)[0];
+    assert_eq!((&ack["t"], &ack["ack"]), (&json!("ack"), &json!(2)));
+    // Should her host send the line anew under the same id, it is taken: the id was not kept.
     let good = host("say", 3, 2, |_| {});
     assert!(matches!(
         delivered(&s.received(&good, T0 + 2100))[..],
