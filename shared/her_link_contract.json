@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "protocol": 2,
   "description": "Her link: the one connection every device of the owner's keeps, to the server (today the site), and on the same 现场's LAN also directly to the PC her mind is on. Her state and every decision stay where her mind is; another end sends what it hears and sees up, and plays what comes down. Ends synthesize her voice themselves: her mind sends text and performance, never audio. Text frames only: each is canonical JSON with v, the frame format version (encoding). Protocol 2 is the only one spoken: an end that says hello in another is closed with unsupported_protocol (history says what protocol 1 was). Whether her log, her lease and the lent chats flow on a link is the welcome's sync, not a protocol number.",
   "history": {"1": "Protocol 1 (2026-10 to 2026-11-05): the site as her host and a native app as a child, the frames above without the families, and an envelope without v. Retired by the owner on 2026-11-05 with no fallback: every end speaks protocol 2, and the sync families are switched by welcome.sync."},
@@ -31,13 +31,19 @@
     "touchAppraiseMs": 3000,
     "actPickupMs": 600000,
     "actMaxRunMs": 1800000,
-    "description": "Each end pings every heartbeatMs and answers a ping with a pong. Nothing heard from the other end for missedHeartbeats heartbeats means the link is gone. A child reconnects with exponential backoff from reconnectInitialMs to reconnectMaxMs, and at once when the network comes back or the machine wakes. touchAppraiseMs is how long the host takes at most to answer touch.appraise. actPickupMs is how long an act.request waits for the child to start it or refuse it; actMaxRunMs is the longest one run it asks for may take on the child, which stops it then, and the host, a minute after that, counts it timed out."
+    "callAcceptMs": 5000,
+    "callDeadlineMaxMs": 60000,
+    "longCallMaxMs": 1800000,
+    "ownerConfirmMaxMs": 900000,
+    "blobKeepMs": 600000,
+    "description": "Each end pings every heartbeatMs and answers a ping with a pong. Nothing heard from the other end for missedHeartbeats heartbeats means the link is gone. A child reconnects with exponential backoff from reconnectInitialMs to reconnectMaxMs, and at once when the network comes back or the machine wakes. touchAppraiseMs is how long the host takes at most to answer touch.appraise. actPickupMs is how long an act.request waits for the child to start it or refuse it; actMaxRunMs is the longest one run it asks for may take on the child, which stops it then, and the host, a minute after that, counts it timed out. callAcceptMs is how long a long call (calls) waits for call.accepted; callDeadlineMaxMs the longest deadlineMs a call that is not long may ask for, longCallMaxMs that of a long one. ownerConfirmMaxMs is how long a call waits for the owner to answer on the device before it ends declined. blobKeepMs is how long the host keeps a call's blob (transports.blobs) before it deletes it."
   },
   "limits": {
     "maxFrameBytes": 262144,
     "maxTextChars": 32680,
     "idPattern": "^[A-Za-z0-9_.:-]{1,64}$",
-    "description": "maxItems on a frame caps its arrays; a frame over any limit is refused with too_large or too_many."
+    "glanceChars": 2000,
+    "description": "maxItems on a frame caps its arrays; a frame over any limit is refused with too_large or too_many. glanceChars caps input.glance's summary and each of its facts together: a child cuts a longer one before it sends it and a host cuts what still is, never refusing the frame for it."
   },
   "envelope": {
     "required": ["v", "t", "seq", "ack", "at", "body"],
@@ -60,6 +66,11 @@
     "server": "The server: issues the lease, relays between devices, keeps the logs it should."
   },
   "transports": {
+    "blobs": {
+      "scheme": "https",
+      "path": "/api/agent/link/blobs/{blobId}",
+      "description": "Where a call's large result goes (an action whose blob is true: a picture, a recording): the end that made it PUTs the bytes here with its device token, blobId being lowercase hex sha256 of the bytes, at most 15 MiB, and call.result names it in blobs. The host keeps it bound to that call and to its for, for blobKeepMs, and deletes it then or once she has used it; only an end the same call and for would be allowed reads it. What she keeps of it is what she made of it in words, never the bytes. Not the sync assets (her log's pictures), which are kept."
+    },
     "server": {
       "scheme": "wss",
       "path": "/api/agent/link",
@@ -123,6 +134,7 @@
     "peer": "Device identities: published, confirmed by the owner, and proven on the LAN.",
     "group": "A group's new messages lent to her mind on a PC to think with (the group's log stays on the server), and what she says there, sent out by the server.",
     "chat": "A private chat's new messages on a chat app, lent to her mind on a PC to think with (someone else's talk stays on the server), and what she says there, sent out by the server.",
+    "call": "One end asking another to do one thing for her, by its name in calls, and what came of it: only between her host and a child, never from one child to another. Only on a link where both ends listed the capability calls.",
     "now": "What is going on on a device, told as it changes: the coding-agent sessions running there. Her host keeps it by rules (sessions), not by judging each one."
   },
   "sync": {
@@ -167,12 +179,286 @@
     "now.sessions",
     "now.sessions2",
     "now.choices",
-    "cards"
+    "cards",
+    "calls",
+    "glance",
+    "versions",
+    "streams"
   ],
   "sayKinds": ["greeting", "proactive", "face-to-face"],
   "noticeKinds": ["work", "waiting", "report", "reminder"],
   "workPlaces": ["site", "mac"],
   "actStatuses": ["completed", "failed", "cancelled", "timeout"],
+  "callAudiences": ["owner", "own", "group", "other"],
+  "calls": {
+    "description": "What one end may ask another to do for her (the call family), one action at a time. by is the end that does it: child (a device of the owner's) or host (her host). The host asks a child; a child asks only the host; no child asks another. group is the permission group the owner approves per device, kept on the host (defaultApproved are on until the owner turns them off; the others wait for the owner once); what is granted at a call is the approved, narrowed by the moment: the end linked, for allowed, the receiver's own grants. for is whom the call is for, one of callAudiences, and each action lists the kinds it may be called for: owner (the site owner's private talk with her), own (her own life, no one's talk), group (a group she is in, its groupId; an action for a group reads or speaks only in that group), other (someone else's private talk on the site: no action lists it, so every call for it is refused with wrong_audience; it is a kind so that the refusal is said and counted, never left to chance). Both ends check for before they act (call_allowed): the caller before it asks, the receiver on receipt. args and result are checked strictly, field by field, and an action changes its fields only with a new version. A receiver says why it did not do one only with these codes: call_unknown (it does not offer the action), version_unsupported (not that version), call_not_granted (its owner did not approve it here, or its own grants do not allow it), wrong_audience (for does not allow it), declined (it asked the owner on the device and they said no, or did not answer within ownerConfirmMaxMs), not_now (its do-not-disturb or its bounds hold it back now), call_timeout, call_cancelled; the host answers call_unavailable at once for an end that is not linked, and queues nothing. long actions answer call.accepted within callAcceptMs, then call.progress, and may be cancelled; streams actions send their result in pieces (call.event) before call.result; blob actions put their bytes at transports.blobs and name them in call.result. An outcome unknown means the receiver lost track midway (it was cut off, or restarted): no end does it again by itself, and she is told it may have happened.",
+    "defaultApproved": [
+      "screen",
+      "notify",
+      "voice"
+    ],
+    "actions": {
+      "screen.look": {
+        "version": 1,
+        "by": "child",
+        "group": "screen",
+        "for": [
+          "owner"
+        ],
+        "long": false,
+        "streams": false,
+        "blob": false,
+        "args": {
+          "required": [],
+          "optional": []
+        },
+        "result": {
+          "required": [
+            "facts"
+          ],
+          "optional": [
+            "summary"
+          ]
+        },
+        "description": "One look at the owner's screen now, through the child's own screen gate and filters: facts are screenFields.facts only, summary follows screenFields.summary. The child may answer without asking the owner when the screen group is granted."
+      },
+      "notify.post": {
+        "version": 1,
+        "by": "child",
+        "group": "notify",
+        "for": [
+          "owner",
+          "own"
+        ],
+        "long": false,
+        "streams": false,
+        "blob": false,
+        "args": {
+          "required": [
+            "title",
+            "body"
+          ],
+          "optional": [
+            "kind",
+            "eventKey"
+          ]
+        },
+        "result": {
+          "required": [
+            "shown"
+          ],
+          "optional": []
+        },
+        "description": "A notification on the child, through its own do-not-disturb and bounds like one she raised there herself: held back, it ends failed with not_now. kind is one of noticeKinds."
+      },
+      "voice.speak": {
+        "version": 1,
+        "by": "child",
+        "group": "voice",
+        "for": [
+          "owner",
+          "own"
+        ],
+        "long": false,
+        "streams": false,
+        "blob": false,
+        "args": {
+          "required": [
+            "text"
+          ],
+          "optional": [
+            "kind",
+            "perform"
+          ]
+        },
+        "result": {
+          "required": [
+            "delivered"
+          ],
+          "optional": []
+        },
+        "description": "She says text on the child, which voices it itself (kind is one of sayKinds; perform as on say). delivered is whether it was heard out; held back, it ends failed with not_now."
+      },
+      "work.run": {
+        "version": 1,
+        "by": "child",
+        "group": "work",
+        "for": [
+          "owner"
+        ],
+        "long": true,
+        "streams": false,
+        "blob": false,
+        "args": {
+          "required": [
+            "proposalId",
+            "title",
+            "instruction",
+            "maxRunMs"
+          ],
+          "optional": [
+            "expectedOutcome",
+            "cap"
+          ]
+        },
+        "result": {
+          "required": [
+            "status"
+          ],
+          "optional": []
+        },
+        "description": "One Work task of her proposal, run on the child with its own Work and grants, cap narrowing them (capNames), as act.request does; act.request stays for children that do not list calls. status is one of actStatuses. The result carries no content: what was done reaches her through the child's experience, not through this answer. waiting owner in call.progress while the child waits for the owner to confirm a step."
+      },
+      "model.chat": {
+        "version": 1,
+        "by": "host",
+        "group": "model",
+        "for": [
+          "owner",
+          "own"
+        ],
+        "long": false,
+        "streams": true,
+        "blob": false,
+        "args": {
+          "required": [
+            "messages"
+          ],
+          "optional": [
+            "system",
+            "maxTokens"
+          ]
+        },
+        "result": {
+          "required": [
+            "text"
+          ],
+          "optional": [
+            "usage"
+          ]
+        },
+        "description": "A child that thinks with her host's model asks it for one answer: messages are [{role, content}], and the text comes in call.event pieces before call.result. The host's keys never leave it; an error says only its code."
+      },
+      "group.read": {
+        "version": 1,
+        "by": "host",
+        "group": "group",
+        "for": [
+          "group"
+        ],
+        "long": false,
+        "streams": false,
+        "blob": false,
+        "args": {
+          "required": [],
+          "optional": [
+            "since",
+            "limit"
+          ]
+        },
+        "result": {
+          "required": [
+            "lines"
+          ],
+          "optional": []
+        },
+        "description": "The newest lines of the group for names, as the host keeps them, for an end her mind is on to think with. Not used while she lives on the site."
+      },
+      "group.send": {
+        "version": 1,
+        "by": "host",
+        "group": "group",
+        "for": [
+          "group"
+        ],
+        "long": false,
+        "streams": false,
+        "blob": false,
+        "args": {
+          "required": [
+            "text"
+          ],
+          "optional": [
+            "replyTo"
+          ]
+        },
+        "result": {
+          "required": [
+            "sent"
+          ],
+          "optional": []
+        },
+        "description": "She says text in the group for names, through the host. Not used while she lives on the site."
+      },
+      "camera.take": {
+        "version": 1,
+        "by": "child",
+        "group": "camera",
+        "for": [
+          "owner"
+        ],
+        "long": true,
+        "streams": false,
+        "blob": true,
+        "args": {
+          "required": [],
+          "optional": [
+            "reason"
+          ]
+        },
+        "result": {
+          "required": [],
+          "optional": []
+        },
+        "description": "One picture through the child's camera, only after the owner taps to allow it on the device, with the device showing it is looking; the bytes go to transports.blobs. Listed, not yet asked for."
+      },
+      "mic.listen": {
+        "version": 1,
+        "by": "child",
+        "group": "mic",
+        "for": [
+          "owner"
+        ],
+        "long": true,
+        "streams": false,
+        "blob": true,
+        "args": {
+          "required": [],
+          "optional": [
+            "reason",
+            "maxMs"
+          ]
+        },
+        "result": {
+          "required": [],
+          "optional": []
+        },
+        "description": "A short recording through the child's microphone, only after the owner taps to allow it on the device, with the device showing it is listening; the bytes go to transports.blobs. Listed, not yet asked for."
+      }
+    }
+  },
+  "screenFields": {
+    "description": "The one list of what a look at the owner's screen may say, wherever it goes: a presence perception row of kind screen, a moment of kind agent.merope.screen (moments), screen.look's result and input.glance. facts are the only keys its facts may have; a host deletes any other it finds and counts, per frame type and key, how many times (never the value). summary is what its one line of text may be.",
+    "facts": [
+      "app",
+      "window_title",
+      "file",
+      "language",
+      "secrets_wiped",
+      "who",
+      "topic",
+      "category",
+      "private",
+      "look_id",
+      "stretch"
+    ],
+    "summary": "For a chat window, only who the owner is talking with and about what: never what anyone else wrote there. For any other app, the app, the window and what of its text the child's filters let through. A host keeps only the first line of the summary of a presence screen row whose facts carry who: a child from before put others' words after it."
+  },
+  "streams": {
+    "description": "Every state frame (only its newest value counts) and event frame (each one kept and acked) names one of these, with the version of its value or body; from now on a new thing told as it changes, or as it happens, is one of these, not a frame of its own. Only on a link where both ends listed the capability streams. Each says who sends it, which audience it belongs to, and its fields, checked like an action's.",
+    "state": {},
+    "event": {}
+  },
   "moments": {
     "description": "What a moment may be (the moment frame). kinds: agent.merope.peer_agent is another coding agent's session on this child's machine (it waits, finished, failed); agent.merope.ai_chat is the owner's conversation with another AI there; agent.merope.situation is this child's own reading, with its own model, of what the owner is doing in front of it, not her judgment; agent.merope.screen is one look at the owner's screen that this child's own screen gate let through and that is worth her attention. A screen moment carries no one else's words anywhere in it, headline, summary or safeFacts: for a chat window it says only who the owner is talking with and about what (safeFacts who, topic, category; summary that one line), for any other app the app, the window and what of its text the child's filters let through (safeFacts app, window_title, file, language, secrets_wiped; summary that text). Either may also carry look_id, the look's own id on the child, and stretch, the same for every look while the screen stays on one app and one window or file and another once it moves, by which the host tells one stretch from the next. Each is said to the owner in person or not at all: never a notification, never her diary. A peer_agent moment comes only from a child that did not negotiate now.sessions: the host takes it but decides nothing of it one by one, because sessions are kept by the now family's rules (now.session, now.drop). Her earlier nodes (see the nodes frame) are no longer written; what she noted before on the node of the owner's talks with other AIs still comes with an ai_chat moment; a situation has no node. A screen moment is decided whether or not she is on screen then (every other kind only while she is: notify.kind needsPresence); what she would say of it is still said in person. What she makes of a screen moment is the host's to keep by what she says of it, not by keepsMemory (which does not apply to it): taken in, on a node of the owner's private talk she chose among those offered her, or else in that day's loose ends; only known, as one fact for its stretch; or not at all. keepsMemory names the kinds whose keepsMemory may be true; for every other kind the host reads it as false. headlineChars is the most a headline may have; summary may have limits.maxTextChars. safeFacts holds at most factsAtMost keys, each a field name as factKey says (lowercase a-z first, then a-z, 0-9 and _, at most maxChars, and no _-separated part among refusedParts: those would carry someone's words or tell her what to do), each value a string of at most factChars characters.",
     "kinds": ["agent.merope.peer_agent", "agent.merope.ai_chat", "agent.merope.situation", "agent.merope.screen"],
@@ -263,9 +549,9 @@
       "delivery": "reliable",
       "idempotency": "id is the turnId: made by the child, one per thing the person says, kept across resends.",
       "required": ["surface", "text"],
-      "optional": ["sessionId", "rigState", "images"],
+      "optional": ["sessionId", "rigState", "images", "glance"],
       "maxItems": {"images": 2},
-      "description": "Something the site owner said to her on this child: a chat turn. The host starts a run for the site owner as their current role allows, and answers run.accepted or run.rejected. sessionId is the chat session to continue (from an earlier run.accepted); without it the host starts one. rigState is the rig as it stands, the same summary the site's face sends, so her acting fits this body. images is what the owner showed her with it (what this child's camera saw when they asked her to look): only from a child whose hello listed images, at most two, each a data URL of a PNG, JPEG or WebP (data:image/jpeg;base64,…). The host hands them to her run as the site's chat hands her the images attached to a message, for this turn only, and keeps none of them; one it cannot read is left out. The whole frame stays within limits.maxFrameBytes, so a child sends them small (about 768 px on the long side)."
+      "description": "Something the site owner said to her on this child: a chat turn. The host starts a run for the site owner as their current role allows, and answers run.accepted or run.rejected. sessionId is the chat session to continue (from an earlier run.accepted); without it the host starts one. rigState is the rig as it stands, the same summary the site's face sends, so her acting fits this body. images is what the owner showed her with it (what this child's camera saw when they asked her to look): only from a child whose hello listed images, at most two, each a data URL of a PNG, JPEG or WebP (data:image/jpeg;base64,…). The host hands them to her run as the site's chat hands her the images attached to a message, for this turn only, and keeps none of them; one it cannot read is left out. The whole frame stays within limits.maxFrameBytes, so a child sends them small (about 768 px on the long side). glance is what the child saw on the owner's screen as they said this (they said to look, and the child looked at once), only from a child whose hello listed glance and only once the welcome listed it too: {facts, summary?} by screenFields, through the same secret wiping and filters as a moment of the screen before it leaves the child, at most limits.glanceChars."
     },
     "presence": {
       "from": "child",
@@ -545,6 +831,86 @@
       "required": ["actId"],
       "optional": ["code"],
       "description": "Only to a child whose hello listed act: stop act.request actId. code is why: act_cancelled (the owner dismissed the proposal on the site) or act_timeout (it ran past maxRunMs and a minute). The child stops the run and answers act.result finished cancelled, unless it was over already. Sent once, while the link is open; a child that misses it ends its run at maxRunMs."
+    },
+    "call.offer": {
+      "from": "device",
+      "delivery": "request",
+      "required": ["actions"],
+      "maxItems": {"actions": 64},
+      "description": "After welcome, on a link where both listed calls: what this child may be asked to do, [{name, version}] from calls, by is child. It says what the end can do, not what the owner allowed; it is said again after every welcome. An action the host does not know is left out by it."
+    },
+    "call.granted": {
+      "from": "host",
+      "delivery": "latest",
+      "required": ["actions", "providing"],
+      "maxItems": {"actions": 64, "providing": 64},
+      "description": "The answer to call.offer, and again whenever it changes: actions are the offered ones the owner approved for this device and that are granted now, [{name, version}]; providing are the host's own actions this child may call, [{name, version}]. An action in neither is not called."
+    },
+    "call.ask": {
+      "from": "either",
+      "delivery": "reliable",
+      "idempotency": "id is the callId: made by the caller once, the same on every resend.",
+      "required": ["callId", "action", "version", "args", "for", "deadlineMs"],
+      "description": "Ask the other end to do action (calls) at version with args, for for ({kind, groupId?}: kind one of callAudiences, groupId only and always for group), answered by deadlineMs at the latest (at most callDeadlineMaxMs, longCallMaxMs for a long action). The caller checks for first (calls); the receiver checks it again, and answers every ask with one call.result."
+    },
+    "call.accepted": {
+      "from": "either",
+      "delivery": "answer",
+      "required": ["callId"],
+      "description": "A long action's receiver has it, within callAcceptMs: call.progress and call.result follow."
+    },
+    "call.progress": {
+      "from": "either",
+      "delivery": "latest",
+      "required": ["callId", "phase"],
+      "optional": ["waiting"],
+      "description": "Where a long action is: phase is a stage name of the action's own, never content; waiting is owner while the receiver waits for the owner to answer on the device (at most ownerConfirmMaxMs)."
+    },
+    "call.event": {
+      "from": "either",
+      "delivery": "request",
+      "required": ["callId", "sequence", "piece"],
+      "description": "The next piece of a streams action's result, sequence from 1, in order. Lost with the link: the result still comes whole in call.result, or the call ends unknown."
+    },
+    "call.result": {
+      "from": "either",
+      "delivery": "reliable",
+      "idempotency": "id is the callId, a dot and result.",
+      "required": ["callId", "action", "outcome"],
+      "optional": ["result", "error", "blobs"],
+      "maxItems": {"blobs": 4},
+      "description": "What came of call.ask callId. outcome done carries result, exactly the action's result fields; failed carries error {code}, one of the codes calls names; unknown carries neither: the receiver lost track midway, and no end does it again by itself. blobs are blobIds at transports.blobs, only for a blob action."
+    },
+    "call.cancel": {
+      "from": "either",
+      "delivery": "request",
+      "required": ["callId"],
+      "description": "The caller no longer wants a long action callId: the receiver stops it and answers call.result failed with call_cancelled, or the result it already had."
+    },
+    "versions": {
+      "from": "either",
+      "delivery": "request",
+      "required": ["contract", "core", "app", "actions"],
+      "description": "After welcome, on a link where both listed versions: contract is this end's schemaVersion, core {abi, crate} the shared core it runs, app {name, version}, actions {name: version} of calls it knows. Each end sends it once per link."
+    },
+    "versions.verdict": {
+      "from": "host",
+      "delivery": "latest",
+      "required": ["usable", "stopped"],
+      "description": "The host's reading of the child's versions: usable is full, partial (stopped names what this link will not carry: frames, capabilities or actions the two do not read alike) or refused (the link closes with unsupported_protocol after it). Shown on the host's status and on the device."
+    },
+    "state": {
+      "from": "either",
+      "delivery": "latest",
+      "required": ["name", "version", "at", "value"],
+      "description": "The newest value of something told as it changes, name and version from streams.state. Only on a link where both listed streams."
+    },
+    "event": {
+      "from": "either",
+      "delivery": "reliable",
+      "idempotency": "id is the event's own, made once by its sender.",
+      "required": ["name", "version", "at", "body"],
+      "description": "Something that happened, each one kept and acked, name and version from streams.event. Only on a link where both listed streams."
     },
     "ack": {
       "from": "child",
@@ -843,7 +1209,15 @@
     "group_unknown": "A group frame naming a group the server does not keep, one she is not in, or one the server did not lend that core.",
     "chat_unknown": "A chat frame naming a private chat the server does not keep, one no chat app reaches now, or one the server did not lend that core.",
     "clock_ahead": "log.rows refused whole: a row's clock more than five minutes ahead. Carries serverTime; the sender measures its offset, repairs its unsynced rows and sends again.",
-    "sync_off": "A frame of a sync family (sync.families) on a link whose welcome said sync off."
+    "sync_off": "A frame of a sync family (sync.families) on a link whose welcome said sync off.",
+    "call_unknown": "call.result: the receiver does not offer this action (not in its call.offer, or not in calls).",
+    "call_not_granted": "call.result: the owner did not approve this action's group for this end, or it is not granted now (the receiver's own grants do not allow it).",
+    "call_unavailable": "call.result: the end the call is for is not linked now; the host answers at once and queues nothing.",
+    "call_timeout": "call.result: no result by deadlineMs.",
+    "call_cancelled": "call.result: call.cancel stopped it.",
+    "wrong_audience": "call.result: the action may not be called for this for: a private action outside the owner's private talk, any action for someone else's private talk (other), a group action for another group.",
+    "declined": "call.result: the owner, asked on the device, said no, or did not answer within ownerConfirmMaxMs.",
+    "not_now": "call.result: the receiver's do-not-disturb or bounds hold it back now; asking later may work."
   },
   "closeCodes": {
     "revoked": { "code": 4001, "forgetCredentials": true, "reconnect": false, "description": "The device was removed from the site, or gave its token back." },

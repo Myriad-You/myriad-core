@@ -79,6 +79,38 @@ struct Sync {
     families: Vec<String>,
 }
 
+/// The fields an action's args or result take (`calls`).
+#[derive(Debug, Clone, Deserialize)]
+pub struct CallFields {
+    pub required: Vec<String>,
+    pub optional: Vec<String>,
+}
+
+/// One action of `calls`: what one end may ask another to do for her.
+#[derive(Debug, Clone, Deserialize)]
+pub struct CallSpec {
+    pub version: u64,
+    /// The end that does it: `child` or `host`.
+    pub by: String,
+    /// The permission group the owner approves it by.
+    pub group: String,
+    /// The kinds of `for` it may be called for (`callAudiences`).
+    #[serde(rename = "for")]
+    pub audiences: Vec<String>,
+    pub long: bool,
+    pub streams: bool,
+    pub blob: bool,
+    pub args: CallFields,
+    pub result: CallFields,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Calls {
+    default_approved: Vec<String>,
+    actions: BTreeMap<String, CallSpec>,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Contract {
@@ -91,6 +123,8 @@ struct Contract {
     sync: Sync,
     frames: BTreeMap<String, FrameSpec>,
     error_codes: BTreeMap<String, String>,
+    call_audiences: Vec<String>,
+    calls: Calls,
 }
 
 static CONTRACT: LazyLock<Contract> =
@@ -120,6 +154,163 @@ pub fn family(t: &str) -> Option<&'static str> {
         .families
         .get_key_value(family)
         .map(|(name, _)| name.as_str())
+}
+
+/// The action `name` of `calls`, when the contract has it.
+pub fn call_spec(name: &str) -> Option<&'static CallSpec> {
+    CONTRACT.calls.actions.get(name)
+}
+
+/// The permission groups that are on for a device until its owner turns
+/// them off.
+pub fn calls_default_approved() -> &'static [String] {
+    &CONTRACT.calls.default_approved
+}
+
+/// Whether `action` may be called for `of` (`call.ask`'s `for`): the caller
+/// asks this before it asks, the receiver again on receipt. The error is
+/// the code its `call.result` fails with.
+pub fn call_allowed(action: &str, of: &Value) -> Result<(), &'static str> {
+    let spec = call_spec(action).ok_or("call_unknown")?;
+    let kind = of["kind"].as_str().ok_or("wrong_audience")?;
+    if spec.audiences.iter().any(|allowed| allowed == kind) {
+        Ok(())
+    } else {
+        Err("wrong_audience")
+    }
+}
+
+/// `call.ask`: its `for` is a kind of `callAudiences` (a group's naming
+/// it), its args those of its action at that version. An action or version
+/// this end does not know passes: the receiver answers it with
+/// `call_unknown` or `version_unsupported`.
+fn check_ask(body: &Value) -> Result<(), Refusal> {
+    let of = &body["for"];
+    let of_fields = fields(of, "call.ask's for")?;
+    let Some(kind) = of["kind"].as_str() else {
+        return Err(refuse("bad_frame", "call.ask's for has no kind"));
+    };
+    if !CONTRACT.call_audiences.iter().any(|one| one == kind) {
+        return Err(refuse(
+            "bad_frame",
+            format!("call.ask's for is of no kind {kind:?}"),
+        ));
+    }
+    let group = kind == "group";
+    check_fields(
+        "call.ask's for",
+        &of_fields,
+        &["kind".to_string()],
+        &["groupId".to_string()],
+    )?;
+    if group
+        != of
+            .get("groupId")
+            .is_some_and(|id| id.as_str().is_some_and(valid_id))
+    {
+        return Err(refuse(
+            "bad_frame",
+            "call.ask's for names a groupId only and always for a group",
+        ));
+    }
+    if !body["deadlineMs"].as_u64().is_some_and(|ms| ms > 0) {
+        return Err(refuse(
+            "bad_frame",
+            "call.ask's deadlineMs is a whole number from 1",
+        ));
+    }
+    let args = fields(&body["args"], "call.ask's args")?;
+    let (Some(action), Some(version)) = (body["action"].as_str(), body["version"].as_u64()) else {
+        return Err(refuse("bad_frame", "call.ask names its action and version"));
+    };
+    match call_spec(action) {
+        Some(spec) if spec.version == version => check_fields(
+            &format!("{action}'s args"),
+            &args,
+            &spec.args.required,
+            &spec.args.optional,
+        ),
+        _ => Ok(()),
+    }
+}
+
+/// `call.result`: done carries exactly its action's result fields, failed
+/// an error with a code the contract names, unknown neither. An action
+/// this end does not know only fails.
+fn check_result(body: &Value) -> Result<(), Refusal> {
+    let Some(action) = body["action"].as_str() else {
+        return Err(refuse("bad_frame", "call.result names its action"));
+    };
+    let spec = call_spec(action);
+    let result = body.get("result");
+    let error = body.get("error");
+    match body["outcome"].as_str() {
+        Some("done") => {
+            let Some(spec) = spec else {
+                return Err(refuse(
+                    "bad_frame",
+                    format!("{action} is not an action: its call only fails"),
+                ));
+            };
+            if error.is_some() {
+                return Err(refuse("bad_frame", "a done call.result has no error"));
+            }
+            let Some(result) = result else {
+                return Err(refuse("bad_frame", "a done call.result carries its result"));
+            };
+            let have = fields(result, "call.result's result")?;
+            check_fields(
+                &format!("{action}'s result"),
+                &have,
+                &spec.result.required,
+                &spec.result.optional,
+            )?;
+        }
+        Some("failed") => {
+            if result.is_some() {
+                return Err(refuse("bad_frame", "a failed call.result has no result"));
+            }
+            let Some(error) = error else {
+                return Err(refuse(
+                    "bad_frame",
+                    "a failed call.result carries its error",
+                ));
+            };
+            check_fields(
+                "call.result's error",
+                &fields(error, "call.result's error")?,
+                &["code".to_string()],
+                &[],
+            )?;
+            if !error["code"]
+                .as_str()
+                .is_some_and(|code| CONTRACT.error_codes.contains_key(code))
+            {
+                return Err(refuse(
+                    "bad_frame",
+                    "call.result's error is a code the contract names",
+                ));
+            }
+        }
+        Some("unknown") => {
+            if result.is_some() || error.is_some() {
+                return Err(refuse(
+                    "bad_frame",
+                    "an unknown call.result carries neither result nor error",
+                ));
+            }
+        }
+        _ => {
+            return Err(refuse(
+                "bad_frame",
+                "call.result's outcome is done, failed or unknown",
+            ));
+        }
+    }
+    if body.get("blobs").is_some() && !spec.is_some_and(|spec| spec.blob) {
+        return Err(refuse("bad_frame", format!("{action} has no blobs")));
+    }
+    Ok(())
 }
 
 /// Whether frame type `t` flows only on a link whose welcome said sync on
@@ -363,6 +554,11 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
         if let Some(value) = body.get(field) {
             check_sealed(field, value)?;
         }
+    }
+    match t {
+        "call.ask" => check_ask(body)?,
+        "call.result" => check_result(body)?,
+        _ => {}
     }
     Ok(Checked {
         t: t.to_string(),

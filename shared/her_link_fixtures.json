@@ -440,6 +440,54 @@
       "body": { "actId": "act_0123456789abcdef0123456789abcdef", "code": "act_cancelled" }
     },
     {
+      "v": 1, "t": "call.offer", "seq": 31, "ack": 20, "at": 1760141100000,
+      "body": {"actions": [{"name": "screen.look", "version": 1}, {"name": "notify.post", "version": 1}, {"name": "work.run", "version": 1}]}
+    },
+    {
+      "v": 1, "t": "call.granted", "seq": 32, "ack": 20, "at": 1760141100000,
+      "body": {"actions": [{"name": "screen.look", "version": 1}, {"name": "notify.post", "version": 1}], "providing": [{"name": "model.chat", "version": 1}]}
+    },
+    {
+      "v": 1, "t": "call.ask", "seq": 33, "ack": 20, "id": "call_0123456789abcdef", "at": 1760141100000,
+      "body": {"callId": "call_0123456789abcdef", "action": "screen.look", "version": 1, "args": {}, "for": {"kind": "owner"}, "deadlineMs": 10000}
+    },
+    {
+      "v": 1, "t": "call.accepted", "seq": 34, "ack": 20, "at": 1760141100000,
+      "body": {"callId": "call_work_0123456789ab"}
+    },
+    {
+      "v": 1, "t": "call.progress", "seq": 35, "ack": 20, "at": 1760141100000,
+      "body": {"callId": "call_work_0123456789ab", "phase": "confirming", "waiting": "owner"}
+    },
+    {
+      "v": 1, "t": "call.event", "seq": 36, "ack": 20, "at": 1760141100000,
+      "body": {"callId": "call_chat_0123456789ab", "sequence": 1, "piece": "好啊，"}
+    },
+    {
+      "v": 1, "t": "call.result", "seq": 37, "ack": 20, "id": "call_0123456789abcdef.result", "at": 1760141100000,
+      "body": {"callId": "call_0123456789abcdef", "action": "screen.look", "outcome": "done", "result": {"facts": {"app": "Xcode", "window_title": "Pen.swift — MyriadNative", "language": "Swift", "secrets_wiped": "0"}, "summary": "Xcode · Pen.swift — MyriadNative"}}
+    },
+    {
+      "v": 1, "t": "call.cancel", "seq": 38, "ack": 20, "at": 1760141100000,
+      "body": {"callId": "call_work_0123456789ab"}
+    },
+    {
+      "v": 1, "t": "versions", "seq": 39, "ack": 20, "at": 1760141100000,
+      "body": {"contract": 3, "core": {"abi": 3, "crate": "0.9.0"}, "app": {"name": "Myriad", "version": "1.4.0"}, "actions": {"screen.look": 1, "notify.post": 1}}
+    },
+    {
+      "v": 1, "t": "versions.verdict", "seq": 40, "ack": 20, "at": 1760141100000,
+      "body": {"usable": "partial", "stopped": ["work.run"]}
+    },
+    {
+      "v": 1, "t": "state", "seq": 41, "ack": 20, "at": 1760141100000,
+      "body": {"name": "example.now", "version": 1, "at": 1760141100000, "value": {}}
+    },
+    {
+      "v": 1, "t": "event", "seq": 42, "ack": 20, "id": "evt_0123456789abcdef", "at": 1760141100000,
+      "body": {"name": "example.happened", "version": 1, "at": 1760141100000, "body": {}}
+    },
+    {
       "v": 1, "t": "wardrobe", "seq": 22, "ack": 17, "at": 1760141000000,
       "body": {
         "outfits": [

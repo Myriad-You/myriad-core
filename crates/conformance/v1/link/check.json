@@ -1433,6 +1433,287 @@
           "code": "too_many"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "unknown"
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 5,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a work.run whose outcome is unknown: the Mac lost track midway",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"unknown\"},\"id\":\"call_work_0123456789ab.result\",\"seq\":5,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "status": "completed"
+            }
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 6,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a work.run done says only how it ended",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"work.run\",\"callId\":\"call_work_0123456789ab\",\"outcome\":\"done\",\"result\":{\"status\":\"completed\"}},\"id\":\"call_work_0123456789ab.result\",\"seq\":6,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "status": "completed",
+              "summary": "桌面上的 12 张截图都移到「截图」文件夹了。"
+            }
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 7,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a work.run result that carries what was done",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "outcome": "unknown",
+            "result": {
+              "status": "completed"
+            }
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 8,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: an unknown outcome that still carries a result",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "work.run",
+            "callId": "call_work_0123456789ab",
+            "error": {
+              "code": "busy_now"
+            },
+            "outcome": "failed"
+          },
+          "id": "call_work_0123456789ab.result",
+          "seq": 9,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a failed call with a code the contract does not name",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "camera.take",
+            "callId": "call_cam_0123456789ab",
+            "error": {
+              "code": "declined"
+            },
+            "outcome": "failed"
+          },
+          "id": "call_cam_0123456789ab.result",
+          "seq": 10,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a call the owner declined on the device",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"camera.take\",\"callId\":\"call_cam_0123456789ab\",\"error\":{\"code\":\"declined\"},\"outcome\":\"failed\"},\"id\":\"call_cam_0123456789ab.result\",\"seq\":10,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {
+              "windowText": true
+            },
+            "callId": "call_look_0123456789a",
+            "deadlineMs": 10000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789a",
+          "seq": 11,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a screen.look asked with an arg it does not take",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "group.read",
+            "args": {},
+            "callId": "call_grp_0123456789ab",
+            "deadlineMs": 10000,
+            "for": {
+              "kind": "group"
+            },
+            "version": 1
+          },
+          "id": "call_grp_0123456789ab",
+          "seq": 12,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call for a group that names no group",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.record",
+            "args": {
+              "seconds": 5
+            },
+            "callId": "call_new_0123456789ab",
+            "deadlineMs": 10000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_new_0123456789ab",
+          "seq": 13,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "an action from a newer end passes, for its receiver to answer call_unknown",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"screen.record\",\"args\":{\"seconds\":5},\"callId\":\"call_new_0123456789ab\",\"deadlineMs\":10000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_new_0123456789ab\",\"seq\":13,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
     }
   ],
   "version": 1

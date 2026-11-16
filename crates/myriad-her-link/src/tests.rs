@@ -43,7 +43,7 @@ pub(crate) fn answer(input: &Value) -> Value {
 #[test]
 fn the_contract_reads_and_agrees_with_these_rules() {
     let raw: Value = serde_json::from_str(CONTRACT_JSON).unwrap();
-    assert_eq!(raw["schemaVersion"], 2);
+    assert_eq!(raw["schemaVersion"], 3);
     assert_eq!(raw["protocol"], 2, "the only protocol spoken");
     assert_eq!(protocol(), 2);
     assert!(
@@ -228,4 +228,86 @@ fn every_link_case_answers_as_recorded() {
         assert!(CONTRACT.error_codes.contains_key(code), "{code}");
     }
     assert_eq!(codes, all);
+}
+
+/// Whom a call may be for (`calls`): what shows the owner's private things
+/// only in their own private talk, nothing at all for someone else's, a
+/// group's actions only for a group; every action's fields and each code
+/// a receiver may answer with are ones the contract has.
+#[test]
+fn a_call_is_allowed_only_for_whom_its_action_says() {
+    let owner = json!({ "kind": "owner" });
+    let own = json!({ "kind": "own" });
+    let group = json!({ "kind": "group", "groupId": "g_1" });
+    let other = json!({ "kind": "other" });
+    for private in [
+        "screen.look",
+        "work.run",
+        "camera.take",
+        "mic.listen",
+        "model.chat",
+    ] {
+        assert_eq!(call_allowed(private, &owner), Ok(()), "{private}");
+        assert_eq!(
+            call_allowed(private, &group),
+            Err("wrong_audience"),
+            "{private}"
+        );
+        assert_eq!(
+            call_allowed(private, &other),
+            Err("wrong_audience"),
+            "{private}"
+        );
+    }
+    for told in ["notify.post", "voice.speak"] {
+        assert_eq!(call_allowed(told, &own), Ok(()), "{told}");
+        assert_eq!(call_allowed(told, &group), Err("wrong_audience"), "{told}");
+    }
+    for said in ["group.read", "group.send"] {
+        assert_eq!(call_allowed(said, &group), Ok(()), "{said}");
+        assert_eq!(call_allowed(said, &owner), Err("wrong_audience"), "{said}");
+    }
+    assert_eq!(call_allowed("screen.record", &owner), Err("call_unknown"));
+    let raw: Value = serde_json::from_str(CONTRACT_JSON).unwrap();
+    let kinds: BTreeSet<&str> = raw["callAudiences"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|kind| kind.as_str().unwrap())
+        .collect();
+    let groups: BTreeSet<&str> = raw["calls"]["actions"]
+        .as_object()
+        .unwrap()
+        .values()
+        .map(|action| action["group"].as_str().unwrap())
+        .collect();
+    for (name, action) in raw["calls"]["actions"].as_object().unwrap() {
+        let spec = call_spec(name).unwrap();
+        assert!(["child", "host"].contains(&spec.by.as_str()), "{name}");
+        for kind in &spec.audiences {
+            assert!(kinds.contains(kind.as_str()), "{name}: {kind}");
+            assert_ne!(
+                kind, "other",
+                "{name}: no action is for someone else's talk"
+            );
+        }
+        assert!(spec.blob <= spec.long, "{name}: a blob waits for the owner");
+        assert!(action["description"].is_string(), "{name}");
+    }
+    for group in calls_default_approved() {
+        assert!(groups.contains(group.as_str()), "{group}");
+    }
+    for code in [
+        "call_unknown",
+        "version_unsupported",
+        "call_not_granted",
+        "wrong_audience",
+        "declined",
+        "not_now",
+        "call_timeout",
+        "call_cancelled",
+        "call_unavailable",
+    ] {
+        assert!(CONTRACT.error_codes.contains_key(code), "{code}");
+    }
 }
