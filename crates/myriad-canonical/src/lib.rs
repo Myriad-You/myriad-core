@@ -3,7 +3,9 @@
 //! Object keys in byte order of their UTF-8, no whitespace, strings escaped
 //! as `serde_json` escapes them, numbers in their shortest round-trip form.
 //! The rig package id was the first thing hashed this way
-//! ([`crate::rig_package_id`]); entity digests use the same writer.
+//! (`myriad_persona_sync::rig_package_id`); entity digests and her link's
+//! frames use the same writer. It lived in `myriad-persona-sync` as
+//! `canonical`, which still re-exports it.
 
 use serde::Serialize;
 use serde_json::Value;

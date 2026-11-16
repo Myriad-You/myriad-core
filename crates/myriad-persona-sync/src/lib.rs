@@ -14,7 +14,10 @@ use std::fmt;
 
 pub mod affect;
 pub mod archive;
-pub mod canonical;
+/// Canonical JSON, in its own crate (`myriad-canonical`) so her link's
+/// frames can use it without her rules; the same paths as before.
+#[doc(inline)]
+pub use myriad_canonical as canonical;
 pub mod compare;
 pub mod entity;
 pub mod hlc;
