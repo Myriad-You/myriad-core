@@ -14,7 +14,7 @@
 use std::{collections::BTreeMap, sync::LazyLock};
 
 use base64::Engine as _;
-use myriad_persona_sync::canonical::canonical_bytes;
+use myriad_canonical::canonical_bytes;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

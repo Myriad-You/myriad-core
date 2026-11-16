@@ -12,6 +12,6 @@ license = "AGPL-3.0-only"
 # Sealing itself (HPKE) is the platform's; here only its shape is checked.
 [dependencies]
 base64 = "0.23"
-myriad-persona-sync = { path = "../myriad-persona-sync" }
+myriad-canonical = { path = "../myriad-canonical" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }

@@ -1,0 +1,17 @@
+[package]
+name = "myriad-canonical"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Canonical JSON: the one byte form a value has on every side, and the digests taken of it."
+authors = ["Myriad Contributors"]
+license = "AGPL-3.0-only"
+
+# Pure: no I/O, no clock, no keys. On its own so that an end that only
+# keeps her link (myriad-her-link) links this and none of her rules;
+# myriad-persona-sync re-exports it as `canonical`, where it came from.
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+# Numbers read back to the exact bits they were written from.
+serde_json = { version = "1", features = ["float_roundtrip"] }
+sha2 = "0.11"
