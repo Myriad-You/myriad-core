@@ -2292,10 +2292,9 @@ mod calling {
             delivered(&down)[..],
             [Delivery::Unsent { code, .. }] if code == "call_unavailable"
         ));
-        // A link where calls was not agreed: the ask that waits is not sent, nor a cancel.
+        // A link where calls was not agreed: the ask that waits is not sent.
         let out = reconnect(&mut s, T0 + 2000, json!([]));
         assert!(out.iter().all(|frame| frame["t"] != "call.ask"));
-        assert!(s.call_cancel("ask_1", T0 + 2100).is_empty());
         // A link where it was, and her host says it provides nothing: not granted, told here.
         reconnect(&mut s, T0 + 3000, json!(["calls"]));
         let out = s.received(
@@ -2462,6 +2461,7 @@ mod calling {
             let mut here = std::collections::BTreeMap::<String, u32>::new();
             let mut there = std::collections::BTreeMap::<String, u32>::new();
             let mut answered = std::collections::BTreeSet::<String>::new();
+            let mut withdrawn = std::collections::BTreeSet::<String>::new();
             let mut asked_here = std::collections::BTreeSet::<String>::new();
             let mut log = Vec::<String>::new();
             for _ in 0..60 {
@@ -2595,6 +2595,9 @@ mod calling {
                         if answered.contains(&id) {
                             fail("an ask after its result came");
                         }
+                        if withdrawn.contains(&id) {
+                            fail("an ask sent after it was cancelled while it waited");
+                        }
                     }
                 }
                 for delivery in delivered(&out) {
@@ -2611,6 +2614,10 @@ mod calling {
                             }
                             if answered.contains(call_id) {
                                 fail("a result told here after her host's");
+                            }
+                            if matches!(delivery, Delivery::CallResult { code: Some(code), .. } if code == "call_cancelled")
+                            {
+                                withdrawn.insert(call_id.clone());
                             }
                         }
                         Delivery::CallResult { call_id, .. } => {
@@ -2653,6 +2660,222 @@ mod calling {
                 s = back;
             }
         }
+    }
+
+    /// The link goes and comes back with `calls`; her host has not yet said what it provides.
+    fn relinked(s: &mut Session, at: i64) {
+        s.disconnected();
+        s.connected(at);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls", "streams"]);
+                body["serverTime"] = json!(at + 50);
+            }),
+            at + 50,
+        );
+    }
+
+    fn provides(s: &mut Session, at: i64) -> Vec<Output> {
+        s.received(
+            &host("call.granted", 2, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([{ "name": "model.chat", "version": 1 }]);
+            }),
+            at,
+        )
+    }
+
+    /// Her host's result of the call `id`, done.
+    fn done(id: &str, seq: u64) -> String {
+        let mut frame: Value = serde_json::from_str(&host("call.result", seq, 2, |body| {
+            *body = json!({ "callId": id, "action": "model.chat", "version": 1,
+                "outcome": "done", "result": { "text": "x" } });
+        }))
+        .unwrap();
+        frame["id"] = json!(format!("{id}.result"));
+        frame.to_string()
+    }
+
+    fn told_here(out: &[Output], id: &str, why: &str) -> bool {
+        matches!(
+            delivered(out)[..],
+            [Delivery::CallResult { call_id, outcome, code: Some(code), here: true, .. }]
+                if call_id == id && outcome == "failed" && code == why
+        )
+    }
+
+    fn untold(out: &[Output], id: &str, why: &str) -> bool {
+        sent(out).is_empty()
+            && matches!(
+                delivered(out)[..],
+                [Delivery::Unsent { t, code, id: Some(of) }]
+                    if t == "call.cancel" && code == why && of == id
+            )
+    }
+
+    #[test]
+    fn a_call_cancelled_while_its_ask_waits_never_goes() {
+        // Not acked when the link goes; cancelled with no link: taken back, ended here.
+        let mut s = linked(0);
+        ask(&mut s, "ask_1", 30_000, T0 + 1000);
+        s.disconnected();
+        let out = s.call_cancel("ask_1", T0 + 1500);
+        assert!(sent(&out).is_empty());
+        assert!(told_here(&out, "ask_1", "call_cancelled"));
+        // Told ended here once: cancelled again, only that it has ended.
+        assert!(untold(
+            &s.call_cancel("ask_1", T0 + 1600),
+            "ask_1",
+            "call_ended"
+        ));
+        // On the next link it does not go, and the action is not long: no cancel either.
+        relinked(&mut s, T0 + 2000);
+        let out = provides(&mut s, T0 + 2060);
+        assert!(sent(&out).iter().all(|frame| frame["t"] != "call.ask"));
+        assert!(sent(&out).iter().all(|frame| frame["t"] != "call.cancel"));
+        // Had her host had the ask after all, its result is what happened, delivered.
+        let out = s.received(&done("ask_1", 3), T0 + 2100);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::CallResult { here: false, outcome, .. }] if outcome == "done"
+        ));
+        // Cancelled on the next link before her host's word on what it provides: the same.
+        ask(&mut s, "ask_2", 30_000, T0 + 3000);
+        relinked(&mut s, T0 + 4000);
+        let out = s.call_cancel("ask_2", T0 + 4055);
+        assert!(sent(&out).is_empty());
+        assert!(told_here(&out, "ask_2", "call_cancelled"));
+        let out = provides(&mut s, T0 + 4060);
+        assert!(sent(&out).iter().all(|frame| frame["t"] != "call.ask"));
+        // A minute past its deadline nothing more is told of it here.
+        assert!(delivered(&s.tick(T0 + 200_000)).is_empty());
+    }
+
+    #[test]
+    fn a_call_that_went_is_cancelled_only_when_it_is_long_and_always_told() {
+        let mut s = linked(0);
+        ask(&mut s, "ask_1", 30_000, T0 + 1000);
+        // Sent on this link, and not long: there is no stopping it, and that is told.
+        assert!(untold(
+            &s.call_cancel("ask_1", T0 + 1100),
+            "ask_1",
+            "call_sent"
+        ));
+        // Not a call this end asks.
+        assert!(untold(
+            &s.call_cancel("ask_none", T0 + 1200),
+            "ask_none",
+            "bad_id"
+        ));
+        // A long one. No action her host does is long today, so this is a call kept in a
+        // state from before the action was kept, which is taken for long.
+        let long = |s: &Session| {
+            let mut state = s.state();
+            for call in state["asking"].as_array_mut().unwrap() {
+                call.as_object_mut().unwrap().remove("action");
+            }
+            Session::restore(contract(), &state).unwrap()
+        };
+        let mut s = long(&s);
+        // Sent on this link: her host is told to stop, now.
+        let out = s.call_cancel("ask_1", T0 + 1300);
+        assert!(delivered(&out).is_empty());
+        assert!(matches!(&sent(&out)[..], [frame]
+            if frame["t"] == "call.cancel" && frame["body"]["callId"] == "ask_1"));
+        // Acked, then the link goes: nothing is kept, and the shell is told to cancel again.
+        let seq = sent(&out)[0]["seq"].as_u64().unwrap();
+        s.received(&host("ping", 3, seq, |_| {}), T0 + 1400);
+        s.disconnected();
+        assert!(untold(
+            &s.call_cancel("ask_1", T0 + 1500),
+            "ask_1",
+            "call_unavailable"
+        ));
+        relinked(&mut s, T0 + 2000);
+        assert!(sent(&provides(&mut s, T0 + 2060)).is_empty());
+        // Its ask waits to go again when it is cancelled: taken back, ended here, and on the
+        // next link with calls her host is told to stop after its word on what it provides.
+        ask(&mut s, "ask_2", 30_000, T0 + 3000);
+        let mut s = long(&s);
+        s.disconnected();
+        assert!(told_here(
+            &s.call_cancel("ask_2", T0 + 3500),
+            "ask_2",
+            "call_cancelled"
+        ));
+        // Kept across a state, and not sent where calls was not agreed.
+        let mut s = Session::restore(contract(), &s.state()).unwrap();
+        s.connected(T0 + 4000);
+        let out = sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 4050));
+        assert!(out.iter().all(|frame| frame["t"] != "call.cancel"));
+        relinked(&mut s, T0 + 5000);
+        let out = sent(&provides(&mut s, T0 + 5060));
+        let told: Vec<&Value> = out.iter().filter(|frame| frame["t"] != "ack").collect();
+        assert!(matches!(&told[..], [frame]
+            if frame["t"] == "call.cancel" && frame["body"]["callId"] == "ask_2"));
+        // Once.
+        relinked(&mut s, T0 + 6000);
+        assert!(
+            sent(&provides(&mut s, T0 + 6060))
+                .iter()
+                .all(|frame| frame["t"] != "call.cancel")
+        );
+    }
+
+    #[test]
+    fn an_action_the_contract_does_not_register_is_not_asked() {
+        let mut s = linked(0);
+        s.received(
+            &host("call.granted", 3, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([{ "name": "future.do", "version": 1 }]);
+            }),
+            T0 + 100,
+        );
+        let out = s.call(
+            "ask_1",
+            "future.do",
+            1,
+            &json!({}),
+            &json!({ "kind": "owner" }),
+            1000,
+            T0 + 200,
+        );
+        assert!(sent(&out).is_empty());
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Unsent { t, code, .. }] if t == "call.ask" && code == "call_unknown"
+        ));
+    }
+
+    #[test]
+    fn calls_ended_here_with_no_result_are_kept_to_a_bound_and_the_shell_is_told_which_go() {
+        let mut s = linked(0);
+        let kept = Session::KEPT_ANSWERS;
+        // Each asked, then told timed out here a minute past its deadline.
+        let mut now = T0 + 1000;
+        let mut forgotten = Vec::new();
+        for n in 0..kept + 3 {
+            let out = ask(&mut s, &format!("ask_{n}"), 1000, now);
+            for delivery in delivered(&out) {
+                if let Delivery::CallsForgotten { call_ids } = delivery {
+                    forgotten.extend(call_ids.iter().cloned());
+                }
+            }
+            now += 100_000;
+            s.received(&host("ping", 3 + n as u64, 2, |_| {}), now);
+            let late = s.tick(now);
+            assert!(told_here(&late, &format!("ask_{n}"), "call_timeout"), "{n}");
+        }
+        // The asks before the last found one more than is kept each time, from the second
+        // past the bound on: the oldest went, and were told.
+        assert_eq!(forgotten, ["ask_0", "ask_1"]);
+        let state = s.state();
+        assert_eq!(state["asking"].as_array().unwrap().len(), kept + 1);
+        // A result of her host's for one let go is acked and not delivered.
+        let out = s.received(&done("ask_0", 3 + kept as u64 + 3), now + 10);
+        assert!(delivered(&out).is_empty());
+        assert!(sent(&out).iter().any(|frame| frame["t"] == "ack"));
     }
 
     #[test]
@@ -2745,5 +2968,45 @@ mod calling {
         // The report of a dropped frame is not the shell's to make.
         let own = s.stream_event("evt_2", "link.dropped", 1, &json!({}), T0 + 2100);
         assert!(matches!(delivered(&own)[..], [Delivery::Unsent { .. }]));
+    }
+
+    #[test]
+    fn events_that_wait_are_kept_to_a_bound_and_the_oldest_let_go_is_told() {
+        let mut s = linked(0);
+        s.disconnected();
+        let event = |s: &mut Session, id: &str| {
+            s.stream_event(id, "example.happened", 1, &json!({}), T0 + 300)
+        };
+        for n in 0..Session::KEPT_EVENTS {
+            assert!(event(&mut s, &format!("evt_{n}")).is_empty());
+        }
+        let gone = |out: &[Output], id: &str| {
+            matches!(
+                delivered(out)[..],
+                [Delivery::Unsent { t, code, id: Some(of) }]
+                    if t == "stream.event" && code == "too_many" && of == id
+            )
+        };
+        // One more: the oldest that waits is let go, and told by its id.
+        assert!(gone(&event(&mut s, "evt_more"), "evt_0"));
+        // The same event again, or one whose id is not free, lets nothing go.
+        assert!(event(&mut s, "evt_more").is_empty());
+        let bad = event(&mut s, "not an id");
+        assert!(matches!(
+            delivered(&bad)[..],
+            [Delivery::Unsent { t, .. }] if t == "stream.event"
+        ));
+        let kept = |s: &Session| {
+            let state = s.state();
+            let outbox = state["outbox"].as_array().unwrap();
+            (outbox.len(), outbox[0]["id"].clone())
+        };
+        assert_eq!(kept(&s), (Session::KEPT_EVENTS, json!("evt_1")));
+        // All on their way on a link: the new one is the one not kept.
+        relinked(&mut s, T0 + 1000);
+        let out = event(&mut s, "evt_last");
+        assert!(sent(&out).is_empty());
+        assert!(gone(&out, "evt_last"));
+        assert_eq!(kept(&s), (Session::KEPT_EVENTS, json!("evt_1")));
     }
 }
