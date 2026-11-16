@@ -1869,10 +1869,12 @@ impl Session {
         ) else {
             return out;
         };
-        let deadline_at = body
-            .get("deadlineAt")
-            .and_then(unsigned)
-            .map_or(0, |at| at as i64);
+        // Held to the most a call of its action may be given from now, by her host's clock
+        // (`call_deadline`): a further one is cut short, not refused.
+        let taken_at = self.host_now(now_ms).max(0) as u64;
+        let deadline_at = body.get("deadlineAt").and_then(unsigned).map_or(0, |at| {
+            myriad_her_link::call_deadline(&action, at, taken_at).min(i64::MAX as u64) as i64
+        });
         let of = body.get("for").cloned().unwrap_or(Value::Null);
         // Why it is not done, when what this end offers already says so. The version said
         // back is the one this end does.

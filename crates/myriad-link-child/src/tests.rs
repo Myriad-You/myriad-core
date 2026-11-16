@@ -1485,6 +1485,30 @@ mod calls {
     }
 
     #[test]
+    fn a_deadline_further_than_its_action_may_be_given_is_cut_short_not_refused() {
+        let hour = 3_600_000;
+        let mut s = called(hour);
+        // screen.look, given two minutes: held to the most a call that is not long may be.
+        let out = s.received(
+            &ask("c_1", 2, T0 + hour + 1000, T0 + hour + 1000 + 120_000),
+            T0 + 1000,
+        );
+        let most = myriad_her_link::call_most_ms("screen.look") as i64;
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Call { deadline_at, .. }] if *deadline_at == T0 + hour + 1000 + most
+        ));
+        // As far as a number every end reads exactly (2^53 - 1): cut short all the same.
+        let mut s = called(hour);
+        let far = (1_i64 << 53) - 1;
+        let out = s.received(&ask("c_2", 2, T0 + hour + 2000, far), T0 + 2000);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Call { deadline_at, .. }] if *deadline_at == T0 + hour + 2000 + most
+        ));
+    }
+
+    #[test]
     fn a_deadline_passes_with_the_link_down_and_the_answer_waits_for_it() {
         let mut s = called(0);
         s.received(&ask("c_1", 2, T0 + 1000, T0 + 9000), T0 + 1000);
