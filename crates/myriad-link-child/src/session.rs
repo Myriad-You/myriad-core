@@ -187,6 +187,57 @@ pub enum Delivery {
         call_id: String,
         why: String,
     },
+    /// Of a call this end asked of her host ([`Session::call`]): her host has the long
+    /// action in hand.
+    CallAccepted {
+        call_id: String,
+    },
+    /// Where that long action is: a stage name of the action's own, and whether her host
+    /// waits for the owner. The newest counts.
+    CallProgress {
+        call_id: String,
+        phase: String,
+        waiting_for_owner: bool,
+    },
+    /// The next piece of its result, in order, each once; one that was lost with a link is
+    /// not made up, and the whole still comes in the result.
+    CallPiece {
+        call_id: String,
+        sequence: u64,
+        piece: Value,
+    },
+    /// What came of it, once: `outcome` is `done` (with `result`), `failed` (with `code`,
+    /// one of the contract's `calls.failCodes`) or `unknown` (her host lost track: it may
+    /// have happened, and no end does it again by itself). `here` says the session said it
+    /// itself, at most once for a call: no answer came by a minute after the deadline
+    /// (`call_timeout`), or her host does not provide the action on the link the ask waited
+    /// for (`call_not_granted`). A result of her host's that still comes after is delivered
+    /// too, and is what happened.
+    CallResult {
+        call_id: String,
+        outcome: String,
+        result: Option<Value>,
+        code: Option<String>,
+        blobs: Vec<String>,
+        here: bool,
+    },
+    /// Something her host tells as it changes (`stream.state`), of a name the contract
+    /// registers at that version. Only the newest counts.
+    StreamState {
+        name: String,
+        version: u64,
+        at: i64,
+        value: Value,
+    },
+    /// Something that happened, as her host tells it (`stream.event`), of a name the
+    /// contract registers at that version; once per id.
+    StreamEvent {
+        id: String,
+        name: String,
+        version: u64,
+        at: i64,
+        body: Value,
+    },
     /// What her host runs, as its own `link.versions` says (`{contract, core, app, actions}`),
     /// for the shell to show beside its own.
     HostVersions(Value),
@@ -491,6 +542,9 @@ struct State {
     mood_revision: Option<f64>,
     taken: Vec<String>,
     host_capabilities: Vec<String>,
+    /// None in a state kept before a session recorded it: then it is what the hello holds.
+    #[serde(default)]
+    said: Option<Vec<String>>,
     #[serde(default)]
     offers: Vec<Named>,
     #[serde(default)]
@@ -511,6 +565,10 @@ struct State {
     heard_granted: bool,
     #[serde(default)]
     held: Vec<Held>,
+    #[serde(default)]
+    providing: Vec<Named>,
+    #[serde(default)]
+    asking: Vec<Asking>,
 }
 
 /// A call this end is doing for her host.
@@ -527,6 +585,22 @@ struct Doing {
     /// The sequence of the last piece of its result sent (`call.event`); 0 before any.
     #[serde(default, deserialize_with = "whole::u64")]
     pieces: u64,
+}
+
+/// A call this end asked of her host and has no result of yet.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Asking {
+    call_id: String,
+    /// By her host's clock, milliseconds.
+    #[serde(deserialize_with = "whole::i64")]
+    deadline_at: i64,
+    /// The sequence of the last piece of its result taken; 0 before any.
+    #[serde(default, deserialize_with = "whole::u64")]
+    pieces: u64,
+    /// Whether the session has said it timed out: a result may still come.
+    #[serde(default)]
+    late: bool,
 }
 
 /// A call that came before her host said what is granted on this link: not judged yet.
@@ -598,6 +672,9 @@ pub struct Session {
     taken: Vec<String>,
     /// What the host accepted of this child's capabilities, as its welcome said.
     host_capabilities: BTreeSet<String>,
+    /// What this end's hello said on this link: the capabilities as they were when the
+    /// link came up.
+    said: BTreeSet<String>,
     /// What this end may be asked to do ([`Session::offer`]), each `(name, version)`.
     offers: Vec<(String, u64)>,
     /// The shared core this end runs, as `link.versions` says it ([`Session::runs`]).
@@ -623,6 +700,11 @@ pub struct Session {
     /// says, then judged by what it says. They wait across a link that goes, for the next
     /// link's word; each is still held to its own deadline.
     held: Vec<Held>,
+    /// Her host's own actions this end may call (`call.granted.providing`), as said on this
+    /// link; none before it has said.
+    providing: Vec<(String, u64)>,
+    /// The calls this end asked of her host and has no result of yet, oldest first.
+    asking: Vec<Asking>,
 }
 
 impl Session {
@@ -635,9 +717,13 @@ impl Session {
     /// (`crate::capabilities::unread` compares an end's capabilities with it). A `pong` is
     /// read only as a sign of life.
     pub const READS: &[&str] = &[
+        "call.accepted",
         "call.ask",
         "call.cancel",
+        "call.event",
         "call.granted",
+        "call.progress",
+        "call.result",
         "conversation",
         "conversations",
         "error",
@@ -654,6 +740,8 @@ impl Session {
         "run.event",
         "run.rejected",
         "say",
+        "stream.event",
+        "stream.state",
         "touch.reaction",
         "wardrobe",
         "welcome",
@@ -708,6 +796,7 @@ impl Session {
             mood_revision: None,
             taken: Vec::new(),
             host_capabilities: BTreeSet::new(),
+            said: BTreeSet::new(),
             offers: Vec::new(),
             core: None,
             told_dropped: BTreeSet::new(),
@@ -718,6 +807,8 @@ impl Session {
             granted: Vec::new(),
             heard_granted: false,
             held: Vec::new(),
+            providing: Vec::new(),
+            asking: Vec::new(),
         }
     }
 
@@ -786,10 +877,11 @@ impl Session {
             .map(|(abi, build)| (*abi, build.as_str()))
     }
 
-    /// Whether both ends listed `capability`: this end in its hello, her host in its welcome.
+    /// Whether both ends listed `capability` on this link: this end in the hello it sent
+    /// when the link came up, her host in its welcome. What the shell has since set for the
+    /// next hello ([`Session::set_capabilities`]) opens nothing on this one.
     fn both(&self, capability: &str) -> bool {
-        self.host_capabilities.contains(capability)
-            && self.capabilities().iter().any(|said| said == capability)
+        self.host_capabilities.contains(capability) && self.said.contains(capability)
     }
 
     /// What goes first on every new link once it is open: this end's versions, and what it
@@ -867,6 +959,7 @@ impl Session {
             mood_revision: self.mood_revision,
             taken: self.taken.clone(),
             host_capabilities: self.host_capabilities.iter().cloned().collect(),
+            said: Some(self.said.iter().cloned().collect()),
             offers: self
                 .offers
                 .iter()
@@ -891,6 +984,15 @@ impl Session {
                 .collect(),
             heard_granted: self.heard_granted,
             held: self.held.clone(),
+            providing: self
+                .providing
+                .iter()
+                .map(|(name, version)| Named {
+                    name: name.clone(),
+                    version: *version,
+                })
+                .collect(),
+            asking: self.asking.clone(),
         };
         serde_json::to_value(state).expect("a session is plain data")
     }
@@ -929,6 +1031,8 @@ impl Session {
             .chain(state.offers.iter().map(|named| named.version))
             .chain(state.granted.iter().map(|named| named.version))
             .chain(state.held.iter().map(|call| call.version))
+            .chain(state.providing.iter().map(|named| named.version))
+            .chain(state.asking.iter().map(|call| call.pieces))
             .chain(state.core.iter().map(|runs| runs.abi));
         let beat = 50..=contract.timing.heartbeat_ms.max(50);
         let mut ids = BTreeSet::new();
@@ -941,6 +1045,7 @@ impl Session {
             || !beat.contains(&state.heartbeat_ms)
             || !state.doing.iter().all(|call| time(call.deadline_at))
             || !state.held.iter().all(|call| time(call.deadline_at))
+            || !state.asking.iter().all(|call| time(call.deadline_at))
             || state.host_ahead_ms.unsigned_abs() > WHOLE
             || !state.turns.iter().all(|turn| ids.insert(&turn.turn_id))
             || state
@@ -964,6 +1069,15 @@ impl Session {
             })
             .cloned()
             .collect();
+        // What the hello of the link said, when the state was kept under a session that
+        // recorded it; one from before did not, and then it is what its hello holds.
+        let said_on_link: BTreeSet<String> = match state.said.take() {
+            Some(said) => said.into_iter().collect(),
+            None => said
+                .iter()
+                .filter_map(|one| one.as_str().map(str::to_string))
+                .collect(),
+        };
         state
             .hello
             .insert("capabilities".into(), Value::Array(said));
@@ -1005,6 +1119,7 @@ impl Session {
             mood_revision: state.mood_revision,
             taken: state.taken,
             host_capabilities: state.host_capabilities.into_iter().collect(),
+            said: said_on_link,
             // By this contract, whichever one the state was kept under: an action it no
             // longer names, or names at another version, is not offered.
             offers: offered(
@@ -1026,6 +1141,12 @@ impl Session {
                 .collect(),
             heard_granted: state.heard_granted,
             held: state.held,
+            providing: state
+                .providing
+                .into_iter()
+                .map(|named| (named.name, named.version))
+                .collect(),
+            asking: state.asking,
         })
     }
 
@@ -1040,9 +1161,11 @@ impl Session {
         self.last_heard_ms = now_ms;
         self.heartbeat_ms = self.timing.heartbeat_ms;
         self.host_capabilities.clear();
+        self.said = self.capabilities().into_iter().collect();
         self.told_dropped.clear();
         // What is granted is said anew on every link: nothing of the last one's decides.
         self.granted.clear();
+        self.providing.clear();
         self.heard_granted = false;
         for pending in &mut self.outbox {
             pending.seq = None;
@@ -1427,6 +1550,20 @@ impl Session {
             }
             "error" => self.host_error(&body),
             "call.ask" => self.asked(envelope, &body, taken, now_ms),
+            "call.accepted" | "call.progress" | "call.event" => {
+                self.heard_of_call(&envelope.t, &body)
+            }
+            "call.result" => self.answered_to(envelope, &body, taken, now_ms),
+            "stream.state" => match self.stream(false, &body) {
+                Some((name, version, at)) => vec![Output::Deliver(Delivery::StreamState {
+                    name,
+                    version,
+                    at,
+                    value: body["value"].clone(),
+                })],
+                None => Vec::new(),
+            },
+            "stream.event" => self.stream_event_in(envelope, &body, taken, now_ms),
             "call.cancel" => match string(&body, "callId") {
                 Some(call_id) => self.cancelled(&call_id, now_ms),
                 None => Vec::new(),
@@ -1451,18 +1588,22 @@ impl Session {
                 (Some(actions), Some(providing)) => {
                     let delivery = Delivery::Granted {
                         actions: actions.clone(),
-                        providing,
+                        providing: providing.clone(),
                     };
                     let mut out = vec![Output::Deliver(delivery)];
                     // It decides only on a link where both ends listed `calls`: on another
                     // no call is taken, whatever is said to be granted.
                     if self.both("calls") {
                         self.granted = actions;
+                        self.providing = providing;
                         self.heard_granted = true;
                         // What came before her host said: judged now, by what it says.
                         for call in std::mem::take(&mut self.held) {
                             out.extend(self.judge(call, now_ms));
                         }
+                        // And what this end waits to ask of it: asked now if it provides
+                        // the action here, told not granted if it does not.
+                        out.extend(self.settle_asks(now_ms));
                     }
                     out
                 }
@@ -2162,7 +2303,7 @@ impl Session {
         if !self.doing.iter().any(|call| call.call_id == call_id) {
             return unsent("call.progress", "bad_id", Some(call_id));
         }
-        if self.phase != Phase::Open {
+        if self.phase != Phase::Open || !self.both("calls") {
             return Vec::new();
         }
         let mut body = json!({ "callId": call_id, "phase": phase });
@@ -2181,7 +2322,7 @@ impl Session {
         };
         call.pieces += 1;
         let body = json!({ "callId": call_id, "sequence": call.pieces, "piece": piece });
-        if self.phase != Phase::Open {
+        if self.phase != Phase::Open || !self.both("calls") {
             return Vec::new();
         }
         self.send("call.event", &body, None, now_ms)
@@ -2229,6 +2370,357 @@ impl Session {
         out
     }
 
+    // Calls: this end asks her host to do one thing
+
+    /// How long after its deadline a call with no answer is counted timed out (the
+    /// contract's `call.ask`: "a minute after deadlineAt").
+    pub const CALL_GRACE_MS: i64 = 60_000;
+
+    /// Ask her host to do `action` at `version` with `args`, for `of` (`{kind, groupId?}`),
+    /// to be answered within `within_ms` from now, cut short to the most a call of the
+    /// action may be given (`timing.callDeadlineMaxMs`, `longCallMaxMs` for a long one); the
+    /// deadline goes out by her host's clock, the frame's own time by this end's. `call_id`
+    /// is the shell's, made once (at
+    /// most 57 characters): the ask is a reliable frame under it, kept and sent again with
+    /// the same deadline until her host acks it. Not asked, and told `Unsent`, when there is
+    /// no open link (`call_unavailable`), when the two ends did not both list `calls` on it
+    /// or her host has not said it provides the action at that version here
+    /// (`call_not_granted`), when the action is not for `of` (`wrong_audience`), when the
+    /// id is already a call's or another frame's (`bad_id`), or when the frame is not one
+    /// the contract takes. An ask not acked when the link goes waits for the next link's
+    /// word on what her host provides there: it goes again if it does, and ends
+    /// `call_not_granted` (told here) if it does not. What comes
+    /// of it is delivered: [`Delivery::CallAccepted`], `CallProgress`, `CallPiece`, and one
+    /// [`Delivery::CallResult`].
+    #[allow(clippy::too_many_arguments)]
+    pub fn call(
+        &mut self,
+        call_id: &str,
+        action: &str,
+        version: u64,
+        args: &Value,
+        of: &Value,
+        within_ms: i64,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        let refuse = |code: &str| unsent("call.ask", code, Some(call_id));
+        // Her host is asked only while it is linked, and only for what it has said, on this
+        // link, that it provides.
+        if self.phase != Phase::Open {
+            return refuse("call_unavailable");
+        }
+        if !self.both("calls") || !self.providing.contains(&(action.to_string(), version)) {
+            return refuse("call_not_granted");
+        }
+        // A call's id is made once: not one whose result has already come.
+        if self.taken.contains(&format!("{call_id}{RESULT}")) {
+            return refuse("bad_id");
+        }
+        if myriad_her_link::call_allowed(action, of).is_err() {
+            return refuse("wrong_audience");
+        }
+        if self.asking.iter().any(|call| call.call_id == call_id) {
+            return refuse("bad_id");
+        }
+        // The deadline is by her host's clock, whoever asks (this end's clock as set right by
+        // the latest welcome), and no further than a call of the action may be given from
+        // now: her host holds it to that anyway (`call_deadline`), so both hold the same.
+        let asked_at = self.host_now(now_ms).max(0) as u64;
+        let wanted = asked_at.saturating_add(within_ms.max(0) as u64);
+        let deadline_at =
+            myriad_her_link::call_deadline(action, wanted, asked_at).min(i64::MAX as u64) as i64;
+        let body = json!({
+            "callId": call_id,
+            "action": action,
+            "version": version,
+            "args": args,
+            "for": of,
+            "deadlineAt": deadline_at,
+        });
+        // As her host will check it.
+        if let Err(refused) = frames::text("call.ask", WHOLE, WHOLE, Some(call_id), now_ms, &body) {
+            return refuse(&refused.code);
+        }
+        let out = self.reliable_out(call_id, "call.ask", &body, now_ms);
+        if !out
+            .iter()
+            .any(|o| matches!(o, Output::Deliver(Delivery::Unsent { .. })))
+        {
+            self.asking.push(Asking {
+                call_id: call_id.to_string(),
+                deadline_at,
+                pieces: 0,
+                late: false,
+            });
+            // Calls long timed out with no result are not kept without end.
+            let mut over = self
+                .asking
+                .iter()
+                .filter(|call| call.late)
+                .count()
+                .saturating_sub(Self::KEPT_ANSWERS);
+            let mut gone = Vec::new();
+            self.asking.retain(|call| {
+                if over > 0 && call.late {
+                    over -= 1;
+                    gone.push(call.call_id.clone());
+                    false
+                } else {
+                    true
+                }
+            });
+            self.outbox
+                .retain(|pending| !(pending.t == "call.ask" && gone.contains(&pending.id)));
+        }
+        out
+    }
+
+    /// Whether her host has said, on this link, that it provides what the `call.ask` body
+    /// asks: on a link where both ends listed `calls`.
+    fn provided(&self, ask: &Value) -> bool {
+        let named = string(ask, "action").zip(ask.get("version").and_then(unsigned));
+        self.both("calls") && named.is_some_and(|named| self.providing.contains(&named))
+    }
+
+    /// Her host has just said what it provides on this link: an ask that waited from the
+    /// link before goes now if it provides the action here; if it does not, the ask is let
+    /// go and the shell is told the call was not granted, here.
+    fn settle_asks(&mut self, now_ms: i64) -> Vec<Output> {
+        // Only asks that wait from a link before: one sent on this link is her host's to
+        // answer, whatever it says it provides now.
+        let refused: Vec<String> = self
+            .outbox
+            .iter()
+            .filter(|pending| {
+                pending.t == "call.ask" && pending.seq.is_none() && !self.provided(&pending.body)
+            })
+            .map(|pending| pending.id.clone())
+            .collect();
+        self.outbox
+            .retain(|pending| pending.t != "call.ask" || !refused.contains(&pending.id));
+        let mut out = Vec::new();
+        for call in &mut self.asking {
+            // Told here once (not again of one already told timed out), and kept as asked:
+            // her host may have had the ask after all, and its result is what happened.
+            if refused.contains(&call.call_id) && !call.late {
+                call.late = true;
+                out.push(Output::Deliver(Delivery::CallResult {
+                    call_id: call.call_id.clone(),
+                    outcome: "failed".into(),
+                    result: None,
+                    code: Some("call_not_granted".into()),
+                    blobs: Vec::new(),
+                    here: true,
+                }));
+            }
+        }
+        out.extend(self.flush(now_ms));
+        out
+    }
+
+    /// This end no longer wants the long call `call_id`: her host is told to stop it
+    /// (`call.cancel`, not kept while the link is down). Its result still comes.
+    pub fn call_cancel(&mut self, call_id: &str, now_ms: i64) -> Vec<Output> {
+        if !self.asking.iter().any(|call| call.call_id == call_id) {
+            return unsent("call.cancel", "bad_id", Some(call_id));
+        }
+        if self.phase != Phase::Open || !self.both("calls") {
+            return Vec::new();
+        }
+        self.send("call.cancel", &json!({ "callId": call_id }), None, now_ms)
+    }
+
+    /// `call.accepted`, `call.progress`, `call.event` of a call this end asked.
+    fn heard_of_call(&mut self, t: &str, body: &Value) -> Vec<Output> {
+        let Some(call_id) = string(body, "callId") else {
+            return Vec::new();
+        };
+        let Some(call) = self.asking.iter_mut().find(|call| call.call_id == call_id) else {
+            return Vec::new();
+        };
+        let delivery = match t {
+            "call.accepted" => Delivery::CallAccepted { call_id },
+            "call.progress" => match string(body, "phase") {
+                Some(phase) => Delivery::CallProgress {
+                    call_id,
+                    phase,
+                    waiting_for_owner: body.get("waiting").is_some_and(|w| w == "owner"),
+                },
+                None => return Vec::new(),
+            },
+            _ => {
+                // In order, each once: one behind what was taken is old.
+                let Some(sequence) = body.get("sequence").and_then(unsigned) else {
+                    return Vec::new();
+                };
+                if sequence <= call.pieces {
+                    return Vec::new();
+                }
+                call.pieces = sequence;
+                Delivery::CallPiece {
+                    call_id,
+                    sequence,
+                    piece: body.get("piece").cloned().unwrap_or(Value::Null),
+                }
+            }
+        };
+        vec![Output::Deliver(delivery)]
+    }
+
+    /// `call.result` of a call this end asked: acked, and delivered once.
+    fn answered_to(
+        &mut self,
+        envelope: &Envelope,
+        body: &Value,
+        taken: bool,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        if !taken {
+            return match envelope.id.as_deref().filter(|id| valid_id(id)) {
+                Some(_) => self.send("ack", &json!({}), None, now_ms),
+                None => Vec::new(),
+            };
+        }
+        let Some(call_id) = string(body, "callId") else {
+            return Vec::new();
+        };
+        // Only of a call this end asked: another's is acked and passed by.
+        let asked = self.asking.iter().any(|call| call.call_id == call_id);
+        let result = Delivery::CallResult {
+            call_id: call_id.clone(),
+            outcome: string(body, "outcome").unwrap_or_default(),
+            result: body.get("result").cloned(),
+            code: body.get("error").and_then(|error| string(error, "code")),
+            blobs: body
+                .get("blobs")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|blob| blob.as_str().map(str::to_string))
+                .collect(),
+            here: false,
+        };
+        let out = self.reliable_in(envelope, Value::Null, now_ms, |_, _| result);
+        if !asked {
+            return out
+                .into_iter()
+                .filter(|o| !matches!(o, Output::Deliver(_)))
+                .collect();
+        }
+        self.asking.retain(|call| call.call_id != call_id);
+        // It is answered: its ask, if it still waited to go again, does not.
+        self.outbox
+            .retain(|pending| !(pending.t == "call.ask" && pending.id == call_id));
+        out
+    }
+
+    /// Every call this end asked that has had no answer a minute past its deadline: told
+    /// timed out here, once. It stays asked, so that a result that still comes is delivered.
+    fn overdue(&mut self, now_ms: i64) -> Vec<Output> {
+        let host_now = self.host_now(now_ms);
+        let mut out = Vec::new();
+        for call in &mut self.asking {
+            if !call.late && host_now >= call.deadline_at.saturating_add(Self::CALL_GRACE_MS) {
+                call.late = true;
+                out.push(Output::Deliver(Delivery::CallResult {
+                    call_id: call.call_id.clone(),
+                    outcome: "failed".into(),
+                    result: None,
+                    code: Some("call_timeout".into()),
+                    blobs: Vec::new(),
+                    here: true,
+                }));
+            }
+        }
+        out
+    }
+
+    // Streams
+
+    /// The name, version and time of a `stream.state` or `stream.event` body, when both
+    /// ends listed `streams` and the contract registers that name at that version for her
+    /// host to send; an end passes any other by.
+    fn stream(&self, event: bool, body: &Value) -> Option<(String, u64, i64)> {
+        if !self.both("streams") {
+            return None;
+        }
+        let name = string(body, "name")?;
+        let version = body.get("version").and_then(unsigned)?;
+        let spec = myriad_her_link::stream_spec(event, &name)?;
+        if spec.version != version || spec.from == "child" {
+            return None;
+        }
+        let at = body.get("at").and_then(unsigned).map_or(0, |at| at as i64);
+        Some((name, version, at))
+    }
+
+    fn stream_event_in(
+        &mut self,
+        envelope: &Envelope,
+        body: &Value,
+        taken: bool,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        let Some(id) = envelope.id.clone().filter(|id| valid_id(id)) else {
+            return Vec::new();
+        };
+        let known = if taken { self.stream(true, body) } else { None };
+        let Some((name, version, at)) = known else {
+            // Not one this end reads: acked like any reliable frame, and passed by.
+            return self.send("ack", &json!({}), None, now_ms);
+        };
+        let delivery = Delivery::StreamEvent {
+            id,
+            name,
+            version,
+            at,
+            body: body["body"].clone(),
+        };
+        self.reliable_in(envelope, Value::Null, now_ms, |_, _| delivery)
+    }
+
+    /// Tell her host the newest value of something that changes (`stream.state`): `name`
+    /// and `version` as the contract's `streams.state` registers them, or a name of this
+    /// end's own that her host may pass by. Only on an open link where both ends listed
+    /// `streams`; not kept otherwise.
+    pub fn stream_state(
+        &mut self,
+        name: &str,
+        version: u64,
+        value: &Value,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        if self.phase != Phase::Open || !self.both("streams") {
+            return Vec::new();
+        }
+        let body = json!({ "name": name, "version": version, "at": now_ms.max(0), "value": value });
+        self.send("stream.state", &body, None, now_ms)
+    }
+
+    /// Tell her host something that happened (`stream.event`), kept until it is acked: `id`
+    /// is the event's own, made once by the shell. It goes only on a link where both ends
+    /// listed `streams`, and waits for one otherwise.
+    pub fn stream_event(
+        &mut self,
+        id: &str,
+        name: &str,
+        version: u64,
+        body: &Value,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        // `link.dropped` is the session's own to tell.
+        if name == "link.dropped" {
+            return unsent("stream.event", "bad_frame", Some(id));
+        }
+        let frame = json!({ "name": name, "version": version, "at": now_ms.max(0), "body": body });
+        if let Err(refused) =
+            frames::text("stream.event", WHOLE, WHOLE, Some(id), WHOLE as i64, &frame)
+        {
+            return unsent("stream.event", &refused.code, Some(id));
+        }
+        self.reliable_out(id, "stream.event", &frame, now_ms)
+    }
+
     // Clock
 
     /// Heartbeat and timeouts; call it often (several times a heartbeat).
@@ -2237,6 +2729,7 @@ impl Session {
         // and its answer waits for the link like any reliable frame.
         let mut out = self.expire(now_ms);
         out.extend(self.expire_held(now_ms));
+        out.extend(self.overdue(now_ms));
         out.extend(self.beat(now_ms));
         out
     }
@@ -2343,6 +2836,19 @@ impl Session {
         let mut refused = BTreeSet::new();
         for index in 0..self.outbox.len() {
             if self.outbox[index].seq.is_some() {
+                continue;
+            }
+            // An event goes only on a link where both ends listed `streams`: on another it
+            // waits for one that did.
+            if self.outbox[index].t == "stream.event" && !self.both("streams") {
+                continue;
+            }
+            // A call's frames go only on a link where both ends listed `calls`; and an ask
+            // only once her host has said, on this link, that it provides the action.
+            if self.outbox[index].t == "call.result" && !self.both("calls") {
+                continue;
+            }
+            if self.outbox[index].t == "call.ask" && !self.provided(&self.outbox[index].body) {
                 continue;
             }
             let Pending { id, t, body, .. } = self.outbox[index].clone();

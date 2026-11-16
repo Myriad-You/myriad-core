@@ -895,8 +895,12 @@ mod capabilities {
             "wardrobe",
         ];
         let elsewhere = [
+            "call.accepted",
             "call.ask",
             "call.cancel",
+            "call.event",
+            "call.progress",
+            "call.result",
             "perform",
             "ping",
             "pong",
@@ -904,6 +908,8 @@ mod capabilities {
             "run.end",
             "run.event",
             "run.rejected",
+            "stream.event",
+            "stream.state",
             "welcome",
         ];
         let mut both: Vec<&str> = alone.iter().chain(&elsewhere).copied().collect();
@@ -2144,5 +2150,600 @@ mod calls {
             delivered(&out)[..],
             [Delivery::HostVersions(body)] if body["contract"] == 3
         ));
+    }
+}
+
+mod calling {
+    use super::*;
+
+    /// Open on a link where both listed calls and streams; her host provides `model.chat`
+    /// and its clock is `ahead` of the shell's.
+    fn linked(ahead: i64) -> Session {
+        let mut s = Session::new(
+            contract(),
+            &["calls", "streams"],
+            ("Child", "1"),
+            None,
+            None,
+        );
+        s.connected(T0);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls", "streams"]);
+                body["serverTime"] = json!(T0 + 50 + ahead);
+            }),
+            T0 + 50,
+        );
+        s.received(
+            &host("call.granted", 2, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([{ "name": "model.chat", "version": 1 }]);
+            }),
+            T0 + 60,
+        );
+        s
+    }
+
+    fn ask(s: &mut Session, call_id: &str, within: i64, at: i64) -> Vec<Output> {
+        let args = json!({ "messages": [] });
+        s.call(
+            call_id,
+            "model.chat",
+            1,
+            &args,
+            &json!({ "kind": "owner" }),
+            within,
+            at,
+        )
+    }
+
+    #[test]
+    fn an_ask_carries_her_hosts_time_and_goes_again_with_the_same_deadline() {
+        // Her host's clock runs an hour ahead: the deadline is by it, the frame's own time by
+        // this end's.
+        let hour = 3_600_000;
+        let mut s = linked(hour);
+        let out = sent(&ask(&mut s, "ask_1", 30_000, T0 + 1000));
+        assert_eq!(out.len(), 1);
+        assert_eq!(out[0]["t"], "call.ask");
+        assert_eq!(out[0]["at"], T0 + 1000);
+        assert_eq!(out[0]["body"]["deadlineAt"], T0 + hour + 31_000);
+        // Not acked when the link goes: on the next it waits for her host's word on what it
+        // provides there, then goes again, the same id and the same deadline.
+        s.disconnected();
+        s.connected(T0 + 5000);
+        let welcomed = sent(&s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls", "streams"]);
+                body["serverTime"] = json!(T0 + 5050 + hour);
+            }),
+            T0 + 5050,
+        ));
+        assert!(welcomed.iter().all(|frame| frame["t"] != "call.ask"));
+        let again = sent(&s.received(
+            &host("call.granted", 2, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([{ "name": "model.chat", "version": 1 }]);
+            }),
+            T0 + 5060,
+        ));
+        let resent = again.iter().find(|frame| frame["t"] == "call.ask").unwrap();
+        assert_eq!(resent["id"], "ask_1");
+        assert_eq!(resent["body"]["deadlineAt"], T0 + hour + 31_000);
+        // Asked for longer than a call of the action may be given: cut short to that from
+        // now by her host's clock, as her host would hold it, and not refused.
+        let far = sent(&ask(&mut s, "ask_far", 3_600_000, T0 + 6000));
+        let most = myriad_her_link::call_most_ms("model.chat") as i64;
+        assert_eq!(far.len(), 1);
+        assert_eq!(far[0]["at"], T0 + 6000);
+        assert_eq!(far[0]["body"]["deadlineAt"], T0 + hour + 6000 + most);
+        // Nor twice under one id.
+        let twice = ask(&mut s, "ask_1", 30_000, T0 + 6100);
+        assert!(sent(&twice).is_empty());
+    }
+
+    #[test]
+    fn only_what_her_host_provides_on_this_link_is_asked() {
+        // Before it has said, and on a link where calls was not agreed.
+        let mut s = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        s.connected(T0);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 50,
+        );
+        let refused = |out: Vec<Output>| {
+            matches!(
+                delivered(&out)[..],
+                [Delivery::Unsent { code, .. }] if code == "call_not_granted"
+            ) && sent(&out).is_empty()
+        };
+        assert!(refused(ask(&mut s, "ask_1", 30_000, T0 + 100)));
+        // What it provided on the link before is not provided on this one until it says so.
+        let mut s = linked(0);
+        s.disconnected();
+        s.connected(T0 + 5000);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls", "streams"])
+            }),
+            T0 + 5050,
+        );
+        assert!(refused(ask(&mut s, "ask_2", 30_000, T0 + 5100)));
+    }
+
+    #[test]
+    fn an_ask_that_waits_goes_only_where_her_host_says_it_provides_the_action() {
+        let reconnect = |s: &mut Session, at: i64, caps: Value| {
+            s.disconnected();
+            s.connected(at);
+            sent(&s.received(
+                &host("welcome", 1, 1, |body| body["capabilities"] = caps),
+                at + 50,
+            ))
+        };
+        let mut s = linked(0);
+        ask(&mut s, "ask_1", 30_000, T0 + 1000);
+        // With no link nothing is asked.
+        s.disconnected();
+        let down = ask(&mut s, "ask_down", 30_000, T0 + 1500);
+        assert!(matches!(
+            delivered(&down)[..],
+            [Delivery::Unsent { code, .. }] if code == "call_unavailable"
+        ));
+        // A link where calls was not agreed: the ask that waits is not sent, nor a cancel.
+        let out = reconnect(&mut s, T0 + 2000, json!([]));
+        assert!(out.iter().all(|frame| frame["t"] != "call.ask"));
+        assert!(s.call_cancel("ask_1", T0 + 2100).is_empty());
+        // A link where it was, and her host says it provides nothing: not granted, told here.
+        reconnect(&mut s, T0 + 3000, json!(["calls"]));
+        let out = s.received(
+            &host("call.granted", 2, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([]);
+            }),
+            T0 + 3100,
+        );
+        assert!(sent(&out).iter().all(|frame| frame["t"] != "call.ask"));
+        assert!(matches!(
+            delivered(&out)[..],
+            [
+                Delivery::Granted { .. },
+                Delivery::CallResult { call_id, code: Some(code), here: true, .. }
+            ] if call_id == "ask_1" && code == "call_not_granted"
+        ));
+        // Told once here: no timeout is told of it later.
+        assert!(
+            delivered(&s.tick(T0 + 200_000))
+                .iter()
+                .all(|d| !matches!(d, Delivery::CallResult { .. }))
+        );
+        // An ask sent on this link is her host's to answer, though it narrows what it
+        // provides before it has acked it.
+        let mut s = linked(0);
+        ask(&mut s, "ask_2", 30_000, T0 + 1000);
+        let out = s.received(
+            &host("call.granted", 3, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([]);
+            }),
+            T0 + 1100,
+        );
+        assert!(matches!(delivered(&out)[..], [Delivery::Granted { .. }]));
+        // Where calls is not agreed, nothing of a call in hand goes either.
+        let mut s = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        s.offer(&[("work.run", 1)]);
+        s.connected(T0);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 50,
+        );
+        s.received(
+            &host("call.granted", 2, 2, |body| {
+                body["actions"] = json!([{ "name": "work.run", "version": 1 }]);
+            }),
+            T0 + 60,
+        );
+        let mut work = fixture("call.ask");
+        work["seq"] = json!(3);
+        work["id"] = json!("w_1");
+        work["at"] = json!(T0 + 100);
+        work["body"]["callId"] = json!("w_1");
+        work["body"]["action"] = json!("work.run");
+        work["body"]["args"] = json!({ "proposalId": "p", "title": "t", "instruction": "i" });
+        work["body"]["deadlineAt"] = json!(T0 + 600_000);
+        assert!(!delivered(&s.received(&work.to_string(), T0 + 100)).is_empty());
+        reconnect(&mut s, T0 + 5000, json!([]));
+        assert!(
+            s.call_progress("w_1", "running", false, T0 + 5100)
+                .is_empty()
+        );
+        assert!(s.call_piece("w_1", &json!("x"), T0 + 5200).is_empty());
+    }
+
+    #[test]
+    fn what_the_shell_sets_for_the_next_hello_opens_nothing_on_this_link() {
+        // The hello of this link said nothing of calls or streams.
+        let mut s = Session::new(contract(), &[], ("Child", "1"), None, None);
+        s.offer(&[("screen.look", 1)]);
+        s.connected(T0);
+        // Mid-link the shell adds them for its next hello, and her host, against the
+        // contract, lists them in its welcome and says everything is granted and provided.
+        s.set_capabilities(&["calls", "streams"]);
+        let welcomed = s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls", "streams"])
+            }),
+            T0 + 50,
+        );
+        assert!(
+            sent(&welcomed)
+                .iter()
+                .all(|frame| frame["t"] != "call.offer")
+        );
+        s.received(
+            &host("call.granted", 2, 1, |body| {
+                body["actions"] = json!([{ "name": "screen.look", "version": 1 }]);
+                body["providing"] = json!([{ "name": "model.chat", "version": 1 }]);
+            }),
+            T0 + 60,
+        );
+        // No call is taken, none is asked, nothing of streams goes, nothing dropped is told.
+        let mut look = fixture("call.ask");
+        look["seq"] = json!(3);
+        look["at"] = json!(T0 + 100);
+        look["body"]["deadlineAt"] = json!(T0 + 9000);
+        assert!(s.received(&look.to_string(), T0 + 100).is_empty());
+        let asked = ask(&mut s, "ask_1", 30_000, T0 + 200);
+        assert!(sent(&asked).is_empty());
+        assert!(
+            s.stream_state("example.now", 1, &json!({}), T0 + 300)
+                .is_empty()
+        );
+        let mut later: Value = serde_json::from_str(&host("mood", 4, 1, |_| {})).unwrap();
+        later["t"] = json!("call.later");
+        assert!(sent(&s.received(&later.to_string(), T0 + 400)).is_empty());
+        // The next link's hello says them, and there they are agreed.
+        s.disconnected();
+        let hello = sent(&s.connected(T0 + 1000)).remove(0);
+        assert_eq!(hello["body"]["capabilities"], json!(["calls", "streams"]));
+        let welcomed = s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls", "streams"])
+            }),
+            T0 + 1050,
+        );
+        assert!(
+            sent(&welcomed)
+                .iter()
+                .any(|frame| frame["t"] == "call.offer")
+        );
+        // Kept with the state, and a state from before it was kept goes by its hello.
+        let state = s.state();
+        assert_eq!(state["said"], json!(["calls", "streams"]));
+        let mut before = state.clone();
+        before.as_object_mut().unwrap().remove("said");
+        assert_eq!(
+            Session::restore(contract(), &before).unwrap().state(),
+            state
+        );
+    }
+
+    /// Many random lives of a link: reconnects to hosts that list what they like, clocks
+    /// that differ, grants, calls, results that come again, cancels, ticks, the session
+    /// kept as its state between every step. Seeded, so a failure is the same every run.
+    #[test]
+    fn whatever_happens_a_call_ends_once_and_goes_only_where_it_may() {
+        struct Dice(u64);
+        impl Dice {
+            fn roll(&mut self, sides: u64) -> u64 {
+                self.0 = self
+                    .0
+                    .wrapping_mul(6_364_136_223_846_793_005)
+                    .wrapping_add(1_442_695_040_888_963_407);
+                (self.0 >> 33) % sides
+            }
+        }
+        for seed in 0..300u64 {
+            let mut dice = Dice(seed * 7919 + 1);
+            let says: Vec<&str> = match dice.roll(8) {
+                0 => vec!["streams"],
+                1 => vec![],
+                2 => vec!["calls"],
+                _ => vec!["calls", "streams"],
+            };
+            let mut s = Session::new(contract(), &says, ("Child", "1"), None, None);
+            let (mut now, mut host_seq, mut child_sent) = (T0, 0u64, 0u64);
+            let (mut open, mut calls, mut streams, mut provided) = (false, false, false, false);
+            let (mut asked, mut next) = (Vec::<String>::new(), 0u64);
+            let mut here = std::collections::BTreeMap::<String, u32>::new();
+            let mut there = std::collections::BTreeMap::<String, u32>::new();
+            let mut answered = std::collections::BTreeSet::<String>::new();
+            let mut asked_here = std::collections::BTreeSet::<String>::new();
+            let mut log = Vec::<String>::new();
+            for _ in 0..60 {
+                now += [1, 50, 1000, 20_000, 70_000][dice.roll(5) as usize];
+                let mut result_of = None;
+                let out = match dice.roll(14) {
+                    0 => {
+                        s.disconnected();
+                        (host_seq, child_sent, provided) = (1, 0, false);
+                        asked_here.clear();
+                        let mut out = s.connected(now);
+                        let lists: Vec<&str> = match dice.roll(4) {
+                            0 => vec![],
+                            1 => vec!["streams"],
+                            2 => vec!["calls"],
+                            _ => vec!["calls", "streams"],
+                        };
+                        calls = lists.contains(&"calls") && says.contains(&"calls");
+                        streams = lists.contains(&"streams") && says.contains(&"streams");
+                        let ahead = [0, 3_600_000, -3_600_000][dice.roll(3) as usize];
+                        let welcome = host("welcome", 1, 1, |body| {
+                            body["capabilities"] = json!(lists);
+                            body["serverTime"] = json!(now + ahead);
+                        });
+                        out.extend(s.received(&welcome, now));
+                        open = true;
+                        log.push(format!("reconnect, host lists {lists:?}"));
+                        out
+                    }
+                    1 => {
+                        s.disconnected();
+                        open = false;
+                        log.push("disconnect".into());
+                        Vec::new()
+                    }
+                    2 | 3 if open => {
+                        let provides = dice.roll(2) == 0;
+                        host_seq += 1;
+                        let ack = if dice.roll(2) == 0 { child_sent } else { 0 };
+                        if calls {
+                            provided = provides;
+                        }
+                        log.push(format!("granted, provides {provides}, acks {ack}"));
+                        let granted = host("call.granted", host_seq, ack, |body| {
+                            body["actions"] = json!([]);
+                            body["providing"] = if provides {
+                                json!([{ "name": "model.chat", "version": 1 }])
+                            } else {
+                                json!([])
+                            };
+                        });
+                        s.received(&granted, now)
+                    }
+                    4..=6 => {
+                        let id = format!("c{next}");
+                        next += 1;
+                        log.push(format!("call {id}"));
+                        let within = [1000, 30_000, 60_000][dice.roll(3) as usize];
+                        let out = ask(&mut s, &id, within, now);
+                        if sent(&out).len() + delivered(&out).len() == sent(&out).len() {
+                            asked.push(id);
+                        }
+                        out
+                    }
+                    7..=9 if open && !asked.is_empty() => {
+                        let id = asked[dice.roll(asked.len() as u64) as usize].clone();
+                        host_seq += 1;
+                        let mut frame = fixture("call.result");
+                        frame["seq"] = json!(host_seq);
+                        frame["ack"] = json!(0);
+                        frame["id"] = json!(format!("{id}.result"));
+                        frame["body"] = match dice.roll(3) {
+                            0 => json!({ "callId": id, "action": "model.chat", "version": 1,
+                                "outcome": "done", "result": { "text": "x" } }),
+                            1 => json!({ "callId": id, "action": "model.chat", "version": 1,
+                                "outcome": "failed", "error": { "code": "call_timeout" } }),
+                            _ => json!({ "callId": id, "action": "model.chat", "version": 1,
+                                "outcome": "unknown" }),
+                        };
+                        log.push(format!("her host's result of {id}"));
+                        result_of = Some(id);
+                        s.received(&frame.to_string(), now)
+                    }
+                    10 if !asked.is_empty() => {
+                        let id = asked[dice.roll(asked.len() as u64) as usize].clone();
+                        log.push(format!("cancel {id}"));
+                        s.call_cancel(&id, now)
+                    }
+                    11 => {
+                        log.push("stream".into());
+                        next += 1;
+                        let mut out = s.stream_state("example.now", 1, &json!({}), now);
+                        let id = format!("e{next}");
+                        out.extend(s.stream_event(&id, "example.happened", 1, &json!({}), now));
+                        out
+                    }
+                    12 if open => {
+                        host_seq += 1;
+                        log.push("ping, acking all".into());
+                        s.received(&host("ping", host_seq, child_sent, |_| {}), now)
+                    }
+                    _ => {
+                        log.push("tick".into());
+                        let out = s.tick(now);
+                        if out.iter().any(|o| matches!(o, Output::Drop(_))) {
+                            s.disconnected();
+                            open = false;
+                        }
+                        out
+                    }
+                };
+                let fail = |why: &str| panic!("seed {seed}: {why}\n{}", log.join("\n"));
+                let mut delivered_hers = false;
+                for frame in sent(&out) {
+                    child_sent += 1;
+                    let t = frame["t"].as_str().unwrap();
+                    if t.starts_with("call.") && !(open && calls) {
+                        fail(&format!("{t} on a link where calls was not agreed"));
+                    }
+                    if t.starts_with("stream.") && !(open && streams) {
+                        fail(&format!("{t} on a link where streams was not agreed"));
+                    }
+                    if t == "call.ask" {
+                        let id = frame["id"].as_str().unwrap().to_string();
+                        if !provided {
+                            fail("an ask her host does not provide on this link");
+                        }
+                        if !asked_here.insert(id.clone()) {
+                            fail("an ask twice on one link");
+                        }
+                        if answered.contains(&id) {
+                            fail("an ask after its result came");
+                        }
+                    }
+                }
+                for delivery in delivered(&out) {
+                    match delivery {
+                        Delivery::CallResult {
+                            call_id,
+                            here: true,
+                            ..
+                        } => {
+                            let count = here.entry(call_id.clone()).or_default();
+                            *count += 1;
+                            if *count > 1 {
+                                fail("two results told here of one call");
+                            }
+                            if answered.contains(call_id) {
+                                fail("a result told here after her host's");
+                            }
+                        }
+                        Delivery::CallResult { call_id, .. } => {
+                            let count = there.entry(call_id.clone()).or_default();
+                            *count += 1;
+                            delivered_hers = true;
+                            if *count > 1 {
+                                fail("her host's result delivered twice");
+                            }
+                        }
+                        Delivery::Unread { .. } => fail("a frame of this test's it could not read"),
+                        _ => {}
+                    }
+                }
+                if let Some(id) = result_of {
+                    let first = answered.insert(id.clone());
+                    if first != delivered_hers {
+                        fail(&format!(
+                            "the result of {id}: first {first}, delivered {delivered_hers}"
+                        ));
+                    }
+                }
+                // Kept as its state between every step, as an end across the C entry keeps it.
+                let state = s.state();
+                let back = Session::restore(contract(), &state)
+                    .unwrap_or_else(|why| panic!("seed {seed}: {why}\n{}", log.join("\n")));
+                if back.state() != state {
+                    fail("the state does not come back the same");
+                }
+                let asking = state["asking"].as_array().unwrap();
+                if asking.len() > Session::KEPT_ANSWERS + 8 {
+                    fail("calls asked are kept without end");
+                }
+                for pending in state["outbox"].as_array().unwrap() {
+                    let waits = asking.iter().any(|call| call["callId"] == pending["id"]);
+                    if pending["t"] == "call.ask" && !waits {
+                        fail("an ask waits to go that is not asked any more");
+                    }
+                }
+                s = back;
+            }
+        }
+    }
+
+    #[test]
+    fn what_comes_of_a_call_is_delivered_in_order_and_its_result_once() {
+        let mut s = linked(0);
+        ask(&mut s, "ask_1", 30_000, T0 + 1000);
+        let piece = |seq: u64, n: u64| {
+            host("call.event", seq, 3, |body| {
+                body["callId"] = json!("ask_1");
+                body["sequence"] = json!(n);
+            })
+        };
+        assert_eq!(delivered(&s.received(&piece(3, 1), T0 + 1100)).len(), 1);
+        assert_eq!(
+            delivered(&s.received(&piece(4, 3), T0 + 1200)).len(),
+            1,
+            "a gap is a gap"
+        );
+        assert!(
+            delivered(&s.received(&piece(5, 2), T0 + 1300)).is_empty(),
+            "behind is old"
+        );
+        let result = |seq: u64| {
+            let mut frame = fixture("call.result");
+            frame["seq"] = json!(seq);
+            frame["id"] = json!("ask_1.result");
+            frame["body"]["callId"] = json!("ask_1");
+            frame["body"]["action"] = json!("model.chat");
+            frame["body"]["result"] = json!({ "text": "好啊" });
+            frame.to_string()
+        };
+        let out = s.received(&result(6), T0 + 1400);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::CallResult { outcome, here: false, .. }] if outcome == "done"
+        ));
+        assert_eq!(sent(&out)[0]["t"], "ack");
+        let again = s.received(&result(7), T0 + 1500);
+        assert!(delivered(&again).is_empty());
+        assert_eq!(sent(&again)[0]["t"], "ack");
+        // Kept with the state while it is asked.
+        let mut s = linked(0);
+        ask(&mut s, "ask_2", 10_000, T0 + 1000);
+        let mut back = Session::restore(contract(), &s.state()).unwrap();
+        assert_eq!(back.state(), s.state());
+        // No answer a minute past the deadline: told here, once; the result that still comes
+        // is what happened.
+        assert!(delivered(&back.tick(T0 + 70_999)).is_empty());
+        let late = back.tick(T0 + 71_000);
+        assert!(matches!(
+            delivered(&late)[..],
+            [Delivery::CallResult { code: Some(code), here: true, .. }] if code == "call_timeout"
+        ));
+        assert!(delivered(&back.tick(T0 + 72_000)).is_empty());
+    }
+
+    #[test]
+    fn an_event_waits_for_a_link_with_streams_and_a_state_does_not() {
+        let mut s = linked(0);
+        assert_eq!(
+            sent(&s.stream_state("example.now", 1, &json!({}), T0 + 100)).len(),
+            1
+        );
+        s.disconnected();
+        assert!(
+            s.stream_state("example.now", 1, &json!({}), T0 + 200)
+                .is_empty()
+        );
+        assert!(
+            s.stream_event("evt_1", "example.happened", 1, &json!({}), T0 + 300)
+                .is_empty()
+        );
+        // A link whose host did not list streams: the event waits on.
+        s.connected(T0 + 1000);
+        let out = sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 1050));
+        assert!(out.iter().all(|frame| frame["t"] != "stream.event"));
+        s.disconnected();
+        s.connected(T0 + 2000);
+        let out = sent(&s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["streams"])
+            }),
+            T0 + 2050,
+        ));
+        let event = out
+            .iter()
+            .find(|frame| frame["t"] == "stream.event")
+            .unwrap();
+        assert_eq!(event["id"], "evt_1");
+        // The report of a dropped frame is not the shell's to make.
+        let own = s.stream_event("evt_2", "link.dropped", 1, &json!({}), T0 + 2100);
+        assert!(matches!(delivered(&own)[..], [Delivery::Unsent { .. }]));
     }
 }

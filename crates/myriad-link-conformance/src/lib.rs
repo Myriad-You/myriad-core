@@ -87,7 +87,10 @@ pub struct Step {
     /// `{say: {turnId, text, sessionId?, rigState?, images?}}`, `{delivered: {id, body}}`,
     /// or, of a call her host asked: `{callDone: {callId, result, blobs?}}`,
     /// `{callFailed: {callId, code}}`, `{callProgress: {callId, phase, waiting?}}`,
-    /// `{callPiece: {callId, piece}}`, `{callsLost: [{callId, action, version}]}`.
+    /// `{callPiece: {callId, piece}}`, `{callsLost: [{callId, action, version}]}`; of a call
+    /// it asks of her host: `{call: {callId, action, version, args, for, withinMs}}`,
+    /// `{callCancel: {callId}}`; and `{streamState: {name, version, value}}`,
+    /// `{streamEvent: {id, name, version, body}}`.
     #[serde(default, rename = "do")]
     pub act: Option<Value>,
     /// The child sends this frame: `{t, id?, seq?, ack?, body?}`, each given part matched.
@@ -522,6 +525,39 @@ impl Child {
                     "callPiece" => self.session.call_piece(
                         text("callId").ok_or("callPiece needs callId")?,
                         with.get("piece").ok_or("callPiece needs piece")?,
+                        now_ms,
+                    ),
+                    "call" => self.session.call(
+                        text("callId").ok_or("call needs callId")?,
+                        text("action").ok_or("call needs action")?,
+                        with.get("version")
+                            .and_then(Value::as_u64)
+                            .ok_or("call needs version")?,
+                        with.get("args").ok_or("call needs args")?,
+                        with.get("for").ok_or("call needs for")?,
+                        with.get("withinMs")
+                            .and_then(Value::as_i64)
+                            .ok_or("call needs withinMs")?,
+                        now_ms,
+                    ),
+                    "callCancel" => self
+                        .session
+                        .call_cancel(text("callId").ok_or("callCancel needs callId")?, now_ms),
+                    "streamState" => self.session.stream_state(
+                        text("name").ok_or("streamState needs name")?,
+                        with.get("version")
+                            .and_then(Value::as_u64)
+                            .ok_or("streamState needs version")?,
+                        with.get("value").ok_or("streamState needs value")?,
+                        now_ms,
+                    ),
+                    "streamEvent" => self.session.stream_event(
+                        text("id").ok_or("streamEvent needs id")?,
+                        text("name").ok_or("streamEvent needs name")?,
+                        with.get("version")
+                            .and_then(Value::as_u64)
+                            .ok_or("streamEvent needs version")?,
+                        with.get("body").ok_or("streamEvent needs body")?,
                         now_ms,
                     ),
                     "callsLost" => {

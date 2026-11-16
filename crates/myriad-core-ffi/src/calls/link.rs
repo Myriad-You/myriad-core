@@ -218,7 +218,11 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
 /// `{callProgress: {callId, phase, waiting?}}` (`waiting` is true while it waits for the
 /// owner on the device), `{callPiece: {callId, piece}}`, and
 /// `{callsLost: [{callId, action, version}]}` for calls it had in hand when it was
-/// restarted, handed back before `"connected"`. `outputs` is what the shell does now, in order: `{send: text}`,
+/// restarted, handed back before `"connected"`; of a call this end asks of her host:
+/// `{call: {callId, action, version, args, for, withinMs}}` (answered within `withinMs`
+/// milliseconds from now) and `{callCancel: {callId}}`; and what it tells her host as it
+/// changes or happens: `{streamState: {name, version, value}}`,
+/// `{streamEvent: {id, name, version, body}}`. `outputs` is what the shell does now, in order: `{send: text}`,
 /// `{deliver: {kind, …}}`, `{drop: {why, …}}` (close the socket). `phase` is `closed`,
 /// `greeting` or `open`. `hostCapabilities` is what her host accepted of this end's
 /// capabilities in its last welcome (empty before a first, and from a new connection's
@@ -298,6 +302,41 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
     }
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct Ask {
+        call_id: String,
+        action: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+        args: Value,
+        #[serde(rename = "for")]
+        of: Value,
+        #[serde(deserialize_with = "whole::i64")]
+        within_ms: i64,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct Cancel {
+        call_id: String,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct StreamState {
+        name: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+        value: Value,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct StreamEvent {
+        id: String,
+        name: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+        body: Value,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
     struct Lost {
         call_id: String,
         action: String,
@@ -325,6 +364,10 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         CallProgress(CallProgress),
         CallPiece(CallPiece),
         CallsLost(Vec<Lost>),
+        Call(Ask),
+        CallCancel(Cancel),
+        StreamState(StreamState),
+        StreamEvent(StreamEvent),
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -392,6 +435,22 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
             session.call_progress(&progress.call_id, &progress.phase, progress.waiting, now)
         }
         Event::CallPiece(piece) => session.call_piece(&piece.call_id, &piece.piece, now),
+        Event::Call(ask) => session.call(
+            &ask.call_id,
+            &ask.action,
+            ask.version,
+            &ask.args,
+            &ask.of,
+            ask.within_ms,
+            now,
+        ),
+        Event::CallCancel(cancel) => session.call_cancel(&cancel.call_id, now),
+        Event::StreamState(state) => {
+            session.stream_state(&state.name, state.version, &state.value, now)
+        }
+        Event::StreamEvent(event) => {
+            session.stream_event(&event.id, &event.name, event.version, &event.body, now)
+        }
         Event::CallsLost(lost) => {
             let lost: Vec<(&str, &str, u64)> = lost
                 .iter()
