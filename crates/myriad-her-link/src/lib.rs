@@ -187,6 +187,10 @@ const CALL_ID_CHARS: usize = 64 - ".result".len();
 /// below it was written in seconds.
 const EPOCH_MS_FLOOR: u64 = 1_000_000_000_000;
 
+/// The largest whole number an end that reads every number as a double
+/// reads exactly (2^53 - 1).
+const WHOLE_MOST: u64 = (1 << 53) - 1;
+
 static CONTRACT: LazyLock<Contract> =
     LazyLock::new(|| serde_json::from_str(CONTRACT_JSON).expect("her_link_contract.json"));
 
@@ -321,11 +325,11 @@ fn check_ask(frame: &Value, body: &Value) -> Result<(), Refusal> {
     // most ([`call_deadline`]), and answers one that has passed call_timeout.
     if !body["deadlineAt"]
         .as_u64()
-        .is_some_and(|by| by >= EPOCH_MS_FLOOR)
+        .is_some_and(|by| (EPOCH_MS_FLOOR..=WHOLE_MOST).contains(&by))
     {
         return Err(refuse(
             "bad_frame",
-            "call.ask's deadlineAt is milliseconds since the epoch",
+            "call.ask's deadlineAt is milliseconds since the epoch, a whole number every end reads exactly",
         ));
     }
     match spec {

@@ -2839,6 +2839,37 @@
           "t": "call.ask"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "screen.look",
+            "args": {},
+            "callId": "call_look_0123456789b",
+            "deadlineAt": 9007199254740992,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_look_0123456789b",
+          "seq": 16,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a call.ask whose deadline is past what every end reads exactly",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
     }
   ],
   "version": 1
