@@ -85,7 +85,8 @@ pub struct CallFields {
     pub required: Vec<String>,
     pub optional: Vec<String>,
     /// Fields whose value is one of a contract list: field → the list's
-    /// name (`actStatuses`, `noticeKinds`, `sayKinds`, `workStatuses`).
+    /// name (`actStatuses`, `dropReasons`, `noticeKinds`, `sayKinds`,
+    /// `workStatuses`).
     #[serde(default)]
     pub enums: BTreeMap<String, String>,
 }
@@ -106,6 +107,25 @@ pub struct CallSpec {
     pub blob: bool,
     pub args: CallFields,
     pub result: CallFields,
+}
+
+/// One state or event of `streams`: what a `stream.state` value or a
+/// `stream.event` body of that name and version holds.
+#[derive(Debug, Clone, Deserialize)]
+pub struct StreamSpec {
+    pub version: u64,
+    /// Who sends it: `child`, `host` or `either`.
+    pub from: String,
+    /// Whose it is: a kind of `callAudiences`, or `link`.
+    #[serde(rename = "for")]
+    pub audience: String,
+    pub fields: CallFields,
+}
+
+#[derive(Debug, Deserialize)]
+struct Streams {
+    state: BTreeMap<String, StreamSpec>,
+    event: BTreeMap<String, StreamSpec>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -135,6 +155,8 @@ struct Contract {
     notice_kinds: Vec<String>,
     act_statuses: Vec<String>,
     work_statuses: Vec<String>,
+    drop_reasons: Vec<String>,
+    streams: Streams,
 }
 
 /// The longest a call may ask to be answered in.
@@ -149,6 +171,7 @@ struct CallTiming {
 fn named_list(name: &str) -> Option<&'static [String]> {
     match name {
         "actStatuses" => Some(&CONTRACT.act_statuses),
+        "dropReasons" => Some(&CONTRACT.drop_reasons),
         "noticeKinds" => Some(&CONTRACT.notice_kinds),
         "sayKinds" => Some(&CONTRACT.say_kinds),
         "workStatuses" => Some(&CONTRACT.work_statuses),
@@ -410,15 +433,60 @@ fn check_result(frame: &Value, body: &Value) -> Result<(), Refusal> {
     Ok(())
 }
 
-/// `stream.state` / `stream.event`: a name and a version, which an end that
-/// has not registered them ignores (`streams`).
-fn check_stream(body: &Value) -> Result<(), Refusal> {
-    if !body["name"].as_str().is_some_and(valid_id)
-        || !body["version"].as_u64().is_some_and(|version| version >= 1)
-    {
+/// A state (`stream.state`) or an event (`stream.event`) of `streams` by
+/// its name, at the version registered.
+pub fn stream_spec(event: bool, name: &str) -> Option<&'static StreamSpec> {
+    let streams = &CONTRACT.streams;
+    let of = if event { &streams.event } else { &streams.state };
+    of.get(name)
+}
+
+/// `stream.state` / `stream.event`: a name and a version; one registered at
+/// that version holds exactly its fields, another passes for an end to
+/// ignore (`streams`).
+fn check_stream(t: &str, body: &Value) -> Result<(), Refusal> {
+    let (Some(name), Some(version)) = (body["name"].as_str(), body["version"].as_u64()) else {
+        return Err(refuse("bad_frame", "a stream names its name and version"));
+    };
+    if !valid_id(name) || version < 1 {
         return Err(refuse(
             "bad_frame",
             "a stream's name matches limits.idPattern and its version is at least 1",
+        ));
+    }
+    let event = t == "stream.event";
+    let Some(spec) = stream_spec(event, name).filter(|spec| spec.version == version) else {
+        return Ok(());
+    };
+    let held = if event { &body["body"] } else { &body["value"] };
+    check_call_fields(name, held, &spec.fields)?;
+    if name == "link.dropped" && !held["t"].as_str().is_some_and(valid_id) {
+        return Err(refuse(
+            "bad_frame",
+            "link.dropped's t is a frame type (limits.idPattern) or unnamed",
+        ));
+    }
+    Ok(())
+}
+
+/// `link.versions`: the core an end runs is its abi and the commit it was
+/// built from.
+fn check_versions(body: &Value) -> Result<(), Refusal> {
+    let core = &body["core"];
+    check_fields(
+        "link.versions's core",
+        &fields(core, "link.versions's core")?,
+        &["abi".to_string(), "commit".to_string()],
+        &[],
+    )?;
+    let commit = core["commit"].as_str().unwrap_or("");
+    if core["abi"].as_u64().is_none()
+        || commit.len() != 40
+        || !commit.bytes().all(|byte| byte.is_ascii_hexdigit())
+    {
+        return Err(refuse(
+            "bad_frame",
+            "link.versions's core is its abi and its 40-hex-digit commit",
         ));
     }
     Ok(())
@@ -692,7 +760,8 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
         "call.ask" => check_ask(frame, body)?,
         "call.result" => check_result(frame, body)?,
         "call.progress" => check_progress(body)?,
-        "stream.state" | "stream.event" => check_stream(body)?,
+        "stream.state" | "stream.event" => check_stream(t, body)?,
+        "link.versions" => check_versions(body)?,
         "call.accepted" | "call.event" | "call.cancel" => {
             check_call_id(body)?;
         }
