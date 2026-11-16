@@ -45,7 +45,30 @@ pub struct Script {
     pub about: String,
     /// What the child says it can do in hello.
     pub capabilities: Vec<String>,
+    /// What the child may be asked to do (`call.offer`), `[{name, version}]`; none when left out.
+    #[serde(default)]
+    pub offers: Vec<Offer>,
+    /// The shared core the child says it runs in `link.versions`; none when left out, and
+    /// then it sends no `link.versions`.
+    #[serde(default)]
+    pub core: Option<Core>,
     pub steps: Vec<Step>,
+}
+
+/// An action a script's child offers.
+#[derive(Debug, Clone, Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Offer {
+    pub name: String,
+    pub version: u64,
+}
+
+/// The shared core a script's child says it runs: its ABI and the commit it was built from.
+#[derive(Debug, Clone, Deserialize, serde::Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Core {
+    pub abi: u64,
+    pub commit: String,
 }
 
 /// One step. Exactly one of `do`, `child`, `host`, `raw`, `deliver`, `drop`, `close`, `http`.
@@ -327,6 +350,21 @@ pub struct Child {
 }
 
 impl Child {
+    /// The child a script asks for: what it says it can do, may be asked to do, and runs.
+    pub fn of(script: &Script) -> Self {
+        let mut child = Self::new(&script.capabilities);
+        let offers: Vec<(&str, u64)> = script
+            .offers
+            .iter()
+            .map(|offer| (offer.name.as_str(), offer.version))
+            .collect();
+        child.session.offer(&offers);
+        if let Some(core) = &script.core {
+            child.session.runs(core.abi, &core.commit);
+        }
+        child
+    }
+
     pub fn new(capabilities: &[String]) -> Self {
         let capabilities: Vec<&str> = capabilities.iter().map(String::as_str).collect();
         Self {
@@ -486,11 +524,12 @@ pub fn after_http(http: &Value) -> Result<Value, String> {
 
 /// Plays `script` to the stand-in child, the child core itself.
 pub fn run(script: &Script) -> Result<(), Fault> {
-    play(script, &mut Child::new(&script.capabilities))
+    play(script, &mut Child::of(script))
 }
 
 /// Plays `script` to `child` against the stand-in host, in memory. The caller makes `child`
-/// an end that says the script's `capabilities` in its hello. Every frame the child
+/// an end that says the script's `capabilities` in its hello, offers its `offers` and runs
+/// its `core`. Every frame the child
 /// sends and everything its shell is handed must be a step, in order: nothing may be waiting
 /// when the script moves on to the next thing that happens, and nothing left over at the end.
 /// `close` and `http` steps ask the child core what it would do, not `child`: an end checks

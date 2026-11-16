@@ -74,6 +74,8 @@ pub struct FrameRule {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Contract {
+    /// The contract's own version (`schemaVersion`), which `link.versions` says.
+    pub schema_version: u32,
     pub protocol: u32,
     pub path: String,
     pub timing: Timing,

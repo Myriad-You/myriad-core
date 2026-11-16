@@ -125,15 +125,17 @@ struct AcrossTheEntry {
 }
 
 impl AcrossTheEntry {
-    fn new(capabilities: &[String], doubles: bool) -> Self {
-        let made = ok(
-            "link.child_new",
-            json!({
-                "capabilities": capabilities,
-                "app": { "name": "Child", "version": "1" },
-                "text": doubles,
-            }),
-        );
+    fn new(script: &myriad_link_conformance::Script, doubles: bool) -> Self {
+        let mut new = json!({
+            "capabilities": script.capabilities,
+            "app": { "name": "Child", "version": "1" },
+            "offers": script.offers,
+            "text": doubles,
+        });
+        if let Some(core) = &script.core {
+            new["coreCommit"] = json!(core.commit);
+        }
+        let made = ok("link.child_new", new);
         assert_eq!(made["state"].is_string(), doubles);
         Self {
             state: made["state"].clone(),
@@ -197,7 +199,7 @@ fn scripts() -> Vec<myriad_link_conformance::Script> {
         .map(|entry| entry.unwrap().path())
         .collect();
     paths.sort();
-    assert_eq!(paths.len(), 8);
+    assert_eq!(paths.len(), 10);
     paths
         .iter()
         .map(|path| serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap())
@@ -208,7 +210,7 @@ fn scripts() -> Vec<myriad_link_conformance::Script> {
 fn every_child_script_plays_through_the_c_entry_point() {
     for doubles in [false, true] {
         for script in scripts() {
-            let mut child = AcrossTheEntry::new(&script.capabilities, doubles);
+            let mut child = AcrossTheEntry::new(&script, doubles);
             if let Err(fault) = myriad_link_conformance::play(&script, &mut child) {
                 panic!("{} (doubles: {doubles}): {fault}", script.name);
             }
@@ -456,6 +458,51 @@ fn a_child_stepped_through_the_c_entry_point_is_the_crates_session() {
     );
     assert_eq!(status, STATUS_BAD_INPUT);
     assert!(!out.to_string().contains("私话"), "{out}");
+}
+
+#[test]
+fn the_abi_a_child_says_it_runs_is_this_librarys_whatever_its_state_says() {
+    let made = ok(
+        "link.child_new",
+        json!({
+            "capabilities": ["versions"],
+            "app": { "name": "Child", "version": "1" },
+            "coreCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        }),
+    );
+    assert_eq!(
+        made["state"]["core"],
+        json!({ "abi": crate::ABI_VERSION, "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })
+    );
+    // A state kept under an older library.
+    let mut state = made["state"].clone();
+    state["core"]["abi"] = json!(1);
+    let now = 1_760_140_800_000_000_i64;
+    let open = ok(
+        "link.child_step",
+        json!({ "state": state, "now": now, "event": "connected" }),
+    );
+    let welcome = json!({
+        "v": 1, "t": "welcome", "seq": 1, "ack": 1, "at": now / 1000,
+        "body": {
+            "protocol": 2, "role": "host", "host": "site", "deviceId": "dev_1",
+            "heartbeatMs": 15000, "capabilities": ["versions"], "turns": [],
+            "serverTime": now / 1000, "sync": "off",
+        },
+    })
+    .to_string();
+    let said = ok(
+        "link.child_step",
+        json!({ "state": open["state"], "now": now, "event": { "received": welcome } }),
+    );
+    let versions: Value =
+        serde_json::from_str(said["outputs"][1]["send"].as_str().unwrap()).unwrap();
+    assert_eq!(versions["t"], "link.versions");
+    assert_eq!(
+        versions["body"]["core"],
+        json!({ "abi": crate::ABI_VERSION, "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })
+    );
+    assert_eq!(said["state"]["core"]["abi"], crate::ABI_VERSION);
 }
 
 #[test]

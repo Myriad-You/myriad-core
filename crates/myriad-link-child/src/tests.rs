@@ -878,9 +878,12 @@ mod capabilities {
         let mut s = open();
         let mut seq = 1;
         let alone = [
+            "call.granted",
             "conversation",
             "conversations",
             "error",
+            "link.verdict",
+            "link.versions",
             "mood",
             "notice",
             "outfit",
@@ -1288,5 +1291,289 @@ mod state {
             );
         }
         measure("worst", &worst);
+    }
+}
+
+mod calls {
+    use super::*;
+
+    fn offering(capabilities: &[&str]) -> Session {
+        let mut s = Session::new(contract(), capabilities, ("Child", "0.1.0"), None, None);
+        // In the contract's words only: not another version, not her host's own, not one
+        // the contract does not name; each once.
+        s.offer(&[
+            ("screen.look", 1),
+            ("notify.post", 1),
+            ("screen.look", 1),
+            ("screen.look", 2),
+            ("model.chat", 1),
+            ("made.up", 1),
+        ]);
+        s.runs(4, "1111111111111111111111111111111111111111");
+        s
+    }
+
+    fn welcomed(s: &mut Session, accepted: &[&str]) -> Vec<Value> {
+        s.connected(T0);
+        sent(&s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(accepted)
+            }),
+            T0 + 50,
+        ))
+    }
+
+    #[test]
+    fn a_new_link_is_told_what_this_end_runs_and_may_be_asked() {
+        let mut s = offering(&["calls", "versions"]);
+        let out = welcomed(&mut s, &["calls", "versions"]);
+        assert_eq!(out.len(), 2);
+        assert_eq!(out[0]["t"], "link.versions");
+        assert_eq!(
+            out[0]["body"],
+            json!({
+                "contract": contract().schema_version,
+                "core": { "abi": 4, "commit": "1111111111111111111111111111111111111111" },
+                "app": { "name": "Child", "version": "0.1.0" },
+                "actions": { "notify.post": 1, "screen.look": 1 },
+            })
+        );
+        assert_eq!(out[1]["t"], "call.offer");
+        assert_eq!(
+            out[1]["body"]["actions"],
+            json!([{ "name": "notify.post", "version": 1 }, { "name": "screen.look", "version": 1 }])
+        );
+        // Only what both ends listed; and nothing of versions from an end that does not say
+        // what it runs.
+        let mut s = offering(&["calls", "versions"]);
+        assert!(welcomed(&mut s, &[]).is_empty());
+        let mut s = offering(&["calls"]);
+        let only: Vec<Value> = welcomed(&mut s, &["calls", "versions"]);
+        assert_eq!(only.len(), 1);
+        assert_eq!(only[0]["t"], "call.offer");
+        let mut quiet = Session::new(contract(), &["versions"], ("Child", "1"), None, None);
+        assert!(welcomed(&mut quiet, &["versions"]).is_empty());
+    }
+
+    #[test]
+    fn what_this_end_offers_and_runs_is_kept_in_its_state() {
+        let mut s = offering(&["calls", "versions"]);
+        let state = s.state();
+        let mut back = Session::restore(contract(), &state).unwrap();
+        assert_eq!(back.state(), state);
+        assert_eq!(
+            welcomed(&mut back, &["calls", "versions"]),
+            welcomed(&mut s, &["calls", "versions"])
+        );
+        // Written as doubles, and from before a session kept them.
+        let mut doubled = state.clone();
+        doubled["offers"][0]["version"] = json!(1.0);
+        doubled["core"]["abi"] = json!(4.0);
+        assert_eq!(
+            Session::restore(contract(), &doubled).unwrap().state(),
+            state
+        );
+        let mut before = state.clone();
+        before.as_object_mut().unwrap().remove("offers");
+        before.as_object_mut().unwrap().remove("core");
+        let mut old = Session::restore(contract(), &before).unwrap();
+        assert!(welcomed(&mut old, &["versions"]).is_empty());
+        let mut far = state.clone();
+        far["core"]["abi"] = json!(u64::MAX);
+        assert!(Session::restore(contract(), &far).is_err());
+    }
+
+    #[test]
+    fn a_state_kept_across_an_update_offers_by_the_contract_it_is_restored_under() {
+        let mut state = offering(&["calls", "versions"]).state();
+        // As a state kept under an older contract might hold them: an action since dropped,
+        // one at a version no longer done, one her host does, one twice.
+        state["offers"] = json!([
+            { "name": "gone.action", "version": 9 },
+            { "name": "screen.look", "version": 7 },
+            { "name": "model.chat", "version": 1 },
+            { "name": "screen.look", "version": 1 },
+            { "name": "screen.look", "version": 1 },
+        ]);
+        let mut back = Session::restore(contract(), &state).unwrap();
+        let out = welcomed(&mut back, &["calls"]);
+        assert_eq!(
+            out[0]["body"]["actions"],
+            json!([{ "name": "screen.look", "version": 1 }])
+        );
+        // And the end says again what it runs now: the state's own word is the old one.
+        assert_eq!(
+            back.running(),
+            Some((4, "1111111111111111111111111111111111111111"))
+        );
+        back.runs(5, "2222222222222222222222222222222222222222");
+        back.disconnected();
+        let out = welcomed(&mut back, &["versions"]);
+        assert_eq!(
+            out[0]["body"]["core"],
+            json!({ "abi": 5, "commit": "2222222222222222222222222222222222222222" })
+        );
+    }
+
+    #[test]
+    fn her_host_is_told_what_this_end_drops_once_a_kind_and_never_what_it_carried() {
+        let mut s = Session::new(contract(), &["streams"], ("Child", "1"), None, None);
+        welcomed(&mut s, &["streams"]);
+        let later = |seq: u64, secret: &str| {
+            let mut frame: Value = serde_json::from_str(&host("mood", seq, 1, |_| {})).unwrap();
+            frame["t"] = json!("call.later");
+            frame["body"]["secret"] = json!(secret);
+            frame.to_string()
+        };
+        let out = s.received(&later(2, "私话"), T0 + 100);
+        let frames = sent(&out);
+        assert_eq!(frames.len(), 1);
+        assert_eq!(frames[0]["t"], "stream.event");
+        assert_eq!(
+            frames[0]["body"]["body"],
+            json!({ "t": "call.later", "reason": "unknown_frame" })
+        );
+        assert!(!frames[0].to_string().contains("私话"));
+        assert_eq!(frames[0]["id"], format!("ld_{T0}_1"));
+        // The same kind again: the shell is told, her host is not.
+        let out = s.received(&later(3, "x"), T0 + 200);
+        assert!(sent(&out).is_empty());
+        assert_eq!(delivered(&out).len(), 1);
+        // What is told is kept with the session, so a restored one does not tell it twice.
+        let mut back = Session::restore(contract(), &s.state()).unwrap();
+        assert!(sent(&back.received(&later(4, "x"), T0 + 300)).is_empty());
+        // Every refusal of the core's that is not one of the contract's reasons is bad_frame.
+        let mut odd: Value = serde_json::from_str(&host("say", 5, 1, |_| {})).unwrap();
+        odd["id"] = json!("not an id");
+        let out = s.received(&odd.to_string(), T0 + 400);
+        let told = sent(&out);
+        let event = told.iter().find(|f| f["t"] == "stream.event").unwrap();
+        assert_eq!(
+            event["body"]["body"],
+            json!({ "t": "say", "reason": "bad_frame" })
+        );
+        // A link where her host did not list streams: only the shell.
+        let mut quiet = Session::new(contract(), &["streams"], ("Child", "1"), None, None);
+        welcomed(&mut quiet, &[]);
+        let out = quiet.received(&later(2, "x"), T0 + 100);
+        assert!(sent(&out).is_empty());
+        assert_eq!(delivered(&out).len(), 1);
+    }
+
+    #[test]
+    fn a_report_of_a_dropped_frame_has_an_id_of_its_own_and_is_told_once() {
+        let unknown = |seq: u64, t: &str| {
+            let mut frame: Value = serde_json::from_str(&host("mood", seq, 0, |_| {})).unwrap();
+            frame["t"] = json!(t);
+            frame.to_string()
+        };
+        let ids = |out: &[Output]| -> Vec<String> {
+            sent(out)
+                .iter()
+                .filter(|frame| frame["t"] == "stream.event")
+                .map(|frame| frame["id"].as_str().unwrap().to_string())
+                .collect()
+        };
+        let mut s = Session::new(contract(), &["streams"], ("Child", "1"), None, None);
+        welcomed(&mut s, &["streams"]);
+        // Her host never acks: both reports wait.
+        let first = ids(&s.received(&unknown(2, "a.later"), T0 + 100));
+        let second = ids(&s.received(&unknown(3, "b.later"), T0 + 200));
+        // A second link that came up at the very same time by the shell's clock.
+        s.disconnected();
+        let again: Vec<String> = welcomed(&mut s, &["streams"])
+            .iter()
+            .filter(|frame| frame["t"] == "stream.event")
+            .map(|frame| frame["id"].as_str().unwrap().to_string())
+            .collect();
+        assert_eq!(
+            again,
+            [first.clone(), second.clone()].concat(),
+            "they go again"
+        );
+        // Told again on this link, the two that wait are not told twice; a new kind has an
+        // id no other report has.
+        assert!(ids(&s.received(&unknown(2, "a.later"), T0 + 300)).is_empty());
+        let third = ids(&s.received(&unknown(3, "c.later"), T0 + 400));
+        assert_eq!(third.len(), 1);
+        assert!(!first.contains(&third[0]) && !second.contains(&third[0]));
+        // Nor one a turn of the shell's has.
+        let mut s = Session::new(contract(), &["streams"], ("Child", "1"), None, None);
+        welcomed(&mut s, &["streams"]);
+        let taken = format!("ld_{T0}_1");
+        s.say(&taken, "在吗", None, None, &[], T0 + 50);
+        assert_eq!(
+            ids(&s.received(&unknown(2, "a.later"), T0 + 100)),
+            [format!("ld_{T0}_2")]
+        );
+    }
+
+    #[test]
+    fn a_frame_that_is_no_envelope_is_told_by_its_type_when_it_came_with_one() {
+        let mut s = Session::new(contract(), &["streams"], ("Child", "1"), None, None);
+        welcomed(&mut s, &["streams"]);
+        let told = |out: &[Output]| -> Vec<Value> {
+            sent(out)
+                .iter()
+                .filter(|frame| frame["t"] == "stream.event")
+                .map(|frame| frame["body"]["body"].clone())
+                .collect()
+        };
+        // No `at`: not an envelope, and its type came.
+        let no_at = r#"{"v":1,"t":"peer.offer","seq":2,"ack":1,"body":{}}"#;
+        let out = s.received(no_at, T0 + 100);
+        assert_eq!(
+            told(&out),
+            [json!({ "t": "peer.offer", "reason": "bad_frame" })]
+        );
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Unread { t: None, .. }]
+        ));
+        // No type, or none that is written as one.
+        let out = s.received(r#"{"v":1,"seq":3,"ack":1,"body":{}}"#, T0 + 200);
+        assert_eq!(
+            told(&out),
+            [json!({ "t": "unnamed", "reason": "bad_frame" })]
+        );
+        assert!(
+            told(&s.received("[1, 2]", T0 + 300)).is_empty(),
+            "told already"
+        );
+        // Past so many kinds on one link a new type is told as unnamed, so her host cannot
+        // make this end keep a list as long as it likes.
+        let mut s = Session::new(contract(), &["streams"], ("Child", "1"), None, None);
+        welcomed(&mut s, &["streams"]);
+        let mut kinds = Vec::new();
+        for n in 0..(Session::KEPT_DROPPED as u64 + 20) {
+            let mut frame: Value =
+                serde_json::from_str(&host("mood", 2 + n, 1 + n, |_| {})).unwrap();
+            frame["t"] = json!(format!("later.{n}"));
+            kinds.extend(told(&s.received(&frame.to_string(), T0 + 100)));
+        }
+        assert_eq!(kinds.len(), Session::KEPT_DROPPED + 1);
+        assert_eq!(kinds.last().unwrap()["t"], "unnamed");
+    }
+
+    #[test]
+    fn her_hosts_reading_and_what_is_granted_are_handed_to_the_shell() {
+        let mut s = open();
+        let out = s.received(&host("link.verdict", 2, 1, |_| {}), T0 + 100);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Verdict { usable, stopped }] if usable == "partial" && stopped == &["work.run"]
+        ));
+        let out = s.received(&host("call.granted", 3, 1, |_| {}), T0 + 200);
+        let [Delivery::Granted { actions, providing }] = delivered(&out)[..] else {
+            panic!("no granted: {out:?}")
+        };
+        assert_eq!(actions.len(), 2);
+        assert_eq!(providing, &[("model.chat".to_string(), 1)]);
+        // And what her host says it runs itself.
+        let out = s.received(&host("link.versions", 4, 1, |_| {}), T0 + 300);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::HostVersions(body)] if body["contract"] == 3
+        ));
     }
 }

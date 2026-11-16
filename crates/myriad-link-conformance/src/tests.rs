@@ -15,12 +15,20 @@ const SCRIPTS: &[(&str, &str)] = &[
         include_str!("../../conformance/v1/child/close.json"),
     ),
     (
+        "dropped",
+        include_str!("../../conformance/v1/child/dropped.json"),
+    ),
+    (
         "handshake",
         include_str!("../../conformance/v1/child/handshake.json"),
     ),
     (
         "heartbeat",
         include_str!("../../conformance/v1/child/heartbeat.json"),
+    ),
+    (
+        "offer",
+        include_str!("../../conformance/v1/child/offer.json"),
     ),
     (
         "reliable",
@@ -335,12 +343,7 @@ impl ChildEnd for Chatty {
 
 #[test]
 fn another_child_end_is_played_the_same_scripts() {
-    let hides = |name: &str| {
-        play(
-            &script(name),
-            &mut Chatty(Child::new(&script(name).capabilities)),
-        )
-    };
+    let hides = |name: &str| play(&script(name), &mut Chatty(Child::of(&script(name))));
     assert!(hides("turn").is_ok());
     assert!(hides("unreadable").is_err());
 }
