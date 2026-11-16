@@ -1057,6 +1057,68 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "budget": {
+          "standing": 2
+        },
+        "nodes": [
+          {
+            "entries": [
+              {
+                "at": 1760000000000001,
+                "id": "m1"
+              },
+              {
+                "at": 1760000000000002,
+                "id": "m2"
+              }
+            ],
+            "id": "garden",
+            "standing": [
+              {
+                "at": 1760000000000001,
+                "because": [
+                  "memory:m1"
+                ],
+                "item": "roses"
+              },
+              {
+                "at": 1760000000000002,
+                "item": "tomatoes"
+              },
+              {
+                "at": 1760000000000003,
+                "item": "basil"
+              }
+            ]
+          }
+        ],
+        "ranked": [
+          {
+            "id": "m1",
+            "named": true
+          }
+        ]
+      },
+      "name": "a picked node shows its share of how things stand, what the words found first, and says how many more",
+      "output": {
+        "picked": [
+          {
+            "entries": [
+              "m1",
+              "m2"
+            ],
+            "node": "garden",
+            "standing": [
+              "roses",
+              "basil"
+            ],
+            "standingLeftOut": 1
+          }
+        ]
+      }
     }
   ],
   "version": 1
