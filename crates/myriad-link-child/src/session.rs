@@ -1637,6 +1637,7 @@ impl Session {
                     if self.both("calls") {
                         self.granted = actions;
                         self.providing = providing;
+                        let first = !self.heard_granted;
                         self.heard_granted = true;
                         // What came before her host said: judged now, by what it says.
                         for call in std::mem::take(&mut self.held) {
@@ -1644,7 +1645,7 @@ impl Session {
                         }
                         // And what this end waits to ask of it: asked now if it provides
                         // the action here, told not granted if it does not.
-                        out.extend(self.settle_asks(now_ms));
+                        out.extend(self.settle_asks(first, now_ms));
                     }
                     out
                 }
@@ -2536,7 +2537,11 @@ impl Session {
     /// Her host has just said what it provides on this link: an ask that waited from the
     /// link before goes now if it provides the action here; if it does not, the ask is let
     /// go and the shell is told the call was not granted, here.
-    fn settle_asks(&mut self, now_ms: i64) -> Vec<Output> {
+    ///
+    /// `first` is whether this is her host's first word on this link: the stops that wait
+    /// from before go then. One made on this link after that is for the next link, and a
+    /// later word of her host's on this one does not send it early.
+    fn settle_asks(&mut self, first: bool, now_ms: i64) -> Vec<Output> {
         // Only asks that wait from a link before: one sent on this link is her host's to
         // answer, whatever it says it provides now.
         let refused: Vec<String> = self
@@ -2568,7 +2573,7 @@ impl Session {
         out.extend(self.flush(now_ms));
         // The long calls cancelled while their ask waited: her host, had it had the ask on a
         // link before, is told to stop; had it not, it passes this by.
-        if self.both("calls") {
+        if first && self.both("calls") {
             for call_id in std::mem::take(&mut self.cancels) {
                 out.extend(self.send("call.cancel", &json!({ "callId": call_id }), None, now_ms));
             }

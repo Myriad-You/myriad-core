@@ -2879,6 +2879,15 @@ mod calling {
         assert_eq!(stops(&s.call_cancel("ask_2", T0 + 1100)), 1);
         // Stopped again on the same link: told again, and the one for the next link stays.
         assert_eq!(stops(&s.call_cancel("ask_2", T0 + 1200)), 1);
+        // Nor does another word of her host's on this link send it early, or use it up.
+        let again = s.received(
+            &host("call.granted", 3, 2, |body| {
+                body["actions"] = json!([]);
+                body["providing"] = json!([{ "name": "model.chat", "version": 1 }]);
+            }),
+            T0 + 1300,
+        );
+        assert_eq!(stops(&again), 0);
         relinked(&mut s, T0 + 2000);
         assert!(untold(
             &s.call_cancel("ask_2", T0 + 2055),
