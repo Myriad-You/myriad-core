@@ -24,8 +24,12 @@
 //!   all be from before and the newest says how things are now.
 //! - **How things stand** (`node.standing`): each picked node's, and
 //!   their own node's, come before its entries and take none of their
-//!   places: every one that has not ended, newest first. Ranking never
-//!   finds them; they are how things are now, which entries only tell of.
+//!   places: those not ended, the ones resting on an entry the words found
+//!   first, then newest first. Ranking never finds them; they are how
+//!   things are now, which entries only tell of. At most
+//!   [`Budget::standing`] of each picked node's and [`Budget::resident`] of
+//!   their own; how many more there are is said, so she knows not all of
+//!   it is in front of her (none is cut short).
 //! - **How their life stands, every time** (`resident`): what stands in
 //!   someone's life on any of her nodes not gone, shown whatever the words
 //!   found, since an old way of things on a node the words did find says
@@ -91,6 +95,12 @@ pub struct Budget {
     pub resident: usize,
     /// The chars those items take, at most.
     pub resident_chars: usize,
+    /// Items of how things stand on each picked node, at most: the room of
+    /// how their life stands every time ([`Budget::resident`]) shared by
+    /// the nodes picked ([`Budget::picked`]), so a node whose stands grew
+    /// long over months does not crowd out the rest. Their own node's take
+    /// [`Budget::resident`].
+    pub standing: usize,
 }
 
 /// The fewest chars of an item's words worth showing cut short.
@@ -109,6 +119,7 @@ impl Default for Budget {
             together: 24,
             resident: 24,
             resident_chars: 600,
+            standing: 8,
         }
     }
 }
@@ -145,6 +156,10 @@ pub struct PickStanding {
     /// how their life stands every time.
     #[serde(default)]
     pub text: String,
+    /// What its current version rests on (`memory:<id>`, as the node's
+    /// rows cite it): one resting on an entry the words found comes first.
+    #[serde(default)]
+    pub because: Vec<String>,
     /// The memories its current version rests on, with their days
     /// ([`crate::stands::due_of`]): what was still to come when she learned
     /// it is due on that day, and once it has gone by it is no longer how
@@ -214,6 +229,7 @@ impl PickNode {
                     at: standing.current.at,
                     ended: standing.current.value.ended,
                     text: standing.current.value.text.clone(),
+                    because: standing.current.value.because.clone(),
                     rests_on: Vec::new(),
                 })
                 .collect(),
@@ -249,10 +265,13 @@ pub struct PickInput {
 #[serde(rename_all = "camelCase")]
 pub struct Picked {
     pub node: String,
-    /// How things on it stand, by item, newest first: shown before its
-    /// entries.
+    /// How things on it stand, by item, those its words found first, then
+    /// newest first: shown before its entries.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub standing: Vec<String>,
+    /// How many more stand on it than [`Budget::standing`] let in.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub standing_left_out: usize,
     pub entries: Vec<String>,
 }
 
@@ -287,10 +306,13 @@ pub struct Pick {
     pub picked: Vec<Picked>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub about_them: Vec<String>,
-    /// How things stand on their own node, by item, newest first: shown
-    /// before its entries.
+    /// How things stand on their own node, by item, those their words
+    /// found first, then newest first: shown before its entries.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub about_them_standing: Vec<String>,
+    /// How many more stand there than [`Budget::resident`] let in.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub about_them_standing_left_out: usize,
     /// How their life stands, shown every time, in order.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub resident: Vec<Resident>,
@@ -326,20 +348,41 @@ fn newest(node: &PickNode) -> Vec<&str> {
         .collect()
 }
 
-/// How things on `node` stand: every one not ended, newest first (the same
-/// time: by item).
-fn standing(node: &PickNode, today: Option<&str>) -> Vec<String> {
+/// How things on `node` stand: those not ended, the ones resting on an
+/// entry the words found (`named`) first, then newest first (the same time:
+/// by item); at most `most`, with how many more there are.
+fn standing(
+    node: &PickNode,
+    today: Option<&str>,
+    named: &BTreeSet<&str>,
+    most: usize,
+) -> (Vec<String>, usize) {
+    let found = |one: &PickStanding| {
+        one.because.iter().any(|reference| {
+            reference
+                .strip_prefix(MEMORY_REF)
+                .is_some_and(|id| named.contains(id))
+        })
+    };
     let mut now: Vec<&PickStanding> = node
         .standing
         .iter()
         .filter(|one| one.holds(today))
         .collect();
-    now.sort_by(|a, b| b.at.cmp(&a.at).then_with(|| a.item.cmp(&b.item)));
+    now.sort_by(|a, b| {
+        found(b)
+            .cmp(&found(a))
+            .then_with(|| b.at.cmp(&a.at))
+            .then_with(|| a.item.cmp(&b.item))
+    });
     let mut seen = BTreeSet::new();
-    now.into_iter()
+    let items: Vec<String> = now
+        .into_iter()
         .filter(|one| seen.insert(one.item.as_str()))
         .map(|one| one.item.clone())
-        .collect()
+        .collect();
+    let left_out = items.len().saturating_sub(most);
+    (items.into_iter().take(most).collect(), left_out)
 }
 
 /// How their life stands across `nodes` (not `her` own node), shown every
@@ -519,10 +562,15 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     order.truncate(input.budget.picked);
     let picked: Vec<Picked> = order
         .iter()
-        .map(|at| Picked {
-            node: input.nodes[*at].id.clone(),
-            standing: standing(&input.nodes[*at], today),
-            entries: best(&input.nodes[*at], &ranked, &on, *at, input.budget.entries),
+        .map(|at| {
+            let (standing, standing_left_out) =
+                standing(&input.nodes[*at], today, &named, input.budget.standing);
+            Picked {
+                node: input.nodes[*at].id.clone(),
+                standing,
+                standing_left_out,
+                entries: best(&input.nodes[*at], &ranked, &on, *at, input.budget.entries),
+            }
         })
         .collect();
     let about_them_at = input.about_them.as_ref().and_then(|id| {
@@ -534,8 +582,8 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     let about_them = about_them_at
         .map(|at| best(&input.nodes[at], &ranked, &on, at, input.budget.about_them))
         .unwrap_or_default();
-    let about_them_standing = about_them_at
-        .map(|at| standing(&input.nodes[at], today))
+    let (about_them_standing, about_them_standing_left_out) = about_them_at
+        .map(|at| standing(&input.nodes[at], today, &named, input.budget.resident))
         .unwrap_or_default();
     let nodes = &input.nodes;
     let shown_standing: BTreeSet<(&str, &str)> = picked
@@ -596,6 +644,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
         picked,
         about_them,
         about_them_standing,
+        about_them_standing_left_out,
         resident,
         resident_left_out,
         resident_cut,
@@ -620,6 +669,60 @@ mod tests {
                 .map(|n| json!({"id": format!("{prefix}{n}"), "at": n}))
                 .collect::<Vec<_>>()
         )
+    }
+
+    /// A picked node whose stands grew long shows at most its share of the
+    /// room, the ones resting on what the words found first, then newest,
+    /// and says how many more there are; their own node takes the whole
+    /// room.
+    #[test]
+    fn a_long_list_of_how_things_stand_shows_its_share_and_says_the_rest() {
+        let stands = |prefix: &str, count: i64, named: &[i64]| {
+            json!(
+                (1..=count)
+                    .map(|n| {
+                        let because = if named.contains(&n) {
+                            vec![format!("memory:{prefix}{n}")]
+                        } else {
+                            Vec::new()
+                        };
+                        json!({"item": format!("{prefix}-s{n}"), "at": n, "because": because})
+                    })
+                    .collect::<Vec<_>>()
+            )
+        };
+        let out = run(json!({
+            "ranked": [{"id": "g2", "named": true}, {"id": "g3", "named": true}, {"id": "a1"}],
+            "nodes": [
+                {"id": "garden", "entries": entries("g", 3), "standing": stands("g", 10, &[2, 3])},
+                {"id": "you", "entries": entries("a", 1), "standing": stands("a", 30, &[])}
+            ],
+            "aboutThem": "you"
+        }));
+        let garden = &out.picked[0];
+        assert_eq!(
+            garden.standing,
+            [
+                "g-s3", "g-s2", "g-s10", "g-s9", "g-s8", "g-s7", "g-s6", "g-s5"
+            ],
+            "what the words found first, then newest, eight at most"
+        );
+        assert_eq!(garden.standing_left_out, 2);
+        assert_eq!(out.about_them_standing.len(), 24);
+        assert_eq!(out.about_them_standing[0], "a-s30");
+        assert_eq!(out.about_them_standing_left_out, 6);
+        // Under its share nothing is said to be left out.
+        let out = run(json!({
+            "ranked": [{"id": "g1", "named": true}],
+            "nodes": [{"id": "garden", "entries": entries("g", 1), "standing": stands("g", 4, &[])}]
+        }));
+        assert_eq!(out.picked[0].standing.len(), 4);
+        assert_eq!(out.picked[0].standing_left_out, 0);
+        let shown = serde_json::to_value(&out).unwrap();
+        assert!(
+            shown["picked"][0].get("standingLeftOut").is_none(),
+            "{shown}"
+        );
     }
 
     #[test]
