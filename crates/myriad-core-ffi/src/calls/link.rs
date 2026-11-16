@@ -3,6 +3,7 @@
 //! contract the core was built with.
 
 use myriad_her_link::check;
+use myriad_link_child::whole;
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -75,20 +76,55 @@ pub(super) fn now_read(raw: &[u8]) -> Result<Value, Failure> {
     Ok(answer.unwrap_or_else(|refusal| json!({ "refused": refusal })))
 }
 
-/// Milliseconds, as her link counts time, from the microseconds every call takes.
-fn link_ms(now: i64) -> i64 {
-    now / 1000
+/// The largest whole number every JSON reader keeps exactly: no count or time of her link
+/// is past it (`myriad_link_child`'s sessions hold to the same).
+const WHOLE: i64 = 1 << 53;
+
+/// Milliseconds, as her link counts time, from the microseconds every call takes: a time
+/// from the epoch on, and one whose milliseconds a session keeps. Anything else is bad
+/// input, so no step leaves a state the next would refuse.
+fn link_ms(now: i64) -> Result<i64, Failure> {
+    let ms = now / 1000;
+    if now < 0 || ms > WHOLE {
+        return Err(Failure::BadInput(
+            "now is microseconds since the epoch".into(),
+        ));
+    }
+    Ok(ms)
 }
 
+/// A session from the state a caller kept: the object `link.child_new` and
+/// `link.child_step` hand back, or that object as a JSON text (what they hand back to a
+/// caller that asked for `text`).
 fn child(state: &Value) -> Result<myriad_link_child::Session, Failure> {
+    let read;
+    let state = match state {
+        Value::String(text) => {
+            read = serde_json::from_str::<Value>(text)
+                .map_err(|_| Failure::BadInput("not a session's state".into()))?;
+            &read
+        }
+        other => other,
+    };
     myriad_link_child::Session::restore(myriad_link_child::contract(), state)
         .map_err(Failure::BadInput)
 }
 
-/// `{capabilities, app: {name, version}, lineage?, hostEpoch?}` → `{state}`: a child's
+/// The state as the caller asked for it: the object, or its JSON text.
+fn kept(session: &myriad_link_child::Session, text: bool) -> Value {
+    let state = session.state();
+    if text {
+        Value::String(state.to_string())
+    } else {
+        state
+    }
+}
+
+/// `{capabilities, app: {name, version}, lineage?, hostEpoch?, text?}` → `{state}`: a child's
 /// session of her link, not connected yet (`myriad_link_child::Session`). `capabilities` is
 /// what this end can do; names the contract does not know are left out of its hello.
-/// `lineage` and `hostEpoch` are what its last welcome said, when it kept them.
+/// `lineage` and `hostEpoch` are what its last welcome said, when it kept them. With
+/// `text: true` the state comes back as a JSON text in a string (see `link.child_step`).
 pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -103,11 +139,16 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
         app: App,
         #[serde(default)]
         lineage: Option<String>,
-        #[serde(default)]
+        #[serde(default, deserialize_with = "whole::maybe_i64")]
         host_epoch: Option<i64>,
+        #[serde(default)]
+        text: bool,
     }
-    let input: In = input(raw)?;
-    if input.host_epoch.is_some_and(|epoch| epoch < 0) {
+    let input: In = super::quiet_input(raw)?;
+    if input
+        .host_epoch
+        .is_some_and(|epoch| !(0..=WHOLE).contains(&epoch))
+    {
         return Err(Failure::BadInput("hostEpoch counts from 0".into()));
     }
     let capabilities: Vec<&str> = input.capabilities.iter().map(String::as_str).collect();
@@ -118,11 +159,21 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
         input.lineage.as_deref(),
         input.host_epoch,
     );
-    Ok(json!({ "state": session.state() }))
+    Ok(json!({ "state": kept(&session, input.text) }))
 }
 
-/// `{state, now, event}` → `{state, outputs, phase}`: one thing happened to the session.
-/// `now` is the time in microseconds. `event` is `"connected"` (the socket is up),
+/// `{state, now, event, text?}` → `{state, outputs, phase, hostCapabilities}`: one thing
+/// happened to the
+/// session. `state` is what the last call handed back, whole: the object, or its JSON text
+/// in a string, which is what comes back when `text` is true. A caller whose JSON library
+/// keeps every number as a double asks for `text` and never decodes it: the counts in a
+/// state are read back either way, but the frames waiting in it are kept as they were
+/// written, and such a library would rewrite the numbers in them. For the same caller,
+/// every whole number written as a double in `event` (`4.0`) is read as the whole number
+/// (`4`) before a frame is made of it. `now` is the time in
+/// microseconds since the epoch (her link's own frames, and `myriad_link_child` used from
+/// Rust, count milliseconds: a caller that passes those here is not told, and the heartbeat
+/// goes wrong). `event` is `"connected"` (the socket is up),
 /// `"disconnected"`, `"tick"` (call it several times a heartbeat while the socket is up),
 /// `{received: text}` (a text frame from her host), or something the shell does:
 /// `{say: {turnId, text, sessionId?, rigState?, images?}}`, `{presence: body}`,
@@ -131,7 +182,10 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
 /// `{touched: {touchId, touch}}`, `{wear: {outfitId}}`, `{setCapabilities: [..]}` (for the
 /// next hello). `outputs` is what the shell does now, in order: `{send: text}`,
 /// `{deliver: {kind, …}}`, `{drop: {why, …}}` (close the socket). `phase` is `closed`,
-/// `greeting` or `open`. The state is the caller's to keep and hand back whole.
+/// `greeting` or `open`. `hostCapabilities` is what her host accepted of this end's
+/// capabilities in its last welcome (empty before a first, and from a new connection's
+/// start until its welcome; kept while the link is down): pictures go with what the owner says only
+/// when `images` is in it. The state is the caller's to keep and hand back whole.
 pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -197,18 +251,30 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
     #[serde(deny_unknown_fields)]
     struct In {
         state: Value,
+        #[serde(deserialize_with = "whole::i64")]
         now: i64,
-        event: Event,
+        event: Value,
+        #[serde(default)]
+        text: bool,
     }
     // What the owner said and showed her is in the input: a failure names no value of it.
-    let In { state, now, event } = super::quiet_input(raw)?;
-    if now < 0 {
-        return Err(Failure::BadInput(
-            "now is microseconds since the epoch".into(),
-        ));
+    let In {
+        state,
+        now,
+        event,
+        text,
+    } = super::quiet_input(raw)?;
+    // An end that keeps every number as a double (it asked for `text`) writes the counts in
+    // what it hands in as doubles too; a frame's body goes out as given, so they are read
+    // here as the whole numbers they are.
+    let mut event = event;
+    if text {
+        whole::settle(&mut event);
     }
+    let event = Event::deserialize(event)
+        .map_err(|_| Failure::BadInput("input does not fit the call".into()))?;
+    let now = link_ms(now)?;
     let mut session = child(&state)?;
-    let now = link_ms(now);
     let outputs = match event {
         Event::Connected => session.connected(now),
         Event::Disconnected => {
@@ -243,9 +309,10 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         }
     };
     Ok(json!({
-        "state": session.state(),
+        "state": kept(&session, text),
         "outputs": outputs.iter().map(myriad_link_child::Output::json).collect::<Vec<_>>(),
         "phase": session.phase().name(),
+        "hostCapabilities": session.host_capabilities(),
     }))
 }
 
@@ -260,7 +327,7 @@ pub(super) fn child_after(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct Close {
-        #[serde(default)]
+        #[serde(default, deserialize_with = "whole::maybe_u16")]
         code: Option<u16>,
         #[serde(default)]
         reason: Option<String>,
@@ -268,6 +335,7 @@ pub(super) fn child_after(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct Http {
+        #[serde(deserialize_with = "whole::u16")]
         status: u16,
         #[serde(default)]
         body: Option<Value>,
@@ -279,14 +347,14 @@ pub(super) fn child_after(raw: &[u8]) -> Result<Value, Failure> {
         close: Option<Close>,
         #[serde(default)]
         http: Option<Http>,
-        #[serde(default)]
+        #[serde(default, deserialize_with = "whole::maybe_u32")]
         attempt: Option<u32>,
     }
     let In {
         close,
         http,
         attempt,
-    } = input(raw)?;
+    } = super::quiet_input(raw)?;
     let after = match (close, http) {
         (Some(close), None) => {
             Session::after_close(contract(), close.code, close.reason.as_deref())
@@ -320,7 +388,7 @@ pub(super) fn child_claims(raw: &[u8]) -> Result<Value, Failure> {
     let In {
         capabilities,
         reads,
-    } = input(raw)?;
+    } = super::quiet_input(raw)?;
     let said: Vec<&str> = capabilities.iter().map(String::as_str).collect();
     let unread: Vec<Value> =
         myriad_link_child::capabilities::unread(&said, |t| reads.iter().any(|read| read == t))
@@ -348,6 +416,7 @@ pub(super) fn conformance_host(raw: &[u8]) -> Result<Value, Failure> {
     #[serde(deny_unknown_fields)]
     struct Frame {
         spec: Value,
+        #[serde(deserialize_with = "whole::i64")]
         now: i64,
     }
     #[derive(Deserialize)]

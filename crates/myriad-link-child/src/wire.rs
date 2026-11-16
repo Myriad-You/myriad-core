@@ -168,7 +168,9 @@ impl Delivery {
             }
             Delivery::Notice(body) => json!({ "kind": "notice", "body": body }),
             Delivery::HostError { code } => json!({ "kind": "host_error", "code": code }),
-            Delivery::Unsent { t, code } => json!({ "kind": "unsent", "t": t, "code": code }),
+            Delivery::Unsent { t, code, id } => {
+                json!({ "kind": "unsent", "t": t, "code": code, "id": id })
+            }
             Delivery::Unread { t, code } => json!({ "kind": "unread", "t": t, "code": code }),
         }
     }

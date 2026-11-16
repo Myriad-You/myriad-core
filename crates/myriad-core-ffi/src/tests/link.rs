@@ -115,29 +115,53 @@ fn now_bodies_are_read_by_the_sessions_rules() {
 }
 
 /// A child end that is nothing but the C entry: its session is the state `link.child_step`
-/// hands back, as an end in another language keeps it.
+/// hands back, as an end in another language keeps it. With `doubles` it is an end whose
+/// JSON library keeps every number as a double: it asks for the state as text, never
+/// decodes it, and writes its own whole numbers the way such a library does (`3.0`).
 struct AcrossTheEntry {
     state: Value,
     out: std::collections::VecDeque<Value>,
+    doubles: bool,
 }
 
 impl AcrossTheEntry {
-    fn new(capabilities: &[String]) -> Self {
+    fn new(capabilities: &[String], doubles: bool) -> Self {
         let made = ok(
             "link.child_new",
-            json!({ "capabilities": capabilities, "app": { "name": "Child", "version": "1" } }),
+            json!({
+                "capabilities": capabilities,
+                "app": { "name": "Child", "version": "1" },
+                "text": doubles,
+            }),
         );
+        assert_eq!(made["state"].is_string(), doubles);
         Self {
             state: made["state"].clone(),
             out: Default::default(),
+            doubles,
         }
     }
 
     fn step(&mut self, event: Value, now_ms: i64) {
+        // Every number this end writes, the time and the counts in what it hands in.
+        fn doubled(value: &mut Value) {
+            match value {
+                Value::Number(n) => *value = json!(n.as_f64().unwrap()),
+                Value::Array(items) => items.iter_mut().for_each(doubled),
+                Value::Object(fields) => fields.values_mut().for_each(doubled),
+                _ => {}
+            }
+        }
+        let (mut now, mut event) = (json!(now_ms * 1000), event);
+        if self.doubles {
+            doubled(&mut now);
+            doubled(&mut event);
+        }
         let stepped = ok(
             "link.child_step",
-            json!({ "state": self.state, "now": now_ms * 1000, "event": event }),
+            json!({ "state": self.state, "now": now, "event": event, "text": self.doubles }),
         );
+        assert_eq!(stepped["state"].is_string(), self.doubles);
         self.state = stepped["state"].clone();
         self.out
             .extend(stepped["outputs"].as_array().unwrap().iter().cloned());
@@ -182,10 +206,12 @@ fn scripts() -> Vec<myriad_link_conformance::Script> {
 
 #[test]
 fn every_child_script_plays_through_the_c_entry_point() {
-    for script in scripts() {
-        let mut child = AcrossTheEntry::new(&script.capabilities);
-        if let Err(fault) = myriad_link_conformance::play(&script, &mut child) {
-            panic!("{}: {fault}", script.name);
+    for doubles in [false, true] {
+        for script in scripts() {
+            let mut child = AcrossTheEntry::new(&script.capabilities, doubles);
+            if let Err(fault) = myriad_link_conformance::play(&script, &mut child) {
+                panic!("{} (doubles: {doubles}): {fault}", script.name);
+            }
         }
     }
 }
@@ -322,6 +348,8 @@ fn a_child_stepped_through_the_c_entry_point_is_the_crates_session() {
         sent_something += usize::from(!outputs.is_empty());
         assert_eq!(stepped["outputs"], json!(outputs), "{event}");
         assert_eq!(stepped["state"], session.state(), "{event}");
+        let accepted: Vec<&String> = session.host_capabilities().iter().collect();
+        assert_eq!(stepped["hostCapabilities"], json!(accepted), "{event}");
         state = stepped["state"].clone();
     }
     assert!(
@@ -348,11 +376,80 @@ fn a_child_stepped_through_the_c_entry_point_is_the_crates_session() {
         let step = json!({ "state": broken, "now": 0, "event": "tick" });
         assert_eq!(ffi("link.child_step", &step).0, STATUS_BAD_INPUT, "{field}");
     }
-    let before = json!({ "state": made["state"], "now": -1, "event": "tick" });
-    assert_eq!(ffi("link.child_step", &before).0, STATUS_BAD_INPUT);
-    let epoch =
-        json!({ "capabilities": [], "app": { "name": "c", "version": "1" }, "hostEpoch": -5 });
-    assert_eq!(ffi("link.child_new", &epoch).0, STATUS_BAD_INPUT);
+    // A time before the epoch, a time past what a session keeps (milliseconds past 2^53: a
+    // step with it would leave a state the next step refuses), a time with a fraction.
+    for now in [
+        json!(-1),
+        json!(i64::MAX),
+        json!((1i64 << 53) * 1000 + 1000),
+        json!(1.5),
+    ] {
+        let step = json!({ "state": made["state"], "now": now, "event": "connected" });
+        assert_eq!(ffi("link.child_step", &step).0, STATUS_BAD_INPUT, "{now}");
+    }
+    // The latest time it takes leaves a state the next step takes.
+    let last = (1i64 << 53) * 1000;
+    let far = ok(
+        "link.child_step",
+        json!({ "state": made["state"], "now": last, "event": "connected" }),
+    );
+    ok(
+        "link.child_step",
+        json!({ "state": far["state"], "now": last, "event": "tick" }),
+    );
+    for epoch in [
+        json!(-5),
+        json!((1u64 << 53) + 1),
+        json!(u64::MAX),
+        json!(2.5),
+        json!("3"),
+    ] {
+        let new = json!({ "capabilities": [], "app": { "name": "c", "version": "1" }, "hostEpoch": epoch });
+        assert_eq!(ffi("link.child_new", &new).0, STATUS_BAD_INPUT, "{epoch}");
+    }
+    // A state as text that is not a state's text.
+    let step = json!({ "state": "{\"secretish\": 1}", "now": 0, "event": "tick" });
+    let (status, out) = ffi("link.child_step", &step);
+    assert_eq!(status, STATUS_BAD_INPUT);
+    assert!(!out.to_string().contains("secretish"), "{out}");
+    // What the owner said in a place of the wrong type: bad input that quotes none of it.
+    for event in [
+        json!({ "say": { "turnId": "t", "text": ["私话"] } }),
+        json!({ "say": { "turnId": "t", "text": "x", "sessionId": { "私话": 1 } } }),
+        json!({ "say": { "turnId": "t", "text": "x", "images": "私话" } }),
+        json!({ "received": { "私话": true } }),
+        json!("私话"),
+    ] {
+        let step = json!({ "state": made["state"], "now": 0, "event": event });
+        let (status, out) = ffi("link.child_step", &step);
+        assert_eq!(status, STATUS_BAD_INPUT, "{event}");
+        assert!(!out.to_string().contains("私话"), "{out}");
+    }
+    // An end of doubles hands in counts as doubles: with `text` they go out as counts.
+    let open_text = ok(
+        "link.child_step",
+        json!({ "state": made["state"], "now": (now * 1000) as f64, "event": "connected", "text": true }),
+    );
+    let spoken =
+        json!({ "turnId": "t_02", "spokenChars": 4.0, "totalChars": 11.0, "interrupted": false });
+    let kept = ok(
+        "link.child_step",
+        json!({ "state": open_text["state"], "now": (now * 1000) as f64, "event": { "delivered": { "id": "sd_1", "body": spoken } }, "text": true }),
+    );
+    let text = kept["state"].as_str().unwrap();
+    assert!(
+        text.contains("\"spokenChars\":4,") && !text.contains("4.0"),
+        "{text}"
+    );
+    // Words under an id that is not one are not lost in silence: the step says so.
+    let lost = ok(
+        "link.child_step",
+        json!({ "state": made["state"], "now": now * 1000, "event": { "say": { "turnId": "not an id", "text": "在吗" } } }),
+    );
+    assert_eq!(
+        lost["outputs"],
+        json!([{ "deliver": { "kind": "unsent", "t": "input", "code": "bad_id", "id": null } }])
+    );
     let (status, out) = ffi(
         "link.child_step",
         &json!({ "state": made["state"], "now": 0, "event": { "say": { "turnId": "t", "text": "私话", "extra": 1 } } }),
@@ -390,10 +487,27 @@ fn what_a_close_means_and_what_an_end_claims_through_the_c_entry_point() {
         ok("link.child_after", json!({ "close": {} }))["then"],
         "reconnect"
     );
+    // Whole numbers as an encoder of doubles writes them are the same numbers.
+    let doubled = ok(
+        "link.child_after",
+        json!({ "close": { "code": 4001.0 }, "attempt": 2.0 }),
+    );
+    assert_eq!(doubled, gone);
+    let refused = ok(
+        "link.child_after",
+        json!({ "http": { "status": 500.0 }, "attempt": 0.0 }),
+    );
+    assert_eq!(
+        (&refused["then"], &refused["backoffMs"]),
+        (&json!("reconnect"), &json!(1000))
+    );
     for wrong in [
         json!({}),
         json!({ "close": { "code": "4001" } }),
         json!({ "close": { "cod": 4001 } }),
+        json!({ "close": { "code": 4001.5 } }),
+        json!({ "close": { "code": 70000 } }),
+        json!({ "close": { "code": -1 } }),
         json!({ "close": 4001 }),
         json!({ "close": null }),
         json!({ "http": { "status": "403" } }),

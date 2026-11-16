@@ -20,6 +20,7 @@ pub mod capabilities;
 mod contract;
 mod frames;
 mod session;
+pub mod whole;
 mod wire;
 
 pub use contract::{CloseRule, Contract, Encoding, FrameRule, Limits, Timing, contract};
