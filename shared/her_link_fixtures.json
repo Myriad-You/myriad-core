@@ -473,7 +473,7 @@
     },
     {
       "v": 1, "t": "link.versions", "seq": 39, "ack": 20, "at": 1760141100000,
-      "body": {"contract": 3, "core": {"abi": 3, "crate": "0.9.0"}, "app": {"name": "Myriad", "version": "1.4.0"}, "actions": {"screen.look": 1, "notify.post": 1}}
+      "body": {"contract": 3, "core": {"abi": 3, "commit": "78840489d2374e2e962dc3fc3b3c4a9f5e9a4578"}, "app": {"name": "Myriad", "version": "1.4.0"}, "actions": {"screen.look": 1, "notify.post": 1}}
     },
     {
       "v": 1, "t": "link.verdict", "seq": 40, "ack": 20, "at": 1760141100000,
@@ -485,7 +485,7 @@
     },
     {
       "v": 1, "t": "stream.event", "seq": 42, "ack": 20, "id": "evt_0123456789abcdef", "at": 1760141100000,
-      "body": {"name": "example.happened", "version": 1, "at": 1760141100000, "body": {}}
+      "body": {"name": "link.dropped", "version": 1, "at": 1760141100000, "body": {"t": "peer.offer", "reason": "unknown_frame"}}
     },
     {
       "v": 1, "t": "wardrobe", "seq": 22, "ack": 17, "at": 1760141000000,

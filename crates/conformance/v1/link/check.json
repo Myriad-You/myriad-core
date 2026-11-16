@@ -2421,6 +2421,387 @@
           "code": "bad_frame"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "unknown_frame",
+              "t": "peer.offer"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_peer.offer_unknown",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a child tells its host it dropped a frame it does not know",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"at\":1760141100000,\"body\":{\"reason\":\"unknown_frame\",\"t\":\"peer.offer\"},\"name\":\"link.dropped\",\"version\":1},\"id\":\"drop_peer.offer_unknown\",\"seq\":17,\"t\":\"stream.event\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "stream",
+          "t": "stream.event"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_frame",
+              "t": "say",
+              "text": "你好"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_say_bad",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame told with what it said",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "tired",
+              "t": "say"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_say_tired",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame with a reason the contract does not name",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_frame",
+              "t": "what she said"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_unnamed_bad",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame whose type is not a frame type",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_frame",
+              "seq": 4,
+              "t": "say"
+            },
+            "name": "link.dropped",
+            "version": 2
+          },
+          "id": "drop_v2",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "an event a newer end registered passes, for this end to ignore",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"at\":1760141100000,\"body\":{\"reason\":\"bad_frame\",\"seq\":4,\"t\":\"say\"},\"name\":\"link.dropped\",\"version\":2},\"id\":\"drop_v2\",\"seq\":17,\"t\":\"stream.event\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "stream",
+          "t": "stream.event"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "actions": {
+              "screen.look": 1
+            },
+            "app": {
+              "name": "Myriad",
+              "version": "1.4.0"
+            },
+            "contract": 3,
+            "core": {
+              "abi": 3,
+              "commit": "78840489d2374e2e962dc3fc3b3c4a9f5e9a4578"
+            }
+          },
+          "seq": 17,
+          "t": "link.versions",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "the core an end runs, by its abi and commit",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"actions\":{\"screen.look\":1},\"app\":{\"name\":\"Myriad\",\"version\":\"1.4.0\"},\"contract\":3,\"core\":{\"abi\":3,\"commit\":\"78840489d2374e2e962dc3fc3b3c4a9f5e9a4578\"}},\"seq\":17,\"t\":\"link.versions\",\"v\":1}",
+          "delivery": "request",
+          "family": "link",
+          "t": "link.versions"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "actions": {},
+            "app": {
+              "name": "Myriad",
+              "version": "1.4.0"
+            },
+            "contract": 3,
+            "core": {
+              "abi": 3,
+              "crate": "0.9.0"
+            }
+          },
+          "seq": 17,
+          "t": "link.versions",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a core told by its crate version",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "actions": {},
+            "app": {
+              "name": "Myriad",
+              "version": "1.4.0"
+            },
+            "contract": 3,
+            "core": {
+              "abi": 3,
+              "commit": "78840489d"
+            }
+          },
+          "seq": 17,
+          "t": "link.versions",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a core commit cut short",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_frame",
+              "t": "unnamed"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_unnamed",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a dropped frame whose type was not a frame type is told as unnamed",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"at\":1760141100000,\"body\":{\"reason\":\"bad_frame\",\"t\":\"unnamed\"},\"name\":\"link.dropped\",\"version\":1},\"id\":\"drop_unnamed\",\"seq\":17,\"t\":\"stream.event\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "stream",
+          "t": "stream.event"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "bad_sealed",
+              "t": "lease.yield"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_sealed",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame told with the code the core refused it with",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "t": "say"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_noreason",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame with no reason",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": 3,
+              "t": "say"
+            },
+            "name": "link.dropped",
+            "version": 1
+          },
+          "id": "drop_reason3",
+          "seq": 17,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a dropped frame whose reason is not a word",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
     }
   ],
   "version": 1

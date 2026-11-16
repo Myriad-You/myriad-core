@@ -300,6 +300,38 @@ fn a_call_is_allowed_only_for_whom_its_action_says() {
         }
         assert!(action["description"].is_string(), "{name}");
     }
+    for reason in &super::CONTRACT.drop_reasons {
+        assert!(
+            raw["errorCodes"][reason.as_str()].is_string(),
+            "dropReasons: {reason} is an error code"
+        );
+    }
+    for (kind, streams) in [
+        ("state", &super::CONTRACT.streams.state),
+        ("event", &super::CONTRACT.streams.event),
+    ] {
+        for (name, spec) in streams {
+            assert!(super::valid_id(name), "streams.{kind}.{name}");
+            assert!(spec.version >= 1, "streams.{kind}.{name}");
+            assert!(
+                ["child", "host", "either"].contains(&spec.from.as_str()),
+                "streams.{kind}.{name}: from {}",
+                spec.from
+            );
+            assert!(
+                spec.audience == "link" || super::CONTRACT.call_audiences.contains(&spec.audience),
+                "streams.{kind}.{name}: for {}",
+                spec.audience
+            );
+            for (field, list) in &spec.fields.enums {
+                assert!(
+                    raw[list.as_str()].is_array() && super::named_list(list).is_some(),
+                    "streams.{kind}.{name}.{field}: {list} is a list the rules read"
+                );
+            }
+            assert!(raw["streams"][kind][name.as_str()]["description"].is_string());
+        }
+    }
     for group in calls_default_approved() {
         assert!(groups.contains(group.as_str()), "{group}");
     }
