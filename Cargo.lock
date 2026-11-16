@@ -651,6 +651,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "myriad-link-conformance"
+version = "0.1.0"
+dependencies = [
+ "myriad-her-link",
+ "myriad-link-child",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "myriad-merope"
 version = "0.1.0"
 dependencies = [

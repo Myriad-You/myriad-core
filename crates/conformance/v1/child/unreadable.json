@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "name": "unreadable",
+  "about": "A frame this child cannot read is told to its shell with why (the shared core's refusal code), never with what it carried, and the link stays up: a type from a newer contract, a field this contract does not know, another frame format, a text that is no frame. A reliable one is still acked, not delivered, and its id stays free. What comes after is read as before.",
+  "capabilities": ["say"],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": ["say"]}}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["say"], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome", "deviceId": "dev_0123456789abcdef0123456789abcdef", "host": "site"}},
+    {"at": 100, "host": {"t": "mood", "body": {"mood": {"before": 62.0, "after": 64.5, "arousalBefore": 50.0, "arousalAfter": 52.0, "bandBefore": "calm", "bandAfter": "calm", "delta": 2.5, "cause": "user_appraisal", "revision": 1760140800000}, "activity": "talking"}, "envelope": {"t": "call.later"}, "unchecked": true}},
+    {"deliver": {"kind": "unread", "t": null, "code": "unknown_frame"}},
+    {"at": 200, "host": {"t": "mood", "body": {"mood": {"before": 62.0, "after": 64.5, "arousalBefore": 50.0, "arousalAfter": 52.0, "bandBefore": "calm", "bandAfter": "calm", "delta": 2.5, "cause": "user_appraisal", "revision": 1760140800000}, "activity": "talking", "later": 1}, "unchecked": true}},
+    {"deliver": {"kind": "unread", "t": "mood", "code": "bad_frame"}},
+    {"at": 300, "host": {"t": "mood", "body": {"mood": {"before": 62.0, "after": 64.5, "arousalBefore": 50.0, "arousalAfter": 52.0, "bandBefore": "calm", "bandAfter": "calm", "delta": 2.5, "cause": "user_appraisal", "revision": 1760140800000}, "activity": "talking"}, "envelope": {"v": 2}, "unchecked": true}},
+    {"deliver": {"kind": "unread", "t": "mood", "code": "version_unsupported"}},
+    {"at": 400, "raw": "not a frame"},
+    {"deliver": {"kind": "unread", "t": null, "code": "bad_frame"}},
+    {"at": 500, "host": {"t": "say", "id": "spk_02", "body": {"text": "你回来啦。", "kind": "greeting", "saidAt": 1760140819950, "later": 1}, "unchecked": true}},
+    {"deliver": {"kind": "unread", "t": "say", "code": "bad_frame"}},
+    {"child": {"t": "ack", "seq": 2, "ack": 5}},
+    {"at": 600, "host": {"t": "say", "id": "spk_02", "body": {"text": "你回来啦。", "kind": "greeting", "saidAt": 1760140819950}}},
+    {"deliver": {"kind": "say", "id": "spk_02"}},
+    {"child": {"t": "ack", "seq": 3, "ack": 6}},
+    {"at": 700, "host": {"t": "mood", "body": {"mood": {"before": 62.0, "after": 64.5, "arousalBefore": 50.0, "arousalAfter": 52.0, "bandBefore": "calm", "bandAfter": "calm", "delta": 2.5, "cause": "user_appraisal", "revision": 1760140800000}, "activity": "talking"}}},
+    {"deliver": {"kind": "mood"}}
+  ]
+}

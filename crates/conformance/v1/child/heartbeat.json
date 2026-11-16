@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "name": "heartbeat",
+  "about": "The child pings when it has sent nothing for a heartbeat, and answers a ping. Nothing heard for missedHeartbeats heartbeats drops the link.",
+  "capabilities": [],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": []}}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome", "deviceId": "dev_0123456789abcdef0123456789abcdef", "host": "site"}},
+    {"at": 14999, "do": "tick"},
+    {"at": 15000, "do": "tick"},
+    {"child": {"t": "ping", "seq": 2, "ack": 1}},
+    {"at": 15010, "host": {"t": "pong"}},
+    {"at": 20000, "host": {"t": "ping"}},
+    {"child": {"t": "pong", "seq": 3, "ack": 3}},
+    {"at": 34999, "do": "tick"},
+    {"at": 35000, "do": "tick"},
+    {"child": {"t": "ping", "seq": 4}},
+    {"at": 49999, "do": "tick"},
+    {"at": 50000, "do": "tick"},
+    {"drop": {"why": "silent"}}
+  ]
+}

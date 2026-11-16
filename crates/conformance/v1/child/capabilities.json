@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "name": "capabilities",
+  "about": "The child says only capabilities the contract names, in the order its shell gave them. What her host accepted is the welcome's, and the child goes by it: what the owner shows her (images) goes with what they say only to a host that accepted images. A line she says comes to a child that said say, and is acked.",
+  "capabilities": ["say", "made.up", "playback", "images"],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": ["say", "playback", "images"]}}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["say", "playback"], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome", "deviceId": "dev_0123456789abcdef0123456789abcdef", "host": "site"}},
+    {"at": 100, "host": {"t": "say", "id": "spk_01", "body": {"text": "你回来啦。", "kind": "greeting", "saidAt": 1760140819950}}},
+    {"deliver": {"kind": "say", "id": "spk_01", "body": {"kind": "greeting"}}},
+    {"child": {"t": "ack", "seq": 2, "ack": 2}},
+    {"at": 200, "do": {"say": {"turnId": "t_02", "text": "你看", "images": ["data:image/jpeg;base64,/9j/4AAQ"]}}},
+    {"child": {"t": "input", "id": "t_02", "seq": 3, "ack": 2, "body": {"text": "你看", "images": "$absent"}}},
+    {"at": 300, "host": {"t": "run.rejected", "body": {"turnId": "t_02", "code": "agent_access_denied"}}},
+    {"deliver": {"kind": "rejected", "turnId": "t_02", "code": "agent_access_denied"}},
+    {"at": 400, "do": "disconnect"},
+    {"at": 1000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1, "ack": 0, "body": {"protocol": 2, "role": "child", "surface": "app", "capabilities": ["say", "playback", "images"]}}},
+    {"at": 1050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["say", "playback", "images"], "turns": [], "serverTime": 1760140800050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome", "deviceId": "dev_0123456789abcdef0123456789abcdef", "host": "site"}},
+    {"at": 1100, "do": {"say": {"turnId": "t_03", "text": "你看", "images": ["data:image/jpeg;base64,/9j/4AAQ"]}}},
+    {"child": {"t": "input", "id": "t_03", "seq": 2, "ack": 1, "body": {"text": "你看", "images": ["data:image/jpeg;base64,/9j/4AAQ"]}}}
+  ]
+}
