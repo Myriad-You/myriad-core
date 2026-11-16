@@ -210,6 +210,9 @@ impl Delivery {
                 "sequence": sequence,
                 "piece": piece,
             }),
+            Delivery::CallsForgotten { call_ids } => {
+                json!({ "kind": "calls_forgotten", "callIds": call_ids })
+            }
             Delivery::CallResult {
                 call_id,
                 outcome,

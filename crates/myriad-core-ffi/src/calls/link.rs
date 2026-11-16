@@ -220,7 +220,8 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
 /// `{callsLost: [{callId, action, version}]}` for calls it had in hand when it was
 /// restarted, handed back before `"connected"`; of a call this end asks of her host:
 /// `{call: {callId, action, version, args, for, withinMs}}` (answered within `withinMs`
-/// milliseconds from now) and `{callCancel: {callId}}`; and what it tells her host as it
+/// milliseconds from now) and `{callCancel: {callId}}` (what comes of it is always told:
+/// a `call.cancel` sent, a `call_result` said here, or an `unsent` of `call.cancel`); and what it tells her host as it
 /// changes or happens: `{streamState: {name, version, value}}`,
 /// `{streamEvent: {id, name, version, body}}`. `outputs` is what the shell does now, in order: `{send: text}`,
 /// `{deliver: {kind, …}}`, `{drop: {why, …}}` (close the socket). `phase` is `closed`,

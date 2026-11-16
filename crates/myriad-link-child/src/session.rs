@@ -221,6 +221,13 @@ pub enum Delivery {
         blobs: Vec<String>,
         here: bool,
     },
+    /// Calls this end asked that it no longer keeps: each was told timed out, not granted or
+    /// cancelled here, had no result of her host's since, and more than
+    /// [`Session::KEPT_ANSWERS`] such were kept. A result of her host's that still comes
+    /// for one is acked and not delivered. Their ids are not to be used again.
+    CallsForgotten {
+        call_ids: Vec<String>,
+    },
     /// Something her host tells as it changes (`stream.state`), of a name the contract
     /// registers at that version. Only the newest counts.
     StreamState {
@@ -569,6 +576,8 @@ struct State {
     providing: Vec<Named>,
     #[serde(default)]
     asking: Vec<Asking>,
+    #[serde(default)]
+    cancels: Vec<String>,
 }
 
 /// A call this end is doing for her host.
@@ -598,9 +607,14 @@ struct Asking {
     /// The sequence of the last piece of its result taken; 0 before any.
     #[serde(default, deserialize_with = "whole::u64")]
     pieces: u64,
-    /// Whether the session has said it timed out: a result may still come.
+    /// Whether the session has said how it ended here (timed out, not granted, cancelled
+    /// before it went again): a result may still come.
     #[serde(default)]
     late: bool,
+    /// The action asked; none in a state kept before it was kept, and such a call is taken
+    /// for a long one.
+    #[serde(default)]
+    action: Option<String>,
 }
 
 /// A call that came before her host said what is granted on this link: not judged yet.
@@ -705,6 +719,10 @@ pub struct Session {
     providing: Vec<(String, u64)>,
     /// The calls this end asked of her host and has no result of yet, oldest first.
     asking: Vec<Asking>,
+    /// The long calls this end cancelled while their ask waited to go again: her host may
+    /// have had the ask on the link before, so it is told to stop (`call.cancel`) on the
+    /// next link where both ends listed `calls`, after its word on what it provides there.
+    cancels: Vec<String>,
 }
 
 impl Session {
@@ -712,6 +730,11 @@ impl Session {
     pub const KEPT_DROPPED: usize = 32;
     pub const KEPT_TURNS: usize = 64;
     pub const KEPT_TAKEN: usize = 256;
+    /// The most `stream.event` frames kept until acked. The one event a child sends today
+    /// is the session's own `link.dropped`, at most [`Self::KEPT_DROPPED`] kinds on a link:
+    /// this is eight links' worth of them never acked, and as many ids as an end remembers
+    /// of what it took ([`Self::KEPT_TAKEN`]).
+    pub const KEPT_EVENTS: usize = 256;
 
     /// The host's frame types this session reads; any other is passed by
     /// (`crate::capabilities::unread` compares an end's capabilities with it). A `pong` is
@@ -809,6 +832,7 @@ impl Session {
             held: Vec::new(),
             providing: Vec::new(),
             asking: Vec::new(),
+            cancels: Vec::new(),
         }
     }
 
@@ -993,6 +1017,7 @@ impl Session {
                 })
                 .collect(),
             asking: self.asking.clone(),
+            cancels: self.cancels.clone(),
         };
         serde_json::to_value(state).expect("a session is plain data")
     }
@@ -1146,6 +1171,17 @@ impl Session {
                 .into_iter()
                 .map(|named| (named.name, named.version))
                 .collect(),
+            // Only of a call still asked, each once, in the order kept.
+            cancels: {
+                let mut cancels: Vec<String> = Vec::new();
+                for id in state.cancels {
+                    if state.asking.iter().any(|call| call.call_id == id) && !cancels.contains(&id)
+                    {
+                        cancels.push(id);
+                    }
+                }
+                cancels
+            },
             asking: state.asking,
         })
     }
@@ -1460,6 +1496,10 @@ impl Session {
         {
             return Vec::new();
         }
+        // Kept within the same bound as the shell's events: with no room, not told.
+        let Some(mut out) = self.room_for_event() else {
+            return Vec::new();
+        };
         // An id of this end's own making, from what it was given: when this link came up
         // and how many reports this session has made, which never starts over; and never
         // one a turn or a waiting frame already has.
@@ -1483,7 +1523,8 @@ impl Session {
             }),
             seq: None,
         });
-        self.flush(now_ms)
+        out.extend(self.flush(now_ms));
+        out
     }
 
     fn read(&mut self, envelope: &Envelope, taken: bool, now_ms: i64) -> Vec<Output> {
@@ -1596,6 +1637,7 @@ impl Session {
                     if self.both("calls") {
                         self.granted = actions;
                         self.providing = providing;
+                        let first = !self.heard_granted;
                         self.heard_granted = true;
                         // What came before her host said: judged now, by what it says.
                         for call in std::mem::take(&mut self.held) {
@@ -1603,7 +1645,7 @@ impl Session {
                         }
                         // And what this end waits to ask of it: asked now if it provides
                         // the action here, told not granted if it does not.
-                        out.extend(self.settle_asks(now_ms));
+                        out.extend(self.settle_asks(first, now_ms));
                     }
                     out
                 }
@@ -2385,7 +2427,8 @@ impl Session {
     /// the same deadline until her host acks it. Not asked, and told `Unsent`, when there is
     /// no open link (`call_unavailable`), when the two ends did not both list `calls` on it
     /// or her host has not said it provides the action at that version here
-    /// (`call_not_granted`), when the action is not for `of` (`wrong_audience`), when the
+    /// (`call_not_granted`), when the action is not one the contract registers
+    /// (`call_unknown`) or not for `of` (`wrong_audience`), when the
     /// id is already a call's or another frame's (`bad_id`), or when the frame is not one
     /// the contract takes. An ask not acked when the link goes waits for the next link's
     /// word on what her host provides there: it goes again if it does, and ends
@@ -2416,8 +2459,9 @@ impl Session {
         if self.taken.contains(&format!("{call_id}{RESULT}")) {
             return refuse("bad_id");
         }
-        if myriad_her_link::call_allowed(action, of).is_err() {
-            return refuse("wrong_audience");
+        // Not an action the contract registers (`call_unknown`), or not for `of`.
+        if let Err(code) = myriad_her_link::call_allowed(action, of) {
+            return refuse(code);
         }
         if self.asking.iter().any(|call| call.call_id == call_id) {
             return refuse("bad_id");
@@ -2441,18 +2485,22 @@ impl Session {
         if let Err(refused) = frames::text("call.ask", WHOLE, WHOLE, Some(call_id), now_ms, &body) {
             return refuse(&refused.code);
         }
-        let out = self.reliable_out(call_id, "call.ask", &body, now_ms);
-        if !out
-            .iter()
-            .any(|o| matches!(o, Output::Deliver(Delivery::Unsent { .. })))
-        {
+        let mut out = self.reliable_out(call_id, "call.ask", &body, now_ms);
+        // Whether this ask went, by what is told of it: not of another frame that waited.
+        let refused = out.iter().any(|o| {
+            matches!(o, Output::Deliver(Delivery::Unsent { t, id, .. })
+                if t == "call.ask" && id.as_deref() == Some(call_id))
+        });
+        if !refused {
             self.asking.push(Asking {
                 call_id: call_id.to_string(),
                 deadline_at,
                 pieces: 0,
                 late: false,
+                action: Some(action.to_string()),
             });
-            // Calls long timed out with no result are not kept without end.
+            // Calls told ended here with no result since are not kept without end: past so
+            // many, the oldest are let go, and the shell is told which.
             let mut over = self
                 .asking
                 .iter()
@@ -2469,8 +2517,12 @@ impl Session {
                     true
                 }
             });
-            self.outbox
-                .retain(|pending| !(pending.t == "call.ask" && gone.contains(&pending.id)));
+            if !gone.is_empty() {
+                self.outbox
+                    .retain(|pending| !(pending.t == "call.ask" && gone.contains(&pending.id)));
+                self.cancels.retain(|id| !gone.contains(id));
+                out.push(Output::Deliver(Delivery::CallsForgotten { call_ids: gone }));
+            }
         }
         out
     }
@@ -2485,7 +2537,11 @@ impl Session {
     /// Her host has just said what it provides on this link: an ask that waited from the
     /// link before goes now if it provides the action here; if it does not, the ask is let
     /// go and the shell is told the call was not granted, here.
-    fn settle_asks(&mut self, now_ms: i64) -> Vec<Output> {
+    ///
+    /// `first` is whether this is her host's first word on this link: the stops that wait
+    /// from before go then. One made on this link after that is for the next link, and a
+    /// later word of her host's on this one does not send it early.
+    fn settle_asks(&mut self, first: bool, now_ms: i64) -> Vec<Output> {
         // Only asks that wait from a link before: one sent on this link is her host's to
         // answer, whatever it says it provides now.
         let refused: Vec<String> = self
@@ -2515,18 +2571,98 @@ impl Session {
             }
         }
         out.extend(self.flush(now_ms));
+        // The long calls cancelled while their ask waited: her host, had it had the ask on a
+        // link before, is told to stop; had it not, it passes this by.
+        if first && self.both("calls") {
+            for call_id in std::mem::take(&mut self.cancels) {
+                out.extend(self.send("call.cancel", &json!({ "callId": call_id }), None, now_ms));
+            }
+        }
         out
     }
 
-    /// This end no longer wants the long call `call_id`: her host is told to stop it
-    /// (`call.cancel`, not kept while the link is down). Its result still comes.
+    /// This end no longer wants the call `call_id`. What comes of that is always told:
+    ///
+    /// - Its ask waits to go again (not sent on this link, or no link): the ask is taken
+    ///   back and never goes, and the call ends here, `CallResult` `failed`
+    ///   `call_cancelled` with `here` (when it was already told ended here: `Unsent`
+    ///   `call.cancel` `call_ended`). Her host may have had the ask on a link before: a long
+    ///   one it is told to stop on the next link where both ends listed `calls`, after its
+    ///   word on what it provides there, and a result that still comes is delivered.
+    /// - Its ask went on this link, or her host acked it, and the action is long: her host
+    ///   is told to stop (`call.cancel`) now, on a link where both ends listed `calls`
+    ///   (an ask not acked yet is taken back, so that it cannot go again after the stop,
+    ///   and her host is told to stop once more on the next link);
+    ///   with no such link the shell is told `Unsent` `call.cancel` `call_unavailable`, to
+    ///   cancel again when linked. Its result still comes.
+    /// - It went and the action is not long: there is no stopping it (the contract cancels
+    ///   long calls only). `Unsent` `call.cancel` `call_sent`; its result still comes.
+    /// - Cancelled again after it was taken back, or after it was told ended here, with
+    ///   nothing to tell her host now: `Unsent` `call.cancel` `call_ended`.
+    /// - Not a call this end asks: `Unsent` `call.cancel` `bad_id`.
     pub fn call_cancel(&mut self, call_id: &str, now_ms: i64) -> Vec<Output> {
-        if !self.asking.iter().any(|call| call.call_id == call_id) {
-            return unsent("call.cancel", "bad_id", Some(call_id));
+        let untold = |code: &str| unsent("call.cancel", code, Some(call_id));
+        let Some(call) = self.asking.iter_mut().find(|call| call.call_id == call_id) else {
+            return untold("bad_id");
+        };
+        // One whose action this state does not say is taken for long: a stop too many is
+        // passed by, one too few is not.
+        let long = call
+            .action
+            .as_deref()
+            .is_none_or(|action| myriad_her_link::call_spec(action).is_none_or(|spec| spec.long));
+        let waits = |pending: &Pending| {
+            pending.t == "call.ask" && pending.id == call_id && pending.seq.is_none()
+        };
+        if self.outbox.iter().any(waits) {
+            let told = call.late;
+            call.late = true;
+            self.outbox.retain(|pending| !waits(pending));
+            if long && !self.cancels.iter().any(|id| id == call_id) {
+                self.cancels.push(call_id.to_string());
+            }
+            return if told {
+                untold("call_ended")
+            } else {
+                vec![Output::Deliver(Delivery::CallResult {
+                    call_id: call_id.to_string(),
+                    outcome: "failed".into(),
+                    result: None,
+                    code: Some("call_cancelled".into()),
+                    blobs: Vec::new(),
+                    here: true,
+                })]
+            };
         }
-        if self.phase != Phase::Open || !self.both("calls") {
-            return Vec::new();
+        // Its ask does not wait. One already told ended here has nothing more to be told,
+        // unless it is long and her host can be told to stop now.
+        let told = call.late;
+        if !long {
+            return untold(if told { "call_ended" } else { "call_sent" });
         }
+        let queued = self.cancels.iter().any(|id| id == call_id);
+        // No link to tell her host on, or the stop already waits for her host's word on
+        // what it provides on this link (it goes then, not before): nothing goes now.
+        let open = self.phase == Phase::Open && self.both("calls");
+        if !open || (queued && !self.heard_granted) {
+            return untold(if told {
+                "call_ended"
+            } else {
+                "call_unavailable"
+            });
+        }
+        // Its ask went on this link and is not acked: were the link to go now, the ask would
+        // go again on the next with nothing to stop it. It does not: the ask is taken back,
+        // and her host, which may have it, is told to stop once more on the next link.
+        let unacked = |pending: &Pending| pending.t == "call.ask" && pending.id == call_id;
+        if self.outbox.iter().any(unacked) {
+            self.outbox.retain(|pending| !unacked(pending));
+            if !queued {
+                self.cancels.push(call_id.to_string());
+            }
+        }
+        // A stop that waits for the next link is not undone by another made on this one: it
+        // leaves when it goes, when her host's result comes, or with the call.
         self.send("call.cancel", &json!({ "callId": call_id }), None, now_ms)
     }
 
@@ -2608,6 +2744,7 @@ impl Session {
                 .collect();
         }
         self.asking.retain(|call| call.call_id != call_id);
+        self.cancels.retain(|id| *id != call_id);
         // It is answered: its ask, if it still waited to go again, does not.
         self.outbox
             .retain(|pending| !(pending.t == "call.ask" && pending.id == call_id));
@@ -2718,7 +2855,37 @@ impl Session {
         {
             return unsent("stream.event", &refused.code, Some(id));
         }
-        self.reliable_out(id, "stream.event", &frame, now_ms)
+        // The same event again under its id is the same event and takes no room; nor does
+        // one whose id is not free, which is only told.
+        let fresh = valid_id(id)
+            && !id.ends_with(RESULT)
+            && !self.turns.contains_key(id)
+            && !self.outbox.iter().any(|pending| pending.id == id);
+        if !fresh {
+            return self.reliable_out(id, "stream.event", &frame, now_ms);
+        }
+        let Some(mut out) = self.room_for_event() else {
+            return unsent("stream.event", "too_many", Some(id));
+        };
+        out.extend(self.reliable_out(id, "stream.event", &frame, now_ms));
+        out
+    }
+
+    /// Room for one more `stream.event` to be kept until acked: past
+    /// [`Self::KEPT_EVENTS`], the oldest that waits to go is let go and told (`Unsent`
+    /// `stream.event` `too_many`, with its id). None when every one kept is on its way on
+    /// this link: then the new one is not kept.
+    fn room_for_event(&mut self) -> Option<Vec<Output>> {
+        let event = |pending: &Pending| pending.t == "stream.event";
+        if self.outbox.iter().filter(|pending| event(pending)).count() < Self::KEPT_EVENTS {
+            return Some(Vec::new());
+        }
+        let oldest = self
+            .outbox
+            .iter()
+            .position(|pending| event(pending) && pending.seq.is_none())?;
+        let gone = self.outbox.remove(oldest);
+        Some(unsent("stream.event", "too_many", Some(&gone.id)))
     }
 
     // Clock
