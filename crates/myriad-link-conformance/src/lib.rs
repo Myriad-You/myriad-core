@@ -52,6 +52,11 @@ pub struct Script {
     /// then it sends no `link.versions`.
     #[serde(default)]
     pub core: Option<Core>,
+    /// How far her host's clock is ahead of the script's time, milliseconds (0 when left
+    /// out): the host's frames say `at` by its own clock, and the script's `serverTime` and
+    /// deadlines are written by it.
+    #[serde(default, rename = "hostAheadMs")]
+    pub host_ahead_ms: i64,
     pub steps: Vec<Step>,
 }
 
@@ -79,7 +84,10 @@ pub struct Step {
     #[serde(default)]
     pub at: Option<i64>,
     /// The child's shell does something: `"connect"`, `"disconnect"`, `"tick"`,
-    /// `{say: {turnId, text, sessionId?, rigState?, images?}}` or `{delivered: {id, body}}`.
+    /// `{say: {turnId, text, sessionId?, rigState?, images?}}`, `{delivered: {id, body}}`,
+    /// or, of a call her host asked: `{callDone: {callId, result, blobs?}}`,
+    /// `{callFailed: {callId, code}}`, `{callProgress: {callId, phase, waiting?}}`,
+    /// `{callPiece: {callId, piece}}`, `{callsLost: [{callId, action, version}]}`.
     #[serde(default, rename = "do")]
     pub act: Option<Value>,
     /// The child sends this frame: `{t, id?, seq?, ack?, body?}`, each given part matched.
@@ -200,6 +208,10 @@ pub struct Host {
     heard: u64,
     #[serde(deserialize_with = "myriad_link_child::whole::u64")]
     acked: u64,
+    /// How far this host's clock is ahead of the script's time: its frames say `at` by its
+    /// own clock, as a real host's do.
+    #[serde(deserialize_with = "myriad_link_child::whole::i64")]
+    ahead_ms: i64,
     pub vars: Vars,
 }
 
@@ -209,6 +221,16 @@ impl Host {
         [self.sent, self.heard, self.acked]
             .into_iter()
             .all(|count| count <= 1 << 53)
+            && self.ahead_ms.unsigned_abs() <= 1 << 53
+    }
+
+    /// A stand-in host whose clock is `ahead_ms` ahead of the script's time (a script's
+    /// `hostAheadMs`).
+    pub fn ahead(ahead_ms: i64) -> Self {
+        Self {
+            ahead_ms,
+            ..Self::default()
+        }
     }
 
     /// A socket came up: numbering starts again. What the script named stays.
@@ -234,7 +256,7 @@ impl Host {
         frame.insert("t".into(), json!(t));
         frame.insert("seq".into(), json!(self.sent + 1));
         frame.insert("ack".into(), json!(self.heard));
-        frame.insert("at".into(), json!(now_ms));
+        frame.insert("at".into(), json!(now_ms.saturating_add(self.ahead_ms)));
         frame.insert(
             "body".into(),
             spec.get("body").cloned().unwrap_or(json!({})),
@@ -471,6 +493,53 @@ impl Child {
                         with.get("body").ok_or("delivered needs body")?,
                         now_ms,
                     ),
+                    "callDone" => {
+                        let blobs: Vec<String> = with
+                            .get("blobs")
+                            .and_then(Value::as_array)
+                            .into_iter()
+                            .flatten()
+                            .filter_map(|blob| blob.as_str().map(str::to_string))
+                            .collect();
+                        self.session.call_done(
+                            text("callId").ok_or("callDone needs callId")?,
+                            with.get("result").ok_or("callDone needs result")?,
+                            &blobs,
+                            now_ms,
+                        )
+                    }
+                    "callFailed" => self.session.call_failed(
+                        text("callId").ok_or("callFailed needs callId")?,
+                        text("code").ok_or("callFailed needs code")?,
+                        now_ms,
+                    ),
+                    "callProgress" => self.session.call_progress(
+                        text("callId").ok_or("callProgress needs callId")?,
+                        text("phase").ok_or("callProgress needs phase")?,
+                        with.get("waiting") == Some(&Value::Bool(true)),
+                        now_ms,
+                    ),
+                    "callPiece" => self.session.call_piece(
+                        text("callId").ok_or("callPiece needs callId")?,
+                        with.get("piece").ok_or("callPiece needs piece")?,
+                        now_ms,
+                    ),
+                    "callsLost" => {
+                        let lost: Vec<(&str, &str, u64)> = with
+                            .as_array()
+                            .ok_or("callsLost is a list")?
+                            .iter()
+                            .map(|call| {
+                                Some((
+                                    call.get("callId")?.as_str()?,
+                                    call.get("action")?.as_str()?,
+                                    call.get("version")?.as_u64()?,
+                                ))
+                            })
+                            .collect::<Option<_>>()
+                            .ok_or("each lost call is {callId, action, version}")?;
+                        self.session.lost(&lost, now_ms)
+                    }
                     other => return Err(format!("no such thing to do: {other}")),
                 }
             }
@@ -541,7 +610,7 @@ pub fn play(script: &Script, child: &mut impl ChildEnd) -> Result<(), Fault> {
             why: format!("script version {}, this plays {VERSION}", script.version),
         });
     }
-    let mut host = Host::default();
+    let mut host = Host::ahead(script.host_ahead_ms);
     let mut waiting: VecDeque<Value> = VecDeque::new();
     let mut now = T0;
     for (index, step) in script.steps.iter().enumerate() {

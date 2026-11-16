@@ -7,6 +7,26 @@ use super::*;
 
 const SCRIPTS: &[(&str, &str)] = &[
     (
+        "called",
+        include_str!("../../conformance/v1/child/called.json"),
+    ),
+    (
+        "called-clock",
+        include_str!("../../conformance/v1/child/called-clock.json"),
+    ),
+    (
+        "called-granted",
+        include_str!("../../conformance/v1/child/called-granted.json"),
+    ),
+    (
+        "called-long",
+        include_str!("../../conformance/v1/child/called-long.json"),
+    ),
+    (
+        "called-lost",
+        include_str!("../../conformance/v1/child/called-lost.json"),
+    ),
+    (
         "capabilities",
         include_str!("../../conformance/v1/child/capabilities.json"),
     ),

@@ -168,6 +168,25 @@ impl Delivery {
             }
             Delivery::Notice(body) => json!({ "kind": "notice", "body": body }),
             Delivery::HostError { code } => json!({ "kind": "host_error", "code": code }),
+            Delivery::Call {
+                call_id,
+                action,
+                version,
+                args,
+                of,
+                deadline_at,
+            } => json!({
+                "kind": "call",
+                "callId": call_id,
+                "action": action,
+                "version": version,
+                "args": args,
+                "for": of,
+                "deadlineAt": deadline_at,
+            }),
+            Delivery::CallStop { call_id, why } => {
+                json!({ "kind": "call_stop", "callId": call_id, "why": why })
+            }
             Delivery::HostVersions(body) => json!({ "kind": "host_versions", "body": body }),
             Delivery::Verdict { usable, stopped } => {
                 json!({ "kind": "verdict", "usable": usable, "stopped": stopped })

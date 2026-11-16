@@ -166,6 +166,27 @@ pub enum Delivery {
     HostError {
         code: String,
     },
+    /// Her host asks this end to do one thing for her (`call.ask`), already held to what
+    /// this end offered, to whom the action may be for, and to its deadline. The shell writes
+    /// `call_id`, `action` and `version` down before it starts (see [`Session::lost`]), does
+    /// it, and answers once with [`Session::call_done`] or [`Session::call_failed`].
+    /// `deadline_at` is by her host's clock, milliseconds: the session ends the call itself
+    /// when it passes ([`Delivery::CallStop`]). `of` is whom it is for (`{kind, groupId?}`).
+    Call {
+        call_id: String,
+        action: String,
+        version: u64,
+        args: Value,
+        of: Value,
+        deadline_at: i64,
+    },
+    /// Stop doing the call `call_id`: `why` is `cancelled` (her host no longer wants it) or
+    /// `timeout` (its deadline passed). The session has answered her host already; what the
+    /// shell says of this call afterwards is not sent.
+    CallStop {
+        call_id: String,
+        why: String,
+    },
     /// What her host runs, as its own `link.versions` says (`{contract, core, app, actions}`),
     /// for the shell to show beside its own.
     HostVersions(Value),
@@ -365,6 +386,20 @@ fn mark(text: &str, session_id: Option<&str>, images: &[String]) -> String {
     format!("{hash:016x}")
 }
 
+/// How the id of a call's answer ends: the call's id and this (`call.result`'s idempotency).
+const RESULT: &str = ".result";
+
+/// A `call.result` that says the call was not done, and why.
+fn failed(call_id: &str, action: &str, version: u64, code: &str) -> Value {
+    json!({
+        "callId": call_id,
+        "action": action,
+        "version": version,
+        "outcome": "failed",
+        "error": { "code": code },
+    })
+}
+
 /// What an end may offer of `actions`: those the contract's `calls` names at that version
 /// and a child does, each once, in order.
 fn offered(actions: impl Iterator<Item = (String, u64)>) -> Vec<(String, u64)> {
@@ -464,6 +499,57 @@ struct State {
     told_dropped: Vec<(String, String)>,
     #[serde(default, deserialize_with = "whole::u64")]
     drops: u64,
+    #[serde(default)]
+    doing: Vec<Doing>,
+    #[serde(default)]
+    answered: Vec<Answered>,
+    #[serde(default, deserialize_with = "whole::i64")]
+    host_ahead_ms: i64,
+    #[serde(default)]
+    granted: Vec<Named>,
+    #[serde(default)]
+    heard_granted: bool,
+    #[serde(default)]
+    held: Vec<Held>,
+}
+
+/// A call this end is doing for her host.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Doing {
+    call_id: String,
+    action: String,
+    #[serde(deserialize_with = "whole::u64")]
+    version: u64,
+    /// By her host's clock, milliseconds.
+    #[serde(deserialize_with = "whole::i64")]
+    deadline_at: i64,
+    /// The sequence of the last piece of its result sent (`call.event`); 0 before any.
+    #[serde(default, deserialize_with = "whole::u64")]
+    pieces: u64,
+}
+
+/// A call that came before her host said what is granted on this link: not judged yet.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Held {
+    call_id: String,
+    action: String,
+    #[serde(deserialize_with = "whole::u64")]
+    version: u64,
+    args: Value,
+    of: Value,
+    #[serde(deserialize_with = "whole::i64")]
+    deadline_at: i64,
+}
+
+/// A call this end has answered, and with what: asked again, it is answered the same.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Answered {
+    call_id: String,
+    /// The `call.result` body.
+    result: Value,
 }
 
 /// An action and its version, as a state keeps it.
@@ -521,6 +607,22 @@ pub struct Session {
     told_dropped: BTreeSet<(String, String)>,
     /// How many such reports this session has made, for their ids: it never starts over.
     drops: u64,
+    /// The calls this end is doing for her host, oldest first.
+    doing: Vec<Doing>,
+    /// The calls it has answered, newest last: asked again, each is answered the same.
+    answered: Vec<Answered>,
+    /// How far her host's clock is ahead of the time the shell gives, as the last welcome
+    /// showed (`serverTime` less the time it came): a deadline is read by her host's clock.
+    host_ahead_ms: i64,
+    /// What her host said is granted on this link (`call.granted.actions`), the newest.
+    /// Only a grant said on this link decides: nothing is done by one from a link before.
+    granted: Vec<(String, u64)>,
+    /// Whether her host has said what is granted on this link yet.
+    heard_granted: bool,
+    /// The calls that came before it did: neither handed to the shell nor answered until it
+    /// says, then judged by what it says. They wait across a link that goes, for the next
+    /// link's word; each is still held to its own deadline.
+    held: Vec<Held>,
 }
 
 impl Session {
@@ -533,6 +635,8 @@ impl Session {
     /// (`crate::capabilities::unread` compares an end's capabilities with it). A `pong` is
     /// read only as a sign of life.
     pub const READS: &[&str] = &[
+        "call.ask",
+        "call.cancel",
         "call.granted",
         "conversation",
         "conversations",
@@ -608,6 +712,12 @@ impl Session {
             core: None,
             told_dropped: BTreeSet::new(),
             drops: 0,
+            doing: Vec::new(),
+            answered: Vec::new(),
+            host_ahead_ms: 0,
+            granted: Vec::new(),
+            heard_granted: false,
+            held: Vec::new(),
         }
     }
 
@@ -768,6 +878,19 @@ impl Session {
             core: self.core.clone().map(|(abi, commit)| Runs { abi, commit }),
             told_dropped: self.told_dropped.iter().cloned().collect(),
             drops: self.drops,
+            doing: self.doing.clone(),
+            answered: self.answered.clone(),
+            host_ahead_ms: self.host_ahead_ms,
+            granted: self
+                .granted
+                .iter()
+                .map(|(name, version)| Named {
+                    name: name.clone(),
+                    version: *version,
+                })
+                .collect(),
+            heard_granted: self.heard_granted,
+            held: self.held.clone(),
         };
         serde_json::to_value(state).expect("a session is plain data")
     }
@@ -797,7 +920,15 @@ impl Session {
             }));
         let counts = counts
             .chain([state.drops])
+            .chain(
+                state
+                    .doing
+                    .iter()
+                    .flat_map(|call| [call.version, call.pieces]),
+            )
             .chain(state.offers.iter().map(|named| named.version))
+            .chain(state.granted.iter().map(|named| named.version))
+            .chain(state.held.iter().map(|call| call.version))
             .chain(state.core.iter().map(|runs| runs.abi));
         let beat = 50..=contract.timing.heartbeat_ms.max(50);
         let mut ids = BTreeSet::new();
@@ -808,6 +939,9 @@ impl Session {
                 .into_iter()
                 .all(time)
             || !beat.contains(&state.heartbeat_ms)
+            || !state.doing.iter().all(|call| time(call.deadline_at))
+            || !state.held.iter().all(|call| time(call.deadline_at))
+            || state.host_ahead_ms.unsigned_abs() > WHOLE
             || !state.turns.iter().all(|turn| ids.insert(&turn.turn_id))
             || state
                 .mood_revision
@@ -882,6 +1016,16 @@ impl Session {
             core: state.core.map(|runs| (runs.abi, runs.commit)),
             told_dropped: state.told_dropped.into_iter().collect(),
             drops: state.drops,
+            doing: state.doing,
+            answered: state.answered,
+            host_ahead_ms: state.host_ahead_ms,
+            granted: state
+                .granted
+                .into_iter()
+                .map(|named| (named.name, named.version))
+                .collect(),
+            heard_granted: state.heard_granted,
+            held: state.held,
         })
     }
 
@@ -897,6 +1041,9 @@ impl Session {
         self.heartbeat_ms = self.timing.heartbeat_ms;
         self.host_capabilities.clear();
         self.told_dropped.clear();
+        // What is granted is said anew on every link: nothing of the last one's decides.
+        self.granted.clear();
+        self.heard_granted = false;
         for pending in &mut self.outbox {
             pending.seq = None;
         }
@@ -941,7 +1088,8 @@ impl Session {
         images: &[String],
         now_ms: i64,
     ) -> Vec<Output> {
-        if !valid_id(turn_id) {
+        // An id that ends `.result` is a call's answer's, never a turn's.
+        if !valid_id(turn_id) || turn_id.ends_with(RESULT) {
             return unsent("input", "bad_id", Some(turn_id));
         }
         // The mark is of what the shell gave, pictures and all, not of what this host takes:
@@ -1087,7 +1235,7 @@ impl Session {
     }
 
     fn reliable_out(&mut self, id: &str, t: &str, body: &Value, now_ms: i64) -> Vec<Output> {
-        if !valid_id(id) {
+        if !valid_id(id) || id.ends_with(RESULT) {
             return unsent(t, "bad_id", Some(id));
         }
         // The same frame again under the id it waits under is the same frame; another under
@@ -1278,6 +1426,11 @@ impl Session {
                 vec![Output::Deliver(Delivery::Mood(body))]
             }
             "error" => self.host_error(&body),
+            "call.ask" => self.asked(envelope, &body, taken, now_ms),
+            "call.cancel" => match string(&body, "callId") {
+                Some(call_id) => self.cancelled(&call_id, now_ms),
+                None => Vec::new(),
+            },
             "link.versions" if body.is_object() => {
                 vec![Output::Deliver(Delivery::HostVersions(body))]
             }
@@ -1296,7 +1449,22 @@ impl Session {
             },
             "call.granted" => match (named(&body, "actions"), named(&body, "providing")) {
                 (Some(actions), Some(providing)) => {
-                    vec![Output::Deliver(Delivery::Granted { actions, providing })]
+                    let delivery = Delivery::Granted {
+                        actions: actions.clone(),
+                        providing,
+                    };
+                    let mut out = vec![Output::Deliver(delivery)];
+                    // It decides only on a link where both ends listed `calls`: on another
+                    // no call is taken, whatever is said to be granted.
+                    if self.both("calls") {
+                        self.granted = actions;
+                        self.heard_granted = true;
+                        // What came before her host said: judged now, by what it says.
+                        for call in std::mem::take(&mut self.held) {
+                            out.extend(self.judge(call, now_ms));
+                        }
+                    }
+                    out
                 }
                 _ => Vec::new(),
             },
@@ -1453,6 +1621,10 @@ impl Session {
             })
             .collect();
         self.told_dropped.extend(waiting);
+        // Her host's clock, for the deadlines of what it asks: how far ahead of the shell's.
+        if let Some(server) = body.get("serverTime").and_then(unsigned) {
+            self.host_ahead_ms = (server as i64).saturating_sub(now_ms);
+        }
         out.extend(self.introduce(self.schema_version, now_ms));
         // Unanswered inputs again (same id, new seq); then what was missed of each unfinished turn.
         // One whose input her host acked and never answered has no run yet: it is asked for by
@@ -1639,10 +1811,431 @@ impl Session {
         self.send("run.resume", &body, None, now_ms)
     }
 
+    // Calls: her host asks this end to do one thing for her
+
+    pub const KEPT_ANSWERS: usize = 64;
+
+    /// The time by her host's clock, as the last welcome set it right.
+    fn host_now(&self, now_ms: i64) -> i64 {
+        now_ms.saturating_add(self.host_ahead_ms)
+    }
+
+    /// `call.ask`: acked, and then answered at once when it is not this end's to do, handed
+    /// to the shell when it is, or answered again as before when it was asked already.
+    fn asked(
+        &mut self,
+        envelope: &Envelope,
+        body: &Value,
+        taken: bool,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        // Only on a link where both ends listed `calls`: on another it passes by, as any
+        // frame this end does not read.
+        if !self.both("calls") {
+            return Vec::new();
+        }
+        let Some(call_id) = envelope.id.clone().filter(|id| valid_id(id)) else {
+            return Vec::new();
+        };
+        let mut out = self.send("ack", &json!({}), None, now_ms);
+        // One the core refuses is acked, so it is not sent for good, and no more: there is
+        // no saying what it asked.
+        if !taken {
+            return out;
+        }
+        // Asked again while it is in hand (her host did not hear the first time): not done
+        // again, and a long one is said to be in hand again, as it was the first time.
+        if let Some(call) = self.doing.iter().find(|call| call.call_id == call_id) {
+            if myriad_her_link::call_spec(&call.action).is_some_and(|spec| spec.long) {
+                out.extend(self.send("call.accepted", &json!({ "callId": call_id }), None, now_ms));
+            }
+            return out;
+        }
+        if let Some(before) = self.answered.iter().find(|a| a.call_id == call_id).cloned() {
+            out.extend(self.answer(&before.call_id, before.result, now_ms));
+            return out;
+        }
+        // Asked again while it waits for her host's word on what is granted: it waits on.
+        if self.held.iter().any(|call| call.call_id == call_id) {
+            return out;
+        }
+        let (Some(action), Some(version)) = (
+            string(body, "action"),
+            body.get("version").and_then(unsigned),
+        ) else {
+            return out;
+        };
+        let deadline_at = body
+            .get("deadlineAt")
+            .and_then(unsigned)
+            .map_or(0, |at| at as i64);
+        let of = body.get("for").cloned().unwrap_or(Value::Null);
+        // Why it is not done, when what this end offers already says so. The version said
+        // back is the one this end does.
+        let offered = self.offers.iter().find(|(name, _)| *name == action);
+        let refusal = match offered {
+            None => Some(("call_unknown", version)),
+            Some((_, does)) if *does != version => Some(("version_unsupported", *does)),
+            Some(_) if myriad_her_link::call_allowed(&action, &of).is_err() => {
+                Some(("wrong_audience", version))
+            }
+            Some(_) => None,
+        };
+        if let Some((code, version)) = refusal {
+            let result = failed(&call_id, &action, version, code);
+            out.extend(self.answer(&call_id, result, now_ms));
+            return out;
+        }
+        let call = Held {
+            call_id,
+            action,
+            version,
+            args: body.get("args").cloned().unwrap_or_else(|| json!({})),
+            of,
+            deadline_at,
+        };
+        // Whether it is granted is her host's word on this link, and only that. Before it
+        // has said, the call waits: not handed to the shell, which would be acting on a
+        // grant that may have been taken back, and not answered, which would be refusing
+        // what may be granted.
+        if !self.heard_granted {
+            self.held.push(call);
+            return out;
+        }
+        out.extend(self.judge(call, now_ms));
+        out
+    }
+
+    /// A call this end offers, by what her host has said is granted on this link and by its
+    /// deadline: handed to the shell, or answered why not.
+    fn judge(&mut self, call: Held, now_ms: i64) -> Vec<Output> {
+        // One that was answered while it waited (handed back as lost) stays answered, and
+        // one already in hand is not handed over again.
+        if self.doing.iter().any(|doing| doing.call_id == call.call_id) {
+            return Vec::new();
+        }
+        if let Some(before) = self
+            .answered
+            .iter()
+            .find(|a| a.call_id == call.call_id)
+            .cloned()
+        {
+            return self.answer(&before.call_id, before.result, now_ms);
+        }
+        // What this end offers may have changed while the call waited: only what it offers
+        // now. And only what her host said is granted, at the version it said: what an end
+        // offers is what it can do, not what the owner allowed.
+        let named = (call.action.clone(), call.version);
+        let refusal = if !self.offers.contains(&named) {
+            Some("call_unknown")
+        } else if !self.granted.contains(&named) {
+            Some("call_not_granted")
+        } else if self.host_now(now_ms) >= call.deadline_at {
+            Some("call_timeout")
+        } else {
+            None
+        };
+        if let Some(code) = refusal {
+            let result = failed(&call.call_id, &call.action, call.version, code);
+            return self.answer(&call.call_id, result, now_ms);
+        }
+        self.doing.push(Doing {
+            call_id: call.call_id.clone(),
+            action: call.action.clone(),
+            version: call.version,
+            deadline_at: call.deadline_at,
+            pieces: 0,
+        });
+        let long = myriad_her_link::call_spec(&call.action).is_some_and(|spec| spec.long);
+        let accepted = json!({ "callId": call.call_id });
+        let mut out = vec![Output::Deliver(Delivery::Call {
+            call_id: call.call_id,
+            action: call.action,
+            version: call.version,
+            args: call.args,
+            of: call.of,
+            deadline_at: call.deadline_at,
+        })];
+        // A long one is said to be in hand at once (within `callAcceptMs`); with no link
+        // now, it is said when her host asks again.
+        if long && self.phase == Phase::Open {
+            out.extend(self.send("call.accepted", &accepted, None, now_ms));
+        }
+        out
+    }
+
+    /// `call.cancel`: a call in hand is stopped and answered `call_cancelled`; one already
+    /// answered is answered again as it was; one this end does not know is passed by.
+    fn cancelled(&mut self, call_id: &str, now_ms: i64) -> Vec<Output> {
+        if !self.both("calls") {
+            return Vec::new();
+        }
+        if let Some(call) = self.take_doing(call_id) {
+            let result = failed(&call.call_id, &call.action, call.version, "call_cancelled");
+            let mut out = vec![Output::Deliver(Delivery::CallStop {
+                call_id: call.call_id.clone(),
+                why: "cancelled".into(),
+            })];
+            out.extend(self.answer(&call.call_id, result, now_ms));
+            return out;
+        }
+        // One that waits was never the shell's: it is answered, and no one is stopped.
+        if let Some(at) = self.held.iter().position(|call| call.call_id == call_id) {
+            let call = self.held.remove(at);
+            let result = failed(&call.call_id, &call.action, call.version, "call_cancelled");
+            return self.answer(&call.call_id, result, now_ms);
+        }
+        match self.answered.iter().find(|a| a.call_id == call_id).cloned() {
+            Some(before) => self.answer(&before.call_id, before.result, now_ms),
+            None => Vec::new(),
+        }
+    }
+
+    /// Every call whose deadline has passed: stopped, and answered `call_timeout`.
+    fn expire(&mut self, now_ms: i64) -> Vec<Output> {
+        let host_now = self.host_now(now_ms);
+        let late: Vec<String> = self
+            .doing
+            .iter()
+            .filter(|call| host_now >= call.deadline_at)
+            .map(|call| call.call_id.clone())
+            .collect();
+        let mut out = Vec::new();
+        for call_id in late {
+            let Some(call) = self.take_doing(&call_id) else {
+                continue;
+            };
+            out.push(Output::Deliver(Delivery::CallStop {
+                call_id: call.call_id.clone(),
+                why: "timeout".into(),
+            }));
+            let result = failed(&call.call_id, &call.action, call.version, "call_timeout");
+            out.extend(self.answer(&call.call_id, result, now_ms));
+        }
+        out
+    }
+
+    /// Every call still waiting for her host's word whose deadline has passed: answered
+    /// `call_timeout`. The shell never had it, so no one is stopped.
+    fn expire_held(&mut self, now_ms: i64) -> Vec<Output> {
+        let host_now = self.host_now(now_ms);
+        let (late, held): (Vec<Held>, Vec<Held>) = std::mem::take(&mut self.held)
+            .into_iter()
+            .partition(|call| host_now >= call.deadline_at);
+        self.held = held;
+        let mut out = Vec::new();
+        for call in late {
+            let result = failed(&call.call_id, &call.action, call.version, "call_timeout");
+            out.extend(self.answer(&call.call_id, result, now_ms));
+        }
+        out
+    }
+
+    fn take_doing(&mut self, call_id: &str) -> Option<Doing> {
+        let at = self.doing.iter().position(|call| call.call_id == call_id)?;
+        Some(self.doing.remove(at))
+    }
+
+    /// Why the core will not send `body` as the `call.result` of `call_id`, if it will not:
+    /// tried as the longest frame it can go out as (the largest numbering and time a frame
+    /// carries), so one that passes here fits whenever it goes.
+    fn unfit(call_id: &str, body: &Value, now_ms: i64) -> Option<String> {
+        let id = format!("{call_id}{RESULT}");
+        let _ = now_ms;
+        frames::text("call.result", WHOLE, WHOLE, Some(&id), WHOLE as i64, body)
+            .err()
+            .map(|refused| refused.code)
+    }
+
+    /// The one `call.result` of `call_id`: kept, so that the call asked again is answered
+    /// the same, and sent as a reliable frame whose id is the call's and `.result`.
+    fn answer(&mut self, call_id: &str, result: Value, now_ms: i64) -> Vec<Output> {
+        self.answered.retain(|a| a.call_id != call_id);
+        self.answered.push(Answered {
+            call_id: call_id.to_string(),
+            result: result.clone(),
+        });
+        let id = format!("{call_id}{RESULT}");
+        if !self.outbox.iter().any(|pending| pending.id == id) {
+            self.outbox.push(Pending {
+                id,
+                t: "call.result".into(),
+                body: result,
+                seq: None,
+            });
+        }
+        // Only so many answers are kept, the oldest let go first; but never one whose
+        // result her host has not acked yet: asked again, that call would be done again.
+        let mut over = self.answered.len().saturating_sub(Self::KEPT_ANSWERS);
+        let outbox = &self.outbox;
+        self.answered.retain(|kept| {
+            let waiting = outbox
+                .iter()
+                .any(|pending| pending.id == format!("{}{RESULT}", kept.call_id));
+            if over > 0 && !waiting {
+                over -= 1;
+                false
+            } else {
+                true
+            }
+        });
+        if self.phase == Phase::Open {
+            self.flush(now_ms)
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// The call `call_id` is done, with `result` (the action's result fields) and the ids of
+    /// the blobs it put at her host, if it is a blob action. Answered once: a call that is
+    /// not in hand (never asked, answered already, stopped) is told `Unsent`, as is a result
+    /// the contract does not take for the action, and then her host is told the call failed
+    /// here (`internal_error`), not left waiting.
+    pub fn call_done(
+        &mut self,
+        call_id: &str,
+        result: &Value,
+        blobs: &[String],
+        now_ms: i64,
+    ) -> Vec<Output> {
+        let Some(call) = self
+            .doing
+            .iter()
+            .find(|call| call.call_id == call_id)
+            .cloned()
+        else {
+            return unsent("call.result", "bad_id", Some(call_id));
+        };
+        let mut body = json!({
+            "callId": call.call_id,
+            "action": call.action,
+            "version": call.version,
+            "outcome": "done",
+            "result": result,
+        });
+        if !blobs.is_empty() {
+            body["blobs"] = json!(blobs);
+        }
+        let mut out = Vec::new();
+        if let Some(code) = Self::unfit(call_id, &body, now_ms) {
+            out.extend(unsent("call.result", &code, Some(call_id)));
+            body = failed(&call.call_id, &call.action, call.version, "internal_error");
+        }
+        self.take_doing(call_id);
+        out.extend(self.answer(call_id, body, now_ms));
+        out
+    }
+
+    /// The call `call_id` was not done: `code` is one of the contract's `calls.failCodes`
+    /// (`declined`, `not_now`, `call_not_granted`, `internal_error`…). Anything else is
+    /// told `Unsent` and answered `internal_error`.
+    pub fn call_failed(&mut self, call_id: &str, code: &str, now_ms: i64) -> Vec<Output> {
+        let Some(call) = self.take_doing(call_id) else {
+            return unsent("call.result", "bad_id", Some(call_id));
+        };
+        let mut body = failed(&call.call_id, &call.action, call.version, code);
+        let mut out = Vec::new();
+        if let Some(code) = Self::unfit(call_id, &body, now_ms) {
+            out.extend(unsent("call.result", &code, Some(call_id)));
+            body = failed(&call.call_id, &call.action, call.version, "internal_error");
+        }
+        out.extend(self.answer(call_id, body, now_ms));
+        out
+    }
+
+    /// Where the long call `call_id` is: `phase` is a stage name of the action's own, never
+    /// content; `waiting_for_owner` while this end waits for the owner to answer on the
+    /// device. Only the newest counts, and none is kept while the link is down.
+    pub fn call_progress(
+        &mut self,
+        call_id: &str,
+        phase: &str,
+        waiting_for_owner: bool,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        if !self.doing.iter().any(|call| call.call_id == call_id) {
+            return unsent("call.progress", "bad_id", Some(call_id));
+        }
+        if self.phase != Phase::Open {
+            return Vec::new();
+        }
+        let mut body = json!({ "callId": call_id, "phase": phase });
+        if waiting_for_owner {
+            body["waiting"] = json!("owner");
+        }
+        self.send("call.progress", &body, None, now_ms)
+    }
+
+    /// The next piece of the result of the call `call_id`, for an action whose result comes
+    /// in pieces. Numbered here, from 1. Lost with the link: the whole still goes in
+    /// [`Session::call_done`].
+    pub fn call_piece(&mut self, call_id: &str, piece: &Value, now_ms: i64) -> Vec<Output> {
+        let Some(call) = self.doing.iter_mut().find(|call| call.call_id == call_id) else {
+            return unsent("call.event", "bad_id", Some(call_id));
+        };
+        call.pieces += 1;
+        let body = json!({ "callId": call_id, "sequence": call.pieces, "piece": piece });
+        if self.phase != Phase::Open {
+            return Vec::new();
+        }
+        self.send("call.event", &body, None, now_ms)
+    }
+
+    /// Calls this end had in hand when it lost track of them: it was restarted, and its
+    /// session with it. Each is `(call_id, action, version)` as the shell wrote it down
+    /// before it began ([`Delivery::Call`]). Each is answered `unknown`, which is the truth
+    /// (it may have happened), and is never handed to the shell again: asked again under
+    /// that id, it is answered the same. No end does it again by itself. The shell hands
+    /// them back before it connects: an ask that comes first under one of these ids on a
+    /// session that does not know it would be taken for a new call.
+    pub fn lost(&mut self, calls: &[(&str, &str, u64)], now_ms: i64) -> Vec<Output> {
+        let mut out = Vec::new();
+        for (call_id, action, version) in calls {
+            // One this session still has in hand (its state was kept across the restart) is
+            // lost all the same: the shell is not doing it. One answered already stands.
+            if self.answered.iter().any(|a| a.call_id == *call_id) {
+                out.extend(unsent("call.result", "bad_id", Some(call_id)));
+                continue;
+            }
+            // One that still waits for her host's word in a kept state was handed to the
+            // shell after that state was kept: it waits no more.
+            let waited = self
+                .held
+                .iter()
+                .position(|call| call.call_id == *call_id)
+                .map(|at| self.held.remove(at));
+            let (action, version) = match (self.take_doing(call_id), waited) {
+                (Some(call), _) => (call.action, call.version),
+                (None, Some(call)) => (call.action, call.version),
+                (None, None) => (action.to_string(), *version),
+            };
+            let body = json!({
+                "callId": call_id,
+                "action": action,
+                "version": version,
+                "outcome": "unknown",
+            });
+            match Self::unfit(call_id, &body, now_ms) {
+                Some(code) => out.extend(unsent("call.result", &code, Some(call_id))),
+                None => out.extend(self.answer(call_id, body, now_ms)),
+            }
+        }
+        out
+    }
+
     // Clock
 
     /// Heartbeat and timeouts; call it often (several times a heartbeat).
     pub fn tick(&mut self, now_ms: i64) -> Vec<Output> {
+        // A call's deadline passes whether or not the link is up: the call is stopped here,
+        // and its answer waits for the link like any reliable frame.
+        let mut out = self.expire(now_ms);
+        out.extend(self.expire_held(now_ms));
+        out.extend(self.beat(now_ms));
+        out
+    }
+
+    fn beat(&mut self, now_ms: i64) -> Vec<Output> {
         match self.phase {
             Phase::Closed => Vec::new(),
             Phase::Greeting => {

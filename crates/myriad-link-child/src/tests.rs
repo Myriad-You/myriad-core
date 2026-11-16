@@ -892,6 +892,8 @@ mod capabilities {
             "wardrobe",
         ];
         let elsewhere = [
+            "call.ask",
+            "call.cancel",
             "perform",
             "ping",
             "pong",
@@ -1413,6 +1415,546 @@ mod calls {
             out[0]["body"]["core"],
             json!({ "abi": 5, "commit": "2222222222222222222222222222222222222222" })
         );
+    }
+
+    /// Open on a link where both listed calls, offering three actions; her host's clock is
+    /// `ahead` of the shell's.
+    fn called(ahead: i64) -> Session {
+        let mut s = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        s.offer(&[("screen.look", 1), ("notify.post", 1), ("work.run", 1)]);
+        s.connected(T0);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"]);
+                body["serverTime"] = json!(T0 + 50 + ahead);
+            }),
+            T0 + 50,
+        );
+        // Her host says what is granted on this link: all three.
+        let granted = host("call.granted", 2, 2, |body| {
+            body["actions"] = json!([
+                { "name": "screen.look", "version": 1 },
+                { "name": "notify.post", "version": 1 },
+                { "name": "work.run", "version": 1 },
+            ]);
+        });
+        s.received(&granted, T0 + 60);
+        s
+    }
+
+    /// `call.ask` for `screen.look`, sent by her host at `at` by its own clock.
+    fn ask(call_id: &str, seq: u64, at: i64, deadline_at: i64) -> String {
+        let mut frame = fixture("call.ask");
+        frame["seq"] = json!(seq);
+        frame["id"] = json!(call_id);
+        frame["at"] = json!(at);
+        frame["body"]["callId"] = json!(call_id);
+        frame["body"]["deadlineAt"] = json!(deadline_at);
+        frame.to_string()
+    }
+
+    #[test]
+    fn a_deadline_is_read_by_her_hosts_clock() {
+        // Her host's clock runs an hour ahead of the shell's.
+        let hour = 3_600_000;
+        let mut s = called(hour);
+        let out = s.received(
+            &ask("c_1", 2, T0 + hour + 1000, T0 + hour + 9000),
+            T0 + 1000,
+        );
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Call { deadline_at, .. }] if *deadline_at == T0 + hour + 9000
+        ));
+        assert!(delivered(&s.tick(T0 + 8999)).is_empty());
+        let out = s.tick(T0 + 9000);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::CallStop { why, .. }] if why == "timeout"
+        ));
+        // One whose deadline is past by her clock, though not by the shell's, is not done.
+        let out = s.received(
+            &ask("c_2", 3, T0 + hour + 9500, T0 + hour + 9400),
+            T0 + 9500,
+        );
+        assert!(delivered(&out).is_empty());
+        assert_eq!(sent(&out)[1]["body"]["error"]["code"], "call_timeout");
+    }
+
+    #[test]
+    fn a_deadline_passes_with_the_link_down_and_the_answer_waits_for_it() {
+        let mut s = called(0);
+        s.received(&ask("c_1", 2, T0 + 1000, T0 + 9000), T0 + 1000);
+        s.disconnected();
+        let out = s.tick(T0 + 9000);
+        assert!(sent(&out).is_empty());
+        assert!(matches!(delivered(&out)[..], [Delivery::CallStop { .. }]));
+        s.connected(T0 + 20_000);
+        let out = sent(&s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 20_050,
+        ));
+        let result = out
+            .iter()
+            .find(|frame| frame["t"] == "call.result")
+            .unwrap();
+        assert_eq!(result["id"], "c_1.result");
+        assert_eq!(result["body"]["error"]["code"], "call_timeout");
+    }
+
+    #[test]
+    fn a_call_in_hand_and_its_answer_are_kept_in_the_state() {
+        let mut s = called(0);
+        s.received(&ask("c_1", 2, T0 + 1000, T0 + 9000), T0 + 1000);
+        s.received(&ask("c_2", 3, T0 + 1100, T0 + 9000), T0 + 1100);
+        let facts = json!({ "facts": { "app": "Xcode" } });
+        s.call_done("c_1", &facts, &[], T0 + 1500);
+        let state = s.state();
+        let mut back = Session::restore(contract(), &state).unwrap();
+        assert_eq!(back.state(), state);
+        // The one in hand is still answered once; the one answered is answered the same.
+        let again = ask("c_1", 4, T0 + 2000, T0 + 9000);
+        assert_eq!(
+            back.received(&again, T0 + 2000),
+            s.received(&again, T0 + 2000)
+        );
+        assert_eq!(
+            back.call_done("c_2", &facts, &[], T0 + 2100),
+            s.call_done("c_2", &facts, &[], T0 + 2100)
+        );
+        assert_eq!(back.state(), s.state());
+        // Numbers no call has are not a state.
+        let mut far = state.clone();
+        far["doing"][0]["deadlineAt"] = json!(-1);
+        assert!(Session::restore(contract(), &far).is_err());
+        let mut far = state.clone();
+        far["hostAheadMs"] = json!(i64::MIN);
+        assert!(Session::restore(contract(), &far).is_err());
+        // A state from before a session kept calls.
+        let mut before = state.clone();
+        for key in ["doing", "answered", "hostAheadMs"] {
+            before.as_object_mut().unwrap().remove(key);
+        }
+        assert!(Session::restore(contract(), &before).is_ok());
+    }
+
+    #[test]
+    fn an_ask_this_end_cannot_read_is_acked_and_not_done() {
+        let mut s = called(0);
+        let mut later: Value = serde_json::from_str(&ask("c_1", 2, T0 + 1000, T0 + 9000)).unwrap();
+        later["body"]["later"] = json!(true);
+        let out = s.received(&later.to_string(), T0 + 1000);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Unread { t: Some(t), .. }] if t == "call.ask"
+        ));
+        let frames = sent(&out);
+        assert_eq!(frames.len(), 1);
+        assert_eq!(frames[0]["t"], "ack");
+        // Only the answers kept are answered again: once her host has acked them, the
+        // oldest of many is forgotten, and asked again is a call like any other.
+        let mut s = called(0);
+        for n in 0..=Session::KEPT_ANSWERS as u64 {
+            let id = format!("c_{n}");
+            s.received(&ask(&id, 3 + n, T0 + 1000, T0 + 9000), T0 + 1000);
+            s.call_failed(&id, "not_now", T0 + 1001);
+        }
+        s.received(&host("ping", 400, 10_000, |_| {}), T0 + 1001);
+        s.received(&ask("c_last", 401, T0 + 1000, T0 + 9000), T0 + 1001);
+        s.call_failed("c_last", "not_now", T0 + 1001);
+        let out = s.received(&ask("c_0", 500, T0 + 1000, T0 + 9000), T0 + 1002);
+        assert!(matches!(delivered(&out)[..], [Delivery::Call { .. }]));
+        let out = s.received(&ask("c_last", 501, T0 + 1000, T0 + 9000), T0 + 1003);
+        assert!(delivered(&out).is_empty());
+    }
+
+    #[test]
+    fn calls_in_hand_when_it_was_restarted_are_answered_unknown_whatever_the_session_kept() {
+        // The end kept its session's state across the restart: the call is still in it.
+        let mut before = called(0);
+        before.received(&ask("c_1", 3, T0 + 1000, T0 + 9000), T0 + 1000);
+        let mut s = Session::restore(contract(), &before.state()).unwrap();
+        let out = s.lost(&[("c_1", "screen.look", 1)], T0 + 2000);
+        let frames = sent(&out);
+        assert_eq!(frames.len(), 1);
+        assert_eq!(frames[0]["id"], "c_1.result");
+        assert_eq!(frames[0]["body"]["outcome"], "unknown");
+        // It is not in hand any more: no deadline stops it later, and asked again it is
+        // answered unknown, not handed to the shell.
+        assert!(
+            s.tick(T0 + 9000)
+                .iter()
+                .all(|o| !matches!(o, Output::Deliver(_)))
+        );
+        let out = s.received(&ask("c_1", 4, T0 + 3000, T0 + 9000), T0 + 3000);
+        assert!(delivered(&out).is_empty());
+        // One already answered stands as it was answered.
+        let out = s.lost(&[("c_1", "screen.look", 1)], T0 + 4000);
+        assert!(matches!(delivered(&out)[..], [Delivery::Unsent { code, .. }] if code == "bad_id"));
+    }
+
+    #[test]
+    fn a_call_handed_back_as_lost_is_not_done_again_though_a_kept_state_still_held_it() {
+        let grant = |s: &mut Session, seq: u64, at: i64| {
+            let all = json!([{ "name": "screen.look", "version": 1 }]);
+            s.received(
+                &host("call.granted", seq, 2, |body| body["actions"] = all),
+                at,
+            )
+        };
+        let welcome = |s: &mut Session, at: i64| {
+            s.connected(at);
+            s.received(
+                &host("welcome", 1, 1, |body| {
+                    body["capabilities"] = json!(["calls"]);
+                    body["serverTime"] = json!(at + 50);
+                }),
+                at + 50,
+            )
+        };
+        // The call waits for her host's word; the state is kept here.
+        let mut s = called(0);
+        s.disconnected();
+        welcome(&mut s, T0 + 5000);
+        s.received(&ask("c_x", 2, T0 + 6000, T0 + 60_000), T0 + 6000);
+        let kept = s.state();
+        // Then the word comes, the shell is handed the call and writes it down, and the
+        // process dies before that step's state is kept.
+        let out = grant(&mut s, 3, T0 + 6100);
+        assert!(matches!(delivered(&out)[..], [_, Delivery::Call { .. }]));
+        // Restarted from the kept state: the shell hands the call back before it connects.
+        let mut s = Session::restore(contract(), &kept).unwrap();
+        s.disconnected();
+        assert!(
+            s.lost(&[("c_x", "screen.look", 1)], T0 + 9000).is_empty(),
+            "queued for the link"
+        );
+        let out = welcome(&mut s, T0 + 10_000);
+        let results: Vec<Value> = sent(&out)
+            .into_iter()
+            .filter(|f| f["t"] == "call.result")
+            .collect();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0]["body"]["outcome"], "unknown");
+        // Her host's word on the new link hands nothing over, and nothing more is answered.
+        let out = grant(&mut s, 2, T0 + 10_100);
+        assert!(matches!(delivered(&out)[..], [Delivery::Granted { .. }]));
+        assert!(sent(&out).iter().all(|f| f["t"] != "call.result"));
+        let done = s.call_done("c_x", &json!({ "facts": {} }), &[], T0 + 10_200);
+        assert!(sent(&done).is_empty());
+    }
+
+    #[test]
+    fn an_answer_her_host_has_not_acked_is_never_forgotten() {
+        // More calls answered than answers are kept, and her host has acked none of them.
+        let mut s = called(0);
+        let many = Session::KEPT_ANSWERS as u64 + 10;
+        for n in 0..many {
+            let id = format!("c_{n}");
+            s.received(&ask(&id, 3 + n, T0 + 1000, T0 + 50_000), T0 + 1000);
+            s.call_failed(&id, "not_now", T0 + 1001);
+        }
+        // (The asks themselves ack the first few results; the rest wait.)
+        let state = s.state();
+        let waiting: Vec<String> = state["outbox"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|pending| pending["t"] == "call.result")
+            .map(|pending| pending["body"]["callId"].as_str().unwrap().to_string())
+            .collect();
+        assert!(
+            waiting.len() > Session::KEPT_ANSWERS / 2,
+            "{}",
+            waiting.len()
+        );
+        let kept: Vec<&str> = state["answered"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|answer| answer["callId"].as_str().unwrap())
+            .collect();
+        assert!(waiting.iter().all(|id| kept.contains(&id.as_str())));
+        // The oldest of those asked again is answered the same, not done again.
+        let out = s.received(&ask(&waiting[0], 500, T0 + 1002, T0 + 50_000), T0 + 1002);
+        assert!(delivered(&out).is_empty());
+        // Once her host has acked them, only so many are kept.
+        let acked = host("ping", 501, 10_000, |_| {});
+        s.received(&acked, T0 + 1003);
+        s.received(&ask("c_new", 502, T0 + 1004, T0 + 50_000), T0 + 1004);
+        s.call_failed("c_new", "not_now", T0 + 1005);
+        let kept = s.state()["answered"].as_array().unwrap().len();
+        assert!(kept <= Session::KEPT_ANSWERS + 1, "{kept}");
+    }
+
+    #[test]
+    fn a_grant_decides_only_where_calls_was_agreed_and_only_for_what_is_offered_now() {
+        // A call waits; the next link's host did not list calls, and says granted anyway.
+        let mut s = called(0);
+        s.disconnected();
+        s.connected(T0 + 5000);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 5050,
+        );
+        s.received(&ask("c_1", 2, T0 + 5100, T0 + 60_000), T0 + 5100);
+        s.disconnected();
+        s.connected(T0 + 6000);
+        s.received(&host("welcome", 1, 1, |_| {}), T0 + 6050);
+        let all = json!([{ "name": "screen.look", "version": 1 }]);
+        let out = s.received(
+            &host("call.granted", 2, 1, |body| body["actions"] = all.clone()),
+            T0 + 6100,
+        );
+        assert!(
+            matches!(delivered(&out)[..], [Delivery::Granted { .. }]),
+            "{out:?}"
+        );
+        // What this end no longer offers is not done, though her host grants it.
+        let mut s = called(0);
+        s.disconnected();
+        s.connected(T0 + 5000);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 5050,
+        );
+        s.received(&ask("c_2", 2, T0 + 5100, T0 + 60_000), T0 + 5100);
+        s.offer(&[("notify.post", 1)]);
+        let out = s.received(
+            &host("call.granted", 3, 2, |body| body["actions"] = all),
+            T0 + 5200,
+        );
+        assert!(matches!(delivered(&out)[..], [Delivery::Granted { .. }]));
+        let result = sent(&out)
+            .into_iter()
+            .find(|f| f["t"] == "call.result")
+            .unwrap();
+        assert_eq!(result["body"]["error"]["code"], "call_unknown");
+    }
+
+    #[test]
+    fn a_long_call_asked_again_while_in_hand_is_said_to_be_in_hand_again() {
+        let mut s = called(0);
+        let mut work: Value =
+            serde_json::from_str(&ask("w_1", 3, T0 + 1000, T0 + 600_000)).unwrap();
+        work["body"]["action"] = json!("work.run");
+        work["body"]["args"] = json!({ "proposalId": "p", "title": "t", "instruction": "i" });
+        let first = s.received(&work.to_string(), T0 + 1000);
+        assert_eq!(delivered(&first).len(), 1);
+        let types = |out: &[Output]| -> Vec<String> {
+            sent(out)
+                .iter()
+                .map(|f| f["t"].as_str().unwrap().to_string())
+                .collect()
+        };
+        assert_eq!(types(&first), ["ack", "call.accepted"]);
+        work["seq"] = json!(4);
+        let again = s.received(&work.to_string(), T0 + 2000);
+        assert!(delivered(&again).is_empty(), "not done again");
+        assert_eq!(types(&again), ["ack", "call.accepted"]);
+        // The pieces of its result are numbered whether or not they went.
+        assert_eq!(
+            sent(&s.call_piece("w_1", &json!("a"), T0 + 2100))[0]["body"]["sequence"],
+            1
+        );
+        s.disconnected();
+        assert!(s.call_piece("w_1", &json!("b"), T0 + 2200).is_empty());
+        s.connected(T0 + 3000);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 3050,
+        );
+        assert_eq!(
+            sent(&s.call_piece("w_1", &json!("c"), T0 + 3100))[0]["body"]["sequence"],
+            3
+        );
+    }
+
+    #[test]
+    fn a_call_is_taken_only_where_calls_was_agreed_and_granted() {
+        // A link where her host did not accept calls: an ask passes by, as before.
+        let mut s = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        s.offer(&[("screen.look", 1)]);
+        s.connected(T0);
+        s.received(&host("welcome", 1, 1, |_| {}), T0 + 50);
+        assert!(
+            s.received(&ask("c_1", 2, T0 + 1000, T0 + 9000), T0 + 1000)
+                .is_empty()
+        );
+        // A link where it did, and nothing is granted yet; then granted; then a new link.
+        let mut s = called(0);
+        s.received(
+            &host("call.granted", 3, 2, |body| body["actions"] = json!([])),
+            T0 + 100,
+        );
+        let out = s.received(&ask("c_1", 4, T0 + 1000, T0 + 9000), T0 + 1000);
+        assert!(delivered(&out).is_empty());
+        assert_eq!(sent(&out)[1]["body"]["error"]["code"], "call_not_granted");
+        // Only this link's own word on what is granted decides. Her host sent an ask into a
+        // link that was already gone, and sends it again on the new one before it has said
+        // what is granted there: the call waits, neither done by the old grant nor refused.
+        let reconnect = |s: &mut Session, at: i64| {
+            s.disconnected();
+            s.connected(at);
+            s.received(
+                &host("welcome", 1, 1, |body| {
+                    body["capabilities"] = json!(["calls"]);
+                    body["serverTime"] = json!(at + 50);
+                }),
+                at + 50,
+            );
+        };
+        let grant = |s: &mut Session, seq: u64, actions: Value, at: i64| {
+            s.received(
+                &host("call.granted", seq, 2, |body| body["actions"] = actions),
+                at,
+            )
+        };
+        let look = json!([{ "name": "screen.look", "version": 1 }]);
+        let mut s = called(0);
+        reconnect(&mut s, T0 + 5000);
+        let out = s.received(&ask("c_2", 2, T0 + 6000, T0 + 9000), T0 + 6000);
+        assert!(delivered(&out).is_empty(), "not handed to the shell");
+        let frames = sent(&out);
+        assert_eq!(frames.len(), 1, "and not answered");
+        assert_eq!(frames[0]["t"], "ack");
+        // Asked again while it waits: it waits on.
+        let out = s.received(&ask("c_2", 3, T0 + 6050, T0 + 9000), T0 + 6050);
+        assert!(delivered(&out).is_empty() && sent(&out).len() == 1);
+        // Her host says it is granted here too: now it is the shell's, once.
+        let out = grant(&mut s, 4, look.clone(), T0 + 6100);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Granted { .. }, Delivery::Call { call_id, .. }] if call_id == "c_2"
+        ));
+        // The owner took the action back while the link was down: the call her host sends
+        // again is refused when the new link says what is granted, and the shell never hears.
+        let mut s = called(0);
+        reconnect(&mut s, T0 + 5000);
+        s.received(&ask("c_3", 2, T0 + 6000, T0 + 9000), T0 + 6000);
+        let out = grant(&mut s, 3, json!([]), T0 + 6100);
+        assert!(matches!(delivered(&out)[..], [Delivery::Granted { .. }]));
+        let result = sent(&out)
+            .into_iter()
+            .find(|f| f["t"] == "call.result")
+            .unwrap();
+        assert_eq!(result["id"], "c_3.result");
+        assert_eq!(result["body"]["error"]["code"], "call_not_granted");
+        // One that waits is still held to its deadline, and can be cancelled; the shell
+        // was never asked, so it is not told to stop.
+        let mut s = called(0);
+        reconnect(&mut s, T0 + 5000);
+        s.received(&ask("c_4", 2, T0 + 6000, T0 + 9000), T0 + 6000);
+        s.received(&ask("c_5", 3, T0 + 6000, T0 + 9000), T0 + 6000);
+        let cancel = host("call.cancel", 4, 2, |body| body["callId"] = json!("c_5"));
+        let out = s.received(&cancel, T0 + 6500);
+        assert!(delivered(&out).is_empty());
+        assert_eq!(sent(&out)[0]["body"]["error"]["code"], "call_cancelled");
+        assert!(
+            sent(&s.tick(T0 + 8999))
+                .iter()
+                .all(|f| f["t"] != "call.result")
+        );
+        let out = s.tick(T0 + 9000);
+        assert!(delivered(&out).is_empty());
+        let result = sent(&out)
+            .into_iter()
+            .find(|f| f["t"] == "call.result")
+            .unwrap();
+        assert_eq!(result["body"]["error"]["code"], "call_timeout");
+        // A granted that comes after says nothing more of them.
+        let out = grant(&mut s, 5, look.clone(), T0 + 9100);
+        assert!(matches!(delivered(&out)[..], [Delivery::Granted { .. }]));
+        // One that waits when the link goes waits for the next link's word, and is judged
+        // by that; kept with the state meanwhile.
+        let mut s = called(0);
+        reconnect(&mut s, T0 + 5000);
+        s.received(&ask("c_6", 2, T0 + 6000, T0 + 30_000), T0 + 6000);
+        let mut s = Session::restore(contract(), &s.state()).unwrap();
+        reconnect(&mut s, T0 + 10_000);
+        let out = grant(&mut s, 2, look, T0 + 10_100);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Granted { .. }, Delivery::Call { call_id, .. }] if call_id == "c_6"
+        ));
+        // A session that has heard nothing granted at all holds too, and does nothing.
+        let mut fresh = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        fresh.offer(&[("screen.look", 1)]);
+        fresh.connected(T0);
+        fresh.received(
+            &host("welcome", 1, 1, |body| {
+                body["capabilities"] = json!(["calls"])
+            }),
+            T0 + 50,
+        );
+        let out = fresh.received(&ask("c_7", 2, T0 + 1000, T0 + 9000), T0 + 1000);
+        assert!(delivered(&out).is_empty() && sent(&out).len() == 1);
+    }
+
+    #[test]
+    fn an_answer_as_large_as_a_frame_holds_is_refused_before_it_is_kept() {
+        let mut s = called(0);
+        s.received(&ask("c_1", 3, T0 + 1000, T0 + 9000), T0 + 1000);
+        // Near the frame's limit: it would pass as a short frame and not as the one it is.
+        let summary = "x".repeat(261_958);
+        let out = s.call_done(
+            "c_1",
+            &json!({ "facts": {}, "summary": summary }),
+            &[],
+            T0 + 2000,
+        );
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Unsent { code, .. }] if code == "too_large"
+        ));
+        let frames = sent(&out);
+        assert_eq!(frames.len(), 1, "her host is answered all the same");
+        assert_eq!(frames[0]["body"]["error"]["code"], "internal_error");
+        // An id that ends as a call's answer does is not a turn's or another frame's.
+        let unsent = |out: Vec<Output>| matches!(delivered(&out)[..], [Delivery::Unsent { code, .. }] if code == "bad_id");
+        assert!(unsent(s.say(
+            "c_9.result",
+            "在吗",
+            None,
+            None,
+            &[],
+            T0 + 3000
+        )));
+        assert!(unsent(s.touched("c_9.result", &json!({}), T0 + 3000)));
+    }
+
+    #[test]
+    fn what_the_shell_says_of_a_call_is_held_to_the_contract() {
+        let mut s = called(0);
+        s.received(&ask("c_1", 2, T0 + 1000, T0 + 9000), T0 + 1000);
+        // A code that is not one of the contract's: told, and her host hears internal_error.
+        let out = s.call_failed("c_1", "because", T0 + 1100);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::Unsent { t, code, id: Some(id) }]
+                if t == "call.result" && code == "bad_frame" && id == "c_1"
+        ));
+        assert_eq!(sent(&out)[0]["body"]["error"]["code"], "internal_error");
+        // Of a call it does not have, nothing goes.
+        for out in [
+            s.call_progress("c_9", "running", false, T0 + 1200),
+            s.call_piece("c_9", &json!("x"), T0 + 1200),
+            s.call_failed("c_9", "not_now", T0 + 1200),
+            s.call_done("c_9", &json!({}), &[], T0 + 1200),
+        ] {
+            assert!(sent(&out).is_empty());
+            assert!(
+                matches!(delivered(&out)[..], [Delivery::Unsent { code, .. }] if code == "bad_id")
+            );
+        }
     }
 
     #[test]
