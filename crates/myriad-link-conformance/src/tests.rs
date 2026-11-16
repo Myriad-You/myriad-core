@@ -27,6 +27,10 @@ const SCRIPTS: &[(&str, &str)] = &[
         include_str!("../../conformance/v1/child/called-lost.json"),
     ),
     (
+        "calling",
+        include_str!("../../conformance/v1/child/calling.json"),
+    ),
+    (
         "capabilities",
         include_str!("../../conformance/v1/child/capabilities.json"),
     ),
@@ -53,6 +57,10 @@ const SCRIPTS: &[(&str, &str)] = &[
     (
         "reliable",
         include_str!("../../conformance/v1/child/reliable.json"),
+    ),
+    (
+        "streams",
+        include_str!("../../conformance/v1/child/streams.json"),
     ),
     ("turn", include_str!("../../conformance/v1/child/turn.json")),
     (

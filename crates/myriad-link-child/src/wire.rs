@@ -187,6 +187,71 @@ impl Delivery {
             Delivery::CallStop { call_id, why } => {
                 json!({ "kind": "call_stop", "callId": call_id, "why": why })
             }
+            Delivery::CallAccepted { call_id } => {
+                json!({ "kind": "call_accepted", "callId": call_id })
+            }
+            Delivery::CallProgress {
+                call_id,
+                phase,
+                waiting_for_owner,
+            } => json!({
+                "kind": "call_progress",
+                "callId": call_id,
+                "phase": phase,
+                "waiting": waiting_for_owner,
+            }),
+            Delivery::CallPiece {
+                call_id,
+                sequence,
+                piece,
+            } => json!({
+                "kind": "call_piece",
+                "callId": call_id,
+                "sequence": sequence,
+                "piece": piece,
+            }),
+            Delivery::CallResult {
+                call_id,
+                outcome,
+                result,
+                code,
+                blobs,
+                here,
+            } => json!({
+                "kind": "call_result",
+                "callId": call_id,
+                "outcome": outcome,
+                "result": result,
+                "code": code,
+                "blobs": blobs,
+                "here": here,
+            }),
+            Delivery::StreamState {
+                name,
+                version,
+                at,
+                value,
+            } => json!({
+                "kind": "stream_state",
+                "name": name,
+                "version": version,
+                "at": at,
+                "value": value,
+            }),
+            Delivery::StreamEvent {
+                id,
+                name,
+                version,
+                at,
+                body,
+            } => json!({
+                "kind": "stream_event",
+                "id": id,
+                "name": name,
+                "version": version,
+                "at": at,
+                "body": body,
+            }),
             Delivery::HostVersions(body) => json!({ "kind": "host_versions", "body": body }),
             Delivery::Verdict { usable, stopped } => {
                 json!({ "kind": "verdict", "usable": usable, "stopped": stopped })
