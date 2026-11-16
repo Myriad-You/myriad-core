@@ -171,8 +171,11 @@ fn sender(t: &str) -> Option<&'static str> {
 #[derive(Debug, Clone, Default, PartialEq, serde::Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields, default)]
 pub struct Host {
+    #[serde(deserialize_with = "myriad_link_child::whole::u64")]
     sent: u64,
+    #[serde(deserialize_with = "myriad_link_child::whole::u64")]
     heard: u64,
+    #[serde(deserialize_with = "myriad_link_child::whole::u64")]
     acked: u64,
     pub vars: Vars,
 }

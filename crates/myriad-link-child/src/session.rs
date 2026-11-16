@@ -13,6 +13,7 @@ use serde_json::{Map, Value, json};
 
 use crate::contract::{Contract, Timing};
 use crate::frames;
+use crate::whole;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Phase {
@@ -165,11 +166,19 @@ pub enum Delivery {
     HostError {
         code: String,
     },
-    /// A frame of this end's the shared core would not send: its type and why, never its body.
-    /// A reliable one has left the outbox.
+    /// A frame of this end's that will not go: its type and why, never its body. Either the
+    /// shared core would not send it (its refusal code; a reliable one has left the outbox,
+    /// and an `input`'s turn has ended), or the shell gave what cannot be a frame: an id that
+    /// is not one or is already used here for something else (`bad_id`), a part that is not
+    /// the object it must be (`bad_frame`). Then nothing was kept, and a turn that id was
+    /// used for before stands as it was.
     Unsent {
         t: String,
         code: String,
+        /// The id the shell gave it (the turn's, for an `input`), when it is a reliable
+        /// frame and the id is one (`limits.idPattern`): which words, which touch. None for
+        /// a frame that is not reliable, and for an id that is not an id.
+        id: Option<String>,
     },
     /// A frame from the host this end could not read, so the two are not of one version: why,
     /// as the shared core's refusal code (`unknown_frame`, `bad_frame`, `version_unsupported`…),
@@ -229,12 +238,19 @@ pub struct Turn {
     pub run_id: Option<String>,
     pub session_id: Option<String>,
     /// The highest run sequence taken; 0 before any.
+    #[serde(deserialize_with = "whole::u64")]
     pub last_sequence: u64,
     saw_start: bool,
+    /// The mark of what was said under this id ([`mark`]); empty in a state kept before
+    /// turns had one.
+    #[serde(default)]
+    said: String,
     /// The highest sequence a directive of this turn was played at.
+    #[serde(default, deserialize_with = "whole::maybe_u64")]
     pub performed: Option<u64>,
     /// The highest version of her director's refinement played while the reply is said; once
     /// there is one, the run's own directives no longer replace it.
+    #[serde(default, deserialize_with = "whole::maybe_u64")]
     pub live: Option<u64>,
     pub answered: bool,
     pub ended: bool,
@@ -248,6 +264,7 @@ impl Turn {
             session_id: None,
             last_sequence: 0,
             saw_start: false,
+            said: String::new(),
             performed: None,
             live: None,
             answered: false,
@@ -262,6 +279,7 @@ struct Pending {
     id: String,
     t: String,
     body: Value,
+    #[serde(default, deserialize_with = "whole::maybe_u64")]
     seq: Option<u64>,
 }
 
@@ -300,6 +318,36 @@ impl Envelope {
     }
 }
 
+/// A frame of this end's that is not kept or sent, told at once: its type, why, and the id
+/// the shell gave it when it is a reliable one.
+fn unsent(t: &str, code: &str, id: Option<&str>) -> Vec<Output> {
+    vec![Output::Deliver(Delivery::Unsent {
+        t: t.to_string(),
+        code: code.to_string(),
+        // Only an id that is one: what is not may be anything the shell had in hand, and
+        // nothing told here repeats what came in.
+        id: id.filter(|id| valid_id(id)).map(str::to_string),
+    })]
+}
+
+/// What was said under a turn's id, as a short mark of it (64-bit FNV-1a, in hex): enough
+/// to tell the same words given again from other words under an id already used, without
+/// keeping the words. Not a secret and not for anything else.
+fn mark(text: &str, session_id: Option<&str>, images: &[String]) -> String {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    let mut take = |bytes: &[u8]| {
+        for byte in bytes.iter().chain(&[0xff]) {
+            hash = (hash ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    };
+    take(text.as_bytes());
+    take(session_id.unwrap_or_default().as_bytes());
+    for image in images {
+        take(image.as_bytes());
+    }
+    format!("{hash:016x}")
+}
+
 /// A whole number JSON can carry exactly.
 fn unsigned(value: &Value) -> Option<u64> {
     match value.as_u64() {
@@ -320,18 +368,47 @@ fn string(value: &Value, key: &str) -> Option<String> {
     value.get(key)?.as_str().map(str::to_string)
 }
 
+/// Whether what a kept hello says of this end is what [`Session::new`] and a welcome write:
+/// an app with a name and a version, a lineage that is text or null, an epoch that is a
+/// count or null. One that is not would be refused by every host, on every reconnect.
+fn hello_holds(hello: &Map<String, Value>) -> bool {
+    let text_or_null = |value: Option<&Value>| value.is_none_or(|v| v.is_null() || v.is_string());
+    let app = hello.get("app").and_then(Value::as_object);
+    app.is_some_and(|app| {
+        app.len() == 2
+            && app.get("name").is_some_and(Value::is_string)
+            && app.get("version").is_some_and(Value::is_string)
+    }) && text_or_null(hello.get("lineage"))
+        && hello
+            .get("hostEpoch")
+            .is_none_or(|epoch| epoch.is_null() || unsigned(epoch).is_some())
+        && hello.keys().all(|key| {
+            matches!(
+                key.as_str(),
+                "app" | "capabilities" | "hostEpoch" | "lineage" | "protocol" | "role" | "surface"
+            )
+        })
+}
+
 /// [`Session::state`]: every field that is not the contract's, turns in the order said.
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct State {
+    #[serde(deserialize_with = "whole::u32")]
     version: u32,
     hello: Map<String, Value>,
     phase: String,
+    #[serde(deserialize_with = "whole::u64")]
     sent: u64,
+    #[serde(deserialize_with = "whole::u64")]
     heard: u64,
+    #[serde(deserialize_with = "whole::i64")]
     opened_at_ms: i64,
+    #[serde(deserialize_with = "whole::i64")]
     last_heard_ms: i64,
+    #[serde(deserialize_with = "whole::i64")]
     last_sent_ms: i64,
+    #[serde(deserialize_with = "whole::i64")]
     heartbeat_ms: i64,
     outbox: Vec<Pending>,
     turns: Vec<Turn>,
@@ -420,6 +497,10 @@ impl Session {
             ),
         );
         hello.insert("app".into(), json!({ "name": app.0, "version": app.1 }));
+        // An epoch is a count: one that is not is not said. Each of the two is said as
+        // given: the device she lives on says an epoch and no lineage.
+        let host_epoch =
+            host_epoch.filter(|epoch| u64::try_from(*epoch).is_ok_and(|epoch| epoch <= WHOLE));
         hello.insert("lineage".into(), json!(lineage));
         hello.insert("hostEpoch".into(), json!(host_epoch));
         Self {
@@ -501,8 +582,10 @@ impl Session {
     /// The whole session as JSON, for an end that keeps it between calls (the C entry's
     /// `link.child_step`): [`Session::restore`] of it is this session again. What comes from
     /// the contract is read again from the contract when it is restored. It holds what the
-    /// owner said and has not been acked; an end keeps it where it keeps that. Every number
-    /// in it is a whole number no greater than 2^53.
+    /// owner said and has not been acked; an end keeps it where it keeps that. Every count
+    /// and time in it is a whole number no greater than 2^53, and is read back whether it
+    /// comes as `3` or as `3.0` (some encoders write every number as a double);
+    /// `moodRevision` is her host's own number, kept as it came.
     pub fn state(&self) -> Value {
         let state = State {
             version: State::VERSION,
@@ -553,13 +636,18 @@ impl Session {
             }));
         let beat = 50..=contract.timing.heartbeat_ms.max(50);
         let mut ids = BTreeSet::new();
+        // `sent` counts up by one with each frame, so it stops one short.
         if counts.into_iter().any(|count| count > WHOLE)
+            || state.sent >= WHOLE
             || ![state.opened_at_ms, state.last_heard_ms, state.last_sent_ms]
                 .into_iter()
                 .all(time)
             || !beat.contains(&state.heartbeat_ms)
             || !state.turns.iter().all(|turn| ids.insert(&turn.turn_id))
-            || !state.hello.get("app").is_some_and(Value::is_object)
+            || state
+                .mood_revision
+                .is_some_and(|revision| !revision.is_finite())
+            || !hello_holds(&state.hello)
         {
             return Err(no());
         }
@@ -580,6 +668,11 @@ impl Session {
         state
             .hello
             .insert("capabilities".into(), Value::Array(said));
+        // The epoch as the count it is, however the state's numbers were written.
+        let epoch = state.hello.get("hostEpoch").and_then(unsigned);
+        state.hello.insert("hostEpoch".into(), json!(epoch));
+        let lineage = state.hello.get("lineage").cloned().unwrap_or(Value::Null);
+        state.hello.insert("lineage".into(), lineage);
         state
             .hello
             .insert("protocol".into(), json!(contract.protocol));
@@ -646,6 +739,20 @@ impl Session {
     /// Something the owner said here: a reliable `input` whose id is the turn. Sent now when
     /// the link is open, otherwise with the next welcome. `images` is what they showed her with
     /// it (data URLs), sent only to a host that accepted `images` ([`Session::shows`]).
+    ///
+    /// Nothing the owner said is let fall in silence: when `turn_id` is not an id
+    /// (`limits.idPattern`), or was already used here for other words (or with another
+    /// session or other pictures), or is one another reliable frame waits under, the words
+    /// are not kept and the shell is told at once, `Unsent { t: "input", code: "bad_id", id }`.
+    /// The same call made again under its id (the same words, session and pictures), whether
+    /// the turn still waits, was sent, was answered or was rejected, is the same turn:
+    /// nothing comes back, and nothing more goes. To ask again after a rejection is a new
+    /// turn, under a new id.
+    ///
+    /// Whether the pictures go with the words is settled here, when it is said, by what the
+    /// host of the last welcome accepted ([`Session::shows`]; nothing before a first welcome):
+    /// when that is not `images`, the words are kept without them, and go so on whatever
+    /// link they go. The shell reads `shows` before it calls and says so to the owner.
     #[allow(clippy::too_many_arguments)]
     pub fn say(
         &mut self,
@@ -656,20 +763,42 @@ impl Session {
         images: &[String],
         now_ms: i64,
     ) -> Vec<Output> {
-        if !valid_id(turn_id) || self.turns.contains_key(turn_id) {
-            return Vec::new();
+        if !valid_id(turn_id) {
+            return unsent("input", "bad_id", Some(turn_id));
+        }
+        // The mark is of what the shell gave, pictures and all, not of what this host takes:
+        // the same call made again is the same turn whatever link it is made on.
+        let said = mark(text, session_id, images);
+        let shown: &[String] = if self.shows() { images } else { &[] };
+        if let Some(turn) = self.turns.get(turn_id) {
+            // The same words again under their id are the same turn, said once: nothing more
+            // goes and nothing is lost. Other words under an id already used would be lost,
+            // and are told.
+            // (A turn from a state kept before turns had a mark has none: it is taken for the
+            // same, which sends nothing twice.)
+            return if turn.said == said || turn.said.is_empty() {
+                Vec::new()
+            } else {
+                unsent("input", "bad_id", Some(turn_id))
+            };
+        }
+        // Nor may the id be one another reliable frame waits under: its answer would take
+        // both out of the outbox.
+        if self.outbox.iter().any(|pending| pending.id == turn_id) {
+            return unsent("input", "bad_id", Some(turn_id));
         }
         let mut body = json!({ "surface": "app", "text": text });
         if let Some(session_id) = session_id {
             body["sessionId"] = json!(session_id);
         }
-        if !images.is_empty() && self.shows() {
-            body["images"] = json!(images);
+        if !shown.is_empty() {
+            body["images"] = json!(shown);
         }
         if let Some(rig_state) = rig_state.filter(|state| state.is_object()) {
             body["rigState"] = rig_state.clone();
         }
         let mut turn = Turn::new(turn_id);
+        turn.said = said;
         turn.session_id = session_id.map(str::to_string);
         self.remember(turn);
         self.current_turn = Some(turn_id.to_string());
@@ -688,8 +817,11 @@ impl Session {
 
     /// Whether the owner is with her here; dropped while the link is down (a latest value).
     pub fn presence(&mut self, body: &Value, now_ms: i64) -> Vec<Output> {
-        if self.phase != Phase::Open || !body.get("presence").is_some_and(Value::is_object) {
+        if self.phase != Phase::Open {
             return Vec::new();
+        }
+        if !body.get("presence").is_some_and(Value::is_object) {
+            return unsent("presence", "bad_frame", None);
         }
         self.send("presence", body, None, now_ms)
     }
@@ -702,8 +834,11 @@ impl Session {
         rig: &Value,
         now_ms: i64,
     ) -> Vec<Output> {
-        if self.phase != Phase::Open || run_id.is_empty() || !rig.is_object() {
+        if self.phase != Phase::Open {
             return Vec::new();
+        }
+        if run_id.is_empty() || !rig.is_object() {
+            return unsent("playback.observe", "bad_frame", None);
         }
         let body = json!({ "runId": run_id, "upcomingText": upcoming_text, "rig": rig });
         self.send("playback.observe", &body, None, now_ms)
@@ -711,8 +846,11 @@ impl Session {
 
     /// The run's reply has been said, or stopped being said (`playback.end`, a request).
     pub fn end_playback(&mut self, run_id: &str, now_ms: i64) -> Vec<Output> {
-        if self.phase != Phase::Open || run_id.is_empty() {
+        if self.phase != Phase::Open {
             return Vec::new();
+        }
+        if run_id.is_empty() {
+            return unsent("playback.end", "bad_frame", None);
         }
         self.send("playback.end", &json!({ "runId": run_id }), None, now_ms)
     }
@@ -730,8 +868,14 @@ impl Session {
         rig_state: Option<&Value>,
         now_ms: i64,
     ) -> Vec<Output> {
-        if self.phase != Phase::Open || !valid_id(touch_id) || !touch.is_object() {
+        if self.phase != Phase::Open {
             return Vec::new();
+        }
+        if !valid_id(touch_id) {
+            return unsent("touch.appraise", "bad_id", None);
+        }
+        if !touch.is_object() {
+            return unsent("touch.appraise", "bad_frame", None);
         }
         let mut body = json!({ "touchId": touch_id, "touch": touch });
         if let Some(rig_state) = rig_state.filter(|state| state.is_object()) {
@@ -743,15 +887,18 @@ impl Session {
     /// A contact with her figure here ended (`touch`, reliable, its id the contact's).
     pub fn touched(&mut self, touch_id: &str, touch: &Value, now_ms: i64) -> Vec<Output> {
         if !touch.is_object() {
-            return Vec::new();
+            return unsent("touch", "bad_frame", Some(touch_id));
         }
         self.reliable_out(touch_id, "touch", &json!({ "touch": touch }), now_ms)
     }
 
     /// The owner put the set `outfit_id` on her here (`outfit.wear`, a request).
     pub fn wear(&mut self, outfit_id: &str, now_ms: i64) -> Vec<Output> {
-        if self.phase != Phase::Open || outfit_id.is_empty() {
+        if self.phase != Phase::Open {
             return Vec::new();
+        }
+        if outfit_id.is_empty() {
+            return unsent("outfit.wear", "bad_frame", None);
         }
         self.send(
             "outfit.wear",
@@ -762,8 +909,20 @@ impl Session {
     }
 
     fn reliable_out(&mut self, id: &str, t: &str, body: &Value, now_ms: i64) -> Vec<Output> {
-        if !valid_id(id) || self.outbox.iter().any(|pending| pending.id == id) {
-            return Vec::new();
+        if !valid_id(id) {
+            return unsent(t, "bad_id", Some(id));
+        }
+        // The same frame again under the id it waits under is the same frame; another under
+        // that id would be lost, and is told. An id a turn was said under is not free either.
+        if let Some(pending) = self.outbox.iter().find(|pending| pending.id == id) {
+            return if pending.t == t && pending.body == *body {
+                Vec::new()
+            } else {
+                unsent(t, "bad_id", Some(id))
+            };
+        }
+        if self.turns.contains_key(id) {
+            return unsent(t, "bad_id", Some(id));
         }
         self.outbox.push(Pending {
             id: id.to_string(),
@@ -1328,10 +1487,7 @@ impl Session {
                 self.last_sent_ms = now_ms;
                 vec![Output::Send(text)]
             }
-            Err(unsent) => vec![Output::Deliver(Delivery::Unsent {
-                t: t.to_string(),
-                code: unsent.code,
-            })],
+            Err(refused) => unsent(t, &refused.code, id),
         }
     }
 }

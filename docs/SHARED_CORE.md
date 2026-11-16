@@ -210,8 +210,8 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | --- | --- |
 | `link.check` | `{frame, roles?}` → `{accepted: {t, family, delivery, canonical}}` 或 `{refused: {code, detail}}`；`code` 是契约 `errorCodes` 里的一个；`roles` 是发送方的角色（`device`、`host`、`mind`、`server`），不给就不查 |
 | `link.encode` | `{frame}` → `{text}`：要发的帧检查过后的规范文本；不通过是 `bad_input` |
-| `link.child_new` | `{capabilities, app: {name, version}, lineage?, hostEpoch?}` → `{state}`：子机的一个连接会话，还没连上（见「子机核心」） |
-| `link.child_step` | `{state, now, event}` → `{state, outputs, phase}`：会话遇到一件事。`now` 是微秒；`event` 和 `outputs` 见「子机核心」 |
+| `link.child_new` | `{capabilities, app: {name, version}, lineage?, hostEpoch?, text?}` → `{state}`：子机的一个连接会话，还没连上（见「子机核心」） |
+| `link.child_step` | `{state, now, event, text?}` → `{state, outputs, phase, hostCapabilities}`：会话遇到一件事。`now` 是微秒；`event` 和 `outputs` 见「子机核心」 |
 | `link.child_after` | `{close: {code?, reason?}}` 或 `{http: {status, body?}}`，可带 `attempt` → `{then: "reconnect" \| "stop", down}` 或 `{then: "forget", removal}`，带了 `attempt` 就多一项 `backoffMs` |
 | `link.child_claims` | `{capabilities, reads}` → `{unread: [{capability, t}], idle, sends, takes}`：一端声明的能力里，主机可能发来而它不读的帧（`reads` 是它自己的代码处理的主机帧类型）；一端的测试断言 `unread` 是空的 |
 | `conformance.host` | `{host?, event}` → `{host, text?, fault?}`：对照剧本的假主机走一步，给不用 Rust 的端演剧本用（见「她的连接：子机一侧的剧本」）；产品不调它 |
@@ -260,10 +260,14 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 
 - 输出要按顺序做完，`send` 的文本原样发，不重新编码。
 - 断线期间主人说的话照样交给会话：它留在待发箱，下次 `welcome` 之后自己发出去。外壳不自己排队。
-- 回合 id、可靠帧的 id 由外壳造（契约的 `limits.idPattern`），同一件事重试时用同一个 id。
+- 回合 id、可靠帧的 id 由外壳造，要合契约的 `limits.idPattern`（字母、数字和 `_.:-`，1 到 64 个），每句话、每件事一个新的，回合和别的可靠帧之间也不重。id 造错了那句话不会进待发箱，会话当场交回一个 `unsent`（`t` 是 `input`、`speech.delivered` 或 `touch`，`code` 是 `bad_id`）。算造错的：不合写法；这个 id 已经给过别的话（或同样的话配着别的对话、别的图）；这个 id 正被另一种可靠帧占着。`unsent` 里的 `id` 就是外壳给的那个；外壳给的根本不是 id 时它是 `null`（会话不把不认识的东西原样说回来），这时外壳按自己刚才那次调用去对。外壳拿到 `unsent` 要告诉主人这句没发出去，换一个新 id 再交，不能当没事；原来用这个 id 的那一轮照旧，不受影响。
+- 同一个回合 id、同样的话、同样的对话和图再交一次，算同一轮：不管它还在等、已经发了、已经答了还是被拒了，都没有输出，不会多发，也不丢。所以被拒以后想再问一遍，要用新的 id，那是新的一轮。`speech.delivered` 和 `touch` 只在还等着发的时候这样认；被确认以后同一个 id 再交会再发一次，由主机按 id 去重。
+- 图带不带是在交这句话的时候定的，看上一次 `welcome` 里主机接受了没有 `images`（还没连上过就是没有）：没有就只留下话、不留图，之后在哪条连接上发出去都不带图，也不另外报。所以外壳交之前先看主机收不收图，不收就告诉主人：Rust 是 `Session::shows`，C 入口是每一步回答里的 `hostCapabilities` 里有没有 `images`。`hostCapabilities` 是上一次 `welcome` 里主机接受的能力：第一次 `welcome` 之前是空的，断线期间留着上一次的，新连接开始到它的 `welcome` 之间是空的。
+- 只算当下的那几样（在场、播放进度、播放结束、触碰的评估、换装）连接没开时不留，交给会话也没有输出；这是有意的，连上以后外壳把现在的值再报一次。连接开着而交来的东西拼不成帧（该是对象的不是对象、id 不合写法、该有的 id 是空的）时，同样交回 `unsent`（`code` 是 `bad_frame` 或 `bad_id`，`id` 是 `null`）。主人说的话、说到哪了、一次触碰的结束是可靠帧，断着线也留着。
+- 同一个会话的每一步要一个接一个做，不能并发：上一步的输出做完、状态换好，再做下一步。两处同时拿着同一份状态各走一步，编号就乱了。
 - `lineage` 和 `hostEpoch` 是每次 `welcome` 交付里给的；外壳存下最新的，下次新建会话时传回。
 - `deliver` 的 `unread` 是「主机发了一帧这一端读不了的」：只有类型（契约认识时）和原因码，没有内容。外壳记日志、提示版本不齐，自己控制频率（每帧来一次）。读不了的 `welcome` 会紧跟一个 `drop`。
-- 时间一律由外壳给。Rust 接口是毫秒（连接自己的单位）；经 C 入口是微秒（那里的规矩）。
+- 时间一律由外壳给。Rust 接口是毫秒（连接自己的单位）；经 C 入口是微秒（那里的规矩）。两边差一千倍，传错了不会报错：毫秒当微秒传，心跳和超时就全不对。
 
 ### 用 Rust 的端（桌面，Android XR）
 
@@ -303,7 +307,7 @@ var state = try core("link.child_new", [
 
 func step(_ event: JSON) throws {
     let out = try core("link.child_step", ["state": state, "now": nowMicroseconds(), "event": event])
-    state = out["state"]                               // 整个换掉，不要改它、不要读它
+    state = out["state"]                               // 成功才换；整个换掉，不要改它、不要读它
     for output in out["outputs"].array {
         if let text = output["send"].string { socket.send(text) }
         else if let delivery = output["deliver"].object { handle(delivery) }   // delivery["kind"]
@@ -312,8 +316,10 @@ func step(_ event: JSON) throws {
 }
 ```
 
+- 某一步失败（`bad_input` 之类）时没有新状态：留着旧的，不要清掉，也不要拿错误的回答去换。
+- JSON 库把所有数都当双精度的端（把 3 写成 `3.0` 的那种），两个调用都带上 `text: true`。带了以后：状态改为一段 JSON 文本、装在字符串里交回，原样存着、原样传回，不要解码；`event` 里写成 `4.0` 的整数，核心先读回 `4` 再拼帧。原因：待发的帧的正文是原样留着、原样发出去的，而主机只从整数读计数，`"spokenChars": 4.0` 它不认。不带 `text` 的端要自己保证交进来的整数不带小数点，状态也不能经这种库解码再编码。`now`、关闭码这些调用自己的数，带不带 `text` 写成 `3.0` 都认（`now` 写成双精度时不能超过 2^53 微秒）。
 - `event`：`"connected"`、`"disconnected"`、`"tick"`、`{received: 文本}`，以及外壳做的事：`{say: {turnId, text, sessionId?, rigState?, images?}}`、`{presence: body}`、`{observePlayback: {runId, upcomingText, rig}}`、`{endPlayback: {runId}}`、`{delivered: {id, body}}`、`{appraiseTouch: {touchId, touch, rigState?}}`、`{touched: {touchId, touch}}`、`{wear: {outfitId}}`、`{setCapabilities: [..]}`（下一次 hello 用）。
-- `outputs` 里每一项是 `{send: 文本}`、`{deliver: {kind, …}}` 或 `{drop: {why, …}}`。字段是 camelCase；没有值的字段是 `null`，不会缺。`phase`（`closed`、`greeting`、`open`）给界面显示连没连上用。
+- `outputs` 里每一项是 `{send: 文本}`、`{deliver: {kind, …}}` 或 `{drop: {why, …}}`。字段是 camelCase；没有值的字段是 `null`，不会缺。`phase`（`closed`、`greeting`、`open`）给界面显示连没连上用。`hostCapabilities` 是主机接受了这一端的哪些能力。
 - `deliver` 按 `kind`（定义在 `crates/myriad-link-child/src/wire.rs`，Rust 的 `Delivery` 是同一批）：
 
   | `kind` | 字段 | 什么时候 |
@@ -334,11 +340,11 @@ func step(_ event: JSON) throws {
   | `conversation` | `session` | 其中一场变了 |
   | `notice` | `body` | 一条通知 |
   | `host_error` | `code` | 主机没收下这一端的某一帧，连接还在 |
-  | `unsent` | `t`、`code` | 这一端的一帧核心不肯发（太大之类）；是 `input` 的话那一轮已结束 |
+  | `unsent` | `t`、`code`、`id` | 这一端的一帧没发出去，也不会再发。`id` 是外壳给它的 id（回合的话就是回合 id），不是可靠帧时是 `null`。两种来历：核心不肯发（太大之类，`code` 是核心的拒收码；是 `input` 的话那一轮就此结束）；外壳交来的拼不成帧（`bad_id`、`bad_frame`，什么都没留下，原来用这个 id 的那一轮照旧） |
   | `unread` | `t`、`code` | 主机的一帧这一端读不了（版本不齐）；`t` 在契约不认识这个类型时是 `null` |
 
 - `drop` 的 `why`、`link.child_after` 里 `down.why` 是同一批：`network`、`silent`（没等到心跳或 welcome）、`host_unavailable`、`no_owner`、`replaced`（同一设备的另一条连接顶替了）、`unsupported_protocol`（要更新）、`refused_handshake`、`host_moved`（多一项 `device`：她现在住的那台的名字或 `null`）、`host_frozen`（她在搬家）、`redirected`、`unsupported_site`、`removed`（多一项 `removal`）。`removal` 是 `revoked`、`owner_changed`、`token_unknown`。
-- 状态是一段不透明的 JSON，只在进程里拿着就行（进程没了连接也没了）。它里面有主人说了还没被确认的话，所以要落盘的话，放在这一端放那些话的地方。落了盘的状态跨得过升级：契约管的那几项（协议号、能力名）恢复时按新的契约重写。里面的数都是不超过 2^53 的整数，按双精度读写也不会走样；格式不对或数出了界的状态是 `bad_input`，不会带着错的数往下走。
+- 状态是一段不透明的 JSON，只在进程里拿着就行（进程没了连接也没了）。它里面有主人说了还没被确认的话，所以要落盘的话，放在这一端放那些话的地方。落了盘的状态跨得过升级：契约管的那几项（协议号、能力名）恢复时按新的契约重写。里面的计数和时间都是不超过 2^53 的整数；`moodRevision` 是主机给的数，原样留着，不一定是整数。格式不对、数出了界、hello 里的东西不像样的状态是 `bad_input`，不会带着错的数往下走。`now` 也有界：早于纪元、或毫秒数超过 2^53 的是 `bad_input`，所以一步不会留下下一步不认的状态。
 - 关闭和重连：`link.child_after`。套接字关了给 `{close: {code?, reason?}}`（两样都没有就给 `{close: {}}`），升级被拒给 `{http: {status, body?}}`（`body` 是主机答的 JSON，读不出来就不给）。带上 `attempt`（第几次重试，从 0 起），答 `reconnect` 时一并给出 `backoffMs`。`code` 写成字符串之类的是 `bad_input`，不会被当成不认识的关闭码。
 - **开销**（M 系列笔记本，release，状态出去再回来一次）：平常约 1 KB、0.03 到 0.04 毫秒；留满 64 个回合和 256 个已收 id 时约 33 KB、0.3 到 0.45 毫秒；最坏是断线时待发箱里压着带图的话，4 句各两张图约 1 MB、1.6 到 2.3 毫秒。最坏的情形只在重连后的头几步出现（发出去、被确认后就没了），断线期间没有帧进来。真要压低它，改法是把待发箱里的正文留在外壳、状态里只放 id，等有一端量出这确实是问题再做。
 

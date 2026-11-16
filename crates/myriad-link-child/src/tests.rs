@@ -190,11 +190,12 @@ fn a_turn_goes_out_once_and_streams_in_order() {
     assert_eq!(out[0]["t"], "input");
     assert_eq!(out[0]["id"], "t_02");
     assert_eq!(out[0]["seq"], 2);
-    assert!(
-        s.say("t_02", "again", None, None, &[], T0 + 1001)
-            .is_empty(),
-        "one turn per id"
-    );
+    let again = s.say("t_02", "again", None, None, &[], T0 + 1001);
+    assert!(sent(&again).is_empty(), "one turn per id");
+    assert!(matches!(
+        delivered(&again)[..],
+        [Delivery::Unsent { code, .. }] if code == "bad_id"
+    ));
 
     let accepted = s.received(&host("run.accepted", 2, 2, |_| {}), T0 + 1020);
     assert!(matches!(
@@ -321,13 +322,197 @@ fn an_input_the_core_will_not_send_ends_its_turn() {
     let out = s.say("t_09", &long, None, None, &[], T0 + 1000);
     assert!(matches!(
         delivered(&out)[..],
-        [Delivery::Unsent { t, code }] if t == "input" && code == "too_large"
+        [Delivery::Unsent { t, code, .. }] if t == "input" && code == "too_large"
     ));
     assert!(s.unfinished().is_empty());
     // So nothing is asked for it after a reconnect.
     s.disconnected();
     s.connected(T0 + 5000);
     assert!(sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 5050)).is_empty());
+}
+
+#[test]
+fn nothing_the_owner_said_is_let_fall_in_silence() {
+    // Told at once, with which words (the id), and nothing goes.
+    let unsent = |out: &[Output], t: &str, code: &str, id: Option<&str>| {
+        matches!(
+            delivered(out)[..],
+            [Delivery::Unsent { t: got, code: why, id: which }]
+                if got == t && why == code && which.as_deref() == id
+        ) && sent(out).is_empty()
+    };
+    let mut s = open();
+    // An id that is not one: the words are not kept, and the shell is told. What is not an
+    // id is not repeated back: it may be anything the shell had in hand.
+    let bad = s.say("bad id", "在吗", None, None, &[], T0 + 1000);
+    assert!(unsent(&bad, "input", "bad_id", None));
+    assert!(unsent(
+        &s.say("", "在吗", None, None, &[], T0 + 1000),
+        "input",
+        "bad_id",
+        None
+    ));
+    assert!(s.unfinished().is_empty());
+    // An id already used for other words, or the same words to another session.
+    assert_eq!(
+        sent(&s.say("t_02", "在吗", None, None, &[], T0 + 1100)).len(),
+        1
+    );
+    let other = s.say("t_02", "别的话", None, None, &[], T0 + 1200);
+    assert!(unsent(&other, "input", "bad_id", Some("t_02")));
+    let elsewhere = s.say("t_02", "在吗", Some("sess_9"), None, &[], T0 + 1200);
+    assert!(unsent(&elsewhere, "input", "bad_id", Some("t_02")));
+    // The same words under their id are the same turn, said once: while it waits, once her
+    // host has acked it and not answered, and after it is answered. Nothing, and nothing lost.
+    assert!(s.say("t_02", "在吗", None, None, &[], T0 + 1300).is_empty());
+    s.received(&host("ping", 2, 2, |_| {}), T0 + 1350);
+    assert!(s.say("t_02", "在吗", None, None, &[], T0 + 1360).is_empty());
+    s.received(&host("run.accepted", 3, 3, |_| {}), T0 + 1400);
+    assert!(s.say("t_02", "在吗", None, None, &[], T0 + 1500).is_empty());
+    assert_eq!(s.unfinished().len(), 1, "one turn, not ended by the tries");
+    // The other reliable frames of the shell's alike.
+    let spoken = fixture("speech.delivered")["body"].clone();
+    let no_id = s.delivered("no good", &spoken, T0 + 1600);
+    assert!(unsent(&no_id, "speech.delivered", "bad_id", None));
+    let touch = json!({ "zone": "head" });
+    assert!(unsent(
+        &s.touched("tc 1", &touch, T0 + 1600),
+        "touch",
+        "bad_id",
+        None
+    ));
+    let flat = s.touched("tc_1", &json!("head"), T0 + 1600);
+    assert!(unsent(&flat, "touch", "bad_frame", Some("tc_1")));
+    // A turn's id is not free for another frame, nor a waiting frame's for a turn.
+    assert!(unsent(
+        &s.touched("t_02", &touch, T0 + 1650),
+        "touch",
+        "bad_id",
+        Some("t_02")
+    ));
+    s.disconnected();
+    assert!(
+        s.delivered("sd_1", &spoken, T0 + 1700).is_empty(),
+        "kept for the next link"
+    );
+    assert!(
+        s.delivered("sd_1", &spoken, T0 + 1800).is_empty(),
+        "the same again is the same"
+    );
+    let mut changed = spoken.clone();
+    changed["spokenChars"] = json!(0);
+    let again = s.delivered("sd_1", &changed, T0 + 1900);
+    assert!(unsent(&again, "speech.delivered", "bad_id", Some("sd_1")));
+    let taken = s.say("sd_1", "在吗", None, None, &[], T0 + 1950);
+    assert!(unsent(&taken, "input", "bad_id", Some("sd_1")));
+    // And while the link is down the owner's words are kept, never dropped.
+    assert!(
+        s.say("t_03", "还在吗", None, None, &[], T0 + 2000)
+            .is_empty()
+    );
+    assert_eq!(s.unfinished().len(), 2);
+    // Both waiting frames go on the next link, each once.
+    s.connected(T0 + 3000);
+    let out = sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 3050));
+    let types: Vec<&str> = out
+        .iter()
+        .map(|frame| frame["t"].as_str().unwrap())
+        .collect();
+    assert_eq!(types, ["speech.delivered", "input", "run.resume"]);
+}
+
+#[test]
+fn what_the_owner_shows_her_is_part_of_what_was_said() {
+    let photo = String::from("data:image/jpeg;base64,/9j/4AAQ");
+    let takes_images = |s: &mut Session, at: i64, images: bool| {
+        s.connected(at);
+        let caps = if images { json!(["images"]) } else { json!([]) };
+        s.received(
+            &host("welcome", 1, 1, |body| body["capabilities"] = caps),
+            at + 50,
+        )
+    };
+    let again = |s: &mut Session, at: i64| {
+        s.say("t_02", "你看", None, None, std::slice::from_ref(&photo), at)
+    };
+    let mut s = session();
+    takes_images(&mut s, T0, true);
+    assert_eq!(
+        sent(&again(&mut s, T0 + 1000))[0]["body"]["images"],
+        json!([photo])
+    );
+    // The same words without the picture, under the same id, are other words.
+    let without = s.say("t_02", "你看", None, None, &[], T0 + 1100);
+    assert!(matches!(
+        delivered(&without)[..],
+        [Delivery::Unsent { code, id: Some(id), .. }] if code == "bad_id" && id == "t_02"
+    ));
+    // The same call again is the same turn on whatever link it is made: while the next
+    // link is still greeting, and on one whose host takes no pictures.
+    assert!(again(&mut s, T0 + 1200).is_empty());
+    s.disconnected();
+    s.connected(T0 + 5000);
+    assert!(again(&mut s, T0 + 5001).is_empty(), "before the welcome");
+    s.disconnected();
+    let resent = sent(&takes_images(&mut s, T0 + 9000, false));
+    assert_eq!(resent.len(), 1, "the turn itself goes again, once");
+    assert!(
+        again(&mut s, T0 + 9100).is_empty(),
+        "to a host that takes no pictures"
+    );
+    // And one first said with no link, then again once a host that takes them is there.
+    let mut offline = session();
+    assert!(
+        offline
+            .say("t_02", "你看", None, None, std::slice::from_ref(&photo), T0)
+            .is_empty()
+    );
+    takes_images(&mut offline, T0 + 100, true);
+    assert!(again(&mut offline, T0 + 200).is_empty());
+    assert_eq!(offline.unfinished().len(), 1);
+}
+
+#[test]
+fn a_request_that_cannot_be_a_frame_is_told_and_one_made_while_down_is_let_go() {
+    let told = |out: Vec<Output>, t: &str, code: &str| {
+        matches!(
+            delivered(&out)[..],
+            [Delivery::Unsent { t: got, code: why, id: None }] if got == t && why == code
+        )
+    };
+    let mut s = open();
+    let rig = json!({});
+    assert!(told(
+        s.presence(&json!({}), T0 + 100),
+        "presence",
+        "bad_frame"
+    ));
+    assert!(told(
+        s.observe_playback("", "x", &rig, T0 + 100),
+        "playback.observe",
+        "bad_frame"
+    ));
+    assert!(told(
+        s.end_playback("", T0 + 100),
+        "playback.end",
+        "bad_frame"
+    ));
+    assert!(told(
+        s.appraise_touch("tc 1", &rig, None, T0 + 100),
+        "touch.appraise",
+        "bad_id"
+    ));
+    assert!(told(
+        s.appraise_touch("tc_1", &json!(1), None, T0 + 100),
+        "touch.appraise",
+        "bad_frame"
+    ));
+    assert!(told(s.wear("", T0 + 100), "outfit.wear", "bad_frame"));
+    // With no link they are of the moment and let go, as the contract's deliveries say.
+    s.disconnected();
+    assert!(s.presence(&json!({ "presence": {} }), T0 + 200).is_empty());
+    assert!(s.end_playback("run_1", T0 + 200).is_empty());
+    assert!(s.wear("coat", T0 + 200).is_empty());
 }
 
 #[test]
@@ -385,7 +570,7 @@ fn a_frame_the_core_will_not_send_leaves_the_outbox() {
     let out = s.delivered("sd_1", &json!({ "turnId": "t_02" }), T0 + 1000);
     assert!(matches!(
         delivered(&out)[..],
-        [Delivery::Unsent { t, code }] if t == "speech.delivered" && code == "bad_frame"
+        [Delivery::Unsent { t, code, .. }] if t == "speech.delivered" && code == "bad_frame"
     ));
     s.disconnected();
     s.connected(T0 + 2000);
@@ -828,6 +1013,7 @@ mod state {
             Session::restore(contract(), &state).is_err()
         };
         assert!(broken(&|s| s["sent"] = json!(u64::MAX)));
+        assert!(broken(&|s| s["sent"] = json!(1u64 << 53)));
         assert!(broken(&|s| s["heard"] = json!((1u64 << 53) + 1)));
         assert!(broken(&|s| s["openedAtMs"] = json!(i64::MIN)));
         assert!(broken(&|s| s["lastHeardMs"] = json!(-1)));
@@ -841,6 +1027,155 @@ mod state {
             let turn = s["turns"][0].clone();
             s["turns"].as_array_mut().unwrap().push(turn);
         }));
+    }
+
+    #[test]
+    fn a_state_whose_numbers_went_through_doubles_is_the_same_state() {
+        let mut s = open();
+        s.say("t_02", "在吗", None, None, &[], T0 + 1000);
+        s.received(&host("run.accepted", 2, 2, |_| {}), T0 + 1020);
+        s.received(&host("run.event", 3, 2, |_| {}), T0 + 1100);
+        s.received(
+            &host("perform", 4, 2, |b| b["turnId"] = json!("t_02")),
+            T0 + 1150,
+        );
+        s.delivered("sd_1", &fixture("speech.delivered")["body"], T0 + 1200);
+        // Every count and time written the way an encoder of doubles writes it: 3 as 3.0.
+        // (A waiting frame's body is its own: what an encoder does to the numbers in it goes
+        // out on the wire, so an end keeps the state as text when its encoder does that.)
+        fn doubled(value: &mut Value) {
+            match value {
+                Value::Number(n) => *value = json!(n.as_f64().unwrap()),
+                Value::Array(items) => items.iter_mut().for_each(doubled),
+                Value::Object(fields) => fields
+                    .iter_mut()
+                    .filter(|(key, _)| *key != "body")
+                    .for_each(|(_, field)| doubled(field)),
+                _ => {}
+            }
+        }
+        let state = s.state();
+        let mut floats = state.clone();
+        doubled(&mut floats);
+        assert_ne!(floats.to_string(), state.to_string());
+        let text = floats.to_string();
+        assert!(text.contains("\"sent\":3.0"), "{text}");
+        let back = Session::restore(contract(), &serde_json::from_str(&text).unwrap()).unwrap();
+        assert_eq!(back.state(), state);
+        // A number with a fraction, or a count below zero, is not one.
+        for (field, value) in [
+            ("sent", json!(2.5)),
+            ("heard", json!(-1.0)),
+            ("version", json!(1.5)),
+        ] {
+            let mut broken = state.clone();
+            broken[field] = value;
+            assert!(Session::restore(contract(), &broken).is_err(), "{field}");
+        }
+    }
+
+    #[test]
+    fn a_hello_no_host_would_take_is_not_kept() {
+        let broken = |edit: &dyn Fn(&mut Value)| {
+            let mut state = open().state();
+            edit(&mut state["hello"]);
+            Session::restore(contract(), &state).is_err()
+        };
+        assert!(broken(&|h| h["lineage"] = json!(7)));
+        assert!(broken(&|h| h["hostEpoch"] = json!("three")));
+        assert!(broken(&|h| h["hostEpoch"] = json!(-1)));
+        assert!(broken(&|h| h["hostEpoch"] = json!(u64::MAX)));
+        assert!(broken(&|h| h["app"]["name"] = json!(null)));
+        assert!(broken(&|h| h["app"]["extra"] = json!("x")));
+        assert!(broken(&|h| h["later"] = json!(true)));
+        assert!(!broken(&|h| h["hostEpoch"] = json!(4.0)));
+        assert!(!broken(&|h| h["lineage"] = json!("ln_01")));
+    }
+
+    #[test]
+    fn an_epoch_written_as_a_double_is_said_as_the_count_it_is() {
+        let mut state = session().state();
+        state["hello"]["lineage"] = json!("ln_01");
+        state["hello"]["hostEpoch"] = json!(4.0);
+        let mut back = Session::restore(contract(), &state).unwrap();
+        let hello = sent(&back.connected(T0)).remove(0);
+        assert_eq!(hello["body"]["hostEpoch"].to_string(), "4");
+        assert_eq!(hello["body"]["lineage"], "ln_01");
+        // A new session does not say an epoch that is not a count.
+        let mut odd = Session::new(contract(), CAPABILITIES, ("Child", "1"), None, Some(-1));
+        assert!(sent(&odd.connected(T0))[0]["body"]["hostEpoch"].is_null());
+        assert!(Session::restore(contract(), &odd.state()).is_ok());
+    }
+
+    #[test]
+    fn a_turn_kept_before_turns_had_a_mark_is_not_said_twice() {
+        let mut s = open();
+        s.say("t_02", "在吗", None, None, &[], T0 + 1000);
+        let mut state = s.state();
+        state["turns"][0].as_object_mut().unwrap().remove("said");
+        let mut back = Session::restore(contract(), &state).unwrap();
+        assert!(
+            back.say("t_02", "在吗", None, None, &[], T0 + 1100)
+                .is_empty()
+        );
+        assert_eq!(back.unfinished().len(), 1);
+    }
+
+    #[test]
+    fn her_lineage_and_her_epoch_are_each_said_as_given() {
+        let said = |s: &mut Session| {
+            let hello = sent(&s.connected(T0)).remove(0);
+            (
+                hello["body"]["lineage"].clone(),
+                hello["body"]["hostEpoch"].clone(),
+            )
+        };
+        // The device she lives on says an epoch and no lineage (the contract's own example).
+        let lives: Value = serde_json::from_str(FIXTURES).unwrap();
+        assert_eq!(lives["closed"][0]["frame"]["body"]["hostEpoch"], 3);
+        let mut epoch_only = Session::new(contract(), CAPABILITIES, ("Child", "1"), None, Some(3));
+        assert_eq!(said(&mut epoch_only), (Value::Null, json!(3)));
+        let mut both = Session::new(
+            contract(),
+            CAPABILITIES,
+            ("Child", "1"),
+            Some("ln_01"),
+            Some(3),
+        );
+        assert_eq!(said(&mut both), (json!("ln_01"), json!(3)));
+        // And a kept state says what it held.
+        let mut state = session().state();
+        state["hello"]["hostEpoch"] = json!(4);
+        let mut back = Session::restore(contract(), &state).unwrap();
+        assert_eq!(said(&mut back), (Value::Null, json!(4)));
+        assert_eq!(
+            Session::restore(contract(), &back.state()).unwrap().state(),
+            back.state()
+        );
+    }
+
+    #[test]
+    fn a_state_whose_nulls_were_dropped_on_the_way_is_still_that_state() {
+        let mut s = open();
+        s.say("t_02", "在吗", None, None, &[], T0 + 1000);
+        s.disconnected();
+        s.say("t_03", "还在吗", None, None, &[], T0 + 2000);
+        fn without_nulls(value: &mut Value) {
+            match value {
+                Value::Array(items) => items.iter_mut().for_each(without_nulls),
+                Value::Object(fields) => {
+                    fields.retain(|_, field| !field.is_null());
+                    fields.values_mut().for_each(without_nulls);
+                }
+                _ => {}
+            }
+        }
+        let state = s.state();
+        let mut bare = state.clone();
+        without_nulls(&mut bare);
+        assert_ne!(bare, state);
+        let back = Session::restore(contract(), &bare).unwrap();
+        assert_eq!(back.state(), state);
     }
 
     #[test]
