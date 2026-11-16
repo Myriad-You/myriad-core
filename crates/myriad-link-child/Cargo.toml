@@ -1,0 +1,16 @@
+[package]
+name = "myriad-link-child"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "The child core: what every end needs to keep her link to her host. The handshake, numbering and acks, the reliable outbox, turns and their resuming, the heartbeat and what a close means, as a value with no socket and no clock."
+authors = ["Myriad Contributors"]
+license = "AGPL-3.0-only"
+
+# Pure: no I/O, no clock, no keys. Whether a frame is sent or taken is
+# myriad-her-link's; the socket and the time are the shell's. It depends on
+# none of her rules, so an end that is only a child links this and no more.
+[dependencies]
+myriad-her-link = { path = "../myriad-her-link" }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
