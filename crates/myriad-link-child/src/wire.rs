@@ -168,6 +168,22 @@ impl Delivery {
             }
             Delivery::Notice(body) => json!({ "kind": "notice", "body": body }),
             Delivery::HostError { code } => json!({ "kind": "host_error", "code": code }),
+            Delivery::HostVersions(body) => json!({ "kind": "host_versions", "body": body }),
+            Delivery::Verdict { usable, stopped } => {
+                json!({ "kind": "verdict", "usable": usable, "stopped": stopped })
+            }
+            Delivery::Granted { actions, providing } => {
+                let named = |all: &[(String, u64)]| -> Vec<Value> {
+                    all.iter()
+                        .map(|(name, version)| json!({ "name": name, "version": version }))
+                        .collect()
+                };
+                json!({
+                    "kind": "granted",
+                    "actions": named(actions),
+                    "providing": named(providing),
+                })
+            }
             Delivery::Unsent { t, code, id } => {
                 json!({ "kind": "unsent", "t": t, "code": code, "id": id })
             }

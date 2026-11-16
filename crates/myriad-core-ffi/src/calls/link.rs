@@ -106,8 +106,13 @@ fn child(state: &Value) -> Result<myriad_link_child::Session, Failure> {
         }
         other => other,
     };
-    myriad_link_child::Session::restore(myriad_link_child::contract(), state)
-        .map_err(Failure::BadInput)
+    let mut session = myriad_link_child::Session::restore(myriad_link_child::contract(), state)
+        .map_err(Failure::BadInput)?;
+    // The ABI it says it runs is this library's, whichever one the state was kept under.
+    if let Some(build) = session.running().map(|(_, build)| build.to_string()) {
+        session.runs(u64::from(crate::ABI_VERSION), &build);
+    }
+    Ok(session)
 }
 
 /// The state as the caller asked for it: the object, or its JSON text.
@@ -120,10 +125,16 @@ fn kept(session: &myriad_link_child::Session, text: bool) -> Value {
     }
 }
 
-/// `{capabilities, app: {name, version}, lineage?, hostEpoch?, text?}` → `{state}`: a child's
+/// `{capabilities, app: {name, version}, lineage?, hostEpoch?, offers?, coreCommit?, text?}`
+/// → `{state}`: a child's
 /// session of her link, not connected yet (`myriad_link_child::Session`). `capabilities` is
 /// what this end can do; names the contract does not know are left out of its hello.
-/// `lineage` and `hostEpoch` are what its last welcome said, when it kept them. With
+/// `lineage` and `hostEpoch` are what its last welcome said, when it kept them. `offers`
+/// is what this end may be asked to do for her, `[{name, version}]` of the contract's
+/// `calls` (said in `call.offer` on a link where both ends listed `calls`; one the contract
+/// does not name at that version, or that her host does, is left out). `coreCommit` is the
+/// myriad-core commit this end was built from (40 hex digits, its pin): with it, `link.versions` is sent on a link
+/// where both ends listed `versions` (the ABI it says is this library's). With
 /// `text: true` the state comes back as a JSON text in a string (see `link.child_step`).
 pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
@@ -142,7 +153,18 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
         #[serde(default, deserialize_with = "whole::maybe_i64")]
         host_epoch: Option<i64>,
         #[serde(default)]
+        offers: Vec<Offer>,
+        #[serde(default)]
+        core_commit: Option<String>,
+        #[serde(default)]
         text: bool,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Offer {
+        name: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
     }
     let input: In = super::quiet_input(raw)?;
     if input
@@ -152,13 +174,23 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
         return Err(Failure::BadInput("hostEpoch counts from 0".into()));
     }
     let capabilities: Vec<&str> = input.capabilities.iter().map(String::as_str).collect();
-    let session = myriad_link_child::Session::new(
+    let mut session = myriad_link_child::Session::new(
         myriad_link_child::contract(),
         &capabilities,
         (&input.app.name, &input.app.version),
         input.lineage.as_deref(),
         input.host_epoch,
     );
+    let offers: Vec<(&str, u64)> = input
+        .offers
+        .iter()
+        .map(|offer| (offer.name.as_str(), offer.version))
+        .collect();
+    session.offer(&offers);
+    // The ABI is this library's own; what the end calls its build of the core is its to say.
+    if let Some(build) = &input.core_commit {
+        session.runs(u64::from(crate::ABI_VERSION), build);
+    }
     Ok(json!({ "state": kept(&session, input.text) }))
 }
 

@@ -166,6 +166,23 @@ pub enum Delivery {
     HostError {
         code: String,
     },
+    /// What her host runs, as its own `link.versions` says (`{contract, core, app, actions}`),
+    /// for the shell to show beside its own.
+    HostVersions(Value),
+    /// Her host's reading of this end's `link.versions`: `usable` is `full`, `partial`
+    /// (`stopped` names what this link will not carry) or `refused` (the host closes the link
+    /// after it). For the shell to show.
+    Verdict {
+        usable: String,
+        stopped: Vec<String>,
+    },
+    /// What may be called on this link now (`call.granted`), each `(name, version)`:
+    /// `actions` are those of this end's offer the owner approved and that are granted now;
+    /// `providing` are her host's own that this end may call. The newest stands.
+    Granted {
+        actions: Vec<(String, u64)>,
+        providing: Vec<(String, u64)>,
+    },
     /// A frame of this end's that will not go: its type and why, never its body. Either the
     /// shared core would not send it (its refusal code; a reliable one has left the outbox,
     /// and an `input`'s turn has ended), or the shell gave what cannot be a frame: an id that
@@ -348,6 +365,29 @@ fn mark(text: &str, session_id: Option<&str>, images: &[String]) -> String {
     format!("{hash:016x}")
 }
 
+/// What an end may offer of `actions`: those the contract's `calls` names at that version
+/// and a child does, each once, in order.
+fn offered(actions: impl Iterator<Item = (String, u64)>) -> Vec<(String, u64)> {
+    let mut offers: Vec<(String, u64)> = actions
+        .filter(|(name, version)| {
+            myriad_her_link::call_spec(name)
+                .is_some_and(|spec| spec.by == "child" && spec.version == *version)
+        })
+        .collect();
+    offers.sort();
+    offers.dedup();
+    offers
+}
+
+/// The `[{name, version}]` under `key`, each as `(name, version)`; none when it is not that.
+fn named(body: &Value, key: &str) -> Option<Vec<(String, u64)>> {
+    body.get(key)?
+        .as_array()?
+        .iter()
+        .map(|one| Some((string(one, "name")?, unsigned(one.get("version")?)?)))
+        .collect()
+}
+
 /// A whole number JSON can carry exactly.
 fn unsigned(value: &Value) -> Option<u64> {
     match value.as_u64() {
@@ -416,6 +456,32 @@ struct State {
     mood_revision: Option<f64>,
     taken: Vec<String>,
     host_capabilities: Vec<String>,
+    #[serde(default)]
+    offers: Vec<Named>,
+    #[serde(default)]
+    core: Option<Runs>,
+    #[serde(default)]
+    told_dropped: Vec<(String, String)>,
+    #[serde(default, deserialize_with = "whole::u64")]
+    drops: u64,
+}
+
+/// An action and its version, as a state keeps it.
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Named {
+    name: String,
+    #[serde(deserialize_with = "whole::u64")]
+    version: u64,
+}
+
+/// [`Session::runs`], as a state keeps it.
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Runs {
+    #[serde(deserialize_with = "whole::u64")]
+    abi: u64,
+    commit: String,
 }
 
 impl State {
@@ -424,6 +490,7 @@ impl State {
 
 pub struct Session {
     timing: Timing,
+    schema_version: u32,
     hello: Map<String, Value>,
     contract_capabilities: Vec<String>,
     /// The frame types the contract names: only these are told in an `Unread`.
@@ -445,9 +512,20 @@ pub struct Session {
     taken: Vec<String>,
     /// What the host accepted of this child's capabilities, as its welcome said.
     host_capabilities: BTreeSet<String>,
+    /// What this end may be asked to do ([`Session::offer`]), each `(name, version)`.
+    offers: Vec<(String, u64)>,
+    /// The shared core this end runs, as `link.versions` says it ([`Session::runs`]).
+    core: Option<(u64, String)>,
+    /// What her host has been told this end dropped on this link, each `(type, reason)`:
+    /// each is told once a link.
+    told_dropped: BTreeSet<(String, String)>,
+    /// How many such reports this session has made, for their ids: it never starts over.
+    drops: u64,
 }
 
 impl Session {
+    /// The most kinds of dropped frame told by their own type on one link.
+    pub const KEPT_DROPPED: usize = 32;
     pub const KEPT_TURNS: usize = 64;
     pub const KEPT_TAKEN: usize = 256;
 
@@ -455,9 +533,12 @@ impl Session {
     /// (`crate::capabilities::unread` compares an end's capabilities with it). A `pong` is
     /// read only as a sign of life.
     pub const READS: &[&str] = &[
+        "call.granted",
         "conversation",
         "conversations",
         "error",
+        "link.verdict",
+        "link.versions",
         "mood",
         "notice",
         "outfit",
@@ -505,6 +586,7 @@ impl Session {
         hello.insert("hostEpoch".into(), json!(host_epoch));
         Self {
             timing: contract.timing,
+            schema_version: contract.schema_version,
             hello,
             contract_capabilities: contract.capabilities.clone(),
             known_frames: contract.frames.keys().cloned().collect(),
@@ -522,6 +604,10 @@ impl Session {
             mood_revision: None,
             taken: Vec::new(),
             host_capabilities: BTreeSet::new(),
+            offers: Vec::new(),
+            core: None,
+            told_dropped: BTreeSet::new(),
+            drops: 0,
         }
     }
 
@@ -559,6 +645,70 @@ impl Session {
             .filter(|c| self.contract_capabilities.iter().any(|known| known == c))
             .collect();
         self.hello.insert("capabilities".into(), json!(known));
+    }
+
+    /// What this end may be asked to do for her, each `(name, version)` of the contract's
+    /// `calls`: said in `call.offer` after every welcome on a link where both ends listed
+    /// `calls`. An action the contract does not name at that version, or one her host does
+    /// (`by: host`), is left out: an end offers what it can do, in the contract's words.
+    pub fn offer(&mut self, actions: &[(&str, u64)]) {
+        self.offers = offered(
+            actions
+                .iter()
+                .map(|(name, version)| (name.to_string(), *version)),
+        );
+    }
+
+    /// The shared core this end runs, for `link.versions`: its ABI, and the myriad-core
+    /// commit it was built from (40 hex digits; the end's pin). Without it no
+    /// `link.versions` is sent; with a commit that is not one, the core refuses the frame
+    /// and the shell is told (`Unsent`) after every welcome. A session restored from a
+    /// kept state says what the state said: an end says it again after [`Session::restore`],
+    /// so that after an update it is the core it runs now.
+    pub fn runs(&mut self, abi: u64, build: &str) {
+        self.core = Some((abi.min(WHOLE), build.to_string()));
+    }
+
+    /// What this end said it runs ([`Session::runs`]), when it did.
+    pub fn running(&self) -> Option<(u64, &str)> {
+        self.core
+            .as_ref()
+            .map(|(abi, build)| (*abi, build.as_str()))
+    }
+
+    /// Whether both ends listed `capability`: this end in its hello, her host in its welcome.
+    fn both(&self, capability: &str) -> bool {
+        self.host_capabilities.contains(capability)
+            && self.capabilities().iter().any(|said| said == capability)
+    }
+
+    /// What goes first on every new link once it is open: this end's versions, and what it
+    /// may be asked to do.
+    fn introduce(&mut self, schema_version: u32, now_ms: i64) -> Vec<Output> {
+        let mut out = Vec::new();
+        if let (true, Some((abi, build))) = (self.both("versions"), self.core.clone()) {
+            let actions: Map<String, Value> = self
+                .offers
+                .iter()
+                .map(|(name, version)| (name.clone(), json!(version)))
+                .collect();
+            let body = json!({
+                "contract": schema_version,
+                "core": { "abi": abi, "commit": build },
+                "app": self.hello.get("app").cloned().unwrap_or(Value::Null),
+                "actions": actions,
+            });
+            out.extend(self.send("link.versions", &body, None, now_ms));
+        }
+        if self.both("calls") {
+            let actions: Vec<Value> = self
+                .offers
+                .iter()
+                .map(|(name, version)| json!({ "name": name, "version": version }))
+                .collect();
+            out.extend(self.send("call.offer", &json!({ "actions": actions }), None, now_ms));
+        }
+        out
     }
 
     pub fn turn(&self, turn_id: &str) -> Option<&Turn> {
@@ -607,6 +757,17 @@ impl Session {
             mood_revision: self.mood_revision,
             taken: self.taken.clone(),
             host_capabilities: self.host_capabilities.iter().cloned().collect(),
+            offers: self
+                .offers
+                .iter()
+                .map(|(name, version)| Named {
+                    name: name.clone(),
+                    version: *version,
+                })
+                .collect(),
+            core: self.core.clone().map(|(abi, commit)| Runs { abi, commit }),
+            told_dropped: self.told_dropped.iter().cloned().collect(),
+            drops: self.drops,
         };
         serde_json::to_value(state).expect("a session is plain data")
     }
@@ -634,6 +795,10 @@ impl Session {
                     .into_iter()
                     .flatten()
             }));
+        let counts = counts
+            .chain([state.drops])
+            .chain(state.offers.iter().map(|named| named.version))
+            .chain(state.core.iter().map(|runs| runs.abi));
         let beat = 50..=contract.timing.heartbeat_ms.max(50);
         let mut ids = BTreeSet::new();
         // `sent` counts up by one with each frame, so it stops one short.
@@ -680,6 +845,7 @@ impl Session {
         state.hello.insert("surface".into(), json!("app"));
         Ok(Self {
             timing: contract.timing,
+            schema_version: contract.schema_version,
             hello: state.hello,
             contract_capabilities: contract.capabilities.clone(),
             known_frames: contract.frames.keys().cloned().collect(),
@@ -705,6 +871,17 @@ impl Session {
             mood_revision: state.mood_revision,
             taken: state.taken,
             host_capabilities: state.host_capabilities.into_iter().collect(),
+            // By this contract, whichever one the state was kept under: an action it no
+            // longer names, or names at another version, is not offered.
+            offers: offered(
+                state
+                    .offers
+                    .into_iter()
+                    .map(|named| (named.name, named.version)),
+            ),
+            core: state.core.map(|runs| (runs.abi, runs.commit)),
+            told_dropped: state.told_dropped.into_iter().collect(),
+            drops: state.drops,
         })
     }
 
@@ -719,6 +896,7 @@ impl Session {
         self.last_heard_ms = now_ms;
         self.heartbeat_ms = self.timing.heartbeat_ms;
         self.host_capabilities.clear();
+        self.told_dropped.clear();
         for pending in &mut self.outbox {
             pending.seq = None;
         }
@@ -949,7 +1127,18 @@ impl Session {
             });
             return match self.phase {
                 Phase::Greeting => vec![unread, Output::Drop(Down::RefusedHandshake)],
-                Phase::Open => vec![unread],
+                Phase::Open => {
+                    // Its type, if it came with one, and why the core refuses it, as far
+                    // as either can be read of what is no envelope.
+                    let t = serde_json::from_str::<Value>(text)
+                        .ok()
+                        .and_then(|frame| string(&frame, "t"))
+                        .unwrap_or_default();
+                    let code = frames::refused(text).unwrap_or_else(|| "bad_frame".into());
+                    let mut out = vec![unread];
+                    out.extend(self.dropped(&t, &code, now_ms));
+                    out
+                }
                 Phase::Closed => Vec::new(),
             };
         };
@@ -965,7 +1154,65 @@ impl Session {
             })
             .collect();
         out.extend(self.read(&envelope, refused.is_none(), now_ms));
+        if let Some(code) = &refused {
+            out.extend(self.dropped(&envelope.t, code, now_ms));
+        }
         out
+    }
+
+    /// Her host is told what this end drops (`stream.event` `link.dropped`), on a link that
+    /// is open and where both ends listed `streams`: the frame's type as it came when it is
+    /// written as an id (`unnamed` otherwise) and why, never anything it carried; once per
+    /// type and reason on a link. The contract's reasons are four: every refusal of the
+    /// core's that is none of the others is `bad_frame`.
+    fn dropped(&mut self, t: &str, code: &str, now_ms: i64) -> Vec<Output> {
+        if self.phase != Phase::Open || !self.both("streams") {
+            return Vec::new();
+        }
+        let t = if valid_id(t) { t } else { "unnamed" };
+        let reason = match code {
+            "unknown_frame" | "version_unsupported" | "too_large" => code,
+            _ => "bad_frame",
+        };
+        // Her host sends the types; this end does not keep a list as long as it likes. Past
+        // so many kinds on one link, a new type is told as unnamed.
+        let t = if self.told_dropped.len() >= Self::KEPT_DROPPED
+            && !self.told_dropped.iter().any(|(told, _)| told == t)
+        {
+            "unnamed"
+        } else {
+            t
+        };
+        if !self
+            .told_dropped
+            .insert((t.to_string(), reason.to_string()))
+        {
+            return Vec::new();
+        }
+        // An id of this end's own making, from what it was given: when this link came up
+        // and how many reports this session has made, which never starts over; and never
+        // one a turn or a waiting frame already has.
+        let id = loop {
+            self.drops += 1;
+            let id = format!("ld_{}_{}", self.opened_at_ms.max(0), self.drops);
+            let taken =
+                self.turns.contains_key(&id) || self.outbox.iter().any(|pending| pending.id == id);
+            if !taken {
+                break id;
+            }
+        };
+        self.outbox.push(Pending {
+            id,
+            t: "stream.event".into(),
+            body: json!({
+                "name": "link.dropped",
+                "version": 1,
+                "at": now_ms.max(0),
+                "body": { "t": t, "reason": reason },
+            }),
+            seq: None,
+        });
+        self.flush(now_ms)
     }
 
     fn read(&mut self, envelope: &Envelope, taken: bool, now_ms: i64) -> Vec<Output> {
@@ -1031,6 +1278,28 @@ impl Session {
                 vec![Output::Deliver(Delivery::Mood(body))]
             }
             "error" => self.host_error(&body),
+            "link.versions" if body.is_object() => {
+                vec![Output::Deliver(Delivery::HostVersions(body))]
+            }
+            "link.verdict" => match string(&body, "usable") {
+                Some(usable) => vec![Output::Deliver(Delivery::Verdict {
+                    usable,
+                    stopped: body
+                        .get("stopped")
+                        .and_then(Value::as_array)
+                        .into_iter()
+                        .flatten()
+                        .filter_map(|what| what.as_str().map(str::to_string))
+                        .collect(),
+                })],
+                None => Vec::new(),
+            },
+            "call.granted" => match (named(&body, "actions"), named(&body, "providing")) {
+                (Some(actions), Some(providing)) => {
+                    vec![Output::Deliver(Delivery::Granted { actions, providing })]
+                }
+                _ => Vec::new(),
+            },
             // One the core refuses is acked, so her host stops sending it again, but it is not
             // taken: its id stays free for a line this end can read.
             "say" if !taken => match envelope.id.as_deref().filter(|id| valid_id(id)) {
@@ -1164,6 +1433,27 @@ impl Session {
             lineage,
             host_epoch,
         })];
+        // A report of what this end dropped is for a host that listed `streams`: one still
+        // waiting is not carried to a link where it did not.
+        let report = |pending: &Pending| {
+            pending.t == "stream.event" && pending.body["name"] == "link.dropped"
+        };
+        if !self.both("streams") {
+            self.outbox.retain(|pending| !report(pending));
+        }
+        // What waits from the link before goes again on this one, and is this link's telling
+        // of that kind: it is not told a second time here.
+        let waiting: Vec<(String, String)> = self
+            .outbox
+            .iter()
+            .filter(|pending| report(pending))
+            .filter_map(|pending| {
+                let body = &pending.body["body"];
+                Some((string(body, "t")?, string(body, "reason")?))
+            })
+            .collect();
+        self.told_dropped.extend(waiting);
+        out.extend(self.introduce(self.schema_version, now_ms));
         // Unanswered inputs again (same id, new seq); then what was missed of each unfinished turn.
         // One whose input her host acked and never answered has no run yet: it is asked for by
         // its turn alone, and a host that does not have it rejects it (`turn_unknown`), so the
