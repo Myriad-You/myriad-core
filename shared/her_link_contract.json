@@ -565,7 +565,7 @@
       "delivery": "request",
       "required": ["turnId", "afterSeq"],
       "optional": ["runId"],
-      "description": "Send the turn's run events after afterSeq (the last run sequence this child has; 0 for all), then keep going live until run.end. runId lets the host find a turn it no longer remembers (after a restart). A turn the host cannot find is answered run.rejected turn_unknown. The host keeps the latest 512 events of a run; when what came after afterSeq is older than that, the replay starts later (the final task_completed still carries the whole reply)."
+      "description": "Send the turn's run events after afterSeq (the last run sequence this child has; 0 for all), then keep going live until run.end. runId lets the host find a turn it no longer remembers (after a restart). Without runId (a child that never read the turn's run.accepted: it was answered with error, or could not read it) the host answers run.accepted again, duplicate true and with its sessionId, and streams nothing yet: the child learns its run and the session the host began, and asks again with runId. A turn the host cannot find is answered run.rejected turn_unknown. The host keeps the latest 512 events of a run; when what came after afterSeq is older than that, the replay starts later (the final task_completed still carries the whole reply)."
     },
     "run.accepted": {
       "from": "host",
