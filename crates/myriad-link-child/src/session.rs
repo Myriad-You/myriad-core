@@ -843,20 +843,26 @@ impl Session {
             host_epoch,
         })];
         // Unanswered inputs again (same id, new seq); then what was missed of each unfinished turn.
+        // One whose input her host acked and never answered has no run yet: it is asked for by
+        // its turn alone, and a host that does not have it rejects it (`turn_unknown`), so the
+        // owner is told it was not sent instead of waiting on it for good.
         out.extend(self.flush(now_ms));
         let waiting: BTreeSet<String> = self.outbox.iter().map(|p| p.id.clone()).collect();
-        let resumes: Vec<(String, String, u64)> = self
+        let resumes: Vec<(String, Option<String>, u64)> = self
             .order
             .iter()
             .filter_map(|id| self.turns.get(id))
             .filter(|turn| !turn.ended && !waiting.contains(&turn.turn_id))
-            .filter_map(|turn| {
-                let run_id = turn.run_id.clone()?;
-                Some((turn.turn_id.clone(), run_id, turn.last_sequence))
+            .map(|turn| {
+                (
+                    turn.turn_id.clone(),
+                    turn.run_id.clone(),
+                    turn.last_sequence,
+                )
             })
             .collect();
         for (turn_id, run_id, after) in resumes {
-            out.extend(self.resume(&turn_id, &run_id, after, now_ms));
+            out.extend(self.resume(&turn_id, run_id.as_deref(), after, now_ms));
         }
         out
     }
@@ -885,7 +891,7 @@ impl Session {
         })];
         // A resend the host already had: nothing streams until it is asked for.
         if duplicate && !ended {
-            out.extend(self.resume(&id, &run_id, after, now_ms));
+            out.extend(self.resume(&id, Some(&run_id), after, now_ms));
         }
         out
     }
@@ -936,7 +942,10 @@ impl Session {
             }
             turn.last_sequence = sequence;
         }
+        // A turn asked for by its turn alone is answered by its run's events, with no
+        // `run.accepted`: the first of them says which run it is.
         turn.run_id = Some(run_id.clone());
+        turn.answered = true;
         vec![Output::Deliver(Delivery::Event {
             turn_id: id,
             run_id,
@@ -1004,8 +1013,17 @@ impl Session {
         })]
     }
 
-    fn resume(&mut self, turn_id: &str, run_id: &str, after: u64, now_ms: i64) -> Vec<Output> {
-        let body = json!({ "turnId": turn_id, "runId": run_id, "afterSeq": after });
+    fn resume(
+        &mut self,
+        turn_id: &str,
+        run_id: Option<&str>,
+        after: u64,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        let mut body = json!({ "turnId": turn_id, "afterSeq": after });
+        if let Some(run_id) = run_id {
+            body["runId"] = json!(run_id);
+        }
         self.send("run.resume", &body, None, now_ms)
     }
 
@@ -1119,6 +1137,13 @@ impl Session {
             if frame.iter().any(|o| matches!(o, Output::Send(_))) {
                 self.outbox[index].seq = Some(self.sent);
             } else {
+                // An input that can never go is a turn that will never be answered: it ends
+                // here, with the `Unsent` that tells the shell.
+                if t == "input"
+                    && let Some(turn) = self.turns.get_mut(&id)
+                {
+                    turn.ended = true;
+                }
                 refused.insert(id);
             }
             out.extend(frame);

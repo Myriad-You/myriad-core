@@ -259,6 +259,78 @@ fn an_unfinished_turn_resumes_after_its_last_event() {
 }
 
 #[test]
+fn a_turn_her_host_acked_and_never_answered_is_asked_for_by_its_turn() {
+    let mut s = open();
+    s.say("t_02", "在吗", None, None, &[], T0 + 1000);
+    // Her host heard the input (its ping acks seq 2) and the link went before it answered.
+    s.received(&host("ping", 2, 2, |_| {}), T0 + 1010);
+    s.disconnected();
+    s.connected(T0 + 5000);
+    let frames = sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 5050));
+    assert_eq!(frames.len(), 1, "not sent again: her host has it");
+    assert_eq!(frames[0]["t"], "run.resume");
+    assert_eq!(
+        frames[0]["body"],
+        json!({ "turnId": "t_02", "afterSeq": 0 })
+    );
+    // A host that never started it says so, and the turn ends unsent.
+    let out = s.received(
+        &host("run.rejected", 2, 2, |b| {
+            b["turnId"] = json!("t_02");
+            b["code"] = json!("turn_unknown");
+        }),
+        T0 + 5100,
+    );
+    assert!(matches!(
+        delivered(&out)[..],
+        [Delivery::Rejected { code, .. }] if code == "turn_unknown"
+    ));
+    assert!(s.unfinished().is_empty());
+}
+
+#[test]
+fn a_turn_asked_for_by_its_turn_is_answered_by_its_runs_events() {
+    let mut s = open();
+    s.say("t_02", "在吗", None, None, &[], T0 + 1000);
+    s.received(&host("ping", 2, 2, |_| {}), T0 + 1010);
+    s.disconnected();
+    s.connected(T0 + 5000);
+    s.received(&host("welcome", 1, 1, |_| {}), T0 + 5050);
+    assert!(!s.turn("t_02").unwrap().answered);
+    // Her host has the turn: it sends the run's events and its end, and no run.accepted.
+    let out = s.received(&host("run.event", 2, 2, |_| {}), T0 + 5100);
+    assert!(matches!(
+        delivered(&out)[..],
+        [Delivery::Event { run_id, .. }] if run_id == "run_fedcba9876543210fedcba9876543210"
+    ));
+    let turn = s.turn("t_02").unwrap();
+    assert!(turn.answered);
+    assert_eq!(
+        turn.run_id.as_deref(),
+        Some("run_fedcba9876543210fedcba9876543210")
+    );
+    let out = s.received(&host("run.end", 3, 2, |_| {}), T0 + 5200);
+    assert!(matches!(delivered(&out)[..], [Delivery::End { .. }]));
+    assert!(s.unfinished().is_empty());
+}
+
+#[test]
+fn an_input_the_core_will_not_send_ends_its_turn() {
+    let mut s = open();
+    let long = "长".repeat(300_000);
+    let out = s.say("t_09", &long, None, None, &[], T0 + 1000);
+    assert!(matches!(
+        delivered(&out)[..],
+        [Delivery::Unsent { t, code }] if t == "input" && code == "too_large"
+    ));
+    assert!(s.unfinished().is_empty());
+    // So nothing is asked for it after a reconnect.
+    s.disconnected();
+    s.connected(T0 + 5000);
+    assert!(sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 5050)).is_empty());
+}
+
+#[test]
 fn a_line_she_says_is_acked_every_time_and_taken_once() {
     let mut s = open();
     let say = host("say", 2, 1, |_| {});
