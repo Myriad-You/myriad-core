@@ -21733,6 +21733,228 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "bodies": {
+          "s1": {
+            "key": "minted:release-week",
+            "kind": "topic",
+            "name": "工作",
+            "saidBy": [
+              "her"
+            ],
+            "sync": "shared",
+            "version": 1
+          },
+          "s2": {
+            "base": [],
+            "because": [
+              "memory:m1"
+            ],
+            "item": "them-0123456789",
+            "saidBy": [
+              "her"
+            ],
+            "since": "2026-10-01",
+            "sync": "shared",
+            "text": "在趣养做运营",
+            "version": 1
+          },
+          "s3": {
+            "base": [
+              "s2"
+            ],
+            "because": [
+              "memory:m2"
+            ],
+            "item": "them-0123456789",
+            "saidBy": [
+              "her"
+            ],
+            "since": "2026-10-01",
+            "sync": "shared",
+            "text": "在趣养做运营，同事小王在追她",
+            "version": 1
+          },
+          "s4": {
+            "base": [
+              "s3"
+            ],
+            "because": [
+              "memory:m3"
+            ],
+            "item": "them-0123456789",
+            "saidBy": [
+              "her"
+            ],
+            "since": "2026-10-01",
+            "sync": "shared",
+            "text": "在趣养做主管，同事小王在追她",
+            "version": 1
+          }
+        },
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-site",
+            "id": "s1",
+            "kind": "node.created",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000001000-000000-site",
+            "id": "s2",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000002000-000000-site",
+            "id": "s3",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000003000-000000-site",
+            "id": "s4",
+            "kind": "node.standing",
+            "object": "node:25ae623559006437c416adbde717a853",
+            "origin": "site",
+            "payload": {
+              "ref": "body:s4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 5,
+            "hlc": "001760000004000-000000-site",
+            "id": "f3",
+            "kind": "forget",
+            "object": "row:s3",
+            "origin": "site",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:7",
+            "author": "owner",
+            "dseq": 6,
+            "hlc": "001760000004000-000000-site",
+            "id": "f4",
+            "kind": "forget",
+            "object": "row:s4",
+            "origin": "site",
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "how things stand: a version taken back and the ones written on it are forgotten, the one before stands again",
+      "output": {
+        "nodes": [
+          {
+            "audience": "personal:7",
+            "createdAt": 1760000000000000,
+            "createdBy": "her",
+            "id": "25ae623559006437c416adbde717a853",
+            "key": "minted:release-week",
+            "kind": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "s1"
+              ],
+              "epoch": 1,
+              "row": "s1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": {
+                "kind": "topic"
+              }
+            },
+            "name": {
+              "at": 1760000000000000,
+              "author": "her",
+              "base": [
+                "s1"
+              ],
+              "epoch": 1,
+              "row": "s1",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "value": "工作"
+            },
+            "standing": {
+              "them-0123456789": {
+                "at": 1760000001000000,
+                "author": "her",
+                "base": [
+                  "s2"
+                ],
+                "epoch": 1,
+                "row": "s2",
+                "saidBy": [
+                  "her"
+                ],
+                "sync": "shared",
+                "value": {
+                  "because": [
+                    "memory:m1"
+                  ],
+                  "since": "2026-10-01",
+                  "text": "在趣养做运营"
+                }
+              }
+            },
+            "updatedAt": 1760000003000000
+          }
+        ],
+        "stubbed": [
+          "s3",
+          "s4"
+        ]
+      }
     }
   ],
   "version": 1
