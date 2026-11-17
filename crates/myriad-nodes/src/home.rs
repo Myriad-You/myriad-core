@@ -273,6 +273,7 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
         rows: kept,
         payloads,
         withheld,
+        more: None,
     })
 }
 
@@ -289,6 +290,10 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
         origin,
     } = input;
     check_holder(&holder, &page.audience)?;
+    // A page of a file is not one of a link's: it says no `more`.
+    if page.more.is_some() {
+        return Err(NodeError::new("a page of a file says no more"));
+    }
     myriad_persona_log::partner::exchange(&holder.owner, &peer)
         .map_err(|error| NodeError::new(error.to_string()))?;
     let mut carried: BTreeMap<&str, &str> = BTreeMap::new();

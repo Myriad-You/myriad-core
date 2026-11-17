@@ -202,6 +202,11 @@ fn a_wire_batch_fits_one_log_rows_frame() {
     );
     let vector = &contract["frames"]["log.vector"];
     assert_eq!(vector["maxItems"]["ask"], myriad_nodes::wire::ASK_ROWS);
+    // A page (log.pages) is the contract's number of batches.
+    assert_eq!(
+        contract["limits"]["logPageBatches"],
+        myriad_nodes::wire::PAGE_BATCHES
+    );
     let max = contract["limits"]["maxFrameBytes"].as_u64().unwrap() as usize;
     assert!(myriad_nodes::wire::BATCH_BYTES + (32 << 10) <= max);
     // The largest body that travels, in base64, fits one batch with room

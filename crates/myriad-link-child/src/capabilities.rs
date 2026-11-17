@@ -141,6 +141,8 @@ pub const RULES: &[Rule] = &[
         &["chat.lend", "chat.said", "group.lend", "group.said"],
     ),
     frames("log.full", &[], &[], &["log.full"]),
+    // `log.rows` `more` and `log.vector` `after`: what is missing comes a page at a time.
+    bare("log.pages", Kind::Fields),
     bare("log2", Kind::Fields),
     bare("log3", Kind::Fields),
     bare("log4", Kind::Fields),
