@@ -405,6 +405,12 @@ pub struct Settled {
     /// place, verbatim: only entries of `known`, none a lasting fact
     /// replaces.
     pub took_back: Vec<String>,
+    /// How many entries of `known` only facts not kept said they replace
+    /// (their evidence did not hold, in another language, too long, past
+    /// [`MAX_LASTING`]): they stay as they were, a change not kept changes
+    /// nothing, and a partial taking back such a fact carried is not done.
+    /// A count for the host's log, never the words.
+    pub unkept_replaces: usize,
 }
 
 /// What going over a stretch gives: facts to keep for good (each held to
@@ -442,9 +448,13 @@ pub fn parse_settle(
     told.as_array()?;
     let mut took_back = of_known(Some(told));
     let mut replaced: Vec<String> = Vec::new();
-    let lasting: Vec<Lasting> = answer
-        .get("lasting")?
-        .as_array()?
+    let items = answer.get("lasting")?.as_array()?;
+    // What any fact says it replaces, kept or not.
+    let named: std::collections::BTreeSet<String> = items
+        .iter()
+        .flat_map(|item| of_known(item.get("replaces")))
+        .collect();
+    let lasting: Vec<Lasting> = items
         .iter()
         .filter_map(|item| {
             let fact = item
@@ -494,7 +504,15 @@ pub fn parse_settle(
         .collect();
     // What a fact replaces is not taken back as well.
     took_back.retain(|old| !replaced.contains(old));
-    Some(Settled { lasting, took_back })
+    let unkept_replaces = named
+        .iter()
+        .filter(|old| !replaced.contains(old) && !took_back.contains(old))
+        .count();
+    Some(Settled {
+        lasting,
+        took_back,
+        unkept_replaces,
+    })
 }
 
 /// How many facts of the answer were not kept only for being in another
@@ -1019,6 +1037,24 @@ mod tests {
             parse_settle(raw, theirs, &known, 0, 0).unwrap().took_back,
             ["想辞职"]
         );
+        // A fact not kept (its evidence is not what they said) replaces
+        // nothing and does not keep what it named from being taken back;
+        // what it named alone is counted.
+        let raw = r#"{"lasting":[
+            {"fact":"想辞职","evidence":"从没说过的话","from":[],"concepts":[],"replaces":["想辞职","住在朝阳"]}
+        ],"tookBack":["想辞职"],"moment":[],"known":[]}"#;
+        let settled = parse_settle(raw, theirs, &known, 0, 0).unwrap();
+        assert!(settled.lasting.is_empty());
+        assert_eq!(settled.took_back, ["想辞职"]);
+        assert_eq!(settled.unkept_replaces, 1, "住在朝阳 stays as it was");
+        // tookBack missing, or not a list: refused.
+        for raw in [
+            r#"{"lasting":[],"moment":[],"known":[]}"#,
+            r#"{"lasting":[],"tookBack":null,"moment":[],"known":[]}"#,
+            r#"{"lasting":[],"tookBack":"想辞职","moment":[],"known":[]}"#,
+        ] {
+            assert!(parse_settle(raw, theirs, &known, 0, 0).is_none(), "{raw}");
+        }
         // The shape before: one replaces for the whole answer, refused.
         let raw = r#"{"lasting":[],"replaces":["想辞职"],"moment":[],"known":[]}"#;
         assert!(parse_settle(raw, theirs, &known, 0, 0).is_none());
