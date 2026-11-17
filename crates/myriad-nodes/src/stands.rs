@@ -26,7 +26,7 @@
 //!   [`build_read`]): each node a stretch's facts are put on that has never
 //!   held an item of hers is gone over, from the memories on it, before
 //!   those facts are read, so what they change is changed, not only
-//!   started. A rule's item (where a session is `now`) is not hers and does
+//!   started; only a topic or a person is asked of. A rule's item (where a session is `now`) is not hers and does
 //!   not count; nor does an item of hers that is no one's life (her line on
 //!   a repository).
 //! - **No ledger of its own**: the rows are ordinary `node.standing` rows,
@@ -822,18 +822,28 @@ pub struct BuildDue {
 /// the memories it rests on would stand up what has ended.
 ///
 /// A node built to nothing (nothing on it stood) is still never built, so
-/// it is gone over again the next time a fact is put on it.
+/// it is gone over again the next time a fact is put on it. A node of
+/// another kind is named too: only a topic or a person is asked of
+/// ([`build_prepare`] skips the rest).
 pub fn build_due(input: &BuildDueInput) -> BuildDue {
-    let mut nodes: Vec<String> = Vec::new();
-    for node in &input.nodes {
-        let built = node.standing.iter().any(|row| {
+    let built = |node: &DueNodeIn| {
+        node.standing.iter().any(|row| {
             row.author == "her"
                 && row
                     .item
                     .as_deref()
                     .is_none_or(|item| whose_of(item).is_some())
-        });
-        if !built && !nodes.contains(&node.node) {
+        })
+    };
+    // A node given twice is built when either says so.
+    let mut nodes: Vec<String> = Vec::new();
+    for node in &input.nodes {
+        if !nodes.contains(&node.node)
+            && !input
+                .nodes
+                .iter()
+                .any(|other| other.node == node.node && built(other))
+        {
             nodes.push(node.node.clone());
         }
     }

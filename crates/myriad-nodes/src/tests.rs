@@ -589,6 +589,8 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a standing without evidence", "because is empty"),
         ("a standing with a field it does not know", "unknown field"),
         ("a standing in a state no end says", "body does not fit its kind"),
+        // nodes.stands_build_due
+        ("the shape before nodes is refused", "unknown field"),
         // nodes.sort_input, nodes.standing_read, nodes.range_dates, nodes.list
         ("a said day that is not a day", "said and today are a day"),
         ("no item", "missing field `item`"),

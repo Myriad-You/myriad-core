@@ -155,6 +155,39 @@
           "cafe"
         ]
       }
+    },
+    {
+      "input": {
+        "nodes": [
+          {
+            "node": "run"
+          },
+          {
+            "node": "run",
+            "standing": [
+              {
+                "author": "her",
+                "item": "them-0123456789"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "a node given twice is built when either says so",
+      "output": {
+        "due": false,
+        "nodes": []
+      }
+    },
+    {
+      "input": {
+        "facts": 1,
+        "standing": []
+      },
+      "name": "the shape before nodes is refused",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

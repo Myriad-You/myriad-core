@@ -410,6 +410,14 @@ fn a_node_a_fact_is_put_on_is_built_until_one_of_hers_stood_on_it() {
         ]),
         only(&["run", "cafe"])
     );
+    // A node given twice is built when either says so.
+    assert_eq!(
+        due(vec![
+            on("run", vec![]),
+            on("run", vec![hers(Some("them-0123456789"))]),
+        ]),
+        none
+    );
     // Once one of hers stood on it, ended or not (the host gives ended
     // rows too), or with no item given, it is not built again.
     assert_eq!(
