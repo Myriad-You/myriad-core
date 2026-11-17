@@ -800,10 +800,11 @@ impl Session {
     pub const KEPT_DROPPED: usize = 32;
     pub const KEPT_TURNS: usize = 64;
     pub const KEPT_TAKEN: usize = 256;
-    /// The most `stream.event` frames kept until acked. The one event a child sends today
-    /// is the session's own `link.dropped`, at most [`Self::KEPT_DROPPED`] kinds on a link:
-    /// this is eight links' worth of them never acked, and as many ids as an end remembers
-    /// of what it took ([`Self::KEPT_TAKEN`]).
+    /// The most `stream.event` frames and frames of the shell's own ([`Session::pass`])
+    /// kept until acked, together. The one event a child sends today is the session's own
+    /// `link.dropped`, at most [`Self::KEPT_DROPPED`] kinds on a link: this is eight links'
+    /// worth of them never acked, and as many ids as an end remembers of what it took
+    /// ([`Self::KEPT_TAKEN`]).
     pub const KEPT_EVENTS: usize = 256;
 
     /// The host's frame types this session reads; any other is passed by
@@ -2009,7 +2010,14 @@ impl Session {
         needs: Option<&str>,
         now_ms: i64,
     ) -> Vec<Output> {
-        let untold = |code: &str| unsent(t, code, id);
+        // Nothing told here repeats what came in: a type is said back only when it is one
+        // the contract names.
+        let named = if self.known_frames.contains(t) {
+            t
+        } else {
+            "unnamed"
+        };
+        let untold = |code: &str| unsent(named, code, id);
         let owned = Self::OWNS.contains(&t)
             || ["call.", "link.", "stream."]
                 .iter()
@@ -2150,7 +2158,9 @@ impl Session {
         };
         // Every end speaks one protocol and neither falls back: a welcome that says
         // another than this end's hello did is not a link to go on with.
-        if body.get("protocol") != self.hello.get("protocol") {
+        // Read as a number however it is written (`2`, `2.0`), like every count here.
+        let protocol = |from: Option<&Value>| from.and_then(unsigned);
+        if protocol(body.get("protocol")) != protocol(self.hello.get("protocol")) {
             return vec![
                 Output::Deliver(Delivery::Unread {
                     t: Some("welcome".into()),

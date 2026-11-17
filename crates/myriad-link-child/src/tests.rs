@@ -3464,8 +3464,15 @@ mod passing {
             T0 + 100,
         );
         assert!(untold(&out, "node.forget", "bad_frame"));
-        let out = s.pass("no.such", None, &json!({}), None, None, T0 + 100);
-        assert!(sent(&out).is_empty() && matches!(delivered(&out)[..], [Delivery::Unsent { .. }]));
+        // A type the contract does not name is not said back, whatever it is.
+        for t in ["no.such", "call.no such thing", "zzz anything at all"] {
+            let out = s.pass(t, Some("x_1"), &json!({}), None, None, T0 + 100);
+            assert!(sent(&out).is_empty());
+            assert!(
+                matches!(delivered(&out)[..], [Delivery::Unsent { t, .. }] if t == "unnamed"),
+                "{out:?}"
+            );
+        }
         // A sync family's frame of a host core's is this end's to send, where sync is on.
         let out = sent(&s.pass(
             "log.vector",
@@ -3617,6 +3624,16 @@ mod passing {
                 ..
             }
         ));
+    }
+
+    #[test]
+    fn a_welcome_that_writes_the_protocol_as_a_double_is_the_same_protocol() {
+        let mut s = session();
+        s.connected(T0);
+        let welcome = host("welcome", 1, 1, |_| {}).replace("\"protocol\":2", "\"protocol\":2.0");
+        assert!(welcome.contains("2.0"));
+        s.received(&welcome, T0 + 50);
+        assert_eq!(s.phase(), Phase::Open);
     }
 
     #[test]
