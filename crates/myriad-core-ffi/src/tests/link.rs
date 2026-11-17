@@ -119,6 +119,8 @@ fn now_bodies_are_read_by_the_sessions_rules() {
 /// JSON library keeps every number as a double: it asks for the state as text, never
 /// decodes it, and writes its own whole numbers the way such a library does (`3.0`).
 struct AcrossTheEntry {
+    /// What `link.child_new` was given: a restart makes the session anew from it.
+    new: Value,
     state: Value,
     out: std::collections::VecDeque<Value>,
     doubles: bool,
@@ -130,14 +132,16 @@ impl AcrossTheEntry {
             "capabilities": script.capabilities,
             "app": { "name": "Child", "version": "1" },
             "offers": script.offers,
+            "passthrough": script.passthrough,
             "text": doubles,
         });
         if let Some(core) = &script.core {
             new["coreCommit"] = json!(core.commit);
         }
-        let made = ok("link.child_new", new);
+        let made = ok("link.child_new", new.clone());
         assert_eq!(made["state"].is_string(), doubles);
         Self {
+            new,
             state: made["state"].clone(),
             out: Default::default(),
             doubles,
@@ -173,6 +177,11 @@ impl AcrossTheEntry {
 impl myriad_link_conformance::ChildEnd for AcrossTheEntry {
     fn act(&mut self, what: &Value, now_ms: i64) -> Result<(), String> {
         let event = match what.as_str() {
+            // The process is gone: nothing of the state it held is kept.
+            Some("restart") => {
+                self.state = ok("link.child_new", self.new.clone())["state"].clone();
+                return Ok(());
+            }
             Some("connect") => json!("connected"),
             Some("disconnect") => json!("disconnected"),
             Some("tick") => json!("tick"),
@@ -199,7 +208,7 @@ fn scripts() -> Vec<myriad_link_conformance::Script> {
         .map(|entry| entry.unwrap().path())
         .collect();
     paths.sort();
-    assert_eq!(paths.len(), 17);
+    assert_eq!(paths.len(), 25);
     paths
         .iter()
         .map(|path| serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap())

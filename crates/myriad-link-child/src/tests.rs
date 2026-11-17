@@ -112,10 +112,14 @@ fn a_welcome_without_sync_is_not_taken() {
 }
 
 #[test]
-fn a_frame_of_the_sync_families_passes_her_by() {
+fn a_frame_of_the_sync_families_is_told_as_not_read() {
     let mut s = open();
     let out = s.received(&host("lease.epoch", 2, 1, |_| {}), T0 + 60);
-    assert!(out.is_empty());
+    assert!(matches!(
+        &out[..],
+        [Output::Deliver(Delivery::Unread { t: Some(t), code })]
+            if t == "lease.epoch" && code == "unknown_frame"
+    ));
     assert_eq!(s.phase(), Phase::Open);
 }
 
@@ -927,7 +931,8 @@ mod capabilities {
                 "{t}: {out:?}"
             );
         }
-        // And a host frame it does not read brings nothing, though the core takes it.
+        // And a host frame it does not read is told as not read, though the core takes it:
+        // nothing of it is handed over.
         let known: BTreeSet<&str> = Session::READS.iter().copied().collect();
         let all: Value = serde_json::from_str(FIXTURES).unwrap();
         for frame in all["frames"].as_array().unwrap() {
@@ -940,7 +945,14 @@ mod capabilities {
             let mut frame = frame.clone();
             frame["seq"] = json!(seq);
             let out = s.received(&frame.to_string(), T0 + 200);
-            assert!(delivered(&out).is_empty(), "{t}: {out:?}");
+            assert!(
+                matches!(
+                    delivered(&out)[..],
+                    [Delivery::Unread { t: Some(told), code }]
+                        if told == t && code == "unknown_frame"
+                ),
+                "{t}: {out:?}"
+            );
         }
     }
 
@@ -1486,7 +1498,12 @@ mod calls {
             &ask("c_2", 3, T0 + hour + 9500, T0 + hour + 9400),
             T0 + 9500,
         );
-        assert!(delivered(&out).is_empty());
+        // (Her host's ack of the first call's answer is told; the call itself is not handed over.)
+        assert!(
+            delivered(&out)
+                .iter()
+                .all(|d| matches!(d, Delivery::CallSettled { .. }))
+        );
         assert_eq!(sent(&out)[1]["body"]["error"]["code"], "call_timeout");
     }
 
@@ -1622,7 +1639,11 @@ mod calls {
                 .all(|o| !matches!(o, Output::Deliver(_)))
         );
         let out = s.received(&ask("c_1", 4, T0 + 3000, T0 + 9000), T0 + 3000);
-        assert!(delivered(&out).is_empty());
+        assert!(
+            delivered(&out)
+                .iter()
+                .all(|d| matches!(d, Delivery::CallSettled { .. }))
+        );
         // One already answered stands as it was answered.
         let out = s.lost(&[("c_1", "screen.look", 1)], T0 + 4000);
         assert!(matches!(delivered(&out)[..], [Delivery::Unsent { code, .. }] if code == "bad_id"));
@@ -3089,5 +3110,606 @@ mod calling {
         assert!(sent(&out).is_empty());
         assert!(gone(&out, "evt_last"));
         assert_eq!(kept(&s), (Session::KEPT_EVENTS, json!("evt_1")));
+    }
+}
+
+mod passing {
+    use super::*;
+
+    /// Open, with a shell that takes the frames the session does not read; `sync` is what
+    /// the welcome says.
+    fn taking(sync: &str) -> Session {
+        let mut s = session();
+        s.passes(true);
+        s.connected(T0);
+        s.received(
+            &host("welcome", 1, 1, |body| body["sync"] = json!(sync)),
+            T0 + 50,
+        );
+        s
+    }
+
+    /// A frame of her host's with its fixture's body, under `id` when it has one.
+    fn from_host(t: &str, seq: u64, id: Option<&str>) -> String {
+        let mut frame: Value = serde_json::from_str(&host(t, seq, 1, |_| {})).unwrap();
+        if let Some(id) = id {
+            frame["id"] = json!(id);
+        }
+        frame.to_string()
+    }
+
+    fn handed(out: &[Output]) -> Vec<(String, Option<String>, u64, u64, String)> {
+        delivered(out)
+            .iter()
+            .filter_map(|delivery| match delivery {
+                Delivery::Frame {
+                    t,
+                    id,
+                    seq,
+                    link,
+                    delivery,
+                } => Some((t.clone(), id.clone(), *seq, *link, delivery.clone())),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// What this end acks, as its next frame says: asked with a ping of her host's.
+    fn acks(s: &mut Session, seq: u64) -> u64 {
+        let out = sent(&s.received(&host("ping", seq, 1, |_| {}), T0 + 900));
+        assert_eq!(out[0]["t"], "pong");
+        out[0]["ack"].as_u64().unwrap()
+    }
+
+    fn untold(out: &[Output], of: &str, why: &str) -> bool {
+        sent(out).is_empty()
+            && matches!(
+                delivered(out)[..],
+                [Delivery::Unsent { t, code, .. }] if t == of && code == why
+            )
+    }
+
+    #[test]
+    fn a_reliable_frame_handed_to_the_shell_counts_when_the_shell_took_it() {
+        let mut s = taking("on");
+        // Reliable: handed over with its number, and not acked.
+        let out = s.received(&from_host("act.request", 2, Some("act_1")), T0 + 100);
+        assert!(sent(&out).is_empty());
+        assert_eq!(
+            handed(&out),
+            [(
+                "act.request".into(),
+                Some("act_1".into()),
+                2,
+                1,
+                "reliable".into()
+            )]
+        );
+        // Not reliable: handed over, and done with at once; what is acked still stops short
+        // of the one that waits.
+        let out = s.received(&from_host("nodes", 3, None), T0 + 110);
+        assert_eq!(
+            handed(&out),
+            [("nodes".into(), None, 3, 1, "latest".into())]
+        );
+        assert_eq!(acks(&mut s, 4), 1);
+        // A second waits; taken out of order, the ack does not move past the first.
+        let out = s.received(&from_host("log.rows", 5, Some("rows_1")), T0 + 120);
+        assert_eq!(handed(&out).len(), 1);
+        assert!(s.took(&[(1, 5)], T0 + 130).is_empty());
+        assert_eq!(acks(&mut s, 6), 1);
+        // The first taken: everything heard is acked, said at once.
+        let out = s.took(&[(1, 2)], T0 + 140);
+        assert!(matches!(&sent(&out)[..], [frame] if frame["t"] == "ack" && frame["ack"] == 6));
+        // Taken twice, or never handed over: told.
+        assert!(untold(&s.took(&[(1, 2)], T0 + 150), "ack", "bad_id"));
+        assert!(untold(&s.took(&[(1, 3)], T0 + 150), "ack", "bad_id"));
+        // Her host sends one that was taken again: acked, not handed over again.
+        let out = s.received(&from_host("act.request", 7, Some("act_1")), T0 + 160);
+        assert!(handed(&out).is_empty());
+        assert!(matches!(&sent(&out)[..], [frame] if frame["t"] == "ack" && frame["ack"] == 7));
+        // The state keeps what waits.
+        s.received(&from_host("act.request", 8, Some("act_2")), T0 + 170);
+        let state = s.state();
+        assert_eq!(state["passing"], json!([{ "seq": 8, "id": "act_2" }]));
+        let mut back = Session::restore(contract(), &state).unwrap();
+        assert_eq!(back.state(), state);
+        assert_eq!(acks(&mut back, 9), 7);
+    }
+
+    #[test]
+    fn a_frame_not_taken_when_the_link_goes_is_handed_over_again_on_the_next() {
+        let mut s = taking("on");
+        s.received(&from_host("act.request", 2, Some("act_1")), T0 + 100);
+        s.disconnected();
+        // What waited is gone with the link: its number means nothing now.
+        assert!(untold(&s.took(&[(1, 2)], T0 + 200), "ack", "bad_id"));
+        s.connected(T0 + 1000);
+        s.received(&host("welcome", 1, 1, |_| {}), T0 + 1050);
+        // Her host sends it again, the same id under a new number: handed over again.
+        let out = s.received(&from_host("act.request", 2, Some("act_1")), T0 + 1100);
+        assert_eq!(
+            handed(&out),
+            [(
+                "act.request".into(),
+                Some("act_1".into()),
+                2,
+                2,
+                "reliable".into()
+            )]
+        );
+        // The last link's number does not take this link's frame, though the two are equal.
+        assert!(untold(&s.took(&[(1, 2)], T0 + 1200), "ack", "bad_id"));
+        assert_eq!(acks(&mut s, 3), 1);
+        let out = s.took(&[(2, 2)], T0 + 1300);
+        assert!(matches!(&sent(&out)[..], [frame] if frame["t"] == "ack" && frame["ack"] == 3));
+    }
+
+    #[test]
+    fn only_so_many_wait_for_the_shell_and_past_that_the_ack_stays() {
+        let mut s = taking("on");
+        let kept = Session::KEPT_PASSING as u64;
+        for n in 0..kept {
+            let out = s.received(
+                &from_host("act.request", 2 + n, Some(&format!("act_{n}"))),
+                T0 + 100,
+            );
+            assert_eq!(handed(&out).len(), 1);
+        }
+        let out = s.received(
+            &from_host("act.request", 2 + kept, Some("act_more")),
+            T0 + 200,
+        );
+        assert!(matches!(
+            &out[..],
+            [
+                Output::Deliver(Delivery::Unread { t: Some(t), code }),
+                Output::Drop(Down::Behind)
+            ] if t == "act.request" && code == "too_many"
+        ));
+        // All that were handed over are taken: the ack stops short of the one that was not.
+        let all: Vec<(u64, u64)> = (0..kept).map(|n| (1, 2 + n)).collect();
+        let out = s.took(&all, T0 + 300);
+        assert!(matches!(&sent(&out)[..], [frame] if frame["ack"] == 1 + kept));
+        assert_eq!(acks(&mut s, 3 + kept), 1 + kept);
+    }
+
+    #[test]
+    fn a_shell_that_takes_no_frames_is_told_and_the_frame_counts() {
+        let mut s = open();
+        let out = s.received(&from_host("act.request", 2, Some("act_1")), T0 + 100);
+        assert!(matches!(
+            &out[..],
+            [Output::Deliver(Delivery::Unread { t: Some(t), code })]
+                if t == "act.request" && code == "unknown_frame"
+        ));
+        assert_eq!(acks(&mut s, 3), 3);
+        // A frame the session reads that brings nothing (a pong) is not one of these.
+        assert!(s.received(&host("pong", 4, 1, |_| {}), T0 + 950).is_empty());
+    }
+
+    #[test]
+    fn a_frame_of_the_shells_goes_numbered_and_a_reliable_one_goes_again() {
+        let mut s = taking("on");
+        let body = |t: &str| fixture(t)["body"].clone();
+        // Reliable, kept: sent, and again on the next link under the same id, in the order
+        // given.
+        let out = sent(&s.pass(
+            "node.forget",
+            Some("f_1"),
+            &body("node.forget"),
+            None,
+            None,
+            T0 + 100,
+        ));
+        assert!(matches!(&out[..], [frame]
+            if frame["t"] == "node.forget" && frame["id"] == "f_1" && frame["seq"] == 2));
+        s.pass(
+            "card.answer",
+            Some("c_1"),
+            &body("card.answer"),
+            None,
+            None,
+            T0 + 110,
+        );
+        // Reliable, not kept: sent as one, and nothing of it stays.
+        let out = sent(&s.pass(
+            "moment",
+            Some("m_1"),
+            &body("moment"),
+            Some(false),
+            None,
+            T0 + 120,
+        ));
+        assert!(matches!(&out[..], [frame] if frame["t"] == "moment" && frame["id"] == "m_1"));
+        let waiting = |s: &Session| -> Vec<Value> {
+            s.state()["outbox"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|pending| pending["id"].clone())
+                .collect()
+        };
+        assert_eq!(waiting(&s), [json!("f_1"), json!("c_1")]);
+        // Not reliable: sent, never kept; said to be kept, it is no frame.
+        let out = sent(&s.pass(
+            "work.recall",
+            None,
+            &body("work.recall"),
+            None,
+            None,
+            T0 + 130,
+        ));
+        assert!(matches!(&out[..], [frame] if frame["t"] == "work.recall"));
+        assert!(untold(
+            &s.pass(
+                "work.recall",
+                None,
+                &body("work.recall"),
+                Some(true),
+                None,
+                T0 + 130
+            ),
+            "work.recall",
+            "bad_frame"
+        ));
+        // With no link: a kept one waits, any other is told.
+        s.disconnected();
+        assert!(
+            s.pass(
+                "node.forget",
+                Some("f_2"),
+                &body("node.forget"),
+                None,
+                None,
+                T0 + 200
+            )
+            .is_empty()
+        );
+        assert!(untold(
+            &s.pass(
+                "moment",
+                Some("m_2"),
+                &body("moment"),
+                Some(false),
+                None,
+                T0 + 200
+            ),
+            "moment",
+            "link_down"
+        ));
+        assert!(untold(
+            &s.pass(
+                "work.recall",
+                None,
+                &body("work.recall"),
+                None,
+                None,
+                T0 + 200
+            ),
+            "work.recall",
+            "link_down"
+        ));
+        s.connected(T0 + 1000);
+        let out = sent(&s.received(&host("welcome", 1, 1, |_| {}), T0 + 1050));
+        let again: Vec<&Value> = out.iter().map(|frame| &frame["id"]).collect();
+        assert_eq!(again, [&json!("f_1"), &json!("c_1"), &json!("f_2")]);
+        // Acked, they wait no more.
+        s.received(&host("ping", 2, 4, |_| {}), T0 + 1100);
+        assert!(waiting(&s).is_empty());
+        // The same frame again under an id that waits is the same frame; another is told.
+        s.disconnected();
+        s.pass(
+            "node.forget",
+            Some("f_3"),
+            &body("node.forget"),
+            None,
+            None,
+            T0 + 1200,
+        );
+        assert!(
+            s.pass(
+                "node.forget",
+                Some("f_3"),
+                &body("node.forget"),
+                None,
+                None,
+                T0 + 1200
+            )
+            .is_empty()
+        );
+        assert!(untold(
+            &s.pass(
+                "card.answer",
+                Some("f_3"),
+                &body("card.answer"),
+                None,
+                None,
+                T0 + 1200
+            ),
+            "card.answer",
+            "bad_id"
+        ));
+    }
+
+    #[test]
+    fn what_the_session_sends_itself_and_what_only_her_host_sends_do_not_go() {
+        let mut s = taking("on");
+        let body = |t: &str| fixture(t)["body"].clone();
+        for t in [
+            "call.ask",
+            "call.result",
+            "link.versions",
+            "stream.event",
+            "ping",
+            "ack",
+            "input",
+            "presence",
+        ] {
+            let out = s.pass(t, Some("x_1"), &body(t), None, None, T0 + 100);
+            assert!(untold(&out, t, "owned"), "{t}: {out:?}");
+        }
+        for t in ["welcome", "say", "error", "lease.grant", "log.full"] {
+            let id = (contract().frames[t].delivery == "reliable").then_some("x_1");
+            let out = s.pass(t, id, &body(t), None, None, T0 + 100);
+            assert!(untold(&out, t, "not_sender"), "{t}: {out:?}");
+        }
+        // What the core does not take is told by its code, never sent.
+        let out = s.pass(
+            "node.forget",
+            Some("f_1"),
+            &json!({ "other": 1 }),
+            None,
+            None,
+            T0 + 100,
+        );
+        assert!(untold(&out, "node.forget", "bad_frame"));
+        let out = s.pass("no.such", None, &json!({}), None, None, T0 + 100);
+        assert!(sent(&out).is_empty() && matches!(delivered(&out)[..], [Delivery::Unsent { .. }]));
+        // A sync family's frame of a host core's is this end's to send, where sync is on.
+        let out = sent(&s.pass(
+            "log.vector",
+            None,
+            &body("log.vector"),
+            None,
+            None,
+            T0 + 100,
+        ));
+        assert!(matches!(&out[..], [frame] if frame["t"] == "log.vector"));
+    }
+
+    #[test]
+    fn sync_frames_go_only_where_sync_is_on_and_a_needed_capability_where_it_was_accepted() {
+        let body = |t: &str| fixture(t)["body"].clone();
+        let mut s = taking("off");
+        assert!(untold(
+            &s.pass(
+                "log.vector",
+                None,
+                &body("log.vector"),
+                None,
+                None,
+                T0 + 100
+            ),
+            "log.vector",
+            "sync_off"
+        ));
+        // Her host accepted none of this: a frame that needs it does not go.
+        assert!(untold(
+            &s.pass(
+                "node.forget",
+                Some("f_1"),
+                &body("node.forget"),
+                None,
+                Some("nodes"),
+                T0 + 100
+            ),
+            "node.forget",
+            "not_accepted"
+        ));
+        // Handed over with no link, they wait for a welcome's word, and are let go by one
+        // that says no: told, each once, and not kept for another link.
+        s.disconnected();
+        s.pass(
+            "log.rows",
+            Some("rows_1"),
+            &body("log.rows"),
+            None,
+            None,
+            T0 + 200,
+        );
+        s.pass(
+            "node.forget",
+            Some("f_2"),
+            &body("node.forget"),
+            None,
+            Some("nodes"),
+            T0 + 200,
+        );
+        s.pass(
+            "card.answer",
+            Some("c_1"),
+            &body("card.answer"),
+            None,
+            None,
+            T0 + 200,
+        );
+        s.connected(T0 + 1000);
+        let out = s.received(
+            &host("welcome", 1, 1, |body| body["sync"] = json!("off")),
+            T0 + 1050,
+        );
+        let told: Vec<(&str, &str)> = delivered(&out)
+            .iter()
+            .filter_map(|delivery| match delivery {
+                Delivery::Unsent { t, code, .. } => Some((t.as_str(), code.as_str())),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(
+            told,
+            [("log.rows", "sync_off"), ("node.forget", "not_accepted")]
+        );
+        let went: Vec<Value> = sent(&out).iter().map(|frame| frame["t"].clone()).collect();
+        assert_eq!(went, [json!("card.answer")]);
+        assert_eq!(s.state()["outbox"].as_array().unwrap().len(), 1);
+        // Where her host accepted the capability and sync is on, both go.
+        let mut s = session();
+        s.passes(true);
+        s.set_capabilities(&["nodes"]);
+        s.connected(T0);
+        s.received(
+            &host("welcome", 1, 1, |body| {
+                body["sync"] = json!("on");
+                body["capabilities"] = json!(["nodes"]);
+            }),
+            T0 + 50,
+        );
+        let out = sent(&s.pass(
+            "node.forget",
+            Some("f_1"),
+            &body("node.forget"),
+            None,
+            Some("nodes"),
+            T0 + 100,
+        ));
+        assert_eq!(out.len(), 1);
+        let out = sent(&s.pass(
+            "log.rows",
+            Some("rows_1"),
+            &body("log.rows"),
+            Some(false),
+            None,
+            T0 + 100,
+        ));
+        assert_eq!(out.len(), 1);
+    }
+
+    #[test]
+    fn a_welcome_says_whether_sync_is_on_and_the_partners_id() {
+        let mut s = session();
+        s.connected(T0);
+        let out = s.received(
+            &host("welcome", 1, 1, |body| {
+                body["sync"] = json!("on");
+                body["partner"] = json!("partner_1");
+            }),
+            T0 + 50,
+        );
+        assert!(matches!(
+            delivered(&out)[0],
+            Delivery::Welcome { sync: true, partner: Some(partner), .. } if partner == "partner_1"
+        ));
+        let mut s = session();
+        s.connected(T0);
+        let out = s.received(
+            &host("welcome", 1, 1, |body| {
+                body["sync"] = json!("off");
+                body.as_object_mut().unwrap().remove("partner");
+            }),
+            T0 + 50,
+        );
+        assert!(matches!(
+            delivered(&out)[0],
+            Delivery::Welcome {
+                sync: false,
+                partner: None,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn a_welcome_of_another_protocol_drops_the_link() {
+        let mut s = session();
+        s.connected(T0);
+        let out = s.received(
+            &host("welcome", 1, 1, |body| body["protocol"] = json!(1)),
+            T0 + 50,
+        );
+        assert!(matches!(out.last(), Some(Output::Drop(_))), "{out:?}");
+        assert!(
+            delivered(&out)
+                .iter()
+                .any(|d| matches!(d, Delivery::Unread { .. }))
+        );
+        assert_ne!(s.phase(), Phase::Open);
+    }
+
+    #[test]
+    fn a_call_is_settled_when_her_host_has_its_result_and_a_restart_before_that_is_not_done_twice()
+    {
+        let look = [("screen.look", 1)];
+        let linked = |s: &mut Session, at: i64| {
+            s.connected(at);
+            s.received(
+                &host("welcome", 1, 1, |body| {
+                    body["capabilities"] = json!(["calls"])
+                }),
+                at + 50,
+            );
+            s.received(
+                &host("call.granted", 2, 2, |body| {
+                    body["actions"] = json!([{ "name": "screen.look", "version": 1 }]);
+                    body["providing"] = json!([]);
+                }),
+                at + 60,
+            )
+        };
+        let asked = |seq: u64, ack: u64, at: i64| {
+            let mut frame: Value = serde_json::from_str(&host("call.ask", seq, ack, |body| {
+                *body = json!({ "callId": "c_1", "action": "screen.look", "version": 1,
+                    "args": {}, "for": { "kind": "owner" }, "deadlineAt": at + 9000 });
+            }))
+            .unwrap();
+            frame["id"] = json!("c_1");
+            frame.to_string()
+        };
+        let mut s = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        s.offer(&look);
+        linked(&mut s, T0);
+        let out = s.received(&asked(3, 2, T0 + 1000), T0 + 1000);
+        assert!(
+            delivered(&out)
+                .iter()
+                .any(|d| matches!(d, Delivery::Call { .. }))
+        );
+        // Handed in, the result is on its way: nothing says her host has it yet.
+        let out = s.call_done("c_1", &json!({ "facts": {} }), &[], T0 + 1500);
+        let result = sent(&out)[0]["seq"].as_u64().unwrap();
+        assert!(delivered(&out).is_empty());
+        let out = s.received(&host("ping", 4, result - 1, |_| {}), T0 + 1600);
+        assert!(delivered(&out).is_empty());
+        // The process is gone before her host acked it, and the session's state with it. The
+        // shell still has the call on disk: a new session is told of it before it connects,
+        // and her host, asking again, is answered that it is not known, not handed the call.
+        let mut s = Session::new(contract(), &["calls"], ("Child", "1"), None, None);
+        s.offer(&look);
+        s.lost(&[("c_1", "screen.look", 1)], T0 + 5000);
+        linked(&mut s, T0 + 5000);
+        let out = s.received(&asked(3, 2, T0 + 5100), T0 + 5100);
+        assert!(
+            delivered(&out)
+                .iter()
+                .all(|d| !matches!(d, Delivery::Call { .. }))
+        );
+        let answer = s.state()["outbox"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|p| p["t"] == "call.result")
+            .cloned()
+            .unwrap();
+        assert_eq!(answer["body"]["outcome"], "unknown");
+        // Her host's ack covers that answer: now the shell is told, and forgets the call.
+        let seq = answer["seq"].as_u64().unwrap();
+        let out = s.received(&host("ping", 4, seq, |_| {}), T0 + 5200);
+        assert!(matches!(
+            delivered(&out)[..],
+            [Delivery::CallSettled { call_id }] if call_id == "c_1"
+        ));
+        // Once: a later frame of her host's says nothing more of it.
+        let out = s.received(&host("ping", 5, seq, |_| {}), T0 + 5300);
+        assert!(delivered(&out).is_empty());
     }
 }

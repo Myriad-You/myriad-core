@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "pass-off",
+  "about": "A shell that takes no frames of the kinds the session does not read: such a frame is told to it as not read every time, told to her host as dropped once on a link (where both listed streams), and counts as heard.",
+  "capabilities": ["streams"],
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["streams"], "turns": [], "serverTime": 1760140800050, "sync": "on"}}},
+    {"deliver": {"kind": "welcome", "sync": "on", "partner": null}},
+    {"at": 100, "host": {"t": "act.request", "body": {"proposalId": "int_1123456789abcdef0123456789abcdef", "title": "把这台 Mac 的截图收进一个文件夹", "instruction": "把桌面上的截图移到「截图」文件夹", "expectedOutcome": "桌面上不再散着截图", "pickupBy": 1760141540000, "maxRunMs": 1800000}, "id": "act_1"}},
+    {"deliver": {"kind": "unread", "t": "act.request", "code": "unknown_frame"}},
+    {"child": {"t": "stream.event", "body": {"name": "link.dropped", "body": {"t": "act.request", "reason": "unknown_frame"}}}},
+    {"at": 200, "host": {"t": "ping"}},
+    {"child": {"t": "pong", "ack": 3}},
+    {"at": 300, "host": {"t": "act.request", "body": {"proposalId": "int_1123456789abcdef0123456789abcdef", "title": "把这台 Mac 的截图收进一个文件夹", "instruction": "把桌面上的截图移到「截图」文件夹", "expectedOutcome": "桌面上不再散着截图", "pickupBy": 1760141540000, "maxRunMs": 1800000}, "id": "act_2"}},
+    {"deliver": {"kind": "unread", "t": "act.request", "code": "unknown_frame"}},
+    {"at": 400, "host": {"t": "ping"}},
+    {"child": {"t": "pong", "ack": 5}}
+  ]
+}

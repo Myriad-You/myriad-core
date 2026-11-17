@@ -38,6 +38,7 @@
     {"child": {"t": "call.offer", "seq": 2}},
     {"child": {"t": "call.result", "id": "call_work_1.result", "body": {"callId": "call_work_1", "action": "work.run", "version": 1, "outcome": "done", "result": {"status": "completed"}}, "seq": 3}},
     {"at": 5060, "host": {"t": "call.granted", "body": {"actions": [{"name": "notify.post", "version": 1}, {"name": "screen.look", "version": 1}, {"name": "work.run", "version": 1}], "providing": []}}},
+    {"deliver": {"kind": "call_settled", "callId": "call_work_1"}},
     {"deliver": {"kind": "granted"}},
     {"at": 6000, "host": {"t": "call.ask", "id": "call_work_2", "body": {"callId": "call_work_2", "action": "work.run", "version": 1, "args": {"proposalId": "p_1", "title": "t", "instruction": "i"}, "for": {"kind": "owner"}, "deadlineAt": 1760141400000}}},
     {"child": {"t": "ack"}},
@@ -47,8 +48,10 @@
     {"deliver": {"kind": "call_stop", "callId": "call_work_2", "why": "cancelled"}},
     {"child": {"t": "call.result", "id": "call_work_2.result", "body": {"callId": "call_work_2", "action": "work.run", "version": 1, "outcome": "failed", "error": {"code": "call_cancelled"}}}},
     {"at": 7100, "host": {"t": "call.cancel", "body": {"callId": "call_work_2"}}},
+    {"deliver": {"kind": "call_settled", "callId": "call_work_2"}},
     {"child": {"t": "call.result", "id": "call_work_2.result", "body": {"callId": "call_work_2", "action": "work.run", "version": 1, "outcome": "failed", "error": {"code": "call_cancelled"}}}},
     {"at": 7200, "host": {"t": "call.cancel", "body": {"callId": "call_never"}}},
+    {"deliver": {"kind": "call_settled", "callId": "call_work_2"}},
     {"at": 7300, "do": {"callFailed": {"callId": "call_work_2", "code": "declined"}}},
     {"deliver": {"kind": "unsent", "t": "call.result", "code": "bad_id", "id": "call_work_2"}},
     {"at": 8000, "do": "disconnect"}
