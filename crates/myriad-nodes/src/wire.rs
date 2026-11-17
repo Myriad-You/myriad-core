@@ -173,7 +173,8 @@ pub struct Batch {
     /// is to go, the id the sender made for the page, which the receiver
     /// names in its next `log.vector` `after`. [`send`] leaves it unset
     /// ([`Sent::more`] says whether more is to go); the end that sends the
-    /// page sets it. Never in a file.
+    /// page sets it. A page of a file never has it (`home::take` refuses one
+    /// that does).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub more: Option<String>,
 }

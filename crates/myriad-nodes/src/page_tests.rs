@@ -102,18 +102,40 @@ fn a_side_far_behind_takes_it_a_page_at_a_time_and_ends_holding_all() {
 }
 
 #[test]
-fn a_page_that_did_not_arrive_goes_again_as_it_was() {
+fn a_page_lost_on_the_way_comes_whole_again_and_nothing_after_it_is_skipped() {
     let site = far_ahead(300);
     let mut mac = Side::new(Core::Pc);
-    let first = page_to(&site, &mac, 2, Vec::new());
-    for batch in first.batches {
+    for batch in page_to(&site, &mac, 2, Vec::new()).batches {
         mac.take(batch);
     }
-    // The link dropped before the second page arrived: on the next link the
-    // side asks from what it holds, and gets the same page.
-    let second = page_to(&site, &mac, 2, Vec::new());
-    assert!(second.more);
-    assert_eq!(page_to(&site, &mac, 2, Vec::new()), second);
+    // The link dropped while the second page was on its way: none of it
+    // was taken. On the next link the side asks from what it holds.
+    let lost = page_to(&site, &mac, 2, Vec::new());
+    assert!(lost.more);
+    let lost_rows: BTreeSet<String> = lost
+        .batches
+        .iter()
+        .flat_map(|batch| &batch.rows)
+        .map(|row| row.id.clone())
+        .collect();
+    let mut came = BTreeSet::new();
+    let mut pages = 0;
+    loop {
+        let page = page_to(&site, &mac, 2, Vec::new());
+        pages += 1;
+        for batch in page.batches {
+            for row in &batch.rows {
+                assert!(came.insert(row.id.clone()), "{} went twice", row.id);
+            }
+            mac.take(batch);
+        }
+        if !page.more {
+            break;
+        }
+        assert!(pages <= 10);
+    }
+    assert!(lost_rows.is_subset(&came), "the lost page came whole again");
+    assert_eq!(mac.shared(MINE), site.shared(MINE));
 }
 
 #[test]

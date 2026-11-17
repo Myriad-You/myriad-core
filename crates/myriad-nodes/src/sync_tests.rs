@@ -1841,6 +1841,11 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
         })
     };
     assert!(take_as(page.clone(), server, Vec::new()).is_err());
+    // A page of a file is not one of a link's: one that says more is refused.
+    let mut paged = page.clone();
+    paged.more = Some("page_1".into());
+    let mac_holder = mac.holder.clone();
+    assert!(take_as(paged, mac_holder, Vec::new()).is_err());
     // A new Mac takes the home page, then the log from the server: it is
     // the home now, and keeps 「别的事」 whole.
     let restore = |fresh: &mut Side| {
