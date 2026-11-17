@@ -273,6 +273,7 @@ pub fn send(input: SendInput) -> Result<Batch, NodeError> {
         rows: kept,
         payloads,
         withheld,
+        more: None,
     })
 }
 
