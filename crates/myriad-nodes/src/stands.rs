@@ -23,11 +23,12 @@
 //!   due, not when it stood from: it stands since the day she was told.
 //!   An item built from what she knew is since the latest day it rests on.
 //! - **What she knew before stands first** ([`build_due`], [`build_prepare`],
-//!   [`build_read`]): in a talk where none of hers stands yet, each of her
-//!   topic and person nodes with none of hers on it is gone over once, from
-//!   the memories on it, before a new fact is read. A rule's item (where a
-//!   session is `now`) is not hers and counts for neither; nor does an
-//!   item of hers that is no one's life (her line on a repository).
+//!   [`build_read`]): each node a stretch's facts are put on that has never
+//!   held an item of hers is gone over, from the memories on it, before
+//!   those facts are read, so what they change is changed, not only
+//!   started; only a topic or a person is asked of. A rule's item (where a session is `now`) is not hers and does
+//!   not count; nor does an item of hers that is no one's life (her line on
+//!   a repository).
 //! - **No ledger of its own**: the rows are ordinary `node.standing` rows,
 //!   folded as every head field is (two current versions of one item that
 //!   differ are `bothChanged`).
@@ -772,8 +773,8 @@ fn decide(
 
 // ── Building what she knew ────────────────────────────────────────────
 
-/// One of the audience's `node.standing` rows, as far as [`build_due`]
-/// needs: who wrote it (`her`, `rule`, …).
+/// One of a node's `node.standing` rows, as far as [`build_due`] needs:
+/// who wrote it (`her`, `rule`, …).
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StandingRowIn {
@@ -785,30 +786,71 @@ pub struct StandingRowIn {
     pub item: Option<String>,
 }
 
-/// [`build_due`]'s input: how many facts the stretch kept, and the
-/// audience's `node.standing` rows (their authors).
+/// A node a stretch's facts are put on, and its `node.standing` rows:
+/// every one not forgotten, ended ones too.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct BuildDueInput {
-    pub facts: usize,
+pub struct DueNodeIn {
+    pub node: String,
     #[serde(default)]
     pub standing: Vec<StandingRowIn>,
 }
 
-/// Whether to build before reading a stretch's facts: it kept some, and
-/// none of hers stands in the audience yet. A rule's rows do not count: in
-/// the site owner's talk they are there from the start. Nor do her items
-/// that are no one's life (her line on a repository): they come from her
-/// look at the owner's sessions, not from what she knew of them.
-pub fn build_due(input: &BuildDueInput) -> bool {
-    input.facts > 0
-        && !input.standing.iter().any(|row| {
+/// [`build_due`]'s input: the nodes a stretch's facts are put on.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BuildDueInput {
+    pub nodes: Vec<DueNodeIn>,
+}
+
+/// [`build_due`]'s answer: the nodes to build before the stretch's facts
+/// are read, each once, in the order given; `due` while there is one.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BuildDue {
+    pub due: bool,
+    pub nodes: Vec<String>,
+}
+
+/// Which of the nodes a stretch's facts are put on to build first: each
+/// that has never held an item of hers, by node, not by talk: one built
+/// node does not stand for the rest. A rule's rows do not count: in the
+/// site owner's talk they are there from the start. Nor do her items that
+/// are no one's life (her line on a repository): they come from her look
+/// at the owner's sessions, not from what she knew of them. An item of
+/// hers that ended counts: the node was built, and building it again from
+/// the memories it rests on would stand up what has ended.
+///
+/// A node built to nothing (nothing on it stood) is still never built, so
+/// it is gone over again the next time a fact is put on it. A node of
+/// another kind is named too: only a topic or a person is asked of
+/// ([`build_prepare`] skips the rest).
+pub fn build_due(input: &BuildDueInput) -> BuildDue {
+    let built = |node: &DueNodeIn| {
+        node.standing.iter().any(|row| {
             row.author == "her"
                 && row
                     .item
                     .as_deref()
                     .is_none_or(|item| whose_of(item).is_some())
         })
+    };
+    // A node given twice is built when either says so.
+    let mut nodes: Vec<String> = Vec::new();
+    for node in &input.nodes {
+        if !nodes.contains(&node.node)
+            && !input
+                .nodes
+                .iter()
+                .any(|other| other.node == node.node && built(other))
+        {
+            nodes.push(node.node.clone());
+        }
+    }
+    BuildDue {
+        due: !nodes.is_empty(),
+        nodes,
+    }
 }
 
 /// One node to build: the node, which of the memories on it she still holds
