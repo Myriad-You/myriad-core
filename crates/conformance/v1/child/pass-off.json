@@ -1,7 +1,7 @@
 {
   "version": 1,
   "name": "pass-off",
-  "about": "A shell that takes no frames of the kinds the session does not read: such a frame is told to it as not read every time, told to her host as dropped once on a link (where both listed streams), and counts as heard.",
+  "about": "A shell that takes no frames of the kinds the session does not read: such a frame is told to it as not read every time, told to her host as dropped once on a link (where both listed streams), and counts as heard. Nor does it send a frame of its own by the shell's door.",
   "capabilities": ["streams"],
   "steps": [
     {"at": 0, "do": "connect"},
@@ -16,6 +16,8 @@
     {"at": 300, "host": {"t": "act.request", "body": {"proposalId": "int_1123456789abcdef0123456789abcdef", "title": "把这台 Mac 的截图收进一个文件夹", "instruction": "把桌面上的截图移到「截图」文件夹", "expectedOutcome": "桌面上不再散着截图", "pickupBy": 1760141540000, "maxRunMs": 1800000}, "id": "act_2"}},
     {"deliver": {"kind": "unread", "t": "act.request", "code": "unknown_frame"}},
     {"at": 400, "host": {"t": "ping"}},
-    {"child": {"t": "pong", "ack": 5}}
+    {"child": {"t": "pong", "ack": 5}},
+    {"at": 500, "do": {"send": {"t": "node.forget", "body": {"nodeId": "node_0123456789abcdef0123456789abcdef01234567"}, "id": "f_1"}}},
+    {"deliver": {"kind": "unsent", "t": "node.forget", "code": "passthrough_off", "id": "f_1"}}
   ]
 }

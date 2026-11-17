@@ -635,6 +635,8 @@ struct State {
     passing: Vec<Passing>,
     #[serde(default, deserialize_with = "whole::maybe_u64")]
     stalled: Option<u64>,
+    #[serde(default, deserialize_with = "whole::u64")]
+    acked: u64,
 }
 
 /// A call this end is doing for her host.
@@ -793,6 +795,9 @@ pub struct Session {
     /// (too many wait): what this end acks stays short of it while the link lasts, so her
     /// host sends it again on the next.
     stalled: Option<u64>,
+    /// The highest number this end has acked on this link: what it acks never goes back,
+    /// whatever numbers her host's frames come under.
+    acked: u64,
 }
 
 impl Session {
@@ -909,6 +914,7 @@ impl Session {
             sync: false,
             passing: Vec::new(),
             stalled: None,
+            acked: 0,
         }
     }
 
@@ -1099,6 +1105,7 @@ impl Session {
             sync: self.sync,
             passing: self.passing.clone(),
             stalled: self.stalled,
+            acked: self.acked,
         };
         serde_json::to_value(state).expect("a session is plain data")
     }
@@ -1142,7 +1149,8 @@ impl Session {
             .chain(state.core.iter().map(|runs| runs.abi))
             .chain([state.links])
             .chain(state.passing.iter().map(|passing| passing.seq))
-            .chain(state.stalled);
+            .chain(state.stalled)
+            .chain([state.acked]);
         let beat = 50..=contract.timing.heartbeat_ms.max(50);
         let mut ids = BTreeSet::new();
         // `sent` counts up by one with each frame, so it stops one short.
@@ -1272,6 +1280,7 @@ impl Session {
             sync: state.sync,
             passing: state.passing,
             stalled: state.stalled,
+            acked: state.acked,
         })
     }
 
@@ -1298,6 +1307,7 @@ impl Session {
         self.sync = false;
         self.passing.clear();
         self.stalled = None;
+        self.acked = 0;
         for pending in &mut self.outbox {
             pending.seq = None;
         }
@@ -1887,12 +1897,10 @@ impl Session {
         if self.taken.contains(&id) {
             return self.send("ack", &json!({}), None, now_ms);
         }
-        // The same frame again on this link, still waiting: nothing more.
-        if self
-            .passing
-            .iter()
-            .any(|passing| passing.seq == envelope.seq)
-        {
+        // The same frame again on this link, still waiting: nothing more. The same number
+        // under another id is another frame (her host's numbers are not this end's to trust).
+        let same = |passing: &Passing| passing.seq == envelope.seq && passing.id == id;
+        if self.passing.iter().any(same) {
             return Vec::new();
         }
         // Too many wait for the shell. This one is neither handed over nor counted: what
@@ -1965,6 +1973,8 @@ impl Session {
             .map_or(self.heard, |lowest| {
                 lowest.saturating_sub(1).min(self.heard)
             })
+            // Never back: a host whose numbers go back does not take back what was acked.
+            .max(self.acked)
     }
 
     /// The frame types the session sends itself, each by a call of its own: not the
@@ -2000,7 +2010,8 @@ impl Session {
     /// `link.*` and `stream.*`); `not_sender`, a type only her host's side sends;
     /// `sync_off`, a frame of the sync families on a link whose welcome said sync off;
     /// `not_accepted`, her host did not accept the capability `needs` names; `link_down`,
-    /// there is no open link and the frame is not kept.
+    /// there is no open link and the frame is not kept; `passthrough_off`, the shell did
+    /// not say it takes the frames the session does not read ([`Session::passes`]).
     pub fn pass(
         &mut self,
         t: &str,
@@ -2018,6 +2029,11 @@ impl Session {
             "unnamed"
         };
         let untold = |code: &str| unsent(named, code, id);
+        // A shell that does not take the frames the session does not read does not send
+        // them either: it would not be handed her host's answers to them.
+        if !self.passes {
+            return untold("passthrough_off");
+        }
         let owned = Self::OWNS.contains(&t)
             || ["call.", "link.", "stream."]
                 .iter()
@@ -3462,9 +3478,11 @@ impl Session {
     /// The next frame, numbered, as the shared core writes it; when the core refuses it, no number
     /// is taken and only why is told (`Unsent`).
     fn send(&mut self, t: &str, body: &Value, id: Option<&str>, now_ms: i64) -> Vec<Output> {
-        match frames::text(t, self.sent + 1, self.acks(), id, now_ms, body) {
+        let acks = self.acks();
+        match frames::text(t, self.sent + 1, acks, id, now_ms, body) {
             Ok(text) => {
                 self.sent += 1;
+                self.acked = acks;
                 self.last_sent_ms = now_ms;
                 vec![Output::Send(text)]
             }

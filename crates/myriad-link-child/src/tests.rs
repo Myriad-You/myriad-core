@@ -3275,6 +3275,44 @@ mod passing {
     }
 
     #[test]
+    fn what_is_acked_never_goes_back_and_one_number_under_two_ids_is_two_frames() {
+        let mut s = taking("on");
+        // Her host's numbers go back (they should not): what was acked stays acked.
+        assert_eq!(acks(&mut s, 5), 5);
+        let out = s.received(&from_host("act.request", 3, Some("act_1")), T0 + 100);
+        assert_eq!(handed(&out).len(), 1);
+        assert_eq!(acks(&mut s, 6), 5);
+        s.took(&[(1, 3)], T0 + 200);
+        assert_eq!(acks(&mut s, 7), 7);
+        // One number under two ids: both are handed over, and each is taken by itself.
+        let mut s = taking("on");
+        let one = s.received(&from_host("act.request", 2, Some("act_1")), T0 + 100);
+        let two = s.received(&from_host("act.request", 2, Some("act_2")), T0 + 110);
+        assert_eq!((handed(&one).len(), handed(&two).len()), (1, 1));
+        // The same one again: nothing more.
+        assert!(
+            s.received(&from_host("act.request", 2, Some("act_2")), T0 + 120)
+                .is_empty()
+        );
+        assert!(s.took(&[(1, 2)], T0 + 200).is_empty());
+        assert_eq!(acks(&mut s, 3), 1);
+        let out = s.took(&[(1, 2)], T0 + 300);
+        assert!(matches!(&sent(&out)[..], [frame] if frame["t"] == "ack" && frame["ack"] == 3));
+    }
+
+    #[test]
+    fn a_shell_that_takes_no_frames_sends_none_by_this_door() {
+        let mut s = open();
+        let body = fixture("node.forget")["body"].clone();
+        assert!(untold(
+            &s.pass("node.forget", Some("f_1"), &body, None, None, T0 + 100),
+            "node.forget",
+            "passthrough_off"
+        ));
+        assert!(s.state()["outbox"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
     fn a_shell_that_takes_no_frames_is_told_and_the_frame_counts() {
         let mut s = open();
         let out = s.received(&from_host("act.request", 2, Some("act_1")), T0 + 100);
