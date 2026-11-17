@@ -37,6 +37,10 @@ const KEY: &str = "minted:release";
 const T: u64 = 1_760_000_000_000;
 const NOW: i64 = (T as i64 + 100_000) * 1000;
 
+/// What is missing, a page at a time: with this file's sides.
+#[path = "page_tests.rs"]
+mod page_tests;
+
 fn object(audience: &str, key: &str) -> String {
     format!("node:{}", node_id(audience, key).unwrap())
 }
@@ -229,6 +233,8 @@ impl Side {
             bodies: self.bodies.clone(),
             theirs: holdings(&to.of(audience)).unwrap().vector,
             ask: Vec::new(),
+            beyond: BTreeMap::new(),
+            page: None,
             holder: to.holder.clone(),
             here: self.holder.owner.clone(),
             peer_abi: to.abi,
@@ -511,6 +517,7 @@ fn any_arrival_order_folds_the_same() {
                     .filter(|one| one.id == row.id)
                     .cloned()
                     .collect(),
+                more: None,
             });
         }
     }
@@ -668,6 +675,7 @@ fn a_forget_made_offline_reaches_the_other_side_and_takes_its_later_rows() {
             .payloads
             .clone(),
         withheld: Vec::new(),
+        more: None,
     });
     assert!(taken.admitted.accepted[0].forgotten);
     assert!(taken.bodies.is_empty());
@@ -757,6 +765,8 @@ fn a_body_lost_on_the_way_is_asked_for_again_and_then_both_fold_the_same() {
         bodies: mac.bodies.clone(),
         theirs: holdings(&site.of(MINE)).unwrap().vector,
         ask: asked.clone(),
+        beyond: BTreeMap::new(),
+        page: None,
         holder: site.holder.clone(),
         here: site.holder.owner.clone(),
         peer_abi: 2,
@@ -943,6 +953,7 @@ fn a_retract_made_offline_keeps_the_node_home_and_takes_it_from_every_other_side
         rows: vec![row("s2", "site", 2, T + 20, MINE, KEY, "node.span")],
         payloads: Vec::new(),
         withheld: Vec::new(),
+        more: None,
     });
     let mut air = Side::named(Core::Pc, "dev_air");
     air.sync_from(&site, MINE);
@@ -1830,6 +1841,11 @@ fn a_home_restored_onto_a_new_computer_is_its_home() {
         })
     };
     assert!(take_as(page.clone(), server, Vec::new()).is_err());
+    // A page of a file is not one of a link's: one that says more is refused.
+    let mut paged = page.clone();
+    paged.more = Some("page_1".into());
+    let mac_holder = mac.holder.clone();
+    assert!(take_as(paged, mac_holder, Vec::new()).is_err());
     // A new Mac takes the home page, then the log from the server: it is
     // the home now, and keeps 「别的事」 whole.
     let restore = |fresh: &mut Side| {
@@ -2012,6 +2028,8 @@ fn a_side_whose_core_is_older_gets_no_row_it_cannot_read() {
         bodies: mac.bodies.clone(),
         theirs: BTreeMap::new(),
         ask: Vec::new(),
+        beyond: BTreeMap::new(),
+        page: None,
         holder: site.holder.clone(),
         here: site.holder.owner.clone(),
         peer_abi: 0,
@@ -2146,6 +2164,8 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
         bodies: writer.bodies.clone(),
         theirs: holdings(&site.of(OWN)).unwrap().vector,
         ask: Vec::new(),
+        beyond: BTreeMap::new(),
+        page: None,
         holder: site.holder.clone(),
         here: site.holder.owner.clone(),
         ledger: Vec::new(),
@@ -2217,6 +2237,8 @@ fn a_person_in_her_own_audience_stays_held_back_across_batches() {
         bodies: site.bodies.clone(),
         theirs: BTreeMap::new(),
         ask: Vec::new(),
+        beyond: BTreeMap::new(),
+        page: None,
         holder: air.holder.clone(),
         here: air.holder.owner.clone(),
         ledger: Vec::new(),
@@ -2502,6 +2524,8 @@ mod partner_id {
                         bodies: here.bodies.clone(),
                         theirs: holdings(&to.of("own:")).unwrap().vector,
                         ask: Vec::new(),
+                        beyond: BTreeMap::new(),
+                        page: None,
                         holder: to.holder.clone(),
                         here: here.holder.owner.clone(),
                         peer_abi: to.abi,

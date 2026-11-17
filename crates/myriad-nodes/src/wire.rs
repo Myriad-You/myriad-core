@@ -17,6 +17,14 @@
 //! The row always goes because the other side's version vector counts it: a
 //! missing row would stop that side's count there for good.
 //!
+//! **A page at a time** ([`SendInput::page`], the link's `log.pages`): at
+//! most that many batches of what the other side lacks, leaving out what it
+//! holds past a gap ([`SendInput::beyond`]); [`Sent::more`] when more is to
+//! go, which the other side pulls with its next `log.vector` once it holds
+//! this page. Rows asked again for go after the page's, within the same
+//! number of batches; the ones that do not fit are [`Sent::ask_left`], for
+//! the next page. Without `page` everything goes at once, as before.
+//!
 //! **Taking** ([`take`]): the batch is checked as `log.admit` checks it
 //! (clock, envelope, local, audience, members, epochs, the ledger, and the
 //! audiences this side may hold); then each accepted row's body passes the
@@ -134,6 +142,9 @@ pub const MAX_BODY_BYTES: usize = 128 << 10;
 /// Rows one side asks again for at a time: the link's `log.vector`
 /// `maxItems.ask`.
 pub const ASK_ROWS: usize = 64;
+/// Batches in one page, on a link where both ends listed `log.pages`: the
+/// link's `limits.logPageBatches`.
+pub const PAGE_BATCHES: usize = 16;
 
 /// A payload carried beside the rows: the row's `payload.ref` and the
 /// body's canonical bytes, base64.
@@ -158,6 +169,14 @@ pub struct Batch {
     /// for.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub withheld: Vec<Withheld>,
+    /// The link's `log.rows` `more`: on the last batch of a page when more
+    /// is to go, the id the sender made for the page, which the receiver
+    /// names in its next `log.vector` `after`. [`send`] leaves it unset
+    /// ([`Sent::more`] says whether more is to go); the end that sends the
+    /// page sets it. A page of a file never has it (`home::take` refuses one
+    /// that does).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub more: Option<String>,
 }
 
 /// Why a body did not travel (or was not taken) with its row.
@@ -220,6 +239,15 @@ pub struct SendInput {
     /// payload is passed by.
     #[serde(default)]
     pub ask: Vec<String>,
+    /// What the other side holds past a gap (its `log.vector` `beyond`, by
+    /// origin): weighed only with [`Self::page`], where those rows do not
+    /// go again.
+    #[serde(default)]
+    pub beyond: BTreeMap<String, Vec<u64>>,
+    /// A page at a time (`log.pages`): at most this many batches, 1 or more
+    /// and at most [`PAGE_BATCHES`]; none, every batch at once.
+    #[serde(default)]
+    pub page: Option<usize>,
     /// The other side.
     pub holder: Holder,
     /// The id this side goes by: a side under another id gets nothing
@@ -243,7 +271,7 @@ pub struct SendInput {
     pub elsewhere: Vec<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sent {
     /// In order; each one `log.rows` frame, with the rows in it that go
@@ -266,6 +294,14 @@ pub struct Sent {
     /// such a row in a log is a host's fault, reported here.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub held_back: Vec<String>,
+    /// With [`SendInput::page`]: more is to go past these batches (rows it
+    /// lacks, or rows asked again for). Never set without `page`.
+    #[serde(skip_serializing_if = "is_false")]
+    pub more: bool,
+    /// With [`SendInput::page`]: the rows asked again for that did not fit
+    /// this page, in order, for the next one's `ask`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub ask_left: Vec<String>,
 }
 
 /// The core ABI a row needs on the side that takes it: 4 for a card row
@@ -778,6 +814,8 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         bodies,
         theirs,
         ask,
+        beyond,
+        page,
         holder,
         here,
         peer_abi,
@@ -805,12 +843,15 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
             "asks again for more than {ASK_ROWS} rows"
         )));
     }
+    if page.is_some_and(|most| most == 0 || most > PAGE_BATCHES) {
+        return Err(NodeError::new(format!(
+            "a page is 1 to {PAGE_BATCHES} batches"
+        )));
+    }
     if !holder.holds(&audience) {
         return Ok(Sent {
-            batches: Vec::new(),
             not_held: true,
-            too_old: false,
-            held_back: Vec::new(),
+            ..Sent::default()
         });
     }
     // Nothing of a forgotten or retracted node leaves this side but stubs,
@@ -827,9 +868,20 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     // it would leave a gap in that side's count that never closes, and
     // every later row of its side would go again on every sync.
     let mut held_back = Vec::new();
+    // A page leaves out what the other side holds past a gap: the forgets
+    // of an earlier page, which go first and so ahead of the count.
+    let held_past = |row: &Row| {
+        page.is_some()
+            && row.dseq.is_some_and(|dseq| {
+                beyond
+                    .get(&row.origin)
+                    .is_some_and(|past| past.contains(&dseq))
+            })
+    };
     let answered: Vec<Row> = vector::answer(&rows, &theirs)
         .map_err(|error| NodeError::new(error.to_string()))?
         .into_iter()
+        .filter(|row| !held_past(row))
         .filter_map(|row| {
             if holder.holds_row(&row) {
                 return Some(row);
@@ -857,16 +909,25 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
         .any(|row| needs_abi(row, bodies.get(&row.id)) > peer_abi)
     {
         return Ok(Sent {
-            batches: Vec::new(),
-            not_held: false,
             too_old: true,
-            held_back: Vec::new(),
+            ..Sent::default()
         });
     }
     let engine = base64::engine::general_purpose::STANDARD;
     let mut batches: Vec<Batch> = Vec::new();
     let mut bytes = 0;
-    for row in answered.into_iter().chain(again) {
+    let lacking = answered.len();
+    let mut more = false;
+    let mut ask_left = Vec::new();
+    for (at, row) in answered.into_iter().chain(again).enumerate() {
+        // Past a full page nothing more goes, in order: what is left goes
+        // with the next one.
+        if more {
+            if at >= lacking {
+                ask_left.push(row.id);
+            }
+            continue;
+        }
         row.check()
             .map_err(|_| NodeError::new("a row's envelope is not whole"))?;
         let carried = match (&row.payload, row.forgotten) {
@@ -901,12 +962,20 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
                 || (carried.is_some() && batch.payloads.len() >= BATCH_PAYLOADS)
                 || (bytes + size > BATCH_BYTES && !batch.rows.is_empty())
         });
+        if full && page.is_some_and(|most| batches.len() >= most) {
+            more = true;
+            if at >= lacking {
+                ask_left.push(row.id);
+            }
+            continue;
+        }
         if full {
             batches.push(Batch {
                 audience: audience.clone(),
                 rows: Vec::new(),
                 payloads: Vec::new(),
                 withheld: Vec::new(),
+                more: None,
             });
             bytes = 0;
         }
@@ -918,9 +987,10 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     }
     Ok(Sent {
         batches,
-        not_held: false,
-        too_old: false,
         held_back,
+        more,
+        ask_left,
+        ..Sent::default()
     })
 }
 
