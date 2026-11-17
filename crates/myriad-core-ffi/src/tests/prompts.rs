@@ -3,8 +3,8 @@
 
 use chrono::{NaiveDate, TimeZone, Utc};
 use myriad_merope::{
-    chat_days, chat_history, chat_remember, curiosity, doing, explore, heard, inner, life, pace,
-    reading, remembering, sharing, speaking, views, wants,
+    chat_days, chat_history, chat_remember, curiosity, doing, explore, heard, inferring, inner,
+    life, pace, reading, remembering, sharing, speaking, views, wants,
 };
 use serde_json::json;
 
@@ -27,6 +27,10 @@ pub(super) const TESTED: &[&str] = &[
     "explore.think_system",
     "explore.wonder_system",
     "heard.system",
+    "inferring.input",
+    "inferring.read",
+    "inferring.schema",
+    "inferring.system",
     "inner.system",
     "inner.system_for",
     "inner.system_for_group",
@@ -106,6 +110,63 @@ fn the_recall_judgment_reads_as_the_crate_reads_it() {
     assert!(plain.get("range").is_none() && plain.get("open").is_none());
     assert_eq!(
         ok("remembering.read", json!({"output": "嗯"})),
+        serde_json::Value::Null
+    );
+}
+
+/// Inferring what a turn brings, through the calls as through the crate:
+/// the instructions as judged or not, the schema, what she is shown, and
+/// the answer read back with the turn always among what it rests on.
+#[test]
+fn an_inference_reads_as_the_crate_reads_it() {
+    for judged in [true, false] {
+        assert_eq!(
+            text("inferring.system", json!({ "judged": judged })),
+            some(inferring::infer_system_prompt(judged))
+        );
+    }
+    assert_eq!(
+        ok("inferring.schema", json!({}))["schema"],
+        inferring::infer_schema()
+    );
+    let known = [
+        inferring::Known {
+            on: "2026-08-01",
+            fact: "每天骑车上班",
+        },
+        inferring::Known {
+            on: "2026-10-02",
+            fact: "打球把腿摔断了",
+        },
+    ];
+    assert_eq!(
+        text(
+            "inferring.input",
+            json!({"changes": [1], "known": [
+                {"on": "2026-08-01", "fact": "每天骑车上班"},
+                {"on": "2026-10-02", "fact": "打球把腿摔断了"},
+            ], "already": ["腿断了"], "today": "2026-10-03 (Saturday)"})
+        ),
+        some(inferring::infer_input(
+            &[1],
+            &known,
+            &["腿断了"],
+            "2026-10-03 (Saturday)"
+        ))
+    );
+    assert_eq!(
+        ok(
+            "inferring.read",
+            json!({"output": r#"{"inference":"腿断了，这阵子大概骑不了车上班","because":[0,9],"whenFor":["聊到上班怎么去"]}"#,
+                "changes": [1], "known": 2})
+        ),
+        json!({"inference": "腿断了，这阵子大概骑不了车上班", "because": [0, 1], "whenFor": ["聊到上班怎么去"]})
+    );
+    assert_eq!(
+        ok(
+            "inferring.read",
+            json!({"output": r#"{"inference":null,"because":[],"whenFor":[]}"#, "changes": [1], "known": 2})
+        ),
         serde_json::Value::Null
     );
 }
