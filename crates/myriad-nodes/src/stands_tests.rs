@@ -367,7 +367,7 @@ fn a_rule_s_now_is_not_shown_and_an_ended_item_is_not_either() {
 }
 
 #[test]
-fn building_is_due_while_none_of_hers_stands_whatever_a_rule_wrote() {
+fn a_node_a_fact_is_put_on_is_built_until_one_of_hers_stood_on_it() {
     let rule = || StandingRowIn {
         author: "rule".into(),
         item: None,
@@ -376,20 +376,49 @@ fn building_is_due_while_none_of_hers_stands_whatever_a_rule_wrote() {
         author: "her".into(),
         item: item.map(str::to_string),
     };
-    let due = |facts, standing| build_due(&BuildDueInput { facts, standing });
-    assert!(due(1, vec![]));
-    assert!(due(2, vec![rule(), rule()]));
-    assert!(!due(0, vec![]));
-    assert!(!due(1, vec![rule(), hers(None)]));
-    // Her line on a repository is no one's life: it does not count.
-    assert!(due(1, vec![hers(Some(crate::look_progress::ITEM))]));
-    assert!(!due(
-        1,
-        vec![
-            hers(Some(crate::look_progress::ITEM)),
-            hers(Some("them-0123456789"))
-        ]
-    ));
+    let on = |node: &str, standing: Vec<StandingRowIn>| DueNodeIn {
+        node: node.into(),
+        standing,
+    };
+    let due = |nodes| build_due(&BuildDueInput { nodes });
+    let none = BuildDue {
+        due: false,
+        nodes: vec![],
+    };
+    let only = |nodes: &[&str]| BuildDue {
+        due: true,
+        nodes: nodes.iter().map(|node| node.to_string()).collect(),
+    };
+    // No fact put on a node: nothing to build.
+    assert_eq!(due(vec![]), none);
+    // A rule's rows, and her line on a repository, are not hers built.
+    assert_eq!(
+        due(vec![on(
+            "run",
+            vec![rule(), hers(Some(crate::look_progress::ITEM))]
+        )]),
+        only(&["run"])
+    );
+    // By node: another node built does not stand for this one, and each
+    // is named once, in the order given.
+    assert_eq!(
+        due(vec![
+            on("run", vec![]),
+            on("knee", vec![hers(Some("them-0123456789"))]),
+            on("run", vec![]),
+            on("cafe", vec![rule()]),
+        ]),
+        only(&["run", "cafe"])
+    );
+    // Once one of hers stood on it, ended or not (the host gives ended
+    // rows too), or with no item given, it is not built again.
+    assert_eq!(
+        due(vec![
+            on("knee", vec![hers(Some("them-0123456789"))]),
+            on("cafe", vec![hers(None)]),
+        ]),
+        none
+    );
 }
 
 fn entry(text: &str, memories: &[&str], happened: Option<&str>) -> Value {

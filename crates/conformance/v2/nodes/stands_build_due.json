@@ -3,89 +3,157 @@
   "cases": [
     {
       "input": {
-        "facts": 2,
-        "standing": []
+        "nodes": []
       },
-      "name": "due while none of hers stands",
+      "name": "no fact put on a node",
       "output": {
-        "due": true
+        "due": false,
+        "nodes": []
       }
     },
     {
       "input": {
-        "facts": 1,
-        "standing": [
+        "nodes": [
           {
-            "author": "rule"
-          },
+            "node": "run"
+          }
+        ]
+      },
+      "name": "a node none of hers stood on",
+      "output": {
+        "due": true,
+        "nodes": [
+          "run"
+        ]
+      }
+    },
+    {
+      "input": {
+        "nodes": [
           {
-            "author": "rule"
+            "node": "run",
+            "standing": [
+              {
+                "author": "rule"
+              },
+              {
+                "author": "rule"
+              }
+            ]
           }
         ]
       },
       "name": "a rule's rows do not count",
       "output": {
-        "due": true
-      }
-    },
-    {
-      "input": {
-        "facts": 1,
-        "standing": [
-          {
-            "author": "rule"
-          },
-          {
-            "author": "her"
-          }
+        "due": true,
+        "nodes": [
+          "run"
         ]
-      },
-      "name": "not once one of hers stands",
-      "output": {
-        "due": false
       }
     },
     {
       "input": {
-        "facts": 1,
-        "standing": [
+        "nodes": [
           {
-            "author": "her",
-            "item": "progress"
+            "node": "run",
+            "standing": [
+              {
+                "author": "her",
+                "item": "progress"
+              }
+            ]
           }
         ]
       },
       "name": "her line on a repository does not count",
       "output": {
-        "due": true
+        "due": true,
+        "nodes": [
+          "run"
+        ]
       }
     },
     {
       "input": {
-        "facts": 1,
-        "standing": [
+        "nodes": [
           {
-            "author": "her",
-            "item": "progress"
-          },
+            "node": "run",
+            "standing": [
+              {
+                "author": "rule"
+              },
+              {
+                "author": "her"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "not once one of hers stood on it",
+      "output": {
+        "due": false,
+        "nodes": []
+      }
+    },
+    {
+      "input": {
+        "nodes": [
           {
-            "author": "her",
-            "item": "them-0123456789"
+            "node": "run",
+            "standing": [
+              {
+                "author": "her",
+                "item": "progress"
+              },
+              {
+                "author": "her",
+                "item": "them-0123456789"
+              }
+            ]
           }
         ]
       },
       "name": "her item of their life counts",
       "output": {
-        "due": false
+        "due": false,
+        "nodes": []
       }
     },
     {
       "input": {
-        "facts": 0
+        "nodes": [
+          {
+            "node": "run"
+          },
+          {
+            "node": "knee",
+            "standing": [
+              {
+                "author": "her",
+                "item": "them-0123456789"
+              }
+            ]
+          },
+          {
+            "node": "run"
+          },
+          {
+            "node": "cafe",
+            "standing": [
+              {
+                "author": "rule"
+              }
+            ]
+          }
+        ]
       },
-      "name": "not when the stretch kept nothing",
+      "name": "by node: another built does not stand for this one; each once, in order",
       "output": {
-        "due": false
+        "due": true,
+        "nodes": [
+          "run",
+          "cafe"
+        ]
       }
     }
   ],

@@ -110,9 +110,7 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
         "nodes.stands_step_input" => json_of(&crate::stands::step_prepare(input(raw)?)?),
         "nodes.stands_step_read" => json_of(&crate::stands::step_read(input(raw)?)?),
-        "nodes.stands_build_due" => {
-            json!({ "due": crate::stands::build_due(&input(raw)?) })
-        }
+        "nodes.stands_build_due" => json_of(&crate::stands::build_due(&input(raw)?)),
         "nodes.stands_build_input" => json_of(&crate::stands::build_prepare(input(raw)?)?),
         "nodes.stands_build_read" => json_of(&crate::stands::build_read(input(raw)?)?),
         "nodes.range_dates" => json_of(&listing::range_dates(input(raw)?)?),
