@@ -110,9 +110,7 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
         "nodes.stands_step_input" => json_of(&crate::stands::step_prepare(input(raw)?)?),
         "nodes.stands_step_read" => json_of(&crate::stands::step_read(input(raw)?)?),
-        "nodes.stands_build_due" => {
-            json!({ "due": crate::stands::build_due(&input(raw)?) })
-        }
+        "nodes.stands_build_due" => json_of(&crate::stands::build_due(&input(raw)?)),
         "nodes.stands_build_input" => json_of(&crate::stands::build_prepare(input(raw)?)?),
         "nodes.stands_build_read" => json_of(&crate::stands::build_read(input(raw)?)?),
         "nodes.range_dates" => json_of(&listing::range_dates(input(raw)?)?),
@@ -591,6 +589,8 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("a standing without evidence", "because is empty"),
         ("a standing with a field it does not know", "unknown field"),
         ("a standing in a state no end says", "body does not fit its kind"),
+        // nodes.stands_build_due
+        ("the shape before nodes is refused", "unknown field"),
         // nodes.sort_input, nodes.standing_read, nodes.range_dates, nodes.list
         ("a said day that is not a day", "said and today are a day"),
         ("no item", "missing field `item`"),

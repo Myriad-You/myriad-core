@@ -300,11 +300,12 @@ pub(super) fn stands_step_read(raw: &[u8]) -> Result<Value, Failure> {
     answer(&stands::step_read(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{facts, standing?: [{author}]}` → `{due}`: whether to build 「现在」 from
-/// what she knew before a stretch's facts are read.
+/// `{nodes: [{node, standing?: [{author, item?}]}]}` → `{due, nodes}`:
+/// which of the nodes a stretch's facts are put on to build 「现在」 on
+/// from what she knew, before those facts are read.
 pub(super) fn stands_build_due(raw: &[u8]) -> Result<Value, Failure> {
     let input: stands::BuildDueInput = quiet_input(raw)?;
-    Ok(json!({ "due": stands::build_due(&input) }))
+    answer(&stands::build_due(&input))
 }
 
 /// `{node, held?, learned?}` → `{skip?, system, schema, input}`.
