@@ -705,16 +705,24 @@ fn decide(
             .and_then(|n| shown.get((n as usize).wrapping_sub(1)))
     };
     // Each item the answer names to change or end, whether or not it is.
+    // One named so it cannot be told which (not a number in the list):
+    // nothing is said to still hold.
+    let mut unread = false;
     let named: Vec<&str> = answer["set"]
         .as_array()
         .into_iter()
         .flatten()
         .map(|one| &one["item"])
         .chain(answer["end"].as_array().into_iter().flatten())
-        .filter_map(|n| item(n).map(|shown| shown.item.as_str()))
+        .filter_map(|n| {
+            let found = item(n);
+            unread |= found.is_none();
+            found.map(|shown| shown.item.as_str())
+        })
         .collect();
     decided.still_so = shown
         .iter()
+        .filter(|_| !unread)
         .filter(|shown| own.contains(&shown.node))
         .filter(|shown| whose_of(&shown.item).is_some_and(|(key, _)| key == whose))
         .filter(|shown| !named.contains(&shown.item.as_str()))
@@ -804,6 +812,9 @@ fn decide(
         && !decided.changes.iter().any(|change| &change.node == home)
     {
         start(&mut decided, Some(home), fact);
+        // It changed something the answer left standing: what it left is
+        // not seen to still hold.
+        decided.still_so.clear();
     }
     decided
 }

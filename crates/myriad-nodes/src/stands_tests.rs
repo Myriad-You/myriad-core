@@ -313,6 +313,37 @@ fn what_a_fact_was_put_to_and_left_standing_is_said_back() {
     let got = read(&step, json!({"set": [], "end": [], "add": []}));
     assert!(got.still_so.is_empty());
     assert!(serde_json::to_value(&got).unwrap().get("stillSo").is_none());
+    // Ended: not said to still hold; the others are.
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [n("熬夜")], "add": []}),
+    );
+    assert_eq!(still(&got), sorted(vec![run.clone(), read_.clone()]));
+    // One named so it cannot be told which: none.
+    for answer in [
+        json!({"whose": "them", "set": [{"item": "1", "text": "x"}], "end": [], "add": []}),
+        json!({"whose": "them", "set": [], "end": [1.5], "add": []}),
+        json!({"whose": "them", "set": [], "end": [99], "add": []}),
+    ] {
+        assert!(read(&step, answer.clone()).still_so.is_empty(), "{answer}");
+    }
+    // A fact that took the place of something she knew, with nothing
+    // changed by the answer: the core starts it, and what the answer left
+    // is not said to still hold.
+    let mut replacing = step.clone();
+    replacing.fact.replaced = true;
+    let got = read(
+        &replacing,
+        json!({"whose": "them", "set": [], "end": [], "add": []}),
+    );
+    assert_eq!(got.rows.len(), 1);
+    assert!(got.still_so.is_empty());
+    // Changed on its node by the answer: what it left still holds.
+    let got = read(
+        &replacing,
+        json!({"whose": "them", "set": [{"item": n("每天晚上跑步"), "text": "不跑了"}], "end": [], "add": []}),
+    );
+    assert_eq!(still(&got), sorted(vec![read_.clone(), late.clone()]));
 }
 
 #[test]
