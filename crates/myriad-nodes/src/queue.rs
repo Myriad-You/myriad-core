@@ -15,6 +15,15 @@
 //!   it (a hand to raise);
 //! - **clash**: a clash with it is new to it (撞上: a hand to raise).
 //!
+//! Of a part or a whole, not what a rule wrote there (anything a session
+//! laid out: frames, a status it moved, what it asks) nor how it stands now
+//! (「现在」, hers too: a conclusion, not news) ([`its_own`]). Those are
+//! that node's alone, and would otherwise wake every task under a
+//! repository each time a session moves. Everything else she or the
+//! partner put on it, or did to it, still wakes the other end: by who wrote
+//! the row, not by `saidBy` (the partner's words a session copies in are
+//! the rule's). A blocker wakes what it blocks with all of it.
+//!
 //! Its own rows are also unseen while a head item is 两边都改过 and no one
 //! run of hers saw every current version of it (why `own`). Two of her ran
 //! at once only when the partner forced the pen while the old holder kept
@@ -52,6 +61,12 @@ use crate::{
     fold::{FoldInput, Full, fold_full},
     limits::QUEUE_MAX,
 };
+
+/// A row that makes only its own node due, never that node's parts or
+/// its whole: what a rule wrote, and 「现在」.
+fn its_own(row: &Row) -> bool {
+    row.author == myriad_persona_log::row::Author::Rule || row.kind == "node.standing"
+}
 
 /// Why a node is due.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -215,6 +230,7 @@ impl<'a> Watch<'a> {
             out.extend(
                 self.rows_of(audience, other)
                     .iter()
+                    .filter(|row| reason == Reason::Blocker || !its_own(row))
                     .map(|row| (reason, *row)),
             );
         }
