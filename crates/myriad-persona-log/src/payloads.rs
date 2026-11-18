@@ -363,7 +363,7 @@ pub struct StateWrite {
 }
 
 /// The entity kinds a `state.write` row carries, sorted.
-pub const STATE_KINDS: [&str; 16] = [
+pub const STATE_KINDS: [&str; 17] = [
     "affect_anchor",
     "affect_event",
     "diary",
@@ -379,6 +379,7 @@ pub const STATE_KINDS: [&str; 16] = [
     "serial_work",
     "soup_game",
     "sticker",
+    "undertone",
     "vitals_day",
 ];
 
@@ -395,7 +396,7 @@ pub enum StateAudience {
 }
 
 /// Each kind of [`STATE_KINDS`] and whom its rows are for.
-pub const STATE_AUDIENCES: [(&str, StateAudience); 16] = [
+pub const STATE_AUDIENCES: [(&str, StateAudience); 17] = [
     ("affect_anchor", StateAudience::Partner),
     // A change of her mood toward the owner (the only one that crosses,
     // `AffectEventBody.subject`), as `affect.change` toward them is.
@@ -413,6 +414,8 @@ pub const STATE_AUDIENCES: [(&str, StateAudience); 16] = [
     ("serial_work", StateAudience::Own),
     ("soup_game", StateAudience::Partner),
     ("sticker", StateAudience::Own),
+    // Made of her own days only (`myriad_merope::undertone`).
+    ("undertone", StateAudience::Own),
     ("vitals_day", StateAudience::Own),
 ];
 
@@ -672,6 +675,13 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
         }
         "state.write" => {
             let state: StateWrite = read(kind, payload)?;
+            // A body in a later format than this core's is one it cannot
+            // check, and may be of a kind that format added: not taken until
+            // this side reads that format. One in an earlier format it still
+            // reads is read as it was written.
+            if state.format > myriad_persona_sync::FORMAT_VERSION {
+                return Ok(false);
+            }
             if !STATE_KINDS.contains(&state.kind.as_str()) {
                 return Err(LogError::new(
                     "a state.write payload is of no kind it carries",
@@ -679,12 +689,6 @@ pub fn check(kind: &str, payload: &Value) -> Result<bool, LogError> {
             }
             let entity = myriad_persona_sync::Kind::parse(&state.kind)
                 .ok_or_else(|| LogError::new("a state.write payload is of no kind it carries"))?;
-            // A body in a later format than this core's is one it cannot
-            // check: not taken until this side reads that format. One in an
-            // earlier format it still reads is read as it was written.
-            if state.format > myriad_persona_sync::FORMAT_VERSION {
-                return Ok(false);
-            }
             if !myriad_persona_sync::READ_FORMAT_VERSIONS.contains(&state.format) {
                 return Err(LogError::new(
                     "a state.write payload is in no format this core reads",

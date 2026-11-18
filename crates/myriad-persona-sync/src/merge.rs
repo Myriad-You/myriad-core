@@ -635,6 +635,7 @@ pub fn plan(input: MergeInput) -> Result<MergePlan, SyncError> {
         Kind::SerialShelf,
         Kind::SoupGame,
         Kind::Present,
+        Kind::Undertone,
     ] {
         match (fixed(&host, kind), fixed(&other, kind)) {
             (Some(kept), Some(theirs)) => {

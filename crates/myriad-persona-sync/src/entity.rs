@@ -24,11 +24,12 @@ use crate::{
 /// The envelope's fixed `format`.
 pub const FORMAT: &str = "myriad.her";
 /// Bumped only for a change an older side cannot read; a new optional
-/// field does not bump it. 3 added `speech_said`.
-pub const FORMAT_VERSION: u32 = 3;
-/// The versions this side reads: what it writes, and 2, which is 3 without
-/// `speech_said` (a file exported before it still comes back).
-pub const READ_FORMAT_VERSIONS: [u32; 2] = [2, FORMAT_VERSION];
+/// field does not bump it. 3 added `speech_said`, 4 `undertone`.
+pub const FORMAT_VERSION: u32 = 4;
+/// The versions this side reads: what it writes, 3, which is 4 without
+/// `undertone`, and 2, which is 3 without `speech_said` (a file exported
+/// before them still comes back).
+pub const READ_FORMAT_VERSIONS: [u32; 3] = [2, 3, FORMAT_VERSION];
 
 /// Whether this side reads `myriad.her` version `version`; why not, when
 /// not, as an older side would be told.
@@ -37,7 +38,7 @@ pub fn check_format_version(version: u32) -> Result<(), SyncError> {
         return Ok(());
     }
     Err(SyncError::new(format!(
-        "format version {version} is not one this side reads (2, {FORMAT_VERSION})"
+        "format version {version} is not one this side reads (2, 3, {FORMAT_VERSION})"
     )))
 }
 /// The one person a synced memory can be with.
@@ -96,12 +97,13 @@ pub enum Kind {
     SoupGame,
     SpeechSaid,
     Sticker,
+    Undertone,
     VitalsDay,
     Wearing,
 }
 
 impl Kind {
-    pub const ALL: [Kind; 22] = [
+    pub const ALL: [Kind; 23] = [
         Kind::AffectAnchor,
         Kind::AffectEvent,
         Kind::Conversation,
@@ -122,6 +124,7 @@ impl Kind {
         Kind::SoupGame,
         Kind::SpeechSaid,
         Kind::Sticker,
+        Kind::Undertone,
         Kind::VitalsDay,
         Kind::Wearing,
     ];
@@ -170,6 +173,7 @@ impl Kind {
             Kind::SoupGame => "soup_game",
             Kind::SpeechSaid => "speech_said",
             Kind::Sticker => "sticker",
+            Kind::Undertone => "undertone",
             Kind::VitalsDay => "vitals_day",
             Kind::Wearing => "wearing",
         }
@@ -189,6 +193,7 @@ impl Kind {
             Kind::SoupGame => Some(SOUP_GAME_ID),
             Kind::Pace => Some(PACE_ID),
             Kind::Present => Some(PRESENT_ID),
+            Kind::Undertone => Some(UNDERTONE_ID),
             _ => None,
         }
     }
@@ -227,6 +232,8 @@ pub const PERSONA_ID: &str = "her";
 pub const SOUP_GAME_ID: &str = "p:owner";
 /// Her pace's id.
 pub const PACE_ID: &str = "pace";
+/// Her undertone's id.
+pub const UNDERTONE_ID: &str = "undertone";
 /// What she is doing now: its id.
 pub const PRESENT_ID: &str = "now";
 
@@ -381,6 +388,14 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
     {
         return Err(SyncError::new("format version 2 has no speech_said"));
     }
+    if envelope.format_version < 4
+        && envelope
+            .entities
+            .iter()
+            .any(|entity| entity.kind == Kind::Undertone)
+    {
+        return Err(SyncError::new("format version 3 has no undertone"));
+    }
     for asset in &mut envelope.assets {
         asset.check()?;
     }
@@ -490,6 +505,7 @@ fn normalize_body(kind: Kind, state: State, id: &str, body: Value) -> Result<Val
         Kind::Intention => checked::<IntentionBody>(body)?,
         Kind::OwnerState => typed::<OwnerStateBody>(body)?,
         Kind::Pace => checked::<PaceBody>(body)?,
+        Kind::Undertone => checked::<UndertoneBody>(body)?,
         Kind::Present => typed::<PresentBody>(body)?,
         Kind::ProactiveLine => checked::<ProactiveLineBody>(body)?,
         Kind::SpeechSaid => checked::<SpeechSaidBody>(body)?,
@@ -1124,6 +1140,20 @@ pub struct PaceBody {
     /// By day (`YYYY-MM-DD`, her day).
     #[serde(default)]
     pub lazed: std::collections::BTreeMap<String, f64>,
+}
+
+/// Her undertone (`myriad_merope::undertone`): numbers and a date, made
+/// on her host from her own days only.
+pub type UndertoneBody = myriad_merope::undertone::Undertone;
+
+impl CheckBody for UndertoneBody {
+    fn check_body(&mut self) -> Result<(), SyncError> {
+        if self.holds() {
+            Ok(())
+        } else {
+            Err(SyncError::new("an undertone is days lived and leanings in range"))
+        }
+    }
 }
 
 impl CheckBody for PaceBody {

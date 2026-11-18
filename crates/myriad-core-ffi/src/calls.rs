@@ -57,6 +57,7 @@ type Call = fn(&[u8]) -> Result<Value, Failure>;
 /// Sorted by name.
 const CALLS: &[(&str, Call)] = &[
     ("affect.apply_appraisal", affect::apply_appraisal),
+    ("affect.baseline", affect::baseline),
     ("affect.lite_appraisal", affect::lite_appraisal),
     ("affect.mood_band", affect::mood_band),
     ("affect.mood_cue", affect::mood_cue),
