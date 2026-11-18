@@ -74,10 +74,26 @@ fn place(session: &Session) -> &str {
     }
 }
 
+/// A card's title, by what it is about. `{name}` is the session's.
+struct Titles {
+    decide: &'static str,
+    nod: &'static str,
+    done: &'static str,
+    stuck: &'static str,
+    going: &'static str,
+    asking: &'static str,
+    quiet: &'static str,
+}
+
 /// What a card says, in one language. `{…}` are filled in.
 struct Words {
     session: &'static str,
     session_in: &'static str,
+    /// A card's title: what it is about, then what the session is
+    /// (`{name}`): it waits on the owner's choice (`decide`) or nod
+    /// (`nod`), or the session finished, got stuck, went on without them,
+    /// asks them again or went quiet.
+    titles: Titles,
     given_owner: &'static str,
     given_by: &'static str,
     given_session: &'static str,
@@ -117,6 +133,15 @@ struct Words {
 const EN: Words = Words {
     session: "{tool} session",
     session_in: "{tool} session in {repo}",
+    titles: Titles {
+        decide: "Needs your call: {name}",
+        nod: "Needs your OK: {name}",
+        done: "Done: {name}",
+        stuck: "Stuck: {name}",
+        going: "Went on: {name}",
+        asking: "Asking you: {name}",
+        quiet: "Quiet: {name}",
+    },
     given_owner: "You assigned this work yourself",
     given_by: "Sent on by «{by}»; reports back there",
     given_session: "Sent on by another session; reports back there",
@@ -153,6 +178,15 @@ const EN: Words = Words {
 const ZH_CN: Words = Words {
     session: "{tool} 会话",
     session_in: "{repo} 里的 {tool} 会话",
+    titles: Titles {
+        decide: "要你定：{name}",
+        nod: "等你点头：{name}",
+        done: "做完了：{name}",
+        stuck: "卡住了：{name}",
+        going: "接着在做：{name}",
+        asking: "在问你：{name}",
+        quiet: "没有动静：{name}",
+    },
     given_owner: "你亲自派的活",
     given_by: "「{by}」派的活，做完要回那边",
     given_session: "另一个会话派的活，做完要回那边",
@@ -189,6 +223,15 @@ const ZH_CN: Words = Words {
 const ZH_TW: Words = Words {
     session: "{tool} 工作階段",
     session_in: "{repo} 裡的 {tool} 工作階段",
+    titles: Titles {
+        decide: "要你決定：{name}",
+        nod: "等你點頭：{name}",
+        done: "做完了：{name}",
+        stuck: "卡住了：{name}",
+        going: "接著在做：{name}",
+        asking: "在問你：{name}",
+        quiet: "沒有動靜：{name}",
+    },
     given_owner: "你親自交辦的工作",
     given_by: "「{by}」交辦的工作，做完要回報那邊",
     given_session: "另一個工作階段交辦的，做完要回報那邊",
@@ -225,6 +268,15 @@ const ZH_TW: Words = Words {
 const JA: Words = Words {
     session: "{tool} セッション",
     session_in: "{repo} の {tool} セッション",
+    titles: Titles {
+        decide: "決めてほしい：{name}",
+        nod: "確かめてほしい：{name}",
+        done: "終わった：{name}",
+        stuck: "行き詰まり：{name}",
+        going: "続けている：{name}",
+        asking: "質問している：{name}",
+        quiet: "動きがない：{name}",
+    },
     given_owner: "自分で頼んだ作業",
     given_by: "「{by}」から回された作業。終わったらそちらに戻る",
     given_session: "別のセッションから回された作業。終わったらそちらに戻る",
@@ -261,6 +313,15 @@ const JA: Words = Words {
 const KO: Words = Words {
     session: "{tool} 세션",
     session_in: "{repo}의 {tool} 세션",
+    titles: Titles {
+        decide: "결정 필요: {name}",
+        nod: "확인 필요: {name}",
+        done: "완료: {name}",
+        stuck: "막힘: {name}",
+        going: "계속 진행 중: {name}",
+        asking: "질문 중: {name}",
+        quiet: "움직임 없음: {name}",
+    },
     given_owner: "직접 맡긴 작업",
     given_by: "「{by}」에서 넘긴 작업, 끝나면 그쪽으로 보고",
     given_session: "다른 세션에서 넘긴 작업, 끝나면 그쪽으로 보고",
@@ -297,6 +358,15 @@ const KO: Words = Words {
 const FR: Words = Words {
     session: "session {tool}",
     session_in: "session {tool} dans {repo}",
+    titles: Titles {
+        decide: "À vous de décider : {name}",
+        nod: "Votre accord : {name}",
+        done: "Terminé : {name}",
+        stuck: "Bloquée : {name}",
+        going: "A continué : {name}",
+        asking: "Vous pose une question : {name}",
+        quiet: "Silencieuse : {name}",
+    },
     given_owner: "Travail que vous avez confié vous-même",
     given_by: "Confié par « {by} » ; rend compte là-bas",
     given_session: "Confié par une autre session ; rend compte là-bas",
@@ -333,6 +403,15 @@ const FR: Words = Words {
 const DE: Words = Words {
     session: "{tool}-Sitzung",
     session_in: "{tool}-Sitzung in {repo}",
+    titles: Titles {
+        decide: "Deine Entscheidung: {name}",
+        nod: "Dein OK: {name}",
+        done: "Fertig: {name}",
+        stuck: "Steckt fest: {name}",
+        going: "Läuft weiter: {name}",
+        asking: "Fragt dich: {name}",
+        quiet: "Still: {name}",
+    },
     given_owner: "Von dir selbst beauftragt",
     given_by: "Von „{by}“ beauftragt; berichtet dorthin zurück",
     given_session: "Von einer anderen Sitzung beauftragt; berichtet dorthin zurück",
@@ -395,13 +474,39 @@ fn fill(template: &str, values: &[(&str, &str)]) -> String {
     text
 }
 
-/// The card's title: the session's own, or what it is.
-fn title(session: &Session, words: &Words) -> String {
-    let title = match &session.title {
+/// What a card is about, as its title says it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum About {
+    Decide,
+    Nod,
+    /// Where the session came to, the card asking nothing of the owner.
+    Came,
+}
+
+/// A card's title: what it is about, then the session, by its title, or
+/// by its tool and repository when it has none. What it is about is the
+/// card's kind while it asks the owner, and where the session came to
+/// once it does not.
+fn title(session: &Session, about: About, words: &Words) -> String {
+    let name = match &session.title {
         Some(title) if !clean(title, true).is_empty() => clean(title, true),
-        _ => fill(words.session, &[("tool", &session.tool)]),
+        _ => match place(session) {
+            "" => fill(words.session, &[("tool", &session.tool)]),
+            repo => fill(words.session_in, &[("tool", &session.tool), ("repo", repo)]),
+        },
     };
-    cut(&title, cards::TITLE_CHARS)
+    let titles = &words.titles;
+    let template = match (about, session.change) {
+        (About::Decide, _) => titles.decide,
+        (About::Nod, _) => titles.nod,
+        (About::Came, Change::Finished) => titles.done,
+        (About::Came, Change::Failed) => titles.stuck,
+        (About::Came, Change::Quiet) => titles.quiet,
+        (About::Came, Change::Started) => titles.going,
+        // It asks again, of something the card is no longer about.
+        (About::Came, Change::Asked) => titles.asking,
+    };
+    cut(&fill(template, &[("name", &name)]), cards::TITLE_CHARS)
 }
 
 fn ago(at: i64, then: i64, words: &Words) -> String {
@@ -734,7 +839,15 @@ pub fn decision(input: DecisionInput) -> Result<CardVersion, NodeError> {
         kind: kind.to_string(),
         scene: SCENE.to_string(),
         subject: Some(format!("node:{}", input.task)),
-        title: title(&input.told.session, words),
+        title: title(
+            &input.told.session,
+            if kind == "nod" {
+                About::Nod
+            } else {
+                About::Decide
+            },
+            words,
+        ),
         state: state(&input.told.session),
         facts: facts.into_iter().map(|(_, fact)| fact).collect(),
         view,
@@ -771,7 +884,7 @@ pub fn status(input: StatusInput) -> Result<Option<CardVersion>, NodeError> {
         kind: "status".to_string(),
         scene: SCENE.to_string(),
         subject: Some(format!("node:{}", input.task)),
-        title: title(session, words),
+        title: title(session, About::Came, words),
         state: state(session),
         facts: facts(&input.told, input.at, words)
             .into_iter()
@@ -816,8 +929,10 @@ pub fn settled(input: SettledInput) -> Result<CardVersion, NodeError> {
     }
     // Nothing to answer but going to it, said in the owner's language now.
     card.actions = vec![action(OPEN, words.open)];
-    // Asking nothing, nothing comes of no answer.
+    // Asking nothing, nothing comes of no answer, and the title says where
+    // the session came to instead of what it asked.
     card.idle = None;
+    card.title = title(&input.told.session, About::Came, words);
     cards::check(&card)?;
     Ok(card)
 }
@@ -849,6 +964,47 @@ mod tests {
         Told {
             device: "dev_mac".to_string(),
             session: serde_json::from_value(session).unwrap(),
+        }
+    }
+
+    /// A title says what the card is about, then the session: while it
+    /// asks, what it asks of the owner; once it does not, where the
+    /// session came to.
+    #[test]
+    fn a_title_says_what_the_card_is_about() {
+        let words = words("zh-CN");
+        let said = |change: &str, about| {
+            let told = told("s-1", json!({ "change": change }));
+            title(&told.session, about, words)
+        };
+        assert_eq!(said("asked", About::Decide), "要你定：Split the store");
+        assert_eq!(said("asked", About::Nod), "等你点头：Split the store");
+        assert_eq!(said("finished", About::Came), "做完了：Split the store");
+        assert_eq!(said("failed", About::Came), "卡住了：Split the store");
+        assert_eq!(said("started", About::Came), "接着在做：Split the store");
+        assert_eq!(said("asked", About::Came), "在问你：Split the store");
+        assert_eq!(said("quiet", About::Came), "没有动静：Split the store");
+        // No title of its own: its tool and repository.
+        let mut told = told("s-1", json!({ "change": "asked" }));
+        told.session.title = None;
+        assert_eq!(
+            title(&told.session, About::Decide, words),
+            "要你定：sample-repo 里的 coding-agent 会话"
+        );
+        // Every language has every title, with the session's name in it.
+        for language in ["en", "zh-CN", "zh-TW", "ja", "ko", "fr", "de"] {
+            let titles = &self::words(language).titles;
+            for template in [
+                titles.decide,
+                titles.nod,
+                titles.done,
+                titles.stuck,
+                titles.going,
+                titles.asking,
+                titles.quiet,
+            ] {
+                assert!(template.contains("{name}"), "{language}: {template}");
+            }
         }
     }
 

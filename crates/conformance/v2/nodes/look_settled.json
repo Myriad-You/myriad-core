@@ -113,7 +113,7 @@
           "scene": "agents",
           "state": "finished",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "做完了：Split the store",
           "view": {
             "text": "要不要现在推送\n推"
           }
@@ -228,7 +228,7 @@
           "scene": "agents",
           "state": "finished",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "Done: Split the store",
           "view": {
             "text": "要不要现在推送\n推"
           }
@@ -352,7 +352,7 @@
           "scene": "agents",
           "state": "finished",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "做完了：Split the store",
           "view": {
             "text": "要不要现在推送\n推"
           }
@@ -485,7 +485,7 @@
           "scene": "agents",
           "state": "finished",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "做完了：Split the store",
           "view": {
             "text": "要不要现在推送\n推"
           }
