@@ -151,6 +151,8 @@ pub const RULES: &[Rule] = &[
     bare("log4", Kind::Fields),
     // ABI 5 reads the same rows as 4: said for the versions it shows.
     bare("log5", Kind::Fields),
+    // A card's `effects`, `undo`, `icon` and `idle`: a core below 6 refuses the whole card.
+    bare("log6", Kind::Fields),
     frames("moments", &[], &["moment"], &["moment.taken"]),
     frames("nodes", &[], &["node.forget"], &["nodes"]),
     frames("notify", &[], &[], &["notice"]),

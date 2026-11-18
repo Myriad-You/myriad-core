@@ -20,9 +20,10 @@ mod calls;
 /// removed, or her log gains rows an older core refuses (2: a merge's or a
 /// split's names, a retract; 3: a rule's rows, `node.standing`; 4: card
 /// rows; 5: `lease.move` takes no takeover and no place of the holder's or
-/// the owner's, and her log reads as in 4). Adding a call or an optional
-/// field does not bump it.
-pub const ABI_VERSION: u32 = 5;
+/// the owner's, and her log reads as in 4; 6: a card's `effects`, `undo`,
+/// `icon` and `idle`, which a core below 6 refuses with the whole card).
+/// Adding a call or an optional field an older core takes does not bump it.
+pub const ABI_VERSION: u32 = 6;
 
 /// The upstream commit this library was built from (see `build.rs`).
 pub const UPSTREAM_COMMIT: &str = env!("MYRIAD_CORE_UPSTREAM_COMMIT");

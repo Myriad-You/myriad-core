@@ -27,6 +27,15 @@
 //! words of a conversation. Its title, facts, view and labels pass the
 //! secret scan, its ids the path and known-key rules (`wire`).
 //!
+//! **What comes of an answer** (ABI 6): an action may say its gains and
+//! costs (`effects`, each resting on a fact by number and counted when it
+//! was), whether it can be taken back (`undo`: `false` when it cannot), and
+//! a word for its picture (`icon`); a card that asks may say what happens
+//! when nobody answers (`idle`). All of them are hers to say and optional:
+//! a card without them is drawn with its labels, and is byte for byte the
+//! card it was before they existed. A side whose core is below ABI 6 reads
+//! no card that has one of them, so none goes to it (`wire`).
+//!
 //! **Waiting on the owner** ([`fold`]): a card waits on them while its
 //! latest version has an action other than [`OPEN`] and no answer to that
 //! very version came after it (an answer to an older one, however late,
@@ -60,13 +69,21 @@ pub const ACTIONS: usize = 5;
 /// At most this many characters of an action's label: a session's choice
 /// is said as the session gave it, cut to this.
 pub const LABEL_CHARS: usize = 40;
+/// At most this many effects of one action.
+pub const EFFECTS: usize = 4;
+/// At most this many characters of one effect.
+pub const EFFECT_CHARS: usize = 40;
+/// At most this many times an effect's count is out of.
+pub const COUNT_OF: u32 = 20;
+/// At most this many characters of what happens when nobody answers.
+pub const IDLE_CHARS: usize = FACT_CHARS;
 /// At most this many bytes of a word (`kind`, `scene`, an action's id).
 pub const WORD_BYTES: usize = myriad_persona_log::payloads::CARD_WORD_BYTES;
 /// At most this many bytes of a card's id.
 pub const ID_BYTES: usize = 80;
 /// The fields of a card (`card.version`), as the wire takes them.
-pub const FIELDS: [&str; 10] = [
-    "at", "id", "kind", "scene", "subject", "title", "state", "facts", "view", "actions",
+pub const FIELDS: [&str; 11] = [
+    "at", "id", "kind", "scene", "subject", "title", "state", "facts", "view", "actions", "idle",
 ];
 /// The action that opens what the card is about (a session) and answers
 /// nothing: no `card.answered` is written of it.
@@ -174,8 +191,74 @@ pub fn check(card: &CardVersion) -> Result<(), NodeError> {
         if action.label.trim().is_empty() || action.label.chars().count() > LABEL_CHARS {
             return bad("an action's label is empty or too long");
         }
+        // Going to the session answers nothing: nothing comes of it here.
+        if action.id == OPEN && (!action.effects.is_empty() || action.undo.is_some()) {
+            return bad("open has no effects and no undo");
+        }
+        if action.icon.as_deref().is_some_and(|icon| !word(icon)) {
+            return bad("an action's icon is not a word");
+        }
+        if action.effects.len() > EFFECTS {
+            return bad("an action has too many effects");
+        }
+        for effect in &action.effects {
+            if effect.text.trim().is_empty() || effect.text.chars().count() > EFFECT_CHARS {
+                return bad("an effect is empty or too long");
+            }
+            if effect
+                .because
+                .is_some_and(|ground| ground == 0 || ground as usize > card.facts.len())
+            {
+                return bad("an effect rests on a fact it does not have");
+            }
+            if effect
+                .count
+                .is_some_and(|count| count.of == 0 || count.of > COUNT_OF || count.hits > count.of)
+            {
+                return bad("an effect's count is not some times out of 1 to 20");
+            }
+        }
+    }
+    if let Some(idle) = &card.idle {
+        if idle.trim().is_empty() || idle.chars().count() > IDLE_CHARS {
+            return bad("what happens with no answer is empty or too long");
+        }
+        if !asks(card) {
+            return bad("a card that asks nothing has nothing happen with no answer");
+        }
     }
     Ok(())
+}
+
+/// Whether a card says one of the things ABI 6 added (an action's
+/// `effects`, `undo` or `icon`, the card's `idle`): a core below 5 reads
+/// no such card.
+pub fn says_more(card: &Value) -> bool {
+    card.get("idle").is_some()
+        || card
+            .get("actions")
+            .and_then(Value::as_array)
+            .is_some_and(|actions| {
+                actions.iter().any(|action| {
+                    ["effects", "undo", "icon"]
+                        .iter()
+                        .any(|field| action.get(field).is_some())
+                })
+            })
+}
+
+/// The card as a core below ABI 6 reads it: what comes of its answers
+/// (`effects`, `undo`, `icon`) and of none (`idle`) left out, the rest as
+/// it is. For a place that takes cards only as ABI 4 read them.
+pub fn plain(card: &CardVersion) -> CardVersion {
+    let mut card = card.clone();
+    card.idle = None;
+    for action in &mut card.actions {
+        action.effects.clear();
+        action.undo = None;
+        action.icon = None;
+    }
+    card
 }
 
 /// Her words on a card and its ids, for the wire's checks (`wire`).
@@ -195,7 +278,12 @@ pub(crate) fn parts(card: &CardVersion) -> (Vec<&str>, Vec<&str>) {
     for action in &card.actions {
         texts.push(&action.label);
         ids.push(&action.id);
+        ids.extend(action.icon.as_deref());
+        for effect in &action.effects {
+            texts.push(&effect.text);
+        }
     }
+    texts.extend(card.idle.as_deref());
     (texts, ids)
 }
 
@@ -354,4 +442,78 @@ pub fn fold(input: FoldInput) -> Result<Folded, NodeError> {
     Ok(Folded {
         cards: cards.into_iter().map(|(_, now)| now).collect(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use myriad_persona_log::payloads::{CardCount, CardEffect};
+    use serde_json::json;
+
+    use super::*;
+
+    fn card() -> Value {
+        json!({
+            "at": 1, "id": "dev_mac_1", "kind": "decide", "scene": "agents",
+            "title": "要你定：推送", "facts": [{"text": "检查都过了"}],
+            "actions": [{"id": "open", "label": "去会话里说"}, {"id": "push", "label": "推送"}],
+        })
+    }
+
+    /// A card that says none of what ABI 6 added reads and writes back
+    /// byte for byte as it was, and needs no more than ABI 4.
+    #[test]
+    fn a_card_without_the_new_fields_stays_as_it_was() {
+        let before = serde_json::to_vec(&card()).unwrap();
+        let read: CardVersion = serde_json::from_value(card()).unwrap();
+        // Canonical, as it goes on the wire: its keys in order.
+        let after = serde_json::to_vec(&serde_json::to_value(&read).unwrap()).unwrap();
+        assert_eq!(after, before);
+        assert!(!says_more(&card()));
+        assert_eq!(plain(&read), read);
+    }
+
+    /// Each of the new fields alone makes a card one only ABI 6 reads, and
+    /// `plain` takes every one of them out again.
+    #[test]
+    fn each_new_field_is_one_only_abi_5_reads() {
+        let more = [
+            ("idle", json!("没人回答就先等")),
+            ("effects", json!([{"text": "今天上线", "good": true}])),
+            ("undo", json!(false)),
+            ("icon", json!("send")),
+        ];
+        for (field, value) in more {
+            let mut body = card();
+            if field == "idle" {
+                body[field] = value;
+            } else {
+                body["actions"][1][field] = value;
+            }
+            assert!(says_more(&body), "{field}");
+            let read: CardVersion = serde_json::from_value(body).unwrap();
+            check(&read).unwrap();
+            let plain = serde_json::to_value(plain(&read)).unwrap();
+            assert_eq!(plain, card(), "{field}");
+            assert!(!says_more(&plain), "{field}");
+        }
+    }
+
+    /// The words of what comes of an answer, and of none, are scanned as
+    /// her words; an icon is held as an id.
+    #[test]
+    fn the_new_texts_are_scanned() {
+        let mut read: CardVersion = serde_json::from_value(card()).unwrap();
+        read.actions[1].effects.push(CardEffect {
+            text: "今天上线".into(),
+            good: true,
+            because: Some(1),
+            count: Some(CardCount { hits: 1, of: 2 }),
+        });
+        read.actions[1].icon = Some("send".into());
+        read.idle = Some("没人回答就先等".into());
+        let (texts, ids) = parts(&read);
+        assert!(texts.contains(&"今天上线"));
+        assert!(texts.contains(&"没人回答就先等"));
+        assert!(ids.contains(&"send"));
+    }
 }

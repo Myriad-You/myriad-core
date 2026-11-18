@@ -652,8 +652,47 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "withheld on the wire (Secret)",
         ),
         ("a field the card does not name is refused", "unknown field"),
+        ("a field a fact does not name is refused", "not of its shape"),
+        ("too many effects is refused", "too many effects"),
+        ("an effect too long is refused", "effect is empty or too long"),
         (
-            "a field a fact does not name is refused",
+            "an effect resting on a fact it does not have is refused",
+            "effect rests on a fact it does not have",
+        ),
+        (
+            "an effect resting on fact 0 is refused",
+            "effect rests on a fact it does not have",
+        ),
+        ("a count out of none is refused", "count is not some times"),
+        (
+            "a count out of more than 20 is refused",
+            "count is not some times",
+        ),
+        (
+            "a count of more hits than times is refused",
+            "count is not some times",
+        ),
+        ("an icon that is not a word is refused", "icon is not a word"),
+        ("open with effects is refused", "open has no effects"),
+        (
+            "open that cannot be taken back is refused",
+            "open has no effects and no undo",
+        ),
+        (
+            "what happens with no answer on a card that asks nothing is refused",
+            "asks nothing has nothing happen",
+        ),
+        (
+            "what happens with no answer too long is refused",
+            "no answer is empty or too long",
+        ),
+        ("a key in an effect is refused", "withheld on the wire (Secret)"),
+        (
+            "a key in what happens with no answer is refused",
+            "withheld on the wire (Secret)",
+        ),
+        (
+            "a field an effect does not name is refused",
             "not of its shape",
         ),
         // nodes.look_route, nodes.look_input, nodes.look_read

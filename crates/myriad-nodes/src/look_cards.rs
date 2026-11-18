@@ -562,10 +562,7 @@ fn state(session: &Session) -> Option<String> {
 }
 
 fn action(id: &str, label: &str) -> CardAction {
-    CardAction {
-        id: id.to_string(),
-        label: label.to_string(),
-    }
+    CardAction::new(id, label)
 }
 
 /// The action of a session's choice `number` (from 1).
@@ -742,6 +739,7 @@ pub fn decision(input: DecisionInput) -> Result<CardVersion, NodeError> {
         facts: facts.into_iter().map(|(_, fact)| fact).collect(),
         view,
         actions,
+        idle: None,
     };
     cards::check(&card)?;
     Ok(card)
@@ -781,6 +779,7 @@ pub fn status(input: StatusInput) -> Result<Option<CardVersion>, NodeError> {
             .collect(),
         view: None,
         actions: vec![action(OPEN, words.open)],
+        idle: None,
     };
     cards::check(&card)?;
     Ok(Some(card))
@@ -817,6 +816,8 @@ pub fn settled(input: SettledInput) -> Result<CardVersion, NodeError> {
     }
     // Nothing to answer but going to it, said in the owner's language now.
     card.actions = vec![action(OPEN, words.open)];
+    // Asking nothing, nothing comes of no answer.
+    card.idle = None;
     cards::check(&card)?;
     Ok(card)
 }

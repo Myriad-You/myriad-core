@@ -58,7 +58,9 @@
 //! retract as nothing; one below ABI 3 refuses a rule's row and a
 //! `node.standing`; one below ABI 4 refuses a card row (`card.version`,
 //! `card.answered`) and holds a `segment.line` that carries a card as a bad
-//! body. Nothing goes to it while one of those would ([`Sent::too_old`]).
+//! body; one below ABI 6 refuses a card that says what comes of its
+//! answers (`cards::says_more`). Nothing goes to it while one of those
+//! would ([`Sent::too_old`]).
 //! Until every side of hers reads the ABI a row needs, hosts write it as a
 //! local row, which never goes.
 //!
@@ -257,11 +259,12 @@ pub struct SendInput {
     pub here: String,
     /// The other side's core ABI (`meta.version` `abi`): the highest N for
     /// which its link's `hello` or `welcome` lists the `logN` capability
-    /// (`log5`, `log4`, `log3`, `log2`), 1 when none. A side below 2 gets
+    /// (`log6`, `log5`, `log4`, `log3`, `log2`), 1 when none. A side below 2 gets
     /// nothing that carries a merge's or a split's names or a retract, one
-    /// below 3 nothing with a rule's row or a `node.standing`, and one below 4
-    /// no card row and no `segment.line` that carries a card (`tooOld`): its
-    /// core would refuse the whole batch.
+    /// below 3 nothing with a rule's row or a `node.standing`, one below 4
+    /// no card row and no `segment.line` that carries a card, and one below
+    /// 6 no card that says what comes of its answers (`tooOld`): its core
+    /// would refuse the whole batch. (5 reads her log as 4 does.)
     pub peer_abi: u32,
     /// This side's ledger, required: a node it forgot or took back from
     /// sync goes as stubs under every name it has, whatever rows are given.
@@ -319,7 +322,12 @@ fn needs_abi(row: &Row, body: Option<&Value>) -> u32 {
     // line's body for good).
     let carries_card =
         row.kind == "segment.line" && body.is_some_and(|body| body.get("card").is_some());
-    if row.kind.starts_with("card.") || carries_card {
+    // A card that says what comes of its answers, or of none: a core below
+    // 6 takes no such field (5 reads cards as 4 does). A card without them
+    // still goes to a core of 4.
+    if row.kind == "card.version" && body.is_some_and(crate::cards::says_more) {
+        6
+    } else if row.kind.starts_with("card.") || carries_card {
         4
     } else if row.author == myriad_persona_log::row::Author::Rule || row.kind == "node.standing" {
         3
@@ -558,6 +566,7 @@ const PAYLOAD_FIELDS: [(&str, &[&str]); 21] = [
         "card.version",
         &[
             "at", "id", "kind", "scene", "subject", "title", "state", "facts", "view", "actions",
+            "idle",
         ],
     ),
     ("card.answered", &["at", "action", "version"]),
@@ -1284,9 +1293,17 @@ mod tests {
                         leans: None,
                     }),
                     actions: vec![CardAction {
-                        id: "push".into(),
-                        label: "推送".into(),
+                        effects: vec![CardEffect {
+                            text: "今天上线".into(),
+                            good: true,
+                            because: Some(1),
+                            count: Some(CardCount { hits: 2, of: 5 }),
+                        }],
+                        undo: Some(false),
+                        icon: Some("send".into()),
+                        ..CardAction::new("push", "推送")
                     }],
+                    idle: Some("没人回答就先等".into()),
                 }),
             ),
             (
