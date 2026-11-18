@@ -394,6 +394,7 @@ pub fn progress(input: ProgressInput) -> Result<Progress, NodeError> {
             leans: None,
         }),
         actions: Vec::new(),
+        idle: None,
     };
     cards::check(&card)?;
     Ok(Progress { node, row, card })

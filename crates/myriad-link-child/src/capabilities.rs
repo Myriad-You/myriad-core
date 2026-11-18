@@ -146,6 +146,7 @@ pub const RULES: &[Rule] = &[
     bare("log2", Kind::Fields),
     bare("log3", Kind::Fields),
     bare("log4", Kind::Fields),
+    bare("log5", Kind::Fields),
     frames("moments", &[], &["moment"], &["moment.taken"]),
     frames("nodes", &[], &["node.forget"], &["nodes"]),
     frames("notify", &[], &[], &["notice"]),

@@ -4423,6 +4423,249 @@
         "batches": [],
         "tooOld": true
       }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "effects": [
+                  {
+                    "because": 1,
+                    "good": true,
+                    "text": "今天就能上线"
+                  }
+                ],
+                "icon": "send",
+                "id": "push",
+                "label": "推送",
+                "undo": false
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s1",
+                "text": "会话停下来问：现在推送吗"
+              }
+            ],
+            "id": "dev_mac_1",
+            "idle": "没人回答的话，会话一直停在这里等。",
+            "kind": "nod",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "title": "等你点头：推送",
+            "view": {
+              "because": [
+                1
+              ],
+              "text": "检查都过了，可以推。"
+            }
+          },
+          "k2": {
+            "at": 1760000000001,
+            "card": "dev_mac_1",
+            "text": ""
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 4,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k1",
+            "kind": "card.version",
+            "object": "card:dev_mac_1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "k2",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a side whose core is ABI 4 gets nothing while a card that says what comes of its answers would go to it",
+      "output": {
+        "batches": [],
+        "tooOld": true
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "effects": [
+                  {
+                    "because": 1,
+                    "good": true,
+                    "text": "今天就能上线"
+                  }
+                ],
+                "icon": "send",
+                "id": "push",
+                "label": "推送",
+                "undo": false
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s1",
+                "text": "会话停下来问：现在推送吗"
+              }
+            ],
+            "id": "dev_mac_1",
+            "idle": "没人回答的话，会话一直停在这里等。",
+            "kind": "nod",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "title": "等你点头：推送",
+            "view": {
+              "because": [
+                1
+              ],
+              "text": "检查都过了，可以推。"
+            }
+          },
+          "k2": {
+            "at": 1760000000001,
+            "card": "dev_mac_1",
+            "text": ""
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 5,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k1",
+            "kind": "card.version",
+            "object": "card:dev_mac_1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "k2",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "once that side reads ABI 5 the card that says what comes of its answers goes",
+      "output": {
+        "batches": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "payloads": [
+              {
+                "data": "eyJhY3Rpb25zIjpbeyJpZCI6Im9wZW4iLCJsYWJlbCI6IuWOu+S8muivnemHjOivtCJ9LHsiZWZmZWN0cyI6W3siYmVjYXVzZSI6MSwiZ29vZCI6dHJ1ZSwidGV4dCI6IuS7iuWkqeWwseiDveS4iue6vyJ9XSwiaWNvbiI6InNlbmQiLCJpZCI6InB1c2giLCJsYWJlbCI6IuaOqOmAgSIsInVuZG8iOmZhbHNlfV0sImF0IjoxNzYwMDAwMDAwMDAwLCJmYWN0cyI6W3sicmVmIjoic2Vzc2lvbjpzMSIsInRleHQiOiLkvJror53lgZzkuIvmnaXpl67vvJrnjrDlnKjmjqjpgIHlkJcifV0sImlkIjoiZGV2X21hY18xIiwiaWRsZSI6IuayoeS6uuWbnuetlOeahOivne+8jOS8muivneS4gOebtOWBnOWcqOi/memHjOetieOAgiIsImtpbmQiOiJub2QiLCJzY2VuZSI6ImFnZW50cyIsInN0YXRlIjoid2FpdGluZ19vd25lciIsInRpdGxlIjoi562J5L2g54K55aS077ya5o6o6YCBIiwidmlldyI6eyJiZWNhdXNlIjpbMV0sInRleHQiOiLmo4Dmn6Xpg73ov4fkuobvvIzlj6/ku6XmjqjjgIIifX0=",
+                "ref": "doc:k1"
+              },
+              {
+                "data": "eyJhdCI6MTc2MDAwMDAwMDAwMSwiY2FyZCI6ImRldl9tYWNfMSIsInRleHQiOiIifQ==",
+                "ref": "doc:k2"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "hlc": "001760000000000-000000-dev_mac",
+                "id": "k1",
+                "kind": "card.version",
+                "object": "card:dev_mac_1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k1"
+                },
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-dev_mac",
+                "id": "k2",
+                "kind": "segment.line",
+                "object": "segment:g1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k2"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1
