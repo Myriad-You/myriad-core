@@ -45,9 +45,14 @@ pub(super) fn taste_section(raw: &[u8]) -> Result<Value, Failure> {
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     struct In {
         liked_by: Vec<String>,
+        #[serde(default)]
+        not_for_her: Vec<String>,
     }
     let req: In = input(raw)?;
-    Ok(text(speaking::format_taste_section(&req.liked_by)))
+    Ok(text(speaking::format_taste_section(
+        &req.liked_by,
+        &req.not_for_her,
+    )))
 }
 
 pub(super) fn self_story_section(raw: &[u8]) -> Result<Value, Failure> {

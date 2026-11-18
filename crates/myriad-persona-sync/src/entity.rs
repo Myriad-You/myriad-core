@@ -24,7 +24,12 @@ use crate::{
 /// The envelope's fixed `format`.
 pub const FORMAT: &str = "myriad.her";
 /// Bumped only for a change an older side cannot read; a new optional
-/// field does not bump it. 3 added `speech_said`.
+/// field does not bump it. 3 added `speech_said`. `undertone` came later
+/// without a bump: a side's sync hello says this number, and a Mac that
+/// reads only up to it stops syncing when it is higher. A side older than
+/// `undertone` refuses only what carries one (a move or an export once she
+/// has an undertone, and its log rows), so it is held back by deploying
+/// in order: every end first, then the host writing it.
 pub const FORMAT_VERSION: u32 = 3;
 /// The versions this side reads: what it writes, and 2, which is 3 without
 /// `speech_said` (a file exported before it still comes back).
@@ -96,12 +101,13 @@ pub enum Kind {
     SoupGame,
     SpeechSaid,
     Sticker,
+    Undertone,
     VitalsDay,
     Wearing,
 }
 
 impl Kind {
-    pub const ALL: [Kind; 22] = [
+    pub const ALL: [Kind; 23] = [
         Kind::AffectAnchor,
         Kind::AffectEvent,
         Kind::Conversation,
@@ -122,6 +128,7 @@ impl Kind {
         Kind::SoupGame,
         Kind::SpeechSaid,
         Kind::Sticker,
+        Kind::Undertone,
         Kind::VitalsDay,
         Kind::Wearing,
     ];
@@ -170,6 +177,7 @@ impl Kind {
             Kind::SoupGame => "soup_game",
             Kind::SpeechSaid => "speech_said",
             Kind::Sticker => "sticker",
+            Kind::Undertone => "undertone",
             Kind::VitalsDay => "vitals_day",
             Kind::Wearing => "wearing",
         }
@@ -189,6 +197,7 @@ impl Kind {
             Kind::SoupGame => Some(SOUP_GAME_ID),
             Kind::Pace => Some(PACE_ID),
             Kind::Present => Some(PRESENT_ID),
+            Kind::Undertone => Some(UNDERTONE_ID),
             _ => None,
         }
     }
@@ -227,6 +236,8 @@ pub const PERSONA_ID: &str = "her";
 pub const SOUP_GAME_ID: &str = "p:owner";
 /// Her pace's id.
 pub const PACE_ID: &str = "pace";
+/// Her undertone's id.
+pub const UNDERTONE_ID: &str = "undertone";
 /// What she is doing now: its id.
 pub const PRESENT_ID: &str = "now";
 
@@ -490,6 +501,7 @@ fn normalize_body(kind: Kind, state: State, id: &str, body: Value) -> Result<Val
         Kind::Intention => checked::<IntentionBody>(body)?,
         Kind::OwnerState => typed::<OwnerStateBody>(body)?,
         Kind::Pace => checked::<PaceBody>(body)?,
+        Kind::Undertone => checked::<UndertoneBody>(body)?,
         Kind::Present => typed::<PresentBody>(body)?,
         Kind::ProactiveLine => checked::<ProactiveLineBody>(body)?,
         Kind::SpeechSaid => checked::<SpeechSaidBody>(body)?,
@@ -1124,6 +1136,20 @@ pub struct PaceBody {
     /// By day (`YYYY-MM-DD`, her day).
     #[serde(default)]
     pub lazed: std::collections::BTreeMap<String, f64>,
+}
+
+/// Her undertone (`myriad_merope::undertone`): numbers and a date, made
+/// on her host from her own days only.
+pub type UndertoneBody = myriad_merope::undertone::Undertone;
+
+impl CheckBody for UndertoneBody {
+    fn check_body(&mut self) -> Result<(), SyncError> {
+        if self.holds() {
+            Ok(())
+        } else {
+            Err(SyncError::new("an undertone is days lived and leanings in range"))
+        }
+    }
 }
 
 impl CheckBody for PaceBody {

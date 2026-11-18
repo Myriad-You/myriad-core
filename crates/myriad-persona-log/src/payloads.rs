@@ -363,7 +363,7 @@ pub struct StateWrite {
 }
 
 /// The entity kinds a `state.write` row carries, sorted.
-pub const STATE_KINDS: [&str; 16] = [
+pub const STATE_KINDS: [&str; 17] = [
     "affect_anchor",
     "affect_event",
     "diary",
@@ -379,6 +379,7 @@ pub const STATE_KINDS: [&str; 16] = [
     "serial_work",
     "soup_game",
     "sticker",
+    "undertone",
     "vitals_day",
 ];
 
@@ -395,7 +396,7 @@ pub enum StateAudience {
 }
 
 /// Each kind of [`STATE_KINDS`] and whom its rows are for.
-pub const STATE_AUDIENCES: [(&str, StateAudience); 16] = [
+pub const STATE_AUDIENCES: [(&str, StateAudience); 17] = [
     ("affect_anchor", StateAudience::Partner),
     // A change of her mood toward the owner (the only one that crosses,
     // `AffectEventBody.subject`), as `affect.change` toward them is.
@@ -413,6 +414,8 @@ pub const STATE_AUDIENCES: [(&str, StateAudience); 16] = [
     ("serial_work", StateAudience::Own),
     ("soup_game", StateAudience::Partner),
     ("sticker", StateAudience::Own),
+    // Made of her own days only (`myriad_merope::undertone`).
+    ("undertone", StateAudience::Own),
     ("vitals_day", StateAudience::Own),
 ];
 

@@ -950,7 +950,7 @@ fn no_record_names_a_credential() {
         .map(|entry| entry.unwrap().path())
         .collect();
     files.sort();
-    assert_eq!(files.len(), 22, "{files:?}");
+    assert_eq!(files.len(), 23, "{files:?}");
     for kind in payloads::STATE_KINDS {
         assert!(
             files.iter().any(|file| file.file_stem().unwrap() == kind),

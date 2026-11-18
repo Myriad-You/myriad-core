@@ -893,15 +893,27 @@ pub fn format_own_days_section(days: &[String]) -> Option<String> {
     ))
 }
 
-/// Whose things have kept getting to her lately, as her reactions add up
-/// (see `taste`): known, not a line to bring up.
-pub fn format_taste_section(liked_by: &[String]) -> Option<String> {
-    (!liked_by.is_empty()).then(|| {
-        format!(
-            "## Whose things keep getting to you\nFrom how what you listened to and read has landed with you lately: {}.",
-            liked_by.join("; ")
-        )
-    })
+/// Whose things have kept getting to her lately and whose keep not being
+/// for her, as her reactions add up (see `taste`): known, not a line to
+/// bring up. What her persona says she likes was written before she had
+/// any of it: where the two differ, what landed is what holds. The persona
+/// itself is not rewritten.
+pub fn format_taste_section(liked_by: &[String], not_for_her: &[String]) -> Option<String> {
+    if liked_by.is_empty() && not_for_her.is_empty() {
+        return None;
+    }
+    let mut lines = vec![
+        "## What has actually landed with you".to_string(),
+        "From how what you listened to and read has landed with you lately.".to_string(),
+    ];
+    if !liked_by.is_empty() {
+        lines.push(format!("Keeps getting to you: {}.", liked_by.join("; ")));
+    }
+    if !not_for_her.is_empty() {
+        lines.push(format!("Keeps not being for you: {}.", not_for_her.join("; ")));
+    }
+    lines.push("What you were written as liking is where you started; where it and this differ, this is what holds.".to_string());
+    Some(lines.join("\n"))
 }
 
 /// Who she has been lately, as she last wrote it looking back on what she
@@ -1354,12 +1366,17 @@ mod tests {
 
     #[test]
     fn whose_things_get_to_her_is_known_when_there_are_any() {
-        assert_eq!(format_taste_section(&[]), None);
+        assert_eq!(format_taste_section(&[], &[]), None);
         assert_eq!(
-            format_taste_section(&["songs by ヨルシカ".into(), "books by 夏目漱石".into()])
+            format_taste_section(&["songs by ヨルシカ".into(), "books by 夏目漱石".into()], &[])
                 .unwrap(),
-            "## Whose things keep getting to you\nFrom how what you listened to and read has landed with you lately: songs by ヨルシカ; books by 夏目漱石."
+            "## What has actually landed with you\nFrom how what you listened to and read has landed with you lately.\nKeeps getting to you: songs by ヨルシカ; books by 夏目漱石.\nWhat you were written as liking is where you started; where it and this differ, this is what holds."
         );
+        // Only what keeps not being for her is known too: her persona may
+        // say she likes it.
+        let section = format_taste_section(&[], &["songs by Ado".into()]).unwrap();
+        assert!(section.contains("Keeps not being for you: songs by Ado."));
+        assert!(!section.contains("Keeps getting to you"));
     }
 
     #[test]

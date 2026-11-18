@@ -219,3 +219,27 @@ pub(super) fn persona_baseline(raw: &[u8]) -> Result<Value, Failure> {
     let base = affect::persona_affect_baseline(req.persona.as_ref(), &req.personality);
     Ok(json!({ "mood": base.mood, "arousal": base.arousal }))
 }
+
+/// Where her mood toward someone settles (`affect::baseline`), the same
+/// on every end: from her persona, her undertone as her host keeps it (the
+/// `undertone` record's body, as her log carries it; none while there is
+/// none) and how much what still stings with them weighs (`sore.mood_weighs`).
+pub(super) fn baseline(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        persona: Option<Value>,
+        personality: String,
+        #[serde(default)]
+        undertone: Option<myriad_merope::undertone::Undertone>,
+        #[serde(default)]
+        stings: f64,
+    }
+    let req: In = input(raw)?;
+    let base = affect::baseline(
+        affect::persona_affect_baseline(req.persona.as_ref(), &req.personality),
+        req.undertone.as_ref(),
+        req.stings,
+    );
+    Ok(json!({ "mood": base.mood, "arousal": base.arousal }))
+}

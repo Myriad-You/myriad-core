@@ -690,12 +690,9 @@ fn speech_said_comes_in_version_3_and_an_unknown_version_is_refused_by_number() 
     let raw = std::fs::read(fixtures().join("envelope.json")).unwrap();
     let envelope: Envelope = serde_json::from_slice(&raw).unwrap();
     assert_eq!(envelope.format_version, 3);
-    assert!(
-        envelope
-            .entities
-            .iter()
-            .any(|entity| entity.kind == Kind::SpeechSaid)
-    );
+    for kind in [Kind::SpeechSaid, Kind::Undertone] {
+        assert!(envelope.entities.iter().any(|entity| entity.kind == kind));
+    }
     assert!(entity::canonicalize_envelope(envelope.clone()).is_ok());
     let mut old = envelope.clone();
     old.format_version = 2;

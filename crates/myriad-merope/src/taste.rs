@@ -168,6 +168,11 @@ impl Taste {
         self.leaning_by(most, |leaning| leaning <= -LIKES_BY)
     }
 
+    /// Whose things keep not being for her, as a line each.
+    pub fn not_for_her_by(&self, most: usize) -> Vec<String> {
+        self.not_for_her(most).iter().map(By::line).collect()
+    }
+
     fn leaning_by(&self, most: usize, keep: impl Fn(f64) -> bool) -> Vec<By> {
         let mut found: Vec<(&str, &str, f64)> = self
             .by
