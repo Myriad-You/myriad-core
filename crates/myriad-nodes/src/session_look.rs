@@ -25,7 +25,9 @@
 //! is of a change she gave a card with her answer on it. Her grounds must
 //! be numbers of the material she was shown ([`read`]): one that names a
 //! number not there is asked once more, and a second such answer keeps only
-//! the cards of what waits on the owner, unsaid.
+//! the cards of what waits on the owner, unsaid. A change she leaves to
+//! itself (no_need) with nothing said of what it is about is her answer
+//! all the same: there is nothing for the owner in it to name.
 //!
 //! Pure: what time it is comes in; nothing here reads a clock, a file or
 //! the network.
@@ -102,8 +104,11 @@ pub fn decides(session: &Session) -> bool {
 }
 
 /// Whether an answer holds to the schema with nothing in it: every change
-/// it gives says nothing of what it is about. Read as a failure; kept
-/// apart in an end's ledger, so how often it comes can be counted.
+/// it gives says nothing of what it is about. Kept apart in an end's
+/// ledger, so how often it comes can be counted. Read as a failure, unless
+/// every change it gives an empty `about` is one she leaves to itself
+/// (no_need): that much is her answer ([`read`]). One with no `about` at
+/// all is not her answer's shape.
 pub fn hollow(raw: &str) -> bool {
     serde_json::from_str::<Value>(strip_fence(raw))
         .ok()
@@ -893,8 +898,15 @@ pub fn read(raw: &str, material: &Material) -> Read {
         if judgment.verdict != Verdict::NoNeed && because.is_empty() {
             return Read::BadGrounds;
         }
-        let Some(about) = kept(Some(judgment.about), ABOUT_CHARS) else {
-            return Read::Unreadable;
+        // Nothing said of a change she leaves to itself is still her
+        // answer: it is about what the material says of it.
+        let about = match kept(Some(judgment.about), ABOUT_CHARS) {
+            Some(about) => about,
+            None if judgment.verdict == Verdict::NoNeed => material.changes[change - 1]
+                .chars()
+                .take(ABOUT_CHARS)
+                .collect(),
+            None => return Read::Unreadable,
         };
         // A lean to a choice the change does not have is none.
         let choices = material.choices_of(change).len();
@@ -960,15 +972,21 @@ pub fn read(raw: &str, material: &Material) -> Read {
 }
 
 /// Her answer held to itself: what waits on the owner (`waits`, by change)
-/// is never left to itself. What she says goes as she said it, of a card
-/// or not: it is hers to say.
-pub fn settle(mut answer: Answer, waits: &[bool]) -> Answer {
-    for (judgment, waits) in answer.judgments.iter_mut().zip(waits) {
+/// is never left to itself; one that waits on the owner's own answer
+/// (`decides`, [`decides`]; none past its end) is theirs to decide, as
+/// [`card_only`] has it, never a nod. What she says goes as she said it, of
+/// a card or not: it is hers to say.
+pub fn settle(mut answer: Answer, waits: &[bool], decides: &[bool]) -> Answer {
+    for (at, (judgment, waits)) in answer.judgments.iter_mut().zip(waits).enumerate() {
         if let Some(judgment) = judgment
             && (*waits || judgment.owner_must_say)
             && judgment.verdict == Verdict::NoNeed
         {
-            judgment.verdict = Verdict::Nod;
+            judgment.verdict = if decides.get(at).copied().unwrap_or(false) {
+                Verdict::Decide
+            } else {
+                Verdict::Nod
+            };
         }
     }
     answer
@@ -1338,7 +1356,7 @@ pub fn look_read(input: ReadInput) -> Result<LookRead, crate::NodeError> {
     };
     let (status, judgments, line, repos) = match read(&input.raw, &input.material) {
         Read::Good(answer) => {
-            let answer = settle(answer, &input.waits);
+            let answer = settle(answer, &input.waits, &input.decides);
             let repos = answer
                 .repos
                 .iter()
