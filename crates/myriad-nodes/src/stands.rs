@@ -631,7 +631,10 @@ pub struct StepRead {
     /// the life the answer says it tells of, and neither changed nor ended
     /// (nor named to be). The end may note that each still held on the day
     /// she learned the fact. None when the answer says no one's life it
-    /// tells of, or could not be read.
+    /// tells of, or could not be read; when it names an item to change or
+    /// end that is not a number in the list; and when the fact took the
+    /// place of something she knew and the answer changed or ended nothing
+    /// standing on its node.
     #[serde(rename = "stillSo", skip_serializing_if = "Vec::is_empty")]
     pub still_so: Vec<StillSo>,
 }
@@ -812,8 +815,17 @@ fn decide(
         && !decided.changes.iter().any(|change| &change.node == home)
     {
         start(&mut decided, Some(home), fact);
-        // It changed something the answer left standing: what it left is
-        // not seen to still hold.
+    }
+    // It took the place of something she knew, and the answer changed or
+    // ended nothing that stood on its node (it only started something, or
+    // the core did): what it left there is not seen to still hold.
+    if replaced
+        && !own.first().is_some_and(|home| {
+            decided.changes.iter().any(|change| {
+                &change.node == home && shown.iter().any(|one| one.item == change.item)
+            })
+        })
+    {
         decided.still_so.clear();
     }
     decided

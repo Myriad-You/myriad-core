@@ -338,6 +338,13 @@ fn what_a_fact_was_put_to_and_left_standing_is_said_back() {
     );
     assert_eq!(got.rows.len(), 1);
     assert!(got.still_so.is_empty());
+    // Only started something on its node: none either.
+    let got = read(
+        &replacing,
+        json!({"whose": "them", "set": [], "end": [], "add": [{"topic": "日常", "text": "改成游泳了"}]}),
+    );
+    assert_eq!(got.rows.len(), 1);
+    assert!(got.still_so.is_empty());
     // Changed on its node by the answer: what it left still holds.
     let got = read(
         &replacing,
