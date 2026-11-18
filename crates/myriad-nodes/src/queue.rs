@@ -20,7 +20,9 @@
 //! (「现在」, hers too: a conclusion, not news) ([`its_own`]). Those are
 //! that node's alone, and would otherwise wake every task under a
 //! repository each time a session moves. Everything else she or the
-//! partner put on it, or did to it, still wakes the other end.
+//! partner put on it, or did to it, still wakes the other end: by who wrote
+//! the row, not by `saidBy` (the partner's words a session copies in are
+//! the rule's). A blocker wakes what it blocks with all of it.
 //!
 //! Its own rows are also unseen while a head item is 两边都改过 and no one
 //! run of hers saw every current version of it (why `own`). Two of her ran
