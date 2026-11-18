@@ -106,8 +106,9 @@ pub struct Day {
 impl Day {
     /// How lively the day was, `0..=1`: half how much of her own time went
     /// into doing rather than lazing, half how often what she did landed
-    /// hard. None for a day she did not live (she was not running, or did
-    /// and lazed nothing).
+    /// hard. None for a day she did not live: she did nothing of her own,
+    /// nothing landed and she lazed no time (she was not running). A day
+    /// she only lazed is lived, and the quietest.
     pub fn activation(&self) -> Option<f64> {
         let spent = finite_minutes(self.spent_minutes);
         let lazed = finite_minutes(self.lazed_minutes);
@@ -225,15 +226,15 @@ impl Undertone {
                 recent: today,
                 long: today,
             },
-            Some(before) => {
-                let gap = (day - before.day).num_days().max(1) as f64;
-                Undertone {
-                    day,
-                    days: before.days.saturating_add(1),
-                    recent: before.recent.toward(today, weight(gap, RECENT_HALF_DAYS)),
-                    long: before.long.toward(today, weight(gap, LONG_HALF_DAYS)),
-                }
-            }
+            // Counted in days she lived, as her persona's weight is: days
+            // she was not running are not days of her life, and do not
+            // let the next one stand for them.
+            Some(before) => Undertone {
+                day,
+                days: before.days.saturating_add(1),
+                recent: before.recent.toward(today, weight(RECENT_HALF_DAYS)),
+                long: before.long.toward(today, weight(LONG_HALF_DAYS)),
+            },
         })
     }
 
@@ -263,10 +264,10 @@ impl Undertone {
     }
 }
 
-/// How much a day weighs against a run with half-life `half` days, `gap`
-/// days after the last one folded in.
-fn weight(gap: f64, half: f64) -> f64 {
-    1.0 - 0.5f64.powf(gap / half)
+/// How much a day she lived weighs against a run with half-life `half`
+/// days she lived.
+fn weight(half: f64) -> f64 {
+    1.0 - 0.5f64.powf(1.0 / half)
 }
 
 #[cfg(test)]

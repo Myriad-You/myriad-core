@@ -60,7 +60,15 @@ fn only_what_landed_hard_is_a_gap() {
         gap(Some(Reaction::Moved), &guessed(Held::No, false)),
         Some(MOVED - GUESS)
     );
-    assert_eq!(want_ended(true), CAME_TRUE);
+    // A guess that failed on a question answered: something landed, both
+    // ways at once.
+    let both = Kept {
+        guessed: guessed(Held::No, false).guessed,
+        explored: looked_up("yes", "none", false).explored,
+        ..Kept::default()
+    };
+    assert_eq!(gap(None, &both), Some(0.0));
+        assert_eq!(want_ended(true), CAME_TRUE);
     assert_eq!(want_ended(false), -LET_GO);
 }
 
@@ -81,6 +89,13 @@ fn a_day_not_lived_is_not_folded_in() {
     // The same night again, or an older day, changes nothing.
     assert_eq!(Undertone::after(Some(&first), day(0), &lived), Some(first));
     assert!(first.holds());
+    // Days she was not running do not count: a lived day after a month
+    // away weighs as the next lived day would.
+    let next = Undertone::after(Some(&first), day(1), &lived).unwrap();
+    let after_away = Undertone::after(Some(&first), day(30), &lived).unwrap();
+    assert_eq!(next.recent, after_away.recent);
+    assert_eq!(next.long, after_away.long);
+    assert_eq!(after_away.days, 2);
 }
 
 #[test]

@@ -24,12 +24,16 @@ use crate::{
 /// The envelope's fixed `format`.
 pub const FORMAT: &str = "myriad.her";
 /// Bumped only for a change an older side cannot read; a new optional
-/// field does not bump it. 3 added `speech_said`, 4 `undertone`.
-pub const FORMAT_VERSION: u32 = 4;
-/// The versions this side reads: what it writes, 3, which is 4 without
-/// `undertone`, and 2, which is 3 without `speech_said` (a file exported
-/// before them still comes back).
-pub const READ_FORMAT_VERSIONS: [u32; 3] = [2, 3, FORMAT_VERSION];
+/// field does not bump it. 3 added `speech_said`. `undertone` came later
+/// without a bump: a side's sync hello says this number, and a Mac that
+/// reads only up to it stops syncing when it is higher. A side older than
+/// `undertone` refuses only what carries one (a move or an export once she
+/// has an undertone, and its log rows), so it is held back by deploying
+/// in order: every end first, then the host writing it.
+pub const FORMAT_VERSION: u32 = 3;
+/// The versions this side reads: what it writes, and 2, which is 3 without
+/// `speech_said` (a file exported before it still comes back).
+pub const READ_FORMAT_VERSIONS: [u32; 2] = [2, FORMAT_VERSION];
 
 /// Whether this side reads `myriad.her` version `version`; why not, when
 /// not, as an older side would be told.
@@ -38,7 +42,7 @@ pub fn check_format_version(version: u32) -> Result<(), SyncError> {
         return Ok(());
     }
     Err(SyncError::new(format!(
-        "format version {version} is not one this side reads (2, 3, {FORMAT_VERSION})"
+        "format version {version} is not one this side reads (2, {FORMAT_VERSION})"
     )))
 }
 /// The one person a synced memory can be with.
@@ -388,14 +392,7 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
     {
         return Err(SyncError::new("format version 2 has no speech_said"));
     }
-    if envelope.format_version < 4
-        && envelope
-            .entities
-            .iter()
-            .any(|entity| entity.kind == Kind::Undertone)
-    {
-        return Err(SyncError::new("format version 3 has no undertone"));
-    }
+
     for asset in &mut envelope.assets {
         asset.check()?;
     }
