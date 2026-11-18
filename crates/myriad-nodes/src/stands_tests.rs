@@ -232,6 +232,97 @@ fn a_change_is_written_where_the_item_stands_and_only_of_whose_life_it_is() {
 }
 
 #[test]
+fn what_a_fact_was_put_to_and_left_standing_is_said_back() {
+    let run = item_id("them", "own", "m0", 0);
+    let read_ = item_id("them", "own", "m0", 1);
+    let late = item_id("them", "own", "m0", 2);
+    let mom = item_id(&whose_key("妈妈").unwrap(), "own", "m0", 3);
+    let job = item_id("them", "work", "m0", 0);
+    let step = StepInput {
+        fact: fact("m1", "跑步时被绳子绊了一下", &["own"]),
+        known: vec![KnownIn {
+            text: "在会展公司做策划".into(),
+            on: names(&["work"]),
+        }],
+        nodes: vec![
+            node(
+                "own",
+                "日常",
+                folded(&[
+                    (&run, "每天晚上跑步", false),
+                    (&read_, "睡前读书", false),
+                    (&late, "熬夜", false),
+                    (&mom, "妈妈每周日打电话", false),
+                ]),
+            ),
+            node("work", "工作", folded(&[(&job, "在会展公司做策划", false)])),
+        ],
+    };
+    let still = |got: &StepRead| -> Vec<String> {
+        let mut items: Vec<String> = got
+            .still_so
+            .iter()
+            .map(|still| still.item.clone())
+            .collect();
+        items.sort();
+        items
+    };
+    let sorted = |mut items: Vec<String>| {
+        items.sort();
+        items
+    };
+    // Each item's number as the list shows it.
+    let asked: Value = serde_json::from_str(&step_prepare(step.clone()).unwrap().input).unwrap();
+    let n = |text: &str| {
+        asked["list"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|item| item["text"] == text)
+            .unwrap()["n"]
+            .clone()
+    };
+    // Their own life: what it changes or ends, or names to and cannot, is
+    // not; 妈妈's is not theirs; one only brought to mind is not on its node.
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [{"item": n("每天晚上跑步"), "text": "每天晚上跑步，最近膝盖疼"},
+                                        {"item": n("睡前读书"), "text": " "}],
+            "end": [], "add": []}),
+    );
+    assert_eq!(still(&got), vec![late.clone()]);
+    assert_eq!(got.still_so[0].node, "own");
+    let wire = serde_json::to_value(&got).unwrap();
+    assert_eq!(wire["stillSo"], json!([{"node": "own", "item": late}]));
+    // A detail of an item: every one of theirs on its node still holds.
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [], "add": []}),
+    );
+    assert_eq!(
+        still(&got),
+        sorted(vec![run.clone(), read_.clone(), late.clone()])
+    );
+    // 妈妈's fact puts only her items to it.
+    let got = read(
+        &step,
+        json!({"whose": "妈妈", "set": [], "end": [], "add": []}),
+    );
+    assert_eq!(still(&got), vec![mom]);
+    // No whose, or nothing read: none, and none on the wire.
+    let got = read(&step, json!({"set": [], "end": [], "add": []}));
+    assert!(got.still_so.is_empty());
+    assert!(serde_json::to_value(&got).unwrap().get("stillSo").is_none());
+}
+
+#[test]
+fn no_text_says_up_to_which_day_it_held() {
+    for system in [STEP_SYSTEM, BUILD_SYSTEM] {
+        assert!(system.contains("截至某日, as of, so far"), "{system}");
+    }
+}
+
+#[test]
 fn a_change_the_rules_refuse_is_set_aside_and_the_rest_are_written() {
     let run = item_id("them", "run", "m0", 0);
     let step = StepInput {
