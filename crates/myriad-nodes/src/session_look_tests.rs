@@ -426,6 +426,41 @@ fn the_form_with_nothing_in_it_is_hollow() {
     assert!(!hollow(r#"{"changes":[],"say":null}"#));
 }
 
+/// A change she leaves to itself with nothing said of it is her answer:
+/// not asked again. Nothing said of one she gives a card is not.
+#[test]
+fn nothing_said_of_what_needs_nothing_is_an_answer() {
+    let material = two();
+    let empty = r#"{"changes":[{"change":1,"verdict":"VERDICT","about":"","suggestion":null,"because":[],"missing":null,"ownerMustSay":false},{"change":2,"verdict":"no_need","about":" ","suggestion":null,"because":[],"missing":null,"ownerMustSay":false}],"say":null}"#;
+    let no_need = empty.replace("VERDICT", "no_need");
+    assert!(hollow(&no_need));
+    let answer = good(&no_need);
+    for (at, judgment) in answer.judgments.iter().enumerate() {
+        let judgment = judgment.as_ref().unwrap();
+        assert_eq!(judgment.verdict, Verdict::NoNeed);
+        // What the material says of it stands for what she did not say.
+        assert_eq!(judgment.about, material.changes[at]);
+    }
+    // One that waits on them is still never left to itself.
+    let settled = settle(answer, &[true, false]);
+    assert_eq!(settled.judgments[0].as_ref().unwrap().verdict, Verdict::Nod);
+    // With a line of hers on it, the line goes as she said it.
+    let said = no_need.replace(
+        r#""say":null"#,
+        r#""say":{"change":2,"text":"文档写完了","because":[2]}"#,
+    );
+    assert_eq!(good(&said).line.unwrap().text, "文档写完了");
+    // Nothing said of a change she gives a card is no answer.
+    let carded = empty.replacen(r#""because":[]"#, r#""because":[1]"#, 1);
+    for verdict in ["nod", "decide"] {
+        assert_eq!(
+            read(&carded.replace("VERDICT", verdict), &material),
+            Read::Unreadable,
+            "{verdict}"
+        );
+    }
+}
+
 /// What she leans to is one of the change's choices, or none; her
 /// suggestion answers only when there is one.
 #[test]

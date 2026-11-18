@@ -25,7 +25,9 @@
 //! is of a change she gave a card with her answer on it. Her grounds must
 //! be numbers of the material she was shown ([`read`]): one that names a
 //! number not there is asked once more, and a second such answer keeps only
-//! the cards of what waits on the owner, unsaid.
+//! the cards of what waits on the owner, unsaid. A change she leaves to
+//! itself (no_need) with nothing said of what it is about is her answer
+//! all the same: there is nothing for the owner in it to name.
 //!
 //! Pure: what time it is comes in; nothing here reads a clock, a file or
 //! the network.
@@ -102,8 +104,10 @@ pub fn decides(session: &Session) -> bool {
 }
 
 /// Whether an answer holds to the schema with nothing in it: every change
-/// it gives says nothing of what it is about. Read as a failure; kept
-/// apart in an end's ledger, so how often it comes can be counted.
+/// it gives says nothing of what it is about. Kept apart in an end's
+/// ledger, so how often it comes can be counted. Read as a failure, unless
+/// every change it says nothing of is one she leaves to itself (no_need):
+/// that much is her answer ([`read`]).
 pub fn hollow(raw: &str) -> bool {
     serde_json::from_str::<Value>(strip_fence(raw))
         .ok()
@@ -893,8 +897,15 @@ pub fn read(raw: &str, material: &Material) -> Read {
         if judgment.verdict != Verdict::NoNeed && because.is_empty() {
             return Read::BadGrounds;
         }
-        let Some(about) = kept(Some(judgment.about), ABOUT_CHARS) else {
-            return Read::Unreadable;
+        // Nothing said of a change she leaves to itself is still her
+        // answer: it is about what the material says of it.
+        let about = match kept(Some(judgment.about), ABOUT_CHARS) {
+            Some(about) => about,
+            None if judgment.verdict == Verdict::NoNeed => material.changes[change - 1]
+                .chars()
+                .take(ABOUT_CHARS)
+                .collect(),
+            None => return Read::Unreadable,
         };
         // A lean to a choice the change does not have is none.
         let choices = material.choices_of(change).len();

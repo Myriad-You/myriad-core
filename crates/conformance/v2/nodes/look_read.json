@@ -377,6 +377,73 @@
     },
     {
       "input": {
+        "decides": [
+          false,
+          false
+        ],
+        "material": {
+          "changes": [
+            "stopped and asks the owner; waits on the owner",
+            "finished a turn, nothing to answer"
+          ],
+          "pieces": [
+            {
+              "change": 1,
+              "evidence": "session:s1",
+              "text": "Split the store (coding-agent in sample-repo)",
+              "what": "the session"
+            },
+            {
+              "change": 2,
+              "evidence": "session:s2",
+              "text": "Write the docs (coding-agent in sample-repo)",
+              "what": "the session"
+            }
+          ]
+        },
+        "raw": "{\"changes\": [{\"change\": 1, \"verdict\": \"no_need\", \"about\": \"\", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}, {\"change\": 2, \"verdict\": \"no_need\", \"about\": \" \", \"suggestion\": null, \"because\": [], \"missing\": null, \"ownerMustSay\": false}], \"say\": null}",
+        "waits": [
+          true,
+          false
+        ]
+      },
+      "name": "a change she leaves to itself with nothing said of it is her answer, not asked again; one that waits on the owner still keeps its card",
+      "output": {
+        "judgments": [
+          {
+            "about": "stopped and asks the owner; waits on the owner",
+            "answers": false,
+            "because": [],
+            "card": "你点头就行：stopped and asks the owner; waits on the owner",
+            "evidence": [],
+            "hasCard": true,
+            "leans": null,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "nod"
+          },
+          {
+            "about": "finished a turn, nothing to answer",
+            "answers": false,
+            "because": [],
+            "card": "不用你管：finished a turn, nothing to answer",
+            "evidence": [],
+            "hasCard": false,
+            "leans": null,
+            "missing": null,
+            "ownerMustSay": false,
+            "suggestion": "",
+            "verdict": "no_need"
+          }
+        ],
+        "line": null,
+        "repos": [],
+        "status": "good"
+      }
+    },
+    {
+      "input": {
         "failed": [
           false,
           true
