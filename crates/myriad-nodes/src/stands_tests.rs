@@ -353,6 +353,31 @@ fn what_a_fact_was_put_to_and_left_standing_is_said_back() {
     assert_eq!(still(&got), sorted(vec![read_.clone(), late.clone()]));
 }
 
+/// A build may have just given the fact's own memory an item on its node
+/// (the same id its step would start): started again, it is no change of
+/// what stood there, and nothing is said to still hold.
+#[test]
+fn a_replacing_fact_starting_what_a_build_gave_it_says_nothing_still_holds() {
+    let built = item_id("them", "own", "m1", 0);
+    let other = item_id("them", "own", "m0", 0);
+    let mut step = StepInput {
+        fact: fact("m1", "改成游泳了", &["own"]),
+        known: Vec::new(),
+        nodes: vec![node(
+            "own",
+            "日常",
+            folded(&[(&built, "改成游泳了", false), (&other, "睡前读书", false)]),
+        )],
+    };
+    step.fact.replaced = true;
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [], "add": [{"topic": "日常", "text": "改成游泳了"}]}),
+    );
+    assert!(got.rows.iter().any(|row| row.body["item"] == json!(built)));
+    assert!(got.still_so.is_empty(), "{:?}", got.still_so);
+}
+
 #[test]
 fn no_text_says_up_to_which_day_it_held() {
     for system in [STEP_SYSTEM, BUILD_SYSTEM] {

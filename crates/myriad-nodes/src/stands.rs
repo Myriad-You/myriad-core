@@ -819,11 +819,13 @@ fn decide(
     // It took the place of something she knew, and the answer changed or
     // ended nothing that stood on its node (it only started something, or
     // the core did): what it left there is not seen to still hold.
+    // What set or end changed (`touched`), not what was started: a started
+    // item's id may be one a build just gave the same memory.
     if replaced
         && !own.first().is_some_and(|home| {
-            decided.changes.iter().any(|change| {
-                &change.node == home && shown.iter().any(|one| one.item == change.item)
-            })
+            shown
+                .iter()
+                .any(|one| &one.node == home && touched.contains(&one.item))
         })
     {
         decided.still_so.clear();
