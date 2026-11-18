@@ -70,6 +70,7 @@ mod speech_plan;
 mod sticker_avatar;
 pub mod stickers;
 pub mod style;
+pub mod take_back_check;
 pub mod strangers;
 pub mod talk_shape;
 pub mod topics;
