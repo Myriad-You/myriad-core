@@ -9,6 +9,12 @@
 //! - **part**: the rows of its parts (属于: one end changed, the other is
 //!   upkept);
 //! - **whole**: the rows of what it is part of;
+//!
+//!   From a part or a whole, not what a rule wrote there nor how it stands
+//!   now (its 「现在」: [`its_own`]): a session's frames on a repository,
+//!   and her line on how it goes, are that node's alone, and would
+//!   otherwise wake every task under it each time. What she or the partner
+//!   put on it, or did to it, still wakes the other end.
 //! - **blocker**: the rows of what blocks it (挡着: the blocker changed, so
 //!   the blocked one looks again: the wake its structure brings);
 //! - **mutual_block**: it and another block each other, and that is new to
@@ -52,6 +58,12 @@ use crate::{
     fold::{FoldInput, Full, fold_full},
     limits::QUEUE_MAX,
 };
+
+/// A row that makes only its own node due, never that node's parts or
+/// its whole: what a rule wrote, and 「现在」.
+fn its_own(row: &Row) -> bool {
+    row.author == myriad_persona_log::row::Author::Rule || row.kind == "node.standing"
+}
 
 /// Why a node is due.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
@@ -215,6 +227,7 @@ impl<'a> Watch<'a> {
             out.extend(
                 self.rows_of(audience, other)
                     .iter()
+                    .filter(|row| reason == Reason::Blocker || !its_own(row))
                     .map(|row| (reason, *row)),
             );
         }
