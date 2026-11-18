@@ -147,6 +147,103 @@
     {
       "input": {
         "fact": {
+          "learned": "2026-11-12",
+          "memory": "m2",
+          "on": [
+            "work"
+          ],
+          "text": "今天加班到很晚"
+        },
+        "known": [
+          {
+            "on": [
+              "work"
+            ],
+            "text": "在会展公司做策划"
+          },
+          {
+            "on": [
+              "mom"
+            ],
+            "text": "妈妈每周日打电话"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "own",
+            "kind": "topic",
+            "name": "新工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "now": {
+                  "base": [
+                    "u-now"
+                  ],
+                  "value": {
+                    "text": "working"
+                  }
+                },
+                "them-0123456789": {
+                  "base": [
+                    "u-them-0123456789"
+                  ],
+                  "value": {
+                    "text": "在会展公司做策划"
+                  }
+                }
+              }
+            },
+            "id": "work",
+            "kind": "topic",
+            "name": "工作"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "每周日晚上和妈妈通电话"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"them\", \"set\": [], \"end\": [], \"add\": []}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a fact that changes nothing says back the items of its life on its own node that still hold",
+      "output": {
+        "left": [],
+        "rows": [],
+        "setAside": 0,
+        "stillSo": [
+          {
+            "item": "them-0123456789",
+            "node": "work"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "fact": {
           "happened": "2026-10",
           "learned": "2026-11-12",
           "memory": "m1",
