@@ -68,7 +68,7 @@ fn only_what_landed_hard_is_a_gap() {
         ..Kept::default()
     };
     assert_eq!(gap(None, &both), Some(0.0));
-        assert_eq!(want_ended(true), CAME_TRUE);
+    assert_eq!(want_ended(true), CAME_TRUE);
     assert_eq!(want_ended(false), -LET_GO);
 }
 

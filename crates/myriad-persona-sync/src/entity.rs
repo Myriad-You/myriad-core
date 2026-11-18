@@ -392,7 +392,6 @@ pub fn canonicalize_envelope(mut envelope: Envelope) -> Result<Envelope, SyncErr
     {
         return Err(SyncError::new("format version 2 has no speech_said"));
     }
-
     for asset in &mut envelope.assets {
         asset.check()?;
     }
