@@ -9,17 +9,18 @@
 //! - **part**: the rows of its parts (属于: one end changed, the other is
 //!   upkept);
 //! - **whole**: the rows of what it is part of;
-//!
-//!   From a part or a whole, not what a rule wrote there nor how it stands
-//!   now (its 「现在」: [`its_own`]): a session's frames on a repository,
-//!   and her line on how it goes, are that node's alone, and would
-//!   otherwise wake every task under it each time. What she or the partner
-//!   put on it, or did to it, still wakes the other end.
 //! - **blocker**: the rows of what blocks it (挡着: the blocker changed, so
 //!   the blocked one looks again: the wake its structure brings);
 //! - **mutual_block**: it and another block each other, and that is new to
 //!   it (a hand to raise);
 //! - **clash**: a clash with it is new to it (撞上: a hand to raise).
+//!
+//! Of a part or a whole, not what a rule wrote there (anything a session
+//! laid out: frames, a status it moved, what it asks) nor how it stands now
+//! (「现在」, hers too: a conclusion, not news) ([`its_own`]). Those are
+//! that node's alone, and would otherwise wake every task under a
+//! repository each time a session moves. Everything else she or the
+//! partner put on it, or did to it, still wakes the other end.
 //!
 //! Its own rows are also unseen while a head item is 两边都改过 and no one
 //! run of hers saw every current version of it (why `own`). Two of her ran
