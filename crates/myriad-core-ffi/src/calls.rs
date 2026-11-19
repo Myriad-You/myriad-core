@@ -174,6 +174,7 @@ const CALLS: &[(&str, Call)] = &[
     ("library.from_gutenberg", serial::from_gutenberg),
     ("life.concepts_system", prompts::concepts_system),
     ("life.own_day_system", prompts::own_day_system),
+    ("link.call_receive", link::call_receive),
     ("link.check", link::check_frame),
     ("link.child_after", link::child_after),
     ("link.child_claims", link::child_claims),

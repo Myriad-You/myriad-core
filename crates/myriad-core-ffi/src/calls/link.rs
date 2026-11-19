@@ -76,6 +76,95 @@ pub(super) fn now_read(raw: &[u8]) -> Result<Value, Failure> {
     Ok(answer.unwrap_or_else(|refusal| json!({ "refused": refusal })))
 }
 
+/// `{action, version, for, deadlineAt, takenAt, offers, refused?, granted}` →
+/// `{verdict, code, version, deadlineAt}`: what the receiver of a `call.ask` does with it
+/// (`myriad_her_link::call_receive`), the one place it is decided, for an end that keeps
+/// its own link and for the child core's session alike.
+///
+/// `for` is the ask's (`{kind, groupId?}`). `deadlineAt` is the ask's and `takenAt` when
+/// this end took it, both on the host's clock, milliseconds. `offers` is what this end
+/// can do, `[{name, version}]`; `refused` what it can do but its own grants do not allow
+/// now (none when left out); `granted` what the sender said is granted on this link
+/// (`call.granted.actions`), null before it has said.
+///
+/// `verdict` is `hold` (keep the ask, neither do nor answer it, until `call.granted` has
+/// come on this link, then ask again), `do`, or `fail`, with `code` one of the contract's
+/// `calls.failCodes` (null otherwise). `version` is the version the answer says: the
+/// ask's, or this end's own when the code is `version_unsupported`. `deadlineAt` is the
+/// deadline the ask is held to, cut short to the most its action may be given.
+pub(super) fn call_receive(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Named {
+        name: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct In {
+        action: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+        #[serde(rename = "for")]
+        of: Value,
+        #[serde(deserialize_with = "whole::u64")]
+        deadline_at: u64,
+        #[serde(deserialize_with = "whole::u64")]
+        taken_at: u64,
+        offers: Vec<Named>,
+        #[serde(default)]
+        refused: Vec<Named>,
+        // Must be there, null or a list: left out, every ask would be held for good.
+        granted: Value,
+    }
+    let input: In = super::quiet_input(raw)?;
+    let bad = |what: &str| Failure::BadInput(what.into());
+    let granted: Option<Vec<Named>> =
+        serde_json::from_value(input.granted).map_err(|_| bad("granted is null or a list"))?;
+    // No count or time past what every JSON reader keeps exactly.
+    let whole = |count: u64| count <= WHOLE as u64;
+    let lists = [&input.offers, &input.refused]
+        .into_iter()
+        .chain(&granted)
+        .flatten();
+    if ![input.version, input.deadline_at, input.taken_at]
+        .into_iter()
+        .chain(lists.map(|one| one.version))
+        .all(whole)
+    {
+        return Err(bad("a number past 2^53"));
+    }
+    let pairs = |list: Vec<Named>| -> Vec<(String, u64)> {
+        list.into_iter()
+            .map(|one| (one.name, one.version))
+            .collect()
+    };
+    let (offers, refused) = (pairs(input.offers), pairs(input.refused));
+    let granted = granted.map(pairs);
+    let received = myriad_her_link::call_receive(
+        &input.action,
+        input.version,
+        &input.of,
+        input.deadline_at,
+        input.taken_at,
+        &offers,
+        &refused,
+        granted.as_deref(),
+    );
+    let (verdict, code) = match received.verdict {
+        myriad_her_link::CallVerdict::Hold => ("hold", None),
+        myriad_her_link::CallVerdict::Do => ("do", None),
+        myriad_her_link::CallVerdict::Fail(code) => ("fail", Some(code)),
+    };
+    Ok(json!({
+        "verdict": verdict,
+        "code": code,
+        "version": received.version,
+        "deadlineAt": received.deadline_at,
+    }))
+}
+
 /// The largest whole number every JSON reader keeps exactly: no count or time of her link
 /// is past it (`myriad_link_child`'s sessions hold to the same).
 const WHOLE: i64 = 1 << 53;

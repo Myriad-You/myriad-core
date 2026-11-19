@@ -360,6 +360,99 @@ pub fn call_deadline(action: &str, deadline_at: u64, taken_at: u64) -> u64 {
     deadline_at.min(taken_at.saturating_add(call_most_ms(action)))
 }
 
+/// What an end does with a `call.ask` it was sent ([`call_receive`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CallVerdict {
+    /// Not yet: the sender has not said, on this link, what is granted. The ask is
+    /// neither done nor answered until it has.
+    Hold,
+    /// Done now, by `deadline_at`.
+    Do,
+    /// Answered failed with this one of `calls.failCodes`, and not done.
+    Fail(&'static str),
+}
+
+/// [`call_receive`]'s answer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CallReceived {
+    pub verdict: CallVerdict,
+    /// The version the answer says: the ask's, or the one this end does when it answers
+    /// `version_unsupported`.
+    pub version: u64,
+    /// The deadline the ask is held to ([`call_deadline`]).
+    pub deadline_at: u64,
+}
+
+/// What the receiver of a `call.ask` does with it, by the contract's order: the one
+/// place it is decided, for every end.
+///
+/// `offers` is what this end can do, `[(name, version)]`. `refused` is what it can do
+/// but its own grants do not allow now (the owner turned it off on the device): the
+/// contract's `call_not_granted` covers both the sender's grant and the receiver's own.
+/// `granted` is what the sender said is granted on this link (`call.granted`), `None`
+/// before it has said. `deadline_at` and `taken_at` are on the host's clock.
+///
+/// In order: an action this end neither offers nor refuses is `call_unknown`; one it has
+/// at another version, `version_unsupported` (and the answer says this end's version);
+/// one not for `of`, `wrong_audience`, and one the contract does not register, though
+/// this end says it offers it, `call_unknown` ([`call_allowed`]). Then, with no word yet on what
+/// is granted, the ask is held: not done, which would be acting on a grant that may have
+/// been taken back, and not answered, which would be refusing what may be granted. Then
+/// one this end refuses, or one the sender did not grant, is `call_not_granted`; one
+/// whose deadline has passed, `call_timeout`; any other is done.
+#[allow(clippy::too_many_arguments)]
+pub fn call_receive(
+    action: &str,
+    version: u64,
+    of: &Value,
+    deadline_at: u64,
+    taken_at: u64,
+    offers: &[(String, u64)],
+    refused: &[(String, u64)],
+    granted: Option<&[(String, u64)]>,
+) -> CallReceived {
+    let deadline_at = call_deadline(action, deadline_at, taken_at);
+    let answer = |verdict, version| CallReceived {
+        verdict,
+        version,
+        deadline_at,
+    };
+    let fail = |code| answer(CallVerdict::Fail(code), version);
+    // The version this end has the action at: the one asked when it has that one, in
+    // what it offers or else in what it refuses; otherwise the first it has it at.
+    let at = |list: &[(String, u64)], exact: bool| {
+        list.iter()
+            .find(|(name, v)| name == action && (!exact || *v == version))
+            .map(|one| one.1)
+    };
+    let has = |list: &[(String, u64)]| at(list, true).or_else(|| at(list, false));
+    let does = at(offers, true)
+        .or_else(|| at(refused, true))
+        .or_else(|| has(offers))
+        .or_else(|| has(refused));
+    let Some(does) = does else {
+        return fail("call_unknown");
+    };
+    if does != version {
+        return answer(CallVerdict::Fail("version_unsupported"), does);
+    }
+    if let Err(code) = call_allowed(action, of) {
+        return fail(code);
+    }
+    let Some(granted) = granted else {
+        return answer(CallVerdict::Hold, version);
+    };
+    let named =
+        |list: &[(String, u64)]| list.iter().any(|(name, v)| name == action && *v == version);
+    if named(refused) || !named(granted) {
+        return fail("call_not_granted");
+    }
+    if taken_at >= deadline_at {
+        return fail("call_timeout");
+    }
+    answer(CallVerdict::Do, version)
+}
+
 /// `call.result`: its id is its callId's and `.result`; done carries
 /// exactly the result fields of its action at that version (another
 /// version passes), failed an error with one of `calls.failCodes`, unknown
