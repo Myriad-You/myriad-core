@@ -503,17 +503,18 @@ func step(_ event: JSON) throws {
 - `takenAt`：这一端收下它的时刻，主机的钟，毫秒。
 - `offers`：这一端会做的动作，`[{name, version}]`。
 - `refused`：这一端会做、但这一端自己的授予现在不让的（主人在设备上把它关了），可以不给。关着的动作照样在 `call.offer` 里报：契约说报的是「能做」，不是「主人允许」。
-- `granted`：主机在这条连接上说过授予的（`call.granted` 的 `actions`）；还没说过就是 `null`。
+- `granted`：主机在这条连接上说过授予的（`call.granted` 的 `actions`）；还没说过就是 `null`。这个字段每次都要写：漏了的话每个调用都会被一直搁着，所以漏写算输入有误。
+- 数都不超过 2^53。同一个动作在 `offers`、`refused` 里按「问的那一版」找；这一版哪边都没有，才按版本不对算。
 
-输出：`verdict` 是 `hold`（先搁着：不做也不答，等这条连接的 `call.granted` 到了带着它再问一次）、`do`、或 `fail`（`code` 是契约 `calls.failCodes` 里的一个；别的时候 `code` 是 `null`）。`version` 是答复里写的版本：一般是问的那一版，`version_unsupported` 时是这一端做的那一版。`deadlineAt` 是这个调用守的期限，超过这个动作允许的最长时间的已经截短。
+输出：`verdict` 是 `hold`（先搁着：不做也不答，等这条连接的 `call.granted` 到了带着它再问一次）、`do`、或 `fail`（`code` 是契约 `calls.failCodes` 里的一个；别的时候 `code` 是 `null`）。`version` 是答复里写的版本：一般是问的那一版，`version_unsupported` 时是这一端做的那一版。`deadlineAt` 是这个调用守的期限，超过这个动作允许的最长时间的已经截短（从 `takenAt` 起算）。搁着的调用之后再问时，把上次给的 `deadlineAt` 交回来：它只会不变或更短，不会变长。
 
 判的顺序：
 
 1. `offers` 和 `refused` 里都没有这个动作：`call_unknown`。
 2. 有，但版本不是问的那一版：`version_unsupported`。
-3. 这个动作不是给 `for` 说的对象的：`wrong_audience`。
+3. 这个动作不是给 `for` 说的对象的：`wrong_audience`。契约里根本没登记这个动作（虽然 `offers` 里写了）：`call_unknown`。
 4. `granted` 是 `null`：`hold`。前三样在主机说话之前就答，因为不管授予什么它们都不会变。
-5. 在 `refused` 里，或不在 `granted` 里：`call_not_granted`。契约这个码本来就包两种：主人没在这里批准，或这一端自己的授予不让。`refused` 里的动作同时也在 `offers` 里时，按 `refused` 算。
+5. 在 `refused` 里，或不在 `granted` 里：`call_not_granted`。契约这个码本来就包两种：主人没在这里批准，或这一端自己的授予不让。同一个动作同一版既在 `offers` 里又在 `refused` 里时，按 `refused` 算。
 6. `takenAt` 已经到了期限：`call_timeout`。
 7. 否则 `do`。
 

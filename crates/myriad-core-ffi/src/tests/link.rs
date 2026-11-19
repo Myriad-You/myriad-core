@@ -74,6 +74,15 @@ fn every_call_receive_case_answers_through_the_c_entry_point() {
     let (status, answer) = ffi("link.call_receive", &bad);
     assert_eq!(status, STATUS_BAD_INPUT);
     assert!(!answer.to_string().contains("a value"));
+    // granted is said every time, null when her host has not said: left out, the call
+    // would hold every ask for good, so it is bad input.
+    let mut none = file["cases"][0]["input"].clone();
+    none.as_object_mut().unwrap().remove("granted");
+    assert_eq!(ffi("link.call_receive", &none).0, STATUS_BAD_INPUT);
+    // No number past what every JSON reader keeps exactly.
+    let mut far = file["cases"][0]["input"].clone();
+    far["deadlineAt"] = json!(u64::MAX);
+    assert_eq!(ffi("link.call_receive", &far).0, STATUS_BAD_INPUT);
 }
 
 #[test]

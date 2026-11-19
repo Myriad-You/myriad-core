@@ -115,16 +115,33 @@ pub(super) fn call_receive(raw: &[u8]) -> Result<Value, Failure> {
         offers: Vec<Named>,
         #[serde(default)]
         refused: Vec<Named>,
-        granted: Option<Vec<Named>>,
+        // Must be there, null or a list: left out, every ask would be held for good.
+        granted: Value,
     }
     let input: In = super::quiet_input(raw)?;
+    let bad = |what: &str| Failure::BadInput(what.into());
+    let granted: Option<Vec<Named>> =
+        serde_json::from_value(input.granted).map_err(|_| bad("granted is null or a list"))?;
+    // No count or time past what every JSON reader keeps exactly.
+    let whole = |count: u64| count <= WHOLE as u64;
+    let lists = [&input.offers, &input.refused]
+        .into_iter()
+        .chain(&granted)
+        .flatten();
+    if ![input.version, input.deadline_at, input.taken_at]
+        .into_iter()
+        .chain(lists.map(|one| one.version))
+        .all(whole)
+    {
+        return Err(bad("a number past 2^53"));
+    }
     let pairs = |list: Vec<Named>| -> Vec<(String, u64)> {
         list.into_iter()
             .map(|one| (one.name, one.version))
             .collect()
     };
     let (offers, refused) = (pairs(input.offers), pairs(input.refused));
-    let granted = input.granted.map(pairs);
+    let granted = granted.map(pairs);
     let received = myriad_her_link::call_receive(
         &input.action,
         input.version,

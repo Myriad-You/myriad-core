@@ -394,7 +394,8 @@ pub struct CallReceived {
 ///
 /// In order: an action this end neither offers nor refuses is `call_unknown`; one it has
 /// at another version, `version_unsupported` (and the answer says this end's version);
-/// one not for `of`, `wrong_audience` ([`call_allowed`]). Then, with no word yet on what
+/// one not for `of`, `wrong_audience`, and one the contract does not register, though
+/// this end says it offers it, `call_unknown` ([`call_allowed`]). Then, with no word yet on what
 /// is granted, the ask is held: not done, which would be acting on a grant that may have
 /// been taken back, and not answered, which would be refusing what may be granted. Then
 /// one this end refuses, or one the sender did not grant, is `call_not_granted`; one
@@ -417,13 +418,19 @@ pub fn call_receive(
         deadline_at,
     };
     let fail = |code| answer(CallVerdict::Fail(code), version);
-    // The version this end has the action at: what it offers, or else what it refuses.
-    let has = |list: &[(String, u64)]| {
+    // The version this end has the action at: the one asked when it has that one, in
+    // what it offers or else in what it refuses; otherwise the first it has it at.
+    let at = |list: &[(String, u64)], exact: bool| {
         list.iter()
-            .find(|(name, _)| name == action)
+            .find(|(name, v)| name == action && (!exact || *v == version))
             .map(|one| one.1)
     };
-    let Some(does) = has(offers).or_else(|| has(refused)) else {
+    let has = |list: &[(String, u64)]| at(list, true).or_else(|| at(list, false));
+    let does = at(offers, true)
+        .or_else(|| at(refused, true))
+        .or_else(|| has(offers))
+        .or_else(|| has(refused));
+    let Some(does) = does else {
         return fail("call_unknown");
     };
     if does != version {
