@@ -36,6 +36,7 @@ pub mod group_reading;
 pub mod memes;
 pub mod motion;
 pub mod notify;
+pub mod on_mind;
 pub mod life;
 mod onboarding;
 pub mod other_groups;
