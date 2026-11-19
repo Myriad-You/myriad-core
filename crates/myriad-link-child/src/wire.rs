@@ -107,6 +107,7 @@ impl Delivery {
                 seq,
                 link,
                 delivery,
+                again,
             } => json!({
                 "kind": "frame",
                 "t": t,
@@ -114,6 +115,7 @@ impl Delivery {
                 "seq": seq,
                 "link": link,
                 "delivery": delivery,
+                "again": again,
             }),
             Delivery::CallSettled { call_id } => {
                 json!({ "kind": "call_settled", "callId": call_id })

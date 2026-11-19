@@ -208,7 +208,7 @@ fn scripts() -> Vec<myriad_link_conformance::Script> {
         .map(|entry| entry.unwrap().path())
         .collect();
     paths.sort();
-    assert_eq!(paths.len(), 25);
+    assert_eq!(paths.len(), 26);
     paths
         .iter()
         .map(|path| serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap())

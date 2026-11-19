@@ -67,6 +67,10 @@ const SCRIPTS: &[(&str, &str)] = &[
         include_str!("../../conformance/v1/child/pass-in.json"),
     ),
     (
+        "pass-in-again",
+        include_str!("../../conformance/v1/child/pass-in-again.json"),
+    ),
+    (
         "pass-in-full",
         include_str!("../../conformance/v1/child/pass-in-full.json"),
     ),

@@ -291,12 +291,19 @@ pub enum Delivery {
     /// Nothing of what it carried: it is the text the shell has just handed to
     /// [`Session::received`], which the shared core took. A `reliable` one counts as taken
     /// only when the shell says so ([`Session::took`]); any other counts at once.
+    ///
+    /// `again` is true for a frame the shell took before that her host sends again, of the
+    /// few kinds whose sender counts them delivered on an answer of the shell's and not on
+    /// this end's ack (`myriad_her_link::TAKEN_BY_ANSWER`: `lease.grant`, `lease.deputy`):
+    /// there is nothing to take (it counts already), the shell answers it again. Any other
+    /// reliable frame it took before is only acked, and not handed over again.
     Frame {
         t: String,
         id: Option<String>,
         seq: u64,
         link: u64,
         delivery: String,
+        again: bool,
     },
     /// Her host has the result of the call `call_id` it asked of this end: its ack covers
     /// the `call.result`. Only now is the call nothing the shell need keep on disk.
@@ -1878,24 +1885,32 @@ impl Session {
             return out;
         }
         let id = envelope.id.clone().filter(|id| valid_id(id));
-        let frame = |id: Option<String>, link: u64| {
+        let frame = |id: Option<String>, link: u64, again: bool| {
             Output::Deliver(Delivery::Frame {
                 t: envelope.t.clone(),
                 id,
                 seq: envelope.seq,
                 link,
                 delivery: rule.delivery.clone(),
+                again,
             })
         };
         // Only a reliable frame waits for the shell's word: the contract promises no other
         // kind is delivered.
         let Some(id) = id.filter(|_| rule.delivery == "reliable") else {
-            return vec![frame(id_of(envelope), self.links)];
+            return vec![frame(id_of(envelope), self.links, false)];
         };
         // One the shell took before (her host did not hear this end's ack): acked, not
-        // handed over again.
+        // handed over again. But a frame its sender counts delivered only on the shell's
+        // answer comes again because that answer was not heard: the shell is handed it
+        // again, to answer again; it counts already, and waits for nothing.
         if self.taken.contains(&id) {
-            return self.send("ack", &json!({}), None, now_ms);
+            let mut out = Vec::new();
+            if myriad_her_link::TAKEN_BY_ANSWER.contains(&envelope.t.as_str()) {
+                out.push(frame(Some(id), self.links, true));
+            }
+            out.extend(self.send("ack", &json!({}), None, now_ms));
+            return out;
         }
         // The same frame again on this link, still waiting: nothing more. The same number
         // under another id is another frame (her host's numbers are not this end's to trust).
@@ -1920,7 +1935,7 @@ impl Session {
             seq: envelope.seq,
             id: id.clone(),
         });
-        vec![frame(Some(id), self.links)]
+        vec![frame(Some(id), self.links, false)]
     }
 
     /// The shell takes the frames of her host's that the session does not read

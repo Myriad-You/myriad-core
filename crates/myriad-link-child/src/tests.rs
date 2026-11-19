@@ -3148,6 +3148,7 @@ mod passing {
                     seq,
                     link,
                     delivery,
+                    ..
                 } => Some((t.clone(), id.clone(), *seq, *link, delivery.clone())),
                 _ => None,
             })
@@ -3243,6 +3244,41 @@ mod passing {
         assert_eq!(acks(&mut s, 3), 1);
         let out = s.took(&[(2, 2)], T0 + 1300);
         assert!(matches!(&sent(&out)[..], [frame] if frame["t"] == "ack" && frame["ack"] == 3));
+    }
+
+    #[test]
+    fn a_frame_delivered_by_the_shells_answer_is_handed_over_again_when_it_comes_again() {
+        let mut s = taking("on");
+        let again = |out: &[Output]| {
+            delivered(out)
+                .iter()
+                .filter_map(|delivery| match delivery {
+                    Delivery::Frame { t, again, .. } => Some((t.clone(), *again)),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        let out = s.received(&from_host("lease.grant", 2, Some("6")), T0 + 100);
+        assert_eq!(again(&out), [("lease.grant".to_string(), false)]);
+        s.took(&[(1, 2)], T0 + 110);
+        // The link goes before her host heard the shell's answer; it sends the grant again.
+        s.disconnected();
+        s.connected(T0 + 1000);
+        s.received(
+            &host("welcome", 1, 1, |body| body["sync"] = json!("on")),
+            T0 + 1050,
+        );
+        let out = s.received(&from_host("lease.grant", 2, Some("6")), T0 + 1100);
+        // Handed over again, to be answered again; it counts already and waits for nothing.
+        assert_eq!(again(&out), [("lease.grant".to_string(), true)]);
+        assert!(matches!(&sent(&out)[..], [frame] if frame["t"] == "ack" && frame["ack"] == 2));
+        assert!(s.state()["passing"].as_array().unwrap().is_empty());
+        assert!(untold(&s.took(&[(2, 2)], T0 + 1200), "ack", "bad_id"));
+        // Any other reliable frame taken before is only acked.
+        s.received(&from_host("act.request", 3, Some("act_1")), T0 + 1300);
+        s.took(&[(2, 3)], T0 + 1310);
+        let out = s.received(&from_host("act.request", 4, Some("act_1")), T0 + 1400);
+        assert!(again(&out).is_empty());
     }
 
     #[test]
