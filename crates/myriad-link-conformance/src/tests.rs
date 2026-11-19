@@ -27,6 +27,14 @@ const SCRIPTS: &[(&str, &str)] = &[
         include_str!("../../conformance/v1/child/called-lost.json"),
     ),
     (
+        "called-restart",
+        include_str!("../../conformance/v1/child/called-restart.json"),
+    ),
+    (
+        "called-settled",
+        include_str!("../../conformance/v1/child/called-settled.json"),
+    ),
+    (
         "calling",
         include_str!("../../conformance/v1/child/calling.json"),
     ),
@@ -53,6 +61,34 @@ const SCRIPTS: &[(&str, &str)] = &[
     (
         "offer",
         include_str!("../../conformance/v1/child/offer.json"),
+    ),
+    (
+        "pass-in",
+        include_str!("../../conformance/v1/child/pass-in.json"),
+    ),
+    (
+        "pass-in-again",
+        include_str!("../../conformance/v1/child/pass-in-again.json"),
+    ),
+    (
+        "pass-in-full",
+        include_str!("../../conformance/v1/child/pass-in-full.json"),
+    ),
+    (
+        "pass-in-relink",
+        include_str!("../../conformance/v1/child/pass-in-relink.json"),
+    ),
+    (
+        "pass-off",
+        include_str!("../../conformance/v1/child/pass-off.json"),
+    ),
+    (
+        "pass-out",
+        include_str!("../../conformance/v1/child/pass-out.json"),
+    ),
+    (
+        "pass-out-owned",
+        include_str!("../../conformance/v1/child/pass-out-owned.json"),
     ),
     (
         "reliable",

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "name": "pass-in-relink",
+  "about": "A reliable frame handed to the shell and not taken when the link goes was never acked: her host sends it again on the next link, and it is handed over again. What waited is gone with the link: a number of the last link takes nothing on this one, though the numbers are equal.",
+  "capabilities": [],
+  "passthrough": true,
+  "steps": [
+    {"at": 0, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 50, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140800050, "sync": "on"}}},
+    {"deliver": {"kind": "welcome", "sync": "on", "partner": null}},
+    {"at": 100, "host": {"t": "act.request", "body": {"proposalId": "int_1123456789abcdef0123456789abcdef", "title": "把这台 Mac 的截图收进一个文件夹", "instruction": "把桌面上的截图移到「截图」文件夹", "expectedOutcome": "桌面上不再散着截图", "pickupBy": 1760141540000, "maxRunMs": 1800000}, "id": "act_1"}},
+    {"deliver": {"kind": "frame", "t": "act.request", "id": "act_1", "seq": 2, "link": 1, "delivery": "reliable", "again": false}},
+    {"at": 200, "do": "disconnect"},
+    {"at": 300, "do": {"took": [{"link": 1, "seq": 2}]}},
+    {"deliver": {"kind": "unsent", "t": "ack", "code": "bad_id", "id": null}},
+    {"at": 1000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 1050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": [], "turns": [], "serverTime": 1760140801050, "sync": "on"}}},
+    {"deliver": {"kind": "welcome", "sync": "on", "partner": null}},
+    {"at": 1100, "host": {"t": "act.request", "body": {"proposalId": "int_1123456789abcdef0123456789abcdef", "title": "把这台 Mac 的截图收进一个文件夹", "instruction": "把桌面上的截图移到「截图」文件夹", "expectedOutcome": "桌面上不再散着截图", "pickupBy": 1760141540000, "maxRunMs": 1800000}, "id": "act_1"}},
+    {"deliver": {"kind": "frame", "t": "act.request", "id": "act_1", "seq": 2, "link": 2, "delivery": "reliable", "again": false}},
+    {"at": 1200, "do": {"took": [{"link": 1, "seq": 2}]}},
+    {"deliver": {"kind": "unsent", "t": "ack", "code": "bad_id", "id": null}},
+    {"at": 1300, "host": {"t": "ping"}},
+    {"child": {"t": "pong", "ack": 1}},
+    {"at": 1400, "do": {"took": [{"link": 2, "seq": 2}]}},
+    {"child": {"t": "ack", "ack": 3}}
+  ]
+}

@@ -157,6 +157,8 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
         #[serde(default)]
         core_commit: Option<String>,
         #[serde(default)]
+        passthrough: bool,
+        #[serde(default)]
         text: bool,
     }
     #[derive(Deserialize)]
@@ -187,6 +189,7 @@ pub(super) fn child_new(raw: &[u8]) -> Result<Value, Failure> {
         .map(|offer| (offer.name.as_str(), offer.version))
         .collect();
     session.offer(&offers);
+    session.passes(input.passthrough);
     // The ABI is this library's own; what the end calls its build of the core is its to say.
     if let Some(build) = &input.core_commit {
         session.runs(u64::from(crate::ABI_VERSION), build);
@@ -337,6 +340,33 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         body: Value,
     }
     #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Took {
+        #[serde(deserialize_with = "whole::u64")]
+        link: u64,
+        #[serde(deserialize_with = "whole::u64")]
+        seq: u64,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Pass {
+        t: String,
+        #[serde(default)]
+        id: Option<String>,
+        body: Value,
+        #[serde(default)]
+        keep: Option<bool>,
+        #[serde(default)]
+        needs: Option<String>,
+    }
+    /// One frame, or several to go in the order given.
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Passed {
+        One(Pass),
+        Many(Vec<Pass>),
+    }
+    #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     struct Lost {
         call_id: String,
@@ -369,6 +399,8 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         CallCancel(Cancel),
         StreamState(StreamState),
         StreamEvent(StreamEvent),
+        Took(Vec<Took>),
+        Send(Passed),
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -451,6 +483,29 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         }
         Event::StreamEvent(event) => {
             session.stream_event(&event.id, &event.name, event.version, &event.body, now)
+        }
+        Event::Took(took) => {
+            let took: Vec<(u64, u64)> = took.iter().map(|one| (one.link, one.seq)).collect();
+            session.took(&took, now)
+        }
+        Event::Send(passed) => {
+            let frames = match passed {
+                Passed::One(one) => vec![one],
+                Passed::Many(many) => many,
+            };
+            frames
+                .iter()
+                .flat_map(|frame| {
+                    session.pass(
+                        &frame.t,
+                        frame.id.as_deref(),
+                        &frame.body,
+                        frame.keep,
+                        frame.needs.as_deref(),
+                        now,
+                    )
+                })
+                .collect()
         }
         Event::CallsLost(lost) => {
             let lost: Vec<(&str, &str, u64)> = lost

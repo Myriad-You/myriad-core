@@ -41,6 +41,10 @@ pub enum Down {
     Replaced,
     UnsupportedProtocol,
     RefusedHandshake,
+    /// The shell fell too far behind in taking the reliable frames handed to it
+    /// ([`Session::KEPT_PASSING`] wait): the link is dropped so that her host, which was
+    /// acked none of them, sends again on the next what it sends again.
+    Behind,
     /// She lives on another end now: the device's name, when the site said it.
     HostMoved(Option<String>),
     /// She is moving: no end has her until it is done or called off.
@@ -104,6 +108,10 @@ pub enum Delivery {
         host: String,
         lineage: Option<String>,
         host_epoch: Option<i64>,
+        /// Whether the sync families flow on this link (`welcome.sync` is `on`).
+        sync: bool,
+        /// The partner's one id, when her host said it (an id, not a credential).
+        partner: Option<String>,
     },
     Accepted {
         turn_id: String,
@@ -276,6 +284,32 @@ pub enum Delivery {
         /// a frame that is not reliable, and for an id that is not an id.
         id: Option<String>,
     },
+    /// A frame of her host's that the session does not read, handed to a shell that takes
+    /// such frames ([`Session::passes`]): its type, its id when it has one, its number on
+    /// this link (`seq`), which link of this session's it came on (`link`, counted from 1),
+    /// and how the contract delivers its kind (`reliable`, `answer`, `latest`, `request`).
+    /// Nothing of what it carried: it is the text the shell has just handed to
+    /// [`Session::received`], which the shared core took. A `reliable` one counts as taken
+    /// only when the shell says so ([`Session::took`]); any other counts at once.
+    ///
+    /// `again` is true for a frame the shell took before that her host sends again, of the
+    /// few kinds whose sender counts them delivered on an answer of the shell's and not on
+    /// this end's ack (`myriad_her_link::TAKEN_BY_ANSWER`: `lease.grant`, `lease.deputy`):
+    /// there is nothing to take (it counts already), the shell answers it again. Any other
+    /// reliable frame it took before is only acked, and not handed over again.
+    Frame {
+        t: String,
+        id: Option<String>,
+        seq: u64,
+        link: u64,
+        delivery: String,
+        again: bool,
+    },
+    /// Her host has the result of the call `call_id` it asked of this end: its ack covers
+    /// the `call.result`. Only now is the call nothing the shell need keep on disk.
+    CallSettled {
+        call_id: String,
+    },
     /// A frame from the host this end could not read, so the two are not of one version: why,
     /// as the shared core's refusal code (`unknown_frame`, `bad_frame`, `version_unsupported`…),
     /// never its body. `t` is its type when the contract this end was built with names it, none
@@ -377,6 +411,21 @@ struct Pending {
     body: Value,
     #[serde(default, deserialize_with = "whole::maybe_u64")]
     seq: Option<u64>,
+    /// Whether it is a frame of the shell's own ([`Session::pass`]).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pass: bool,
+    /// The capability her host must have accepted for it to go, when the shell named one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    needs: Option<String>,
+}
+
+/// A reliable frame handed to the shell that it has not said it took.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Passing {
+    #[serde(deserialize_with = "whole::u64")]
+    seq: u64,
+    id: String,
 }
 
 /// A frame as it crosses the link: `{t, seq, ack, id?, at, body}` (contract `envelope`).
@@ -412,6 +461,11 @@ impl Envelope {
             body,
         })
     }
+}
+
+/// A frame's id, when it is written as one.
+fn id_of(envelope: &Envelope) -> Option<String> {
+    envelope.id.clone().filter(|id| valid_id(id))
 }
 
 /// A frame of this end's that is not kept or sent, told at once: its type, why, and the id
@@ -578,6 +632,18 @@ struct State {
     asking: Vec<Asking>,
     #[serde(default)]
     cancels: Vec<String>,
+    #[serde(default)]
+    passes: bool,
+    #[serde(default, deserialize_with = "whole::u64")]
+    links: u64,
+    #[serde(default)]
+    sync: bool,
+    #[serde(default)]
+    passing: Vec<Passing>,
+    #[serde(default, deserialize_with = "whole::maybe_u64")]
+    stalled: Option<u64>,
+    #[serde(default, deserialize_with = "whole::u64")]
+    acked: u64,
 }
 
 /// A call this end is doing for her host.
@@ -723,6 +789,22 @@ pub struct Session {
     /// have had the ask on the link before, so it is told to stop (`call.cancel`) on the
     /// next link where both ends listed `calls`, after its word on what it provides there.
     cancels: Vec<String>,
+    /// Whether the shell takes the frames of her host's that the session does not read.
+    passes: bool,
+    /// How many links this session has had; the one now is this number.
+    links: u64,
+    /// Whether this link's welcome said sync is on.
+    sync: bool,
+    /// The reliable frames handed to the shell on this link that it has not said it took:
+    /// what this end acks stops short of the lowest.
+    passing: Vec<Passing>,
+    /// The lowest number of a reliable frame of this link that could not be handed over
+    /// (too many wait): what this end acks stays short of it while the link lasts, so her
+    /// host sends it again on the next.
+    stalled: Option<u64>,
+    /// The highest number this end has acked on this link: what it acks never goes back,
+    /// whatever numbers her host's frames come under.
+    acked: u64,
 }
 
 impl Session {
@@ -730,10 +812,11 @@ impl Session {
     pub const KEPT_DROPPED: usize = 32;
     pub const KEPT_TURNS: usize = 64;
     pub const KEPT_TAKEN: usize = 256;
-    /// The most `stream.event` frames kept until acked. The one event a child sends today
-    /// is the session's own `link.dropped`, at most [`Self::KEPT_DROPPED`] kinds on a link:
-    /// this is eight links' worth of them never acked, and as many ids as an end remembers
-    /// of what it took ([`Self::KEPT_TAKEN`]).
+    /// The most `stream.event` frames and frames of the shell's own ([`Session::pass`])
+    /// kept until acked, together. The one event a child sends today is the session's own
+    /// `link.dropped`, at most [`Self::KEPT_DROPPED`] kinds on a link: this is eight links'
+    /// worth of them never acked, and as many ids as an end remembers of what it took
+    /// ([`Self::KEPT_TAKEN`]).
     pub const KEPT_EVENTS: usize = 256;
 
     /// The host's frame types this session reads; any other is passed by
@@ -833,6 +916,12 @@ impl Session {
             providing: Vec::new(),
             asking: Vec::new(),
             cancels: Vec::new(),
+            passes: false,
+            links: 0,
+            sync: false,
+            passing: Vec::new(),
+            stalled: None,
+            acked: 0,
         }
     }
 
@@ -1018,6 +1107,12 @@ impl Session {
                 .collect(),
             asking: self.asking.clone(),
             cancels: self.cancels.clone(),
+            passes: self.passes,
+            links: self.links,
+            sync: self.sync,
+            passing: self.passing.clone(),
+            stalled: self.stalled,
+            acked: self.acked,
         };
         serde_json::to_value(state).expect("a session is plain data")
     }
@@ -1058,7 +1153,11 @@ impl Session {
             .chain(state.held.iter().map(|call| call.version))
             .chain(state.providing.iter().map(|named| named.version))
             .chain(state.asking.iter().map(|call| call.pieces))
-            .chain(state.core.iter().map(|runs| runs.abi));
+            .chain(state.core.iter().map(|runs| runs.abi))
+            .chain([state.links])
+            .chain(state.passing.iter().map(|passing| passing.seq))
+            .chain(state.stalled)
+            .chain([state.acked]);
         let beat = 50..=contract.timing.heartbeat_ms.max(50);
         let mut ids = BTreeSet::new();
         // `sent` counts up by one with each frame, so it stops one short.
@@ -1183,6 +1282,12 @@ impl Session {
                 cancels
             },
             asking: state.asking,
+            passes: state.passes,
+            links: state.links,
+            sync: state.sync,
+            passing: state.passing,
+            stalled: state.stalled,
+            acked: state.acked,
         })
     }
 
@@ -1203,6 +1308,13 @@ impl Session {
         self.granted.clear();
         self.providing.clear();
         self.heard_granted = false;
+        // Numbers start again: what waited for the shell's word on the last link is her
+        // host's to send again.
+        self.links = self.links.saturating_add(1).min(WHOLE);
+        self.sync = false;
+        self.passing.clear();
+        self.stalled = None;
+        self.acked = 0;
         for pending in &mut self.outbox {
             pending.seq = None;
         }
@@ -1213,6 +1325,8 @@ impl Session {
     /// The socket is gone; reliable frames wait for the next connection.
     pub fn disconnected(&mut self) {
         self.phase = Phase::Closed;
+        self.passing.clear();
+        self.stalled = None;
         for pending in &mut self.outbox {
             pending.seq = None;
         }
@@ -1292,6 +1406,8 @@ impl Session {
             t: "input".into(),
             body,
             seq: None,
+            pass: false,
+            needs: None,
         });
         if self.phase == Phase::Open {
             self.flush(now_ms)
@@ -1414,6 +1530,8 @@ impl Session {
             t: t.to_string(),
             body: body.clone(),
             seq: None,
+            pass: false,
+            needs: None,
         });
         if self.phase == Phase::Open {
             self.flush(now_ms)
@@ -1522,6 +1640,8 @@ impl Session {
                 "body": { "t": t, "reason": reason },
             }),
             seq: None,
+            pass: false,
+            needs: None,
         });
         out.extend(self.flush(now_ms));
         out
@@ -1530,8 +1650,26 @@ impl Session {
     fn read(&mut self, envelope: &Envelope, taken: bool, now_ms: i64) -> Vec<Output> {
         self.last_heard_ms = now_ms;
         self.heard = self.heard.max(envelope.seq);
-        self.outbox
-            .retain(|pending| !pending.seq.is_some_and(|seq| seq <= envelope.ack));
+        let acked = |pending: &Pending| pending.seq.is_some_and(|seq| seq <= envelope.ack);
+        // Her host has the result of a call it asked: the shell is told, which keeps the
+        // call on disk until then.
+        let mut out: Vec<Output> = self
+            .outbox
+            .iter()
+            .filter(|pending| pending.t == "call.result" && acked(pending))
+            .filter_map(|pending| pending.id.strip_suffix(RESULT))
+            .map(|call_id| {
+                Output::Deliver(Delivery::CallSettled {
+                    call_id: call_id.to_string(),
+                })
+            })
+            .collect();
+        self.outbox.retain(|pending| !acked(pending));
+        out.extend(self.read_frame(envelope, taken, now_ms));
+        out
+    }
+
+    fn read_frame(&mut self, envelope: &Envelope, taken: bool, now_ms: i64) -> Vec<Output> {
         // Whether the frame is taken is the shared core's; the numbering, acks and heartbeat are
         // the link's own, and count a refused frame too. One it refuses is read as carrying
         // nothing, which every reader below turns down: a ping is still answered and a reliable
@@ -1717,8 +1855,301 @@ impl Session {
                     Vec::new()
                 }
             }
-            _ => Vec::new(),
+            _ => self.unread_frame(envelope, taken, now_ms),
         }
+    }
+
+    /// The most reliable frames handed to the shell that may wait for its word at once,
+    /// counted apart from the frames this end keeps to send. A shell that reads its socket
+    /// no faster than it takes frames never comes to it.
+    pub const KEPT_PASSING: usize = 256;
+
+    /// A frame of a type the session does not read. One the core refuses was told already
+    /// (`Unread`). One it takes goes to a shell that takes such frames; to any other it is
+    /// told as not read (`Unread` `unknown_frame`, and `link.dropped` to her host where both
+    /// ends listed `streams`), so that it is not let fall in silence.
+    fn unread_frame(&mut self, envelope: &Envelope, taken: bool, now_ms: i64) -> Vec<Output> {
+        // One the session reads that brings nothing here (a pong) is read all the same.
+        if !taken || Self::READS.contains(&envelope.t.as_str()) {
+            return Vec::new();
+        }
+        let Some(rule) = crate::contract::contract().frames.get(&envelope.t) else {
+            return Vec::new();
+        };
+        if !self.passes {
+            let mut out = vec![Output::Deliver(Delivery::Unread {
+                t: Some(envelope.t.clone()),
+                code: "unknown_frame".into(),
+            })];
+            out.extend(self.dropped(&envelope.t, "unknown_frame", now_ms));
+            return out;
+        }
+        let id = envelope.id.clone().filter(|id| valid_id(id));
+        let frame = |id: Option<String>, link: u64, again: bool| {
+            Output::Deliver(Delivery::Frame {
+                t: envelope.t.clone(),
+                id,
+                seq: envelope.seq,
+                link,
+                delivery: rule.delivery.clone(),
+                again,
+            })
+        };
+        // Only a reliable frame waits for the shell's word: the contract promises no other
+        // kind is delivered.
+        let Some(id) = id.filter(|_| rule.delivery == "reliable") else {
+            return vec![frame(id_of(envelope), self.links, false)];
+        };
+        // One the shell took before (her host did not hear this end's ack): acked, not
+        // handed over again. But a frame its sender counts delivered only on the shell's
+        // answer comes again because that answer was not heard: the shell is handed it
+        // again, to answer again; it counts already, and waits for nothing.
+        if self.taken.contains(&id) {
+            let mut out = Vec::new();
+            if myriad_her_link::TAKEN_BY_ANSWER.contains(&envelope.t.as_str()) {
+                out.push(frame(Some(id), self.links, true));
+            }
+            out.extend(self.send("ack", &json!({}), None, now_ms));
+            return out;
+        }
+        // The same frame again on this link, still waiting: nothing more. The same number
+        // under another id is another frame (her host's numbers are not this end's to trust).
+        let same = |passing: &Passing| passing.seq == envelope.seq && passing.id == id;
+        if self.passing.iter().any(same) {
+            return Vec::new();
+        }
+        // Too many wait for the shell. This one is neither handed over nor counted: what
+        // this end acks stays short of it, the shell is told, and the link is dropped, so
+        // that her host sends again on the next link what it sends again.
+        if self.passing.len() >= Self::KEPT_PASSING {
+            self.stalled = Some(self.stalled.map_or(envelope.seq, |at| at.min(envelope.seq)));
+            return vec![
+                Output::Deliver(Delivery::Unread {
+                    t: Some(envelope.t.clone()),
+                    code: "too_many".into(),
+                }),
+                Output::Drop(Down::Behind),
+            ];
+        }
+        self.passing.push(Passing {
+            seq: envelope.seq,
+            id: id.clone(),
+        });
+        vec![frame(Some(id), self.links, false)]
+    }
+
+    /// The shell takes the frames of her host's that the session does not read
+    /// ([`Delivery::Frame`]), or does not (as a session starts): then such a frame counts as
+    /// heard and is told as not read.
+    pub fn passes(&mut self, passes: bool) {
+        self.passes = passes;
+    }
+
+    /// The shell has taken the reliable frames it was handed as `(link, seq)`, in any
+    /// order: each counts now, and what this end acks moves up to just short of the lowest
+    /// still waiting, said to her host at once with an `ack` when it moved. One that does
+    /// not wait (taken before, of a link before this one, never handed over) is told,
+    /// `Unsent` `ack` `bad_id`: a frame of a link before is her host's to send again, and
+    /// is taken by its new number.
+    pub fn took(&mut self, frames: &[(u64, u64)], now_ms: i64) -> Vec<Output> {
+        let before = self.acks();
+        let mut out = Vec::new();
+        for (link, seq) in frames {
+            let waits = self
+                .passing
+                .iter()
+                .position(|passing| *link == self.links && passing.seq == *seq);
+            let Some(index) = waits else {
+                out.extend(unsent("ack", "bad_id", None));
+                continue;
+            };
+            let passing = self.passing.remove(index);
+            self.taken.push(passing.id);
+            if self.taken.len() > Self::KEPT_TAKEN {
+                let over = self.taken.len() - Self::KEPT_TAKEN;
+                self.taken.drain(..over);
+            }
+        }
+        if self.phase == Phase::Open && self.acks() > before {
+            out.extend(self.send("ack", &json!({}), None, now_ms));
+        }
+        out
+    }
+
+    /// What this end acks: every frame of her host's up to this number is done with. A
+    /// frame the session reads is done with when read; a reliable one handed to the shell,
+    /// when the shell says it took it.
+    fn acks(&self) -> u64 {
+        self.passing
+            .iter()
+            .map(|passing| passing.seq)
+            .chain(self.stalled)
+            .min()
+            .map_or(self.heard, |lowest| {
+                lowest.saturating_sub(1).min(self.heard)
+            })
+            // Never back: a host whose numbers go back does not take back what was acked.
+            .max(self.acked)
+    }
+
+    /// The frame types the session sends itself, each by a call of its own: not the
+    /// shell's to send by [`Session::pass`].
+    pub const OWNS: &[&str] = &[
+        "ack",
+        "hello",
+        "input",
+        "outfit.wear",
+        "ping",
+        "playback.end",
+        "playback.observe",
+        "pong",
+        "presence",
+        "run.resume",
+        "speech.delivered",
+        "touch",
+        "touch.appraise",
+    ];
+
+    /// Send a frame of the shell's own: one the session has no call for. The session
+    /// numbers it, says what it acks, and writes it as the shared core does; the core's
+    /// check decides whether it is a frame at all. `needs` names a capability her host must
+    /// have accepted on the link for the frame to go.
+    ///
+    /// Who sends it again is said here, once, and does not change: a reliable frame is
+    /// kept until her host acks it and goes again after a reconnect, with the same id,
+    /// unless `keep` is false; then it goes now, on an open link, and nothing of it is
+    /// kept: sending it again is the shell's. A frame that is not reliable is never kept.
+    ///
+    /// What does not go is told, `Unsent` with the frame's type, its id and why: the
+    /// core's refusal code; `owned`, a type the session sends itself (also every `call.*`,
+    /// `link.*` and `stream.*`); `not_sender`, a type only her host's side sends;
+    /// `sync_off`, a frame of the sync families on a link whose welcome said sync off;
+    /// `not_accepted`, her host did not accept the capability `needs` names; `link_down`,
+    /// there is no open link and the frame is not kept; `passthrough_off`, the shell did
+    /// not say it takes the frames the session does not read ([`Session::passes`]).
+    pub fn pass(
+        &mut self,
+        t: &str,
+        id: Option<&str>,
+        body: &Value,
+        keep: Option<bool>,
+        needs: Option<&str>,
+        now_ms: i64,
+    ) -> Vec<Output> {
+        // Nothing told here repeats what came in: a type is said back only when it is one
+        // the contract names.
+        let named = if self.known_frames.contains(t) {
+            t
+        } else {
+            "unnamed"
+        };
+        let untold = |code: &str| unsent(named, code, id);
+        // A shell that does not take the frames the session does not read does not send
+        // them either: it would not be handed her host's answers to them.
+        if !self.passes {
+            return untold("passthrough_off");
+        }
+        let owned = Self::OWNS.contains(&t)
+            || ["call.", "link.", "stream."]
+                .iter()
+                .any(|family| t.starts_with(family));
+        if owned {
+            return untold("owned");
+        }
+        if let Err(refused) = frames::text(t, WHOLE, WHOLE, id, now_ms.max(0), body) {
+            return untold(&refused.code);
+        }
+        let Some(rule) = crate::contract::contract().frames.get(t) else {
+            return untold("unknown_frame");
+        };
+        // Her host's side alone sends these; a frame of the sync families between the ends
+        // that keep her log is this end's too.
+        let sync = myriad_her_link::needs_sync(t);
+        let hers = match rule.from.as_str() {
+            "server" => true,
+            "host" => !sync,
+            _ => false,
+        };
+        if hers {
+            return untold("not_sender");
+        }
+        let reliable = rule.delivery == "reliable";
+        if (keep == Some(true) && !reliable) || needs.is_some_and(|needs| !valid_id(needs)) {
+            return untold("bad_frame");
+        }
+        let kept = reliable && keep != Some(false);
+        let open = self.phase == Phase::Open;
+        if !kept && !open {
+            return untold("link_down");
+        }
+        // What an open link's welcome said settles it now; a kept frame handed over with
+        // no open link is settled by the next welcome.
+        if open && sync && !self.sync {
+            return untold("sync_off");
+        }
+        if open && needs.is_some_and(|needs| !self.both(needs)) {
+            return untold("not_accepted");
+        }
+        if !kept {
+            return self.send(t, body, id, now_ms);
+        }
+        let Some(id) = id else {
+            return untold("bad_id");
+        };
+        if !valid_id(id) || id.ends_with(RESULT) || self.turns.contains_key(id) {
+            return untold("bad_id");
+        }
+        // The same frame again under the id it waits under is the same frame.
+        if let Some(pending) = self.outbox.iter().find(|pending| pending.id == id) {
+            return if pending.t == t && pending.body == *body {
+                Vec::new()
+            } else {
+                untold("bad_id")
+            };
+        }
+        let Some(mut out) = self.room_for_event() else {
+            return untold("too_many");
+        };
+        self.outbox.push(Pending {
+            id: id.to_string(),
+            t: t.to_string(),
+            body: body.clone(),
+            seq: None,
+            pass: true,
+            needs: needs.map(str::to_string),
+        });
+        if open {
+            out.extend(self.flush(now_ms));
+        }
+        out
+    }
+
+    /// This link's welcome is in: a frame of the shell's that waited and may not go on
+    /// this link is let go and told, and does not wait for another.
+    fn settle_passed(&mut self) -> Vec<Output> {
+        let mut out = Vec::new();
+        let mut kept = Vec::new();
+        for pending in std::mem::take(&mut self.outbox) {
+            let why = if !pending.pass {
+                None
+            } else if myriad_her_link::needs_sync(&pending.t) && !self.sync {
+                Some("sync_off")
+            } else if pending
+                .needs
+                .as_deref()
+                .is_some_and(|needs| !self.both(needs))
+            {
+                Some("not_accepted")
+            } else {
+                None
+            };
+            match why {
+                Some(code) => out.extend(unsent(&pending.t, code, Some(&pending.id))),
+                None => kept.push(pending),
+            }
+        }
+        self.outbox = kept;
+        out
     }
 
     fn host_error(&self, body: &Value) -> Vec<Output> {
@@ -1756,6 +2187,19 @@ impl Session {
         let Some(device_id) = string(body, "deviceId").filter(|id| !id.is_empty()) else {
             return vec![Output::Drop(Down::RefusedHandshake)];
         };
+        // Every end speaks one protocol and neither falls back: a welcome that says
+        // another than this end's hello did is not a link to go on with.
+        // Read as a number however it is written (`2`, `2.0`), like every count here.
+        let protocol = |from: Option<&Value>| from.and_then(unsigned);
+        if protocol(body.get("protocol")) != protocol(self.hello.get("protocol")) {
+            return vec![
+                Output::Deliver(Delivery::Unread {
+                    t: Some("welcome".into()),
+                    code: "unsupported_protocol".into(),
+                }),
+                Output::Drop(Down::UnsupportedProtocol),
+            ];
+        }
         self.phase = Phase::Open;
         if let Some(beat) = body
             .get("heartbeatMs")
@@ -1782,12 +2226,16 @@ impl Session {
             self.hello.insert("lineage".into(), json!(lineage));
             self.hello.insert("hostEpoch".into(), json!(epoch));
         }
+        self.sync = body.get("sync").is_some_and(|sync| sync == "on");
         let mut out = vec![Output::Deliver(Delivery::Welcome {
             device_id,
             host: string(body, "host").unwrap_or_else(|| "site".into()),
             lineage,
             host_epoch,
+            sync: self.sync,
+            partner: string(body, "partner").filter(|partner| !partner.is_empty()),
         })];
+        out.extend(self.settle_passed());
         // A report of what this end dropped is for a host that listed `streams`: one still
         // waiting is not carried to a link where it did not.
         let report = |pending: &Pending| {
@@ -2251,6 +2699,8 @@ impl Session {
                 t: "call.result".into(),
                 body: result,
                 seq: None,
+                pass: false,
+                needs: None,
             });
         }
         // Only so many answers are kept, the oldest let go first; but never one whose
@@ -2876,7 +3326,7 @@ impl Session {
     /// `stream.event` `too_many`, with its id). None when every one kept is on its way on
     /// this link: then the new one is not kept.
     fn room_for_event(&mut self) -> Option<Vec<Output>> {
-        let event = |pending: &Pending| pending.t == "stream.event";
+        let event = |pending: &Pending| pending.t == "stream.event" || pending.pass;
         if self.outbox.iter().filter(|pending| event(pending)).count() < Self::KEPT_EVENTS {
             return Some(Vec::new());
         }
@@ -2885,7 +3335,7 @@ impl Session {
             .iter()
             .position(|pending| event(pending) && pending.seq.is_none())?;
         let gone = self.outbox.remove(oldest);
-        Some(unsent("stream.event", "too_many", Some(&gone.id)))
+        Some(unsent(&gone.t, "too_many", Some(&gone.id)))
     }
 
     // Clock
@@ -3043,9 +3493,11 @@ impl Session {
     /// The next frame, numbered, as the shared core writes it; when the core refuses it, no number
     /// is taken and only why is told (`Unsent`).
     fn send(&mut self, t: &str, body: &Value, id: Option<&str>, now_ms: i64) -> Vec<Output> {
-        match frames::text(t, self.sent + 1, self.heard, id, now_ms, body) {
+        let acks = self.acks();
+        match frames::text(t, self.sent + 1, acks, id, now_ms, body) {
             Ok(text) => {
                 self.sent += 1;
+                self.acked = acks;
                 self.last_sent_ms = now_ms;
                 vec![Output::Send(text)]
             }

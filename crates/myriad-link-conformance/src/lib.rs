@@ -57,6 +57,11 @@ pub struct Script {
     /// deadlines are written by it.
     #[serde(default, rename = "hostAheadMs")]
     pub host_ahead_ms: i64,
+    /// Whether the child's shell takes the frames the session does not read
+    /// (`Session::passes`, the C entry's `passthrough`); it does not when left out. An end
+    /// whose shell takes none skips a script that says it does.
+    #[serde(default)]
+    pub passthrough: bool,
     pub steps: Vec<Step>,
 }
 
@@ -83,7 +88,10 @@ pub struct Step {
     /// Milliseconds from [`T0`]; left out, the step before's.
     #[serde(default)]
     pub at: Option<i64>,
-    /// The child's shell does something: `"connect"`, `"disconnect"`, `"tick"`,
+    /// The child's shell does something: `"connect"`, `"disconnect"`, `"tick"`, `"restart"`
+    /// (the end's process is gone and starts over: the link is down, and its session is
+    /// made anew as the script's head says, with nothing of the old one's state; what the
+    /// end's shell keeps on disk it hands in again with the steps that follow),
     /// `{say: {turnId, text, sessionId?, rigState?, images?}}`, `{delivered: {id, body}}`,
     /// or, of a call her host asked: `{callDone: {callId, result, blobs?}}`,
     /// `{callFailed: {callId, code}}`, `{callProgress: {callId, phase, waiting?}}`,
@@ -318,7 +326,14 @@ impl Host {
             ));
         }
         let frame: Value = serde_json::from_str(text).map_err(|error| error.to_string())?;
-        if !matches!(sender(&checked.t), Some("child" | "device" | "either")) {
+        // A child's own, any device's, her mind's when the child holds it; and of her
+        // host's only the sync families, which go between the ends that keep her log.
+        let childs = match sender(&checked.t) {
+            Some("child" | "device" | "either" | "mind") => true,
+            Some("host") => myriad_her_link::needs_sync(&checked.t),
+            _ => false,
+        };
+        if !childs {
             return Err(format!("{} is not a frame a child sends", checked.t));
         }
         let (seq, ack) = (
@@ -367,6 +382,8 @@ pub trait ChildEnd {
 /// back that no step has taken yet, in order.
 pub struct Child {
     session: Session,
+    /// The session as it was made, before anything happened: what a restart starts from.
+    made: Value,
     pub out: VecDeque<Output>,
     /// Frames this child has sent and the host's numbering on this connection, for [`Child::hears`].
     sent: u64,
@@ -384,16 +401,20 @@ impl Child {
             .map(|offer| (offer.name.as_str(), offer.version))
             .collect();
         child.session.offer(&offers);
+        child.session.passes(script.passthrough);
         if let Some(core) = &script.core {
             child.session.runs(core.abi, &core.commit);
         }
+        child.made = child.session.state();
         child
     }
 
     pub fn new(capabilities: &[String]) -> Self {
         let capabilities: Vec<&str> = capabilities.iter().map(String::as_str).collect();
+        let session = Session::new(contract(), &capabilities, ("Child", "1"), None, None);
         Self {
-            session: Session::new(contract(), &capabilities, ("Child", "1"), None, None),
+            made: session.state(),
+            session,
             out: VecDeque::new(),
             sent: 0,
             heard: 0,
@@ -462,6 +483,11 @@ impl Child {
                     Vec::new()
                 }
                 "tick" => self.session.tick(now_ms),
+                "restart" => {
+                    (self.sent, self.heard, self.acked) = (0, 0, 0);
+                    self.session = Session::restore(contract(), &self.made)?;
+                    Vec::new()
+                }
                 other => return Err(format!("no such thing to do: {other}")),
             },
             Value::Object(object) if object.len() == 1 => {
@@ -560,6 +586,35 @@ impl Child {
                         with.get("body").ok_or("streamEvent needs body")?,
                         now_ms,
                     ),
+                    "took" => {
+                        let took: Vec<(u64, u64)> = with
+                            .as_array()
+                            .ok_or("took is a list")?
+                            .iter()
+                            .map(|one| {
+                                Some((one.get("link")?.as_u64()?, one.get("seq")?.as_u64()?))
+                            })
+                            .collect::<Option<_>>()
+                            .ok_or("each one taken is {link, seq}")?;
+                        self.session.took(&took, now_ms)
+                    }
+                    "send" => {
+                        let one = [with.clone()];
+                        let frames = with.as_array().map_or(&one[..], Vec::as_slice);
+                        let mut out = Vec::new();
+                        for frame in frames {
+                            let text = |key: &str| frame.get(key).and_then(Value::as_str);
+                            out.extend(self.session.pass(
+                                text("t").ok_or("send needs t")?,
+                                text("id"),
+                                frame.get("body").ok_or("send needs body")?,
+                                frame.get("keep").and_then(Value::as_bool),
+                                text("needs"),
+                                now_ms,
+                            ));
+                        }
+                        out
+                    }
                     "callsLost" => {
                         let lost: Vec<(&str, &str, u64)> = with
                             .as_array()

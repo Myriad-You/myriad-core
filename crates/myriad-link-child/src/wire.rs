@@ -42,6 +42,7 @@ impl Down {
             Down::Replaced => "replaced",
             Down::UnsupportedProtocol => "unsupported_protocol",
             Down::RefusedHandshake => "refused_handshake",
+            Down::Behind => "behind",
             Down::HostMoved(device) => return json!({ "why": "host_moved", "device": device }),
             Down::HostFrozen => "host_frozen",
             Down::Redirected => "redirected",
@@ -89,13 +90,36 @@ impl Delivery {
                 host,
                 lineage,
                 host_epoch,
+                sync,
+                partner,
             } => json!({
                 "kind": "welcome",
                 "deviceId": device_id,
                 "host": host,
                 "lineage": lineage,
                 "hostEpoch": host_epoch,
+                "sync": if *sync { "on" } else { "off" },
+                "partner": partner,
             }),
+            Delivery::Frame {
+                t,
+                id,
+                seq,
+                link,
+                delivery,
+                again,
+            } => json!({
+                "kind": "frame",
+                "t": t,
+                "id": id,
+                "seq": seq,
+                "link": link,
+                "delivery": delivery,
+                "again": again,
+            }),
+            Delivery::CallSettled { call_id } => {
+                json!({ "kind": "call_settled", "callId": call_id })
+            }
             Delivery::Accepted {
                 turn_id,
                 run_id,
