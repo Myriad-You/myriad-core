@@ -124,6 +124,9 @@ pub const RULES: &[Rule] = &[
     frames("conversations", &[], &[], &["conversations"]),
     frames("conversations.live", &[], &[], &["conversation"]),
     bare("cua", Kind::Unheeded),
+    // Only an end that can host her: a deputy to be her interim host, and what of it and of a
+    // grant it took. No child's session reads either.
+    frames("deputy", &[], &["lease.taken"], &["lease.deputy"]),
     frames(
         "experience",
         &[],

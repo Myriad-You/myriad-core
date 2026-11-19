@@ -76,3 +76,13 @@ fn every_conformance_case_answers_through_the_c_entry_point() {
     assert_eq!(calls.into_iter().collect::<Vec<_>>(), TESTED);
     assert!(cases >= 40, "{cases}");
 }
+
+/// A deputy runs as long as the contract says at most, in the log rules'
+/// microseconds.
+#[test]
+fn the_longest_deputy_is_the_contracts() {
+    let contract: Value =
+        serde_json::from_str(myriad_her_link::CONTRACT_JSON).expect("the contract reads");
+    let most_ms = contract["timing"]["deputyMaxMs"].as_i64().unwrap();
+    assert_eq!(most_ms * 1000, myriad_persona_log::lease::DEPUTY_MAX_MICROS);
+}

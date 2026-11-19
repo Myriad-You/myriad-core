@@ -1802,6 +1802,146 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "deputies": [
+          {
+            "holder": "dev_mac",
+            "issued": "001760000000000-000000-site",
+            "order": 1,
+            "under": 2,
+            "until": 1760086400000000
+          },
+          {
+            "holder": "dev_win",
+            "issued": "001760000000000-000000-site",
+            "order": 2,
+            "under": 2,
+            "until": 1760086400000000
+          }
+        ],
+        "leases": [
+          {
+            "epoch": 2,
+            "from": "dev_mac",
+            "holder": "site",
+            "how": "handover",
+            "issued": "001759999999000-000000-site"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 2,
+            "hlc": "001760003600000-000000-site",
+            "id": "s-1",
+            "kind": "node.created",
+            "object": "node:lamp",
+            "origin": "site",
+            "payload": {
+              "ref": "blob:s-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 2,
+            "hlc": "001760007200000-000000-dev_mac",
+            "id": "m-1",
+            "kind": "node.noted",
+            "object": "node:lamp",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:m-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 2,
+            "hlc": "001760007200005-000000-dev_win",
+            "id": "w-1",
+            "kind": "node.created",
+            "object": "node:desk",
+            "origin": "dev_win",
+            "payload": {
+              "ref": "blob:w-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 2,
+            "hlc": "001760086400000-000000-dev_win",
+            "id": "w-2",
+            "kind": "node.noted",
+            "object": "node:desk",
+            "origin": "dev_win",
+            "payload": {
+              "ref": "blob:w-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "two interim hosts under their deputies: concurrent and kept; a row after a deputy ran out is not the holder's",
+      "output": {
+        "objects": [
+          {
+            "audience": "personal:o1",
+            "concurrent": true,
+            "object": "node:desk",
+            "rows": [
+              "w-1",
+              "w-2"
+            ]
+          },
+          {
+            "audience": "personal:o1",
+            "concurrent": true,
+            "object": "node:lamp",
+            "rows": [
+              "s-1",
+              "m-1"
+            ]
+          }
+        ],
+        "standing": [
+          {
+            "epoch": 2,
+            "id": "m-1",
+            "origin": "dev_mac",
+            "standing": "concurrent",
+            "with": 2
+          },
+          {
+            "epoch": 2,
+            "id": "w-1",
+            "origin": "dev_win",
+            "standing": "concurrent",
+            "with": 2
+          },
+          {
+            "epoch": 2,
+            "id": "w-2",
+            "origin": "dev_win",
+            "standing": "not_holder"
+          }
+        ]
+      }
     }
   ],
   "version": 1

@@ -48,7 +48,7 @@ pub use fold::{FoldInput, Folded, fold};
 pub use forget::{Entry, ledger};
 pub use holder::{Core, Holder};
 pub use kinds::Rule;
-pub use lease::{Grant, Here, How, Moved, Request, Through};
+pub use lease::{Deputy, Grant, Here, How, Moved, Request, Through};
 pub use merge::{MergeInput, Merged, merge};
 pub use row::{Author, LOG_VERSION, Payload, Replicate, Row};
 pub use vector::{Holdings, Span, Vector};
@@ -72,5 +72,7 @@ impl fmt::Display for LogError {
 
 impl std::error::Error for LogError {}
 
+#[cfg(test)]
+mod deputy_tests;
 #[cfg(test)]
 mod tests;
