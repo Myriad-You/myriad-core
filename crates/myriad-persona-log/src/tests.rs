@@ -394,6 +394,7 @@ fn folded(rows: Vec<Row>) -> Value {
         &fold(FoldInput {
             rows,
             leases: Vec::new(),
+            deputies: Vec::new(),
             ledger: Vec::new(),
         })
         .unwrap(),
@@ -616,6 +617,8 @@ fn takeovers_wait_for_the_stop(stop: Option<i64>) {
                             owner_here_at: Some(owner_left),
                             stop_after: stop,
                             stopped_at: None,
+                            deputy: None,
+                            host_unreachable_since: None,
                         })
                         .unwrap();
                         assert!(
@@ -707,6 +710,8 @@ fn a_holder_that_stopped_stays_stopped_until_the_server_says_so() {
             owner_here_at,
             stop_after: None,
             stopped_at,
+            deputy: None,
+            host_unreachable_since: None,
         })
         .unwrap()
     };
@@ -727,6 +732,8 @@ fn a_holder_that_stopped_stays_stopped_until_the_server_says_so() {
         owner_here_at: None,
         stop_after: None,
         stopped_at: Some(3 * minute),
+        deputy: None,
+        host_unreachable_since: None,
     })
     .unwrap();
     assert_eq!(elsewhere, Here::Child);
@@ -768,23 +775,23 @@ fn only_a_forced_move_makes_rows_concurrent() {
     let late = row("late", "dev_mac", 5, 300, "node:n", "node.view_changed");
     let early = row("early", "dev_mac", 4, 150, "node:n", "node.view_changed");
     assert_eq!(
-        lease::standing(&late, &grants(How::Force)),
+        lease::standing(&late, &grants(How::Force), &[]),
         lease::Stand::Concurrent
     );
     assert_eq!(
-        lease::standing(&early, &grants(How::Force)),
+        lease::standing(&early, &grants(How::Force), &[]),
         lease::Stand::Normal
     );
     assert_eq!(
-        lease::standing(&late, &grants(How::Takeover)),
+        lease::standing(&late, &grants(How::Takeover), &[]),
         lease::Stand::Normal
     );
     assert_eq!(
-        lease::standing(&owner(late.clone()), &grants(How::Force)),
+        lease::standing(&owner(late.clone()), &grants(How::Force), &[]),
         lease::Stand::Normal
     );
     assert_eq!(
-        lease::standing(&late, &grants(How::Handover)),
+        lease::standing(&late, &grants(How::Handover), &[]),
         lease::Stand::AfterHandover
     );
 }
@@ -839,6 +846,8 @@ fn a_frozen_lease_is_held_by_no_one_until_the_move_ends() {
             owner_here_at: None,
             stop_after: None,
             stopped_at: None,
+            deputy: None,
+            host_unreachable_since: None,
         })
         .unwrap();
         assert_eq!(here, Here::Frozen, "{me}");

@@ -218,6 +218,189 @@
         "state": "stopped",
         "stoppedAt": 1760000180000000
       }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000000
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 58,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001759996400000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760003780000000,
+        "ownerHereAt": 1760003720000000
+      },
+      "name": "a deputy, the holder out of reach three minutes, the owner here: interim",
+      "output": {
+        "state": "interim",
+        "until": 1760086400000000
+      }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000000
+        },
+        "lease": {
+          "epoch": 58,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001759996400000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760003780000000,
+        "ownerHereAt": 1760003720000000
+      },
+      "name": "a deputy, the holder back in reach: a child",
+      "output": {
+        "state": "child"
+      }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000000
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 58,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001759996400000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760086400000000,
+        "ownerHereAt": 1760086340000000
+      },
+      "name": "a deputy run out: a child",
+      "output": {
+        "state": "child"
+      }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000000
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 58,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001759996400000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760007200000000,
+        "ownerHereAt": 1760007020000000
+      },
+      "name": "a deputy, the owner not here: a child",
+      "output": {
+        "state": "child"
+      }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 57,
+          "until": 1760086400000000
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 58,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001759996400000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760003780000000,
+        "ownerHereAt": 1760003720000000
+      },
+      "name": "a deputy under an epoch that no longer stands: a child",
+      "output": {
+        "state": "child"
+      }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000001
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 58,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001759996400000-000000-site"
+        },
+        "me": "dev_mac",
+        "now": 1760003780000000,
+        "ownerHereAt": 1760003720000000
+      },
+      "name": "a deputy that runs longer than a day is as none: a child",
+      "output": {
+        "state": "child"
+      }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000000
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 59,
+          "from": "site",
+          "holder": null,
+          "how": "freeze",
+          "issued": "001760003600000-000000-site",
+          "move": "mv_1"
+        },
+        "me": "dev_mac",
+        "now": 1760003780000000,
+        "ownerHereAt": 1760003720000000
+      },
+      "name": "a freeze as lease.epoch gives it to an end that listed deputy: frozen, deputy or not",
+      "output": {
+        "state": "frozen"
+      }
     }
   ],
   "version": 1

@@ -2870,6 +2870,213 @@
           "code": "bad_frame"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800140,
+          "body": {
+            "deputy": {
+              "holder": "dev_mac",
+              "issued": "001760140880000-000000-site",
+              "order": 1,
+              "under": 7,
+              "until": 1760227280000000
+            }
+          },
+          "id": "dp_1760140880000",
+          "seq": 14,
+          "t": "lease.deputy",
+          "v": 1
+        },
+        "roles": [
+          "host",
+          "server"
+        ]
+      },
+      "name": "the server gives an end its deputy",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800140,\"body\":{\"deputy\":{\"holder\":\"dev_mac\",\"issued\":\"001760140880000-000000-site\",\"order\":1,\"under\":7,\"until\":1760227280000000}},\"id\":\"dp_1760140880000\",\"seq\":14,\"t\":\"lease.deputy\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "lease",
+          "t": "lease.deputy"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 14,
+          "at": 1760140800140,
+          "body": {
+            "id": "8",
+            "of": "lease.grant"
+          },
+          "seq": 6,
+          "t": "lease.taken",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host"
+        ]
+      },
+      "name": "an end says it took the grant",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":14,\"at\":1760140800140,\"body\":{\"id\":\"8\",\"of\":\"lease.grant\"},\"seq\":6,\"t\":\"lease.taken\",\"v\":1}",
+          "delivery": "answer",
+          "family": "lease",
+          "t": "lease.taken"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 14,
+          "at": 1760140800140,
+          "body": {
+            "id": "line_1",
+            "of": "say"
+          },
+          "seq": 6,
+          "t": "lease.taken",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host"
+        ]
+      },
+      "name": "bad_frame: lease.taken of a frame no answer counts",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 14,
+          "at": 1760140800140,
+          "body": {
+            "id": "dp 1",
+            "of": "lease.deputy"
+          },
+          "seq": 6,
+          "t": "lease.taken",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host"
+        ]
+      },
+      "name": "bad_id: lease.taken of an id with a space",
+      "output": {
+        "refused": {
+          "code": "bad_id"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800140,
+          "body": {
+            "deputy": {
+              "holder": "dev_mac",
+              "issued": "001760140880000-000000-site",
+              "order": 1,
+              "under": 7,
+              "until": 1760227280000000
+            }
+          },
+          "id": "dp_1760140880000",
+          "seq": 14,
+          "t": "lease.deputy",
+          "v": 1
+        },
+        "roles": [
+          "device",
+          "host",
+          "mind"
+        ]
+      },
+      "name": "bad_frame: a deputy is the server's to give",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800150,
+          "body": {
+            "epoch": 58,
+            "holder": "site",
+            "how": "handover",
+            "issued": "001760140880000-000000-site",
+            "stopAfter": 180000000
+          },
+          "seq": 15,
+          "t": "lease.epoch",
+          "v": 1
+        },
+        "roles": [
+          "host",
+          "server"
+        ]
+      },
+      "name": "lease.epoch with the standing grant's issued, to an end that listed deputy",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800150,\"body\":{\"epoch\":58,\"holder\":\"site\",\"how\":\"handover\",\"issued\":\"001760140880000-000000-site\",\"stopAfter\":180000000},\"seq\":15,\"t\":\"lease.epoch\",\"v\":1}",
+          "delivery": "latest",
+          "family": "lease",
+          "t": "lease.epoch"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800160,
+          "body": {
+            "epoch": 59,
+            "from": "site",
+            "holder": null,
+            "how": "freeze",
+            "issued": "001760140890000-000000-site",
+            "move": "mv_1"
+          },
+          "seq": 16,
+          "t": "lease.epoch",
+          "v": 1
+        },
+        "roles": [
+          "host",
+          "server"
+        ]
+      },
+      "name": "a freeze as lease.epoch, with its issued and from, to an end that listed deputy",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800160,\"body\":{\"epoch\":59,\"from\":\"site\",\"holder\":null,\"how\":\"freeze\",\"issued\":\"001760140890000-000000-site\",\"move\":\"mv_1\"},\"seq\":16,\"t\":\"lease.epoch\",\"v\":1}",
+          "delivery": "latest",
+          "family": "lease",
+          "t": "lease.epoch"
+        }
+      }
     }
   ],
   "version": 1

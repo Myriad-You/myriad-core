@@ -12,8 +12,9 @@
 //!   order its rows and the forget came in.
 //!
 //! Her rows interleave only when the owner forced the lease while the old
-//! holder kept running, or a side was used alone while she already lived
-//! elsewhere; those rows stay and the objects they touch are marked
+//! holder kept running, a side was used alone while she already lived
+//! elsewhere, or an interim host thought under its deputy while the holder
+//! was out of its reach; those rows stay and the objects they touch are marked
 //! `concurrent` ([`crate::lease::standing`]). Owner rows written on several
 //! sides at once just sort by clock.
 
@@ -24,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     LogError, Row, forget,
     kinds::Rule,
-    lease::{self, Grant, Stand, Standing},
+    lease::{self, Deputy, Grant, Stand, Standing},
     row::sort,
 };
 
@@ -37,6 +38,10 @@ pub struct FoldInput {
     /// The lease history this side knows, for marking her rows.
     #[serde(default)]
     pub leases: Vec<Grant>,
+    /// The deputies the server issued, for marking the rows written under
+    /// them ([`crate::lease::Deputy`]); none, none are.
+    #[serde(default)]
+    pub deputies: Vec<Deputy>,
     /// This side's ledger ([`forget`]), as `nodes.fold` takes it: what this
     /// side forgot or took back, and of which nodes it is the home, beyond
     /// the rows given. A host passes it; without it only the rows' own
@@ -143,6 +148,9 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
     for grant in &input.leases {
         grant.check()?;
     }
+    for deputy in &input.deputies {
+        deputy.check()?;
+    }
     let rows = dedupe(input.rows)?;
     let ledger = forget::joined(&input.ledger, &forget::ledger(&rows));
     let (rows, _) = forget::absorb(rows, &ledger, forget::Side::Here);
@@ -153,7 +161,7 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
             && !view.kept(audience, object)
             && view.forgotten(audience, object).is_none()
     };
-    let standing = lease::standings(&rows, &input.leases);
+    let standing = lease::standings(&rows, &input.leases, &input.deputies);
     let concurrent: Vec<&str> = standing
         .iter()
         .filter(|standing| standing.standing == Stand::Concurrent)

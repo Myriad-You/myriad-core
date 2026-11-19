@@ -765,6 +765,34 @@
   },
   {
     "v": 1,
+    "t": "lease.deputy",
+    "seq": 14,
+    "ack": 0,
+    "at": 1760140800130,
+    "id": "dp_1760140880000",
+    "body": {
+      "deputy": {
+        "holder": "dev_0123456789abcdef0123456789abcdef",
+        "under": 7,
+        "issued": "001760140880000-000000-site",
+        "until": 1760227280000000,
+        "order": 1
+      }
+    }
+  },
+  {
+    "v": 1,
+    "t": "lease.taken",
+    "seq": 6,
+    "ack": 14,
+    "at": 1760140800140,
+    "body": {
+      "of": "lease.deputy",
+      "id": "dp_1760140880000"
+    }
+  },
+  {
+    "v": 1,
     "t": "log.vector",
     "seq": 14,
     "ack": 0,

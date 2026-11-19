@@ -375,3 +375,86 @@ fn a_call_is_held_to_its_deadline_or_the_most_its_action_may_be_given() {
     // Already passed: the receiver answers it call_timeout.
     assert!(super::call_deadline("screen.look", taken - 1, taken) < taken);
 }
+
+/// A grant or a deputy to an end that listed `deputy` is delivered when that
+/// end says it took it, never by the link's ack: the ack is of everything
+/// heard, a frame the end refused too. To an end that did not list it,
+/// nothing changes; no other frame waits for an answer.
+#[test]
+fn a_lease_frame_to_an_end_that_listed_deputy_waits_for_lease_taken() {
+    let deputy = vec!["say".to_string(), "deputy".to_string()];
+    let before = vec!["say".to_string(), "lend".to_string()];
+    for t in TAKEN_BY_ANSWER {
+        assert_eq!(CONTRACT.frames[*t].delivery, "reliable", "{t}");
+        assert!(taken_by_answer(t, &deputy), "{t}");
+        assert!(!taken_by_answer(t, &before), "{t}");
+    }
+    for t in ["say", "lease.epoch", "lease.takeover", "group.lend"] {
+        assert!(!taken_by_answer(t, &deputy), "{t}");
+    }
+    // The answer itself names the frame and its id, and only these two.
+    let taken = |of: &str, id: &str| {
+        json!({
+            "v": 1, "t": "lease.taken", "seq": 3, "ack": 9, "at": 1,
+            "body": { "of": of, "id": id },
+        })
+    };
+    let device = roles("device");
+    assert!(check(&taken("lease.grant", "59"), &device).is_ok());
+    assert!(check(&taken("lease.deputy", "dp_1"), &device).is_ok());
+    assert_eq!(
+        check(&taken("lease.epoch", "59"), &device)
+            .unwrap_err()
+            .code,
+        "bad_frame"
+    );
+    assert_eq!(
+        check(&taken("lease.grant", ""), &device).unwrap_err().code,
+        "bad_id"
+    );
+    // Only the server gives a deputy.
+    let mut deputy_frame = fixtures()["frames"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|frame| frame["t"] == "lease.deputy")
+        .unwrap()
+        .clone();
+    assert!(check(&deputy_frame, &roles("server")).is_ok());
+    assert_eq!(
+        check(&deputy_frame, &roles("mind")).unwrap_err().code,
+        "bad_frame"
+    );
+    deputy_frame["body"]["deputy"]["extra"] = json!(1);
+    // The frame checks its fields; the deputy's own are the log rules'.
+    assert!(check(&deputy_frame, &roles("server")).is_ok());
+}
+
+/// An end that did not list `deputy` (every end from before it: the Mac and
+/// XR as installed today) is delivered every frame by the link's ack exactly
+/// as before, whatever else it listed: no frame to it waits for a
+/// `lease.taken`, so the server neither holds a grant back nor sends it
+/// again, nor counts it untaken, for want of one.
+#[test]
+fn an_end_that_did_not_list_deputy_is_delivered_by_the_ack_as_before() {
+    let raw: Value = serde_json::from_str(CONTRACT_JSON).unwrap();
+    let all_but_deputy: Vec<String> = raw["capabilities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|one| one.as_str())
+        .filter(|one| *one != "deputy")
+        .map(str::to_string)
+        .collect();
+    assert!(all_but_deputy.len() + 1 == raw["capabilities"].as_array().unwrap().len());
+    for said in [Vec::new(), all_but_deputy] {
+        for t in CONTRACT.frames.keys() {
+            assert!(!taken_by_answer(t, &said), "{t} waits for an answer");
+        }
+    }
+    // Nor does the server send it a deputy: lease.deputy is the capability's alone.
+    let description = raw["frames"]["lease.deputy"]["description"]
+        .as_str()
+        .unwrap();
+    assert!(description.starts_with("Only to an end whose hello listed deputy"));
+}
