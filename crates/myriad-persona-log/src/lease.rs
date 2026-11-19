@@ -34,6 +34,15 @@
 //! a side alone while she already lived elsewhere is folded like a force
 //! ([`standing`]).
 //!
+//! **Interim**: the server may give a side that does not hold the lease a
+//! [`Deputy`] ahead of time. Cut off from the holder for the stop time with
+//! the owner in front of it, that side thinks as her interim host until
+//! the deputy runs out or the holder is back in reach ([`Here::Interim`]),
+//! writing at the epoch the deputy stands under. The holder may be thinking
+//! too, out of its reach: those rows are kept and marked like a force's
+//! ([`standing`], given the deputies the server issued). A deputy is not a
+//! grant: it moves nothing and no epoch counts it.
+//!
 //! The times are first values, to be tuned once she is used for real. The
 //! one the owner notices, how long a holder out of reach with the owner gone
 //! keeps thinking, is the server's setting ([`MoveInput::stop_after`]): the
@@ -81,6 +90,12 @@ pub fn stop_after(configured: Option<i64>) -> Result<i64, LogError> {
     }
     Ok(micros)
 }
+
+/// The longest a [`Deputy`] may run, from its issue to its end: a day (the
+/// contract's `timing.deputyMaxMs`). Past that her memory is no longer
+/// settled on the side thinking alone, and its last backup is older than
+/// what she wrote there.
+pub const DEPUTY_MAX_MICROS: i64 = 24 * 60 * 60 * 1_000_000;
 
 /// The epoch of her rows written before their side ever held or saw a
 /// lease. No grant has it: the server's first grant is epoch 1.
@@ -212,6 +227,71 @@ impl Grant {
     pub fn held_by(&self, node: &str) -> bool {
         self.holder.as_deref() == Some(node)
     }
+}
+
+/// The server's leave, issued ahead of time, for `holder`, a side that
+/// does not hold the lease, to think as her interim host while the holder
+/// is out of its reach ([`here`]). It is not a grant: it moves nothing, no
+/// epoch counts it, and the side writes at `under`, the epoch standing when
+/// it was issued. The server keeps every one it issued and marks her rows
+/// by those alone ([`standings`]); one it did not issue proves nothing. A
+/// side observes `issued` into its clock when it takes one, so what it
+/// writes under it comes after.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Deputy {
+    /// The side it is for (a clock node).
+    pub holder: String,
+    /// The epoch that stood when it was issued, which the side writes at.
+    pub under: u64,
+    /// The server's clock when it issued it.
+    pub issued: Rev,
+    /// When it runs out, in microseconds: from then on the side does not
+    /// think under it.
+    pub until: i64,
+    /// Where the server put this side among those it issued deputies to,
+    /// from 1, the one the owner used last. Shown for now; nothing decides
+    /// by it yet.
+    pub order: u32,
+}
+
+impl Deputy {
+    pub fn check(&self) -> Result<(), LogError> {
+        hlc::check_node(&self.holder).map_err(|error| LogError::new(error.to_string()))?;
+        if self.under == 0 {
+            return Err(LogError::new("a deputy stands under an epoch from 1"));
+        }
+        if self.order == 0 {
+            return Err(LogError::new("a deputy's order counts from 1"));
+        }
+        let issued = wall_micros(&self.issued);
+        if self.until <= issued {
+            return Err(LogError::new("a deputy runs out after it is issued"));
+        }
+        if self.until - issued > DEPUTY_MAX_MICROS {
+            return Err(LogError::new(format!(
+                "a deputy runs {DEPUTY_MAX_MICROS} microseconds at most"
+            )));
+        }
+        Ok(())
+    }
+
+    /// Whether `row` was written under it: one of her rows, by its holder,
+    /// at the epoch it stands under, from its issue until it runs out.
+    pub fn covers(&self, row: &Row) -> bool {
+        row.author == Author::Her
+            && row.origin == self.holder
+            && row.epoch == Some(self.under)
+            && row.hlc >= self.issued
+            && wall_micros(&row.hlc) < self.until
+    }
+}
+
+/// A revision's wall time in microseconds.
+fn wall_micros(rev: &Rev) -> i64 {
+    i64::try_from(rev.wall_ms)
+        .unwrap_or(i64::MAX)
+        .saturating_mul(1000)
 }
 
 /// Which of two grants stands: the higher epoch. Two grants of one epoch
@@ -455,6 +535,12 @@ pub struct HereInput {
     /// connected): she thinks there alone, at epoch [`ALONE`].
     #[serde(default)]
     pub lease: Option<Grant>,
+    /// This side's clock. A side that may be interim gives it as its rows
+    /// read it (the wall of the revision it would stamp next, never behind
+    /// real time): the server marks its rows by their clock against the
+    /// deputy's `until`, so it stops when they would no longer be covered.
+    /// That clock may run up to five minutes ahead of real time, so the
+    /// stop time and the owner's last time here read against it too.
     pub now: i64,
     /// Since when this side has been cut off from the server; absent while
     /// it is connected.
@@ -476,6 +562,14 @@ pub struct HereInput {
     /// her over meanwhile. The caller drops it once the server has said so.
     #[serde(default)]
     pub stopped_at: Option<i64>,
+    /// The newest [`Deputy`] the server gave this side, when it gave one.
+    #[serde(default)]
+    pub deputy: Option<Deputy>,
+    /// Since when the holder has been out of this side's reach, by this
+    /// side's own judgment (the link silent, and not only this side's
+    /// network down); absent while it is in reach.
+    #[serde(default)]
+    pub host_unreachable_since: Option<i64>,
 }
 
 /// What her mind does on this side.
@@ -496,6 +590,15 @@ pub enum Here {
     /// No one holds it: she is moving house, and thinks nowhere until the
     /// move commits or is called off.
     Frozen,
+    /// Another side holds the lease, but it has been out of this side's
+    /// reach for the stop time, the owner is here, and this side holds the
+    /// server's [`Deputy`] for the epoch that stands: she thinks here as
+    /// her interim host, writing at that epoch, until `until`. She knows
+    /// she is interim: somewhere out of sight she may be thinking too. The
+    /// holder back in reach, the deputy run out, or the owner gone for the
+    /// stop time, this side is a child again.
+    #[serde(rename_all = "camelCase")]
+    Interim { until: i64 },
 }
 
 pub fn here(input: HereInput) -> Result<Here, LogError> {
@@ -507,7 +610,7 @@ pub fn here(input: HereInput) -> Result<Here, LogError> {
         return Ok(Here::Frozen);
     }
     if !lease.held_by(&input.me) {
-        return Ok(Here::Child);
+        return interim(&input, lease);
     }
     if let Some(stopped_at) = input.stopped_at {
         return Ok(Here::Stopped { stopped_at });
@@ -523,6 +626,41 @@ pub fn here(input: HereInput) -> Result<Here, LogError> {
         Here::Stopped { stopped_at }
     } else {
         Here::Thinking
+    })
+}
+
+/// A side that does not hold the lease: a child, or her interim host when
+/// its deputy is for it and for the epoch that stands, has not run out,
+/// the holder has been out of its reach for the stop time, and the owner
+/// was here within it. Without a deputy, or with one that does not
+/// check, a child as ever.
+fn interim(input: &HereInput, lease: &Grant) -> Result<Here, LogError> {
+    // One that does not check (from a newer server, say) is as none: a
+    // child, as without one, never an error that leaves it not knowing.
+    let Some(deputy) = input
+        .deputy
+        .as_ref()
+        .filter(|deputy| deputy.check().is_ok())
+    else {
+        return Ok(Here::Child);
+    };
+    let stop = stop_after(input.stop_after)?;
+    let (Some(cut_off), Some(owner_here_at)) = (input.host_unreachable_since, input.owner_here_at)
+    else {
+        return Ok(Here::Child);
+    };
+    let now = input.now;
+    let thinks = deputy.holder == input.me
+        && deputy.under == lease.epoch
+        && now < deputy.until
+        && now - cut_off >= stop
+        && now - owner_here_at < stop;
+    Ok(if thinks {
+        Here::Interim {
+            until: deputy.until,
+        }
+    } else {
+        Here::Child
     })
 }
 
@@ -561,8 +699,9 @@ pub struct Standing {
     pub origin: String,
     pub epoch: u64,
     pub standing: Stand,
-    /// For [`Stand::Concurrent`]: the epoch it overlaps (the forced one, or
-    /// the one standing elsewhere while it was written alone).
+    /// For [`Stand::Concurrent`]: the epoch it overlaps (the forced one,
+    /// the one standing elsewhere while it was written alone, or the one a
+    /// deputy it was written under stands under).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub with: Option<u64>,
 }
@@ -574,25 +713,28 @@ pub enum Stand {
     /// (rows that arrive late after a takeover are her own memory catching
     /// up, not another her).
     Normal,
-    /// Written by the old holder after the owner forced a move, or written
-    /// alone ([`ALONE`]) while a lease stood elsewhere: she was thinking in
-    /// two places for a while. Kept and marked.
+    /// Written by the old holder after the owner forced a move, written
+    /// alone ([`ALONE`]) while a lease stood elsewhere, or written by an
+    /// interim host under its deputy: she was thinking in two places for a
+    /// while. Kept and marked.
     Concurrent,
-    /// Not written by the holder of its epoch, or written after it handed
-    /// the lease over: a lease bug, to look into.
+    /// Not written by the holder of its epoch (nor under a deputy for it),
+    /// or written after it handed the lease over: a lease bug, to look
+    /// into.
     NotHolder,
     AfterHandover,
 }
 
 /// Where `row` stands against `grants` (any order, any subset of the
-/// history). The owner's rows, and her rows of an epoch not in `grants`,
+/// history) and the `deputies` the server issued (none: as before there
+/// were any). The owner's rows, and her rows of an epoch not in `grants`,
 /// are normal.
-pub fn standing(row: &Row, grants: &[Grant]) -> Stand {
-    placed(row, grants).0
+pub fn standing(row: &Row, grants: &[Grant], deputies: &[Deputy]) -> Stand {
+    placed(row, grants, deputies).0
 }
 
 /// The standing, and for [`Stand::Concurrent`] the epoch it overlaps.
-fn placed(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
+fn placed(row: &Row, grants: &[Grant], deputies: &[Deputy]) -> (Stand, Option<u64>) {
     let normal = (Stand::Normal, None);
     let (Author::Her, Some(epoch)) = (row.author, row.epoch) else {
         return normal;
@@ -604,6 +746,11 @@ fn placed(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
         return normal;
     };
     if !own.held_by(&row.origin) {
+        // Written by an interim host under its deputy: concurrent with the
+        // epoch it stands under, whatever came after it.
+        if deputies.iter().any(|deputy| deputy.covers(row)) {
+            return (Stand::Concurrent, Some(epoch));
+        }
         return (Stand::NotHolder, None);
     }
     let Some(next) = next_epoch(epoch, grants).and_then(|next| issue(grants, next)) else {
@@ -647,11 +794,12 @@ fn alone(row: &Row, grants: &[Grant]) -> (Stand, Option<u64>) {
     }
 }
 
-/// Every one of `rows` that does not stand normal, in log order.
-pub fn standings(rows: &[Row], grants: &[Grant]) -> Vec<Standing> {
+/// Every one of `rows` that does not stand normal, in log order, against
+/// `grants` and `deputies` as in [`standing`].
+pub fn standings(rows: &[Row], grants: &[Grant], deputies: &[Deputy]) -> Vec<Standing> {
     rows.iter()
         .filter_map(|row| {
-            let (stand, with) = placed(row, grants);
+            let (stand, with) = placed(row, grants, deputies);
             (stand != Stand::Normal).then(|| Standing {
                 id: row.id.clone(),
                 origin: row.origin.clone(),

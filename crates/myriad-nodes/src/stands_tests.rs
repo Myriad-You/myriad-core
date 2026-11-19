@@ -232,6 +232,160 @@ fn a_change_is_written_where_the_item_stands_and_only_of_whose_life_it_is() {
 }
 
 #[test]
+fn what_a_fact_was_put_to_and_left_standing_is_said_back() {
+    let run = item_id("them", "own", "m0", 0);
+    let read_ = item_id("them", "own", "m0", 1);
+    let late = item_id("them", "own", "m0", 2);
+    let mom = item_id(&whose_key("妈妈").unwrap(), "own", "m0", 3);
+    let job = item_id("them", "work", "m0", 0);
+    let step = StepInput {
+        fact: fact("m1", "跑步时被绳子绊了一下", &["own"]),
+        known: vec![KnownIn {
+            text: "在会展公司做策划".into(),
+            on: names(&["work"]),
+        }],
+        nodes: vec![
+            node(
+                "own",
+                "日常",
+                folded(&[
+                    (&run, "每天晚上跑步", false),
+                    (&read_, "睡前读书", false),
+                    (&late, "熬夜", false),
+                    (&mom, "妈妈每周日打电话", false),
+                ]),
+            ),
+            node("work", "工作", folded(&[(&job, "在会展公司做策划", false)])),
+        ],
+    };
+    let still = |got: &StepRead| -> Vec<String> {
+        let mut items: Vec<String> = got
+            .still_so
+            .iter()
+            .map(|still| still.item.clone())
+            .collect();
+        items.sort();
+        items
+    };
+    let sorted = |mut items: Vec<String>| {
+        items.sort();
+        items
+    };
+    // Each item's number as the list shows it.
+    let asked: Value = serde_json::from_str(&step_prepare(step.clone()).unwrap().input).unwrap();
+    let n = |text: &str| {
+        asked["list"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|item| item["text"] == text)
+            .unwrap()["n"]
+            .clone()
+    };
+    // Their own life: what it changes or ends, or names to and cannot, is
+    // not; 妈妈's is not theirs; one only brought to mind is not on its node.
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [{"item": n("每天晚上跑步"), "text": "每天晚上跑步，最近膝盖疼"},
+                                        {"item": n("睡前读书"), "text": " "}],
+            "end": [], "add": []}),
+    );
+    assert_eq!(still(&got), vec![late.clone()]);
+    assert_eq!(got.still_so[0].node, "own");
+    let wire = serde_json::to_value(&got).unwrap();
+    assert_eq!(wire["stillSo"], json!([{"node": "own", "item": late}]));
+    // A detail of an item: every one of theirs on its node still holds.
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [], "add": []}),
+    );
+    assert_eq!(
+        still(&got),
+        sorted(vec![run.clone(), read_.clone(), late.clone()])
+    );
+    // 妈妈's fact puts only her items to it.
+    let got = read(
+        &step,
+        json!({"whose": "妈妈", "set": [], "end": [], "add": []}),
+    );
+    assert_eq!(still(&got), vec![mom]);
+    // No whose, or nothing read: none, and none on the wire.
+    let got = read(&step, json!({"set": [], "end": [], "add": []}));
+    assert!(got.still_so.is_empty());
+    assert!(serde_json::to_value(&got).unwrap().get("stillSo").is_none());
+    // Ended: not said to still hold; the others are.
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [n("熬夜")], "add": []}),
+    );
+    assert_eq!(still(&got), sorted(vec![run.clone(), read_.clone()]));
+    // One named so it cannot be told which: none.
+    for answer in [
+        json!({"whose": "them", "set": [{"item": "1", "text": "x"}], "end": [], "add": []}),
+        json!({"whose": "them", "set": [], "end": [1.5], "add": []}),
+        json!({"whose": "them", "set": [], "end": [99], "add": []}),
+    ] {
+        assert!(read(&step, answer.clone()).still_so.is_empty(), "{answer}");
+    }
+    // A fact that took the place of something she knew, with nothing
+    // changed by the answer: the core starts it, and what the answer left
+    // is not said to still hold.
+    let mut replacing = step.clone();
+    replacing.fact.replaced = true;
+    let got = read(
+        &replacing,
+        json!({"whose": "them", "set": [], "end": [], "add": []}),
+    );
+    assert_eq!(got.rows.len(), 1);
+    assert!(got.still_so.is_empty());
+    // Only started something on its node: none either.
+    let got = read(
+        &replacing,
+        json!({"whose": "them", "set": [], "end": [], "add": [{"topic": "日常", "text": "改成游泳了"}]}),
+    );
+    assert_eq!(got.rows.len(), 1);
+    assert!(got.still_so.is_empty());
+    // Changed on its node by the answer: what it left still holds.
+    let got = read(
+        &replacing,
+        json!({"whose": "them", "set": [{"item": n("每天晚上跑步"), "text": "不跑了"}], "end": [], "add": []}),
+    );
+    assert_eq!(still(&got), sorted(vec![read_.clone(), late.clone()]));
+}
+
+/// A build may have just given the fact's own memory an item on its node
+/// (the same id its step would start): started again, it is no change of
+/// what stood there, and nothing is said to still hold.
+#[test]
+fn a_replacing_fact_starting_what_a_build_gave_it_says_nothing_still_holds() {
+    let built = item_id("them", "own", "m1", 0);
+    let other = item_id("them", "own", "m0", 0);
+    let mut step = StepInput {
+        fact: fact("m1", "改成游泳了", &["own"]),
+        known: Vec::new(),
+        nodes: vec![node(
+            "own",
+            "日常",
+            folded(&[(&built, "改成游泳了", false), (&other, "睡前读书", false)]),
+        )],
+    };
+    step.fact.replaced = true;
+    let got = read(
+        &step,
+        json!({"whose": "them", "set": [], "end": [], "add": [{"topic": "日常", "text": "改成游泳了"}]}),
+    );
+    assert!(got.rows.iter().any(|row| row.body["item"] == json!(built)));
+    assert!(got.still_so.is_empty(), "{:?}", got.still_so);
+}
+
+#[test]
+fn no_text_says_up_to_which_day_it_held() {
+    for system in [STEP_SYSTEM, BUILD_SYSTEM] {
+        assert!(system.contains("截至某日, as of, so far"), "{system}");
+    }
+}
+
+#[test]
 fn a_change_the_rules_refuse_is_set_aside_and_the_rest_are_written() {
     let run = item_id("them", "run", "m0", 0);
     let step = StepInput {

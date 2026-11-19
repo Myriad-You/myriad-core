@@ -8,6 +8,9 @@ pub const MOOD_FLOOR: f64 = 10.0;
 pub const DEFAULT_MOOD: f64 = 70.0;
 pub const DEFAULT_AROUSAL: f64 = 48.0;
 pub const ORIGIN: f64 = 50.0;
+/// Where her arousal starts when her persona says she is quiet, or outgoing.
+pub const QUIET_AROUSAL: f64 = 42.0;
+pub const LIVELY_AROUSAL: f64 = 56.0;
 
 const MAX_STEP: f64 = 10.0;
 const TAU_MOOD_H: f64 = 72.0;
@@ -325,11 +328,31 @@ pub fn persona_affect_baseline(
     let blob = format!("{temperament} {social} {personality}").to_lowercase();
     let mut base = AffectBaseline::default();
     if contains_any(&blob, INTROVERT) {
-        base.arousal = 42.0;
+        base.arousal = QUIET_AROUSAL;
     } else if contains_any(&blob, EXTRAVERT) {
-        base.arousal = 56.0;
+        base.arousal = LIVELY_AROUSAL;
     }
     base
+}
+
+/// Where her mood toward someone settles, the same on every end: her
+/// persona's start (`persona`, [`persona_affect_baseline`]), her arousal as
+/// her own days have made it (`undertone`, the record her host keeps, see
+/// `undertone`), and her valence lowered by what still stings with them
+/// (`stings`, `sore::mood_weighs`). Her undertone moves only her arousal
+/// for now.
+pub fn baseline(
+    persona: AffectBaseline,
+    undertone: Option<&crate::undertone::Undertone>,
+    stings: f64,
+) -> AffectBaseline {
+    let stings = if stings.is_finite() { stings.max(0.0) } else { 0.0 };
+    AffectBaseline {
+        mood: (persona.mood - stings).max(0.0),
+        arousal: undertone
+            .filter(|undertone| undertone.holds())
+            .map_or(persona.arousal, |undertone| undertone.arousal(persona.arousal)),
+    }
 }
 
 fn contains_any(blob: &str, needles: &[&str]) -> bool {

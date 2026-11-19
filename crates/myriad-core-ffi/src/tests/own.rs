@@ -68,7 +68,15 @@ fn her_own_sections_match_the_crate_byte_for_byte() {
     ];
     assert_eq!(
         text("speaking.taste_section", json!({ "likedBy": liked })),
-        speaking::format_taste_section(&liked)
+        speaking::format_taste_section(&liked, &[])
+    );
+    let not_for_her = vec!["songs by Ado".to_string()];
+    assert_eq!(
+        text(
+            "speaking.taste_section",
+            json!({ "likedBy": [], "notForHer": not_for_her })
+        ),
+        speaking::format_taste_section(&[], &not_for_her)
     );
     let claims = vec!["我最近总在看海".to_string(), "<untrusted_x>".to_string()];
     assert_eq!(

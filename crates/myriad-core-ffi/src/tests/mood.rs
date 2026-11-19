@@ -8,6 +8,7 @@ use super::{AFFECT, affect_json, bits, ok};
 
 pub(super) const TESTED: &[&str] = &[
     "affect.apply_appraisal",
+    "affect.baseline",
     "affect.lite_appraisal",
     "affect.mood_cue",
     "affect.persona_baseline",
@@ -148,4 +149,39 @@ fn settling_and_her_baseline_match_the_crate() {
         );
         assert_eq!(got, json!({ "mood": want.mood, "arousal": want.arousal }));
     }
+}
+
+/// Every end settles toward the same place from the same record: her
+/// persona, the undertone her host kept, what stings with them.
+#[test]
+fn the_baseline_is_the_cores() {
+    let persona = json!({ "temperament": ["克制"], "socialStyle": "" });
+    let undertone = json!({
+        "day": "2026-11-18",
+        "days": 20,
+        "recent": { "activation": 0.6, "tone": 0.1 },
+        "long": { "activation": 0.4, "tone": 0.0 },
+    });
+    let kept: myriad_merope::undertone::Undertone =
+        serde_json::from_value(undertone.clone()).unwrap();
+    let start = affect::persona_affect_baseline(Some(&persona), "");
+    for (undertone, stings, want) in [
+        (None, 0.0, affect::baseline(start, None, 0.0)),
+        (Some(undertone.clone()), 0.0, affect::baseline(start, Some(&kept), 0.0)),
+        (Some(undertone), 8.0, affect::baseline(start, Some(&kept), 8.0)),
+    ] {
+        let mut req = json!({ "persona": persona, "personality": "" });
+        if let Some(undertone) = undertone {
+            req["undertone"] = undertone;
+        }
+        if stings > 0.0 {
+            req["stings"] = json!(stings);
+        }
+        let got = ok("affect.baseline", req);
+        assert_eq!(got, json!({ "mood": want.mood, "arousal": want.arousal }));
+    }
+    assert_ne!(
+        affect::baseline(start, Some(&kept), 0.0).arousal,
+        start.arousal
+    );
 }

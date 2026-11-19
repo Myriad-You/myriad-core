@@ -543,6 +543,40 @@ pub fn needs_sync(t: &str) -> bool {
     family(t).is_some_and(|family| CONTRACT.sync.families.iter().any(|one| one == family))
 }
 
+/// The lease frames an end that listed the capability `deputy` answers with
+/// `lease.taken` once it has read them through: to such an end the sender
+/// counts them delivered on that answer, not on the link's ack.
+pub const TAKEN_BY_ANSWER: &[&str] = &["lease.deputy", "lease.grant"];
+
+/// Whether the sender of frame `t` waits for a `lease.taken` naming it,
+/// not for the link's ack, to an end whose hello listed `capabilities`:
+/// only a frame of [`TAKEN_BY_ANSWER`], and only to an end that listed
+/// `deputy`. Every other frame, and these to an end that did not, are
+/// delivered by the ack as before.
+pub fn taken_by_answer(t: &str, capabilities: &[String]) -> bool {
+    TAKEN_BY_ANSWER.contains(&t) && capabilities.iter().any(|one| one == "deputy")
+}
+
+/// `lease.taken`: it names one of [`TAKEN_BY_ANSWER`] and that frame's id.
+fn check_taken(body: &Value) -> Result<(), Refusal> {
+    if !body["of"]
+        .as_str()
+        .is_some_and(|of| TAKEN_BY_ANSWER.contains(&of))
+    {
+        return Err(refuse(
+            "bad_frame",
+            "lease.taken is of a lease.grant or a lease.deputy",
+        ));
+    }
+    if !body["id"].as_str().is_some_and(valid_id) {
+        return Err(refuse(
+            "bad_id",
+            "lease.taken's id matches limits.idPattern",
+        ));
+    }
+    Ok(())
+}
+
 /// The additional data a sealed field of frame `t` is bound to: canonical
 /// JSON `{from, t, to}`.
 pub fn seal_aad(from: &str, t: &str, to: &str) -> Vec<u8> {
@@ -785,6 +819,7 @@ pub fn check(frame: &Value, roles: &[String]) -> Result<Checked, Refusal> {
         "call.progress" => check_progress(body)?,
         "stream.state" | "stream.event" => check_stream(t, body)?,
         "link.versions" => check_versions(body)?,
+        "lease.taken" => check_taken(body)?,
         "call.accepted" | "call.event" | "call.cancel" => {
             check_call_id(body)?;
         }
