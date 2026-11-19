@@ -374,6 +374,33 @@
       "output": {
         "state": "child"
       }
+    },
+    {
+      "input": {
+        "deputy": {
+          "holder": "dev_mac",
+          "issued": "001760000000000-000000-site",
+          "order": 1,
+          "under": 58,
+          "until": 1760086400000000
+        },
+        "hostUnreachableSince": 1760003600000000,
+        "lease": {
+          "epoch": 59,
+          "from": "site",
+          "holder": null,
+          "how": "freeze",
+          "issued": "001760003600000-000000-site",
+          "move": "mv_1"
+        },
+        "me": "dev_mac",
+        "now": 1760003780000000,
+        "ownerHereAt": 1760003720000000
+      },
+      "name": "a freeze as lease.epoch gives it to an end that listed deputy: frozen, deputy or not",
+      "output": {
+        "state": "frozen"
+      }
     }
   ],
   "version": 1

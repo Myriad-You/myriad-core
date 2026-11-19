@@ -539,6 +539,8 @@ pub struct HereInput {
     /// read it (the wall of the revision it would stamp next, never behind
     /// real time): the server marks its rows by their clock against the
     /// deputy's `until`, so it stops when they would no longer be covered.
+    /// That clock may run up to five minutes ahead of real time, so the
+    /// stop time and the owner's last time here read against it too.
     pub now: i64,
     /// Since when this side has been cut off from the server; absent while
     /// it is connected.

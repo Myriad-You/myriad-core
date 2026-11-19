@@ -3045,6 +3045,38 @@
           "t": "lease.epoch"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800160,
+          "body": {
+            "epoch": 59,
+            "from": "site",
+            "holder": null,
+            "how": "freeze",
+            "issued": "001760140890000-000000-site",
+            "move": "mv_1"
+          },
+          "seq": 16,
+          "t": "lease.epoch",
+          "v": 1
+        },
+        "roles": [
+          "host",
+          "server"
+        ]
+      },
+      "name": "a freeze as lease.epoch, with its issued and from, to an end that listed deputy",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800160,\"body\":{\"epoch\":59,\"from\":\"site\",\"holder\":null,\"how\":\"freeze\",\"issued\":\"001760140890000-000000-site\",\"move\":\"mv_1\"},\"seq\":16,\"t\":\"lease.epoch\",\"v\":1}",
+          "delivery": "latest",
+          "family": "lease",
+          "t": "lease.epoch"
+        }
+      }
     }
   ],
   "version": 1

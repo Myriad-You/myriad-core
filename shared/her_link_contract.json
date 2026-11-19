@@ -1085,8 +1085,8 @@
       "from": "server",
       "delivery": "latest",
       "required": ["epoch", "holder", "how"],
-      "optional": ["holderName", "stopAfter", "move", "issued"],
-      "description": "To every device: where her mind is now. A core that held an older epoch stops at once and becomes a child. While she moves house holder is null, how is freeze and move names the move: every side stops (lease.here says frozen) until a thaw or a commit, both issued by the server. To a holder that stopped by itself and is back in reach, a lease.epoch naming it at its epoch is the server saying the lease still stands: it drops lease.here's stoppedAt and thinks again. Devices show where she is from it. stopAfter as in lease.grant, so a holder that missed the grant still stops by the server's value. issued is the standing grant's issued, only to an end whose hello listed deputy (an older end's frame check refuses a field it does not take): with it a child holds the grant that stands whole, {epoch, holder, issued, how, move?}, for lease.here to read with its deputy."
+      "optional": ["holderName", "stopAfter", "move", "issued", "from"],
+      "description": "To every device: where her mind is now. A core that held an older epoch stops at once and becomes a child. While she moves house holder is null, how is freeze and move names the move: every side stops (lease.here says frozen) until a thaw or a commit, both issued by the server. To a holder that stopped by itself and is back in reach, a lease.epoch naming it at its epoch is the server saying the lease still stands: it drops lease.here's stoppedAt and thinks again. Devices show where she is from it. stopAfter as in lease.grant, so a holder that missed the grant still stops by the server's value. issued and from are the standing grant's (from absent when it has none), only to an end whose hello listed deputy (an older end's frame check refuses a field it does not take): with them a child holds the grant that stands whole, {epoch, holder, issued, how, from?, move?}, for lease.here to read with its deputy (a freeze checks only with its from)."
     },
     "lease.stopped": {
       "from": "host",
