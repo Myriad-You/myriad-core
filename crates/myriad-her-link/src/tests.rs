@@ -429,3 +429,32 @@ fn a_lease_frame_to_an_end_that_listed_deputy_waits_for_lease_taken() {
     // The frame checks its fields; the deputy's own are the log rules'.
     assert!(check(&deputy_frame, &roles("server")).is_ok());
 }
+
+/// An end that did not list `deputy` (every end from before it: the Mac and
+/// XR as installed today) is delivered every frame by the link's ack exactly
+/// as before, whatever else it listed: no frame to it waits for a
+/// `lease.taken`, so the server neither holds a grant back nor sends it
+/// again, nor counts it untaken, for want of one.
+#[test]
+fn an_end_that_did_not_list_deputy_is_delivered_by_the_ack_as_before() {
+    let raw: Value = serde_json::from_str(CONTRACT_JSON).unwrap();
+    let all_but_deputy: Vec<String> = raw["capabilities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|one| one.as_str())
+        .filter(|one| *one != "deputy")
+        .map(str::to_string)
+        .collect();
+    assert!(all_but_deputy.len() + 1 == raw["capabilities"].as_array().unwrap().len());
+    for said in [Vec::new(), all_but_deputy] {
+        for t in CONTRACT.frames.keys() {
+            assert!(!taken_by_answer(t, &said), "{t} waits for an answer");
+        }
+    }
+    // Nor does the server send it a deputy: lease.deputy is the capability's alone.
+    let description = raw["frames"]["lease.deputy"]["description"]
+        .as_str()
+        .unwrap();
+    assert!(description.starts_with("Only to an end whose hello listed deputy"));
+}
