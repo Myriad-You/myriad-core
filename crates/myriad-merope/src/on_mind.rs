@@ -237,7 +237,20 @@ pub fn step_input(on_mind: &OnMind, have: &[String], now: DateTime<Utc>) -> Stri
 
 /// What she would bring up, thinking it out loud to someone who may hear it.
 pub fn tell_line(on_mind: &OnMind) -> String {
-    format!("你一直在想「{}」，刚想到：{}", on_mind.what, on_mind.so_far)
+    if on_mind.so_far.is_empty() {
+        format!("你心里一直挂着「{}」", on_mind.what)
+    } else {
+        format!("你一直在想「{}」，刚想到：{}", on_mind.what, on_mind.so_far)
+    }
+}
+
+/// What is on her mind, as `who` may see it ([`OnMind::seen_by`]), as a
+/// section of her prompt: a fact of where her thoughts were, hers to bring
+/// up or not.
+pub fn section(seen: &str) -> String {
+    format!(
+        "## On your mind\n{seen} This is where your thoughts were before this; whether you bring it up is yours to judge."
+    )
 }
 
 #[cfg(test)]
@@ -312,6 +325,16 @@ mod tests {
         assert!(input.contains("about 2 hours") && input.contains("what_you_have_of_it"));
         assert!(step_schema()["required"] == json!(["thought", "settled", "tell"]));
         assert!(step_system("你是小满。").starts_with("你是小满。"));
+    }
+
+    #[test]
+    fn what_she_would_say_of_it_reads_before_and_after_she_thinks_it_on() {
+        let mind = OnMind::new("雨天的歌", None, "song:netease:1", at(0)).unwrap();
+        assert_eq!(tell_line(&mind), "你心里一直挂着「雨天的歌」");
+        let on = mind.stepped("也许是雨声本身就慢", at(30));
+        assert!(tell_line(&on).ends_with("刚想到：也许是雨声本身就慢"));
+        let section = section(&on.seen_by(None, at(40)));
+        assert!(section.starts_with("## On your mind\n") && section.contains("yours to judge"));
     }
 
     #[test]
