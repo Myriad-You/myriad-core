@@ -79,7 +79,7 @@
           "scene": "agents",
           "state": "finished",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store"
+          "title": "做完了：Split the store"
         }
       }
     },
@@ -181,7 +181,7 @@
           "scene": "agents",
           "state": "stuck",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store"
+          "title": "卡住了：Split the store"
         }
       }
     },
@@ -283,7 +283,7 @@
           "scene": "agents",
           "state": "stuck",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store"
+          "title": "Stuck: Split the store"
         }
       }
     },

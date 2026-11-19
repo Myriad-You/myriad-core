@@ -616,6 +616,1280 @@
       "output": {
         "error": "bad_input"
       }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a card that says what comes of each answer and of none",
+      "output": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                },
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                },
+                {
+                  "good": true,
+                  "text": "再多一条"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "too many effects is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很很"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "an effect too long is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 3,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "an effect resting on a fact it does not have is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 0,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "an effect resting on fact 0 is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 0,
+                    "of": 0
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a count out of none is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 3,
+                    "of": 21
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a count out of more than 20 is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 6,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a count of more hits than times is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "Send!",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "an icon that is not a word is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "effects": [
+                {
+                  "good": true,
+                  "text": "能看到全文"
+                }
+              ],
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "open with effects is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "open that cannot be taken back is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "id": "open",
+              "label": "去会话里说"
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "what happens with no answer on a card that asks nothing is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等等",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "what happens with no answer too long is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "sk-ant-api03-AAAAAAAAAAAAAAAAAAAAAAAAAA"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a key in an effect is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线"
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "key sk-ant-api03-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a key in what happens with no answer is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "card": {
+          "actions": [
+            {
+              "icon": "chat",
+              "id": "open",
+              "label": "去会话里说"
+            },
+            {
+              "effects": [
+                {
+                  "because": 1,
+                  "good": true,
+                  "text": "今天就能上线",
+                  "weight": 2
+                },
+                {
+                  "because": 1,
+                  "count": {
+                    "hits": 2,
+                    "of": 5
+                  },
+                  "good": false,
+                  "text": "检查还没跑完"
+                }
+              ],
+              "icon": "send",
+              "id": "push",
+              "label": "推送",
+              "undo": false
+            },
+            {
+              "effects": [
+                {
+                  "good": false,
+                  "text": "多等十分钟左右"
+                }
+              ],
+              "icon": "pause",
+              "id": "wait",
+              "label": "等等",
+              "undo": true
+            }
+          ],
+          "at": 1760000000000,
+          "facts": [
+            {
+              "ref": "session:s-1",
+              "text": "会话停下来问：现在推送吗（推送 / 等等）"
+            },
+            {
+              "ref": "session:s-1",
+              "text": "这件事是你亲自派的"
+            }
+          ],
+          "id": "c_7e0ee5eea0ebcf879fd1985fb080c2bb",
+          "idle": "没人回答的话，会话一直停在这里等。",
+          "kind": "decide",
+          "scene": "agents",
+          "state": "waiting_owner",
+          "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
+          "title": "要你定：现在推送吗",
+          "view": {
+            "because": [
+              1,
+              2
+            ],
+            "text": "先等检查跑完再推。"
+          }
+        }
+      },
+      "name": "a field an effect does not name is refused",
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

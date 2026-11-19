@@ -98,6 +98,10 @@ pub struct CardVersion {
     pub view: Option<CardView>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub actions: Vec<CardAction>,
+    /// What happens when nobody answers, as she sees it: only on a card
+    /// that asks something (ABI 5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub idle: Option<String>,
 }
 
 /// At most this many bytes of a card's word (`kind`, `scene`, an action's
@@ -137,12 +141,55 @@ pub struct CardView {
     pub leans: Option<String>,
 }
 
-/// One thing the owner may answer a card with.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// One thing the owner may answer a card with. Beyond its id and label,
+/// what she says comes of it, when she says (ABI 5): its gains and costs
+/// (`effects`), whether it can be taken back once done (`undo`: `false`
+/// when it cannot; none when she did not say), and a word for its picture
+/// (`icon`). A side that draws none of them draws the label.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CardAction {
     pub id: String,
     pub label: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub effects: Vec<CardEffect>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub undo: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
+}
+
+impl CardAction {
+    /// An action that says only its id and label.
+    pub fn new(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            ..Self::default()
+        }
+    }
+}
+
+/// One thing that comes of an answer: a gain (`good`) or a cost, the fact
+/// of the card it rests on (`because`, numbered from 1), and how many
+/// times out of how many it went so (`count`), when that was counted.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardEffect {
+    pub text: String,
+    pub good: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub because: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub count: Option<CardCount>,
+}
+
+/// `hits` times out of `of`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CardCount {
+    pub hits: u32,
+    pub of: u32,
 }
 
 /// The owner's answer to a card (`card.answered`): which action, on which

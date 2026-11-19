@@ -117,7 +117,7 @@
           "kind": "progress",
           "scene": "agents",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "sample-repo",
+          "title": "进展：sample-repo",
           "view": {
             "text": "拆仓库做完一半，剩下的在等你定推不推"
           }
@@ -267,7 +267,7 @@
           "kind": "progress",
           "scene": "agents",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "sample-repo",
+          "title": "进展：sample-repo",
           "view": {
             "text": "拆仓库做完一半，剩下的在等你定推不推"
           }
@@ -339,7 +339,7 @@
           "kind": "progress",
           "scene": "agents",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "sample-repo",
+          "title": "Progress: sample-repo",
           "view": {
             "text": "拆仓库做完一半，剩下的在等你定推不推"
           }
