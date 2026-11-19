@@ -2500,51 +2500,24 @@ impl Session {
         ) else {
             return out;
         };
-        // Held to the most a call of its action may be given from now, by her host's clock
-        // (`call_deadline`): a further one is cut short, not refused.
-        let taken_at = self.host_now(now_ms).max(0) as u64;
-        let deadline_at = body.get("deadlineAt").and_then(unsigned).map_or(0, |at| {
-            myriad_her_link::call_deadline(&action, at, taken_at).min(i64::MAX as u64) as i64
-        });
-        let of = body.get("for").cloned().unwrap_or(Value::Null);
-        // Why it is not done, when what this end offers already says so. The version said
-        // back is the one this end does.
-        let offered = self.offers.iter().find(|(name, _)| *name == action);
-        let refusal = match offered {
-            None => Some(("call_unknown", version)),
-            Some((_, does)) if *does != version => Some(("version_unsupported", *does)),
-            Some(_) if myriad_her_link::call_allowed(&action, &of).is_err() => {
-                Some(("wrong_audience", version))
-            }
-            Some(_) => None,
-        };
-        if let Some((code, version)) = refusal {
-            let result = failed(&call_id, &action, version, code);
-            out.extend(self.answer(&call_id, result, now_ms));
-            return out;
-        }
         let call = Held {
             call_id,
             action,
             version,
             args: body.get("args").cloned().unwrap_or_else(|| json!({})),
-            of,
-            deadline_at,
+            of: body.get("for").cloned().unwrap_or(Value::Null),
+            // As it came; what it is held to is the core's to say (`call_receive`).
+            deadline_at: body
+                .get("deadlineAt")
+                .and_then(unsigned)
+                .map_or(0, |at| at.min(i64::MAX as u64) as i64),
         };
-        // Whether it is granted is her host's word on this link, and only that. Before it
-        // has said, the call waits: not handed to the shell, which would be acting on a
-        // grant that may have been taken back, and not answered, which would be refusing
-        // what may be granted.
-        if !self.heard_granted {
-            self.held.push(call);
-            return out;
-        }
         out.extend(self.judge(call, now_ms));
         out
     }
 
-    /// A call this end offers, by what her host has said is granted on this link and by its
-    /// deadline: handed to the shell, or answered why not.
+    /// A call her host asks, or one that waited for its word on what is granted: handed to
+    /// the shell, kept waiting, or answered why not.
     fn judge(&mut self, call: Held, now_ms: i64) -> Vec<Output> {
         // One that was answered while it waited (handed back as lost) stays answered, and
         // one already in hand is not handed over again.
@@ -2559,22 +2532,36 @@ impl Session {
         {
             return self.answer(&before.call_id, before.result, now_ms);
         }
-        // What this end offers may have changed while the call waited: only what it offers
-        // now. And only what her host said is granted, at the version it said: what an end
-        // offers is what it can do, not what the owner allowed.
-        let named = (call.action.clone(), call.version);
-        let refusal = if !self.offers.contains(&named) {
-            Some("call_unknown")
-        } else if !self.granted.contains(&named) {
-            Some("call_not_granted")
-        } else if self.host_now(now_ms) >= call.deadline_at {
-            Some("call_timeout")
-        } else {
-            None
-        };
-        if let Some(code) = refusal {
-            let result = failed(&call.call_id, &call.action, call.version, code);
-            return self.answer(&call.call_id, result, now_ms);
+        // What is done with it is the shared core's to say, the same for every end
+        // (`myriad_her_link::call_receive`): by what this end offers now (it may have changed
+        // while the call waited), by her host's word on this link on what is granted, and
+        // only that, and by the deadline on her host's clock. Before her host has said, the
+        // call waits: not handed to the shell, which would be acting on a grant that may
+        // have been taken back, and not answered, which would be refusing what may be
+        // granted. A deadline further than its action may be given is cut short, not refused.
+        let received = myriad_her_link::call_receive(
+            &call.action,
+            call.version,
+            &call.of,
+            call.deadline_at.max(0) as u64,
+            self.host_now(now_ms).max(0) as u64,
+            &self.offers,
+            &[],
+            self.heard_granted.then_some(&self.granted[..]),
+        );
+        let mut call = call;
+        call.deadline_at = received.deadline_at.min(i64::MAX as u64) as i64;
+        match received.verdict {
+            myriad_her_link::CallVerdict::Do => {}
+            myriad_her_link::CallVerdict::Hold => {
+                self.held.push(call);
+                return Vec::new();
+            }
+            // The version said back is the one this end does.
+            myriad_her_link::CallVerdict::Fail(code) => {
+                let result = failed(&call.call_id, &call.action, received.version, code);
+                return self.answer(&call.call_id, result, now_ms);
+            }
         }
         self.doing.push(Doing {
             call_id: call.call_id.clone(),

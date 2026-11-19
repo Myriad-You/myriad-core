@@ -211,6 +211,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | --- | --- |
 | `link.check` | `{frame, roles?}` → `{accepted: {t, family, delivery, canonical}}` 或 `{refused: {code, detail}}`；`code` 是契约 `errorCodes` 里的一个；`roles` 是发送方的角色（`device`、`host`、`mind`、`server`），不给就不查 |
 | `link.encode` | `{frame}` → `{text}`：要发的帧检查过后的规范文本；不通过是 `bad_input` |
+| `link.call_receive` | `{action, version, for, deadlineAt, takenAt, offers, refused?, granted}` → `{verdict, code, version, deadlineAt}`：收到一个 `call.ask` 该怎么办（见下面「收到调用怎么判」） |
 | `link.child_new` | `{capabilities, app: {name, version}, lineage?, hostEpoch?, offers?, coreCommit?, text?}` → `{state}`：子机的一个连接会话，还没连上（见「子机核心」） |
 | `link.child_step` | `{state, now, event, text?}` → `{state, outputs, phase, hostCapabilities}`：会话遇到一件事。`now` 是微秒；`event` 和 `outputs` 见「子机核心」 |
 | `link.child_after` | `{close: {code?, reason?}}` 或 `{http: {status, body?}}`，可带 `attempt` → `{then: "reconnect" \| "stop", down}` 或 `{then: "forget", removal}`，带了 `attempt` 就多一项 `backoffMs` |
@@ -491,6 +492,32 @@ func step(_ event: JSON) throws {
 这些码是这一端本地的，不上线；`owned`、`not_sender`、`not_accepted`、`link_down`、`passthrough_off` 不是契约的错误码。
 
 核心的帧检查不看「这一端现在持没持笔」（会话调检查时不给角色，`crates/myriad-link-child/src/frames.rs`）：`mind` 发的帧（`chat.say`、`group.say`、`lease.yield` 等）经口子照发，该不该收由主机判断。
+
+### 收到调用怎么判（`link.call_receive`）
+
+收到一个 `call.ask` 是做、是先搁着、还是答掉，判定只有一处：`myriad_her_link::call_receive`。子机核心的会话调它；自己写连接的端（不经会话）经 C 入口的 `link.call_receive` 调它。两边不会分叉。
+
+输入：
+
+- `action`、`version`、`for`、`deadlineAt`：`call.ask` 里的。
+- `takenAt`：这一端收下它的时刻，主机的钟，毫秒。
+- `offers`：这一端会做的动作，`[{name, version}]`。
+- `refused`：这一端会做、但这一端自己的授予现在不让的（主人在设备上把它关了），可以不给。关着的动作照样在 `call.offer` 里报：契约说报的是「能做」，不是「主人允许」。
+- `granted`：主机在这条连接上说过授予的（`call.granted` 的 `actions`）；还没说过就是 `null`。
+
+输出：`verdict` 是 `hold`（先搁着：不做也不答，等这条连接的 `call.granted` 到了带着它再问一次）、`do`、或 `fail`（`code` 是契约 `calls.failCodes` 里的一个；别的时候 `code` 是 `null`）。`version` 是答复里写的版本：一般是问的那一版，`version_unsupported` 时是这一端做的那一版。`deadlineAt` 是这个调用守的期限，超过这个动作允许的最长时间的已经截短。
+
+判的顺序：
+
+1. `offers` 和 `refused` 里都没有这个动作：`call_unknown`。
+2. 有，但版本不是问的那一版：`version_unsupported`。
+3. 这个动作不是给 `for` 说的对象的：`wrong_audience`。
+4. `granted` 是 `null`：`hold`。前三样在主机说话之前就答，因为不管授予什么它们都不会变。
+5. 在 `refused` 里，或不在 `granted` 里：`call_not_granted`。契约这个码本来就包两种：主人没在这里批准，或这一端自己的授予不让。`refused` 里的动作同时也在 `offers` 里时，按 `refused` 算。
+6. `takenAt` 已经到了期限：`call_timeout`。
+7. 否则 `do`。
+
+它只管判。去重（同一个 `callId` 再来）、搁着的调用存在哪、到期叫停、结果的可靠送达，会话里有现成的；自己写连接的端要自己做。对照例子在 `crates/conformance/v1/link/call_receive.json`，每种答法至少一条。
 
 ### 能力清单要是真的
 

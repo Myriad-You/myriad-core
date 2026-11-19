@@ -11,6 +11,7 @@ use crate::STATUS_BAD_INPUT;
 
 pub(super) const TESTED: &[&str] = &[
     "conformance.host",
+    "link.call_receive",
     "link.check",
     "link.child_after",
     "link.child_claims",
@@ -32,6 +33,47 @@ fn every_link_case_answers_through_the_c_entry_point() {
         }
         assert_eq!(got, case["output"], "{}", case["name"]);
     }
+}
+
+#[test]
+fn every_call_receive_case_answers_through_the_c_entry_point() {
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/link/call_receive.json");
+    let file: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    assert_eq!(file["call"], "link.call_receive");
+    let mut said = std::collections::BTreeSet::new();
+    for case in file["cases"].as_array().unwrap() {
+        let got = ok("link.call_receive", case["input"].clone());
+        assert_eq!(got, case["output"], "{}", case["name"]);
+        // A case is named after what it answers.
+        let what = got["code"].as_str().or(got["verdict"].as_str()).unwrap();
+        assert!(
+            case["name"]
+                .as_str()
+                .unwrap()
+                .starts_with(&format!("{what}:")),
+            "{}",
+            case["name"]
+        );
+        said.insert(what.to_string());
+    }
+    // Every way it can answer has a case.
+    let every = [
+        "call_not_granted",
+        "call_timeout",
+        "call_unknown",
+        "do",
+        "hold",
+        "version_unsupported",
+        "wrong_audience",
+    ];
+    assert_eq!(said.into_iter().collect::<Vec<_>>(), every);
+    // What is not the call's input is bad input, and says nothing of it.
+    let mut bad = file["cases"][0]["input"].clone();
+    bad["other"] = json!("a value");
+    let (status, answer) = ffi("link.call_receive", &bad);
+    assert_eq!(status, STATUS_BAD_INPUT);
+    assert!(!answer.to_string().contains("a value"));
 }
 
 #[test]
