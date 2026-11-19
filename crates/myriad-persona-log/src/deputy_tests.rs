@@ -283,33 +283,67 @@ fn two_interim_hosts_both_keep_every_row_and_mark_what_they_touched() {
 }
 
 // 6. The first back, the server issued a new epoch; the second back later:
-//    its rows are still taken (its own epoch did not go down) and
-//    concurrent.
+//    its rows are still taken (its own epoch did not go down, though the
+//    Mac has rows of the new one) and concurrent, and folded, the object
+//    is marked and keeps every row.
 #[test]
 fn the_second_interim_host_back_after_a_new_epoch_still_has_its_rows_taken() {
-    let (_, epochs) = admitted(
-        vec![her("m1", "dev_mac", 1, ISSUED + 2 * HOUR, "node:a")],
+    // Before the server went out of reach, the Windows side had sent one row
+    // under its deputy (it was interim earlier the same day).
+    let (first, epochs) = admitted(
+        vec![
+            her("w1", "dev_win", 1, ISSUED + HOUR, "node:a"),
+            her("m1", "dev_mac", 1, ISSUED + 2 * HOUR, "node:a"),
+        ],
         Epochs::new(),
     );
+    assert_eq!(epochs[OWNER]["dev_win"], 58);
+    // The Mac back first: the server hands it 59, and it writes at it.
     let next = Grant {
         epoch: 59,
-        holder: Some("site".into()),
+        holder: Some("dev_mac".into()),
         issued: rev(ISSUED_MS + 5 * 3_600_000, "site"),
-        how: How::Takeover,
+        how: How::Handover,
         from: Some("site".into()),
         through: None,
         moving: None,
     };
-    // A takeover from itself does not check; the new epoch is the server's.
-    let next = Grant { from: None, ..next };
-    let grants = [site_holds(58), next];
-    let late = her("w1", "dev_win", 1, ISSUED + 3 * HOUR, "node:a");
-    let (accepted, epochs) = admitted(vec![late], epochs);
-    assert_eq!(epochs[OWNER]["dev_win"], 58);
-    assert_eq!(
-        lease::standing(&accepted[0], &grants, &[deputy("dev_win", 2)]),
-        Stand::Concurrent
+    let mut at_59 = her("m2", "dev_mac", 2, ISSUED + 6 * HOUR, "node:a");
+    at_59.epoch = Some(59);
+    let (mac, epochs) = admitted(vec![at_59], epochs);
+    // The Windows side back later, with what it wrote meanwhile at 58.
+    let (late, epochs) = admitted(
+        vec![her("w2", "dev_win", 2, ISSUED + 3 * HOUR, "node:a")],
+        epochs,
     );
+    assert_eq!(late.len(), 1, "its own epoch did not go down");
+    assert_eq!(epochs[OWNER]["dev_win"], 58);
+    let mut rows = first;
+    rows.extend(mac);
+    rows.extend(late);
+    let folded = fold(FoldInput {
+        rows,
+        leases: vec![site_holds(58), next],
+        deputies: vec![deputy("dev_mac", 1), deputy("dev_win", 2)],
+        ledger: Vec::new(),
+    })
+    .unwrap();
+    let marked: Vec<(&str, Stand, Option<u64>)> = folded
+        .standing
+        .iter()
+        .map(|s| (s.id.as_str(), s.standing, s.with))
+        .collect();
+    assert_eq!(
+        marked,
+        [
+            ("w1", Stand::Concurrent, Some(58)),
+            ("m1", Stand::Concurrent, Some(58)),
+            ("w2", Stand::Concurrent, Some(58)),
+        ]
+    );
+    assert_eq!(folded.objects.len(), 1);
+    assert!(folded.objects[0].concurrent);
+    assert_eq!(folded.objects[0].rows, ["w1", "m1", "w2", "m2"]);
 }
 
 #[test]
@@ -345,8 +379,8 @@ fn a_deputy_is_for_a_side_under_an_epoch_and_runs_a_day_at_most() {
         ..deputy("dev_mac", 1)
     };
     assert_eq!(longest.check(), Ok(()));
-    // One that does not check is refused when it would be used, and only
-    // then: the holder itself, and a child without one, read as before.
+    // One that does not check (a newer server's, say) is as none: a child,
+    // never an error that leaves the side not knowing what it is.
     let bad = At {
         deputy: Some(Deputy {
             order: 0,
@@ -354,20 +388,7 @@ fn a_deputy_is_for_a_side_under_an_epoch_and_runs_a_day_at_most() {
         }),
         ..cut_off(ISSUED + 2 * HOUR)
     };
-    assert!(
-        lease::here(HereInput {
-            me: "dev_mac".into(),
-            lease: Some(site_holds(58)),
-            now: bad.now,
-            disconnected_since: None,
-            owner_here_at: bad.owner_here_at,
-            stop_after: None,
-            stopped_at: None,
-            deputy: bad.deputy,
-            host_unreachable_since: bad.unreachable_since,
-        })
-        .is_err()
-    );
+    assert_eq!(here_at("dev_mac", bad), Here::Child);
 }
 
 /// Without a deputy, `here` answers exactly as before deputies: a child

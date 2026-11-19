@@ -535,6 +535,10 @@ pub struct HereInput {
     /// connected): she thinks there alone, at epoch [`ALONE`].
     #[serde(default)]
     pub lease: Option<Grant>,
+    /// This side's clock. A side that may be interim gives it as its rows
+    /// read it (the wall of the revision it would stamp next, never behind
+    /// real time): the server marks its rows by their clock against the
+    /// deputy's `until`, so it stops when they would no longer be covered.
     pub now: i64,
     /// Since when this side has been cut off from the server; absent while
     /// it is connected.
@@ -626,12 +630,18 @@ pub fn here(input: HereInput) -> Result<Here, LogError> {
 /// A side that does not hold the lease: a child, or her interim host when
 /// its deputy is for it and for the epoch that stands, has not run out,
 /// the holder has been out of its reach for the stop time, and the owner
-/// was here within it. Without a deputy, a child as ever.
+/// was here within it. Without a deputy, or with one that does not
+/// check, a child as ever.
 fn interim(input: &HereInput, lease: &Grant) -> Result<Here, LogError> {
-    let Some(deputy) = &input.deputy else {
+    // One that does not check (from a newer server, say) is as none: a
+    // child, as without one, never an error that leaves it not knowing.
+    let Some(deputy) = input
+        .deputy
+        .as_ref()
+        .filter(|deputy| deputy.check().is_ok())
+    else {
         return Ok(Here::Child);
     };
-    deputy.check()?;
     let stop = stop_after(input.stop_after)?;
     let (Some(cut_off), Some(owner_here_at)) = (input.host_unreachable_since, input.owner_here_at)
     else {

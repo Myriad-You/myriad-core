@@ -370,9 +370,9 @@
         "now": 1760003780000000,
         "ownerHereAt": 1760003720000000
       },
-      "name": "a deputy that runs longer than a day is refused",
+      "name": "a deputy that runs longer than a day is as none: a child",
       "output": {
-        "error": "bad_input"
+        "state": "child"
       }
     }
   ],

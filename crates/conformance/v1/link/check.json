@@ -3014,6 +3014,37 @@
           "code": "bad_frame"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760140800150,
+          "body": {
+            "epoch": 58,
+            "holder": "site",
+            "how": "handover",
+            "issued": "001760140880000-000000-site",
+            "stopAfter": 180000000
+          },
+          "seq": 15,
+          "t": "lease.epoch",
+          "v": 1
+        },
+        "roles": [
+          "host",
+          "server"
+        ]
+      },
+      "name": "lease.epoch with the standing grant's issued, to an end that listed deputy",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760140800150,\"body\":{\"epoch\":58,\"holder\":\"site\",\"how\":\"handover\",\"issued\":\"001760140880000-000000-site\",\"stopAfter\":180000000},\"seq\":15,\"t\":\"lease.epoch\",\"v\":1}",
+          "delivery": "latest",
+          "family": "lease",
+          "t": "lease.epoch"
+        }
+      }
     }
   ],
   "version": 1
