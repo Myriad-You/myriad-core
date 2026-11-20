@@ -156,6 +156,7 @@ struct Contract {
     act_statuses: Vec<String>,
     work_statuses: Vec<String>,
     drop_reasons: Vec<String>,
+    refuse_reasons: Vec<String>,
     streams: Streams,
 }
 
@@ -172,6 +173,7 @@ fn named_list(name: &str) -> Option<&'static [String]> {
     match name {
         "actStatuses" => Some(&CONTRACT.act_statuses),
         "dropReasons" => Some(&CONTRACT.drop_reasons),
+        "refuseReasons" => Some(&CONTRACT.refuse_reasons),
         "noticeKinds" => Some(&CONTRACT.notice_kinds),
         "sayKinds" => Some(&CONTRACT.say_kinds),
         "workStatuses" => Some(&CONTRACT.work_statuses),
@@ -580,6 +582,36 @@ fn check_stream(t: &str, body: &Value) -> Result<(), Refusal> {
         return Err(refuse(
             "bad_frame",
             "link.dropped's t is a frame type (limits.idPattern) or unnamed",
+        ));
+    }
+    if name == "log.refused" {
+        check_refused(held)?;
+    }
+    Ok(())
+}
+
+/// `log.refused`: of an audience (limits.idPattern), at least one row and
+/// no more than a batch carries.
+fn check_refused(body: &Value) -> Result<(), Refusal> {
+    if !body["audience"].as_str().is_some_and(valid_id) {
+        return Err(refuse(
+            "bad_frame",
+            "log.refused's audience matches limits.idPattern",
+        ));
+    }
+    let most = CONTRACT
+        .frames
+        .get("log.rows")
+        .and_then(|spec| spec.max_items.get("rows"))
+        .copied()
+        .unwrap_or(0) as u64;
+    if !body["rows"]
+        .as_u64()
+        .is_some_and(|rows| (1..=most).contains(&rows))
+    {
+        return Err(refuse(
+            "bad_frame",
+            format!("log.refused's rows is a whole number from 1 to {most}"),
         ));
     }
     Ok(())

@@ -2466,6 +2466,229 @@
           "body": {
             "at": 1760141100000,
             "body": {
+              "audience": "personal:partner_a1",
+              "reason": "epoch_back",
+              "rows": 3
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b1_epoch_back",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a child tells its host how many rows of a batch it did not take, and why",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"at\":1760141100000,\"body\":{\"audience\":\"personal:partner_a1\",\"reason\":\"epoch_back\",\"rows\":3},\"name\":\"log.refused\",\"version\":1},\"id\":\"refused_b1_epoch_back\",\"seq\":18,\"t\":\"stream.event\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "stream",
+          "t": "stream.event"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "audience": "own:",
+              "reason": "batch",
+              "rows": 256
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b2_batch",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a child tells its host it refused a batch whole",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"at\":1760141100000,\"body\":{\"audience\":\"own:\",\"reason\":\"batch\",\"rows\":256},\"name\":\"log.refused\",\"version\":1},\"id\":\"refused_b2_batch\",\"seq\":18,\"t\":\"stream.event\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "stream",
+          "t": "stream.event"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "audience": "own:",
+              "reason": "did_not_like_it",
+              "rows": 1
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b3",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a refusal's reason is one of refuseReasons",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "audience": "own:",
+              "detail": "她说的那句话",
+              "reason": "envelope",
+              "rows": 1
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b4",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a refusal carries no detail of a row",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "audience": "own:",
+              "reason": "local",
+              "rows": 0
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b5",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a refusal names at least one row",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "audience": "own:",
+              "reason": "local",
+              "rows": 257
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b6",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a refusal names no more rows than a batch carries",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
+              "reason": "not_held",
+              "rows": 1
+            },
+            "name": "log.refused",
+            "version": 1
+          },
+          "id": "refused_b7",
+          "seq": 18,
+          "t": "stream.event",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a refusal names its audience",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "at": 1760141100000,
+            "body": {
               "reason": "bad_frame",
               "t": "say",
               "text": "你好"
