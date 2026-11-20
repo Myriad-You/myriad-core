@@ -24,8 +24,8 @@
 
 - 有两种 `lease` 帧按契约不只属于第 4 层：`lease.place`（`from` 是 `device`，任何一端都报自己在哪个现场、主人在不在）和 `lease.epoch`（「发给每台设备」，设备靠它显示她在哪）。它们是同步族的帧，所以没开口子的第 1、2 层的端发不了 `lease.place`（`passthrough_off`），收到 `lease.epoch` 时只会拿到 `unread`。站点线核过：
   - 同步开不开是按账号定的，不看这一端存不存日志。账号开了同步，一个只做第 1、2 层的端也会拿到 `welcome.sync` 是 `on`，也会收到 `lease.epoch` 和别的同步族的帧。没开口子时，每来一帧外壳都拿到一个 `unread`（`unknown_frame`）；这是意料之中的，按类型记一次就行，不要当成故障反复提示。
-  - `lease.place` 今天不用报：站点会收，但只有「把她交给设备」的判断读它，而她现在只住在站点上，那条路是关着的。
-  - 站点一侧打算改（还没改）：让不存日志的端只收 `lease.epoch`、不收别的同步帧。改了以后上面第一条会变。
+  - `lease.place` 今天报了也不改变任何事：在同步的连接上站点会收，但只有「把她交给设备」的判断读它，而她现在只住在站点上，那条路是关着的。所以第 1、2 层的端不用为它开口子；第 4 层的端照契约照发（第 5 节）。
+  - 站点线把这一条列为待补（没改，做法也没定）：或者站点按端区分，让不存日志的端只收 `lease.epoch`；或者契约把 `lease.epoch` 移出同步族。定了以后上面第一条会变。
 - **桌面端**是 `pc`，四层都可能做。
 - **iOS** 按今天的规定是 `child`，做第 1、2 层。iOS 要不要做第 3、4 层不是这一页能定的：那是改 `holder` 的规定，等于改所有端。uncertain：我没找到关于 iOS 的单独决定。
 
@@ -114,7 +114,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
   - `hello` 到 `welcome` 就是一次往返：发 `hello` 的本地时刻、`welcome.serverTime`、收到 `welcome` 的本地时刻。
   - `ping` 到 `pong` 也是：发 `ping` 的本地时刻、`pong` 信封的 `at`、收到 `pong` 的本地时刻。
   - **单位不一样，要换算。** `welcome.serverTime` 和信封的 `at` 是毫秒，交给 `log.clock_offset` 前乘 1000；`clock_ahead` 错误里的 `serverTime` 本来就是微秒（契约 `frames.error`）。
-  - 走会话的端用 `welcome` 那一次最省事：`welcome` 交付不带 `serverTime`，心跳也不交给外壳，但每段文本都经外壳的手，`serverTime` 或 `pong` 的 `at` 要外壳自己从原文里读。uncertain：macOS 端现在用哪一种，没人读过。
+  - 走会话的端用 `welcome` 那一次最省事：`welcome` 交付不带 `serverTime`，心跳也不交给外壳，但每段文本都经外壳的手，`serverTime` 或 `pong` 的 `at` 要外壳自己从原文里读；用 `ping` 那一种的话，会话发出去的 `ping` 也要外壳自己从要写的文本里认出来。uncertain：macOS 端现在用哪一种，没人读过。
 
 ### 一轮同步
 
@@ -123,7 +123,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 1. **报你有什么。** `log.holdings` 从你的行算出 `{vector, beyond?}`，发 `log.vector`（`{audience, vector, beyond?, ask?}`）。`welcome` 之后每个受众发一次。
 2. **对方发你缺的。** 它发来 `log.rows`（可靠帧）。每一批交给 `nodes.wire_take`，它做完全部检查，告诉你收下了哪些、拒了哪些、哪些 body 要再要（`ask`）。收下的用 `log.merge` 并进你的日志。落库后对这一帧 `took`。
 3. **你发对方缺的。** 收到对方的 `log.vector` 时，用 `nodes.wire_send` 算出要发的批，每一批是一条 `log.rows`。它要的输入：这个受众和你的行、对方的向量 `theirs`、对方的 `ask` 和 `beyond`、对方是谁（`holder`）、你自己的 id（`here`）、你的账（`ledger`）、对方的 `peerAbi`。对主机的 `peerAbi` 从它在 `welcome` 里接受的能力算：有 `log4` 是 4，有 `log3` 是 3，有 `log2` 是 2，否则 1（契约 `frames.welcome`）。给错了要么什么都不发（`tooOld`），要么发出对方读不懂的行。`log.rows` 可以用 `keep: false` 发：它丢了能从下一轮的 `log.vector` 补回来，不必压在会话的待发箱里。
-4. **对方有你没有的，就回问。** 收到的 `log.vector` 显示对方有你缺的行时（`log.missing` 给 `{mine, theirs}`，答的是 `theirs` 有而 `mine` 没有的），回一条你自己的 `log.vector`，对方才知道该发什么给你。契约的原话是 `log.vector` 也「作为对一条 `log.vector` 的回答」发。**只在 `log.missing` 说对方有你缺的行时才回；两边向量相同绝不回。** 站点自己不防来回（站点线核过）：它对收到的每一条 `log.vector` 都回一条自己的，收完行也回。端要是每条都回，两边就会没完没了地互发。
+4. **对方有你没有的，就回问。** 收到的 `log.vector` 显示对方有你缺的行时（`log.missing` 给 `{mine, theirs}`，答的是 `theirs` 有而 `mine` 没有的），回一条你自己的 `log.vector`，对方才知道该发什么给你。契约的原话是 `log.vector` 也「作为对一条 `log.vector` 的回答」发。**回答一条收到的向量时，只在 `log.missing` 说对方有你缺的行时才回；两边向量相同绝不回。** 站点自己不防来回（站点线核过）：它对收到的每一条 `log.vector` 都回一条自己的，收完行也回（只有翻页时一页还在路上、或一页没有进展，它不回）。端要是每条都回，两边就会没完没了地互发。这条规矩只管「回答」：你自己有理由发的向量照发，不受它限制——`welcome` 之后的那一条、带 `after` 的、带着 `ask` 要 body 的、`log.full` 并完之后的、被 `behind` 断开重连后的。
 
 ### 一页一页地翻（`log.pages`）
 
@@ -267,7 +267,7 @@ git log 1c21bff..<要钉的提交> -- crates/myriad-link-child crates/myriad-her
 - [ ] 每句话一个新的回合 id。断线时主人说的话照样交给会话。
 - [ ] 存下每次 `welcome` 的 `lineage`、`hostEpoch`，下次传回。
 - [ ] 经 C 入口时：时间是微秒；某一步失败就留着旧状态；JSON 库把数都当双精度的，两个调用都带 `text: true`。
-- [ ] 拿到 `unsent` 告诉主人这句没发出去；拿到 `unread` 记日志、提示版本不齐。
+- [ ] 拿到 `unsent` 告诉主人这句没发出去；拿到 `unread` 记日志、提示版本不齐。例外：没开口子的端在 `welcome.sync` 是 `on` 时收到的同步族帧也是 `unread`（`unknown_frame`），那不是版本不齐，按类型记一次就行（见「先定你是哪一种端」）。
 - [ ] 能力清单的测试：`link.child_claims` 的 `unread` 是空的。
 - [ ] `v1/child/` 里不带 `passthrough` 的剧本全过；`v1/link/` 的用例全过。
 
@@ -285,6 +285,8 @@ git log 1c21bff..<要钉的提交> -- crates/myriad-link-child crates/myriad-her
 - [ ] 能力里说 `partner`（不说，`welcome` 里就没有伙伴的 id），和你的核心相符的 `log2`、`log3`、`log4`，以及 `log.pages`。
 - [ ] 因为等确认的满了被断开（`behind`）之后，重连上要重新发 `log.vector`：`log.rows` 主机不会自己重发。
 - [ ] `welcome` 后每个受众发 `log.vector`；收用 `nodes.wire_take` 加 `log.merge`；发用 `nodes.wire_send`。
+- [ ] 回答收到的 `log.vector`：只在 `log.missing` 非空时回，两边相同绝不回。
+- [ ] 时钟偏移用 `hello` 到 `welcome` 那一次往返量，`welcome.serverTime` 是毫秒，交给 `log.clock_offset` 前乘 1000。
 - [ ] 翻页：了结带 `more` 的批之后才发带 `after` 的 `log.vector`；自己发页时一页没翻完不重发。
 - [ ] `v2/log/`、`v2/nodes/`、`v1/partner/` 的用例全过；带 `passthrough` 的剧本全过。
 
