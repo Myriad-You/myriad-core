@@ -2,7 +2,7 @@
 //! cases) run here through the crate, and through the C entry point in
 //! `myriad-core-ffi`; another platform runs the same files through its own
 //! runtime. Below them, the properties the files only sample: forgetting in
-//! any order, union in any order, and a takeover never leaving two minds.
+//! any order, and union in any order.
 //!
 //! `MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` rewrites
 //! every case's `output` after a deliberate change of the rules.

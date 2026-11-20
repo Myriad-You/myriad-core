@@ -255,10 +255,10 @@ pub struct SendInput {
     pub here: String,
     /// The other side's core ABI (`meta.version` `abi`): the highest N for
     /// which its link's `hello` or `welcome` lists the `logN` capability
-    /// (`log4`, `log3`, `log2`), 1 when none. A side below 2 gets nothing
-    /// that carries a merge's or a split's names or a retract, one below 3
-    /// nothing with a rule's row or a `node.standing`, and one below 4 no
-    /// card row and no `segment.line` that carries a card (`tooOld`): its
+    /// (`log5`, `log4`, `log3`, `log2`), 1 when none. A side below 2 gets
+    /// nothing that carries a merge's or a split's names or a retract, one
+    /// below 3 nothing with a rule's row or a `node.standing`, and one below 4
+    /// no card row and no `segment.line` that carries a card (`tooOld`): its
     /// core would refuse the whole batch.
     pub peer_abi: u32,
     /// This side's ledger, required: a node it forgot or took back from

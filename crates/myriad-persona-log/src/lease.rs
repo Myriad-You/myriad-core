@@ -8,9 +8,11 @@
 //! 1. **Handover**: the holder gives it up, with its last count in each
 //!    audience ([`Through`]); the target catches up to them before it
 //!    thinks. A move's commit is one too.
-//! 2. **Force**: the server brings her back to itself from a side that
-//!    held her from before. The old holder may still be running, offline:
-//!    its rows from after the move are folded in and marked ([`standing`]).
+//! 2. **Force**: the server grants her to `to` outright, with no
+//!    [`Through`]; today it uses it only to bring her back to itself from
+//!    a side that held her from before. The old holder may still be
+//!    running, offline: its rows from after the move are folded in and
+//!    marked ([`standing`]).
 //!
 //! Grants of [`How::Takeover`] stay in the history and fold as they did;
 //! the server no longer issues them. A holder cut off from the server stops
@@ -101,6 +103,8 @@ pub enum How {
     /// The first one, when she first lives anywhere.
     First,
     Handover,
+    /// Issued before ABI 5; no longer issued, kept so old grants read and
+    /// fold.
     Takeover,
     Force,
     /// She is moving house: no one holds it ([`Grant::holder`] is none).
@@ -312,8 +316,8 @@ pub enum Request {
         #[serde(default)]
         through: Option<Through>,
     },
-    /// She is brought to `to` (the server, from a side that held her
-    /// from before).
+    /// She is granted to `to` outright, with no [`Through`] (today only the
+    /// server, from a side that held her from before).
     Force { to: String },
     /// She starts moving house (`move`): no one holds it until the move
     /// commits or is called off. The holder's last shared counts go with
@@ -473,8 +477,8 @@ pub struct HereInput {
     /// server has not yet said, since it came back in reach, that the lease
     /// still stands (a `lease.epoch` naming it). Stopped, it stays stopped:
     /// the owner coming back to it while it is cut off, or its coming back
-    /// in reach, does not start her again, since the server may have taken
-    /// her over meanwhile. The caller drops it once the server has said so.
+    /// in reach, does not start her again, since the lease may have moved
+    /// on meanwhile. The caller drops it once the server has said so.
     #[serde(default)]
     pub stopped_at: Option<i64>,
     /// The newest [`Deputy`] the server gave this side, when it gave one.
