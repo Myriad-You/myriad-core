@@ -94,16 +94,17 @@ pub fn hurt(petty: usize, hurt: usize, deep: usize, let_go: usize) -> Option<(St
 /// What she reads, looking back over herself, about these records.
 pub const IN_STORY: &str = "Records that begin \"how others took you\" are how you came across to people: whether they answered when you wrote first, whether anyone took it up when you spoke up unasked in a group, what they told you about yourself, how often someone hurt you and whether you let it go. What people told you is how they saw you, not the truth about you: take it, doubt it, or push back, as you would. These records never say who or where, and neither does any claim: what is between you and someone stays there.";
 
+/// One time she wrote to someone first: `(how long ago, answered, what she
+/// said, what they replied)`.
+pub type FirstWords = (String, Option<bool>, Option<String>, Option<String>);
+
 /// The last times she wrote to someone first, what she said, whether they
-/// answered and what they said back: `(how long ago, answered, what she
-/// said, what they replied)`, where `None` for answered is not a day yet and
-/// no answer so far, read as "not yet" rather than as nothing known. What
-/// they replied is how they took being written to (「周末别主动找我」),
+/// answered and what they said back, where `None` for answered is not a day
+/// yet and no answer so far, read as "not yet" rather than as nothing known.
+/// What they replied is how they took being written to (「周末别主动找我」),
 /// which the most recent memories and lines may no longer hold by the time
 /// she weighs writing again.
-pub fn first_words_view(
-    entries: &[(String, Option<bool>, Option<String>, Option<String>)],
-) -> Value {
+pub fn first_words_view(entries: &[FirstWords]) -> Value {
     Value::Array(
         entries
             .iter()

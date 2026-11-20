@@ -168,7 +168,7 @@ pub(super) fn first_words_view(raw: &[u8]) -> Result<Value, Failure> {
         entries: Vec<Entry>,
     }
     let req: In = input(raw)?;
-    let entries: Vec<(String, Option<bool>, Option<String>, Option<String>)> = req
+    let entries: Vec<myriad_merope::others::FirstWords> = req
         .entries
         .into_iter()
         .map(|entry| (entry.ago, entry.answered, entry.said, entry.replied))
