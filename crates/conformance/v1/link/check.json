@@ -4262,7 +4262,7 @@
           "host"
         ]
       },
-      "name": "bad_frame: a batch that says more but carries no rows",
+      "name": "bad_frame: a batch with neither rows nor sealed, even one that says more",
       "output": {
         "refused": {
           "code": "bad_frame"

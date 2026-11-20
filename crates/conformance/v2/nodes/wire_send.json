@@ -7533,7 +7533,7 @@
           "dev_mac": 65
         }
       },
-      "name": "the next page: the other side now holds up to the last row, so the last row and the row asked again for fit, and no more is to go",
+      "name": "the next page: the other side now holds all but the last row, so the last row and the row asked again for fit, and no more is to go",
       "output": {
         "batches": [
           {
@@ -8164,7 +8164,7 @@
         ],
         "theirs": {}
       },
-      "name": "a page of 16 batches, the most, is taken",
+      "name": "a page of at most 16 batches, the most the link lets, is taken",
       "output": {
         "batches": [
           {
