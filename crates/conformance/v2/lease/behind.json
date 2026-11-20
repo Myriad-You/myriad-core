@@ -1,0 +1,102 @@
+{
+  "call": "lease.behind",
+  "cases": [
+    {
+      "input": {
+        "from": "dev_mac",
+        "held": {
+          "own:": {
+            "dev_mac": 3
+          },
+          "personal:o1": {
+            "dev_mac": 40,
+            "site": 12
+          }
+        },
+        "through": {
+          "own:": 3,
+          "personal:o1": 41
+        }
+      },
+      "name": "a handover: the new holder waits for the audience it lacks",
+      "output": {
+        "behind": {
+          "personal:o1": 41
+        }
+      }
+    },
+    {
+      "input": {
+        "from": "dev_mac",
+        "held": {
+          "personal:o1": {
+            "dev_mac": 41
+          }
+        },
+        "through": {
+          "personal:o1": 41
+        }
+      },
+      "name": "caught up: nothing to wait for",
+      "output": {
+        "behind": {}
+      }
+    },
+    {
+      "input": {
+        "from": "dev_mac",
+        "held": {
+          "personal:o1": {
+            "dev_mac": 44
+          }
+        },
+        "through": {
+          "personal:o1": 41
+        }
+      },
+      "name": "holding more than through is caught up too",
+      "output": {
+        "behind": {}
+      }
+    },
+    {
+      "input": {
+        "from": "dev_mac",
+        "held": {},
+        "through": {
+          "group:g42": 5
+        }
+      },
+      "name": "an audience it holds nothing of waits whole",
+      "output": {
+        "behind": {
+          "group:g42": 5
+        }
+      }
+    },
+    {
+      "input": {
+        "from": "dev_mac",
+        "held": {}
+      },
+      "name": "a takeover has no through: nothing to wait for",
+      "output": {
+        "behind": {}
+      }
+    },
+    {
+      "input": {
+        "from": "dev_mac",
+        "held": {},
+        "through": {
+          "personal:o1": 0
+        }
+      },
+      "name": "a through of 0 is refused",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

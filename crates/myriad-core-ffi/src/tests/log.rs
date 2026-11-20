@@ -1,5 +1,5 @@
 //! Her log across host cores: every case in the shared conformance files
-//! (`crates/conformance/v2/log`, `v1/lease`) through the C entry point, as
+//! (`crates/conformance/v2/log`, `v2/lease`) through the C entry point, as
 //! another platform runs them. `myriad-persona-log` runs the same files
 //! through the crate and blesses them.
 
@@ -44,7 +44,7 @@ fn every_conformance_case_answers_through_the_c_entry_point() {
         let mut files: Vec<PathBuf> = std::fs::read_dir(conformance().join(if area == "log" {
             "v2/log"
         } else {
-            "v1/lease"
+            "v2/lease"
         }))
         .unwrap()
         .map(|entry| entry.unwrap().path())

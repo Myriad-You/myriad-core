@@ -149,6 +149,8 @@ pub const RULES: &[Rule] = &[
     bare("log2", Kind::Fields),
     bare("log3", Kind::Fields),
     bare("log4", Kind::Fields),
+    // ABI 5 reads the same rows as 4: said for the versions it shows.
+    bare("log5", Kind::Fields),
     frames("moments", &[], &["moment"], &["moment.taken"]),
     frames("nodes", &[], &["node.forget"], &["nodes"]),
     frames("notify", &[], &[], &["notice"]),

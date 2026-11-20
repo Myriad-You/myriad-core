@@ -1,0 +1,292 @@
+{
+  "call": "lease.move",
+  "cases": [
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 4,
+            "from": "dev_mac",
+            "through": {
+              "personal:o1": 52
+            },
+            "to": "site"
+          }
+        }
+      },
+      "name": "the holder hands it over",
+      "output": {
+        "granted": {
+          "epoch": 5,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001760001800000-000000-site",
+          "through": {
+            "personal:o1": 52
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 4,
+            "from": "dev_win",
+            "to": "site"
+          }
+        }
+      },
+      "name": "refused: a handover from a side that does not hold it",
+      "output": {
+        "refused": "not_holder"
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 3,
+            "from": "dev_mac",
+            "to": "site"
+          }
+        }
+      },
+      "name": "refused: a handover of an epoch that no longer stands",
+      "output": {
+        "refused": "stale_epoch"
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 4,
+            "from": "dev_mac",
+            "to": "dev_mac"
+          }
+        }
+      },
+      "name": "refused: a handover to itself",
+      "output": {
+        "refused": "already_holder"
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "force": {
+            "to": "dev_win"
+          }
+        }
+      },
+      "name": "the owner brings her here",
+      "output": {
+        "granted": {
+          "epoch": 5,
+          "from": "dev_mac",
+          "holder": "dev_win",
+          "how": "force",
+          "issued": "001760001800000-000000-site"
+        }
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "force": {
+            "to": "dev_mac"
+          }
+        }
+      },
+      "name": "refused: forcing her where she is",
+      "output": {
+        "refused": "already_holder"
+      }
+    },
+    {
+      "input": {
+        "issued": "001759999999999-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "force": {
+            "to": "dev_win"
+          }
+        }
+      },
+      "name": "refused: a grant issued before the one standing",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 4,
+            "from": "dev_mac",
+            "through": {
+              "group:g1": 3,
+              "own:": 7,
+              "personal:o1": 52
+            },
+            "to": "site"
+          }
+        }
+      },
+      "name": "a handover carries the holder's last count in each audience it wrote in",
+      "output": {
+        "granted": {
+          "epoch": 5,
+          "from": "dev_mac",
+          "holder": "site",
+          "how": "handover",
+          "issued": "001760001800000-000000-site",
+          "through": {
+            "group:g1": 3,
+            "own:": 7,
+            "personal:o1": 52
+          }
+        }
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 4,
+            "from": "dev_mac",
+            "through": {
+              "own:": 0,
+              "personal:o1": 52
+            },
+            "to": "site"
+          }
+        }
+      },
+      "name": "refused: a handover's through names an audience with nothing in it",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "issued": "001760001800000-000000-site",
+        "lease": {
+          "epoch": 4,
+          "holder": "dev_mac",
+          "how": "handover",
+          "issued": "001760000000000-000000-site",
+          "through": {
+            "personal:o1": 40
+          }
+        },
+        "request": {
+          "handover": {
+            "epoch": 4,
+            "from": "dev_mac",
+            "through": {
+              "o1": 4,
+              "personal:o1": 52
+            },
+            "to": "site"
+          }
+        }
+      },
+      "name": "refused: a handover's through names something that is not an audience",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
