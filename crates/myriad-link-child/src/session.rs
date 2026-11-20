@@ -813,10 +813,11 @@ impl Session {
     pub const KEPT_TURNS: usize = 64;
     pub const KEPT_TAKEN: usize = 256;
     /// The most `stream.event` frames and frames of the shell's own ([`Session::pass`])
-    /// kept until acked, together. The one event a child sends today is the session's own
-    /// `link.dropped`, at most [`Self::KEPT_DROPPED`] kinds on a link: this is eight links'
-    /// worth of them never acked, and as many ids as an end remembers of what it took
-    /// ([`Self::KEPT_TAKEN`]).
+    /// kept until acked, together. The session's own `link.dropped` is at most
+    /// [`Self::KEPT_DROPPED`] kinds on a link: this is eight links' worth of them never acked,
+    /// and as many ids as an end remembers of what it took ([`Self::KEPT_TAKEN`]). The shell's
+    /// `log.refused` is at most six for a batch the host sent, again only as often as the host
+    /// sends that batch again.
     pub const KEPT_EVENTS: usize = 256;
 
     /// The host's frame types this session reads; any other is passed by

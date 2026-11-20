@@ -156,6 +156,7 @@ struct Contract {
     act_statuses: Vec<String>,
     work_statuses: Vec<String>,
     drop_reasons: Vec<String>,
+    log_audiences: Vec<String>,
     refuse_reasons: Vec<String>,
     streams: Streams,
 }
@@ -173,6 +174,7 @@ fn named_list(name: &str) -> Option<&'static [String]> {
     match name {
         "actStatuses" => Some(&CONTRACT.act_statuses),
         "dropReasons" => Some(&CONTRACT.drop_reasons),
+        "logAudiences" => Some(&CONTRACT.log_audiences),
         "refuseReasons" => Some(&CONTRACT.refuse_reasons),
         "noticeKinds" => Some(&CONTRACT.notice_kinds),
         "sayKinds" => Some(&CONTRACT.say_kinds),
@@ -590,15 +592,9 @@ fn check_stream(t: &str, body: &Value) -> Result<(), Refusal> {
     Ok(())
 }
 
-/// `log.refused`: of an audience (limits.idPattern), at least one row and
-/// no more than a batch carries.
+/// `log.refused`: at least one row and no more than a batch carries (its
+/// kind and reason are checked as enums).
 fn check_refused(body: &Value) -> Result<(), Refusal> {
-    if !body["audience"].as_str().is_some_and(valid_id) {
-        return Err(refuse(
-            "bad_frame",
-            "log.refused's audience matches limits.idPattern",
-        ));
-    }
     let most = CONTRACT
         .frames
         .get("log.rows")

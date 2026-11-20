@@ -86,3 +86,64 @@ fn the_longest_deputy_is_the_contracts() {
     let most_ms = contract["timing"]["deputyMaxMs"].as_i64().unwrap();
     assert_eq!(most_ms * 1000, myriad_persona_log::lease::DEPUTY_MAX_MICROS);
 }
+
+/// The reasons a child tells its host it refused rows for (`log.refused`)
+/// are the reasons `log.admit` refuses a row for, by the same names, and
+/// the two of a batch refused whole; its kinds are the kinds of audience.
+/// A reason or a kind added here fails to compile until the contract has it.
+#[test]
+fn the_reasons_rows_are_refused_for_are_the_contracts() {
+    use myriad_persona_log::admit::Reason;
+    use myriad_persona_log::row::Audience;
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../shared/her_link_contract.json");
+    let contract: Value = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let listed = |key: &str| -> Vec<String> {
+        contract[key]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|one| one.as_str().unwrap().to_string())
+            .collect()
+    };
+    let reasons = [
+        Reason::Envelope,
+        Reason::Local,
+        Reason::AudienceChanged,
+        Reason::NotAMember,
+        Reason::EpochBack,
+        Reason::NotHeld,
+    ];
+    for reason in reasons {
+        match reason {
+            Reason::Envelope
+            | Reason::Local
+            | Reason::AudienceChanged
+            | Reason::NotAMember
+            | Reason::EpochBack
+            | Reason::NotHeld => {}
+        }
+    }
+    let mut named: Vec<String> = reasons
+        .iter()
+        .map(|reason| {
+            serde_json::to_value(reason)
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string()
+        })
+        .collect();
+    named.extend(["clock_ahead".to_string(), "batch".to_string()]);
+    assert_eq!(listed("refuseReasons"), named);
+    let kinds: Vec<String> = ["personal:a", "own:", "group:g"]
+        .into_iter()
+        .map(|raw| match Audience::parse(raw).unwrap() {
+            Audience::Personal(_) => "personal",
+            Audience::Own => "own",
+            Audience::Group(_) => "group",
+        })
+        .map(str::to_string)
+        .collect();
+    assert_eq!(listed("logAudiences"), kinds);
+}

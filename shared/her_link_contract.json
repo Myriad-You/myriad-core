@@ -198,6 +198,7 @@
   "actStatuses": ["completed", "failed", "cancelled", "timeout"],
   "workStatuses": ["completed", "failed"],
   "dropReasons": ["unknown_frame", "bad_frame", "version_unsupported", "too_large"],
+  "logAudiences": ["personal", "own", "group"],
   "refuseReasons": ["envelope", "local", "audience_changed", "not_a_member", "epoch_back", "not_held", "clock_ahead", "batch"],
   "callAudiences": ["owner", "own", "group", "other"],
   "calls": {
@@ -516,16 +517,17 @@
         "for": "link",
         "fields": {
           "required": [
-            "audience",
+            "kind",
             "reason",
             "rows"
           ],
           "optional": [],
           "enums": {
+            "kind": "logAudiences",
             "reason": "refuseReasons"
           }
         },
-        "description": "Rows of her log this child did not take from a log.rows batch its host sent, by reason, so that the host sees why a side makes no headway (a host already answers a batch it refuses with error). audience is the batch's; rows is how many of its rows, 1 to log.rows maxItems.rows; reason is one of refuseReasons: a row's reason from log.admit (envelope, local, audience_changed, not_a_member, epoch_back, not_held), clock_ahead for a batch refused whole for its clock, batch for one refused whole otherwise (log.admit failed on it, rows then all of the batch's). Nothing of a row: no id, no detail (a detail may carry what a row said), no body, no key. Once per batch and reason, after the child settled the batch (took it, or on a link with log.pages named its page back). The host logs it with the audience's kind only and counts it per device, audience kind and reason on its status page. A body withheld (log.rows withheld, nodes.wire_take withheld) is no refusal: its row is taken. On a link without streams the child tells only its own shell."
+        "description": "Rows of her log this child did not take from a log.rows batch its host sent, by reason, so that the host sees why a side makes no headway (a host already answers a batch it refuses with error). kind is the kind of the batch's audience, one of logAudiences (personal, own, group: never the audience itself, which names people); rows is how many of its rows, 1 to log.rows maxItems.rows; reason is one of refuseReasons: a row's reason from log.admit (envelope, local, audience_changed, not_a_member, epoch_back, not_held), at most one event for each; or, for a batch refused whole, clock_ahead for its clock and batch for any other refusal (log.admit or nodes.wire_take failed on it), the only event for that batch, rows then all of the batch's. Nothing of a row: no id, no detail (a detail may carry what a row said), no body, no key; and the event's id is made from the batch's id and the reason, never from a row's, so a batch told again after a reconnect is the same event. Told once the child settled the batch: took it (a batch refused whole is taken too, as nothing), or on a link with log.pages named its page back. A batch with no rows, or one sealed that this child cannot open, is not told. The host logs it and counts it per device, kind and reason on its status page. A body withheld (log.rows withheld, nodes.wire_take withheld) is no refusal: its row is taken. On a link without streams the child tells only its own shell."
       }
     }
   },
