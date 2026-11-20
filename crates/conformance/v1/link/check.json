@@ -3077,6 +3077,636 @@
           "t": "lease.epoch"
         }
       }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "args": {
+              "kind": "face-to-face",
+              "text": "The tea is ready."
+            },
+            "callId": "call_voice_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a",
+          "seq": 40,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a voice.speak she says in person",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"voice.speak\",\"args\":{\"kind\":\"face-to-face\",\"text\":\"The tea is ready.\"},\"callId\":\"call_voice_0123456789a\",\"deadlineAt\":1760141110000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_voice_0123456789a\",\"seq\":40,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "args": {
+              "text": "Good morning."
+            },
+            "callId": "call_voice_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "own"
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a",
+          "seq": 41,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a voice.speak for her own life",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"voice.speak\",\"args\":{\"text\":\"Good morning.\"},\"callId\":\"call_voice_0123456789a\",\"deadlineAt\":1760141110000,\"for\":{\"kind\":\"own\"},\"version\":1},\"id\":\"call_voice_0123456789a\",\"seq\":41,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "args": {
+              "kind": "whisper",
+              "text": "Hello."
+            },
+            "callId": "call_voice_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a",
+          "seq": 42,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a voice.speak whose kind is not one of sayKinds",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "args": {
+              "kind": "proactive"
+            },
+            "callId": "call_voice_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a",
+          "seq": 43,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a voice.speak with nothing to say",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "args": {
+              "text": "Hello.",
+              "volume": 3
+            },
+            "callId": "call_voice_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a",
+          "seq": 44,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a voice.speak asked with an arg it does not take",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "callId": "call_voice_0123456789a",
+            "outcome": "done",
+            "result": {
+              "delivered": true
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a.result",
+          "seq": 45,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a voice.speak heard out",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"voice.speak\",\"callId\":\"call_voice_0123456789a\",\"outcome\":\"done\",\"result\":{\"delivered\":true},\"version\":1},\"id\":\"call_voice_0123456789a.result\",\"seq\":45,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "callId": "call_voice_0123456789a",
+            "outcome": "done",
+            "result": {
+              "delivered": false
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a.result",
+          "seq": 46,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a voice.speak the device stops by itself before its deadline is done, not heard out",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"voice.speak\",\"callId\":\"call_voice_0123456789a\",\"outcome\":\"done\",\"result\":{\"delivered\":false},\"version\":1},\"id\":\"call_voice_0123456789a.result\",\"seq\":46,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "callId": "call_voice_0123456789a",
+            "outcome": "done",
+            "result": {},
+            "version": 1
+          },
+          "id": "call_voice_0123456789a.result",
+          "seq": 47,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a voice.speak done that does not say whether it was heard out",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "callId": "call_voice_0123456789a",
+            "error": {
+              "code": "not_now"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_voice_0123456789a.result",
+          "seq": 48,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a voice.speak held back by the device's do-not-disturb",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"voice.speak\",\"callId\":\"call_voice_0123456789a\",\"error\":{\"code\":\"not_now\"},\"outcome\":\"failed\",\"version\":1},\"id\":\"call_voice_0123456789a.result\",\"seq\":48,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "args": {
+              "body": "The build finished.",
+              "kind": "reminder",
+              "title": "Myriad"
+            },
+            "callId": "call_note_0123456789ab",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_note_0123456789ab",
+          "seq": 50,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a notify.post for a reminder",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"notify.post\",\"args\":{\"body\":\"The build finished.\",\"kind\":\"reminder\",\"title\":\"Myriad\"},\"callId\":\"call_note_0123456789ab\",\"deadlineAt\":1760141110000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_note_0123456789ab\",\"seq\":50,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "args": {
+              "body": "Hi.",
+              "kind": "urgent",
+              "title": "Myriad"
+            },
+            "callId": "call_note_0123456789ab",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_note_0123456789ab",
+          "seq": 51,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a notify.post whose kind is not one of noticeKinds",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "args": {
+              "title": "Myriad"
+            },
+            "callId": "call_note_0123456789ab",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_note_0123456789ab",
+          "seq": 52,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a notify.post with no body",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "callId": "call_note_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "shown": true
+            },
+            "version": 1
+          },
+          "id": "call_note_0123456789ab.result",
+          "seq": 53,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a notify.post shown",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"notify.post\",\"callId\":\"call_note_0123456789ab\",\"outcome\":\"done\",\"result\":{\"shown\":true},\"version\":1},\"id\":\"call_note_0123456789ab.result\",\"seq\":53,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "callId": "call_note_0123456789ab",
+            "outcome": "done",
+            "result": {},
+            "version": 1
+          },
+          "id": "call_note_0123456789ab.result",
+          "seq": 54,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a notify.post done that does not say whether it was shown",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "callId": "call_note_0123456789ab",
+            "outcome": "done",
+            "result": {
+              "shown": true,
+              "title": "Myriad"
+            },
+            "version": 1
+          },
+          "id": "call_note_0123456789ab.result",
+          "seq": 55,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "bad_frame: a notify.post result that carries what was shown",
+      "output": {
+        "refused": {
+          "code": "bad_frame"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "voice.speak",
+            "args": {
+              "perform": {
+                "moodRevision": 1760140800000,
+                "motionStyle": "even",
+                "phase": "proactive",
+                "plan": {
+                  "baseline": {
+                    "attention": 0.75,
+                    "expression": "warm",
+                    "motionEnergy": 0.5,
+                    "posture": "open"
+                  },
+                  "cues": [
+                    {
+                      "atMs": 0,
+                      "fadeInMs": 120,
+                      "fadeOutMs": 240,
+                      "intensity": 0.5,
+                      "intent": "greet",
+                      "interrupt": "replace",
+                      "tempo": 1.0
+                    }
+                  ]
+                }
+              },
+              "text": "Good night."
+            },
+            "callId": "call_voice_0123456789a",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "owner"
+            },
+            "version": 1
+          },
+          "id": "call_voice_0123456789a",
+          "seq": 49,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a voice.speak that says how to perform it",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"voice.speak\",\"args\":{\"perform\":{\"moodRevision\":1760140800000,\"motionStyle\":\"even\",\"phase\":\"proactive\",\"plan\":{\"baseline\":{\"attention\":0.75,\"expression\":\"warm\",\"motionEnergy\":0.5,\"posture\":\"open\"},\"cues\":[{\"atMs\":0,\"fadeInMs\":120,\"fadeOutMs\":240,\"intensity\":0.5,\"intent\":\"greet\",\"interrupt\":\"replace\",\"tempo\":1.0}]}},\"text\":\"Good night.\"},\"callId\":\"call_voice_0123456789a\",\"deadlineAt\":1760141110000,\"for\":{\"kind\":\"owner\"},\"version\":1},\"id\":\"call_voice_0123456789a\",\"seq\":49,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "args": {
+              "body": "I finished reading it.",
+              "eventKey": "agent.task_completed",
+              "title": "Myriad"
+            },
+            "callId": "call_note_0123456789ab",
+            "deadlineAt": 1760141110000,
+            "for": {
+              "kind": "own"
+            },
+            "version": 1
+          },
+          "id": "call_note_0123456789ab",
+          "seq": 56,
+          "t": "call.ask",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a notify.post for her own life, with the event it is about",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"notify.post\",\"args\":{\"body\":\"I finished reading it.\",\"eventKey\":\"agent.task_completed\",\"title\":\"Myriad\"},\"callId\":\"call_note_0123456789ab\",\"deadlineAt\":1760141110000,\"for\":{\"kind\":\"own\"},\"version\":1},\"id\":\"call_note_0123456789ab\",\"seq\":56,\"t\":\"call.ask\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.ask"
+        }
+      }
+    },
+    {
+      "input": {
+        "frame": {
+          "ack": 0,
+          "at": 1760141100000,
+          "body": {
+            "action": "notify.post",
+            "callId": "call_note_0123456789ab",
+            "error": {
+              "code": "not_now"
+            },
+            "outcome": "failed",
+            "version": 1
+          },
+          "id": "call_note_0123456789ab.result",
+          "seq": 57,
+          "t": "call.result",
+          "v": 1
+        },
+        "roles": [
+          "device"
+        ]
+      },
+      "name": "a notify.post held back by the device's do-not-disturb",
+      "output": {
+        "accepted": {
+          "canonical": "{\"ack\":0,\"at\":1760141100000,\"body\":{\"action\":\"notify.post\",\"callId\":\"call_note_0123456789ab\",\"error\":{\"code\":\"not_now\"},\"outcome\":\"failed\",\"version\":1},\"id\":\"call_note_0123456789ab.result\",\"seq\":57,\"t\":\"call.result\",\"v\":1}",
+          "delivery": "reliable",
+          "family": "call",
+          "t": "call.result"
+        }
+      }
     }
   ],
   "version": 1
