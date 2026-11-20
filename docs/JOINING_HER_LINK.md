@@ -69,7 +69,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 - 清单从契约的 `capabilities` 里选，别的名字主机会丢掉。
 - 每个端放一道测试：`link.child_claims`（Rust：`myriad_link_child::capabilities::unread`）给出「声明了却不读的帧」，断言它是空的。规则在核心文档「能力清单要是真的」。
 - 会话自己读的主机帧是 `Session::READS`。别的帧（第 3 节）要开口子才到得了外壳。
-- 这道测试管不到同步族的帧。`log.vector`、`log.rows`、`lease.grant`、`lease.epoch`、`lease.takeover` 不跟着哪项能力走，跟着 `welcome.sync` 走，所以不在那张「能力带来哪些帧」的表里（表里只有 `deputy` 带来的 `lease.deputy`、`log.full` 带来的 `log.full`）。第 3、4 层的端要自己保证这几种帧都有处理代码。
+- 这道测试管不到同步族的帧。`log.vector`、`log.rows`、`lease.grant`、`lease.epoch`、`lease.takeover` 不跟着哪项能力走，跟着 `welcome.sync` 走，所以不在那张「能力带来哪些帧」的表里（同步族里表上有的是跟着能力走的那几种：`deputy` 带来的 `lease.deputy`、`log.full` 带来的 `log.full`、`lend` 带来的借话帧）。第 3、4 层的端要自己保证这几种帧都有处理代码。
 
 和后面几节有关的能力：
 
@@ -147,7 +147,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 任何时刻只有一个她在想。她在哪一端想，由租约（执笔权）定，只有服务端发。规则在核心文档「她的日志」里的「执笔权」和「临时主机（代理凭证）」，帧在契约的 `lease.*`。这些帧都属于同步族，走第 3 节的口子。
 
-**你每时每刻该是什么状态，问 `lease.here`。** 输入是 `{me, lease?, now, disconnectedSince?, ownerHereAt?, stopAfter?, stoppedAt?, deputy?, hostUnreachableSince?}`：这一端的 id、站着的那份租约、现在的时间，其余都是「从什么时刻起」的时刻，不是时长。它答 `thinking`（她在这里想）、`child`、`stopped`（持有者自己停下了）、`frozen`（正在搬家）或 `interim`（临时主机）。不要自己推。
+**你每时每刻该是什么状态，问 `lease.here`。** 输入是 `{me, lease?, now, disconnectedSince?, ownerHereAt?, stopAfter?, stoppedAt?, deputy?, hostUnreachableSince?}`：这一端的 id、站着的那份租约、现在的时间。`disconnectedSince`、`ownerHereAt`、`stoppedAt`、`hostUnreachableSince` 是时刻，不是时长；`stopAfter` 是时长（停下时间，服务端随 `lease.grant`、`lease.epoch` 给，1 分钟到 1 天，不给是 3 分钟）；`deputy` 是凭证。时间都是微秒，和第 6 节调用用的毫秒不同。它答 `thinking`（她在这里想）、`child`、`stopped`（持有者自己停下了）、`frozen`（正在搬家）或 `interim`（临时主机）。不要自己推。
 
 - `lease` 要给站着的那一份的全貌 `{epoch, holder, issued, how, from?, move?}`。说了 `deputy` 的端从 `lease.epoch` 的 `issued`、`from` 拼得出来。
 - `now` 是你写行用的那只时钟读出的时间，不能落后于真实时间。
