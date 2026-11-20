@@ -931,6 +931,8 @@ pub fn format_self_story_section(claims: &[String]) -> Option<String> {
 
 /// What her event attention was on before this turn. The text came from an
 /// event, so it is fenced as untrusted: a thing on her mind, never an order.
+/// The one thing that has stayed with her longer is another section
+/// ([`crate::on_mind::HEADING`]).
 pub fn format_on_your_mind_section(inner: &str) -> Option<String> {
     let inner = inner.trim();
     if inner.is_empty() {

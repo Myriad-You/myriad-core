@@ -278,12 +278,19 @@ pub fn tell_line(on_mind: &OnMind, before: Before) -> Option<String> {
     })
 }
 
+/// Heading of [`section`]. Not the one of
+/// [`crate::speaking::format_on_your_mind_section`] (what her attention to
+/// events was on just before this turn): this is the one thing that has
+/// stayed with her, for minutes or days. Both can be in one prompt, so the
+/// headings differ.
+pub const HEADING: &str = "## What has been on your mind";
+
 /// What is on her mind, as it may be seen ([`OnMind::seen_by`]), as a
 /// section of her prompt: a fact of where her thoughts were, hers to bring
 /// up or not.
 pub fn section(seen: &str) -> String {
     format!(
-        "## On your mind\n{seen} This is where your thoughts were before this; whether you bring it up is yours to judge."
+        "{HEADING}\n{seen} This is where your thoughts were before this; whether you bring it up is yours to judge."
     )
 }
 
@@ -424,7 +431,13 @@ mod tests {
                 .ends_with("刚想到：也许是雨声本身就慢")
         );
         let section = section(&on.seen_by(Before::Anyone, at(40)));
-        assert!(section.starts_with("## On your mind\n") && section.contains("yours to judge"));
+        assert!(section.starts_with(&format!("{HEADING}\n")) && section.contains("yours to judge"));
+        let other = crate::speaking::format_on_your_mind_section("雨声").unwrap();
+        assert_ne!(
+            section.lines().next(),
+            other.lines().next(),
+            "one prompt can hold both"
+        );
     }
 
     #[test]
