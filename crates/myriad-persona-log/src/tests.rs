@@ -1,4 +1,4 @@
-//! The shared conformance files in `crates/conformance/` (`v2/log`, `v1/lease`
+//! The shared conformance files in `crates/conformance/` (`v2/log`, `v2/lease`
 //! cases) run here through the crate, and through the C entry point in
 //! `myriad-core-ffi`; another platform runs the same files through its own
 //! runtime. Below them, the properties the files only sample: forgetting in
@@ -15,20 +15,21 @@ use serde_json::{Value, json};
 
 use super::*;
 use crate::{
-    lease::{HereInput, MoveInput, OwnerPlace},
+    lease::{HereInput, MoveInput},
     vector::{answer, holdings, missing},
 };
 
 /// The conformance files' directory: `log/` is version 2 (a holder on every
 /// `log.admit` and `log.answer`; merge, split and retract rows name what
-/// they reach), `lease/` still version 1.
+/// they reach), `lease/` too (no takeover: `lease.move` takes no place of
+/// the holder's or the owner's, ABI 5).
 pub(crate) fn conformance() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance")
 }
 
 /// Where an area's case files are.
 fn area_dir(area: &str) -> &'static str {
-    if area == "log" { "v2/log" } else { "v1/lease" }
+    if area == "log" { "v2/log" } else { "v2/lease" }
 }
 
 fn blessing() -> bool {
@@ -559,80 +560,6 @@ fn a_row_reads_the_same_whatever_order_its_fields_came_in() {
     assert_eq!(one.digest().len(), 32);
 }
 
-/// Whatever the times and whatever the server's stop time, the server takes
-/// over only once the holder, given the same stop time, has stopped by
-/// itself: never two minds.
-#[test]
-fn a_takeover_only_happens_once_the_holder_has_stopped() {
-    for stop in [None, Some(60_000_000), Some(5 * 60_000_000)] {
-        takeovers_wait_for_the_stop(stop);
-    }
-}
-
-fn takeovers_wait_for_the_stop(stop: Option<i64>) {
-    let minute = 60_000_000_i64;
-    let lease = Grant {
-        epoch: 4,
-        holder: Some("dev_mac".into()),
-        issued: rev(1, "site"),
-        how: How::Handover,
-        from: Some("site".into()),
-        through: Some(Through::from([(OWNER.into(), 3)])),
-        moving: None,
-    };
-    let mut granted = 0;
-    for last_seen in (0..=8).map(|m| m * minute) {
-        for since in (0..=8).map(|m| m * minute / 2) {
-            for now in (0..=12).map(|m| m * minute) {
-                // The owner was last at the Mac at most when they arrived
-                // elsewhere; any time before that is as good for the proof.
-                for owner_left in [since, since - minute, 0]
-                    .into_iter()
-                    .filter(|t| *t <= since)
-                {
-                    let moved = lease::decide(MoveInput {
-                        lease: lease.clone(),
-                        request: Request::Takeover {
-                            server: "site".into(),
-                        },
-                        now,
-                        issued: rev(2, "site"),
-                        holder_last_seen: Some(last_seen),
-                        holder_place: Some("home".into()),
-                        owner_place: Some(OwnerPlace {
-                            place: "office".into(),
-                            since,
-                            seen_at: now.max(since),
-                        }),
-                        stop_after: stop,
-                    })
-                    .unwrap();
-                    if let Moved::Granted(_) = moved {
-                        granted += 1;
-                        let at_holder = lease::here(HereInput {
-                            me: "dev_mac".into(),
-                            lease: Some(lease.clone()),
-                            now,
-                            disconnected_since: Some(last_seen),
-                            owner_here_at: Some(owner_left),
-                            stop_after: stop,
-                            stopped_at: None,
-                            deputy: None,
-                            host_unreachable_since: None,
-                        })
-                        .unwrap();
-                        assert!(
-                            matches!(at_holder, Here::Stopped { .. }),
-                            "last seen {last_seen}, since {since}, now {now}: {at_holder:?}"
-                        );
-                    }
-                }
-            }
-        }
-    }
-    assert!(granted > 0, "{stop:?}");
-}
-
 #[test]
 fn a_new_grant_names_the_holder_it_moves_from() {
     let lease = Grant {
@@ -658,12 +585,7 @@ fn a_new_grant_names_the_holder_it_moves_from() {
         let moved = lease::decide(MoveInput {
             lease: lease.clone(),
             request,
-            now: 10,
             issued: rev(2, "site"),
-            holder_last_seen: None,
-            holder_place: None,
-            owner_place: None,
-            stop_after: None,
         })
         .unwrap();
         let Moved::Granted(grant) = moved else {
@@ -813,12 +735,7 @@ fn a_frozen_lease_is_held_by_no_one_until_the_move_ends() {
         lease::decide(MoveInput {
             lease: lease.clone(),
             request,
-            now: 10,
             issued: rev(lease.epoch + 1, "site"),
-            holder_last_seen: None,
-            holder_place: None,
-            owner_place: None,
-            stop_after: None,
         })
         .unwrap()
     };
@@ -856,9 +773,6 @@ fn a_frozen_lease_is_held_by_no_one_until_the_move_ends() {
     for request in [
         Request::Force {
             to: "dev_mac".into(),
-        },
-        Request::Takeover {
-            server: "site".into(),
         },
         Request::Handover {
             from: "site".into(),

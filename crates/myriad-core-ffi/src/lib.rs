@@ -18,9 +18,11 @@ mod calls;
 
 /// Bumped when a call's input or output changes incompatibly, a call is
 /// removed, or her log gains rows an older core refuses (2: a merge's or a
-/// split's names, a retract; 3: a rule's rows, `node.standing`). Adding a
-/// call or an optional field does not bump it.
-pub const ABI_VERSION: u32 = 4;
+/// split's names, a retract; 3: a rule's rows, `node.standing`; 4: card
+/// rows; 5: `lease.move` takes no takeover and no place of the holder's or
+/// the owner's, and her log reads as in 4). Adding a call or an optional
+/// field does not bump it.
+pub const ABI_VERSION: u32 = 5;
 
 /// The upstream commit this library was built from (see `build.rs`).
 pub const UPSTREAM_COMMIT: &str = env!("MYRIAD_CORE_UPSTREAM_COMMIT");

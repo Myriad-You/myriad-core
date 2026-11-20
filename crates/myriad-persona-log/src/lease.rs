@@ -1,20 +1,20 @@
 //! The lease: which host core her one mind is on, numbered by an epoch that
 //! only grows. Only the server issues it.
 //!
-//! It moves three ways, and while she moves house it is held by no one
+//! She lives on the server and stays there (2026-11-16): her mind no
+//! longer follows the owner from device to device. The server still issues
+//! a new grant for these, and while she moves house it is held by no one
 //! (below):
-//! 1. **Handover**: the holder gives it up (going to sleep, the owner left
-//!    its place or showed up at another). It answers with its last count
-//!    in each audience ([`Through`]); the target catches up to them before
-//!    it thinks.
-//! 2. **Takeover**: the server takes it when the holder has been out of
-//!    reach for [`UNREACHABLE_MICROS`] and the owner's own position proves
-//!    the owner is elsewhere. That is safe because a holder that is cut off
-//!    and has had no owner in front of it for [`SELF_STOP_MICROS`] stops by
-//!    itself ([`here`]), without needing the network to know.
-//! 3. **Force**: the owner says "come here". The only way two of her can
-//!    think at once (the old holder still running, offline); its rows from
-//!    after the move are folded in and marked ([`standing`]).
+//! 1. **Handover**: the holder gives it up, with its last count in each
+//!    audience ([`Through`]); the target catches up to them before it
+//!    thinks. A move's commit is one too.
+//! 2. **Force**: the server brings her back to itself from a side that
+//!    held her from before. The old holder may still be running, offline:
+//!    its rows from after the move are folded in and marked ([`standing`]).
+//!
+//! Grants of [`How::Takeover`] stay in the history and fold as they did;
+//! the server no longer issues them. A holder cut off from the server stops
+//! by itself all the same ([`here`]).
 //!
 //! **Frozen**: while she moves to a host core joining for the first time
 //! (or is taken back from one), she is nowhere: a [`How::Freeze`] grant has
@@ -45,10 +45,10 @@
 //!
 //! The times are first values, to be tuned once she is used for real. The
 //! one the owner notices, how long a holder out of reach with the owner gone
-//! keeps thinking, is the server's setting ([`MoveInput::stop_after`]): the
-//! server decides takeovers with it and gives the same value to every holder
-//! with the lease, which stops by it ([`HereInput::stop_after`]). Three
-//! minutes when nothing says otherwise.
+//! keeps thinking, is the server's setting: it gives the value with the
+//! lease, and a holder stops by it ([`HereInput::stop_after`]); an interim
+//! host waits as long before it starts. Three minutes when nothing says
+//! otherwise.
 
 use std::cmp::Ordering;
 use std::collections::BTreeMap;
@@ -61,24 +61,17 @@ use crate::{
     row::{Audience, Author, Replicate},
 };
 
-/// How long the holder must have been out of the server's reach before the
-/// server may take over: three minutes.
-pub const UNREACHABLE_MICROS: i64 = 3 * 60 * 1_000_000;
 /// How long a holder cut off from the server, with no owner in its place,
 /// keeps thinking before it stops by itself: three minutes.
 pub const SELF_STOP_MICROS: i64 = 3 * 60 * 1_000_000;
-/// How old the owner's position may be and still prove where they are:
-/// three minutes. Older, they may have come back.
-pub const OWNER_PLACE_FRESH_MICROS: i64 = 3 * 60 * 1_000_000;
 /// The shortest a configured stop time may be: a minute. Shorter, a holder
 /// would stop while the owner only looked away.
 pub const MIN_STOP_AFTER_MICROS: i64 = 60 * 1_000_000;
 /// The longest: a day.
 pub const MAX_STOP_AFTER_MICROS: i64 = 24 * 60 * 60 * 1_000_000;
 
-/// The stop time to use: `configured`, or three minutes when absent. One
-/// value for both waits ([`UNREACHABLE_MICROS`], [`SELF_STOP_MICROS`]), so
-/// the server never takes over sooner than a holder stops.
+/// The stop time to use: `configured`, or three minutes when absent
+/// ([`SELF_STOP_MICROS`]).
 pub fn stop_after(configured: Option<i64>) -> Result<i64, LogError> {
     let Some(micros) = configured else {
         return Ok(SELF_STOP_MICROS);
@@ -305,17 +298,6 @@ pub fn newer<'a>(a: &'a Grant, b: &'a Grant) -> &'a Grant {
     }
 }
 
-/// Where the owner was last seen, by a device that recognized the place.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct OwnerPlace {
-    pub place: String,
-    /// Since when they have been there (first seen there, this time).
-    pub since: i64,
-    /// When they were last seen there.
-    pub seen_at: i64,
-}
-
 /// A request to move the lease.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case", deny_unknown_fields)]
@@ -330,9 +312,8 @@ pub enum Request {
         #[serde(default)]
         through: Option<Through>,
     },
-    /// The server (`server`, its node) takes it.
-    Takeover { server: String },
-    /// The owner brings her to `to`.
+    /// She is brought to `to` (the server, from a side that held her
+    /// from before).
     Force { to: String },
     /// She starts moving house (`move`): no one holds it until the move
     /// commits or is called off. The holder's last shared counts go with
@@ -356,25 +337,8 @@ pub struct MoveInput {
     /// The grant that stands now.
     pub lease: Grant,
     pub request: Request,
-    /// The server's clock.
-    pub now: i64,
     /// The server's revision for a new grant (after the current one's).
     pub issued: Rev,
-    /// The last moment the holder may still have believed itself in reach:
-    /// when the server last heard from it, plus the time the holder takes to
-    /// notice it is cut off. Its self-stop counts from there.
-    #[serde(default)]
-    pub holder_last_seen: Option<i64>,
-    /// The place the holder is in, when it knows.
-    #[serde(default)]
-    pub holder_place: Option<String>,
-    #[serde(default)]
-    pub owner_place: Option<OwnerPlace>,
-    /// How long the holder must be out of reach, and the owner away from
-    /// it, before it has stopped by itself: the server's setting, the value
-    /// it gives the holders. Three minutes when absent ([`stop_after`]).
-    #[serde(default)]
-    pub stop_after: Option<i64>,
 }
 
 /// Why a move was refused.
@@ -387,18 +351,6 @@ pub enum Refusal {
     NotHolder,
     /// A handover of an epoch that no longer stands.
     StaleEpoch,
-    /// The server heard from the holder too recently.
-    HolderRecent,
-    /// Nothing says where the holder is.
-    HolderPlaceUnknown,
-    /// Nothing says where the owner is.
-    OwnerPlaceUnknown,
-    /// The owner is where the holder is: she is there, reached locally.
-    SamePlace,
-    /// The owner's position is too old to prove anything.
-    OwnerPlaceStale,
-    /// The owner left too recently for the holder to have stopped.
-    OwnerLeftRecently,
     /// She is moving house: only the move's end moves the lease.
     Frozen,
     /// A thaw or a commit while she is not moving house.
@@ -417,15 +369,9 @@ pub fn decide(input: MoveInput) -> Result<Moved, LogError> {
     let MoveInput {
         lease,
         request,
-        now,
         issued,
-        holder_last_seen,
-        holder_place,
-        owner_place,
-        stop_after: configured,
     } = input;
     lease.check()?;
-    let stop = stop_after(configured)?;
     if issued <= lease.issued {
         return Err(LogError::new(
             "a new grant is issued after the one standing",
@@ -491,37 +437,6 @@ pub fn decide(input: MoveInput) -> Result<Moved, LogError> {
                 return refused(Refusal::AlreadyHolder);
             }
             grant(&to, How::Force, None)
-        }
-        Request::Takeover { server } => {
-            if server == holder {
-                return refused(Refusal::AlreadyHolder);
-            }
-            let last_seen =
-                holder_last_seen.ok_or_else(|| LogError::new("a takeover needs holderLastSeen"))?;
-            if now - last_seen < stop {
-                return refused(Refusal::HolderRecent);
-            }
-            let Some(holder_place) = holder_place else {
-                return refused(Refusal::HolderPlaceUnknown);
-            };
-            let Some(owner) = owner_place else {
-                return refused(Refusal::OwnerPlaceUnknown);
-            };
-            if owner.place == holder_place {
-                return refused(Refusal::SamePlace);
-            }
-            if now - owner.seen_at > OWNER_PLACE_FRESH_MICROS {
-                return refused(Refusal::OwnerPlaceStale);
-            }
-            // The holder stops by itself once it has been cut off and had
-            // no owner in front of it for the stop time. The owner was not
-            // in front of it from `since` on, and it was cut off from
-            // `last_seen` on: so it has stopped by the later of the two
-            // plus that time.
-            if now < last_seen.max(owner.since) + stop {
-                return refused(Refusal::OwnerLeftRecently);
-            }
-            grant(&server, How::Takeover, None)
         }
     }
 }
