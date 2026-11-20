@@ -408,6 +408,10 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.recent_section", speaking::recent_section),
     ("speaking.remembered_section", speaking::remembered_section),
     ("speaking.said_lately_line", prompts::said_lately_line),
+    (
+        "speaking.said_of_herself_section",
+        own::said_of_herself_section,
+    ),
     ("speaking.self_story_section", own::self_story_section),
     ("speaking.share_links_section", prompts::share_links_section),
     ("speaking.share_section", prompts::share_section),

@@ -88,6 +88,8 @@ pub enum Part {
     FoundOut,
     /// What she heard in groups about things.
     HeardInGroups,
+    /// What she said about herself that the talk touches ([`crate::own_said`]).
+    SaidOfHerself,
     /// Her own days lately.
     OwnDays,
     /// Her story as she tells it.
