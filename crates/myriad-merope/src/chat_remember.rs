@@ -197,6 +197,8 @@ struct Wording {
     own: &'static str,
     own_not: &'static str,
     own_them: &'static str,
+    own_short: &'static str,
+    own_changed: &'static str,
     moment: &'static str,
     did_and_came: &'static str,
     named: &'static str,
@@ -219,6 +221,8 @@ const CHINESE: Wording = Wording {
     own: "'我也在追《北窗》！看到第五集了，没想到男主是卧底' → '我在追《北窗》，看到第五集，没想到男主是卧底'; '其实我不太吃辣' → '我不太吃辣'",
     own_not: "'我挺好的', '哈哈我也是', '我在呢', '我也觉得'",
     own_them: "'我觉得你该早点跟你妈说' is about them, not own",
+    own_short: "they ask '《白塔》你读完没', you reply '读到一半，太慢了' → '我在读《白塔》，读到一半，觉得太慢'",
+    own_changed: "yours has '我觉得《潮汐》这张专辑太吵', you now say '多听几遍反而上头了' → '我对《潮汐》改观了：之前嫌太吵，多听几遍上头了'",
     moment: "'刚进门，我家橘猫年糕就扑过来了，它五岁了' → '养了一只五岁的橘猫，叫年糕'",
     did_and_came: "'周二下午去4S店做了保养，店里说刹车片该换了', not only '刹车片该换了'",
     named: "'室友小林搬走了'",
@@ -241,6 +245,8 @@ const ENGLISH: Wording = Wording {
     own: "'oh I'm watching North Window too! I'm on episode five, did not see the lead being a mole coming' → 'I am watching North Window, up to episode five, and did not see the lead being a mole coming'; 'honestly I can't handle spicy food' → 'I can't handle spicy food'",
     own_not: "'I'm good', 'haha same', 'I'm here', 'I think so too'",
     own_them: "'I think you should tell your mom soon' is about them, not own",
+    own_short: "they ask 'did you finish The White Tower?', you reply 'halfway, it's slow' → 'I am halfway through The White Tower and find it slow'",
+    own_changed: "yours has 'I found the album Tides too loud', you now say 'it grew on me after a few more listens' → 'I came around on Tides: found it too loud at first, it grew on me after a few more listens'",
     moment: "'just got in and my orange cat Mochi jumped on me, she is five' → 'has a five-year-old orange cat called Mochi'",
     did_and_came: "'had the car serviced at the dealer on Tuesday afternoon and was told the brake pads need replacing', not only 'the brake pads need replacing'",
     named: "'their roommate Sam moved out'",
@@ -269,10 +275,10 @@ pub fn extract_system_prompt(existing: &[String], examples: Examples) -> String 
             .join("\n")
     };
     format!(
-        "You are keeping what a friend would remember from this message of theirs. facts: 0 to {MAX_FACTS} short facts about them: what happened to them, what they did, are doing or are going to do, people and things in their life, their preferences, habits and plans, anything you agreed. \
+        "You are keeping what a friend would remember from this exchange: what they told you in their message, and what you yourself said back in your reply. Both are worth keeping. facts: 0 to {MAX_FACTS} short facts about them: what happened to them, what they did, are doing or are going to do, people and things in their life, their preferences, habits and plans, anything you agreed. \
 Each fact stands on its own (who, what, and when if it has a when) and is taken only from what they explicitly stated in userText; one thing per fact. Something they did and what it brought them are one thing: say both, with its when ('had a check-up on Tuesday afternoon and was told to cut down on salt', not only 'was told to cut down on salt'). Keep the specifics they gave, the numbers, names, amounts, how often and dates ('yoga three times a week', not 'has a yoga schedule'). When userText or a known fact gives both who someone is to them and their name, write both ('their ENT specialist Dr. Patel', not only 'the ENT specialist'); only when that is what they said, never a guess. Every fact is about them, so never call them he or she: {pronouns} Write each fact in the language of userText. \
 This is not a reply, not a mood number, not a work lesson or tool param, and not what you yourself are doing: facts are only about them, and what you say about yourself goes in own. \
-reply is context only; never treat your guesses as their facts. \
+For facts, reply is context only: never treat your guesses as their facts. said and own are taken from reply. \
 before is what you said just before their message: use it only to understand what userText answers (a short reply to your question), still taking the fact from userText. scene is what was on their screen or playing: context only. \
 If inGame is true, userText is a move in a game you are playing with them (a question or a guess), not a fact about them: facts is empty. \
 today is the date: write anything they say about time as the actual date (their exam 'tomorrow' is an exam on that date; 'last Friday' is that Friday's date). \
@@ -288,7 +294,7 @@ If unsure whether it is the same thing, do not replace. \
 Each fact's evidence, and supersedesEvidence when supersedes is not empty (else null), must be a contiguous verbatim excerpt from userText where they stated it. Do not cite reply. Quotes, translations, hypotheses, and advice must not correct their memory. \
 concepts lists 1-5 things a fact is about (a person, pet, work, place, activity, food), each with its usual name and up to 5 other names people use for it: nicknames, synonyms, the name in Chinese, Japanese or English. They only help find the fact again. \
 said: 0 to {MAX_SAID} things you yourself told them in reply that you would remember having said, because they may come back to it: a recommendation, a promise, an answer or a specific item you gave them. Write each in the first person ('I recommended …'), in the language of the conversation, with evidence a contiguous verbatim excerpt from reply. Small talk and general advice → said is empty. \
-own: what you said about yourself in reply that is yours to keep, so you say the same whoever asks and wherever, later: what you watched, read, played or listened to and how far you got, what you like or do not, something you did or have, what you think of something. You judge which these are; there is no limit. Each one's line is one plain sentence in the first person, in the language of the conversation, standing on its own with the specifics you gave (the title, how far, and when, written as the actual date) and naming no one: who you were talking to and anything about them stay out, since this is yours anywhere ({own}). Its evidence is a contiguous verbatim excerpt from reply, and its concepts as for facts. Only what you said as so about yourself: not a question back, a guess, playing along with a joke or a game, or what you think of them and their life ({own_them}). Politeness and small talk about yourself are not kept ({own_not}). When you answered something about yourself (whether you have seen it, how far you are), that answer is own, not said. When something you recommended or promised also says something of yours (you liked the book you recommend), that part is own as well. yours, when given, is what you already said of yourself that this touches: what is already there is not kept again, only what is new or has changed since. Nothing of the kind → own is empty. \
+own: what you said about yourself in reply that is yours to keep, so you say the same whoever asks and wherever, later: what you watched, read, played or listened to and how far you got, what you like or do not, something you did or have, what you think of something. You judge which these are; there is no limit. Each one's line is one plain sentence in the first person, in the language of the conversation, standing on its own with the specifics you gave (the title, how far, and when, written as the actual date) and naming no one: who you were talking to and anything about them stay out, since this is yours anywhere ({own}). Its evidence is a contiguous verbatim excerpt from reply, and its concepts as for facts. Your reply often only answers what they asked, without saying again what it is about (they asked whether you finished a book, you said how far you got): the line then names it from userText or before, so it stands on its own ({own_short}). Only what you said as so about yourself: not a question back, a guess, playing along with a joke or a game, or what you think of them and their life ({own_them}). Politeness and small talk about yourself are not kept ({own_not}). When you answered something about yourself (whether you have seen it, how far you are), that answer is own, not said. When something you recommended or promised also says something of yours (you liked the book you recommend), that part is own as well. yours, when given, is what you already said of yourself that this touches: what is already there is not kept again. What has changed since is new and is kept, saying how it is now and how it was (you got further, finished it, came to like it, went off it: {own_changed}). Nothing of the kind → own is empty. \
 putOnto: 0 to {MAX_PUT_ONTO} public things they suggested you try yourself (a song, a book, a game, a show, a video), each one plain sentence about the thing itself, in the language of the conversation and with no names of people ({put_onto}), with evidence a contiguous verbatim excerpt from userText. Something they only mention, or like themselves without suggesting it to you, is not one → putOnto is empty. \
 If nothing is worth keeping, return facts=[], supersedes=[], supersedesEvidence=null, said=[], own=[], putOnto=[]. \
 Known:\n{known}",
@@ -303,6 +309,8 @@ Known:\n{known}",
         own = wording.own,
         own_not = wording.own_not,
         own_them = wording.own_them,
+        own_short = wording.own_short,
+        own_changed = wording.own_changed,
     )
 }
 
@@ -943,6 +951,10 @@ mod tests {
                 "Politeness and small talk about yourself are not kept",
                 "that answer is own, not said",
                 "what is already there is not kept again",
+                "What has changed since is new and is kept",
+                "the line then names it from userText or before",
+                "and what you yourself said back in your reply",
+                "said and own are taken from reply",
                 "is about them, not own",
                 "own=[]",
                 own,
