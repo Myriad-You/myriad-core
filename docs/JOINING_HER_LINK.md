@@ -22,6 +22,7 @@
 
 哪一种端能存日志，核心有规定（`myriad_persona_log::holder`，`crates/myriad-persona-log/src/holder.rs` 的 `Core`）：`pc`（伙伴的电脑）存伙伴自己的私聊和她自己的；`server` 存全部；`child`（核心文档写的是「手机、XR 这些子机核心」）不存日志。所以：
 
+- 有两种 `lease` 帧按契约不只属于第 4 层：`lease.place`（`from` 是 `device`，任何一端都报自己在哪个现场、主人在不在）和 `lease.epoch`（「发给每台设备」，设备靠它显示她在哪）。它们是同步族的帧，所以没开口子的第 1、2 层的端发不了 `lease.place`（`passthrough_off`），收到 `lease.epoch` 时只会拿到 `unread`。uncertain：站点会不会给不存日志的子机发 `lease.epoch`、要不要它报 `lease.place`，这个仓库里核实不了；要做「显示她在哪」的第 1、2 层的端，先问站点一侧。
 - **桌面端**是 `pc`，四层都可能做。
 - **iOS** 按今天的规定是 `child`，做第 1、2 层。iOS 要不要做第 3、4 层不是这一页能定的：那是改 `holder` 的规定，等于改所有端。uncertain：我没找到关于 iOS 的单独决定。
 
@@ -56,10 +57,10 @@
 | 4001、4002 | `revoked`、`owner_changed` | 删掉凭据，不再连 |
 | 4003 | `replaced` | 同一台设备的另一条连接顶替了这一条。不自动重连 |
 | 4004、4005 | `host_moved`、`host_frozen` | 她搬到别的端了，或正在搬。重连 |
-| 4406、4415 | `unsupported_protocol`、`version_unsupported` | 这个 App 和站点的版本对不上，要更新。不重连，不是网络问题 |
+| 4406、4415 | `unsupported_protocol`、`version_unsupported` | 这个 App 和站点的版本对不上，有一边要更新。不重连，不是网络问题。说了 `versions` 的端以先到的 `verdict` 交付为准：是哪一边旧了它说得更清楚 |
 | 4408、4503 | `timeout`、`unavailable` | 重连 |
 
-你不用自己查这张表：`link.child_after` 的回答里 `then` 是 `reconnect`、`stop` 或 `forget`，`down.why` 是原因。
+你不用自己查这张表：`link.child_after` 的回答里 `then` 是 `reconnect`、`stop` 或 `forget`。前两种带 `down.why`（原因）；`forget` 带 `removal`（凭据为什么没了）。
 
 ## 2. 能力声明
 
@@ -68,6 +69,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 - 清单从契约的 `capabilities` 里选，别的名字主机会丢掉。
 - 每个端放一道测试：`link.child_claims`（Rust：`myriad_link_child::capabilities::unread`）给出「声明了却不读的帧」，断言它是空的。规则在核心文档「能力清单要是真的」。
 - 会话自己读的主机帧是 `Session::READS`。别的帧（第 3 节）要开口子才到得了外壳。
+- 这道测试管不到同步族的帧。`log.vector`、`log.rows`、`lease.grant`、`lease.epoch`、`lease.takeover` 不跟着哪项能力走，跟着 `welcome.sync` 走，所以不在那张「能力带来哪些帧」的表里（表里只有 `deputy` 带来的 `lease.deputy`、`log.full` 带来的 `log.full`）。第 3、4 层的端要自己保证这几种帧都有处理代码。
 
 和后面几节有关的能力：
 
@@ -84,7 +86,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 ## 3. 会话不读的帧：开口子
 
-会话只读聊天和形象这一批帧。日志、租约、`nodes`、`proposals`、`act.request` 这些它不读，也不会逐族做进去。第 3、4 层的端要开一个口子：
+会话只读聊天和形象这一批帧，加上 `call.*`、`stream.*`、`link.*`。日志、租约、`nodes`、`proposals`、`act.request` 这些它不读，也不会逐族做进去。第 3、4 层的端要开一个口子：
 
 - 开：`link.child_new` 的 `passthrough: true`（Rust：`session.passes(true)`）。
 - 收：会话不读的主机帧以 `frame` 交付交给外壳，带类型、id、序号、第几条连接、送达方式。内容就是你刚交给 `received` 的那段文本，自己读。
@@ -113,7 +115,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 1. **报你有什么。** `log.holdings` 从你的行算出 `{vector, beyond?}`，发 `log.vector`（`{audience, vector, beyond?, ask?}`）。`welcome` 之后每个受众发一次。
 2. **对方发你缺的。** 它发来 `log.rows`（可靠帧）。每一批交给 `nodes.wire_take`，它做完全部检查，告诉你收下了哪些、拒了哪些、哪些 body 要再要（`ask`）。收下的用 `log.merge` 并进你的日志。落库后对这一帧 `took`。
-3. **你发对方缺的。** 收到对方的 `log.vector` 时，用 `nodes.wire_send`（给它对方的向量 `theirs`、对方的 `ask`、`beyond`）算出要发的批，每一批是一条 `log.rows`。
+3. **你发对方缺的。** 收到对方的 `log.vector` 时，用 `nodes.wire_send` 算出要发的批，每一批是一条 `log.rows`。它要的输入：这个受众和你的行、对方的向量 `theirs`、对方的 `ask` 和 `beyond`、对方是谁（`holder`）、你自己的 id（`here`）、你的账（`ledger`）、对方的 `peerAbi`。对主机的 `peerAbi` 从它在 `welcome` 里接受的能力算：有 `log4` 是 4，有 `log3` 是 3，有 `log2` 是 2，否则 1（契约 `frames.welcome`）。给错了要么什么都不发（`tooOld`），要么发出对方读不懂的行。`log.rows` 可以用 `keep: false` 发：它丢了能从下一轮的 `log.vector` 补回来，不必压在会话的待发箱里。
 4. **对方有你没有的，就回问。** 收到的 `log.vector` 显示对方有你缺的行时（`log.missing` 给 `{mine, theirs}`，答的是 `theirs` 有而 `mine` 没有的），回一条你自己的 `log.vector`，对方才知道该发什么给你。契约的原话是 `log.vector` 也「作为对一条 `log.vector` 的回答」发。uncertain：契约没写怎么避免两边来回互发，我没读站点和 macOS 端的做法；至少不要在两边向量相同的时候再回。
 
 ### 一页一页地翻（`log.pages`）
@@ -123,14 +125,16 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 **你是收的一边：**
 
 - 一页的最后一批带 `more`（这一页的 id）。最后一页的最后一批不带。
-- 你把带 `more` 的那一批了结之后（并进去了，或者用错误回绝了），再发一条 `log.vector`，`after` 写这个 id。只在这时写 `after`，别的原因发的 `log.vector` 不写。
+- 你把带 `more` 的那一批了结之后（并进去了，或者整批不收），再发一条 `log.vector`，`after` 写这个 id。只在这时写 `after`，别的原因发的 `log.vector` 不写。契约里「回绝」说的是用 `error` 帧回，而 `error` 只有主机能发：走会话的子机了结这一批就是 `took` 它，然后发带 `after` 的 `log.vector`。uncertain：这样的端整批不收时要不要另外告诉主机，契约没写。
 - 对方收到带 `after` 的才发下一页。
 
 **你是发的一边：**
 
 - 给 `nodes.wire_send` 传 `page`（16）和对方的 `beyond`。它最多出这么多批；回答里 `more` 说还有没发完的，`askLeft` 是这一页放不下的「要求再发的行」，你留着，下一页作为 `ask` 给进去。
 - 这一页的 id 由你造，写在这一页最后一批的 `more` 上（核心不替你写）。一个 id 只用于一页、一条连接。
+- 一页最多 16 批，「要求再发的行」也算在里面：先发向量和 `beyond` 显示缺的，再发要求再发的（上一页剩下的在前，再是这一条 `log.vector` 自己的 `ask`，一次最多 64 个，其余留到下一页）。
 - 一页没翻完（它的 `more` 还没被一个 `after` 点名）时，只有 `after` 点名这一页的 `log.vector` 才换来下一页；别的 `log.vector` 不发行。重复的、过时的 `log.vector` 不会让你把行再发一遍。
+- **例外：没有进展就停。** 一条 `log.vector` 的 `after` 点名了没翻完的那一页，可它的 `vector` 和 `beyond` 和当初要这一页的那一条一模一样，而这一页里有它缺的行——说明对方把这一页的行拒了。这一页就算翻完，后面不再跟页；等下一条不带 `after` 的 `log.vector` 再从头答一页。不这样做，你会把同一页被拒的行一直重发。只有「要求再发的行」的一页不改向量，照样算有进展。
 - 翻页每条连接从头来。
 
 没说 `log.pages` 的连接上，和以前一样一次发完，没有 `more`、`after`。
@@ -143,7 +147,11 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 任何时刻只有一个她在想。她在哪一端想，由租约（执笔权）定，只有服务端发。规则在核心文档「她的日志」里的「执笔权」和「临时主机（代理凭证）」，帧在契约的 `lease.*`。这些帧都属于同步族，走第 3 节的口子。
 
-**你每时每刻该是什么状态，问 `lease.here`。** 给它这一端的 id、站着的那份租约、现在的时间、和主机断开多久了、主人最近什么时候在这一端，它答 `thinking`（她在这里想）、`child`、`stopped`（自己停下了）、`frozen`（正在搬家）或 `interim`（临时主机）。不要自己推。
+**你每时每刻该是什么状态，问 `lease.here`。** 输入是 `{me, lease?, now, disconnectedSince?, ownerHereAt?, stopAfter?, stoppedAt?, deputy?, hostUnreachableSince?}`：这一端的 id、站着的那份租约、现在的时间，其余都是「从什么时刻起」的时刻，不是时长。它答 `thinking`（她在这里想）、`child`、`stopped`（持有者自己停下了）、`frozen`（正在搬家）或 `interim`（临时主机）。不要自己推。
+
+- `lease` 要给站着的那一份的全貌 `{epoch, holder, issued, how, from?, move?}`。说了 `deputy` 的端从 `lease.epoch` 的 `issued`、`from` 拼得出来。
+- `now` 是你写行用的那只时钟读出的时间，不能落后于真实时间。
+- `disconnectedSince` 是和服务端断开的时刻，只用于持有者自己停下；`hostUnreachableSince` 是够不着持笔主机的时刻，只用于临时主机。两个不是一回事。
 
 帧和你要做的事：
 
@@ -164,8 +172,9 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 主机够不着的时候，她可以在一台预先拿到凭证的端上临时想。
 
 - 说了 `deputy` 能力的端，服务端会预先发 `lease.deputy`：一张凭证 `{holder, under, issued, until, order}`，最多管一天（契约 `timing.deputyMaxMs`）。留着最新的一张。
-- 把凭证连同别的输入交给 `lease.here`。主机够不着满了停下时间、主人在这一端、凭证是给你的而且没过期，它答 `interim`：她在这里临时想，知道自己是临时的，写的行用 `under` 那一任。
-- 连回主机、凭证过期、或主人走了，她就在这里停下。临时写的行照常发上去，保留，标为同时发生的。
+- 把凭证作为 `deputy`、够不着主机的时刻作为 `hostUnreachableSince` 交给 `lease.here`。少了 `hostUnreachableSince`，它永远答 `child`。
+- 四样都满足它才答 `interim`：够不着主机满了停下时间；主人此刻在这一端；凭证是给你的；凭证的 `under` 等于站着的那一任，而且没过期。这时她在这里临时想，知道自己是临时的，写的行用 `under` 那一任。
+- 连回主机、凭证过期、或主人离开满了停下时间，答案回到 `child`（不是 `stopped`）。临时写的行照常发上去，保留，标为同时发生的。
 - 凭证不是租约：它不移动执笔权。
 
 ### 回执
@@ -180,18 +189,18 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 「调用」是一端按名字让另一端做一件事。动作的目录在契约的 `calls.actions`，失败码在 `calls.failCodes`。
 
-**走会话的端**（推荐）：在 `link.child_new` 里给 `offers`（这一端会做的动作）和 `coreCommit`，能力里说 `calls`。之后：
+**走会话的端**（推荐）：能力里说 `calls`，在 `link.child_new` 里给 `offers`（这一端会做的动作）。要报版本再说 `versions` 并给 `coreCommit`（你钉的核心提交，40 位十六进制；没说 `versions` 时它不起作用）。之后：
 
-- 主机来调时，会话已经做完检查，交给你一个 `call` 交付。**先把 `callId` 写到盘上再做**；做完交 `callDone` 或 `callFailed`；等到 `call_settled` 交付（主机收到结果了）再把盘上那条划掉。
-- 进程重启后、连上之前，把盘上没划掉的用 `callsLost` 交回，会话替你答「不知道做没做」，不会再做一遍。
+- 主机来调时，会话已经做完检查，交给你一个 `call` 交付。**先把 `callId`、`action`、`version` 三样写到盘上再做**；做完交 `callDone` 或 `callFailed`；等到 `call_settled` 交付（主机收到结果了）再把盘上那条划掉。
+- 进程重启后、连上之前，把盘上没划掉的用 `callsLost` 交回（`[{callId, action, version}]`，三样都要），会话替你答「不知道做没做」，不会再做一遍。
 - 断线时也照常 `tick`，期限才会到。
 
 规则在核心文档「版本、调用和 stream」。
 
 **自己写连接、不经会话的端**：收到 `call.ask` 怎么判，问 `link.call_receive`，不要自己写判定顺序。
 
-- 输入：`action`、`version`、`for`、`deadlineAt`（都是 ask 里的）、`takenAt`（你收下它的时刻，主机的钟）、`offers`、`refused`（这一端会做、但主人在设备上关了的）、`granted`（主机在这条连接上说过授予的；还没说过写 `null`，这个字段不能省）。
-- 输出：`verdict` 是 `hold`（先搁着，等 `call.granted` 到了带着它再问一次）、`do` 或 `fail`（`code` 是失败码）；`version` 是答复里写的版本；`deadlineAt` 是截短过的期限。
+- 输入：`action`、`version`、`for`、`deadlineAt`（都是 ask 里的）、`takenAt`（你收下它的时刻，主机的钟；它和 `deadlineAt` 都是毫秒）、`offers`、`refused`（这一端会做、但主人在设备上关了的）、`granted`（主机在这条连接上说过授予的；还没说过写 `null`，这个字段不能省）。
+- 输出：`verdict` 是 `hold`（先搁着，等 `call.granted` 到了带着它再问一次）、`do` 或 `fail`（`code` 是失败码）；`version` 是答复里写的版本；`deadlineAt` 是截短过的期限。搁着的调用再问时，`deadlineAt` 交回上次给的那个。
 - 它只管判。按 `callId` 去重、搁着的调用存在哪、到期叫停、结果的可靠送达，你要自己做。
 
 规则在核心文档「收到调用怎么判（`link.call_receive`）」。
@@ -232,15 +241,21 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 - 依赖：`Cargo.toml` 里按提交钉 `myriad-link-child`。它钉的是较早的 `1c21bff`，那时还没有调用、stream 和口子，所以这些它都没有接。
 - 能力清单：`crates/myriad-xr-link/src/lib.rs` 的 `XR_CAPABILITIES`，十四项。
 - 外壳的分发：`crates/myriad-xr-ffi/src/lib.rs` 里把会话的输出转成给 Kotlin 的一步（`fn step`）。读不了的帧（`Delivery::Unread`）它记成一条问题，不悄悄丢掉。
-- 连接协议那一层它自己一行都没有：会话、契约的读法、帧检查都是核心的。它自己留着的只有界面和语音的事。
+- 会话、契约的读法、帧检查都是核心的，它没有自己的一份。它自己留着的是套接字外壳和凭据（Kotlin 一侧）、形象和语音。uncertain：Kotlin 的套接字外壳我没有逐行读。
 
-它换钉到现在的 main 时要补的东西，写在 `Myriad-You/myriad-core#129` 的说明里。
+它的钉比现在的 main 旧十几个提交。换钉时要补什么，看这段历史里每个提交说明的「影响的端」：
+
+```bash
+git log 1c21bff..<要钉的提交> -- crates/myriad-link-child crates/myriad-her-link shared/her_link_contract.json
+```
+
+其中改了 `Delivery`、`Unsent` 形状的有好几个（比如 `#118`、`#120`、`#121`、`#125`、`#126`、`#129`）。
 
 ## 9. 最小接入清单
 
 第 1 层（只当子机）：
 
-- [ ] 按一个提交钉住核心。Rust 直接依赖 `myriad-link-child`；Swift 链接 `libmyriad_core_ffi.a`（核心文档「别的平台怎么链接」）。
+- [ ] 按一个提交钉住核心。Rust 直接依赖 `myriad-link-child`；Swift 链接 `libmyriad_core_ffi.a`（核心文档「别的平台怎么链接」）。iOS 的静态库核心的 CI 每次都在出（真机和模拟器两种），但还没有哪个端真的链接过它。
 - [ ] 外壳的循环：升级、`connected`、`received`、`tick`、`disconnected`、`link.child_after`。一步一步来，不并发。
 - [ ] 每句话一个新的回合 id。断线时主人说的话照样交给会话。
 - [ ] 存下每次 `welcome` 的 `lineage`、`hostEpoch`，下次传回。
@@ -252,7 +267,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 第 2 层（加调用）：
 
 - [ ] 能力里说 `calls`（要报版本再说 `versions`），给 `offers` 和 `coreCommit`。
-- [ ] 先写后做；等 `call_settled` 再划；重启先 `callsLost` 再连。
+- [ ] 先把 `callId`、`action`、`version` 写到盘上再做；等 `call_settled` 再划；重启先 `callsLost` 再连。
 - [ ] 断线时照常 `tick`。
 - [ ] 不经会话的端：判定只问 `link.call_receive`，`granted` 每次都写。
 
@@ -260,7 +275,8 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 - [ ] 开口子；可靠的 `frame` 落盘就 `took`；等确认的多了放慢读套接字。
 - [ ] 只在 `welcome.sync` 是 `on` 时同步；伙伴的 id 只从 `welcome.partner` 拿。
-- [ ] 能力里说和你的核心相符的 `log2`、`log3`、`log4`，以及 `log.pages`。
+- [ ] 能力里说 `partner`（不说，`welcome` 里就没有伙伴的 id），和你的核心相符的 `log2`、`log3`、`log4`，以及 `log.pages`。
+- [ ] 因为等确认的满了被断开（`behind`）之后，重连上要重新发 `log.vector`：`log.rows` 主机不会自己重发。
 - [ ] `welcome` 后每个受众发 `log.vector`；收用 `nodes.wire_take` 加 `log.merge`；发用 `nodes.wire_send`。
 - [ ] 翻页：了结带 `more` 的批之后才发带 `after` 的 `log.vector`；自己发页时一页没翻完不重发。
 - [ ] `v2/log/`、`v2/nodes/`、`v1/partner/` 的用例全过；带 `passthrough` 的剧本全过。
