@@ -1016,6 +1016,7 @@ func step(_ event: JSON) throws {
 | 调用 | 输入 | crate 函数 |
 | --- | --- | --- |
 | `chat.reply_instruction` | `{}` | `chat_history::CHAT_REPLY_INSTRUCTION`：聊天回复的收尾 |
+| `speaking.private_prompt` | `{soul, sections: [{part, text}], words, beside?}` | `private_prompt::system`、`their_message`：私聊一轮的整段提示，输出 `{system, message}`。`part` 是 `private_prompt::Part` 的 camelCase 名字（`addressee`、`innerMomentAgo`……）；各节按 `Part` 声明的顺序排，同一 part 保持交进来的顺序，空节不放，回复指令在最后；`beside`（在看的页面、附件）围起来跟在他们的话后面；不认识的 part 拒收 |
 | `speaking.proactive_system` | `{soul, mind, recent}` | `speaking::compose_proactive_system`：`mind` 是一轮聊天戴的那几节，`recent` 是她最近没被问就说过的（新的在前） |
 | `speaking.proactive_user` | `{gist, happened?}` | `speaking::compose_proactive_user`：她想说的，和告诉她的那件事（谁说的话归谁） |
 | `speaking.said_lately_line` | `{minutesAgo, theyWroteSince, line}` | `speaking::said_lately_line`：`recent` 里的一行 |
