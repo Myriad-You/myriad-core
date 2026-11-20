@@ -244,3 +244,34 @@ pub(super) fn untrusted_block(raw: &[u8]) -> Result<Value, Failure> {
         &req.tag, &req.body,
     ))))
 }
+
+/// Her whole prompt for a private chat turn (`private_prompt`): the system
+/// prompt from her soul and the end's sections, each tagged with its part,
+/// and their message with what came beside it.
+pub(super) fn private_prompt(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Section {
+        part: myriad_merope::private_prompt::Part,
+        text: String,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        soul: String,
+        sections: Vec<Section>,
+        words: String,
+        #[serde(default)]
+        beside: String,
+    }
+    let req: In = input(raw)?;
+    let sections: Vec<_> = req
+        .sections
+        .into_iter()
+        .map(|section| (section.part, section.text))
+        .collect();
+    Ok(json!({
+        "system": myriad_merope::private_prompt::system(&req.soul, &sections),
+        "message": myriad_merope::private_prompt::their_message(&req.words, &req.beside),
+    }))
+}

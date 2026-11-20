@@ -402,6 +402,7 @@ const CALLS: &[(&str, Call)] = &[
     ("speaking.openers_section", speaking::openers_section),
     ("speaking.own_days_section", own::own_days_section),
     ("speaking.persona", speaking::persona),
+    ("speaking.private_prompt", speaking::private_prompt),
     ("speaking.proactive_system", prompts::proactive_system),
     ("speaking.proactive_user", prompts::proactive_user),
     ("speaking.recent_section", speaking::recent_section),

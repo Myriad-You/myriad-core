@@ -23,6 +23,7 @@ mod motion;
 mod nodes;
 mod own;
 mod partner;
+mod private_prompt;
 mod prompts;
 mod recall;
 mod screen;
@@ -135,6 +136,7 @@ fn every_call_is_tested_and_version_lists_them() {
     .chain(nodes::TESTED.iter().copied())
     .chain(own::TESTED.iter().copied())
     .chain(partner::TESTED.iter().copied())
+    .chain(private_prompt::TESTED.iter().copied())
     .chain(prompts::TESTED.iter().copied())
     .chain(recall::TESTED.iter().copied())
     .chain(screen::TESTED.iter().copied())

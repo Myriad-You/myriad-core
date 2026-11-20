@@ -42,6 +42,7 @@ mod onboarding;
 pub mod other_groups;
 pub mod others;
 pub mod pace;
+pub mod private_prompt;
 mod outfit_overlay;
 mod performance;
 mod persona;
