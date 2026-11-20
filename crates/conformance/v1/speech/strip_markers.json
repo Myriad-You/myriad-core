@@ -200,6 +200,26 @@
         "held": true,
         "text": "换上"
       }
+    },
+    {
+      "input": {
+        "text": "[[quiet]]"
+      },
+      "name": "the quiet mark leaves nothing to show",
+      "output": {
+        "held": false,
+        "text": ""
+      }
+    },
+    {
+      "input": {
+        "text": "好诶\n[[react:👍]]"
+      },
+      "name": "a reaction mark is not shown",
+      "output": {
+        "held": false,
+        "text": "好诶"
+      }
     }
   ],
   "version": 1

@@ -91,6 +91,10 @@ pub struct MemberReply {
     pub reply: Option<String>,
     #[serde(default)]
     pub bound: bool,
+    /// What she does with the line (`unanswered::Reply::kept`): the closed
+    /// turn gives her words back without marks, so it goes back after them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kept: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -166,6 +170,7 @@ pub(crate) fn member_start(
         after_game: false,
         reply: None,
         bound: false,
+        kept: None,
     };
     let (user_id, input, transcript, speaker, chime, first) = (
         reply.user_id,
@@ -456,7 +461,11 @@ fn ask_again(cx: &mut Cx, r: &mut MemberReply) -> MemberNext {
 
 /// What she said, taken apart: the puzzle she said she would think up.
 fn answered(cx: &mut Cx, r: &mut MemberReply, raw: &str) -> MemberNext {
-    let (text, started) = crate::soup::split_start(raw);
+    // What she does with the line rides past the closed turn, which gives
+    // her words back without marks (see `unanswered`).
+    let took = crate::unanswered::read(raw);
+    r.kept = took.kept();
+    let (text, started) = crate::soup::split_start(&took.said);
     // A game with seats she said she would host: sign-up opens, and she
     // says how to join (not when she spoke up unasked).
     let (mut text, seated) = crate::hosting::split_seat_game(&text);
@@ -529,7 +538,13 @@ fn at_table_done(
 
 fn ended(r: &mut MemberReply) -> MemberNext {
     let sticker = r.sticker.take();
-    MemberNext::Done(r.reply.take().map(|reply| (reply, sticker)), r.bound)
+    let kept = r.kept.take();
+    MemberNext::Done(
+        r.reply
+            .take()
+            .map(|reply| (crate::unanswered::marked(&reply, kept.as_deref()), sticker)),
+        r.bound,
+    )
 }
 
 /// Her words, the sticker she chose taken out, and the turn closed with them.

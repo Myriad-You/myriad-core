@@ -130,6 +130,15 @@ fn run(call: &str, input: &Value) -> Result<Value, Value> {
             }
             Ok(json!({ "ledger": ledger, "skipped": skipped }))
         }
+        "speech.reply" => {
+            let reply = myriad_merope::unanswered::read(input["reply"].as_str().unwrap());
+            Ok(json!({
+                "said": reply.said,
+                "quiet": reply.quiet,
+                "react": reply.react,
+                "kept": reply.kept(),
+            }))
+        }
         "speech.strip_markers" => {
             let (text, held) = markers::shown(input["text"].as_str().unwrap());
             Ok(json!({ "text": text, "held": held }))

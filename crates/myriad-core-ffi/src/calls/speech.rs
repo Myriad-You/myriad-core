@@ -174,6 +174,25 @@ pub(super) fn markers(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "markers": markers::MARKERS }))
 }
 
+/// What her reply does with the line said to her (`unanswered::read`):
+/// leaves it, reacts on it, says something; and the mark a host keeps with
+/// her turn so the conversation she has next time shows it.
+pub(super) fn reply(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        reply: String,
+    }
+    let req: In = input(raw)?;
+    let reply = myriad_merope::unanswered::read(&req.reply);
+    Ok(json!({
+        "said": reply.said,
+        "quiet": reply.quiet,
+        "react": reply.react,
+        "kept": reply.kept(),
+    }))
+}
+
 pub(super) fn strip_markers(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]

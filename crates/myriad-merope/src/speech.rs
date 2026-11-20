@@ -165,8 +165,9 @@ pub struct Wish {
     /// or never.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub keeps_until: Option<i64>,
-    /// Called on (a reply, an @, a touch, her turn in a game): she is not
-    /// asked whether to speak, only how.
+    /// Called on (a reply, an @, a touch, her turn in a game): admitted
+    /// without her weighing whether to speak up; whether she answers at all
+    /// is still hers, in the turn that answers (`unanswered`).
     #[serde(default)]
     pub called: bool,
     /// The grants what it would do takes (a piece of work it offers to do

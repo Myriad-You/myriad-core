@@ -2,7 +2,9 @@
 //! and why: the way a person in a group joins in.
 //!
 //! Someone talking to her or going on with what she said is not joining in:
-//! she simply answers. Joining in has a reason of her own: she knows
+//! that is an answer (`answer` here, or a line that @-ed her), and whether
+//! she gives one is judged in the turn that would answer (`unanswered`).
+//! Joining in has a reason of her own: she knows
 //! something about it, something of hers connects to it, or she wants to ask.
 //! It is judged from the people in the group, not from her: what she would
 //! say has to mean something to them. What she knows or would share comes

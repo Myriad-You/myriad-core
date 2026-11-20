@@ -19,6 +19,7 @@ pub(super) const TESTED: &[&str] = &[
     "speech.choice_parse",
     "speech.choice_prompt",
     "speech.markers",
+    "speech.reply",
     "speech.said_from_rows",
     "speech.strip_markers",
     "speech.texts",

@@ -76,7 +76,7 @@ pub(crate) fn advance(cx: &mut Cx, mut errand: Errand, answer: Option<Answer>) {
                 },
             ) = (answer, &errand.kind)
             {
-                let text = format!("（给 {} 那句贴了 {emoji}）", message.display_name);
+                let text = reacted_line(&message.display_name, &emoji);
                 // Kept under what was kept before a restart, read again if
                 // it could not be read when the line came.
                 if !cx.group.restored {
@@ -182,6 +182,8 @@ pub(crate) fn start_answer(
         replying: None,
         member: None,
         turn: None,
+        react: None,
+        left: None,
     });
     let owner = match &errand.kind {
         Kind::First { owner, .. } => *owner,

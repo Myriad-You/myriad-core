@@ -225,6 +225,33 @@ pub struct Answering {
     /// The member's turn her answer closed, kept with what goes out of it.
     #[serde(default)]
     pub turn: Option<String>,
+    /// The reaction she puts on their line, while it goes on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub react: Option<String>,
+    /// What she did with the line, kept as hers once what was kept before a
+    /// restart is read back (see `keep_left`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub left: Option<Left>,
+}
+
+/// What she did with a line instead of (or before) saying something, kept
+/// as hers, and what comes after.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Left {
+    pub line: String,
+    pub then: Then,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Then {
+    /// She left it: the turn ends with nothing out.
+    Quiet,
+    /// She only reacted: the turn ends, answered.
+    Reacted,
+    /// She reacted and says something too.
+    Say,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -243,6 +270,11 @@ pub enum AnswerStage {
     StrangerTurning,
     Delivering,
     Restoring,
+    /// Putting a reaction on their line.
+    Reacting,
+    /// Reading back what was kept before a restart, to keep what she did
+    /// with the line under it.
+    Leaving,
 }
 
 /// Her reply going out, message by message.

@@ -931,6 +931,7 @@ func step(_ event: JSON) throws {
 | `speech.choice_prompt` | `{soul, lives, atPause?, hands, heldBy?, scene?, pause?, reactions?, now}` → `{system, input}`：几句都在等同一个人时，一次挑一句的提示；`lives` 是她住在哪（`on their Mac`），`hands` 是 `{id, source, line, raisedAt}`，`heldBy` 是 `her_speaking`、`they_speaking`、`they_typing`；输入里的文字先过密钥扫描。从原生 `Arbiter/SpeechChoice.swift` 搬来 |
 | `speech.choice_parse` | `{raw, hands}` → `{choice: {say?, letGo} \| null}`：只留等着的那几句的 id（大小写不同的 UUID 算同一个）；超过 64 KiB、不是 JSON、没有 `let_go` 是 `null` |
 | `speech.markers` | `{}` → `{markers}`：统一的标记表，每种 `[[…]]` 的名字、写法、意思、是谁的、核心里哪个函数读它、今天哪几端照着做 |
+| `speech.reply` | `{reply}`（模型原样的回复）→ `{said, quiet, react, kept}`：她这一轮怎么对待那句话。`quiet` 是看了不回：只有 `[[quiet]]`、别的什么都没有（话、贴纸、办事、音乐都算有）；`react` 是她点在对方那句上的表情（`joining::REACTIONS` 之一），可以单独用也可以和话一起；`said` 是去掉这两个记号后的话，别的记号留给各自的读者；`kept` 是要和她这一轮一起存下的记号，存下了，`chat.history_*` 才会把那一轮原样带给她下一次看。空回复不是她不回，是出错 |
 | `speech.strip_markers` | `{text}` → `{text, held}`：去掉所有标记（标记独占的一行一起去掉）、结尾还没写完的标记先扣住不显示 |
 | `speech.texts` | `{}` → 保险丝的数和窗口、最近几句给她看几句、挑一句的超时、每句给多少字、答案的 schema |
 
