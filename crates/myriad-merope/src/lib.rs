@@ -41,6 +41,7 @@ pub mod life;
 mod onboarding;
 pub mod other_groups;
 pub mod others;
+pub mod own_said;
 pub mod pace;
 pub mod private_prompt;
 mod outfit_overlay;

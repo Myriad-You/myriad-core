@@ -2,7 +2,7 @@
 //! story, what someone is to her, the days behind her, what she has on her
 //! mind about someone (`threads`) and what still stings (`sore`).
 
-use myriad_merope::{sore, speaking, threads};
+use myriad_merope::{own_said, sore, speaking, threads};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
@@ -38,6 +38,33 @@ pub(super) fn views_section(raw: &[u8]) -> Result<Value, Failure> {
     }
     let req: In = input(raw)?;
     Ok(text(speaking::format_views_section(&req.views)))
+}
+
+/// What she said about herself that the talk brings back
+/// (`own_said::section`): each line what she said and how long ago, as
+/// `doing::ago_text` says it.
+pub(super) fn said_of_herself_section(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Line {
+        said: String,
+        ago: String,
+    }
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        said: Vec<Line>,
+    }
+    let req: In = input(raw)?;
+    let recalled: Vec<own_said::Recalled> = req
+        .said
+        .into_iter()
+        .map(|line| own_said::Recalled {
+            said: line.said,
+            ago: line.ago,
+        })
+        .collect();
+    Ok(text(own_said::section(&recalled)))
 }
 
 pub(super) fn taste_section(raw: &[u8]) -> Result<Value, Failure> {
