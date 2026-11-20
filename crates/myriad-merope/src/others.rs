@@ -94,19 +94,28 @@ pub fn hurt(petty: usize, hurt: usize, deep: usize, let_go: usize) -> Option<(St
 /// What she reads, looking back over herself, about these records.
 pub const IN_STORY: &str = "Records that begin \"how others took you\" are how you came across to people: whether they answered when you wrote first, whether anyone took it up when you spoke up unasked in a group, what they told you about yourself, how often someone hurt you and whether you let it go. What people told you is how they saw you, not the truth about you: take it, doubt it, or push back, as you would. These records never say who or where, and neither does any claim: what is between you and someone stays there.";
 
-/// The last times she wrote to someone first, what she said, and whether
-/// they answered: `(how long ago, answered, what she said)`, where `None` is
-/// not a day yet and no answer so far, read as "not yet" rather than as
-/// nothing known.
-pub fn first_words_view(entries: &[(String, Option<bool>, Option<String>)]) -> Value {
+/// One time she wrote to someone first: `(how long ago, answered, what she
+/// said, what they replied)`.
+pub type FirstWords = (String, Option<bool>, Option<String>, Option<String>);
+
+/// The last times she wrote to someone first, what she said, whether they
+/// answered and what they said back, where `None` for answered is not a day
+/// yet and no answer so far, read as "not yet" rather than as nothing known.
+/// What they replied is how they took being written to (「周末别主动找我」),
+/// which the most recent memories and lines may no longer hold by the time
+/// she weighs writing again.
+pub fn first_words_view(entries: &[FirstWords]) -> Value {
     Value::Array(
         entries
             .iter()
-            .map(|(ago, answered, said)| {
+            .map(|(ago, answered, said, replied)| {
                 let answered = answered.map_or(json!("not yet"), Value::Bool);
                 let mut entry = json!({ "ago": ago, "answered": answered });
                 if let Some(said) = said {
                     entry["said"] = json!(said);
+                }
+                if let Some(replied) = replied.as_deref().filter(|r| !r.trim().is_empty()) {
+                    entry["theyReplied"] = json!(replied);
                 }
                 entry
             })
@@ -141,13 +150,22 @@ mod tests {
         assert_eq!(
             first_words_view(&[
                 (
+                    "16 days ago".into(),
+                    Some(true),
+                    Some("周末在干嘛呀？".into()),
+                    Some("周末别主动找我哈 陪孩子呢".into())
+                ),
+                (
                     "2 days ago".into(),
                     Some(false),
-                    Some("今天上课咋样呀？".into())
+                    Some("今天上课咋样呀？".into()),
+                    None
                 ),
-                ("an hour ago".into(), None, None)
+                ("an hour ago".into(), None, None, Some("  ".into()))
             ]),
             json!([
+                { "ago": "16 days ago", "answered": true, "said": "周末在干嘛呀？",
+                  "theyReplied": "周末别主动找我哈 陪孩子呢" },
                 { "ago": "2 days ago", "answered": false, "said": "今天上课咋样呀？" },
                 { "ago": "an hour ago", "answered": "not yet" }
             ])

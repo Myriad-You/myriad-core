@@ -326,17 +326,33 @@ fn writing_first_matches_the_crate() {
             "2 days ago".to_string(),
             Some(false),
             Some("今天上课咋样呀？".to_string()),
+            None,
         ),
-        ("an hour ago".to_string(), None, None),
-        ("a week ago".to_string(), Some(true), Some(String::new())),
+        ("an hour ago".to_string(), None, None, None),
+        (
+            "a week ago".to_string(),
+            Some(true),
+            Some(String::new()),
+            Some("周末别主动找我哈".to_string()),
+        ),
     ];
     let entries: Vec<Value> = first_words
         .iter()
-        .map(|(ago, answered, said)| json!({ "ago": ago, "answered": answered, "said": said }))
+        .map(|(ago, answered, said, replied)| {
+            json!({ "ago": ago, "answered": answered, "said": said, "replied": replied })
+        })
         .collect();
     assert_eq!(
         ok("others.first_words_view", json!({ "entries": entries })),
         others::first_words_view(&first_words)
+    );
+    // An end that does not send what they replied yet reads as before.
+    assert_eq!(
+        ok(
+            "others.first_words_view",
+            json!({ "entries": [{ "ago": "2 days ago", "answered": true, "said": "在吗" }] })
+        ),
+        json!([{ "ago": "2 days ago", "answered": true, "said": "在吗" }])
     );
     assert_eq!(
         ok("others.first_words_view", json!({ "entries": [] })),

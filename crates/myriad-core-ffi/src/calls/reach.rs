@@ -156,6 +156,10 @@ pub(super) fn first_words_view(raw: &[u8]) -> Result<Value, Failure> {
         answered: Option<bool>,
         /// What she wrote that time.
         said: Option<String>,
+        /// What they said back within the day, when they answered. An end
+        /// that does not send it yet reads as before.
+        #[serde(default)]
+        replied: Option<String>,
     }
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
@@ -164,10 +168,10 @@ pub(super) fn first_words_view(raw: &[u8]) -> Result<Value, Failure> {
         entries: Vec<Entry>,
     }
     let req: In = input(raw)?;
-    let entries: Vec<(String, Option<bool>, Option<String>)> = req
+    let entries: Vec<myriad_merope::others::FirstWords> = req
         .entries
         .into_iter()
-        .map(|entry| (entry.ago, entry.answered, entry.said))
+        .map(|entry| (entry.ago, entry.answered, entry.said, entry.replied))
         .collect();
     Ok(myriad_merope::others::first_words_view(&entries))
 }
