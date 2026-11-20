@@ -36,6 +36,18 @@ pub fn section(recalled: &[Recalled]) -> Option<String> {
 mod tests {
     use super::*;
 
+    /// It goes with her own things, after what she heard in groups.
+    #[test]
+    fn it_sits_among_her_own_things() {
+        use crate::private_prompt::Part;
+        assert!(Part::HeardInGroups < Part::SaidOfHerself);
+        assert!(Part::SaidOfHerself < Part::OwnDays);
+        assert_eq!(
+            serde_json::to_value(Part::SaidOfHerself).unwrap(),
+            "saidOfHerself"
+        );
+    }
+
     #[test]
     fn nothing_brought_back_is_no_section() {
         assert_eq!(section(&[]), None);

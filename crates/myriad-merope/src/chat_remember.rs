@@ -71,11 +71,11 @@ pub fn extract_schema() -> serde_json::Value {
                 "items": {
                     "type": "object",
                     "properties": {
-                        "about": { "type": "string", "maxLength": MAX_OWN_CHARS },
+                        "line": { "type": "string", "maxLength": MAX_OWN_CHARS },
                         "evidence": { "type": "string", "maxLength": 240 },
                         "concepts": concepts_schema()
                     },
-                    "required": ["about", "evidence", "concepts"],
+                    "required": ["line", "evidence", "concepts"],
                     "additionalProperties": false
                 }
             },
@@ -196,6 +196,7 @@ struct Wording {
     put_onto: &'static str,
     own: &'static str,
     own_not: &'static str,
+    own_them: &'static str,
     moment: &'static str,
     did_and_came: &'static str,
     named: &'static str,
@@ -215,8 +216,9 @@ const CHINESE: Wording = Wording {
     forget: "‘忘了我刚说的吧’ or ‘当我没说’",
     both_once: "'说过有个姐姐，这次又说自己是独生子，不清楚哪个对'",
     put_onto: "'有人推荐《Outer Wilds》，说最好别看攻略'",
-    own: "'我也在追《北窗》！刚看到第五集，那个反转我没猜到' → '我在追《北窗》，看到第五集，没猜到那个反转'; '其实我不太吃辣' → '我不太吃辣'",
+    own: "'我也在追《北窗》！刚看到第五集，没想到男主是卧底' → '我在追《北窗》，看到第五集，没想到男主是卧底'; '其实我不太吃辣' → '我不太吃辣'",
     own_not: "'我挺好的', '哈哈我也是', '我在呢', '我也觉得'",
+    own_them: "'我觉得你该早点跟你妈说' is about them, not own",
     moment: "'刚进门，我家橘猫年糕就扑过来了，它五岁了' → '养了一只五岁的橘猫，叫年糕'",
     did_and_came: "'周二下午去4S店做了保养，店里说刹车片该换了', not only '刹车片该换了'",
     named: "'室友小林搬走了'",
@@ -236,8 +238,9 @@ const ENGLISH: Wording = Wording {
     forget: "‘forget what I just said’ or ‘never mind’",
     both_once: "'said they have an older sister, this time said they are an only child; not sure which is right'",
     put_onto: "'someone recommended Outer Wilds and said to play it without a walkthrough'",
-    own: "'oh I'm watching North Window too! just got to episode five, did not see that twist coming' → 'I am watching North Window, up to episode five, and did not see the twist coming'; 'honestly I can't handle spicy food' → 'I can't handle spicy food'",
+    own: "'oh I'm watching North Window too! just got to episode five, did not see the lead being a mole coming' → 'I am watching North Window, up to episode five, and did not see the lead being a mole coming'; 'honestly I can't handle spicy food' → 'I can't handle spicy food'",
     own_not: "'I'm good', 'haha same', 'I'm here', 'I think so too'",
+    own_them: "'I think you should tell your mom soon' is about them, not own",
     moment: "'just got in and my orange cat Mochi jumped on me, she is five' → 'has a five-year-old orange cat called Mochi'",
     did_and_came: "'had the car serviced at the dealer on Tuesday afternoon and was told the brake pads need replacing', not only 'the brake pads need replacing'",
     named: "'their roommate Sam moved out'",
@@ -285,7 +288,7 @@ If unsure whether it is the same thing, do not replace. \
 Each fact's evidence, and supersedesEvidence when supersedes is not empty (else null), must be a contiguous verbatim excerpt from userText where they stated it. Do not cite reply. Quotes, translations, hypotheses, and advice must not correct their memory. \
 concepts lists 1-5 things a fact is about (a person, pet, work, place, activity, food), each with its usual name and up to 5 other names people use for it: nicknames, synonyms, the name in Chinese, Japanese or English. They only help find the fact again. \
 said: 0 to {MAX_SAID} things you yourself told them in reply that you would remember having said, because they may come back to it: a recommendation, a promise, an answer or a specific item you gave them. Write each in the first person ('I recommended …'), in the language of the conversation, with evidence a contiguous verbatim excerpt from reply. Small talk and general advice → said is empty. \
-own: what you said about yourself in reply that is yours to keep, so you say the same whoever asks and wherever, later: what you watched, read, played or listened to and how far you got, what you like or do not, something you did or have, what you think of something. You judge which these are; there is no limit. Each one plain sentence in the first person, in the language of the conversation, standing on its own with the specifics you gave (the title, how far, when) and naming no one: who you were talking to and anything about them stay out, since this is yours anywhere ({own}). Its evidence is a contiguous verbatim excerpt from reply, and its concepts as for facts. Only what you said as so about yourself: not a question back, a guess, playing along with a joke or a game, or what you only say about them. Politeness and small talk about yourself are not kept ({own_not}). What you recommended, promised or answered them is said; when it also says something of yours (you liked the book you recommend), that part is own as well. Nothing of the kind → own is empty. \
+own: what you said about yourself in reply that is yours to keep, so you say the same whoever asks and wherever, later: what you watched, read, played or listened to and how far you got, what you like or do not, something you did or have, what you think of something. You judge which these are; there is no limit. Each one's line is one plain sentence in the first person, in the language of the conversation, standing on its own with the specifics you gave (the title, how far, and when, written as the actual date) and naming no one: who you were talking to and anything about them stay out, since this is yours anywhere ({own}). Its evidence is a contiguous verbatim excerpt from reply, and its concepts as for facts. Only what you said as so about yourself: not a question back, a guess, playing along with a joke or a game, or what you think of them and their life ({own_them}). Politeness and small talk about yourself are not kept ({own_not}). When you answered something about yourself (whether you have seen it, how far you are), that answer is own, not said. When something you recommended or promised also says something of yours (you liked the book you recommend), that part is own as well. yours, when given, is what you already said of yourself that this touches: what is already there is not kept again, only what is new or has changed since. Nothing of the kind → own is empty. \
 putOnto: 0 to {MAX_PUT_ONTO} public things they suggested you try yourself (a song, a book, a game, a show, a video), each one plain sentence about the thing itself, in the language of the conversation and with no names of people ({put_onto}), with evidence a contiguous verbatim excerpt from userText. Something they only mention, or like themselves without suggesting it to you, is not one → putOnto is empty. \
 If nothing is worth keeping, return facts=[], supersedes=[], supersedesEvidence=null, said=[], own=[], putOnto=[]. \
 Known:\n{known}",
@@ -299,6 +302,7 @@ Known:\n{known}",
         put_onto = wording.put_onto,
         own = wording.own,
         own_not = wording.own_not,
+        own_them = wording.own_them,
     )
 }
 
@@ -937,6 +941,9 @@ mod tests {
                 "You judge which these are; there is no limit.",
                 "naming no one",
                 "Politeness and small talk about yourself are not kept",
+                "that answer is own, not said",
+                "what is already there is not kept again",
+                "is about them, not own",
                 "own=[]",
                 own,
                 not,
@@ -949,7 +956,7 @@ mod tests {
         assert!(own.get("maxItems").is_none(), "no limit on what is hers");
         assert_eq!(
             own["items"]["required"],
-            serde_json::json!(["about", "evidence", "concepts"])
+            serde_json::json!(["line", "evidence", "concepts"])
         );
         assert!(
             schema["required"]

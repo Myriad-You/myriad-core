@@ -1024,6 +1024,7 @@ func step(_ event: JSON) throws {
 | `speaking.proactive_system` | `{soul, mind, recent}` | `speaking::compose_proactive_system`：`mind` 是一轮聊天戴的那几节，`recent` 是她最近没被问就说过的（新的在前） |
 | `speaking.proactive_user` | `{gist, happened?}` | `speaking::compose_proactive_user`：她想说的，和告诉她的那件事（谁说的话归谁） |
 | `speaking.said_lately_line` | `{minutesAgo, theyWroteSince, line}` | `speaking::said_lately_line`：`recent` 里的一行 |
+| `speaking.said_of_herself_section` | `{said: [{said, ago}]}` | `own_said::section`：她说过的、这次谈话碰到的自己的话，`ago` 照 `doing::ago_text`；段落标 `saidOfHerself`；没有是 `null` |
 | `speaking.found_out_section` | `{notes}` | `speaking::format_found_out_section`；没有是 `null` |
 | `speaking.share_section`、`share_links_section` | `{songs}`；`{songs: [[那一行, 链接]]}` | `speaking::format_share_section`、`format_share_links_section`；没有是 `null` |
 | `views.system`、`wants.system`、`inner.system`、`inner.system_for_group`、`doing.choice_system`、`explore.wonder_system`、`curiosity.wonder_system`、`sharing.system`、`sharing.come_back_system`、`chat_days.day_system`、`life.own_day_system` | `{soul}` | 各模块的 `system`（`life::own_day_prompt`） |
@@ -1034,7 +1035,7 @@ func step(_ event: JSON) throws {
 | `curiosity.digest_system` | `{soul, why}` | `curiosity::digest_system` |
 | `sharing.reason`、`sharing.come_back_reason` | `{what, why}` | `sharing::reason`、`come_back_reason` |
 | `chat_remember.extract_system`、`settle_system` | `{existing, theirs?, dated?}`、`{known, theirs?}` | `chat_remember::extract_system_prompt`、`settle_system_prompt`；例子的语言按 `theirs`（对方这句、这一段对方的话）选（`chat_remember::Examples::for_words`）：有汉字、没有假名和谚文是中文例子，其余是英文例子；不给 `theirs` 是中文例子，和以前一个字节都不差；`dated: true` 时多问每条事实发生在什么时候（`extract_system_prompt_dated`，`happened` 规则同整理的前半句），给每轮就记、不整理一段的端用 |
-| `chat_remember.extract_schema` | `{dated?}` | `{schema}`：`chat_remember::extract_schema`；`dated: true` 是 `extract_schema_dated`，每条事实多一个必答的 `happened`（`{from, to, about}`，不知道时 `from` 空），读法同整理（`nodes.standing_read`） |
+| `chat_remember.extract_schema` | `{dated?}` | `{schema}`：`chat_remember::extract_schema`；`dated: true` 是 `extract_schema_dated`，每条事实多一个必答的 `happened`（`{from, to, about}`，不知道时 `from` 空），读法同整理（`nodes.standing_read`）；回答里还有必答的 `own`：她在回复里说到她自己的（`{line, evidence, concepts}`，不设条数），各端写成 `own` 场合、来源 `own_said::SOURCE`（`self_said`）的她自己的记忆，`evidence` 要在她这句回复里，同一句不重复存；输入里的 `yours`（可选）是她已说过的、这句碰到的自己的话 |
 | `chat_remember.already_system`、`remembering.system`、`chat_days.pick_system`、`heard.system`、`explore.compare_system`、`life.concepts_system` | `{}` | 同名函数（`life::CONCEPTS_SYSTEM`） |
 | `remembering.schema`、`remembering.read` | `{}`、`{output}` | `remembering::schema`（`{schema}`）、`remembering::parse`（`{cues, thorough, lookBack, aboutYou, range?, open?}`，读不出是 `null`） |
 | `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |
