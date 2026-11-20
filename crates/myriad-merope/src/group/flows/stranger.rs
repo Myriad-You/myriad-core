@@ -127,6 +127,10 @@ pub struct Replying {
     pub text: String,
     #[serde(default)]
     pub sticker: Option<Value>,
+    /// What she does with the line (`unanswered::Reply::kept`), put back
+    /// after her words once they are taken apart.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kept: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -244,6 +248,7 @@ pub(crate) fn reply_start(
         asks: 0,
         text: String::new(),
         sticker: None,
+        kept: None,
     };
     let id = read(cx, Of::Hers, ToRead::Soul);
     (replying, Replied::Wait(id))
@@ -850,7 +855,11 @@ fn ask_again(cx: &mut Cx, r: &mut Replying) -> Replied {
 /// What she said, taken apart: the sticker she chose, the puzzle she said
 /// she would think up.
 fn answered(cx: &mut Cx, r: &mut Replying, raw: &str) -> Replied {
-    let (said, started) = crate::soup::split_start(raw);
+    // What she does with the line rides past the directives taken off her
+    // words, back onto them when her answer is done (see `unanswered`).
+    let took = crate::unanswered::read(raw);
+    r.kept = took.kept();
+    let (said, started) = crate::soup::split_start(&took.said);
     // A game with seats she said she would host: sign-up opens, and she
     // says how to join.
     let (mut said, seated) = crate::hosting::split_seat_game(&said);
@@ -937,7 +946,7 @@ fn at_table_done(cx: &mut Cx, r: &mut Replying, what: AtTableDo, text: Option<St
             finish(cx, r)
         }
         AtTableDo::After => {
-            let text = std::mem::take(&mut r.text);
+            let text = crate::unanswered::marked(&std::mem::take(&mut r.text), r.kept.as_deref());
             let sticker = r.sticker.take();
             Replied::Done((!text.is_empty() || sticker.is_some()).then_some((text, sticker)))
         }

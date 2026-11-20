@@ -61,6 +61,36 @@
           },
           {
             "actedOn": [
+              "site",
+              "app"
+            ],
+            "forms": [
+              "[[quiet]]"
+            ],
+            "means": "she read the line said to her and leaves it: alone, nothing is said or sent",
+            "name": "quiet",
+            "readBy": [
+              "unanswered::read"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
+              "site",
+              "app"
+            ],
+            "forms": [
+              "[[react:emoji]]"
+            ],
+            "means": "she puts that reaction on the line they wrote, with her words or alone",
+            "name": "react",
+            "readBy": [
+              "unanswered::read"
+            ],
+            "whose": "her"
+          },
+          {
+            "actedOn": [
               "app"
             ],
             "forms": [

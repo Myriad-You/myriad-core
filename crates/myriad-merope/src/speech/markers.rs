@@ -76,6 +76,22 @@ pub const MARKERS: &[Marker] = &[
         acted_on: &["site", "app"],
     },
     Marker {
+        name: "quiet",
+        forms: &["[[quiet]]"],
+        means: "she read the line said to her and leaves it: alone, nothing is said or sent",
+        whose: Whose::Her,
+        read_by: &["unanswered::read"],
+        acted_on: &["site", "app"],
+    },
+    Marker {
+        name: "react",
+        forms: &["[[react:emoji]]"],
+        means: "she puts that reaction on the line they wrote, with her words or alone",
+        whose: Whose::Her,
+        read_by: &["unanswered::read"],
+        acted_on: &["site", "app"],
+    },
+    Marker {
         name: "stance",
         forms: &[
             "[[stance:disagree|about|view]]",

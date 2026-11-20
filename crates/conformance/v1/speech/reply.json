@@ -1,0 +1,125 @@
+{
+  "call": "speech.reply",
+  "cases": [
+    {
+      "input": {
+        "reply": "[[quiet]]"
+      },
+      "name": "the quiet mark alone: she read it and leaves it",
+      "output": {
+        "kept": "[[quiet]]",
+        "quiet": true,
+        "react": null,
+        "said": ""
+      }
+    },
+    {
+      "input": {
+        "reply": "嗯嗯\n[[quiet]]"
+      },
+      "name": "words with the quiet mark: she answered",
+      "output": {
+        "kept": null,
+        "quiet": false,
+        "react": null,
+        "said": "嗯嗯"
+      }
+    },
+    {
+      "input": {
+        "reply": "[[quiet]]\n[[sticker:2]]"
+      },
+      "name": "a sticker with the quiet mark: she answered with the sticker",
+      "output": {
+        "kept": null,
+        "quiet": false,
+        "react": null,
+        "said": "[[sticker:2]]"
+      }
+    },
+    {
+      "input": {
+        "reply": "   "
+      },
+      "name": "nothing at all is no choice of hers",
+      "output": {
+        "kept": null,
+        "quiet": false,
+        "react": null,
+        "said": "   "
+      }
+    },
+    {
+      "input": {
+        "reply": "[[react:👍]]"
+      },
+      "name": "a reaction alone",
+      "output": {
+        "kept": "[[react:👍]]",
+        "quiet": false,
+        "react": "👍",
+        "said": ""
+      }
+    },
+    {
+      "input": {
+        "reply": "好诶\n[[react：❤️]]"
+      },
+      "name": "a reaction with words, full-width colon, variation selector",
+      "output": {
+        "kept": "[[react:❤]]",
+        "quiet": false,
+        "react": "❤",
+        "said": "好诶"
+      }
+    },
+    {
+      "input": {
+        "reply": "[[react:🦄]]"
+      },
+      "name": "a reaction no platform takes is none",
+      "output": {
+        "kept": null,
+        "quiet": false,
+        "react": null,
+        "said": ""
+      }
+    },
+    {
+      "input": {
+        "reply": "[[quiet]][[react:😁]]"
+      },
+      "name": "a reaction with the quiet mark: she reacted",
+      "output": {
+        "kept": "[[react:😁]]",
+        "quiet": false,
+        "react": "😁",
+        "said": ""
+      }
+    },
+    {
+      "input": {
+        "reply": "换一身[[wear:冬装]]\n[[react:👀]]"
+      },
+      "name": "other marks stay for whoever reads them",
+      "output": {
+        "kept": "[[react:👀]]",
+        "quiet": false,
+        "react": "👀",
+        "said": "换一身[[wear:冬装]]"
+      }
+    },
+    {
+      "input": {
+        "reply": "去老地方吧\n便宜又好吃"
+      },
+      "name": "only words",
+      "output": {
+        "kept": null,
+        "quiet": false,
+        "react": null,
+        "said": "去老地方吧\n便宜又好吃"
+      }
+    }
+  ]
+}

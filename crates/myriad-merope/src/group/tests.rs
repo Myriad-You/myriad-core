@@ -1373,6 +1373,77 @@ fn g1_a_member_calls_her() {
     end.check("a_member_calls_her");
 }
 
+/// Whether she answers is hers even when called by name: she reads the line
+/// and leaves it. Nothing goes out, the waiter is let go, and the line is
+/// kept as hers, so after a restart it is not taken for one she never saw.
+#[test]
+fn g1_a_member_calls_her_and_she_leaves_it() {
+    let mut end = End::new();
+    end.answer(
+        "ask:group_member",
+        3.0,
+        Answer::Asked {
+            raw: Some("[[quiet]]".into()),
+            failure: None,
+        },
+    );
+    heard(&mut end, 0.0, message(1, 11, "阿明", "@bot 晚安", true));
+    heard(&mut end, 1.0, message(2, 11, "阿明", "@bot 晚安～", true));
+    end.run(BASE + secs(900.0));
+    assert!(said_in_group(&end).is_empty(), "nothing went out");
+    let hers: Vec<&str> = end
+        .group
+        .lines
+        .iter()
+        .filter(|line| line.hers)
+        .map(|line| line.text.as_str())
+        .collect();
+    assert!(hers.contains(&"（看了 阿明 那句，没回）"), "{hers:?}");
+    end.check("a_member_calls_her_and_she_leaves_it");
+}
+
+/// Called by name, she only puts a reaction on the line: it goes on the
+/// line, nothing is said, and she has it as hers.
+#[test]
+fn g1_a_member_calls_her_and_she_only_reacts() {
+    let mut end = End::new();
+    end.answer(
+        "ask:group_member",
+        3.0,
+        Answer::Asked {
+            raw: Some("[[react:😁]]".into()),
+            failure: None,
+        },
+    );
+    heard(
+        &mut end,
+        0.0,
+        message(1, 11, "阿明", "@bot 哈哈哈哈你昨天那句笑死", true),
+    );
+    end.run(BASE + secs(900.0));
+    assert!(said_in_group(&end).is_empty(), "no words");
+    let reacted: Vec<Value> = end
+        .steps
+        .iter()
+        .flat_map(|step| {
+            step["output"]["effects"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default()
+        })
+        .filter(|effect| effect["kind"] == "react")
+        .collect();
+    assert_eq!(reacted.len(), 1);
+    assert_eq!(reacted[0]["emoji"], "😁");
+    assert!(
+        end.group
+            .lines
+            .iter()
+            .any(|line| line.hers && line.text == "（给 阿明 那句贴了 😁）")
+    );
+    end.check("a_member_calls_her_and_she_only_reacts");
+}
+
 #[test]
 fn g1_lines_wait_while_she_is_busy() {
     let mut end = End::new();

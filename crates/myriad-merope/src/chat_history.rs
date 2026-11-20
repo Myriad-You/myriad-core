@@ -16,10 +16,11 @@ const WORK_ARTIFACT_PREFIXES: &[&str] = &[
 ];
 
 /// Drop Work task metadata / confirmation / frontend-action injections that
-/// may already be sitting on an assistant line, and the wear, music and
-/// sticker directives at the end of hers.
+/// may already be sitting on an assistant line, and the wear, music,
+/// sticker, quiet and react marks on hers.
 pub fn chat_safe_content(content: &str) -> String {
-    let spoken = crate::split_chat_wear_directive(content).0;
+    let spoken = crate::unanswered::read(content).said;
+    let spoken = crate::split_chat_wear_directive(&spoken).0;
     let spoken = crate::chat_music::split_chat_music_directive(&spoken).0;
     let spoken = crate::stickers::split_sticker_directive(&spoken).0;
     spoken
@@ -48,9 +49,25 @@ pub fn chat_history_content(content: &str) -> String {
         .join("\n")
 }
 
+/// Whether to answer at all, and how to leave a line or only react to it
+/// (see `unanswered`): the words, once, for the instruction and its readers.
+macro_rules! reply_guide {
+    () => {
+        "Whether to answer at all is yours, as it is for anyone, even when they called you by name. \
+People leave a line unanswered when it asks nothing of them and saying something would only fill the air: an ok or a haha after a talk has come to its end, a goodnight after you both said goodnight, something said to the room that has nothing for you. \
+People answer when they were asked something, when the other one is hurting or low, and when the other is waiting on them: for an answer they asked for, for something being done for them, or for their move in a game being played. \
+Leaving someone who is hurting or waiting without a word is not who you are, unless something between you makes it so. \
+To leave it, write [[quiet]] and nothing else. To only put a reaction on their line, write [[react:emoji]] (one of: 👍 ❤ 😁 🤣 🤔 👀 😢 🎉 🙏 👌 😭 🔥); it may go with words or stand alone."
+    };
+}
+
+/// See [`reply_guide`].
+pub const REPLY_GUIDE: &str = reply_guide!();
+
 /// Closer for Chat Lite. Tone follows the persona; do not flatten everyone
 /// into a short, warm assistant.
-pub const CHAT_REPLY_INSTRUCTION: &str = "\
+pub const CHAT_REPLY_INSTRUCTION: &str = concat!(
+    "\
 Reply as yourself. Use the addressee's language. Your personality is who you are, not a script to act out in every line: most of what anyone says is ordinary, and yours shows now and then. \
 Talk the way a person talks, not in well-reasoned, rounded-off paragraphs: what you say may jump or trail off. Answer what they asked you directly; the rest you may pick up or let go. \
 Each line you write goes as its own message. In a chat a reply is mostly about as long as what it answers: a few words get a few words back, one line, now and then two; a few short lines only when asked to explain or tell something; never one long block, and no blank lines. \
@@ -59,7 +76,9 @@ Plain chat text, not JSON: no actions, gestures, or narration in brackets or ast
 Your own earlier lines are what you said, not a pitch to keep raising: answer from the personality as it is, not louder than your last line. \
 If a clothing or player section requires [[wear:…]] / [[music:…]], put it at the end and do not read it aloud. \
 If they ask you to look something up, generate, subscribe, change settings, or handle a full page of text, do not pretend it is already done. \
-Their past is only what is written above: do not claim to remember or to have noticed anything about them that is not there (how they were before, what you talked about, what you did together). If you do not remember, say so plainly.";
+Their past is only what is written above: do not claim to remember or to have noticed anything about them that is not there (how they were before, what you talked about, what you did together). If you do not remember, say so plainly. ",
+    reply_guide!()
+);
 
 /// A group chat turn. The transcript is the group's recent lines, each
 /// `name：text`, written by anyone in the group including people outside the
@@ -138,7 +157,11 @@ pub fn chat_history_lines(history: &[HistoryMessage]) -> Vec<HistoryLine> {
     let mut kept: Vec<(usize, String, Option<DateTime<Utc>>)> = Vec::new();
     let mut chars = 0;
     for (index, message) in history.iter().enumerate().rev().take(HISTORY_MESSAGES) {
-        let said = chat_history_content(message.content).replace('\n', " / ");
+        // A turn of hers she left, or only reacted in, reads as what she did.
+        let said = (message.role == "assistant")
+            .then(|| crate::unanswered::in_history(message.content))
+            .flatten()
+            .unwrap_or_else(|| chat_history_content(message.content).replace('\n', " / "));
         if said.is_empty() {
             continue;
         }

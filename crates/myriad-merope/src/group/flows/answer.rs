@@ -211,6 +211,21 @@ pub(crate) fn answer_step(cx: &mut Cx, a: &mut Answering, answer: Option<Answer>
             let went_out = a.went_out.clone().unwrap_or_default();
             after_saying(cx, a, went_out)
         }
+        (AnswerStage::Reacting, answer) => reacted(cx, a, answer),
+        // What she did is kept as hers whatever came back, as her
+        // reaction is when she speaks up unasked.
+        (AnswerStage::Leaving, answer) => {
+            if let Some(Answer::Kept {
+                restore: Some(restore),
+            }) = answer
+            {
+                restored(cx, restore.lines, restore.spoke_up, restore.table);
+            }
+            match a.left.take() {
+                Some(left) => left_kept(cx, a, left),
+                None => Next::Done(false),
+            }
+        }
         (AnswerStage::Delivering, answer) => {
             let Some(mut deliver) = a.deliver.take() else {
                 return Next::Done(false);
@@ -434,9 +449,7 @@ fn stranger_replied(cx: &mut Cx, a: &mut Answering, replied: Replied) -> Next {
             if text.is_empty() && sticker.is_none() {
                 return Next::Done(false);
             }
-            a.reply = without_reply_mark(&text);
-            a.sticker = sticker;
-            say(cx, a)
+            took(cx, a, &text, sticker)
         }
     }
 }
@@ -457,9 +470,101 @@ fn member_replied(cx: &mut Cx, a: &mut Answering, next: MemberNext) -> Next {
                 keep_turn(cx, a, String::new(), false);
                 return Next::Done(false);
             }
-            a.reply = without_reply_mark(&text);
-            a.sticker = sticker;
-            say(cx, a)
+            took(cx, a, &text, sticker)
         }
     }
+}
+
+/// What she does with the line, from her reply (see `unanswered`): leaves
+/// it, puts a reaction on it, says something, or both of the last two.
+fn took(cx: &mut Cx, a: &mut Answering, text: &str, sticker: Option<Value>) -> Next {
+    let reply = crate::unanswered::read(text);
+    if reply.quiet {
+        keep_turn(cx, a, String::new(), false);
+        // Kept as hers when it called her, so it is not taken for a line
+        // she never saw and answered after a restart (`left_waiting`).
+        if !a.message.addressed {
+            return Next::Done(false);
+        }
+        let line = left_line(&a.message.display_name);
+        return keep_left(
+            cx,
+            a,
+            Left {
+                line,
+                then: Then::Quiet,
+            },
+        );
+    }
+    a.reply = without_reply_mark(reply.said.trim());
+    a.sticker = sticker;
+    match reply.react {
+        // A line with nobody's message behind it takes no reaction.
+        Some(emoji) if !a.message.message_id.is_empty() => {
+            a.react = Some(emoji.to_string());
+            a.stage = AnswerStage::Reacting;
+            let to = a.message.target();
+            let emoji = emoji.to_string();
+            Next::Wait(cx.effect(|id| Effect::React { id, to, emoji }))
+        }
+        _ if a.reply.is_empty() && a.sticker.is_none() => {
+            keep_turn(cx, a, String::new(), false);
+            Next::Done(false)
+        }
+        _ => say(cx, a),
+    }
+}
+
+/// Her reaction put on their line (or not, when the platform would not):
+/// kept as hers, then her words, if she had any.
+fn reacted(cx: &mut Cx, a: &mut Answering, answer: Option<Answer>) -> Next {
+    let emoji = a.react.take().unwrap_or_default();
+    let ok = matches!(answer, Some(Answer::Reacted { ok: true }));
+    let words = !a.reply.trim().is_empty() || a.sticker.is_some();
+    if !words {
+        keep_turn(cx, a, String::new(), false);
+    }
+    if !ok {
+        return if words { say(cx, a) } else { Next::Done(false) };
+    }
+    let line = reacted_line(&a.message.display_name, &emoji);
+    let then = if words { Then::Say } else { Then::Reacted };
+    keep_left(cx, a, Left { line, then })
+}
+
+/// Keep what she did with the line as hers: under what was kept before a
+/// restart, read back first when it could not be read when the line came.
+fn keep_left(cx: &mut Cx, a: &mut Answering, left: Left) -> Next {
+    if !cx.group.restored {
+        a.left = Some(left);
+        a.stage = AnswerStage::Leaving;
+        return Next::Wait(cx.effect(|id| Effect::ReadKept { id }));
+    }
+    left_kept(cx, a, left)
+}
+
+fn left_kept(cx: &mut Cx, a: &mut Answering, left: Left) -> Next {
+    let now = cx.now();
+    record_hers(cx.group, &left.line, now, cx.out);
+    match left.then {
+        Then::Quiet => Next::Done(false),
+        Then::Reacted => {
+            if !a.first {
+                answered(cx.group, &a.message, now);
+            }
+            Next::Done(true)
+        }
+        Then::Say => say(cx, a),
+    }
+}
+
+/// Her reaction on someone's line, as she has it in the group's talk.
+pub(crate) fn reacted_line(name: &str, emoji: &str) -> String {
+    format!("（给 {name} 那句贴了 {emoji}）")
+}
+
+/// A line that called her and that she read and left, as she has it in the
+/// group's talk.
+pub(crate) fn left_line(name: &str) -> String {
+    format!("（看了 {name} 那句，没回）")
 }

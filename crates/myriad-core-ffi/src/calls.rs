@@ -420,6 +420,7 @@ const CALLS: &[(&str, Call)] = &[
     ("speech.choice_parse", speech::choice_parse),
     ("speech.choice_prompt", speech::choice_prompt),
     ("speech.markers", speech::markers),
+    ("speech.reply", speech::reply),
     ("speech.said_from_rows", speech::said_from_rows),
     ("speech.strip_markers", speech::strip_markers),
     ("speech.texts", speech::texts),
