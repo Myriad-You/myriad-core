@@ -457,6 +457,52 @@ pub fn call_receive(
     answer(CallVerdict::Do, version)
 }
 
+/// What her host does with a `call.ask` a device sent it (`call.ask` up):
+/// [`call_receive`] from the host's side, by the same rules.
+///
+/// `providing` is what the host says it provides on this link
+/// (`call.granted.providing`), `[(name, version)]`. The host is the one that
+/// grants, so what it provides is both what it can do and what is granted:
+/// it never holds an ask. An action the contract has the host do but it does
+/// not provide on this link is one it refuses, `call_not_granted`; a device's
+/// action, or one the contract does not register, is `call_unknown`, even
+/// when `providing` names it: only the host's own actions are its to do. Then
+/// the version, the audience and the deadline as for any receiver.
+pub fn host_call_receive(
+    action: &str,
+    version: u64,
+    of: &Value,
+    deadline_at: u64,
+    taken_at: u64,
+    providing: &[(String, u64)],
+) -> CallReceived {
+    let host_does = |name: &str| call_spec(name).is_some_and(|spec| spec.by == "host");
+    let provides: Vec<(String, u64)> = providing
+        .iter()
+        .filter(|(name, _)| host_does(name))
+        .cloned()
+        .collect();
+    let refused: Vec<(String, u64)> = CONTRACT
+        .calls
+        .actions
+        .iter()
+        .filter(|(name, spec)| {
+            spec.by == "host" && !provides.iter().any(|(provided, _)| provided == *name)
+        })
+        .map(|(name, spec)| (name.clone(), spec.version))
+        .collect();
+    call_receive(
+        action,
+        version,
+        of,
+        deadline_at,
+        taken_at,
+        &provides,
+        &refused,
+        Some(&provides),
+    )
+}
+
 /// `call.result`: its id is its callId's and `.result`; done carries
 /// exactly the result fields of its action at that version (another
 /// version passes), failed an error with one of `calls.failCodes`, unknown
