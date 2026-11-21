@@ -8,6 +8,7 @@ use serde_json::json;
 use super::{micros, ok, text};
 
 pub(super) const TESTED: &[&str] = &[
+    "audience.own_said",
     "prompt.untrusted_block",
     "sore.carried_section",
     "sore.input",
@@ -346,5 +347,34 @@ fn what_she_said_of_herself_is_the_crate_section() {
     assert_eq!(
         text("speaking.said_of_herself_section", json!({ "said": [] })),
         None
+    );
+}
+
+/// What she said of herself is kept where the crate keeps it: said in a
+/// group, her own; said in private, that private audience.
+#[test]
+fn where_what_she_said_of_herself_is_kept_is_the_crates() {
+    use myriad_agent_rules::memory::audience::{Audience, Venue};
+    let private = Audience {
+        members: vec!["7".to_string()],
+        venue: Venue::Private,
+    };
+    let group = Audience {
+        members: vec!["7".to_string(), "8".to_string()],
+        venue: Venue::Group("telegram:-100123".into()),
+    };
+    for present in [private, group] {
+        assert_eq!(
+            ok("audience.own_said", json!({ "present": present }))["audience"],
+            serde_json::to_value(own_said::kept_for(&present)).unwrap(),
+            "{present:?}"
+        );
+    }
+    assert_eq!(
+        ok(
+            "audience.own_said",
+            json!({ "present": {"venue": "group", "group": "g", "members": ["1"]} })
+        )["audience"],
+        json!({ "venue": "own" })
     );
 }
