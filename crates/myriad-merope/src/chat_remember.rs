@@ -210,7 +210,7 @@ struct Wording {
 }
 
 const CHINESE: Wording = Wording {
-    pronouns: "in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else.",
+    pronouns: "in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else. 自己 reads as whoever does the thing in its clause, so when someone else does something to or for them, do not write 自己 for them there: say it from their side, or by their name when you know it ('收到同事阿杰送的一盒茶' or '小林收到阿杰送的一盒茶', not '阿杰送了自己一盒茶', which reads as 阿杰 giving it to himself).",
     coffee: "‘喜欢咖啡’",
     no_coffee: "‘我现在不喝咖啡了’",
     tea: "‘我也喜欢茶’",
@@ -815,6 +815,8 @@ mod tests {
             settle_system_prompt(&[], Examples::Chinese),
         ] {
             assert!(prompt.contains("a 他, 她 or 他们 in a fact is always someone else"));
+            // Someone else doing something to them is not written with 自己.
+            assert!(prompt.contains("自己 reads as whoever does the thing in its clause"));
             assert!(!prompt.contains('{'), "every example filled in");
         }
         assert!(settle_system_prompt(&[], Examples::English).contains("brake pads"));
