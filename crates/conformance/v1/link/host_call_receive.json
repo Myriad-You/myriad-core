@@ -1,0 +1,275 @@
+{
+  "call": "link.host_call_receive",
+  "cases": [
+    {
+      "input": {
+        "action": "group.read",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "groupId": "g42",
+          "kind": "group"
+        },
+        "providing": [],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "call_not_granted: a host action the host does not provide on this link",
+      "output": {
+        "code": "call_not_granted",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "group.send",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "groupId": "g42",
+          "kind": "group"
+        },
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "call_not_granted: another host action is provided, not this one",
+      "output": {
+        "code": "call_not_granted",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "screen.look",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "call_unknown: a device's action is never the host's to do",
+      "output": {
+        "code": "call_unknown",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "screen.look",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "screen.look",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "call_unknown: a device's action the host says it provides is still not its to do",
+      "output": {
+        "code": "call_unknown",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "fridge.open",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "fridge.open",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "call_unknown: an action no contract registers, though the host says it provides it",
+      "output": {
+        "code": "call_unknown",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "group.read",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "groupId": "g42",
+          "kind": "group"
+        },
+        "providing": [],
+        "takenAt": 1760140800000,
+        "version": 2
+      },
+      "name": "version_unsupported: a host action at another version, and the answer says the host's",
+      "output": {
+        "code": "version_unsupported",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "model.chat",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 2
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "version_unsupported: the host provides the action at another version, and says which",
+      "output": {
+        "code": "version_unsupported",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 2
+      }
+    },
+    {
+      "input": {
+        "action": "group.read",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "wrong_audience: a group's action asked for the owner",
+      "output": {
+        "code": "wrong_audience",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "model.chat",
+        "deadlineAt": 1760140830000,
+        "for": {},
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "wrong_audience: for has no kind",
+      "output": {
+        "code": "wrong_audience",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "model.chat",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "do: a host action it provides, for whom it is, in time",
+      "output": {
+        "code": null,
+        "deadlineAt": 1760140830000,
+        "verdict": "do",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "model.chat",
+        "deadlineAt": 1760141400000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "do: a deadline further than the action may be given is cut short, not refused",
+      "output": {
+        "code": null,
+        "deadlineAt": 1760140860000,
+        "verdict": "do",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "model.chat",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 1
+          }
+        ],
+        "takenAt": 1760140830000,
+        "version": 1
+      },
+      "name": "call_timeout: a host action it provides, taken at its deadline",
+      "output": {
+        "code": "call_timeout",
+        "deadlineAt": 1760140830000,
+        "verdict": "fail",
+        "version": 1
+      }
+    }
+  ],
+  "version": 1
+}

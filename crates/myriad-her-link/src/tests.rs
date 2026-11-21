@@ -222,6 +222,45 @@ fn every_call_receive_case_answers_as_recorded() {
     }
 }
 
+#[test]
+fn every_host_call_receive_case_answers_as_recorded() {
+    let path = conformance().join("host_call_receive.json");
+    let file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    assert_eq!(file["call"], "link.host_call_receive");
+    for case in file["cases"].as_array().unwrap() {
+        let input = &case["input"];
+        let providing: Vec<(String, u64)> = input["providing"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|one| {
+                (
+                    one["name"].as_str().unwrap().to_string(),
+                    one["version"].as_u64().unwrap(),
+                )
+            })
+            .collect();
+        let got = host_call_receive(
+            input["action"].as_str().unwrap(),
+            input["version"].as_u64().unwrap(),
+            &input["for"],
+            input["deadlineAt"].as_u64().unwrap(),
+            input["takenAt"].as_u64().unwrap(),
+            &providing,
+        );
+        // The host grants: it never holds an ask.
+        assert_ne!(got.verdict, CallVerdict::Hold, "{}", case["name"]);
+        let (verdict, code) = match got.verdict {
+            CallVerdict::Hold => ("hold", Value::Null),
+            CallVerdict::Do => ("do", Value::Null),
+            CallVerdict::Fail(code) => ("fail", json!(code)),
+        };
+        let got = json!({ "verdict": verdict, "code": code, "version": got.version,
+            "deadlineAt": got.deadline_at });
+        assert_eq!(got, case["output"], "{}", case["name"]);
+    }
+}
+
 fn conformance() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/link")
 }
