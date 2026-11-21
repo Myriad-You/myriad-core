@@ -1,6 +1,23 @@
 //! What a coding-agent session's change (`now.session` on her link) puts on
-//! her nodes, by rules and without asking her: the repository is a whole (a
-//! topic of its `repo:` key), each session a task under it (`part_of`).
+//! her nodes.
+//!
+//! **Her inbox, not her nodes** ([`inbox_item`]). A session is not a thing of
+//! hers: whether what it did has a state of its own worth a node (judgment
+//! one), and which node it belongs on, is hers to judge, at her upkeep. So
+//! what she made of a change when she looked at it (her `about`,
+//! [`crate::session_look`]) waits in the inbox of the partner's private
+//! audience, one item per session, until her upkeep puts it on a node, on
+//! one she makes for it, or leaves it. Two sessions of one thing are two
+//! items she can put on the same node. The item is a third party's (what a
+//! coding agent did): it never counts for a view, and never says she did
+//! it.
+//!
+//! **By rules (no longer used by any end).** [`session_rows`] lays a session
+//! out on nodes without asking her: the repository is a whole (a topic of
+//! its `repo:` key), each session a task under it (`part_of`). It made one
+//! task per session, a line of template text per turn and a status that
+//! flipped with every turn, so the ends moved to [`inbox_item`]; it stays
+//! until none pins a core that calls it.
 //!
 //! | change | rows |
 //! | --- | --- |
@@ -422,6 +439,47 @@ impl Writer<'_> {
     }
 }
 
+/// One item of her inbox: what she made of a session when she looked at it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionItem {
+    /// The session's reference ([`session_ref`]): one item per session, the
+    /// latest she made of it in place of the one before while it waits.
+    pub id: String,
+    /// A third party's: what a coding agent did, never hers or the
+    /// partner's, so it never counts for a view.
+    pub said_by: Vec<SaidBy>,
+    /// Her own line of it, as she said it when she looked.
+    pub text: String,
+    /// The grant's and the session's references, sorted: what a span placed
+    /// from it names, so it goes when the grant is forgotten.
+    pub refs: Vec<String>,
+}
+
+/// What waits in her inbox of one session after she looked at a change of
+/// it and said what it is about (`about`, her words): none when she said
+/// nothing of it.
+pub fn inbox_item(
+    device: &str,
+    grant: &str,
+    session: &str,
+    about: &str,
+) -> Result<Option<SessionItem>, NodeError> {
+    crate::check_token("device", device)?;
+    let Some(text) = text(about) else {
+        return Ok(None);
+    };
+    let id = session_ref(device, grant, session);
+    let mut refs = vec![grant_ref(device, grant), id.clone()];
+    refs.sort();
+    Ok(Some(SessionItem {
+        id,
+        said_by: vec![SaidBy::ThirdParty],
+        text,
+        refs,
+    }))
+}
+
 /// The rows one change of a session writes.
 pub fn session_rows(input: SessionInput) -> Result<SessionRows, NodeError> {
     let SessionInput {
@@ -802,6 +860,42 @@ mod tests {
                 )
             })
             .collect()
+    }
+
+    #[test]
+    fn what_she_made_of_a_session_waits_in_her_inbox_as_a_third_partys() {
+        let item = inbox_item(
+            "dev_mac",
+            "g_0123456789",
+            "s-1",
+            "  the store split, waiting on a push  ",
+        )
+        .unwrap()
+        .unwrap();
+        assert_eq!(item.id, session_ref("dev_mac", "g_0123456789", "s-1"));
+        assert_eq!(item.said_by, [SaidBy::ThirdParty]);
+        assert_eq!(item.text, "the store split, waiting on a push");
+        let mut refs = vec![grant_ref("dev_mac", "g_0123456789"), item.id.clone()];
+        refs.sort();
+        assert_eq!(item.refs, refs);
+        // The same session again is the same item; another one is not.
+        let again = inbox_item("dev_mac", "g_0123456789", "s-1", "pushed")
+            .unwrap()
+            .unwrap();
+        assert_eq!(again.id, item.id);
+        let other = inbox_item("dev_mac", "g_0123456789", "s-2", "pushed")
+            .unwrap()
+            .unwrap();
+        assert_ne!(other.id, item.id);
+    }
+
+    #[test]
+    fn nothing_said_of_a_session_puts_nothing_in_her_inbox() {
+        assert_eq!(
+            inbox_item("dev_mac", "g_0123456789", "s-1", " \n ").unwrap(),
+            None
+        );
+        assert!(inbox_item("", "g_0123456789", "s-1", "x").is_err());
     }
 
     #[test]

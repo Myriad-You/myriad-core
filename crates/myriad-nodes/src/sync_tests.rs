@@ -1926,6 +1926,8 @@ fn upkeep_leaves_a_retracted_node_to_a_local_run_on_its_home() {
         candidates,
         inbox: Vec::new(),
         ledger: mac.ledger.clone(),
+        today: None,
+        language: None,
     };
     // A shared run on another node is never shown it, so never merges into
     // it: a preference, not a rule of the log.
@@ -2706,6 +2708,8 @@ fn a_shared_run_is_never_shown_what_a_retract_reaches() {
             candidates: Vec::new(),
             inbox: Vec::new(),
             ledger: side.ledger.clone(),
+            today: None,
+            language: None,
         })
         .unwrap()
     };

@@ -4,7 +4,7 @@
 //! last looked at it (its `node.upkept` rows): never by the calendar, never
 //! by a count. What a node watches:
 //!
-//! - **own**: its own rows;
+//! - **own**: its own rows, but what a rule wrote;
 //! - **relation**: a relation another node made to it, or took back;
 //! - **part**: the rows of its parts (属于: one end changed, the other is
 //!   upkept);
@@ -14,6 +14,10 @@
 //! - **mutual_block**: it and another block each other, and that is new to
 //!   it (a hand to raise);
 //! - **clash**: a clash with it is new to it (撞上: a hand to raise).
+//!
+//! Of its own rows, not what a rule wrote (a program's frames, a status a
+//! rule moved): that is not news to her, and would wake her each time a
+//! program moved.
 //!
 //! Of a part or a whole, not what a rule wrote there (anything a session
 //! laid out: frames, a status it moved, what it asks) nor how it stands now
@@ -50,7 +54,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use myriad_persona_log::{Row, kinds::Rule};
+use myriad_persona_log::{Row, kinds::Rule, row::Author};
 use myriad_persona_sync::Rev;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -202,9 +206,12 @@ impl<'a> Watch<'a> {
 
     /// The watched rows of one node, each with why it watches it.
     fn watched(&self, audience: &str, id: &str) -> Vec<(Reason, &'a Row)> {
+        // What a rule wrote on it is not news to her: it would wake a node
+        // each time a program moved.
         let mut out: Vec<(Reason, &Row)> = self
             .rows_of(audience, id)
             .iter()
+            .filter(|row| row.author != Author::Rule)
             .map(|row| (Reason::Own, *row))
             .collect();
         for (row, (to_audience, to)) in &self.full.points_at {

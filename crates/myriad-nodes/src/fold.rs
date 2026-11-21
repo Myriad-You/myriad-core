@@ -1018,6 +1018,10 @@ pub(crate) struct Seen {
     pub floor: Option<u64>,
     /// Rows her runs wrote.
     pub wrote: BTreeSet<String>,
+    /// The latest mark is an answer that could not be read and saw nothing
+    /// ([`crate::upkeep::read`]): the next one that cannot be read either
+    /// sees what it was shown, so a node is asked again once, not forever.
+    pub failed: bool,
     /// Each mark on its own: what one run saw. Together they say whether
     /// some run saw a row; only one run having seen two rows at once says
     /// she weighed them together.
@@ -1813,10 +1817,13 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                     let seen = seen_by
                         .entry((audience.to_string(), id.to_string()))
                         .or_default();
+                    seen.failed =
+                        body.fallback.is_some() && body.seen.is_empty() && body.floor.is_none();
                     seen.each.push(Seen {
                         clocks: body.seen.clone(),
                         floor: body.floor,
                         wrote: body.wrote.iter().cloned().collect(),
+                        failed: false,
                         each: Vec::new(),
                     });
                     for (device, rev) in body.seen {
