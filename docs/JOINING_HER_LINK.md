@@ -7,7 +7,7 @@
 
 这一页对着核心 main 的 `eab8055e0` 核过，`ABI_VERSION` 是 5，契约 `protocol` 是 2、`schemaVersion` 是 3。你钉哪个提交，就以那个提交上的契约和核心文档为准。
 
-没核实的地方标了 uncertain。站点一侧的做法这个仓库里核实不了：标着「站点线核过」的几处，是站点线 2026-11-20 对着站点 `preview` 分支的 `2004e7794` 读代码得出的，我没有自己核，站点改了它们就会过时。 标着「工程管理转述」的一处，是工程管理 2026-11-21 转述的已定决定和站点提交，同样不在这个仓库里。
+这个仓库里核实不了的是别的仓库的做法，都注明了出处。站点一侧：标着「站点线核过」的几处，是站点线 2026-11-20 对着站点 `preview` 分支的 `2004e7794` 读代码得出的，我没有自己核，站点改了它们就会过时。 标着「工程管理转述」的一处，是工程管理 2026-11-21 转述的已定决定和站点提交，同样不在这个仓库里。 标着「App 线核过」的，是 App 线 2026-11-21 对着 macOS 端 `preview` 的 `03bee290` 读代码得出的。
 
 ## 先定你是哪一种端
 
@@ -117,7 +117,10 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
   - `hello` 到 `welcome` 就是一次往返：发 `hello` 的本地时刻、`welcome.serverTime`、收到 `welcome` 的本地时刻。
   - `ping` 到 `pong` 也是：发 `ping` 的本地时刻、`pong` 信封的 `at`、收到 `pong` 的本地时刻。
   - **单位不一样，要换算。** `welcome.serverTime` 和信封的 `at` 是毫秒，交给 `log.clock_offset` 前乘 1000；`clock_ahead` 错误里的 `serverTime` 本来就是微秒（契约 `frames.error`）。
-  - 走会话的端用 `welcome` 那一次最省事：`welcome` 交付不带 `serverTime`，心跳也不交给外壳，但每段文本都经外壳的手，`serverTime` 或 `pong` 的 `at` 要外壳自己从原文里读；用 `ping` 那一种的话，会话发出去的 `ping` 也要外壳自己从要写的文本里认出来。uncertain：macOS 端现在用哪一种，没人读过。
+  - 走会话的端用 `welcome` 那一次最省事：`welcome` 交付不带 `serverTime`，心跳也不交给外壳，但每段文本都经外壳的手，`serverTime` 或 `pong` 的 `at` 要外壳自己从原文里读；用 `ping` 那一种的话，会话发出去的 `ping` 也要外壳自己从要写的文本里认出来。
+  - macOS 端的做法（App 线核过）：日志的时钟不在这条连接上量，用同步的 HTTP 握手（`GET sync/hello`）那一次往返，把站点时间当成在往返的中点读到的，交给 `log.clock_offset`。它不存裸的偏移，存一个锚点：站点时间、中点那一刻单调钟的读数、这一次开机的 id。同一次开机里，校正后的时间是锚点的站点时间加上单调钟之后走过的时间，墙钟被改了也不受影响；换了一次开机或还没握手过，就直接用墙钟。交给 `log.clock_next`、`log.clock_observe`、`log.clock_repair` 的偏移都这样算。
+  - macOS 端还把服务端盖了时间的 `lease.grant` 的 `issued` 用 `log.clock_observe` 记进日志时钟，之后写的行一定排在它后面。`lease.deputy` 的 `issued` 也该这样（契约 `frames.lease.deputy`：「observes issued into its clock」）。
+  - 调用的期限是另一回事，不用量得这么细：macOS 端只拿 `welcome.serverTime` 减去收到时的本机时间。走会话的端这一步会话已经替你做了。
 
 ### 一轮同步
 
@@ -288,7 +291,7 @@ git log 529c98f..<要钉的提交> -- crates/myriad-link-child crates/myriad-her
 - [ ] 因为等确认的满了被断开（`behind`）之后，重连上要重新发 `log.vector`：`log.rows` 主机不会自己重发。
 - [ ] `welcome` 后每个受众发 `log.vector`；收用 `nodes.wire_take` 加 `log.merge`；发用 `nodes.wire_send`。
 - [ ] 回答收到的 `log.vector`：只在 `log.missing` 非空时回，两边相同绝不回。
-- [ ] 时钟偏移用 `hello` 到 `welcome` 那一次往返量，`welcome.serverTime` 是毫秒，交给 `log.clock_offset` 前乘 1000。
+- [ ] 时钟偏移量一次往返交给 `log.clock_offset`（微秒）：macOS 端用同步的 HTTP 握手；只走这条连接的端用 `hello` 到 `welcome`，`welcome.serverTime` 是毫秒，要乘 1000。偏移对着单调钟存，别对着墙钟。
 - [ ] 翻页：了结带 `more` 的批之后才发带 `after` 的 `log.vector`；自己发页时一页没翻完不重发。
 - [ ] 说了 `streams` 的：了结一批后把拒收的行按理由报 `log.refused`。
 - [ ] `v2/log/`、`v2/nodes/`、`v1/partner/` 的用例全过；带 `passthrough` 的剧本全过。
