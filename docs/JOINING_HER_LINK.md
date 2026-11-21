@@ -254,7 +254,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 - 依赖：`Cargo.toml` 里按提交钉 `myriad-link-child`，钉的是 `529c98f`。那个提交上会话已经有调用和 stream，但还没有口子（`#129`）和 `link.call_receive`（`#139`）；XR 的能力清单里也没说 `calls`、`streams`，所以这些它都没有接。
 - 能力清单：`crates/myriad-xr-link/src/lib.rs` 的 `XR_CAPABILITIES`，十四项。
 - 外壳的分发：`crates/myriad-xr-ffi/src/lib.rs` 里把会话的输出转成给 Kotlin 的一步（`fn step`）。读不了的帧（`Delivery::Unread`）它记成一条问题，不悄悄丢掉；它不处理的交付落进兜底分支。
-- 套接字外壳在 Kotlin 一侧：`android/app/src/main/java/you/myriad/xr/link/LinkClient.kt`（280 行）。它开 WebSocket，把收到的文本、定时的 `tick`、主人做的事一件件交给会话，把会话要发的文本原样写进套接字；关闭和升级被拒问 `afterClose`、`afterHttp`，重连等多久问 `backoffMs`。里面没有编号、确认、心跳的判断，也不拼任何一帧。它自己定的是几件外壳的小事，比如：多久 `tick` 一次（心跳的五分之一）；她搬走了（`host_moved`）时至少等一分钟再连；超过帧大小上限的文本不交给会话；升级被 401、403 拒时另发一次普通的 HTTP 请求去读拒绝的原因。
+- 套接字外壳在 Kotlin 一侧：`android/app/src/main/java/you/myriad/xr/link/LinkClient.kt`（280 行）。它开 WebSocket，把收到的文本、定时的 `tick`、主人做的事一件件交给会话，把会话要发的文本原样写进套接字；关闭和升级被拒问 `afterClose`、`afterHttp`，重连等多久问 `backoffMs`。里面没有编号、确认、心跳的判断，也不拼任何一帧。它自己定的是几件外壳的小事，比如：多久 `tick` 一次；她搬走了（`host_moved`）时至少等一分钟再连；超过帧大小上限的文本不交给会话；升级被 401、403 拒时另发一次普通的 HTTP 请求去读拒绝的原因。
 - 会话、契约的读法、帧检查都是核心的，它没有自己的一份。它自己留着的是套接字外壳和凭据、形象和语音。
 
 它再往后换钉时要补什么，看这段历史里每个提交说明的「影响的端」：
