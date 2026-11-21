@@ -135,7 +135,16 @@ pub struct InboxItem {
     /// own words in a group, kept in their private audience.
     #[serde(default)]
     pub audience: Option<String>,
+    /// What else it rests on (`<type>:<id>`, at most [`INBOX_REFS`]): a
+    /// span placed from it and a sentence resting on it name these too, so
+    /// they go when one of them is forgotten (a coding-agent session's
+    /// grant, [`crate::sessions::inbox_item`]).
+    #[serde(default)]
+    pub refs: Vec<String>,
 }
+
+/// What else one inbox item may rest on, at most.
+pub const INBOX_REFS: usize = 4;
 
 impl InboxItem {
     fn said_in<'a>(&'a self, audience: &'a str) -> &'a str {
@@ -706,6 +715,19 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             return Err(NodeError::new("inbox ids repeat"));
         }
         check_said_by(&item.said_by)?;
+        if item.refs.len() > INBOX_REFS {
+            return Err(NodeError::new("an inbox item rests on at most 4 more"));
+        }
+        let mut rests = BTreeSet::new();
+        for rest in &item.refs {
+            check_token("inbox ref", rest)?;
+            if myriad_persona_log::row::object_type(rest).is_none() {
+                return Err(NodeError::new("an inbox ref is <type>:<id>"));
+            }
+            if rest == &item.id || !rests.insert(rest.as_str()) {
+                return Err(NodeError::new("inbox refs repeat"));
+            }
+        }
         if let Some(said_in) = &item.audience {
             check_token("inbox audience", said_in)?;
             if !audience_fits(said_in, &input.audience, &item.said_by) {
@@ -1321,6 +1343,7 @@ impl<'a> Reader<'a> {
                 let item = &self.context.items[at];
                 counted &= counts(None, &item.said_by, item.said_in(&self.context.audience));
                 ids.insert(item.id.clone());
+                ids.extend(item.refs.iter().cloned());
             } else if let Some(rests_on) = self.context.heads.get(label) {
                 counted = false;
                 ids.extend(rests_on.iter().cloned());
@@ -1608,6 +1631,7 @@ impl<'a> Reader<'a> {
                         return Err(Fallback::NotAllowed);
                     }
                     refs.insert(item.id.clone());
+                    refs.extend(item.refs.iter().cloned());
                     said_by.extend(item.said_by.iter().copied());
                     said_in.insert(item.said_in(&self.context.audience).to_string());
                 }
