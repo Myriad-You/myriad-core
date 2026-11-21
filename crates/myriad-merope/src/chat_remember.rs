@@ -210,7 +210,7 @@ struct Wording {
 }
 
 const CHINESE: Wording = Wording {
-    pronouns: "in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else.",
+    pronouns: "in English they and their are them; in Chinese leave them out, or write 自己 where a word is needed, and never write 他, 她 or 他们 for them ('周六爬山负责带水' or '周六爬山自己负责带水', not '他负责带水' or '他们负责带水'), so a 他, 她 or 他们 in a fact is always someone else. 自己 reads as whoever does the thing in its clause, so when someone else does something to or for them, do not write 自己 for them there: say it from their side ('收到同事阿杰送的一盒茶', not '阿杰送了自己一盒茶', which reads as 阿杰 giving it to himself).",
     coffee: "‘喜欢咖啡’",
     no_coffee: "‘我现在不喝咖啡了’",
     tea: "‘我也喜欢茶’",
@@ -294,7 +294,7 @@ If unsure whether it is the same thing, do not replace. \
 Each fact's evidence, and supersedesEvidence when supersedes is not empty (else null), must be a contiguous verbatim excerpt from userText where they stated it. Do not cite reply for these. Quotes, translations, hypotheses, and advice must not correct their memory. \
 concepts lists 1-5 things a fact is about (a person, pet, work, place, activity, food), each with its usual name and up to 5 other names people use for it: nicknames, synonyms, the name in Chinese, Japanese or English. They only help find the fact again. \
 said: 0 to {MAX_SAID} things you yourself told them in reply that you would remember having said, because they may come back to it: a recommendation, a promise, an answer or a specific item you gave them. Write each in the first person ('I recommended …'), in the language of the conversation, with evidence a contiguous verbatim excerpt from reply. Small talk and general advice → said is empty. \
-own: what you said about yourself in reply that is yours to keep, so you say the same whoever asks and wherever, later: what you watched, read, played or listened to and how far you got, what you like or do not, something you did or have, what you think of something. You judge which these are; there is no limit. Each one's line is one plain sentence in the first person, in the language of the conversation, standing on its own with the specifics you gave (the title, how far, and when, written as the actual date) and naming no one: who you were talking to and anything about them stay out, since this is yours anywhere ({own}). Its evidence is a contiguous verbatim excerpt from reply, and its concepts as for facts. Your reply often only answers what they asked, without saying again what it is about (they asked whether you finished a book, you said how far you got): the line then names it from userText or before, so it stands on its own ({own_short}). Only what you said as so about yourself: not a question back, a guess, playing along with a joke or a game, or what you think of them and their life ({own_them}). Politeness and small talk about yourself are not kept ({own_not}). When you answered something about yourself (whether you have seen it, how far you are), that answer is own, not said. When something you recommended or promised also says something of yours (you liked the book you recommend), that part is own as well. yours, when given, is what you already said of yourself that this touches: what is already there is not kept again. What has changed since is new and is kept, saying how it is now and how it was (you got further, finished it, came to like it, went off it: {own_changed}). Nothing of the kind → own is empty. \
+own: what you said about yourself in reply that is yours to keep, so you say the same when it comes up again: what you watched, read, played or listened to and how far you got, what you like or do not, something you did or have, what you think of something. You judge which these are; there is no limit. Each one's line is one plain sentence in the first person, in the language of the conversation, standing on its own with the specifics you gave (the title, how far, and when, written as the actual date) and naming no one: who you were talking to and anything about them stay out, since this is about you ({own}). Its evidence is a contiguous verbatim excerpt from reply, and its concepts as for facts. Your reply often only answers what they asked, without saying again what it is about (they asked whether you finished a book, you said how far you got): the line then names it from userText or before, so it stands on its own ({own_short}). Only what you said as so about yourself: not a question back, a guess, playing along with a joke or a game, or what you think of them and their life ({own_them}). Politeness and small talk about yourself are not kept ({own_not}). When you answered something about yourself (whether you have seen it, how far you are), that answer is own, not said. When something you recommended or promised also says something of yours (you liked the book you recommend), that part is own as well. yours, when given, is what you already said of yourself that this touches: what is already there is not kept again. What has changed since is new and is kept, saying how it is now and how it was (you got further, finished it, came to like it, went off it: {own_changed}). Nothing of the kind → own is empty. \
 putOnto: 0 to {MAX_PUT_ONTO} public things they suggested you try yourself (a song, a book, a game, a show, a video), each one plain sentence about the thing itself, in the language of the conversation and with no names of people ({put_onto}), with evidence a contiguous verbatim excerpt from userText. Something they only mention, or like themselves without suggesting it to you, is not one → putOnto is empty. \
 If nothing is worth keeping, return facts=[], supersedes=[], supersedesEvidence=null, said=[], own=[], putOnto=[]. \
 Known:\n{known}",
@@ -815,6 +815,8 @@ mod tests {
             settle_system_prompt(&[], Examples::Chinese),
         ] {
             assert!(prompt.contains("a 他, 她 or 他们 in a fact is always someone else"));
+            // Someone else doing something to them is not written with 自己.
+            assert!(prompt.contains("自己 reads as whoever does the thing in its clause"));
             assert!(!prompt.contains('{'), "every example filled in");
         }
         assert!(settle_system_prompt(&[], Examples::English).contains("brake pads"));
@@ -945,7 +947,7 @@ mod tests {
             for rule in [
                 "what you say about yourself goes in own",
                 "own: what you said about yourself in reply",
-                "so you say the same whoever asks and wherever",
+                "so you say the same when it comes up again",
                 "You judge which these are; there is no limit.",
                 "naming no one",
                 "Politeness and small talk about yourself are not kept",

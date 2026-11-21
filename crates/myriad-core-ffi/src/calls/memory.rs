@@ -55,6 +55,20 @@ pub(super) fn admits(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "admits": audience::admits(&req.learned, &req.present) }))
 }
 
+/// `{present}` → `{audience}`: the audience what she said of herself in
+/// front of `present` is kept in (`myriad_merope::own_said::kept_for`):
+/// said in a group, her own (`{venue: "own"}`); said in private, that same
+/// private audience.
+pub(super) fn own_said_audience(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        present: Audience<String>,
+    }
+    let req: In = quiet_input(raw)?;
+    Ok(json!({ "audience": myriad_merope::own_said::kept_for(&req.present) }))
+}
+
 pub(super) fn score_all(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
