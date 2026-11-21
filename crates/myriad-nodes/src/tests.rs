@@ -392,6 +392,11 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         // a person or a group lives in its own audience
         ("a person in her own audience", "lives in its own audience"),
         ("a group in her own audience", "lives in its own audience"),
+        ("a group in another group", "lives in its own audience"),
+        (
+            "a group in the partner's private talk",
+            "lives in its own audience",
+        ),
         // a retract (撤回同步) needs this side's ledger
         (
             "refused: a retract taken without the ledger",

@@ -82,8 +82,9 @@
 //!   a path (`/…`, `~…`, `C:\…`). A raw record's id (`record:<session>#<n>`)
 //!   travels as an id; the record itself stays on its device (`local_ref`).
 //! - **Not someone else's node in hers**: no row of a node whose created
-//!   row puts a person or a group in her own audience (`own:`), which every
-//!   PC holds. Such a node is refused where it is made (`nodes.id`) and
+//!   row puts its key where it does not fit ([`crate::key::Key::fits`]): a
+//!   person or a group in her own audience (`own:`), which every PC holds,
+//!   or a group outside its own. Such a node is refused where it is made (`nodes.id`) and
 //!   passed by in the fold; this keeps what a side wrote anyway off the
 //!   wire (`person_elsewhere`). A side knows such a node by its created
 //!   body, or by the sender's word that it withheld that body for this
@@ -196,7 +197,8 @@ pub enum Why {
     LocalRef,
     /// One of her texts holds a secret, or another string a key.
     Secret,
-    /// A row of a person's or a group's node in her own audience.
+    /// A row of a node whose key does not fit its audience: a person's or
+    /// a group's in her own, or a group's outside its own.
     PersonElsewhere,
     /// More than [`MAX_BODY_BYTES`] canonical bytes.
     TooLarge,
@@ -713,8 +715,9 @@ fn strings_in<'a>(value: &'a Value, out: &mut Vec<&'a str>) {
     }
 }
 
-/// The nodes whose created row (among `created`, row and body) puts a
-/// person or a group in her own audience.
+/// The nodes whose created row (among `created`, row and body) puts its
+/// key where it does not fit: a person or a group in her own audience, or
+/// a group outside its own.
 pub(crate) fn elsewhere<'a>(
     created: impl Iterator<Item = (&'a Row, &'a Value)>,
 ) -> BTreeSet<String> {

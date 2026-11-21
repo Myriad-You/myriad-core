@@ -17,11 +17,13 @@
 //! the partner (一起看过的): it only ever takes others in, and never goes
 //! into another node itself ([`Key::is_together`]).
 //!
-//! A person or group lives in its own audience (the person's private talk,
-//! the group), never in hers (`own:`): what she keeps of someone else stays
-//! with them, so it never reaches the partner's computers, which hold her
-//! own audience ([`Key::fits`]). Hers holds `her`, repositories and minted
-//! things.
+//! A person or a group is never in hers (`own:`): what she keeps of
+//! someone else stays with them, so it never reaches the partner's
+//! computers, which hold her own audience. A group is only in its own
+//! audience (`group:<id>`), so what a group shares stays in that group; a
+//! person may be in any private talk or group, for someone the partner
+//! talks about is a node of their talk too ([`Key::fits`]). Hers holds
+//! `her`, repositories and minted things.
 
 use std::borrow::Cow;
 
@@ -159,7 +161,7 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
         .map_err(|_| NodeError::new("audience is not personal:, own: or group:"))?;
     if !Key::parse(key)?.fits(audience) {
         return Err(NodeError::new(
-            "a person or group lives in its own audience, not hers",
+            "a person or group is never in hers, and a group lives in its own audience only",
         ));
     }
     Ok(made_id(audience, key))
