@@ -135,16 +135,23 @@ pub struct InboxItem {
     /// own words in a group, kept in their private audience.
     #[serde(default)]
     pub audience: Option<String>,
-    /// What else it rests on (`<type>:<id>`, at most [`INBOX_REFS`]): a
-    /// span placed from it and a sentence resting on it name these too, so
-    /// they go when one of them is forgotten (a coding-agent session's
-    /// grant, [`crate::sessions::inbox_item`]).
+    /// What else it rests on: a coding-agent session's grant (`grant:…`,
+    /// [`crate::sessions::inbox_item`]), at most [`INBOX_REFS`]; its own id
+    /// among them is the item itself, and passed over. A span placed from
+    /// it carries them in its `refs`, and evidence citing it in its
+    /// `because`, so the host finds them by the grant when it is forgotten
+    /// (`sessions::names_session`, which reads only a body's own `refs`
+    /// and `because`: a summary sentence citing it is not found so).
     #[serde(default)]
     pub refs: Vec<String>,
 }
 
 /// What else one inbox item may rest on, at most.
 pub const INBOX_REFS: usize = 4;
+/// What an inbox item may rest on besides itself: a grant to tell her of
+/// sessions, and nothing that would make a span look as if it rested on a
+/// row she was not shown.
+const INBOX_REF_TYPES: &[&str] = &["grant"];
 
 impl InboxItem {
     fn said_in<'a>(&'a self, audience: &'a str) -> &'a str {
@@ -715,18 +722,20 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             return Err(NodeError::new("inbox ids repeat"));
         }
         check_said_by(&item.said_by)?;
-        if item.refs.len() > INBOX_REFS {
-            return Err(NodeError::new("an inbox item rests on at most 4 more"));
-        }
         let mut rests = BTreeSet::new();
-        for rest in &item.refs {
+        for rest in item.refs.iter().filter(|rest| **rest != item.id) {
             check_token("inbox ref", rest)?;
-            if myriad_persona_log::row::object_type(rest).is_none() {
-                return Err(NodeError::new("an inbox ref is <type>:<id>"));
+            if !myriad_persona_log::row::object_type(rest)
+                .is_some_and(|kind| INBOX_REF_TYPES.contains(&kind))
+            {
+                return Err(NodeError::new("an inbox ref is a grant:<id>"));
             }
-            if rest == &item.id || !rests.insert(rest.as_str()) {
+            if !rests.insert(rest.as_str()) {
                 return Err(NodeError::new("inbox refs repeat"));
             }
+        }
+        if rests.len() > INBOX_REFS {
+            return Err(NodeError::new("an inbox item rests on at most 4 more"));
         }
         if let Some(said_in) = &item.audience {
             check_token("inbox audience", said_in)?;
