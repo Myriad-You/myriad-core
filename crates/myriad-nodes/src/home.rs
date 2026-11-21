@@ -60,8 +60,10 @@ pub struct SendInput {
     pub ledger: Vec<Entry>,
     /// This side: a computer of the partner's.
     pub holder: Holder,
-    /// Nodes known to put a person or a group in her own audience
-    /// ([`crate::wire::Taken::elsewhere`], kept): no body of theirs goes.
+    /// Nodes known to put their key where it does not fit
+    /// ([`crate::key::Key::fits`]: a person or a group in her own audience,
+    /// a group outside its own; [`crate::wire::Taken::elsewhere`], kept):
+    /// no body of theirs goes.
     #[serde(default)]
     pub elsewhere: Vec<String>,
 }
@@ -367,8 +369,9 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
             Some((row, read))
         })
         .collect();
-    // A person's or a group's node in her own audience, by the created
-    // bodies in the page: no body of it comes in.
+    // A node whose key does not fit its audience (a person or a group in
+    // her own, a group outside its own), by the created bodies in the
+    // page: no body of it comes in.
     let away = elsewhere(
         decoded
             .iter()
