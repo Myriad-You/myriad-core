@@ -29,11 +29,18 @@
 //! | `relate` | `from?` (this node) → `to`, `relation`, `reason`, `because` (挂两处 is a second `part_of`) | `node.related` |
 //! | `unrelate` | `from?` → `to`, `relation`, `reason` (独立 is a `part_of` taken back) | `node.unrelated` on each node holding it |
 //! | `kind` | `done?` and `ongoing?`, `reason`, `because` (进行中 ↔ 话题) | `node.done_when`, `node.kind_changed`, status, as they change |
-//! | `status` | `status` (`active`, `resting`, `done`, `dropped`, `ongoing`) | `node.revised` |
-//! | `hand` | `text`, `because`: a hand raised to the partner | `node.intent`, waiting |
+//! | `status` | `status` (`active`, `resting`, `done`, `dropped`, `ongoing`) | `node.revised`; done or dropped, every hand of hers on it that waits on nothing is dropped too |
+//! | `hand` | `intent?` (an `h…`; none for a new one), `text`, `dropped?`, `because`: a hand raised to the partner, reworded or let go of | `node.intent` of hers (`origin` her), waiting or dropped |
 //! | `summary` | `sentences`, each `{text, because}` (改写概括) | `node.revised` of the summary |
 //! | `view` | `view?` (a `v…`; none for a new one), `text`, `because` (看法变了) | `node.view_changed` |
 //! | `open` | `item?` (an `o…`; none for a new one), `text?`, `closed?`, `because` (没收尾的事) | `node.open_item` |
+//!
+//! A `summary`, `view`, `open` or `hand` that says what stands already, on
+//! the same grounds, writes nothing: the same words again are no new
+//! version. A merge never goes into her own node, a person's or a group's,
+//! and in a private talk nothing is placed on her own node or a group's.
+//! What she is shown carries her day (`today`) and the language she writes
+//! in (`language`) when the caller gives them.
 //!
 //! Evidence (`because`) is what she was shown: a span, an entry or an inbox
 //! item is itself; a summary sentence, an open item or a view stands for
@@ -79,8 +86,13 @@
 //! so nothing the home keeps goes into shared text.
 //!
 //! An answer that cannot be read as it stands changes nothing: no row but
-//! the `node.upkept` mark, which says why (`fallback`) so the queue moves
-//! on; the node is due again at its next change.
+//! the `node.upkept` mark, which says why (`fallback`) and which action
+//! (`failed` in what is read back). The first such mark sees nothing, so the
+//! node stays due and is asked once more (a host waits for its next upkeep
+//! rather than asking again in the same one); a second in a row sees what it
+//! was shown, so the queue moves on and the node is due again at its next
+//! change. Either way nothing she answered is written: her actions name
+//! each other (`new1`, labels), and half an answer is not hers.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -93,11 +105,11 @@ use crate::{
     NodeError,
     body::{
         Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged, OpenItem,
-        Related, Relation, Revised, Sentence, Span, SplitOff, Standing, Status, Unrelated, Upkept,
-        ViewChanged,
+        Origin, Related, Relation, Revised, Sentence, Span, SplitOff, Standing, Status, Unrelated,
+        Upkept, ViewChanged,
     },
     check_token,
-    fold::{FoldInput, Full, Item, Node, Parts, fold_full},
+    fold::{FoldInput, Full, IntentValue, Item, Node, Parts, fold_full},
     key::{Key, Kind, node_id},
     limits::{
         BECAUSE_IDS, NAME_CHARS, PLACE_SUMMARY_CHARS, REASON_CHARS, REFS, SEEN_DEVICES,
@@ -154,6 +166,14 @@ pub struct UpkeepInput {
     /// Inbox items of this audience, oldest first.
     #[serde(default)]
     pub inbox: Vec<InboxItem>,
+    /// Her day today (`2026-11-21`, in her own time zone), shown to her so
+    /// what she writes says a day, not 「明天」 that is stale by next week.
+    #[serde(default)]
+    pub today: Option<String>,
+    /// The language she speaks with the partner (`zh-CN`, `ja`…), shown to
+    /// her so she writes in it.
+    #[serde(default)]
+    pub language: Option<String>,
 }
 
 /// A head field, as the partner may have set it.
@@ -185,8 +205,14 @@ pub struct ShownItem {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ShownIntent {
+    /// `h1`…: what a `hand` names to reword or let go of it.
+    pub label: String,
     pub text: String,
     pub status: IntentStatus,
+    /// The partner's own (they asked her for it, or wrote it): only a hand
+    /// against it.
+    #[serde(skip_serializing_if = "is_false")]
+    pub by_partner: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -337,6 +363,12 @@ pub struct Prepared {
     /// run writes local rows only (`read` is given a local `sync`).
     #[serde(skip_serializing_if = "is_false")]
     pub local: bool,
+    /// Her day today, as the caller gave it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub today: Option<String>,
+    /// The language she writes in, as the caller gave it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
 }
 
 fn is_false(value: &bool) -> bool {
@@ -354,6 +386,28 @@ fn partners<T>(item: &Item<T>) -> bool {
             .rivals
             .iter()
             .any(|rival| rival.author == Author::Owner)
+}
+
+/// Whether a span of what was said in `audience` may go on a node of `key`
+/// there: never on 「关于你」 (only about them, nothing hung on it), and in
+/// a private talk never on her own node or a group's.
+fn may_hold_spans(key: &Key<'_>, audience: &str) -> bool {
+    let private = audience.starts_with("personal:");
+    !(key.is_about_you(audience) || (private && matches!(key, Key::Her | Key::Group(_))))
+}
+
+/// Whether an intent is the partner's own: they asked her for it, or wrote
+/// its current version.
+fn partner_intent(intent: &Item<IntentValue>) -> bool {
+    intent.current.value.origin == Some(Origin::Partner) || partners(intent)
+}
+
+/// Whether an intent is a hand she raised that waits on nothing but her:
+/// hers or from before origins, waiting, with no time or event to come due
+/// on. Such a hand is let go of with the thing it is on.
+fn her_waiting_hand(intent: &Item<IntentValue>) -> bool {
+    let value = &intent.current.value;
+    value.status == IntentStatus::Waiting && value.trigger.is_none() && !partner_intent(intent)
 }
 
 fn aliases_of(node: &Node) -> Vec<String> {
@@ -389,6 +443,8 @@ struct Context {
     open: BTreeMap<String, String>,
     /// `v…` → the view's id.
     views: BTreeMap<String, String>,
+    /// `h…` → the intent's id.
+    intents: BTreeMap<String, String>,
     /// `i…` → index in the inbox.
     inbox: BTreeMap<String, usize>,
     items: Vec<InboxItem>,
@@ -458,6 +514,7 @@ struct Kept {
     heads: BTreeMap<String, Vec<String>>,
     open: BTreeMap<String, String>,
     views: BTreeMap<String, String>,
+    intents: BTreeMap<String, String>,
 }
 
 fn kept(node: &Node) -> Kept {
@@ -564,6 +621,19 @@ fn kept(node: &Node) -> Kept {
             }
         })
         .collect();
+    let intents: Vec<(String, &String, &Item<IntentValue>)> = node
+        .intents
+        .iter()
+        .filter(|(_, intent)| {
+            matches!(
+                intent.current.value.status,
+                IntentStatus::Waiting | IntentStatus::Said
+            )
+        })
+        .take(UPKEEP_HEAD_ITEMS)
+        .enumerate()
+        .map(|(n, (id, intent))| (format!("h{}", n + 1), id, intent))
+        .collect();
     let shown = ShownNode {
         label: "n1".to_string(),
         kind: node.kind.as_ref().map(|kind| kind.current.value.kind),
@@ -576,19 +646,13 @@ fn kept(node: &Node) -> Kept {
             .and_then(|done| done.current.value.as_deref().map(shown_text)),
         summary,
         open,
-        intents: node
-            .intents
+        intents: intents
             .iter()
-            .filter(|(_, intent)| {
-                matches!(
-                    intent.current.value.status,
-                    IntentStatus::Waiting | IntentStatus::Said
-                )
-            })
-            .take(UPKEEP_HEAD_ITEMS)
-            .map(|(_, intent)| ShownIntent {
+            .map(|(label, _, intent)| ShownIntent {
+                label: label.clone(),
                 text: shown_text(&intent.current.value.text),
                 status: intent.current.value.status,
+                by_partner: partner_intent(intent),
             })
             .collect(),
         views,
@@ -602,6 +666,10 @@ fn kept(node: &Node) -> Kept {
         heads,
         open: open_labels,
         views: view_labels,
+        intents: intents
+            .into_iter()
+            .map(|(label, id, _)| (label, id.clone()))
+            .collect(),
     }
 }
 
@@ -610,6 +678,22 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         check_token("node", node)?;
     } else if input.inbox.is_empty() {
         return Err(NodeError::new("with no node, there is an inbox to file"));
+    }
+    if input
+        .today
+        .as_deref()
+        .is_some_and(|today| today.len() != 10 || !crate::stands::is_day(today))
+    {
+        return Err(NodeError::new("today is a day, 2026-11-21"));
+    }
+    if input.language.as_deref().is_some_and(|language| {
+        language.is_empty()
+            || language.len() > 35
+            || !language
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-')
+    }) {
+        return Err(NodeError::new("language is a language tag"));
     }
     let mut seen = BTreeSet::new();
     for item in &input.inbox {
@@ -860,9 +944,15 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
             text,
         });
     }
-    let (shown, heads, open, views) = match kept_node {
-        Some(kept) => (Some(kept.shown), kept.heads, kept.open, kept.views),
-        None => (None, BTreeMap::new(), BTreeMap::new(), BTreeMap::new()),
+    let (shown, heads, open, views, intents) = match kept_node {
+        Some(kept) => (
+            Some(kept.shown),
+            kept.heads,
+            kept.open,
+            kept.views,
+            kept.intents,
+        ),
+        None => Default::default(),
     };
     let prepared = Prepared {
         node: shown,
@@ -878,6 +968,8 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         inbox,
         due,
         local,
+        today: input.today.clone(),
+        language: input.language.clone(),
     };
     Ok(Context {
         full,
@@ -889,6 +981,7 @@ fn context(input: UpkeepInput) -> Result<Context, NodeError> {
         heads,
         open,
         views,
+        intents,
         inbox: inbox_labels,
         items: input.inbox,
         prepared,
@@ -1015,6 +1108,10 @@ pub struct UpkeepRead {
     pub held: Vec<Held>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fallback: Option<Fallback>,
+    /// The action (its place in the answer, from 1) that could not be read,
+    /// when one could not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failed: Option<usize>,
 }
 
 /// A node an answer can name: one in the fold, or one it creates.
@@ -1037,6 +1134,9 @@ struct Reader<'a> {
     news: BTreeMap<String, Named>,
     used: BTreeSet<String>,
     written: BTreeSet<(String, String)>,
+    /// She marked the node done or dropped: the hands she raised on it that
+    /// wait on nothing are let go of with it.
+    ended: bool,
     /// Every `part_of` row the fold weighs, in log order, as (from, to,
     /// row), with what the answer adds and takes back: the fold's rule is
     /// replayed over it, so what stands here is what will stand there.
@@ -1122,6 +1222,7 @@ impl<'a> Reader<'a> {
             news: BTreeMap::new(),
             used: BTreeSet::new(),
             written: BTreeSet::new(),
+            ended: false,
             part_of,
         }
     }
@@ -1486,7 +1587,8 @@ impl<'a> Reader<'a> {
             }
             "place" => {
                 let target = self.label_of(action, "node")?;
-                if Key::parse(&target.key).is_ok_and(|key| key.is_about_you(&self.context.audience))
+                if Key::parse(&target.key)
+                    .is_ok_and(|key| !may_hold_spans(&key, &self.context.audience))
                 {
                     return Err(Fallback::NotAllowed);
                 }
@@ -1564,28 +1666,9 @@ impl<'a> Reader<'a> {
                     .unwrap_or_default();
                 let id = me.id.clone();
                 self.status_write(&id, base, status)?;
+                self.ended = matches!(status, Status::Done | Status::Dropped);
             }
-            "hand" => {
-                let text = text(action, "text", TEXT_CHARS, false)?;
-                let because = self.evidence(action)?;
-                let id = self.me()?.id.clone();
-                self.write(
-                    &id,
-                    Body::Intent(Intent {
-                        version: 1,
-                        sync: self.sync.clone(),
-                        said_by: self.her(),
-                        base: Vec::new(),
-                        intent: format!("h{}", minted(&format!("hand\u{1f}{}\u{1f}{n}", self.run))),
-                        text,
-                        because,
-                        status: IntentStatus::Waiting,
-                        trigger: None,
-                        origin: None,
-                        action: None,
-                    }),
-                )?;
-            }
+            "hand" => self.hand(n, action)?,
             "summary" => self.summary(n, action)?,
             "view" => self.view(n, action)?,
             "open" => self.open(n, action)?,
@@ -1595,6 +1678,109 @@ impl<'a> Reader<'a> {
     }
 
     /// Her summary rewritten, every sentence with what it rests on.
+    /// A hand raised to the partner: new, reworded (`intent`, a label she
+    /// was shown), or let go of (`dropped`). One she raises is hers
+    /// (`origin` her), so it goes with her into the talk to be said when
+    /// she finds the moment; the partner's own is only a hand against.
+    fn hand(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
+        let me = self.me()?;
+        let dropped = flag(action, "dropped")?;
+        let because = self.evidence(action)?;
+        let (intent, current) = match field(action, "intent") {
+            None => (
+                format!("h{}", minted(&format!("hand\u{1f}{}\u{1f}{n}", self.run))),
+                None,
+            ),
+            Some(label) => {
+                let label = label.as_str().ok_or(Fallback::BadField)?.trim();
+                let intent = self
+                    .context
+                    .intents
+                    .get(label)
+                    .ok_or(Fallback::UnknownLabel)?;
+                (intent.clone(), me.intents.get(intent))
+            }
+        };
+        let text = match (optional_text(action, "text", TEXT_CHARS)?, current) {
+            (Some(text), _) => text,
+            (None, Some(current)) if dropped => current.current.value.text.clone(),
+            _ => return Err(Fallback::BadField),
+        };
+        if current.is_none() && dropped {
+            return Err(Fallback::BadField);
+        }
+        if current.is_some_and(partner_intent) {
+            self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        let status = if dropped {
+            IntentStatus::Dropped
+        } else {
+            IntentStatus::Waiting
+        };
+        // The same words again, still waiting: nothing new.
+        if current.is_some_and(|current| {
+            current.current.value.text == text && current.current.value.status == status
+        }) {
+            return Ok(());
+        }
+        let id = me.id.clone();
+        self.once(&id, &format!("intent\u{1f}{intent}"))?;
+        self.write(
+            &id,
+            Body::Intent(Intent {
+                version: 1,
+                sync: self.sync.clone(),
+                said_by: self.her(),
+                base: current.map(|item| item.base.clone()).unwrap_or_default(),
+                intent,
+                text,
+                because,
+                status,
+                trigger: current.and_then(|item| item.current.value.trigger.clone()),
+                origin: Some(Origin::Her),
+                action: None,
+            }),
+        )
+    }
+
+    /// The node done or dropped: every hand she raised on it that waits on
+    /// nothing, and that this answer did not write, is let go of with it.
+    fn let_go(&mut self) -> Result<(), Fallback> {
+        if !self.ended {
+            return Ok(());
+        }
+        let me = self.me()?;
+        let id = me.id.clone();
+        for (intent, item) in &me.intents {
+            if !her_waiting_hand(item)
+                || self
+                    .written
+                    .contains(&(id.clone(), format!("intent\u{1f}{intent}")))
+            {
+                continue;
+            }
+            self.once(&id, &format!("intent\u{1f}{intent}"))?;
+            self.write(
+                &id,
+                Body::Intent(Intent {
+                    version: 1,
+                    sync: self.sync.clone(),
+                    said_by: self.her(),
+                    base: item.base.clone(),
+                    intent: intent.clone(),
+                    text: item.current.value.text.clone(),
+                    because: item.current.value.because.clone(),
+                    status: IntentStatus::Dropped,
+                    trigger: None,
+                    origin: item.current.value.origin,
+                    action: None,
+                }),
+            )?;
+        }
+        Ok(())
+    }
+
     fn summary(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
         let me = self.me()?;
         let given = field(action, "sentences")
@@ -1610,6 +1796,15 @@ impl<'a> Reader<'a> {
         }
         if by_partner(&me.summary) {
             self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        // The same sentences on the same grounds: nothing new to keep a
+        // version of.
+        if me
+            .summary
+            .as_ref()
+            .is_some_and(|summary| !summary.both_changed && summary.current.value == sentences)
+        {
             return Ok(());
         }
         let id = me.id.clone();
@@ -1661,6 +1856,13 @@ impl<'a> Reader<'a> {
             self.hold(n, HeldWhy::NotCounted);
             return Ok(());
         }
+        if current.is_some_and(|current| {
+            !current.both_changed
+                && current.current.value.text == text
+                && current.current.value.because == because
+        }) {
+            return Ok(());
+        }
         let id = me.id.clone();
         self.once(&id, &format!("view\u{1f}{view}"))?;
         self.write(
@@ -1706,6 +1908,14 @@ impl<'a> Reader<'a> {
             self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
         }
+        if current.is_some_and(|current| {
+            !current.both_changed
+                && current.current.value.text == text
+                && current.current.value.because == because
+                && current.current.value.closed == closed
+        }) {
+            return Ok(());
+        }
         let id = me.id.clone();
         self.once(&id, &format!("open\u{1f}{item}"))?;
         self.write(
@@ -1732,8 +1942,10 @@ impl<'a> Reader<'a> {
         let how: How = enum_of(action, "how")?;
         let reason = text(action, "reason", REASON_CHARS, true)?;
         let because = self.evidence(action)?;
-        let about_you =
-            Key::parse(&into.key).is_ok_and(|key| key.is_about_you(&self.context.audience));
+        // Never into a person, a group or her: a thing of the partner's
+        // merged there would be on someone's own node.
+        let someones = Key::parse(&into.key)
+            .is_ok_and(|key| matches!(key, Key::Her | Key::Person(_) | Key::Group(_)));
         // Only a minted node goes into another, and not what she watched or
         // read with the partner: that only ever takes others in.
         let goes = me
@@ -1741,7 +1953,7 @@ impl<'a> Reader<'a> {
             .as_deref()
             .and_then(|key| Key::parse(key).ok())
             .is_some_and(|key| matches!(key, Key::Minted(_)) && !key.is_together());
-        if !goes || Some(into_at) == self.context.at || about_you {
+        if !goes || Some(into_at) == self.context.at || someones {
             return Err(Fallback::NotAllowed);
         }
         if how == How::FoldedBack
@@ -2161,10 +2373,14 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         ));
     }
     let mut reader = Reader::new(&context, &input.run, input.sync.clone());
+    let mut failed = None;
     let read = actions(&input.output).and_then(|actions| {
         for (at, action) in actions.iter().enumerate() {
+            failed = Some(at + 1);
             reader.action(at + 1, action)?;
         }
+        failed = None;
+        reader.let_go()?;
         // A new node no later action puts anything on, or relates, is a
         // node with nothing on it.
         if reader.news.keys().any(|label| !reader.used.contains(label)) {
@@ -2184,6 +2400,7 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         ),
         Err(why) => (Vec::new(), Vec::new(), Vec::new(), Some(why)),
     };
+    let failed = fallback.and(failed);
     // Filing the inbox with no node kept leaves no mark: the inbox items
     // she placed leave the inbox, and the nodes they went on are due.
     if let Some(at) = context.at {
@@ -2207,6 +2424,21 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
             .map(|(_, rev)| rev.wall_ms)
             .max();
         seen.truncate(SEEN_DEVICES);
+        // An answer that could not be read sees nothing the first time, so
+        // the node is asked once more; the second time in a row it sees what
+        // it was shown.
+        let (seen, floor) = match fallback {
+            Some(_)
+                if !context
+                    .full
+                    .seen
+                    .get(&(context.audience.clone(), me.id.clone()))
+                    .is_some_and(|seen| seen.failed) =>
+            {
+                (Vec::new(), None)
+            }
+            _ => (seen, floor),
+        };
         let mut wrote: Vec<String> = writes.iter().map(|write| write.id.clone()).collect();
         wrote.sort();
         let upkept = Body::Upkept(Upkept {
@@ -2236,5 +2468,6 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         placed,
         held,
         fallback,
+        failed,
     })
 }
