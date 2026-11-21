@@ -379,6 +379,11 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "asking again for more than 64 rows",
             "asks again for more than 64",
         ),
+        ("refused: a page of no batches", "a page is 1 to 16 batches"),
+        (
+            "refused: a page of more than 16 batches",
+            "a page is 1 to 16 batches",
+        ),
         (
             "a withheld body of no row in the batch",
             "of no row in the batch",
