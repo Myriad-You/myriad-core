@@ -38,7 +38,7 @@
 //! A `summary`, `view`, `open` or `hand` that says what stands already, on
 //! the same grounds, writes nothing: the same words again are no new
 //! version. A merge never goes into her own node, a person's or a group's,
-//! and in a private talk nothing is placed on her own node or a group's.
+//! and in a private talk nothing is placed on a group's.
 //! What she is shown carries her day (`today`) and the language she writes
 //! in (`language`) when the caller gives them.
 //!
@@ -390,10 +390,11 @@ fn partners<T>(item: &Item<T>) -> bool {
 
 /// Whether a span of what was said in `audience` may go on a node of `key`
 /// there: never on 「关于你」 (only about them, nothing hung on it), and in
-/// a private talk never on her own node or a group's.
+/// a private talk never on a group's. (Her own node there holds what they
+/// told her about herself.)
 fn may_hold_spans(key: &Key<'_>, audience: &str) -> bool {
     let private = audience.starts_with("personal:");
-    !(key.is_about_you(audience) || (private && matches!(key, Key::Her | Key::Group(_))))
+    !(key.is_about_you(audience) || (private && matches!(key, Key::Group(_))))
 }
 
 /// Whether an intent is the partner's own: they asked her for it, or wrote
