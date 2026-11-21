@@ -118,10 +118,18 @@ impl<'a> Key<'a> {
     }
 
     /// Whether a node of this key may be in `audience`: a person or a group
-    /// never in hers (`own:`).
+    /// never in hers (`own:`), and a group only in its own audience
+    /// (`group:<id>` in `group:<id>`), so what a group shares is never kept
+    /// in a private talk or another group. A person may be in any private
+    /// talk or group: someone the partner talks about is a node of their
+    /// talk too.
     pub fn fits(&self, audience: &str) -> bool {
-        !(matches!(self, Self::Person(_) | Self::Group(_))
-            && matches!(Audience::parse(audience), Ok(Audience::Own)))
+        match (self, Audience::parse(audience)) {
+            (Self::Person(_) | Self::Group(_), Ok(Audience::Own)) => false,
+            (Self::Group(group), Ok(Audience::Group(there))) => *group == there,
+            (Self::Group(_), _) => false,
+            _ => true,
+        }
     }
 
     /// Whether this is the partner's own node in their private audience
@@ -396,3 +404,7 @@ mod tests {
         assert!(!Key::parse("person:together-ab12").unwrap().is_together());
     }
 }
+
+#[cfg(test)]
+#[path = "key_fits_tests.rs"]
+mod fits_tests;
