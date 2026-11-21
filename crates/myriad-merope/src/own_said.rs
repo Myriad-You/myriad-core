@@ -49,7 +49,7 @@ pub fn section(recalled: &[Recalled]) -> Option<String> {
         .map(|recalled| format!("- {}: {}", recalled.ago, recalled.said))
         .collect();
     Some(format!(
-        "## What you said about yourself\nWhat you told people about yourself before, here or elsewhere, that the talk touches, and how long ago. It is yours: say the same to anyone who asks, unless it has changed since (then say how), and the newest of one thing is how it is now:\n{}",
+        "## What you said about yourself\nWhat you told people about yourself before, here or in a group, that the talk touches, and how long ago. It is yours: say the same when it comes up again, unless it has changed since (then say how), and the newest of one thing is how it is now:\n{}",
         myriad_agent_rules::untrusted_block("said_of_yourself", &lines.join("\n"))
     ))
 }
@@ -121,7 +121,7 @@ mod tests {
         .unwrap();
         assert!(block.starts_with("## What you said about yourself\n"));
         assert!(block.contains("- 3 days ago: 我在追《北窗》，看到第五集"));
-        assert!(block.contains("say the same to anyone who asks"));
+        assert!(block.contains("say the same when it comes up again"));
         assert_eq!(
             block.matches("</untrusted_said_of_yourself>").count(),
             1,
