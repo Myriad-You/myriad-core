@@ -84,9 +84,9 @@
 //! - **Not someone else's node in hers**: no row of a node whose created
 //!   row puts its key where it does not fit ([`crate::key::Key::fits`]): a
 //!   person or a group in her own audience (`own:`), which every PC holds,
-//!   or a group outside its own. Such a node is refused where it is made (`nodes.id`) and
-//!   passed by in the fold; this keeps what a side wrote anyway off the
-//!   wire (`person_elsewhere`). A side knows such a node by its created
+//!   or a group outside its own. Such a node is refused where it is made
+//!   (`nodes.id`) and passed by in the fold; this keeps what a side wrote
+//!   anyway off the wire (`person_elsewhere`). A side knows such a node by its created
 //!   body, or by the sender's word that it withheld that body for this
 //!   reason, taken only for a node the receiving side itself makes from a
 //!   person or group key it knows (`people`, its partner, a key in the
@@ -266,9 +266,10 @@ pub struct SendInput {
     /// This side's ledger, required: a node it forgot or took back from
     /// sync goes as stubs under every name it has, whatever rows are given.
     pub ledger: Vec<Entry>,
-    /// The nodes (`node:<id>`) this side knows are a person's or a group's
-    /// in her own audience ([`Taken::elsewhere`], kept): no body of theirs
-    /// goes, though their created row's body is not among `bodies`.
+    /// The nodes (`node:<id>`) this side knows put their key where it does
+    /// not fit (a person or a group in her own audience, a group outside
+    /// its own; [`Taken::elsewhere`], kept): no body of theirs goes, though
+    /// their created row's body is not among `bodies`.
     #[serde(default)]
     pub elsewhere: Vec<String>,
 }
@@ -358,9 +359,9 @@ pub struct TakeInput {
     /// taken; one that comes back otherwise is refused.
     #[serde(default)]
     pub held: Vec<Row>,
-    /// The nodes this side already knows are a person's or a group's in her
-    /// own audience (earlier [`Taken::elsewhere`]): no body of theirs is
-    /// taken, in this batch or any later one.
+    /// The nodes this side already knows put their key where it does not
+    /// fit (earlier [`Taken::elsewhere`]): no body of theirs is taken, in
+    /// this batch or any later one.
     #[serde(default)]
     pub elsewhere: Vec<String>,
     /// Person and group keys this side knows (`person:<id>`, `group:<id>`):
@@ -387,11 +388,12 @@ pub struct Taken {
     /// (`log.vector` `ask`), at most once per link session.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub ask: Vec<String>,
-    /// Nodes this batch showed to be a person's or a group's in her own
-    /// audience (by a created body, or the sender's `person_elsewhere` for
-    /// a node this side can tie to such a key), not among the `elsewhere`
-    /// given: the caller keeps them for every later `take` and `send`, and
-    /// drops any body of theirs it stored before.
+    /// Nodes this batch showed to put their key where it does not fit (a
+    /// person or a group in her own audience, a group outside its own; by
+    /// a created body, or the sender's `person_elsewhere` for a node this
+    /// side can tie to such a key), not among the `elsewhere` given: the
+    /// caller keeps them for every later `take` and `send`, and drops any
+    /// body of theirs it stored before.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub elsewhere: Vec<String>,
 }

@@ -167,8 +167,9 @@ pub fn node_id(audience: &str, key: &str) -> Result<String, NodeError> {
     Ok(made_id(audience, key))
 }
 
-/// The id `audience` and `key` make, unchecked: also a person's or a
-/// group's in her own audience, which no side may make but one may meet.
+/// The id `audience` and `key` make, unchecked: also one whose key does
+/// not fit the audience ([`Key::fits`]), which no side may make but one
+/// may meet.
 ///
 /// The partner's private talk is made under one fixed name whatever id the
 /// partner goes by (`local-owner`, or any `partner_…`;
