@@ -593,7 +593,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         ("a standing without evidence", "because is empty"),
         ("a standing with a field it does not know", "unknown field"),
-        ("a standing in a state no end says", "body does not fit its kind"),
+        (
+            "a standing in a state no end says",
+            "body does not fit its kind",
+        ),
         // nodes.stands_build_due
         ("the shape before nodes is refused", "unknown field"),
         // nodes.sort_input, nodes.standing_read, nodes.range_dates, nodes.list
@@ -635,10 +638,19 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ("an action twice is refused", "comes twice"),
         ("too many facts is refused", "too many facts"),
         ("a title too long is refused", "title is empty or too long"),
-        ("a key in a fact is refused", "withheld on the wire (Secret)"),
-        ("a key in its view is refused", "withheld on the wire (Secret)"),
+        (
+            "a key in a fact is refused",
+            "withheld on the wire (Secret)",
+        ),
+        (
+            "a key in its view is refused",
+            "withheld on the wire (Secret)",
+        ),
         ("a field the card does not name is refused", "unknown field"),
-        ("a field a fact does not name is refused", "not of its shape"),
+        (
+            "a field a fact does not name is refused",
+            "not of its shape",
+        ),
         // nodes.look_route, nodes.look_input, nodes.look_read
         (
             "a body the contract refuses",
@@ -650,7 +662,10 @@ fn every_refused_case_is_refused_for_its_own_reason() {
         ),
         ("nothing to look at", "no change to look at"),
         ("waits not one per change", "waits is not one per change"),
-        ("decides not one per change", "decides is not one per change"),
+        (
+            "decides not one per change",
+            "decides is not one per change",
+        ),
         // nodes.look_card
         (
             "a change that needs nothing of them has no card",
