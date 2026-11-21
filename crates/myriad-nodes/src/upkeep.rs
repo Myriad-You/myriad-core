@@ -1719,14 +1719,20 @@ impl<'a> Reader<'a> {
         } else {
             IntentStatus::Waiting
         };
-        // The same words again, still waiting: nothing new.
+        let id = me.id.clone();
+        self.once(&id, &format!("intent\u{1f}{intent}"))?;
+        // The same words on the same grounds, still waiting or said
+        // already: nothing new, and not raised again.
         if current.is_some_and(|current| {
-            current.current.value.text == text && current.current.value.status == status
+            let was = &current.current.value;
+            !current.both_changed
+                && was.text == text
+                && was.because == because
+                && (was.status == status
+                    || (status == IntentStatus::Waiting && was.status == IntentStatus::Said))
         }) {
             return Ok(());
         }
-        let id = me.id.clone();
-        self.once(&id, &format!("intent\u{1f}{intent}"))?;
         self.write(
             &id,
             Body::Intent(Intent {
@@ -1799,6 +1805,8 @@ impl<'a> Reader<'a> {
             self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
         }
+        let id = me.id.clone();
+        self.once(&id, "summary")?;
         // The same sentences on the same grounds: nothing new to keep a
         // version of.
         if me
@@ -1808,8 +1816,6 @@ impl<'a> Reader<'a> {
         {
             return Ok(());
         }
-        let id = me.id.clone();
-        self.once(&id, "summary")?;
         self.write(
             &id,
             Body::Revised(Revised {
@@ -1857,6 +1863,8 @@ impl<'a> Reader<'a> {
             self.hold(n, HeldWhy::NotCounted);
             return Ok(());
         }
+        let id = me.id.clone();
+        self.once(&id, &format!("view\u{1f}{view}"))?;
         if current.is_some_and(|current| {
             !current.both_changed
                 && current.current.value.text == text
@@ -1864,8 +1872,6 @@ impl<'a> Reader<'a> {
         }) {
             return Ok(());
         }
-        let id = me.id.clone();
-        self.once(&id, &format!("view\u{1f}{view}"))?;
         self.write(
             &id,
             Body::ViewChanged(ViewChanged {
@@ -1909,6 +1915,8 @@ impl<'a> Reader<'a> {
             self.hold(n, HeldWhy::PartnerSet);
             return Ok(());
         }
+        let id = me.id.clone();
+        self.once(&id, &format!("open\u{1f}{item}"))?;
         if current.is_some_and(|current| {
             !current.both_changed
                 && current.current.value.text == text
@@ -1917,8 +1925,6 @@ impl<'a> Reader<'a> {
         }) {
             return Ok(());
         }
-        let id = me.id.clone();
-        self.once(&id, &format!("open\u{1f}{item}"))?;
         self.write(
             &id,
             Body::OpenItem(OpenItem {
@@ -2472,3 +2478,7 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         failed,
     })
 }
+
+#[cfg(test)]
+#[path = "upkeep_day_tests.rs"]
+mod day_tests;
