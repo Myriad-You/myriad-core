@@ -56,6 +56,20 @@ pub enum SaidBy {
     ThirdParty,
 }
 
+/// Who said a remembered thing, from who the end kept as its speaker
+/// (`agent` is her, anything else the person she talks with) and where it
+/// came from (its `source`). Only what the person said to her is theirs:
+/// what she looked up, saw on a screen, or brought in from somewhere else
+/// (another assistant's notes, an export) is a third party's however its
+/// speaker was kept, so it is never a fact they told her and never counts.
+pub fn said_by_of(speaker: &str, source: &str) -> SaidBy {
+    match (speaker, source) {
+        ("agent", _) => SaidBy::Her,
+        (_, "import" | "lookup" | "screen") => SaidBy::ThirdParty,
+        _ => SaidBy::Partner,
+    }
+}
+
 /// A who-said-it list: not empty, sorted, no repeats.
 pub(crate) fn check_said_by(said_by: &[SaidBy]) -> Result<(), NodeError> {
     if said_by.is_empty() {
@@ -143,4 +157,21 @@ pub(crate) fn check_item_id(what: &str, id: &str) -> Result<(), NodeError> {
         )));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod said_by_tests {
+    use super::*;
+
+    #[test]
+    fn only_what_the_person_said_is_theirs() {
+        assert_eq!(said_by_of("agent", "chat"), SaidBy::Her);
+        assert_eq!(said_by_of("agent", "import"), SaidBy::Her);
+        assert_eq!(said_by_of("user", "chat"), SaidBy::Partner);
+        assert_eq!(said_by_of("user", "sync"), SaidBy::Partner);
+        // Brought in, looked up or seen: not their words to her.
+        assert_eq!(said_by_of("user", "import"), SaidBy::ThirdParty);
+        assert_eq!(said_by_of("user", "lookup"), SaidBy::ThirdParty);
+        assert_eq!(said_by_of("user", "screen"), SaidBy::ThirdParty);
+    }
 }
