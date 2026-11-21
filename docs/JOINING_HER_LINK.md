@@ -7,7 +7,7 @@
 
 这一页对着核心 main 的 `eab8055e0` 核过，`ABI_VERSION` 是 5，契约 `protocol` 是 2、`schemaVersion` 是 3。你钉哪个提交，就以那个提交上的契约和核心文档为准。
 
-这个仓库里核实不了的是别的仓库的做法，都注明了出处。站点一侧：标着「站点线核过」的几处，是站点线 2026-11-20 对着站点 `preview` 分支的 `2004e7794` 读代码得出的，我没有自己核，站点改了它们就会过时。标着「工程管理转述」的几处，是工程管理 2026-11-21 转述的已定决定和站点提交，同样不在这个仓库里。 标着「App 线核过」的，是 App 线 2026-11-21 对着 macOS 端 `preview` 的 `03bee290` 读代码得出的。
+这个仓库里核实不了的是别的仓库的做法，都注明了出处。站点一侧：标着「站点线核过」的几处，是站点线 2026-11-20 对着站点 `preview` 分支的 `2004e7794` 读代码得出的，我没有自己核，站点改了它们就会过时。标着「工程管理转述」的几处，是工程管理 2026-11-21 转述的已定决定和站点提交，同样不在这个仓库里。标着「App 线核过」的，是 App 线 2026-11-21 对着 macOS 端 `preview` 的 `03bee290` 读代码得出的。
 
 ## 先定你是哪一种端
 
@@ -254,7 +254,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 - 依赖：`Cargo.toml` 里按提交钉 `myriad-link-child`，钉的是 `529c98f`。那个提交上会话已经有调用和 stream，但还没有口子（`#129`）和 `link.call_receive`（`#139`）；XR 的能力清单里也没说 `calls`、`streams`，所以这些它都没有接。
 - 能力清单：`crates/myriad-xr-link/src/lib.rs` 的 `XR_CAPABILITIES`，十四项。
 - 外壳的分发：`crates/myriad-xr-ffi/src/lib.rs` 里把会话的输出转成给 Kotlin 的一步（`fn step`）。读不了的帧（`Delivery::Unread`）它记成一条问题，不悄悄丢掉；它不处理的交付落进兜底分支。
-- 套接字外壳在 Kotlin 一侧：`android/app/src/main/java/you/myriad/xr/link/LinkClient.kt`（280 行）。它开 WebSocket，把收到的文本、定时的 `tick`、主人做的事一件件交给会话，把会话要发的文本原样写进套接字；关闭和升级被拒问 `afterClose`、`afterHttp`，重连等多久问 `backoffMs`。里面没有编号、确认、心跳的判断，也不拼任何一帧。它自己定的只有三件小事：她搬走了（`host_moved`）时至少等一分钟再连；超过帧大小上限的文本不交给会话；升级被 401、403 拒时另发一次普通的 HTTP 请求去读拒绝的原因。
+- 套接字外壳在 Kotlin 一侧：`android/app/src/main/java/you/myriad/xr/link/LinkClient.kt`（280 行）。它开 WebSocket，把收到的文本、定时的 `tick`、主人做的事一件件交给会话，把会话要发的文本原样写进套接字；关闭和升级被拒问 `afterClose`、`afterHttp`，重连等多久问 `backoffMs`。里面没有编号、确认、心跳的判断，也不拼任何一帧。它自己定的是几件外壳的小事，比如：多久 `tick` 一次（心跳的五分之一）；她搬走了（`host_moved`）时至少等一分钟再连；超过帧大小上限的文本不交给会话；升级被 401、403 拒时另发一次普通的 HTTP 请求去读拒绝的原因。
 - 会话、契约的读法、帧检查都是核心的，它没有自己的一份。它自己留着的是套接字外壳和凭据、形象和语音。
 
 它再往后换钉时要补什么，看这段历史里每个提交说明的「影响的端」：
@@ -291,7 +291,7 @@ git log 529c98f..<要钉的提交> -- crates/myriad-link-child crates/myriad-her
 - [ ] 因为等确认的满了被断开（`behind`）之后，重连上要重新发 `log.vector`：`log.rows` 主机不会自己重发。
 - [ ] `welcome` 后每个受众发 `log.vector`；收用 `nodes.wire_take` 加 `log.merge`；发用 `nodes.wire_send`。
 - [ ] 回答收到的 `log.vector`：只在 `log.missing` 非空时回，两边相同绝不回。
-- [ ] 时钟偏移量一次往返交给 `log.clock_offset`（微秒）：macOS 端用同步的 HTTP 握手；只走这条连接的端用 `hello` 到 `welcome`，`welcome.serverTime` 是毫秒，要乘 1000。偏移对着单调钟存，别对着墙钟。
+- [ ] 时钟偏移量一次往返交给 `log.clock_offset`（微秒）：macOS 端用同步的 HTTP 握手；只走这条连接的端用 `hello` 到 `welcome`，`welcome.serverTime` 是毫秒，要乘 1000。偏移对着单调钟存、别对着墙钟，是 macOS 端的做法，建议照做。
 - [ ] 翻页：了结带 `more` 的批之后才发带 `after` 的 `log.vector`；自己发页时一页没翻完不重发。
 - [ ] 说了 `streams` 的：了结一批后把拒收的行按理由报 `log.refused`。
 - [ ] `v2/log/`、`v2/nodes/`、`v1/partner/` 的用例全过；带 `passthrough` 的剧本全过。
