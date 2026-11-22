@@ -8557,6 +8557,143 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "audience": "personal:partner_0199d5c0b00044444444444444444444",
+        "bodies": {
+          "k1": {
+            "actions": [
+              {
+                "id": "open",
+                "label": "去会话里说"
+              },
+              {
+                "effects": [
+                  {
+                    "because": 1,
+                    "good": true,
+                    "text": "今天就能上线"
+                  }
+                ],
+                "icon": "send",
+                "id": "push",
+                "label": "推送",
+                "undo": false
+              }
+            ],
+            "at": 1760000000000,
+            "facts": [
+              {
+                "ref": "session:s1",
+                "text": "会话停下来问：现在推送吗"
+              }
+            ],
+            "id": "dev_mac_1",
+            "idle": "没人回答的话，会话一直停在这里等。",
+            "kind": "nod",
+            "scene": "agents",
+            "state": "waiting_owner",
+            "title": "等你点头：推送",
+            "view": {
+              "because": [
+                1
+              ],
+              "text": "检查都过了，可以推。"
+            }
+          },
+          "k2": {
+            "at": 1760000000001,
+            "card": "dev_mac_1",
+            "text": ""
+          }
+        },
+        "here": "partner_0199d5c0b00044444444444444444444",
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "peerAbi": 4,
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "forgotten": true,
+            "hlc": "001760000000000-000000-dev_mac",
+            "id": "k1",
+            "kind": "card.version",
+            "object": "card:dev_mac_1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "k2",
+            "kind": "segment.line",
+            "object": "segment:g1",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "doc:k2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a forgotten card that said what comes of its answers goes to a side of ABI 4 as a stub: its body is not sent, so it is not weighed",
+      "output": {
+        "batches": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "payloads": [
+              {
+                "data": "eyJhdCI6MTc2MDAwMDAwMDAwMSwiY2FyZCI6ImRldl9tYWNfMSIsInRleHQiOiIifQ==",
+                "ref": "doc:k2"
+              }
+            ],
+            "rows": [
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 1,
+                "epoch": 1,
+                "forgotten": true,
+                "hlc": "001760000000000-000000-dev_mac",
+                "id": "k1",
+                "kind": "card.version",
+                "object": "card:dev_mac_1",
+                "origin": "dev_mac",
+                "replicate": "shared",
+                "version": 1
+              },
+              {
+                "audience": "personal:partner_0199d5c0b00044444444444444444444",
+                "author": "her",
+                "dseq": 2,
+                "epoch": 1,
+                "hlc": "001760000000001-000000-dev_mac",
+                "id": "k2",
+                "kind": "segment.line",
+                "object": "segment:g1",
+                "origin": "dev_mac",
+                "payload": {
+                  "ref": "doc:k2"
+                },
+                "replicate": "shared",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1

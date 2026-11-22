@@ -310,7 +310,9 @@ pub struct Sent {
     pub ask_left: Vec<String>,
 }
 
-/// The core ABI a row needs on the side that takes it: 4 for a card row
+/// The core ABI a row needs on the side that takes it: 6 for a card that
+/// says what comes of its answers (by its body: a stub of one, which goes
+/// without its body, needs what any card row does); 4 for a card row
 /// or a `segment.line` that carries a card; 3 for a rule's row or a
 /// `node.standing` (a core below 3 refuses the author and the kind, stub or
 /// not); 2 for one with a name in its envelope (`to`, `takes`) or a
@@ -920,7 +922,13 @@ pub fn send(input: SendInput) -> Result<Sent, NodeError> {
     if answered
         .iter()
         .chain(&again)
-        .any(|row| needs_abi(row, bodies.get(&row.id)) > peer_abi)
+        // A row that goes as a stub (forgotten, or one the other side cannot
+        // hold) carries no body: what its body says asks nothing of that
+        // side's core, only its kind and its envelope do.
+        .any(|row| {
+            let body = (!row.forgotten).then(|| bodies.get(&row.id)).flatten();
+            needs_abi(row, body) > peer_abi
+        })
     {
         return Ok(Sent {
             too_old: true,

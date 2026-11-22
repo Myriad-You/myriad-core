@@ -231,7 +231,7 @@ pub fn check(card: &CardVersion) -> Result<(), NodeError> {
 }
 
 /// Whether a card says one of the things ABI 6 added (an action's
-/// `effects`, `undo` or `icon`, the card's `idle`): a core below 5 reads
+/// `effects`, `undo` or `icon`, the card's `idle`): a core below 6 reads
 /// no such card.
 pub fn says_more(card: &Value) -> bool {
     card.get("idle").is_some()
@@ -475,7 +475,7 @@ mod tests {
     /// Each of the new fields alone makes a card one only ABI 6 reads, and
     /// `plain` takes every one of them out again.
     #[test]
-    fn each_new_field_is_one_only_abi_5_reads() {
+    fn each_new_field_is_one_only_abi_6_reads() {
         let more = [
             ("idle", json!("没人回答就先等")),
             ("effects", json!([{"text": "今天上线", "good": true}])),
