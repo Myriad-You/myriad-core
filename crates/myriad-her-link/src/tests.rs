@@ -419,6 +419,18 @@ fn a_call_is_allowed_only_for_whom_its_action_says() {
     for group in calls_default_approved() {
         assert!(groups.contains(group.as_str()), "{group}");
     }
+    // A seen action is one a child does, named in actions.
+    let seen = raw["calls"]["seen"].as_array().expect("calls.seen");
+    assert!(!seen.is_empty());
+    for action in seen {
+        let action = action.as_str().expect("an action's name");
+        assert!(
+            call_spec(action).is_some_and(|spec| spec.by == "child"),
+            "{action}"
+        );
+        assert!(super::call_seen(action), "{action}");
+    }
+    assert!(!super::call_seen("notify.post") && !super::call_seen("work.run"));
     for code in [
         "call_unknown",
         "version_unsupported",

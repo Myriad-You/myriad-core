@@ -3453,6 +3453,10 @@ impl Session {
             if self.outbox[index].t == "call.result" && !self.both("calls") {
                 continue;
             }
+            // What a call saw or heard goes only while it is granted on this link.
+            if self.outbox[index].t == "call.result" && self.seen_waits(index) {
+                continue;
+            }
             if self.outbox[index].t == "call.ask" && !self.provided(&self.outbox[index].body) {
                 continue;
             }
@@ -3476,6 +3480,38 @@ impl Session {
         self.outbox
             .retain(|pending| pending.seq.is_some() || !refused.contains(&pending.id));
         out
+    }
+
+    /// Whether the result waiting at `index` waits on: a seen action's (`calls.seen`) done
+    /// result, before her host has said on this link what it grants. Once it has said, one
+    /// it no longer grants is answered `call_not_granted` instead, here and to a call asked
+    /// again, and what was seen never goes; one it grants goes. Every other result goes
+    /// whatever is granted: it says what already happened.
+    fn seen_waits(&mut self, index: usize) -> bool {
+        let body = &self.outbox[index].body;
+        let (Some(call_id), Some(action), Some(version)) = (
+            string(body, "callId"),
+            string(body, "action"),
+            body.get("version").and_then(unsigned),
+        ) else {
+            return false;
+        };
+        if string(body, "outcome").as_deref() != Some("done")
+            || !myriad_her_link::call_seen(&action)
+        {
+            return false;
+        }
+        if !self.heard_granted {
+            return true;
+        }
+        if !self.granted.contains(&(action.clone(), version)) {
+            let gone = failed(&call_id, &action, version, "call_not_granted");
+            if let Some(kept) = self.answered.iter_mut().find(|a| a.call_id == call_id) {
+                kept.result = gone.clone();
+            }
+            self.outbox[index].body = gone;
+        }
+        false
     }
 
     /// The next frame, numbered, as the shared core writes it; when the core refuses it, no number
