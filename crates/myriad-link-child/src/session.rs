@@ -934,6 +934,25 @@ impl Session {
         &self.host_capabilities
     }
 
+    /// The calls in hand whose bytes the shell may put at her host now
+    /// (`transports.blobs`): a blob action's, on an open link where her host has said it
+    /// grants the action. A picture or a recording is what was seen or heard (`calls.seen`),
+    /// and once its bytes are at her host, taking the action back cannot call them back: the
+    /// shell puts them only for a call named here, and asks again before each put.
+    pub fn may_put(&self) -> Vec<String> {
+        if self.phase != Phase::Open || !self.both("calls") || !self.heard_granted {
+            return Vec::new();
+        }
+        self.doing
+            .iter()
+            .filter(|call| {
+                myriad_her_link::call_spec(&call.action).is_some_and(|spec| spec.blob)
+                    && self.granted.contains(&(call.action.clone(), call.version))
+            })
+            .map(|call| call.call_id.clone())
+            .collect()
+    }
+
     /// Whether the host takes what the owner shows her (`images`) with what they say.
     pub fn shows(&self) -> bool {
         self.host_capabilities.contains("images")
