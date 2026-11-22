@@ -7,9 +7,9 @@
 //!
 //! - **The key** comes from `node.created`; a created row whose audience
 //!   and key make another id is passed by (`other_node`). A node whose
-//!   created row puts a person or a group in her own audience reads as
-//!   nothing, every row of it passed by (`person_elsewhere`): they live in
-//!   their own audiences.
+//!   created row puts its key where it does not fit ([`Key::fits`]: a
+//!   person or a group in her own audience, a group outside its own) reads
+//!   as nothing, every row of it passed by (`person_elsewhere`).
 //! - **Head fields** (its kind, name, other names, summary, status,
 //!   who-knows, object,
 //!   each person's progress, each view, open item, standing and intent) are each
@@ -543,8 +543,8 @@ pub enum Why {
     /// Something she watched or read with the partner going into another:
     /// it only ever takes others in.
     Together,
-    /// A person's or a group's node in her own audience: it lives in that
-    /// person's or group's own audience, never in hers.
+    /// A node whose key does not fit its audience ([`Key::fits`]): a
+    /// person's or a group's in her own, or a group's outside its own.
     PersonElsewhere,
 }
 
@@ -1432,8 +1432,8 @@ pub(crate) fn fold_full(input: FoldInput) -> Result<Full, NodeError> {
                 Err(_) => skip(row, Why::BadBody),
             }
         }
-        // A person or a group made in her own audience: it lives in its
-        // own, so nothing of it reads back here.
+        // A key made where it does not fit (a person or a group in her own
+        // audience, a group outside its own): nothing of it reads back here.
         let misplaced = read.iter().any(|(_, _, body)| {
             matches!(body, Body::Created(created)
                 if Key::parse(&created.key).is_ok_and(|parsed| !parsed.fits(audience)))

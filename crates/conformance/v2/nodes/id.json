@@ -123,6 +123,26 @@
     },
     {
       "input": {
+        "audience": "group:g2",
+        "key": "group:g1"
+      },
+      "name": "a group in another group",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "audience": "personal:7",
+        "key": "group:g1"
+      },
+      "name": "a group in the partner's private talk",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
         "audience": "personal:local-owner",
         "key": "minted:release-week"
       },
