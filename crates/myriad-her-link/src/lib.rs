@@ -132,6 +132,7 @@ struct Streams {
 #[serde(rename_all = "camelCase")]
 struct Calls {
     default_approved: Vec<String>,
+    seen: Vec<String>,
     fail_codes: Vec<String>,
     actions: BTreeMap<String, CallSpec>,
 }
@@ -233,6 +234,12 @@ pub fn call_spec(name: &str) -> Option<&'static CallSpec> {
 /// them off.
 pub fn calls_default_approved() -> &'static [String] {
     &CONTRACT.calls.default_approved
+}
+
+/// Whether `action` is a seen one (`calls.seen`): its result is what the child saw or
+/// heard of the owner, and goes only while the action is granted to the device.
+pub fn call_seen(action: &str) -> bool {
+    CONTRACT.calls.seen.iter().any(|seen| seen == action)
 }
 
 /// Whether `action` may be called for `of` (`call.ask`'s `for`): the caller

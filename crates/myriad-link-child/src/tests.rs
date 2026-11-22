@@ -585,6 +585,63 @@ fn a_frame_the_core_will_not_send_leaves_the_outbox() {
 }
 
 #[test]
+fn a_picture_is_put_only_while_its_action_is_granted_on_this_link() {
+    let mut s = Session::new(contract(), &["calls"], ("Child", "0.1.0"), None, None);
+    s.offer(&[("camera.take", 1), ("screen.look", 1)]);
+    let welcome = |at: i64| {
+        host("welcome", 1, 1, |body| {
+            body["capabilities"] = json!(["calls"]);
+            body["turns"] = json!([]);
+            body["serverTime"] = json!(at);
+        })
+    };
+    let granted = |actions: Value| {
+        host("call.granted", 2, 1, |body| {
+            *body = json!({ "actions": actions, "providing": [] });
+        })
+    };
+    let ask = |seq: u64, call_id: &str, action: &str| {
+        let mut frame: Value = serde_json::from_str(&host("call.ask", seq, 1, |body| {
+            *body = json!({
+                "callId": call_id, "action": action, "version": 1, "args": {},
+                "for": { "kind": "owner" }, "deadlineAt": T0 + 600_000,
+            });
+        }))
+        .unwrap();
+        frame["id"] = json!(call_id);
+        frame.to_string()
+    };
+    let both =
+        json!([{ "name": "camera.take", "version": 1 }, { "name": "screen.look", "version": 1 }]);
+    s.connected(T0);
+    s.received(&welcome(T0 + 50), T0 + 50);
+    assert!(
+        s.may_put().is_empty(),
+        "nothing before her host says what it grants"
+    );
+    s.received(&granted(both), T0 + 60);
+    s.received(&ask(3, "call_cam", "camera.take"), T0 + 100);
+    s.received(&ask(4, "call_look", "screen.look"), T0 + 110);
+    assert_eq!(
+        s.may_put(),
+        vec!["call_cam".to_string()],
+        "only a blob action's"
+    );
+    // The link goes: nothing is put while down, nor on the next link before its word.
+    s.disconnected();
+    assert!(s.may_put().is_empty());
+    s.connected(T0 + 2_000);
+    s.received(&welcome(T0 + 2_050), T0 + 2_050);
+    assert!(s.may_put().is_empty());
+    // The owner took the picture back meanwhile: it is never put.
+    s.received(
+        &granted(json!([{ "name": "screen.look", "version": 1 }])),
+        T0 + 2_060,
+    );
+    assert!(s.may_put().is_empty());
+}
+
+#[test]
 fn the_heartbeat_pings_and_silence_drops() {
     let mut s = open();
     let beat = contract().timing.heartbeat_ms;

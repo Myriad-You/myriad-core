@@ -1,7 +1,7 @@
 {
   "version": 1,
   "name": "called-settled",
-  "about": "The shell keeps a call it was handed on disk until her host has its result: the session says so (call_settled) when her host's ack covers the call.result, not when the shell hands the result in. A result not acked when the link goes is told of nothing; it goes again on the next link and is told when acked there.",
+  "about": "The shell keeps a call it was handed on disk until her host has its result: the session says so (call_settled) when her host's ack covers the call.result, not when the shell hands the result in. A result not acked when the link goes is told of nothing; it goes again on the next link and is told when acked there. A look's result is what the child saw (calls.seen): held over from a link before, it waits for that link's call.granted, goes if it still grants screen.look, and is answered call_not_granted instead if it does not, so what was seen never goes once the owner took the action back.",
   "capabilities": ["calls"],
   "offers": [{"name": "screen.look", "version": 1}],
   "steps": [
@@ -31,9 +31,28 @@
     {"at": 3050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["calls"], "turns": [], "serverTime": 1760140803050, "sync": "off"}}},
     {"deliver": {"kind": "welcome"}},
     {"child": {"t": "call.offer", "seq": 2}},
-    {"child": {"t": "call.result", "id": "call_2.result", "seq": 3}},
     {"at": 3060, "host": {"t": "call.granted", "body": {"actions": [{"name": "screen.look", "version": 1}], "providing": []}}},
+    {"deliver": {"kind": "granted"}},
+    {"child": {"t": "call.result", "id": "call_2.result", "seq": 3, "body": {"callId": "call_2", "action": "screen.look", "version": 1, "outcome": "done", "result": {"facts": {"app": "Xcode"}}}}},
+    {"at": 3100, "host": {"t": "ping"}},
     {"deliver": {"kind": "call_settled", "callId": "call_2"}},
-    {"deliver": {"kind": "granted"}}
+    {"child": {"t": "pong"}},
+    {"at": 4000, "host": {"t": "call.ask", "id": "call_3", "body": {"callId": "call_3", "action": "screen.look", "version": 1, "args": {}, "for": {"kind": "owner"}, "deadlineAt": 1760140813000}}},
+    {"child": {"t": "ack"}},
+    {"deliver": {"kind": "call", "callId": "call_3"}},
+    {"at": 4500, "do": {"callDone": {"callId": "call_3", "result": {"facts": {"app": "Xcode"}}}}},
+    {"child": {"t": "call.result", "id": "call_3.result"}},
+    {"at": 4600, "do": "disconnect"},
+    {"at": 5000, "do": "connect"},
+    {"child": {"t": "hello", "seq": 1}},
+    {"at": 5050, "host": {"t": "welcome", "body": {"protocol": 2, "role": "host", "host": "site", "deviceId": "dev_0123456789abcdef0123456789abcdef", "heartbeatMs": 15000, "capabilities": ["calls"], "turns": [], "serverTime": 1760140805050, "sync": "off"}}},
+    {"deliver": {"kind": "welcome"}},
+    {"child": {"t": "call.offer", "seq": 2}},
+    {"at": 5060, "host": {"t": "call.granted", "body": {"actions": [], "providing": []}}},
+    {"deliver": {"kind": "granted", "actions": []}},
+    {"child": {"t": "call.result", "id": "call_3.result", "seq": 3, "body": {"callId": "call_3", "action": "screen.look", "version": 1, "outcome": "failed", "error": {"code": "call_not_granted"}, "result": "$absent"}}},
+    {"at": 5100, "host": {"t": "ping"}},
+    {"deliver": {"kind": "call_settled", "callId": "call_3"}},
+    {"child": {"t": "pong"}}
   ]
 }
