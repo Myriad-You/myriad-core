@@ -457,6 +457,11 @@ fn a_child_stepped_through_the_c_entry_point_is_the_crates_session() {
         assert_eq!(stepped["state"], session.state(), "{event}");
         let accepted: Vec<&String> = session.host_capabilities().iter().collect();
         assert_eq!(stepped["hostCapabilities"], json!(accepted), "{event}");
+        assert_eq!(
+            stepped["mayPut"],
+            json!(session.may_put(call_at)),
+            "{event}"
+        );
         state = stepped["state"].clone();
     }
     assert!(
