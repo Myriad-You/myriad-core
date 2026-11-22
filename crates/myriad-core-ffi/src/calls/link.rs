@@ -668,7 +668,7 @@ pub(super) fn child_step(raw: &[u8]) -> Result<Value, Failure> {
         "outputs": outputs.iter().map(myriad_link_child::Output::json).collect::<Vec<_>>(),
         "phase": session.phase().name(),
         "hostCapabilities": session.host_capabilities(),
-        "mayPut": session.may_put(),
+        "mayPut": session.may_put(now),
     }))
 }
 

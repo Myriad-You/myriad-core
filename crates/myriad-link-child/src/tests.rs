@@ -595,8 +595,8 @@ fn a_picture_is_put_only_while_its_action_is_granted_on_this_link() {
             body["serverTime"] = json!(at);
         })
     };
-    let granted = |actions: Value| {
-        host("call.granted", 2, 1, |body| {
+    let granted = |seq: u64, actions: Value| {
+        host("call.granted", seq, 1, |body| {
             *body = json!({ "actions": actions, "providing": [] });
         })
     };
@@ -611,34 +611,51 @@ fn a_picture_is_put_only_while_its_action_is_granted_on_this_link() {
         frame["id"] = json!(call_id);
         frame.to_string()
     };
+    let named = |s: &Session, at: i64| s.may_put(at);
+    let cam = vec!["call_cam".to_string()];
     let both =
         json!([{ "name": "camera.take", "version": 1 }, { "name": "screen.look", "version": 1 }]);
     s.connected(T0);
     s.received(&welcome(T0 + 50), T0 + 50);
-    assert!(
-        s.may_put().is_empty(),
-        "nothing before her host says what it grants"
-    );
-    s.received(&granted(both), T0 + 60);
+    s.received(&granted(2, both.clone()), T0 + 60);
     s.received(&ask(3, "call_cam", "camera.take"), T0 + 100);
     s.received(&ask(4, "call_look", "screen.look"), T0 + 110);
-    assert_eq!(
-        s.may_put(),
-        vec!["call_cam".to_string()],
-        "only a blob action's"
+    assert_eq!(named(&s, T0 + 120), cam, "only a blob action's");
+    // Granted at another version than the call's: not this call's grant.
+    s.received(
+        &granted(5, json!([{ "name": "camera.take", "version": 2 }])),
+        T0 + 130,
     );
+    assert!(named(&s, T0 + 140).is_empty(), "another version");
+    s.received(&granted(6, both.clone()), T0 + 150);
+    assert_eq!(named(&s, T0 + 160), cam);
+    // Its deadline passed, before any tick has stopped it: not named.
+    assert!(named(&s, T0 + 600_000).is_empty(), "past its deadline");
     // The link goes: nothing is put while down, nor on the next link before its word.
     s.disconnected();
-    assert!(s.may_put().is_empty());
+    assert!(named(&s, T0 + 1_000).is_empty());
     s.connected(T0 + 2_000);
     s.received(&welcome(T0 + 2_050), T0 + 2_050);
-    assert!(s.may_put().is_empty());
-    // The owner took the picture back meanwhile: it is never put.
+    assert!(
+        named(&s, T0 + 2_055).is_empty(),
+        "a call in hand from the last link, before this one's word"
+    );
+    // The owner took the picture back meanwhile: not named.
     s.received(
-        &granted(json!([{ "name": "screen.look", "version": 1 }])),
+        &granted(2, json!([{ "name": "screen.look", "version": 1 }])),
         T0 + 2_060,
     );
-    assert!(s.may_put().is_empty());
+    assert!(named(&s, T0 + 2_065).is_empty());
+    // Granted again on a later link: named again.
+    s.disconnected();
+    s.connected(T0 + 3_000);
+    s.received(&welcome(T0 + 3_050), T0 + 3_050);
+    s.received(&granted(2, both), T0 + 3_060);
+    assert_eq!(named(&s, T0 + 3_065), cam, "granted again");
+    // Put, then answered with the blob's name: answered, it is never named again.
+    let blob = "ab".repeat(32);
+    s.call_done("call_cam", &json!({}), &[blob], T0 + 3_100);
+    assert!(named(&s, T0 + 3_110).is_empty(), "answered");
 }
 
 #[test]

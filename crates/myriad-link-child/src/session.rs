@@ -934,19 +934,28 @@ impl Session {
         &self.host_capabilities
     }
 
-    /// The calls in hand whose bytes the shell may put at her host now
-    /// (`transports.blobs`): a blob action's, on an open link where her host has said it
-    /// grants the action. A picture or a recording is what was seen or heard (`calls.seen`),
-    /// and once its bytes are at her host, taking the action back cannot call them back: the
-    /// shell puts them only for a call named here, and asks again before each put.
-    pub fn may_put(&self) -> Vec<String> {
+    /// The calls in hand whose bytes the shell may put at her host at `now_ms`
+    /// (`transports.blobs`): a blob action's, before its deadline, on an open link where her
+    /// host has said it grants the action at that version. A picture or a recording is what
+    /// was seen or heard (`calls.seen`), and once its bytes are at her host, taking the action
+    /// back cannot call them back: the shell puts them only for a call named here, and asks
+    /// again before each put.
+    ///
+    /// The bytes go first, then the answer ([`Session::call_done`] with their names): a call
+    /// answered is no longer in hand and is never named here again. One that is not named
+    /// waits, neither put nor answered done: it is named once this link grants it, or her
+    /// host cancels it (a blob action is long, and her host cancels a long one when it takes
+    /// the action back), or its deadline passes; the session then hands the shell its stop.
+    pub fn may_put(&self, now_ms: i64) -> Vec<String> {
         if self.phase != Phase::Open || !self.both("calls") || !self.heard_granted {
             return Vec::new();
         }
+        let host_now = self.host_now(now_ms);
         self.doing
             .iter()
             .filter(|call| {
-                myriad_her_link::call_spec(&call.action).is_some_and(|spec| spec.blob)
+                host_now < call.deadline_at
+                    && myriad_her_link::call_spec(&call.action).is_some_and(|spec| spec.blob)
                     && self.granted.contains(&(call.action.clone(), call.version))
             })
             .map(|call| call.call_id.clone())
