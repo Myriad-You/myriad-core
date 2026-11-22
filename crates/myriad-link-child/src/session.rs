@@ -2782,8 +2782,9 @@ impl Session {
     }
 
     /// The call `call_id` was not done: `code` is one of the contract's `calls.failCodes`
-    /// (`declined`, `not_now`, `call_not_granted`, `internal_error`…). Anything else is
-    /// told `Unsent` and answered `internal_error`.
+    /// (`declined`, `not_now`, `internal_error`…). Anything else is told `Unsent` and
+    /// answered `internal_error`. A call only waiting to be named by [`Session::may_put`] is
+    /// not failed here: the session ends it itself (her host's cancel, or its deadline).
     pub fn call_failed(&mut self, call_id: &str, code: &str, now_ms: i64) -> Vec<Output> {
         let Some(call) = self.take_doing(call_id) else {
             return unsent("call.result", "bad_id", Some(call_id));
