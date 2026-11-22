@@ -161,7 +161,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,
@@ -333,7 +333,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你点头：Split the store",
           "view": {
             "because": [
               2,
@@ -498,7 +498,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3
@@ -668,7 +668,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "leans": "agree",
             "text": "要不要现在推送\n推"
@@ -834,7 +834,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               4
@@ -1002,7 +1002,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "coding-agent 会话",
+          "title": "等你点头：sample-repo 里的 coding-agent 会话",
           "view": {
             "because": [
               1
@@ -1171,7 +1171,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "把存储层拆成按租户分片的两层结构，并把旧的单表迁移脚本、回滚脚本和监控面板一起改掉，最后补上压测，压测通过后再把灰度比…",
+          "title": "等你点头：把存储层拆成按租户分片的两层结构，并把旧的单表迁移脚本、回滚脚本和监控面板一起改掉，最后补上压测，压测通过后…",
           "view": {
             "because": [
               1
@@ -1341,7 +1341,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你点头：Split the store",
           "view": {
             "because": [
               2
@@ -1512,7 +1512,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "Needs your call: Split the store",
           "view": {
             "because": [
               3,
@@ -1684,7 +1684,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "確かめてほしい：Split the store",
           "view": {
             "because": [
               2,
@@ -1854,7 +1854,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你點頭：Split the store",
           "view": {
             "because": [
               5
@@ -2023,7 +2023,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "확인 필요: Split the store",
           "view": {
             "because": [
               6
@@ -2192,7 +2192,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "Votre accord : Split the store",
           "view": {
             "because": [
               6
@@ -2361,7 +2361,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "Dein OK: Split the store",
           "view": {
             "because": [
               6
@@ -2530,7 +2530,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "Needs your OK: Split the store",
           "view": {
             "because": [
               1
@@ -2709,7 +2709,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你点头：Split the store",
           "view": {
             "because": [
               5
@@ -2878,7 +2878,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你点头：Split the store",
           "view": {
             "because": [
               1
@@ -3070,7 +3070,7 @@
           "scene": "agents",
           "state": "waiting_checks",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你点头：Split the store",
           "view": {
             "because": [
               6
@@ -3240,7 +3240,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你点头：Split the store",
           "view": {
             "because": [
               2
@@ -3415,7 +3415,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "leans": "agree",
             "text": "要不要现在推送\n推"
@@ -3574,7 +3574,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store"
+          "title": "要你定：Split the store"
         }
       }
     },
@@ -3736,7 +3736,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你點頭：Split the store",
           "view": {
             "because": [
               1
@@ -3905,7 +3905,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "等你點頭：Split the store",
           "view": {
             "because": [
               1
@@ -4318,7 +4318,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,
@@ -4500,7 +4500,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,
@@ -4681,7 +4681,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,
@@ -4850,7 +4850,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,
@@ -5032,7 +5032,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,
@@ -5214,7 +5214,7 @@
           "scene": "agents",
           "state": "waiting_owner",
           "subject": "node:98ef5969e985afd6bc0eb702cd1ffe5c",
-          "title": "Split the store",
+          "title": "要你定：Split the store",
           "view": {
             "because": [
               3,

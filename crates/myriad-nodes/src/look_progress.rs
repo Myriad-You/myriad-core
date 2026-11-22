@@ -33,6 +33,8 @@ const BECAUSE: usize = 16;
 
 /// What a progress card says, in one language. `{n}` is filled in.
 struct Words {
+    /// The card's title: `{name}` the repository's.
+    title: &'static str,
     today: &'static str,
     done: &'static str,
     going: &'static str,
@@ -47,6 +49,7 @@ struct Words {
 }
 
 const EN: Words = Words {
+    title: "Progress: {name}",
     today: "Today: {list}",
     done: "{n} finished a turn",
     going: "{n} under way",
@@ -61,6 +64,7 @@ const EN: Words = Words {
 };
 
 const ZH_CN: Words = Words {
+    title: "进展：{name}",
     today: "今天：{list}",
     done: "做完一轮 {n} 个",
     going: "在做 {n} 个",
@@ -75,6 +79,7 @@ const ZH_CN: Words = Words {
 };
 
 const ZH_TW: Words = Words {
+    title: "進展：{name}",
     today: "今天：{list}",
     done: "做完一輪 {n} 個",
     going: "在做 {n} 個",
@@ -89,6 +94,7 @@ const ZH_TW: Words = Words {
 };
 
 const JA: Words = Words {
+    title: "進み具合：{name}",
     today: "今日：{list}",
     done: "ひと区切り {n}",
     going: "作業中 {n}",
@@ -103,6 +109,7 @@ const JA: Words = Words {
 };
 
 const KO: Words = Words {
+    title: "진행 상황: {name}",
     today: "오늘: {list}",
     done: "일단락 {n}",
     going: "진행 중 {n}",
@@ -117,6 +124,7 @@ const KO: Words = Words {
 };
 
 const FR: Words = Words {
+    title: "Avancement : {name}",
     today: "Aujourd'hui : {list}",
     done: "{n} a (ont) fini un tour",
     going: "{n} en cours",
@@ -131,6 +139,7 @@ const FR: Words = Words {
 };
 
 const DE: Words = Words {
+    title: "Fortschritt: {name}",
     today: "Heute: {list}",
     done: "{n} vorerst fertig",
     going: "{n} in Arbeit",
@@ -375,7 +384,9 @@ pub fn progress(input: ProgressInput) -> Result<Progress, NodeError> {
         scene: SCENE.to_string(),
         subject: Some(subject.clone()),
         title: cut(
-            if name.is_empty() { &input.key } else { &name },
+            &words
+                .title
+                .replace("{name}", if name.is_empty() { &input.key } else { &name }),
             cards::TITLE_CHARS,
         ),
         state: None,
@@ -394,6 +405,7 @@ pub fn progress(input: ProgressInput) -> Result<Progress, NodeError> {
             leans: None,
         }),
         actions: Vec::new(),
+        idle: None,
     };
     cards::check(&card)?;
     Ok(Progress { node, row, card })
@@ -543,7 +555,7 @@ mod tests {
         made.key = key;
         made.name = "notes".into();
         let made = progress(made).unwrap();
-        assert_eq!(made.card.title, "notes");
+        assert_eq!(made.card.title, "进展：notes");
         assert_eq!(made.card.facts[0].text, "今天：做完一轮 1 个");
     }
 }

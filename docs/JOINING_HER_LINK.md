@@ -5,7 +5,7 @@
 - 线上的协议：`shared/her_link_contract.json`（下面叫「契约」）。每种帧的说明在 `frames.<类型>.description`。
 - 核心的调用和各端要照做的规矩：`docs/SHARED_CORE.md`（下面叫「核心文档」）。
 
-这一页对着核心 main 的 `eab8055e0` 核过，`ABI_VERSION` 是 5，契约 `protocol` 是 2、`schemaVersion` 是 3。你钉哪个提交，就以那个提交上的契约和核心文档为准。
+这一页对着核心 main 的 `eab8055e0` 核过，那时 `ABI_VERSION` 是 5；现在是 6（卡片的回答多了得失、能否撤回、图名，卡多了「没人回答会怎样」，见[共用核心](SHARED_CORE.md)），这一页里跟着改的有三处：能力表多了 `log6`，`peerAbi` 的算法多了「有 `log6` 是 6」，核对清单里的能力改成 `log2` 到 `log6`。契约 `protocol` 是 2、`schemaVersion` 是 3。你钉哪个提交，就以那个提交上的契约和核心文档为准。
 
 这个仓库里核实不了的是别的仓库的做法，都注明了出处。站点一侧：标着「站点线核过」的几处，是站点线 2026-11-20 对着站点 `preview` 分支的 `2004e7794` 读代码得出的，我没有自己核，站点改了它们就会过时。标着「工程管理转述」的几处，是工程管理 2026-11-21 转述的已定决定和站点提交，同样不在这个仓库里。标着「App 线核过」的，是 App 线 2026-11-21 对着 macOS 端 `preview` 的 `03bee290` 读代码得出的。
 
@@ -85,7 +85,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 | `calls` | 调用（第 6 节） |
 | `streams` | 能报值和事；这一端读不了的帧自动报给主机（`link.dropped`） |
 | `partner` | `welcome` 里带伙伴的 id |
-| `log2` 到 `log5` | 这一端的核心读得懂哪一代的日志行。说你钉的核心的 `ABI_VERSION` 对应的那几项（ABI 5 就四项都说）。只有存日志的端说：站点靠它分辨一条连接存不存日志（工程管理转述）。对方按你说的最高一项决定发不发新种类的行（`nodes.wire_send` 的 `peerAbi`） |
+| `log2` 到 `log6` | 这一端的核心读得懂哪一代的日志行。说你钉的核心的 `ABI_VERSION` 对应的那几项（ABI 5 就说 `log2` 到 `log5` 四项，ABI 6 五项都说；`log6` 是读得懂说了回答会带来什么的卡）。只有存日志的端说：站点靠它分辨一条连接存不存日志（工程管理转述）。对方按你说的最高一项决定发不发新种类的行（`nodes.wire_send` 的 `peerAbi`） |
 | `log.pages` | 日志一页一页地同步（第 4 节） |
 | `log.full` | 第一次全量同步可以走 HTTPS 下载（契约 `frames.log.full`） |
 | `deputy` | 这一端能当临时主机；`lease.grant`、`lease.deputy` 要用 `lease.taken` 回执（第 5 节） |
@@ -128,7 +128,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 1. **报你有什么。** `log.holdings` 从你的行算出 `{vector, beyond?}`，发 `log.vector`（`{audience, vector, beyond?, ask?}`）。`welcome` 之后每个受众发一次。
 2. **对方发你缺的。** 它发来 `log.rows`（可靠帧）。每一批交给 `nodes.wire_take`，它做完全部检查，告诉你收下了哪些、拒了哪些、哪些 body 要再要（`ask`）。收下的用 `log.merge` 并进你的日志。落库后对这一帧 `took`。
-3. **你发对方缺的。** 收到对方的 `log.vector` 时，用 `nodes.wire_send` 算出要发的批，每一批是一条 `log.rows`。它要的输入：这个受众和你的行、对方的向量 `theirs`、对方的 `ask` 和 `beyond`、对方是谁（`holder`）、你自己的 id（`here`）、你的账（`ledger`）、对方的 `peerAbi`。对主机的 `peerAbi` 从它在 `welcome` 里接受的能力算：有 `log5` 是 5，有 `log4` 是 4，有 `log3` 是 3，有 `log2` 是 2，否则 1（契约 `frames.welcome`）。给错了要么什么都不发（`tooOld`），要么发出对方读不懂的行。`log.rows` 可以用 `keep: false` 发：它丢了能从下一轮的 `log.vector` 补回来，不必压在会话的待发箱里。
+3. **你发对方缺的。** 收到对方的 `log.vector` 时，用 `nodes.wire_send` 算出要发的批，每一批是一条 `log.rows`。它要的输入：这个受众和你的行、对方的向量 `theirs`、对方的 `ask` 和 `beyond`、对方是谁（`holder`）、你自己的 id（`here`）、你的账（`ledger`）、对方的 `peerAbi`。对主机的 `peerAbi` 从它在 `welcome` 里接受的能力算：有 `log6` 是 6，有 `log5` 是 5，有 `log4` 是 4，有 `log3` 是 3，有 `log2` 是 2，否则 1（契约 `frames.welcome`）。给错了要么什么都不发（`tooOld`），要么发出对方读不懂的行。`log.rows` 可以用 `keep: false` 发：它丢了能从下一轮的 `log.vector` 补回来，不必压在会话的待发箱里。
 4. **对方有你没有的，就回问。** 收到的 `log.vector` 显示对方有你缺的行时（`log.missing` 给 `{mine, theirs}`，答的是 `theirs` 有而 `mine` 没有的），回一条你自己的 `log.vector`，对方才知道该发什么给你。契约的原话是 `log.vector` 也「作为对一条 `log.vector` 的回答」发。**回答一条收到的向量时，只在 `log.missing` 说对方有你缺的行时才回；两边向量相同绝不回。** 站点自己不防来回（站点线核过）：它对收到的每一条 `log.vector` 都回一条自己的，收完行也回（只有翻页时一页还在路上、或一页没有进展，它不回）。端要是每条都回，两边就会没完没了地互发。这条规矩只管「回答」：你自己有理由发的向量照发，不受它限制——`welcome` 之后的那一条、带 `after` 的、带着 `ask` 要 body 的、`log.full` 并完之后的、被 `behind` 断开重连后的。
 
 ### 一页一页地翻（`log.pages`）
@@ -287,7 +287,7 @@ git log 529c98f..<要钉的提交> -- crates/myriad-link-child crates/myriad-her
 
 - [ ] 开口子；可靠的 `frame` 落盘就 `took`；等确认的多了放慢读套接字。
 - [ ] 只在 `welcome.sync` 是 `on` 时同步；伙伴的 id 只从 `welcome.partner` 拿。
-- [ ] 能力里说 `partner`（不说，`welcome` 里就没有伙伴的 id），和你的核心相符的 `log2` 到 `log5`，以及 `log.pages`。
+- [ ] 能力里说 `partner`（不说，`welcome` 里就没有伙伴的 id），和你的核心相符的 `log2` 到 `log6`，以及 `log.pages`。
 - [ ] 因为等确认的满了被断开（`behind`）之后，重连上要重新发 `log.vector`：`log.rows` 主机不会自己重发。
 - [ ] `welcome` 后每个受众发 `log.vector`；收用 `nodes.wire_take` 加 `log.merge`；发用 `nodes.wire_send`。
 - [ ] 回答收到的 `log.vector`：只在 `log.missing` 非空时回，两边相同绝不回。
