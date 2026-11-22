@@ -212,6 +212,7 @@ void myriad_core_buf_free(MyriadCoreBuf buf);
 | `link.check` | `{frame, roles?}` → `{accepted: {t, family, delivery, canonical}}` 或 `{refused: {code, detail}}`；`code` 是契约 `errorCodes` 里的一个；`roles` 是发送方的角色（`device`、`host`、`mind`、`server`），不给就不查 |
 | `link.encode` | `{frame}` → `{text}`：要发的帧检查过后的规范文本；不通过是 `bad_input` |
 | `link.call_receive` | `{action, version, for, deadlineAt, takenAt, offers, refused?, granted}` → `{verdict, code, version, deadlineAt}`：收到一个 `call.ask` 该怎么办（见下面「收到调用怎么判」） |
+| `link.host_call_receive` | `{action, version, for, deadlineAt, takenAt, providing}` → `{verdict, code, version, deadlineAt}`：主机收到设备发上来的 `call.ask` 该怎么办（见下面「主机收到调用怎么判」） |
 | `link.child_new` | `{capabilities, app: {name, version}, lineage?, hostEpoch?, offers?, coreCommit?, text?}` → `{state}`：子机的一个连接会话，还没连上（见「子机核心」） |
 | `link.child_step` | `{state, now, event, text?}` → `{state, outputs, phase, hostCapabilities}`：会话遇到一件事。`now` 是微秒；`event` 和 `outputs` 见「子机核心」 |
 | `link.child_after` | `{close: {code?, reason?}}` 或 `{http: {status, body?}}`，可带 `attempt` → `{then: "reconnect" \| "stop", down}` 或 `{then: "forget", removal}`，带了 `attempt` 就多一项 `backoffMs` |
@@ -521,6 +522,15 @@ func step(_ event: JSON) throws {
 7. 否则 `do`。
 
 它只管判。去重（同一个 `callId` 再来）、搁着的调用存在哪、到期叫停、结果的可靠送达，会话里有现成的；自己写连接的端要自己做。对照例子在 `crates/conformance/v1/link/call_receive.json`，每种答法至少一条。
+
+### 主机收到调用怎么判（`link.host_call_receive`）
+
+设备也会调主机（`call.ask` 往上发）。主机收下时照同一套规则判，只是站在主机这边：`myriad_her_link::host_call_receive` 把主机的情况交给 `call_receive`，规则不另写一份。
+
+- 输入：`action`、`version`、`for`、`deadlineAt`、`takenAt` 同上；`providing` 是主机在这条连接上说提供的（`call.granted` 的 `providing`），`[{name, version}]`，每次都要写，什么都不提供就给空列表。
+- 主机就是授予的一方：它提供的就是它会做的、也是授予的，所以永远不会 `hold`。
+- 契约里登记由主机做、这条连接上没提供的动作，算主机会做但现在不让：`call_not_granted`。设备的动作、契约没登记的动作，即使写在 `providing` 里也不算主机的：`call_unknown`。
+- 之后的版本、受众、期限和 `call_receive` 的第 2、3、6 步一样。对照例子在 `crates/conformance/v1/link/host_call_receive.json`。
 
 ### 能力清单要是真的
 

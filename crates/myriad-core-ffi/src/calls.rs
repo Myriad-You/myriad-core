@@ -182,6 +182,7 @@ const CALLS: &[(&str, Call)] = &[
     ("link.child_new", link::child_new),
     ("link.child_step", link::child_step),
     ("link.encode", link::encode),
+    ("link.host_call_receive", link::host_call_receive),
     ("link.now_read", link::now_read),
     ("log.admit", log::admit),
     ("log.answer", log::send),

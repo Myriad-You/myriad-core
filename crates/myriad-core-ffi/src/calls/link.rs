@@ -152,17 +152,76 @@ pub(super) fn call_receive(raw: &[u8]) -> Result<Value, Failure> {
         &refused,
         granted.as_deref(),
     );
+    Ok(received_json(received))
+}
+
+/// `{verdict, code, version, deadlineAt}` of a [`myriad_her_link::CallReceived`].
+fn received_json(received: myriad_her_link::CallReceived) -> Value {
     let (verdict, code) = match received.verdict {
         myriad_her_link::CallVerdict::Hold => ("hold", None),
         myriad_her_link::CallVerdict::Do => ("do", None),
         myriad_her_link::CallVerdict::Fail(code) => ("fail", Some(code)),
     };
-    Ok(json!({
+    json!({
         "verdict": verdict,
         "code": code,
         "version": received.version,
         "deadlineAt": received.deadline_at,
-    }))
+    })
+}
+
+/// `{action, version, for, deadlineAt, takenAt, providing}` → `{verdict, code, version,
+/// deadlineAt}`: what her host does with a `call.ask` a device sent it
+/// (`myriad_her_link::host_call_receive`), [`call_receive`] from the host's side, for every
+/// host. `providing` is what the host says it provides on this link
+/// (`call.granted.providing`), `[{name, version}]`; only the host's own actions count. The
+/// host grants, so the verdict is never `hold`: `do`, or `fail` with a code of
+/// `calls.failCodes`. Times are on the host's clock, milliseconds.
+pub(super) fn host_call_receive(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct Named {
+        name: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+    }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct In {
+        action: String,
+        #[serde(deserialize_with = "whole::u64")]
+        version: u64,
+        #[serde(rename = "for")]
+        of: Value,
+        #[serde(deserialize_with = "whole::u64")]
+        deadline_at: u64,
+        #[serde(deserialize_with = "whole::u64")]
+        taken_at: u64,
+        providing: Vec<Named>,
+    }
+    let input: In = super::quiet_input(raw)?;
+    // No count or time past what every JSON reader keeps exactly.
+    let whole = |count: u64| count <= WHOLE as u64;
+    if ![input.version, input.deadline_at, input.taken_at]
+        .into_iter()
+        .chain(input.providing.iter().map(|one| one.version))
+        .all(whole)
+    {
+        return Err(Failure::BadInput("a number past 2^53".into()));
+    }
+    let providing: Vec<(String, u64)> = input
+        .providing
+        .into_iter()
+        .map(|one| (one.name, one.version))
+        .collect();
+    Ok(received_json(myriad_her_link::host_call_receive(
+        &input.action,
+        input.version,
+        &input.of,
+        input.deadline_at,
+        input.taken_at,
+        &providing,
+    )))
 }
 
 /// The largest whole number every JSON reader keeps exactly: no count or time of her link
