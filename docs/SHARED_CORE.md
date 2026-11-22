@@ -754,7 +754,7 @@ func step(_ event: JSON) throws {
 | `nodes.stands_build_read` | `{output, sync, <stands_build_input 的输入>}` → `{rows, left, setAside, dropped?, unreadable?}`；`dropped` 是读法丢掉的项按原因计数（`no_whose`、`no_text`、`rests_on_nothing`、`too_long`），只有数没有原话，供宿主记日志，空时不写出 |
 | `nodes.trust_tier` | `{items: [{saidBy, author?, provenance?: {together?, typed?, verified?, answer?}, aboutPartner?}]}` → `{tiers: [seen \| heard \| counts \| null]}` |
 | `nodes.under_read` | `{value?, offered?: [id], known?}` → `{to, …}` |
-| `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?}], ledger?}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken, local?}`；`local` 为真时这个节点被撤回、这一端是它的家，这一次整理只写 `local` 行 |
+| `nodes.upkeep_input` | `{rows, bodies?, audience, node?, candidates?: [id], inbox?: [{id, saidBy, text, audience?, refs?}], ledger?}` → `{node?, spans?, entries?, neighbours?, candidates?, inbox?, due?, taken, local?}`；`local` 为真时这个节点被撤回、这一端是它的家，这一次整理只写 `local` 行；`refs` 是这一条还依托的授权（`grant:…`，最多 4 个；和自己的 id 相同的那项不算），从它放上节点的片段和以它为依据的东西都带上，撤销授权时按授权找得到 |
 | `nodes.upkeep_read` | `{input: <upkeep_input 的输入>, run, sync, output}` → `{writes: [{id, node, kind, body, to?, takes?}], placed?, held?, fallback?}`；并入、拆出的那一行带 `to`（和拆出的 `takes`），调用方原样写进行的信封；`upkeep_input` 回答 `local` 时 `sync` 必须是 `local`，不然是 `bad_input` |
 | `nodes.usable_in_private` | `{private, items: [{saidBy, audience, provenance?}]}` → `{usable: [bool]}` |
 | `nodes.view_may_change` | `{because, known?: {partner?, her?, typed?, verified?}, heard?}` → `{mayChange, verdict: view \| heard_only \| refused}` |

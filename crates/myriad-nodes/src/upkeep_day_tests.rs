@@ -50,24 +50,43 @@ fn resting_on(refs: &[&str]) -> UpkeepInput {
 }
 
 #[test]
-fn what_an_inbox_item_rests_on_is_taken_when_it_is_a_few_ids() {
+fn what_an_inbox_item_rests_on_is_taken_when_it_is_a_few_grants() {
     assert!(prepare(resting_on(&["grant:g0123"])).is_ok());
     assert!(
         prepare(resting_on(&[
-            "grant:g1",
-            "session:s1",
-            "record:r1",
-            "file:f1"
+            "grant:g1", "grant:g2", "grant:g3", "grant:g4"
         ]))
         .is_ok()
     );
+    // Its own id is the item itself: passed over.
+    assert!(prepare(resting_on(&["grant:g1", "message:a1"])).is_ok());
     for refs in [
-        &["grant:g1", "session:s1", "record:r1", "file:f1", "file:f2"][..],
+        &["grant:g1", "grant:g2", "grant:g3", "grant:g4", "grant:g5"][..],
         &["grant"][..],
         &["grant:g1", "grant:g1"][..],
-        &["message:a1"][..],
+        &["span:u1"][..],
+        &["session:s1"][..],
         &[""][..],
     ] {
         assert!(prepare(resting_on(refs)).is_err(), "{refs:?}");
     }
+}
+
+/// What the core makes of a session for her inbox goes into her upkeep as
+/// it is: its refs name its grant and the item itself.
+#[test]
+fn a_session_item_goes_into_her_upkeep_as_made() {
+    let made = crate::sessions::inbox_item("dev_mac", "g_0123456789", "s-1", "把存储拆开了")
+        .unwrap()
+        .unwrap();
+    assert!(made.refs.contains(&made.id));
+    let mut input = input(None, None);
+    input.inbox = vec![InboxItem {
+        id: made.id.clone(),
+        said_by: made.said_by.clone(),
+        text: made.text.clone(),
+        audience: None,
+        refs: made.refs.clone(),
+    }];
+    assert!(prepare(input).is_ok());
 }
