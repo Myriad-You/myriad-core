@@ -11,7 +11,9 @@
 //! can be read two ways is the longer: a day or a week of this one gone by is
 //! the next to come, and before today, this week or this month is through
 //! it. A time of today gone by when they said it, or a stretch that does not
-//! hold together, has no end known, as one they gave none.
+//! hold together, has no end known, as one they gave none; nor has one that
+//! only starts later ([`Begins::Later`]), or is not said to have begun: it
+//! does not hold now, and nothing is held off till it would; nor one further off than [`AT_MOST`].
 
 use chrono::{
     DateTime, Datelike, Duration, Months, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Timelike,
@@ -26,12 +28,16 @@ use crate::happened::{Unit, span_of, unit_start};
 pub const NIGHT_ENDS: u32 = 5;
 /// The most days, weeks, months or hours from now an end may be.
 const COUNT_AT_MOST: u32 = 400;
+/// The furthest off an end may be: one later than this, which nobody asks
+/// for, is one they did not give (a date that was misread, or a year).
+pub const AT_MOST: Duration = Duration::days(60);
 
 /// What the model is told to answer, beside [`bound_end_schema`].
 pub const BOUND_END_RULE: &str = "end says when it ends, as they put it, never worked out by you; every field is given, with what does not apply as \"none\", 0 or \"\". \
 how: \"tonight\" (今晚, tonight, 今夜), \"today\", \"tomorrow\", \"week\" or \"month\" (which is this or next), \"weekday\" (a day of the week: weekday, with which next when they say 下周三 / next Wednesday / 来週の水曜, this when they say 这周三 / this Wednesday / 今週の水曜, coming when they only say the day: 周三, Wednesday, 水曜), \"days\" (count days: which is this for 这三天, these three days, 今日から三日, next for 接下来两天, 未来两天, the next two days, これから二日, 明天起两天), \"hours\" (count hours from now), \"date\" (a date they wrote or named by month and day: date as YYYY-MM-DD), or \"unsaid\" (they gave no end, or one that is none of these: 一阵子, 忙完再说). \
 edge is \"before\" for 下周三之前, until Wednesday, 水曜まで待って when the day itself is free; \"after\" for 周日之后再说, after Sunday, 日曜が終わったら; \"through\" for that day, week or month itself (这周, through Friday). \
-time is the clock time they named on that day (HH:MM), else \"\".";
+time is the clock time they named on that day (HH:MM), else \"\". \
+begins is \"now\" when it holds from now on, up to that end (今晚, 这三天, 到明天为止, 明天之前, until Wednesday), \"later\" when it only starts at a later time, so it does not hold yet (明天别找我, 下周别来找我, 十一点以后别找我, don't message me next week).";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -46,6 +52,14 @@ pub enum How {
     Hours,
     Date,
     Unsaid,
+}
+
+/// Whether it holds from when they said it, or only starts later.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Begins {
+    Now,
+    Later,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
@@ -80,10 +94,11 @@ const MARKS: [&str; 2] = [
 Also mark what you must do differently because of what they just said, if anything: \
 - \"keep\": they ask you to remember something, tell you what to call them (or what they call you) or what never to bring up, or tell you of a big change in their life. \
 - \"forget\": they take back something they said, or ask you not to keep it. \
-- \"change\": they correct something in known that you have wrong, or tell you it is no longer so. \
+- \"change\": they correct something in known that you have wrong, or tell you it is no longer so (that they are to be left alone till then, too: 改成今晚就行; mark the bound they give in its place beside it). \
+- \"unbound\": they say you may reach out to them again, or take back that they asked you not to (可以找我了, 不用憋着, 当我没说别找我, you can text me again). known tells what you have been asked of late, if anything; an end they only change is a change and another bound, not this. \
 - \"bound\": they ask you not to reach out to them for a while; ",
     " On other marks end is null. \
-Appointments, reminders and things they ask you to do are not marks (they are handled as you take them); a change of mind within this same talk is not a mark; most of what people say is none of these: marks is empty.\n\
+Appointments, reminders and things they ask you to do are not marks (they are handled as you take them); a change of mind within this same talk is not a mark, but for whether and how long they are to be left alone; most of what people say is none of these: marks is empty.\n\
 Answer only in JSON.",
 ];
 const ANSWER_ONLY: &str = "Answer only in JSON.";
@@ -103,7 +118,7 @@ pub fn with_marks(system: &str, schema: &Value, input: &Value) -> Option<(String
             "items": {
                 "type": "object",
                 "properties": {
-                    "kind": { "type": "string", "enum": ["keep", "forget", "change", "bound"] },
+                    "kind": { "type": "string", "enum": ["keep", "forget", "change", "bound", "unbound"] },
                     "end": { "anyOf": [bound_end_schema(), { "type": "null" }] }
                 },
                 "required": ["kind", "end"],
@@ -136,6 +151,38 @@ pub fn read_bounds(answer: &str) -> Vec<BoundEnd> {
         .collect()
 }
 
+/// Whether they said in her answer to [`with_marks`] that she may come to
+/// them again. Nothing in an answer that does not read.
+pub fn read_unbound(answer: &str) -> bool {
+    has_mark(answer, "unbound")
+}
+
+/// Whether they changed in her answer to [`with_marks`] what she knows of
+/// them, as how long they are to be left alone. Nothing in an answer that
+/// does not read.
+pub fn read_change(answer: &str) -> bool {
+    has_mark(answer, "change")
+}
+
+fn has_mark(answer: &str, kind: &str) -> bool {
+    crate::answer::parse::<Value>(answer)
+        .and_then(|answer| answer["marks"].as_array().cloned())
+        .is_some_and(|marks| marks.iter().any(|mark| mark["kind"] == kind))
+}
+
+/// Whether her answer to [`with_marks`] says in full whether they asked for
+/// anything: one that does not is asked for again.
+pub fn marks_read(answer: &str) -> bool {
+    crate::answer::parse::<Value>(answer)
+        .and_then(|answer| answer["marks"].as_array().cloned())
+        .is_some_and(|marks| {
+            marks
+                .iter()
+                .filter(|mark| mark["kind"] == "bound")
+                .all(|mark| read_bound_end(&mark["end"]).is_some())
+        })
+}
+
 /// The stretch they meant, as the model names it.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -150,6 +197,10 @@ pub struct BoundEnd {
     pub edge: Edge,
     pub date: String,
     pub time: String,
+    /// None in an answer that does not say: as [`Begins::Later`], nothing is
+    /// held off till it is known to have begun.
+    #[serde(default)]
+    pub begins: Option<Begins>,
 }
 
 fn count<'de, D: Deserializer<'de>>(read: D) -> Result<u32, D::Error> {
@@ -170,9 +221,10 @@ pub fn bound_end_schema() -> Value {
             "count": { "type": "integer" },
             "edge": { "type": "string", "enum": ["before", "after", "through", "none"] },
             "date": { "type": "string" },
-            "time": { "type": "string" }
+            "time": { "type": "string" },
+            "begins": { "type": "string", "enum": ["now", "later"] }
         },
-        "required": ["how", "which", "weekday", "count", "edge", "date", "time"],
+        "required": ["how", "which", "weekday", "count", "edge", "date", "time", "begins"],
         "additionalProperties": false
     })
 }
@@ -184,8 +236,16 @@ pub fn read_bound_end(value: &Value) -> Option<BoundEnd> {
 
 impl BoundEnd {
     /// When it ends on their clock, said at `said` there. None when they gave
-    /// no end, it was over already, or it does not hold together.
+    /// no end, it was over already, it only starts later, it is further off
+    /// than [`AT_MOST`], or it does not hold together.
     pub fn ends(&self, said: NaiveDateTime) -> Option<NaiveDateTime> {
+        if self.begins != Some(Begins::Now) {
+            return None;
+        }
+        self.ends_of(said).filter(|end| *end - said <= AT_MOST)
+    }
+
+    fn ends_of(&self, said: NaiveDateTime) -> Option<NaiveDateTime> {
         let today = said.date();
         if self.how == How::Hours {
             return self.hours().map(|hours| said + hours);
@@ -300,7 +360,10 @@ impl BoundEnd {
         hers: &Z,
     ) -> Option<DateTime<Utc>> {
         if self.how == How::Hours {
-            return self.hours().map(|hours| said + hours);
+            return (self.begins == Some(Begins::Now))
+                .then(|| self.hours().filter(|hours| *hours <= AT_MOST))
+                .flatten()
+                .map(|hours| said + hours);
         }
         let zone = theirs.unwrap_or(hers);
         let ends = self.ends(said.with_timezone(zone).naive_local())?;
@@ -384,7 +447,7 @@ mod tests {
     fn end(fields: Value) -> BoundEnd {
         let mut whole = json!({
             "how": "unsaid", "which": "none", "weekday": "none", "count": 0,
-            "edge": "through", "date": "", "time": "",
+            "edge": "through", "date": "", "time": "", "begins": "now",
         });
         for (key, value) in fields.as_object().unwrap() {
             whole[key] = value.clone();
@@ -524,12 +587,12 @@ mod tests {
         );
         is(
             before(json!({"how": "date", "date": "2028-02-29"})),
-            MONDAY,
+            "2028-02-20T21:00",
             "2028-02-29T00:00",
         );
         is(
             json!({"how": "date", "date": "2028-02-29"}),
-            MONDAY,
+            "2028-02-20T21:00",
             "2028-03-01T00:00",
         );
     }
@@ -702,6 +765,65 @@ mod tests {
         assert_eq!(read_bound_end(&json!({"how": "soon"})), None);
     }
 
+    /// Not yet begun, or not said to have: nothing is held off.
+    #[test]
+    fn what_only_starts_later_has_no_end_known() {
+        for fields in [
+            json!({"how": "tomorrow"}),
+            json!({"how": "week", "which": "next"}),
+            json!({"how": "today", "time": "23:00"}),
+            json!({"how": "days", "count": 3, "which": "next"}),
+            json!({"how": "hours", "count": 3}),
+        ] {
+            let mut later = fields.clone();
+            later["begins"] = json!("later");
+            assert_eq!(ends(later.clone(), MONDAY), None, "{later}");
+            let said = Utc.with_ymd_and_hms(2026, 11, 23, 13, 0, 0).unwrap();
+            assert_eq!(end(later).ends_at(said, None, &Utc), None, "{fields}");
+            assert!(ends(fields, MONDAY).is_some());
+        }
+        let unsaid = json!({
+            "how": "tonight", "which": "none", "weekday": "none", "count": 0,
+            "edge": "none", "date": "", "time": "",
+        });
+        let said = NaiveDateTime::parse_from_str(MONDAY, "%Y-%m-%dT%H:%M").unwrap();
+        assert_eq!(read_bound_end(&unsaid).unwrap().ends(said), None);
+        // A begins that is neither does not read.
+        assert_eq!(
+            read_bound_end(&json!({
+                "how": "tonight", "which": "none", "weekday": "none", "count": 0,
+                "edge": "none", "date": "", "time": "", "begins": "soon",
+            })),
+            None
+        );
+    }
+
+    /// Further off than anyone asks for: a date misread, or a year.
+    #[test]
+    fn an_end_further_off_than_sixty_days_is_one_they_did_not_give() {
+        is(
+            json!({"how": "days", "count": 59}),
+            MONDAY,
+            "2027-01-22T00:00",
+        );
+        assert_eq!(ends(json!({"how": "days", "count": 60}), MONDAY), None);
+        for fields in [
+            json!({"how": "date", "date": "2099-01-01"}),
+            json!({"how": "date", "date": "2027"}),
+            json!({"how": "days", "count": 300}),
+        ] {
+            let said = Utc.with_ymd_and_hms(2026, 11, 23, 13, 0, 0).unwrap();
+            assert_eq!(ends(fields.clone(), MONDAY), None, "{fields}");
+            assert_eq!(end(fields.clone()).ends_at(said, None, &Utc), None);
+        }
+        // As far as it goes.
+        is(
+            json!({"how": "date", "date": "2027-01-20"}),
+            MONDAY,
+            "2027-01-21T00:00",
+        );
+    }
+
     /// Tonight ends in their own morning; where no zone of theirs is kept,
     /// in hers.
     #[test]
@@ -775,7 +897,7 @@ mod tests {
 
     #[test]
     fn only_bounds_with_an_end_that_reads_are_read() {
-        let tonight = json!({"how": "tonight", "which": "none", "weekday": "none", "count": 0, "edge": "none", "date": "", "time": ""});
+        let tonight = json!({"how": "tonight", "which": "none", "weekday": "none", "count": 0, "edge": "none", "date": "", "time": "", "begins": "now"});
         let answer = json!({"take": [], "drop": [], "marks": [
             {"kind": "keep", "end": null},
             {"kind": "bound", "end": tonight},
@@ -787,5 +909,35 @@ mod tests {
         assert_eq!(read_bounds(&format!("```json\n{answer}\n```")).len(), 1);
         assert!(read_bounds("今晚").is_empty());
         assert!(read_bounds(r#"{"take": []}"#).is_empty());
+        // A bound with an end that does not read is asked for again; other
+        // marks have none to read.
+        assert!(!marks_read(&answer.to_string()));
+        assert!(marks_read(
+            r#"{"marks": [{"kind": "forget", "end": null}]}"#
+        ));
+        assert!(marks_read(r#"{"marks": []}"#));
+        assert!(!marks_read(r#"{"take": []}"#));
+        assert!(!marks_read("今晚"));
+    }
+
+    #[test]
+    fn that_she_may_come_to_them_again_is_its_own_mark() {
+        let schema = json!({"type": "object", "properties": {"take": {"type": "array"}}, "required": ["take"], "additionalProperties": false});
+        let (system, schema, _) = with_marks("You are her.", &schema, &json!({})).unwrap();
+        assert!(system.contains("\"unbound\""));
+        let kinds = &schema["properties"]["marks"]["items"]["properties"]["kind"]["enum"];
+        assert!(kinds.as_array().unwrap().contains(&json!("unbound")));
+        let answer = r#"{"take": [], "drop": [], "marks": [{"kind": "unbound", "end": null}]}"#;
+        assert!(read_unbound(answer));
+        assert!(read_unbound(&format!("```json\n{answer}\n```")));
+        assert!(!read_unbound(
+            r#"{"take": [], "drop": [], "marks": [{"kind": "forget", "end": null}]}"#
+        ));
+        assert!(!read_unbound("可以找我了"));
+        assert!(!read_change(answer));
+        assert!(read_change(
+            r#"{"marks": [{"kind": "change", "end": null}, {"kind": "bound", "end": null}]}"#
+        ));
+        assert!(read_bounds(answer).is_empty());
     }
 }
