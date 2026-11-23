@@ -6794,6 +6794,7 @@
           ],
           "views": [
             {
+              "keptElsewhere": true,
               "label": "v1",
               "text": "伙伴对搬家有点烦。"
             }
@@ -8554,6 +8555,7 @@
           ],
           "views": [
             {
+              "keptElsewhere": true,
               "label": "v1",
               "text": "伙伴对搬家有点烦。"
             }
