@@ -16,7 +16,10 @@ use crate::Failure;
 /// answer of `chat_remember.extract_system` asked with `asked` says they ask
 /// her not to keep. `answer` is the whole answer, as decoded; `theirs` their
 /// words it is held to; `saidByThem`, of each line whether it is theirs,
-/// where each names its line.
+/// where each names its line, and then `askedBefore` is what they asked
+/// before. An answer of one line alone gives no `saidByThem` and `[]` for
+/// `askedBefore`: it was shown none of it, and their asking again is told by
+/// what keeps it, which a request read as nothing new would hide.
 pub(super) fn remember_read_not_to_keep(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]

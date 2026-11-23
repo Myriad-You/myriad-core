@@ -1052,7 +1052,7 @@ func step(_ event: JSON) throws {
 | `sharing.reason`、`sharing.come_back_reason` | `{what, why}` | `sharing::reason`、`come_back_reason` |
 | `chat_remember.extract_system`、`settle_system` | `{existing, theirs?, dated?, asked?}`、`{known, theirs?}` | `chat_remember::extract_system_prompt`、`settle_system_prompt`；例子的语言按 `theirs`（对方这句、这一段对方的话）选（`chat_remember::Examples::for_words`）：有汉字、没有假名和谚文是中文例子，其余是英文例子；不给 `theirs` 是中文例子，和以前一个字节都不差；`dated: true` 时多问每条事实发生在什么时候（`extract_system_prompt_dated`，`happened` 规则同整理的前半句），给每轮就记、不整理一段的端用；`asked: true` 时多问对方要她以后别记什么（`notToKeep`，`extract_system_prompt_asked`），两个都给时先问发生在什么时候、再问别记什么（`extract_system_prompt_dated_asked`）；`asked` 不给就是 `false`，问的和以前一个字节都不差 |
 | `chat_remember.extract_schema` | `{dated?, asked?}` | `{schema}`：`chat_remember::extract_schema`；`asked: true` 多一个必答的 `notToKeep`（`[{fact, evidence}]`，最多 `MAX_ASKED` 条），用 `chat_remember.read_not_to_keep` 读，和 `dated` 可以一起给；`dated: true` 是 `extract_schema_dated`，每条事实多一个必答的 `happened`（`{from, to, about}`，不知道时 `from` 空），读法同整理（`nodes.standing_read`）；回答里还有必答的 `own`：她在回复里说到她自己的（`{line, evidence, concepts}`，不设条数），各端写成来源 `own_said::SOURCE`（`self_said`）的她自己的记忆，存在 `audience.own_said` 给的听众下（群里说的是 `own`，私聊里说的是那个私聊），`evidence` 要在她这句回复里；同一句不重复存，去重只比这一处能听到的 `self_said` 行（`audience.admits(行的听众, present)`），所以私聊里存过的一句，在群里再说时照样存成 `own`。写入时发给模型的那段输入（各端自己拼，和 `userText`、`reply`、`today` 并列，不是这个调用的输入）可以多一个 `yours`：她之前存下的、这句回复碰到的自己的话，只取 `audience.admits(行的听众, present)` 为真的行，之前存的 `line` 原文组成的字符串数组，最相关的在前；没有就不给 |
-| `chat_remember.read_not_to_keep` | `{answer, theirs, askedBefore, saidByThem?}` → `{asked: [{fact, evidence, said?, replaces}], unread}` | `chat_remember::read_not_to_keep`、`not_to_keep_unread`：`answer` 是整个回答（解开的 JSON，不是文字），`theirs` 是对方的原话，`askedBefore` 是对方以前要她别记的；`saidByThem` 是每一行是不是对方说的，回答按行答（每条带 `said`）时才给，逐句抽取不给。坏一条（缺字段、原话里没有、太长）只去掉那一条，以前问过的、重复的不再给。`unread` 是读不出：回答不是对象，`notToKeep` 有而不是数组（`null` 也算），或者有条目而没有一条站得住；这时 `asked` 是空的，但不能当没有要求，要当失败重试。没有 `notToKeep` 这一项、空数组、只有以前问过的，都不是读不出 |
+| `chat_remember.read_not_to_keep` | `{answer, theirs, askedBefore, saidByThem?}` → `{asked: [{fact, evidence, said?, replaces}], unread}` | `chat_remember::read_not_to_keep`、`not_to_keep_unread`：`answer` 是整个回答（解开的 JSON，不是文字），`theirs` 是对方的原话（几条合成一句时换行照留，条目的 `evidence` 跨行也认）；`saidByThem` 是每一行是不是对方说的，回答按行答（每条带 `said`，整理一段）时才给，这时 `askedBefore` 给对方以前要她别记的。逐句抽取不给 `saidByThem`，`askedBefore` 给 `[]`：它没看过以前的要求，对方一字不差地再说一次也是一件事（还没办的「可以记了」要作废），重复由存的那一步认。坏一条（缺字段、原话里没有、太长）只去掉那一条，以前问过的、重复的不再给。`unread` 是读不出：回答不是对象，`notToKeep` 有而不是数组（`null` 也算），或者有条目而没有一条站得住；这时 `asked` 是空的，但不能当没有要求，要当失败重试。没有 `notToKeep` 这一项、空数组、只有以前问过的，都不是读不出 |
 | `not_to_keep.sources` | `{}` → `{asked, leftAlone}` | `not_to_keep::ASKED_SOURCE`（`asked`，以后别记的要求）、`LEFT_ALONE_SOURCE`（`left_alone`，先别找我）：这两种行只管拦住，不是事实，不参与召回、已知和淡出，删和撤回照常 |
 | `not_to_keep.parts`、`not_to_keep.input` | `{items}` → `{parts: [{from, to}]}`；`{asked, who?, items}` → `{input}` | `not_to_keep::parts`（一次最多问 24 条、12000 字，哪条都不截，`to` 不含）、`not_to_keep_input`（就是发给模型的用户消息，一段 JSON 文字；`who` 是条目里有别人（群里）时对方在里面的名字）。凡是要写下对方说过的内容，都先过这一步 |
 | `not_to_keep.system`、`not_to_keep.schema`、`not_to_keep.read` | `{}` → `{text}`；`{}` → `{schemaName, schema}`；`{raw, items: 条数}` → `{drop}` | `not_to_keep_system`、`not_to_keep_schema`、`parse_not_to_keep`：`drop` 是要留在外面的下标，读不出是 `null`（不是空数组），当失败重试，不放行 |
@@ -1062,6 +1062,12 @@ func step(_ event: JSON) throws {
 | `wants.section` | `{wants: [{id, want, why, reach, longing, since, notes: [[时间, 话]]}], now}` | `wants::section`：`reach` 是 `on_your_own`、`with_others`、`beyond_you`，时间按 Unix 微秒；没有是 `null` |
 | `pace.section` | `{pace: {day, usualMinutes, daysPastUsual, tone}, spentMinutes, lazedMinutes}` | `pace::section`：`tone` 是 `flat`、`even`、`keen`；没什么可说是 `null` |
 | `pace.lazing` | `{}` → `{lazing: [[种类, 是什么]]}` | `pace::LAZING` |
+
+接 `not_to_keep.*` 的端自己要有的三件（在站点 `merope/asked.rs`，是编排，不在核心出口里；不做会比站点多丢）：
+
+- 一批的 `drop` 点了全部条目时，同一批再问一次，只丢两次都点名的。
+- 一批读不出（或被拒答）时，逐条各问一次；还是读不出的那条算没判，不写、以后重试，别的照判出的来。
+- 空条目（去掉空白什么都不剩的）先滤掉再分批，`drop` 的下标对的是滤过的。
 
 ## 她的样子（`visual.*`、`sticker.*`、`persona.fallback`、`persona.draft`）
 

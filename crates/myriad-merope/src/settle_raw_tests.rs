@@ -999,12 +999,43 @@ fn an_answer_that_cannot_be_read_is_not_one_that_asks_nothing() {
             "{answer}"
         );
     }
-    // Asked already: read, though there is nothing new in it.
-    let answer = serde_json::json!({"notToKeep": [good]});
-    assert!(read_not_to_keep(&answer, theirs, None, &["不要记体重的事".into()]).is_empty());
-    assert!(!not_to_keep_unread(&answer, theirs, None));
+    // Of lines, asked already: read, though there is nothing new in it.
+    let answer = serde_json::json!({"notToKeep": [{"fact": "不要记体重的事", "evidence": theirs, "said": 0}]});
+    let (by, before) = ([true], ["不要记体重的事".to_string()]);
+    assert!(read_not_to_keep(&answer, theirs, Some(&by), &before).is_empty());
+    assert!(!not_to_keep_unread(&answer, theirs, Some(&by)));
     // Of lines, one she said is none of theirs.
     let said = serde_json::json!({"notToKeep": [{"fact": "不要记体重的事", "evidence": theirs, "said": 1}]});
     assert!(not_to_keep_unread(&said, theirs, Some(&[true, false])));
     assert!(!not_to_keep_unread(&said, theirs, Some(&[false, true])));
+}
+
+/// What they sent in two goes is there over two lines, however the answer
+/// copies it; words they did not say one after the other are not.
+#[test]
+fn a_request_sent_in_two_goes_is_in_their_words() {
+    use crate::chat_remember::{not_to_keep_unread, read_not_to_keep};
+    let theirs = "我的体重\n以后别记了\r\n  今天去爬山";
+    for (evidence, holds) in [
+        ("我的体重\n以后别记了", true),
+        ("我的体重 以后别记了", true),
+        ("以后别记了\n今天去爬山", true),
+        ("我的体重", true),
+        ("我的体重 / 以后别记了", true),
+        ("我的体重以后别记了", false),
+        ("我的体重\n今天去爬山", false),
+        ("以后别记了\n我的体重", false),
+    ] {
+        let one = serde_json::json!({"fact": "不要记体重的事", "evidence": evidence, "said": 0});
+        let answer = serde_json::json!({"notToKeep": [one]});
+        for by in [None, Some(&[true][..])] {
+            let read = read_not_to_keep(&answer, theirs, by, &[]);
+            assert_eq!(read.len(), usize::from(holds), "{evidence:?}");
+            assert_eq!(
+                not_to_keep_unread(&answer, theirs, by),
+                !holds,
+                "{evidence:?}"
+            );
+        }
+    }
 }

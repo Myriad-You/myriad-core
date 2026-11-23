@@ -163,13 +163,14 @@ fn what_they_asked_is_read_as_the_crate_does_and_not_quoted_back() {
         json!([{ "fact": "不要记体重" }]),
     ] {
         let answer = json!({ "notToKeep": list });
-        for by in [None, Some(&by[..])] {
+        // Of one line alone, none of what they asked before is given.
+        for (by, before) in [(None, &[][..]), (Some(&by[..]), &before[..])] {
             let mut input = json!({ "answer": answer, "theirs": theirs, "askedBefore": before });
             if let Some(by) = by {
                 input["saidByThem"] = json!(by);
             }
             let got = ok("chat_remember.read_not_to_keep", input);
-            let asked = chat_remember::read_not_to_keep(&answer, theirs, by, &before);
+            let asked = chat_remember::read_not_to_keep(&answer, theirs, by, before);
             assert_eq!(got["asked"], serde_json::to_value(&asked).unwrap());
             assert_eq!(
                 got["unread"],

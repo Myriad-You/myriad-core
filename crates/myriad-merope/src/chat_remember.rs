@@ -371,7 +371,9 @@ pub(crate) fn not_to_keep_schema(lines: bool) -> serde_json::Value {
 
 /// `notToKeep` of an answer: each held to being in `theirs`, none they had
 /// asked already. `said_by_them` (of each line, whether it is theirs) when
-/// each names its line; None when the answer is of one line alone.
+/// each names its line; None when the answer is of one line alone, and then
+/// `asked_before` is empty: that answer was shown none of it, and asking
+/// again is something they did, told by whatever keeps it.
 pub fn read_not_to_keep(
     answer: &serde_json::Value,
     theirs: &str,
@@ -407,17 +409,20 @@ pub fn not_to_keep_unread(
 }
 
 /// Each request held to being in `theirs`, and in a line of theirs when it
-/// names one.
+/// names one. Its evidence has its runs of space as one already, so `theirs`
+/// is looked in so too: what they sent in two goes is there over two lines.
 fn asked_in_theirs<'a>(
     theirs: &'a str,
     said_by_them: Option<&'a [bool]>,
 ) -> impl Fn(&str, Option<usize>) -> Option<Option<usize>> + 'a {
+    let spaced = one_spaced(theirs);
     move |evidence, said| {
         let said = match said_by_them {
             None => None,
             Some(by) => Some(said.filter(|index| by.get(*index) == Some(&true))?),
         };
-        settle_evidence_holds(evidence, theirs).then_some(said)
+        (settle_evidence_holds(evidence, theirs) || settle_evidence_holds(evidence, &spaced))
+            .then_some(said)
     }
 }
 
