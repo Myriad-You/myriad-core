@@ -39,7 +39,7 @@ pub const BOUND_END_RULE: &str = "end says when it ends, as they put it, never w
 how: \"tonight\" (今晚, tonight, 今夜), \"today\", \"tomorrow\", \"week\" or \"month\" (which is this or next), \"weekday\" (a day of the week: weekday, with which next when they say 下周五 / next Friday / 来週の金曜, this when they say 这周五 / this Friday / 今週の金曜, coming when they only say the day: 周五, Friday, 金曜), \"days\" (count days: which is this for 这五天, these five days, 今日から五日, next for 往后四天, the next four days, これから四日), \"hours\" (count hours from now), \"date\" (a date they wrote or named by month and day: date as YYYY-MM-DD), or \"unsaid\" (they gave no end, or one that is none of these: 过段时间, 有空再说). \
 edge is \"before\" for 下周五之前, until Friday, 金曜まで待って when the day itself is free; \"after\" for 过了周五, after Friday, 金曜が終わったら; \"through\" for that day, week or month itself (这周, through Friday). \
 time is the clock time they named on that day (HH:MM), else \"\". \
-begins is always \"now\" or \"later\". \"now\": she is to leave them be from this moment, up to that end, however they put the end: till a day or an hour, not to come before one, or to come only after one (过了周五再来, 夜里零点前别出声), or for a stretch that goes on straight from where known says they asked till, with no gap between. tonight, today, this week, this month and these days (今晚, 这几天) are always now, also when said in the morning. \"later\": till some time still to come she may reach out, and only from then on is she to leave them be (从周五起别来, 后天别出声, 零点过后别出声): the end is of that stretch.";
+begins is always \"now\" or \"later\". \"now\": she is to leave them be from this moment, up to that end, however they put the end: till a day or an hour, not to come before one, or to come only after one (过了周五再来, 夜里零点前别出声), or for a stretch that goes on straight from where known says they asked till, with no gap between. tonight, today, this week, this month and these days (今晚, 这几天) are now as a whole, also when said in the morning; from an hour or a day in them on is later (夜里零点过后). \"later\": till some time still to come she may reach out, and only from then on is she to leave them be (从周五起别来, 后天别出声): the end is of that stretch.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -140,23 +140,28 @@ pub fn with_marks(system: &str, schema: &Value, input: &Value) -> Option<(String
 }
 
 /// Until when they asked to be left alone in her answer to [`with_marks`],
-/// one for each time they did, or, when they only changed until when, each
-/// they changed it to; an end that does not read is one they did not give.
-/// Nothing in an answer that does not read.
+/// one for each time they did, or, when none of those gives an end, each they
+/// changed it to; an end that does not read is one they did not give. Nothing
+/// in an answer that does not read.
 pub fn read_bounds(answer: &str) -> Vec<BoundEnd> {
     let Some(answer) = crate::answer::parse::<Value>(answer) else {
         return Vec::new();
     };
-    let marks: Vec<&Value> = answer["marks"].as_array().into_iter().flatten().collect();
-    let kind = match marks.iter().any(|mark| mark["kind"] == "bound") {
-        true => "bound",
-        false => "change",
+    let ends = |kind: &str| -> Vec<BoundEnd> {
+        answer["marks"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|mark| mark["kind"] == kind)
+            .filter_map(|mark| read_bound_end(&mark["end"]))
+            .collect()
     };
-    marks
-        .into_iter()
-        .filter(|mark| mark["kind"] == kind)
-        .filter_map(|mark| read_bound_end(&mark["end"]))
-        .collect()
+    let bounds = ends("bound");
+    let given = |end: &BoundEnd| end.begins == Some(Begins::Now) && end.how != How::Unsaid;
+    match bounds.iter().any(given) {
+        true => bounds,
+        false => bounds.into_iter().chain(ends("change")).collect(),
+    }
 }
 
 /// Whether they said in her answer to [`with_marks`] that she may come to
@@ -952,7 +957,13 @@ mod tests {
         required.sort_unstable();
         assert_eq!(fields, required);
         assert!(required.contains(&"begins"));
-        for said in ["begins is always", "\"now\"", "\"later\""] {
+        for said in [
+            "begins is always \"now\" or \"later\"",
+            "\"now\": she is",
+            "\"later\": till",
+            "are now as a whole",
+            "in them on is later",
+        ] {
             assert!(BOUND_END_RULE.contains(said), "{said}");
         }
         for field in required {
@@ -1000,9 +1011,9 @@ mod tests {
         }
     }
 
-    /// Beside a bound, a change has no end of its own to add.
+    /// Beside a bound that gives an end, a change has none of its own to add.
     #[test]
-    fn the_end_of_a_change_is_read_when_there_is_no_bound() {
+    fn the_end_of_a_change_is_read_when_no_bound_gives_one() {
         let end = |count: u32| {
             json!({
                 "how": "hours", "which": "none", "weekday": "none", "count": count, "edge": "none",
@@ -1027,8 +1038,18 @@ mod tests {
             ),
             [2, 3]
         );
-        // Nor when the bound's does not read.
-        assert!(counts(json!([change, {"kind": "bound", "end": null}])).is_empty());
+        // Theirs gives none: the change's is what they meant.
+        for (how, begins) in [("unsaid", "now"), ("hours", "later"), ("hours", "soon")] {
+            let mut none = end(2);
+            none["how"] = json!(how);
+            none["begins"] = json!(begins);
+            assert_eq!(
+                counts(json!([change, {"kind": "bound", "end": none}])),
+                [2, 9],
+                "{how} {begins}"
+            );
+        }
+        assert_eq!(counts(json!([change, {"kind": "bound", "end": null}])), [9]);
     }
 
     /// An end that does not say whether it has begun is asked for again; one
