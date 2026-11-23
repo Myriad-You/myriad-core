@@ -207,6 +207,10 @@ pub(crate) struct Wording {
     pub(crate) took_back_words: &'static str,
     pub(crate) took_back: &'static str,
     pub(crate) both_stretch: &'static str,
+    pub(crate) not_to_keep: &'static str,
+    pub(crate) not_to_keep_fact: &'static str,
+    pub(crate) not_to_keep_beside: &'static str,
+    pub(crate) not_to_keep_yet: &'static str,
 }
 
 const CHINESE: Wording = Wording {
@@ -231,6 +235,10 @@ const CHINESE: Wording = Wording {
     took_back_words: "'当我没说', 'forget I said that', '当没听过'",
     took_back: "'受够了组长，想辞职', then '辞职那个当没听过' → '受够了组长'",
     both_stretch: "'说过有个姐姐，又说自己是独生子，不清楚哪个对'",
+    not_to_keep: "'我打呼噜的事以后都别记'",
+    not_to_keep_fact: "'不要记打呼噜的事', never '昨晚打呼噜吵醒了室友，以后别记'",
+    not_to_keep_beside: "asked not to keep their snoring, '昨晚又打呼噜了，今天跟室友去挑枕头' still keeps the pillows",
+    not_to_keep_yet: "'这个先别记'",
 };
 
 const ENGLISH: Wording = Wording {
@@ -255,6 +263,10 @@ const ENGLISH: Wording = Wording {
     took_back_words: "'never mind', 'forget I said that', 'pretend you never heard that'",
     took_back: "'fed up with their team lead and wants to quit', then 'forget the quitting part' → 'fed up with their team lead'",
     both_stretch: "'said they have an older sister, then said they are an only child; not sure which is right'",
+    not_to_keep: "'don't keep anything about my snoring, now or later'",
+    not_to_keep_fact: "'does not want their snoring kept', never 'their snoring woke the flatmate last night, do not keep it'",
+    not_to_keep_beside: "asked not to keep their snoring, 'snored again, we went to pick pillows today' still keeps the pillows",
+    not_to_keep_yet: "'leave this out for now'",
 };
 
 /// Facts she already has that she sees: what their words recalled, and
@@ -311,6 +323,135 @@ Known:\n{known}",
         own_them = wording.own_them,
         own_short = wording.own_short,
         own_changed = wording.own_changed,
+    )
+}
+
+/// What they ask her not to keep from now on, at most, in one answer.
+pub const MAX_ASKED: usize = 4;
+
+/// Something they asked her not to keep from now on (`notToKeep`): kept
+/// for good, and shown every time she keeps what they say.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Asked {
+    pub fact: String,
+    pub evidence: String,
+    /// Their line asking it (none where the answer is of one line alone).
+    pub said: Option<usize>,
+    /// What they asked before that this takes the place of, verbatim.
+    pub replaces: Vec<String>,
+}
+
+/// `notToKeep`, with the index of the line asking it, and what it takes the
+/// place of, when `lines`.
+pub(crate) fn not_to_keep_schema(lines: bool) -> serde_json::Value {
+    let mut item = json!({
+        "type": "object",
+        "properties": {
+            "fact": { "type": "string", "maxLength": 240 },
+            "evidence": { "type": "string", "maxLength": 240 }
+        },
+        "required": ["fact", "evidence"],
+        "additionalProperties": false
+    });
+    if lines {
+        item["properties"]["said"] = json!({ "type": "integer", "minimum": 0 });
+        item["properties"]["replaces"] =
+            json!({ "type": "array", "items": {"type":"string", "maxLength":240}, "maxItems": 8 });
+        if let Some(required) = item["required"].as_array_mut() {
+            required.push("said".into());
+            required.push("replaces".into());
+        }
+    }
+    json!({ "type": "array", "maxItems": MAX_ASKED, "items": item })
+}
+
+/// `notToKeep` of an answer: each held to being in `theirs`, none they had
+/// asked already. `said_by_them` (of each line, whether it is theirs) when
+/// each names its line; None when the answer is of one line alone.
+pub fn read_not_to_keep(
+    answer: &serde_json::Value,
+    theirs: &str,
+    said_by_them: Option<&[bool]>,
+    asked_before: &[String],
+) -> Vec<Asked> {
+    let mut out: Vec<Asked> = Vec::new();
+    for item in answer
+        .get("notToKeep")
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten()
+    {
+        let text = |key: &str| {
+            item.get(key)
+                .and_then(serde_json::Value::as_str)
+                .map(|text| text.split_whitespace().collect::<Vec<_>>().join(" "))
+                .unwrap_or_default()
+        };
+        let (fact, evidence) = (text("fact"), text("evidence"));
+        let said = match said_by_them {
+            None => None,
+            Some(by) => {
+                let Some(index) = item
+                    .get("said")
+                    .and_then(serde_json::Value::as_u64)
+                    .map(|index| index as usize)
+                    .filter(|index| by.get(*index) == Some(&true))
+                else {
+                    continue;
+                };
+                Some(index)
+            }
+        };
+        if fact.is_empty()
+            || fact.chars().count() > 240
+            || !settle_evidence_holds(&evidence, theirs)
+            || asked_before.contains(&fact)
+            || out.iter().any(|one| one.fact == fact)
+        {
+            continue;
+        }
+        let replaces = item
+            .get("replaces")
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(serde_json::Value::as_str)
+            .map(str::to_string)
+            .filter(|old| asked_before.contains(old))
+            .filter(|old| !out.iter().any(|one| one.replaces.contains(old)))
+            .collect();
+        out.push(Asked {
+            fact,
+            evidence,
+            said,
+            replaces,
+        });
+        if out.len() == MAX_ASKED {
+            break;
+        }
+    }
+    out
+}
+
+/// What they asked her not to keep, as she is shown it, last of all.
+pub(crate) fn asked_shown(asked: &[String]) -> String {
+    let asked = if asked.is_empty() {
+        "(nothing)".to_string()
+    } else {
+        asked
+            .iter()
+            .map(|one| format!("- {one}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    format!("Asked not to keep:\n{asked}")
+}
+
+/// What is no request not to keep something from now on.
+pub(crate) fn not_a_request(wording: &Wording) -> String {
+    format!(
+        "Not one: taking back one thing they said ('never mind'); leaving it out for now, with no word of later ({yet}), which takes back only what they told, so it is kept when they tell it again; not telling others; not bringing it up or teasing them with it, however often; or your own promise not to keep it.",
+        yet = wording.not_to_keep_yet,
     )
 }
 
@@ -504,35 +645,14 @@ pub fn parse_settle(
     )
 }
 
-/// [`parse_settle`], keeping at most `at_most` facts.
-pub(crate) fn parse_settle_at_most(
-    raw: &str,
-    theirs: &str,
+/// What of `known` the answer says they took back (`tookBack`), each entry
+/// once, with the first line given for it that is theirs. An entry alone
+/// (the shape before lines were given) has no line.
+pub(crate) fn taken_back(
+    answer: &serde_json::Value,
     said_by_them: &[bool],
     known: &[String],
-    notes: usize,
-    offered: usize,
-    at_most: usize,
-) -> Option<Settled> {
-    let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
-    if answer.get("replaces").is_some() {
-        return None;
-    }
-    let of_known = |value: Option<&serde_json::Value>| -> Vec<String> {
-        let mut entries: Vec<String> = value
-            .and_then(serde_json::Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(serde_json::Value::as_str)
-            .filter(|old| known.iter().any(|fact| fact == old))
-            .map(str::to_string)
-            .collect();
-        entries.sort();
-        entries.dedup();
-        entries
-    };
-    // Each entry once, with the first line given for it that is theirs. An
-    // entry alone (the shape before lines were given) has no line.
+) -> Option<Vec<TookBack>> {
     let mut took_back: Vec<TookBack> = Vec::new();
     for one in answer.get("tookBack")?.as_array()? {
         let (entry, said) = match one {
@@ -562,6 +682,37 @@ pub(crate) fn parse_settle_at_most(
         }
     }
     took_back.sort();
+    Some(took_back)
+}
+
+/// [`parse_settle`], keeping at most `at_most` facts.
+pub(crate) fn parse_settle_at_most(
+    raw: &str,
+    theirs: &str,
+    said_by_them: &[bool],
+    known: &[String],
+    notes: usize,
+    offered: usize,
+    at_most: usize,
+) -> Option<Settled> {
+    let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
+    if answer.get("replaces").is_some() {
+        return None;
+    }
+    let of_known = |value: Option<&serde_json::Value>| -> Vec<String> {
+        let mut entries: Vec<String> = value
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(serde_json::Value::as_str)
+            .filter(|old| known.iter().any(|fact| fact == old))
+            .map(str::to_string)
+            .collect();
+        entries.sort();
+        entries.dedup();
+        entries
+    };
+    let mut took_back = taken_back(&answer, said_by_them, known)?;
     let mut replaced: Vec<String> = Vec::new();
     let items = answer.get("lasting")?.as_array()?;
     // What any fact says it replaces, kept or not.

@@ -20,12 +20,15 @@ fn you(text: &str) -> Line<'_> {
 #[test]
 fn what_every_talk_is_asked_comes_before_what_she_knows() {
     for examples in [Examples::Chinese, Examples::English] {
-        let one = raw_settle_system_prompt(&["喜欢喝茶".to_string()], examples);
-        let other = raw_settle_system_prompt(&[], examples);
+        let one = raw_settle_system_prompt(&["喜欢喝茶".to_string()], &[], examples);
+        let other = raw_settle_system_prompt(&[], &[], examples);
         let at = one.find("Known for good:\n").unwrap();
         assert_eq!(one[..at], other[..other.find("Known for good:\n").unwrap()]);
-        assert!(one.ends_with("Known for good:\n- 喜欢喝茶"));
-        assert!(other.ends_with("Known for good:\n(nothing yet)"));
+        assert!(one.ends_with("Known for good:\n- 喜欢喝茶\nAsked not to keep:\n(nothing)"));
+        assert!(other.ends_with("Known for good:\n(nothing yet)\nAsked not to keep:\n(nothing)"));
+        let asked = raw_settle_system_prompt(&[], &["以后不要记和房东吵架的事".into()], examples);
+        assert!(asked.ends_with("Asked not to keep:\n- 以后不要记和房东吵架的事"));
+        assert_eq!(asked[..asked.find("Known for good:\n").unwrap()], one[..at]);
         // Long enough for a provider to cache.
         assert!(at > 8000, "{at}");
     }
@@ -45,7 +48,14 @@ fn going_over_gives_facts_what_she_said_and_what_they_suggested() {
         .filter_map(|key| key.as_str())
         .collect();
     for key in [
-        "lasting", "tookBack", "moment", "known", "said", "own", "putOnto",
+        "lasting",
+        "tookBack",
+        "moment",
+        "known",
+        "notToKeep",
+        "said",
+        "own",
+        "putOnto",
     ] {
         assert!(required.contains(&key), "{key}");
     }
@@ -191,7 +201,7 @@ fn facts_hold_only_to_their_own_lines_and_what_she_said_to_hers() {
             ]
         }),
     );
-    let got = parse_raw_settle(&raw, &lines, &[], 0, None).unwrap();
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
     let facts: Vec<&str> = got
         .settled
         .lasting
@@ -227,7 +237,7 @@ fn asked_again_only_the_lines_asked_about_count() {
         }),
     );
     let known = ["住在上海".to_string()];
-    let got = parse_raw_settle(&raw, &lines, &known, 0, Some(&[2])).unwrap();
+    let got = parse_raw_settle(&raw, &lines, &known, &[], 0, Some(&[2])).unwrap();
     // Only the fact from the line asked about, and only that line in it.
     assert_eq!(got.settled.lasting.len(), 1);
     assert_eq!(got.settled.lasting[0].from, [2]);
@@ -236,7 +246,7 @@ fn asked_again_only_the_lines_asked_about_count() {
     assert!(got.left.is_empty());
     // The whole stretch: the line about where they live is a taking back
     // of what she knew, so it is accounted for.
-    let whole = parse_raw_settle(&raw, &lines, &known, 0, None).unwrap();
+    let whole = parse_raw_settle(&raw, &lines, &known, &[], 0, None).unwrap();
     assert_eq!(whole.settled.lasting.len(), 2);
     assert!(whole.left.is_empty());
 }
@@ -258,7 +268,7 @@ fn what_they_take_back_in_the_stretch_is_let_go_by_its_lines() {
         ]),
         serde_json::json!({"letGo": [0, 1, 9], "moment": [2]}),
     );
-    let got = parse_raw_settle(&raw, &lines, &[], 0, None).unwrap();
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
     let facts: Vec<&str> = got
         .settled
         .lasting
@@ -274,7 +284,7 @@ fn what_they_take_back_in_the_stretch_is_let_go_by_its_lines() {
 #[test]
 fn a_malformed_answer_gives_nothing() {
     assert_eq!(
-        parse_raw_settle("not json", &[them("我养了一只猫")], &[], 0, None),
+        parse_raw_settle("not json", &[them("我养了一只猫")], &[], &[], 0, None),
         None
     );
 }
@@ -293,8 +303,65 @@ fn a_pass_keeps_as_many_facts_as_it_is_asked_for() {
         .map(|(n, text)| fact(&format!("买了第{n}样东西"), text, &[n]))
         .collect();
     let raw = answer(serde_json::json!(facts), serde_json::json!({}));
-    let got = parse_raw_settle(&raw, &lines, &[], 0, None).unwrap();
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
     assert_eq!(got.settled.lasting.len(), MAX_RAW_LASTING);
     const { assert!(MAX_RAW_LASTING > crate::chat_remember::MAX_LASTING) };
     assert!(got.left.is_empty());
+}
+
+/// What they ask her not to keep from now on is kept itself, held to being
+/// theirs, whatever else the same line takes back; it is not an answer to
+/// account for a line with, and taking it back goes by what it says.
+#[test]
+fn what_they_ask_her_not_to_keep_is_kept_beside_what_they_take_back() {
+    let lines = [
+        them("跟房东又吵了一架，他把空调费算我头上"),
+        you("太过分了"),
+        them("我跟房东吵架的事你以后都别记了"),
+        you("好，我不记了"),
+    ];
+    let asked_before = ["以后不要记和妹妹吵架的事".to_string()];
+    let raw = answer(
+        serde_json::json!([]),
+        serde_json::json!({
+            "letGo": [0],
+            "moment": [],
+            "tookBack": [
+                {"entry": "和房东因为押金吵过", "said": 2},
+                {"entry": "以后不要记和妹妹吵架的事", "said": 2}
+            ],
+            "notToKeep": [
+                {"fact": "以后不要记和房东吵架的事", "evidence": "我跟房东吵架的事你以后都别记了", "said": 2, "replaces": ["以后不要记和妹妹吵架的事", "没有这条"]},
+                // Her own promise is no request, nor is one quoting no line.
+                {"fact": "以后不要记那件事", "evidence": "好，我不记了", "said": 3, "replaces": []},
+                {"fact": "以后不要记空调费", "evidence": "没说过的话", "said": 0, "replaces": []},
+                // Said twice, and one asked before.
+                {"fact": "以后不要记和房东吵架的事", "evidence": "我跟房东吵架的事", "said": 2, "replaces": []},
+                {"fact": "以后不要记和妹妹吵架的事", "evidence": "我跟房东吵架的事", "said": 2, "replaces": []}
+            ]
+        }),
+    );
+    let known = ["和房东因为押金吵过".to_string()];
+    let got = parse_raw_settle(&raw, &lines, &known, &asked_before, 0, None).unwrap();
+    assert_eq!(
+        got.asked,
+        [Asked {
+            fact: "以后不要记和房东吵架的事".into(),
+            evidence: "我跟房东吵架的事你以后都别记了".into(),
+            said: Some(2),
+            replaces: vec!["以后不要记和妹妹吵架的事".into()],
+        }]
+    );
+    // The one it takes the place of is not taken back as well.
+    let taken: Vec<&str> = got
+        .settled
+        .took_back
+        .iter()
+        .map(|one| one.entry.as_str())
+        .collect();
+    assert_eq!(taken, ["和房东因为押金吵过"]);
+    assert!(got.left.is_empty(), "{:?}", got.left);
+    // Asked again about some lines alone, it gives no requests.
+    let again = parse_raw_settle(&raw, &lines, &known, &asked_before, 0, Some(&[2])).unwrap();
+    assert!(again.asked.is_empty());
 }
