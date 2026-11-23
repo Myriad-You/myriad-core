@@ -7,6 +7,7 @@ pub mod affect;
 mod anime25d_contract;
 pub mod answer;
 pub mod bits;
+pub mod bound_end;
 pub mod chat_days;
 pub mod chat_history;
 pub mod chat_music;

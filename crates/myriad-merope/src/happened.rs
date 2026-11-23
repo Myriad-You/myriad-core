@@ -282,7 +282,7 @@ pub enum Range {
     },
 }
 
-fn unit_start(day: NaiveDate, unit: Unit) -> Option<NaiveDate> {
+pub(crate) fn unit_start(day: NaiveDate, unit: Unit) -> Option<NaiveDate> {
     match unit {
         Unit::Day => Some(day),
         Unit::Week => day.checked_sub_signed(Duration::days(i64::from(
