@@ -39,7 +39,7 @@ pub const BOUND_END_RULE: &str = "end says when it ends, as they put it, never w
 how: \"tonight\" (今晚, tonight, 今夜), \"today\", \"tomorrow\", \"week\" or \"month\" (which is this or next), \"weekday\" (a day of the week: weekday, with which next when they say 下周五 / next Friday / 来週の金曜, this when they say 这周五 / this Friday / 今週の金曜, coming when they only say the day: 周五, Friday, 金曜), \"days\" (count days: which is this for 这五天, these five days, 今日から五日, next for 往后四天, the next four days, これから四日), \"hours\" (count hours from now), \"date\" (a date they wrote or named by month and day: date as YYYY-MM-DD), or \"unsaid\" (they gave no end, or one that is none of these: 过段时间, 有空再说). \
 edge is \"before\" for 下周五之前, until Friday, 金曜まで待って when the day itself is free; \"after\" for 过了周五, after Friday, 金曜が終わったら; \"through\" for that day, week or month itself (这周, through Friday). \
 time is the clock time they named on that day (HH:MM), else \"\". \
-begins is always \"now\" or \"later\". \"now\": she is to leave them be from this moment, up to that end, however they put the end: till a day or an hour, not before one, only after one (过了周五再来, 夜里零点前别出声), or for longer than known says they asked already. \"later\": till some time still to come she may reach out, and only from then on is she to leave them be (从周五起别来, 后天别出声, 零点过后别出声): the end is of that stretch.";
+begins is always \"now\" or \"later\". \"now\": she is to leave them be from this moment, up to that end, however they put the end: tonight, today or these days (also when said in the morning), till a day or an hour, not before one, only after one (过了周五再来, 夜里零点前别出声), or for longer than known says they asked already. \"later\": till some time still to come she may reach out, and only from then on is she to leave them be (从周五起别来, 后天别出声, 零点过后别出声): the end is of that stretch.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -939,6 +939,7 @@ mod tests {
         required.sort_unstable();
         assert_eq!(fields, required);
         assert!(required.contains(&"begins"));
+        assert!(BOUND_END_RULE.contains("begins is always \"now\" or \"later\""));
         for field in required {
             assert!(BOUND_END_RULE.contains(field), "{field}");
         }
