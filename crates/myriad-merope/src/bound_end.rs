@@ -196,10 +196,8 @@ impl BoundEnd {
         let time = self.clock()?;
         if self.how == How::Tonight {
             let mut end = tonight(said, time);
-            // Past midnight, an evening's time is that of the day begun; a
-            // morning's, gone by, the one this night ends in.
-            let morning = time.is_some_and(|time| (NIGHT_ENDS..12).contains(&time.hour()));
-            if end <= said && (morning || said.hour() < NIGHT_ENDS) {
+            // Past midnight, an evening's time is that of the day begun.
+            if end <= said && said.hour() < NIGHT_ENDS {
                 end += Duration::days(1);
             }
             return (end > said).then_some(end);
@@ -360,7 +358,7 @@ impl BoundEnd {
 
 /// The end of the night `said` is in, or goes into: [`NIGHT_ENDS`] after it.
 /// Said past midnight, it is the night still going on. With a time they
-/// named, the one that night (a small hour is past midnight).
+/// named, the one that night (before noon, in the morning it ends with).
 fn tonight(said: NaiveDateTime, time: Option<NaiveTime>) -> NaiveDateTime {
     let evening = if said.hour() < NIGHT_ENDS {
         said.date() - Duration::days(1)
@@ -369,7 +367,7 @@ fn tonight(said: NaiveDateTime, time: Option<NaiveTime>) -> NaiveDateTime {
     };
     let next = evening + Duration::days(1);
     match time {
-        Some(time) if time.hour() >= NIGHT_ENDS => evening.and_time(time),
+        Some(time) if time.hour() >= 12 => evening.and_time(time),
         Some(time) => next.and_time(time),
         None => next.and_time(NaiveTime::from_hms_opt(NIGHT_ENDS, 0, 0).unwrap_or_default()),
     }
@@ -457,6 +455,7 @@ mod tests {
         let eight = json!({"how": "tonight", "time": "08:00"});
         is(eight.clone(), MONDAY, "2026-11-24T08:00");
         is(eight.clone(), "2026-11-23T09:00", "2026-11-24T08:00");
+        is(eight.clone(), "2026-11-23T07:30", "2026-11-24T08:00");
         is(eight, "2026-11-24T01:30", "2026-11-24T08:00");
         is(
             json!({"how": "tonight", "time": "11:59"}),

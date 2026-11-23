@@ -467,15 +467,16 @@ fn joined(lines: &[Line], who: Who) -> String {
         .join("\n")
 }
 
-/// What is quoted with fewer letters than this may be in a line that says
-/// something else ('不是'): it is of a line only when that is all it says.
-const QUOTED_FROM: usize = 6;
-
-/// The lines of theirs `evidence` is of, when those an answer names do not
-/// say it: the one it is all in; else those a part of it is in, a short part
-/// being all a line says; else the first its longest part is in. A single
-/// character says none.
-fn quoted_lines(evidence: &str, lines: &[Line], said_by_them: &[bool]) -> Vec<usize> {
+/// The lines of theirs `evidence` is of, when those an answer names (`from`)
+/// do not say it: the one it is all in; else a line for each part, one of
+/// those named that says it, else the first saying only that, else the first
+/// it is in. A single character says none.
+fn quoted_lines(
+    evidence: &str,
+    lines: &[Line],
+    said_by_them: &[bool],
+    from: &[usize],
+) -> Vec<usize> {
     let parts: Vec<&str> = evidence_parts(evidence)
         .into_iter()
         .filter(|part| letters(part) >= 2)
@@ -484,29 +485,28 @@ fn quoted_lines(evidence: &str, lines: &[Line], said_by_them: &[bool]) -> Vec<us
         .filter(|index| said_by_them[*index])
         .map(|index| (index, one_spaced(lines[index].text)))
         .collect();
-    let of = |line: &str, part: &str| {
-        holds(line, part) && (letters(part) >= QUOTED_FROM || same_letters(line, part))
+    let first = |says: &dyn Fn(usize, &str) -> bool| {
+        theirs
+            .iter()
+            .find(|(index, line)| says(*index, line))
+            .map(|(index, _)| *index)
     };
-    let whole = theirs
-        .iter()
-        .find(|(_, line)| parts.len() > 1 && parts.iter().all(|part| holds(line, part)));
-    if let Some((index, _)) = whole {
-        return vec![*index];
+    if parts.len() > 1
+        && let Some(index) = first(&|_, line| parts.iter().all(|part| holds(line, part)))
+    {
+        return vec![index];
     }
-    let quoted: Vec<usize> = theirs
+    let mut of: Vec<usize> = parts
         .iter()
-        .filter(|(_, line)| parts.iter().any(|part| of(line, part)))
-        .map(|(index, _)| *index)
+        .filter_map(|part| {
+            first(&|index, line| from.contains(&index) && holds(line, part))
+                .or_else(|| first(&|_, line| same_letters(line, part)))
+                .or_else(|| first(&|_, line| holds(line, part)))
+        })
         .collect();
-    if !quoted.is_empty() {
-        return quoted;
-    }
-    let longest = parts.iter().rev().max_by_key(|part| letters(part));
-    theirs
-        .iter()
-        .find(|(_, line)| longest.is_some_and(|part| holds(line, part)))
-        .map(|(index, _)| vec![*index])
-        .unwrap_or_default()
+    of.sort();
+    of.dedup();
+    of
 }
 
 fn letters(text: &str) -> usize {
@@ -630,7 +630,7 @@ pub fn parse_raw_settle(
         fact.from = of_theirs(&fact.from);
         // Of the lines it quotes, when those it names do not say it.
         if !quotes_lines(&fact.evidence, lines, &fact.from) {
-            let quoted = quoted_lines(&fact.evidence, lines, &said_by_them);
+            let quoted = quoted_lines(&fact.evidence, lines, &said_by_them, &fact.from);
             if !quoted.is_empty() {
                 fact.from = quoted;
             }
@@ -760,27 +760,40 @@ pub fn parse_raw_settle(
             }
         }
     }
-    // Asked in the line it names, what it is of told in that or another.
+    // Asked in the line it names, what it is of told in that or another; one
+    // quoting no part of that line, in the line it quotes.
     let all_theirs: Vec<usize> = (0..lines.len())
         .filter(|index| said_by_them[*index])
         .collect();
     let in_its_line = |evidence: &str, said: Option<usize>| {
-        said.is_some_and(|said| {
-            quotes_lines(evidence, lines, &all_theirs)
-                && evidence_parts(evidence)
-                    .into_iter()
-                    .any(|part| quotes_lines(part, lines, &[said]))
-        })
+        if !quotes_lines(evidence, lines, &all_theirs) {
+            return None;
+        }
+        let parts = evidence_parts(evidence);
+        let named = said.filter(|said| {
+            said_by_them.get(*said) == Some(&true)
+                && parts.iter().any(|part| quotes_lines(part, lines, &[*said]))
+        });
+        match (named, parts.len()) {
+            (Some(said), _) => Some(said),
+            (None, 1) => quoted_lines(evidence, lines, &said_by_them, &[])
+                .first()
+                .copied(),
+            (None, _) => None,
+        }
     };
-    let not_to_keep: Vec<Asked> =
-        read_requests(&answer, Some(&said_by_them), asked_before, in_its_line)
-            .into_iter()
-            .filter(|one| only.is_none() || one.said.is_some_and(|said| asked(&said)))
-            .collect();
+    let not_to_keep: Vec<Asked> = read_requests(&answer, asked_before, |evidence, said| {
+        in_its_line(evidence, said).map(Some)
+    })
+    .into_iter()
+    .filter(|one| only.is_none() || one.said.is_some_and(|said| asked(&said)))
+    .collect();
     // What they asked her not to keep is theirs to take back too, in a line
     // saying so and by no fact's replacing it; one a new one takes the place
     // of, or asked over again, is not taken back as well.
-    let again = asked_again(&answer, &said_by_them, asked_before, in_its_line);
+    let again = asked_again(&answer, asked_before, |evidence, said| {
+        in_its_line(evidence, said).map(Some)
+    });
     let taken = taken_back(&answer, &said_by_them, asked_before)?;
     settled.took_back.extend(taken.into_iter().filter(|old| {
         old.said.is_some_and(|said| asked(&said))

@@ -427,12 +427,12 @@ fn what_is_quoted_is_in_the_lines_it_is_from() {
     assert_eq!(kept("我是在成都长大的 / 分手了", &[2]), Some(vec![2, 3]));
     // With none named, the lines it quotes; a single character of a line
     // names none.
-    assert!(quoted_lines("我 / 是", &lines, &[false, true, true, true]).is_empty());
+    assert!(quoted_lines("我 / 是", &lines, &[false, true, true, true], &[]).is_empty());
 }
 
-/// A line of a game says nothing of them, whatever the answer takes from it.
+/// What is quoted is of one line for each part of it.
 #[test]
-fn a_short_quote_names_no_line_that_says_something_else() {
+fn a_part_of_what_is_quoted_is_of_one_line() {
     let lines = [
         them("不是吧，又下雨"),
         them("我周五考试，不是周四"),
@@ -452,17 +452,33 @@ fn a_short_quote_names_no_line_that_says_something_else() {
     for from in [&[][..], &[5]] {
         // All of it in one line.
         assert_eq!(of("我周五考试 / 不是", from), [1]);
-        // A short part is of the line that says only that, a long one of any.
+        // The line that says only that, before one it is in.
         assert_eq!(of("不是", from), [2]);
         assert_eq!(of("我下周三去看牙医 / 不是", from), [2, 4]);
-        assert_eq!(of("下周三去看牙医 / 又下雨", from), [4]);
-        // Else of the first line it is in.
+        // Each part, the first line it is in.
+        assert_eq!(of("下周三去看牙医 / 又下雨", from), [0, 4]);
         assert_eq!(of("就不是", from), [3]);
-        assert_eq!(of("下雨 / 我的问题", from), [3]);
+        assert_eq!(of("下雨 / 我的问题", from), [0, 3]);
     }
+    // Those named, for the parts they say.
     assert_eq!(of("不是", &[3]), [3]);
+    assert_eq!(of("就不是 / 看牙医", &[3]), [3, 4]);
+    assert_eq!(of("不是 / 看牙医", &[0]), [0, 4]);
+    let lines = [them("不是"), them("是不是要下雨"), them("我不是很喜欢")];
+    let all = [true; 3];
+    assert_eq!(quoted_lines("不是", &lines, &all, &[]), [0]);
+    let lines = [them("我体重的事别记"), them("今天又胖了"), them("今天")];
+    assert_eq!(
+        quoted_lines("我体重的事 / 今天", &lines, &all, &[0]),
+        [0, 2]
+    );
+    assert_eq!(
+        quoted_lines("我体重的事 / 今天", &lines, &all, &[0, 1]),
+        [0, 1]
+    );
 }
 
+/// A line of a game says nothing of them, whatever the answer takes from it.
 #[test]
 fn a_line_of_a_game_is_never_taken_from() {
     let mut guess = them("他是被房东推下去的吗，以后别记这个");
@@ -485,9 +501,9 @@ fn a_line_of_a_game_is_never_taken_from() {
 }
 
 /// Asked again what they asked already, word for word, its line is accounted
-/// for; one quoting another line than it names is none.
+/// for; one quoting another line than it names is in the one it quotes.
 #[test]
-fn a_request_is_in_the_line_it_names() {
+fn a_request_is_in_the_line_it_quotes() {
     let lines = [them("我的体重你别记"), them("说过了，体重别记啊")];
     let raw = answer(
         serde_json::json!([]),
@@ -498,7 +514,9 @@ fn a_request_is_in_the_line_it_names() {
     );
     let before = ["不要记自己的体重".to_string()];
     let got = parse_raw_settle(&raw, &lines, &[], &before, 0, None).unwrap();
-    assert!(got.asked.is_empty());
+    assert_eq!(got.asked.len(), 1);
+    assert_eq!(got.asked[0].fact, "不要记自己的身高");
+    assert_eq!(got.asked[0].said, Some(1));
     assert_eq!(got.left, [0]);
     assert_eq!(
         raw_settle_schema()["properties"]["tookBack"]["maxItems"],
@@ -513,6 +531,9 @@ fn a_request_may_say_what_it_is_of_in_another_line() {
         ("我体重的事 / 以后都别记了", 1, 1),
         ("我体重的事 / 以后都别记了", 2, 0),
         ("我身高的事 / 以后都别记了", 1, 0),
+        // Told in two lines, neither the one it names; in one, the one it is in.
+        ("以后都别记了", 2, 1),
+        ("以后都别提了", 2, 0),
     ] {
         let raw = answer(
             serde_json::json!([]),

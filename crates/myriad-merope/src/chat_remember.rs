@@ -376,21 +376,24 @@ pub fn read_not_to_keep(
     said_by_them: Option<&[bool]>,
     asked_before: &[String],
 ) -> Vec<Asked> {
-    read_requests(answer, said_by_them, asked_before, |evidence, _| {
-        settle_evidence_holds(evidence, theirs)
+    read_requests(answer, asked_before, |evidence, said| {
+        let said = match said_by_them {
+            None => None,
+            Some(by) => Some(said.filter(|index| by.get(*index) == Some(&true))?),
+        };
+        settle_evidence_holds(evidence, theirs).then_some(said)
     })
 }
 
-/// [`read_not_to_keep`], each held to `evidence_holds` of its evidence and
-/// the line it names.
+/// [`read_not_to_keep`], each asked in the line `asked_in` gives of its
+/// evidence and the line it names; with none given, not asked.
 pub(crate) fn read_requests(
     answer: &serde_json::Value,
-    said_by_them: Option<&[bool]>,
     asked_before: &[String],
-    evidence_holds: impl Fn(&str, Option<usize>) -> bool,
+    asked_in: impl Fn(&str, Option<usize>) -> Option<Option<usize>>,
 ) -> Vec<Asked> {
     let mut out: Vec<Asked> = Vec::new();
-    for mut one in requests(answer, said_by_them, evidence_holds) {
+    for mut one in requests(answer, asked_in) {
         if asked_before.contains(&one.fact) || out.iter().any(|kept| kept.fact == one.fact) {
             continue;
         }
@@ -409,11 +412,10 @@ pub(crate) fn read_requests(
 /// word (and in which line): it stands, whatever else the answer says of it.
 pub(crate) fn asked_again(
     answer: &serde_json::Value,
-    said_by_them: &[bool],
     asked_before: &[String],
-    evidence_holds: impl Fn(&str, Option<usize>) -> bool,
+    asked_in: impl Fn(&str, Option<usize>) -> Option<Option<usize>>,
 ) -> Vec<(String, Option<usize>)> {
-    requests(answer, Some(said_by_them), evidence_holds)
+    requests(answer, asked_in)
         .map(|one| (one.fact, one.said))
         .filter(|(fact, _)| asked_before.contains(fact))
         .collect()
@@ -423,8 +425,7 @@ pub(crate) fn asked_again(
 /// in a line of theirs.
 fn requests<'a>(
     answer: &'a serde_json::Value,
-    said_by_them: Option<&'a [bool]>,
-    evidence_holds: impl Fn(&str, Option<usize>) -> bool + 'a,
+    asked_in: impl Fn(&str, Option<usize>) -> Option<Option<usize>> + 'a,
 ) -> impl Iterator<Item = Asked> + 'a {
     answer
         .get("notToKeep")
@@ -439,18 +440,14 @@ fn requests<'a>(
                     .unwrap_or_default()
             };
             let (fact, evidence) = (text("fact"), text("evidence"));
-            let said = match said_by_them {
-                None => None,
-                Some(by) => Some(
-                    item.get("said")
-                        .and_then(serde_json::Value::as_u64)
-                        .map(|index| index as usize)
-                        .filter(|index| by.get(*index) == Some(&true))?,
-                ),
-            };
-            if fact.is_empty() || fact.chars().count() > 240 || !evidence_holds(&evidence, said) {
+            if fact.is_empty() || fact.chars().count() > 240 {
                 return None;
             }
+            let named = item
+                .get("said")
+                .and_then(serde_json::Value::as_u64)
+                .map(|index| index as usize);
+            let said = asked_in(&evidence, named)?;
             let mut replaces: Vec<String> = item
                 .get("replaces")
                 .and_then(serde_json::Value::as_array)
