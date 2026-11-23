@@ -1593,7 +1593,7 @@ pub fn check_outline(outline: &Outline, players: usize) -> Vec<String> {
     }
     for c in &outline.characters {
         if !outline.secrets.iter().any(|s| s.owner == c.id) {
-            problems.push(format!("{} has no secret: everyone must have one", c.id));
+            problems.push(format!("{} has no secret; everyone must have one", c.id));
         }
     }
     let crimes: Vec<&Secret> = outline.secrets.iter().filter(|s| s.crime).collect();

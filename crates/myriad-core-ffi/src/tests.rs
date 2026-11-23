@@ -22,6 +22,7 @@ mod mood;
 mod motion;
 mod nodes;
 mod own;
+mod own_words;
 mod partner;
 mod private_prompt;
 mod prompts;
