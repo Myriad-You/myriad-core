@@ -289,6 +289,50 @@ fn a_malformed_answer_gives_nothing() {
     );
 }
 
+/// A long line is gone over in parts, all of it, each ending where a
+/// sentence does when one does near there.
+#[test]
+fn a_long_line_is_gone_over_in_parts_none_of_it_left_out() {
+    assert_eq!(line_parts("短的"), ["短的"]);
+    let long = format!("{}。{}", "说".repeat(550), "完".repeat(700));
+    let parts = line_parts(&long);
+    assert_eq!(parts.concat(), long);
+    assert_eq!(parts.len(), 3);
+    assert!(parts[0].ends_with('。'));
+    assert!(parts.iter().all(|part| part.chars().count() <= PART_CHARS));
+    // With nowhere to end, at the length; the whole of it shown.
+    assert_eq!(line_parts(&"说".repeat(600)).len(), 1);
+    assert_eq!(line_parts(&"说".repeat(601)).len(), 2);
+    let shown = raw_settle_input(
+        &[them(&long)],
+        "2026-11-23 (Monday)",
+        &serde_json::Value::Null,
+        &[],
+        None,
+    );
+    assert!(shown.contains(&long));
+}
+
+/// What they took back in a line asked about again is taken back; in one
+/// not asked about, it is as the first answer had it.
+#[test]
+fn asked_again_a_line_may_take_back_what_she_knew() {
+    let lines = [them("在学吉他"), them("吉他那个当我没说过吧")];
+    let raw = answer(
+        serde_json::json!([]),
+        serde_json::json!({"tookBack": [{"entry": "会弹吉他", "said": 1}], "letGo": [0]}),
+    );
+    let known = ["会弹吉他".to_string()];
+    let again = parse_raw_settle(&raw, &lines, &known, &[], 0, Some(&[1])).unwrap();
+    assert_eq!(again.settled.took_back.len(), 1);
+    assert!(again.left.is_empty());
+    // The line let go of was not asked about.
+    assert!(again.let_go.is_empty());
+    let other = parse_raw_settle(&raw, &lines, &known, &[], 0, Some(&[0])).unwrap();
+    assert!(other.settled.took_back.is_empty());
+    assert_eq!(other.let_go, [0]);
+}
+
 /// A pass may keep as many facts as the prompt allows it, not as many as a
 /// stretch of short notes.
 #[test]
@@ -361,9 +405,118 @@ fn what_they_ask_her_not_to_keep_is_kept_beside_what_they_take_back() {
         .collect();
     assert_eq!(taken, ["和房东因为押金吵过"]);
     assert!(got.left.is_empty(), "{:?}", got.left);
-    // Asked again about some lines alone, it gives no requests.
+    // Asked again about some lines alone, only those lines' requests.
     let again = parse_raw_settle(&raw, &lines, &known, &asked_before, 0, Some(&[2])).unwrap();
-    assert!(again.asked.is_empty());
+    assert_eq!(again.asked, got.asked);
+    let other = parse_raw_settle(&raw, &lines, &known, &asked_before, 0, Some(&[0])).unwrap();
+    assert!(other.asked.is_empty());
+}
+
+/// What they asked her not to keep is taken back only in a line of theirs,
+/// and not when the answer has them asking it all the same.
+#[test]
+fn what_they_asked_not_to_keep_is_taken_back_only_in_a_line() {
+    let lines = [them("体重现在可以记了"), them("算了还是别记体重吧")];
+    let asked_before = ["不要记体重".to_string()];
+    let taken = |rest: serde_json::Value| -> Vec<Option<usize>> {
+        let raw = answer(serde_json::json!([]), rest);
+        parse_raw_settle(&raw, &lines, &[], &asked_before, 0, None)
+            .unwrap()
+            .settled
+            .took_back
+            .iter()
+            .map(|one| one.said)
+            .collect()
+    };
+    let back = serde_json::json!([{"entry": "不要记体重", "said": 0}]);
+    assert_eq!(taken(serde_json::json!({"tookBack": back})), [Some(0)]);
+    for said in [
+        serde_json::json!("不要记体重"),
+        serde_json::json!({"entry": "不要记体重", "said": 7}),
+    ] {
+        assert!(taken(serde_json::json!({"tookBack": [said]})).is_empty());
+    }
+    let again = serde_json::json!([
+        {"fact": "不要记体重", "evidence": "算了还是别记体重吧", "said": 1, "replaces": []}
+    ]);
+    assert!(taken(serde_json::json!({"tookBack": back, "notToKeep": again})).is_empty());
+}
+
+/// A part of what she knew taken back, the rest kept by a fact: when that
+/// fact goes after all, the whole of it is taken back, not left as it was.
+#[test]
+fn a_part_taken_back_whose_rest_is_not_kept_is_taken_back() {
+    let lines = [
+        them("我在杭州上班"),
+        them("公司名字别记了"),
+        them("我现在换到上海上班了"),
+    ];
+    let mut rest = fact("在杭州上班", "我在杭州上班", &[0]);
+    rest["replaces"] = serde_json::json!(["在杭州的云上公司上班"]);
+    let raw = answer(
+        serde_json::json!([rest]),
+        serde_json::json!({
+            "tookBack": [{"entry": "在杭州的云上公司上班", "said": 1}],
+            "letGo": [0], "moment": [2]
+        }),
+    );
+    let known = ["在杭州的云上公司上班".to_string()];
+    let got = parse_raw_settle(&raw, &lines, &known, &[], 0, None).unwrap();
+    assert!(got.settled.lasting.is_empty());
+    assert_eq!(got.settled.took_back[0].said, Some(1));
+    // Kept, the fact replaces it.
+    let kept = raw.replace("\"letGo\":[0]", "\"letGo\":[]");
+    let got = parse_raw_settle(&kept, &lines, &known, &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), 1);
+    assert!(got.settled.took_back.is_empty());
+    // Asked again about the other line, the fact is none of its.
+    let again = parse_raw_settle(&kept, &lines, &known, &[], 0, Some(&[1])).unwrap();
+    assert!(again.settled.lasting.is_empty());
+    assert_eq!(again.settled.took_back.len(), 1);
+}
+
+/// A fact naming no line is of the lines it quotes, and goes with them.
+#[test]
+fn a_fact_naming_no_line_is_of_those_it_quotes() {
+    let lines = [them("我下个月要去东京出差"), them("我在学做面包")];
+    let raw = answer(
+        serde_json::json!([
+            fact("下个月去东京出差", "下个月要去东京出差", &[]),
+            fact("在学做面包", "我在学做面包", &[]),
+        ]),
+        serde_json::json!({"letGo": [0]}),
+    );
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), 1);
+    assert_eq!(got.settled.lasting[0].from, [1]);
+}
+
+/// A line is shown as it was said, its line breaks and wide spaces too:
+/// quoted with them, it still holds.
+#[test]
+fn a_quote_holds_with_the_spaces_a_line_was_shown_with() {
+    let line = "周六去爬山了\n爬的是　香山";
+    let raw = answer(
+        serde_json::json!([fact("周六爬了香山", line, &[0])]),
+        serde_json::json!({"notToKeep": [
+            {"fact": "不要记爬山", "evidence": "爬的是　香山", "said": 0, "replaces": []}
+        ]}),
+    );
+    let got = parse_raw_settle(&raw, &[them(line)], &[], &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), 1);
+    assert_eq!(got.asked.len(), 1);
+}
+
+/// A pass holds so many characters, theirs and hers: a line of theirs
+/// longer than that is a pass of its own, and none is cut.
+#[test]
+fn a_pass_holds_so_many_characters() {
+    let (long, short) = ("说".repeat(PASS_CHARS - 10), "说".repeat(20));
+    let lines = [them(&long), you(&short), them(&short), them("嗯")];
+    assert_eq!(pass_end(&lines), 2);
+    assert_eq!(pass_end(&lines[2..]), 2);
+    let alone = "说".repeat(PASS_CHARS * 2);
+    assert_eq!(pass_end(&[them(&alone), them("嗯")]), 1);
 }
 
 /// What every talk is asked about requests not to keep something is there

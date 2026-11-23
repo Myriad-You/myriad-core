@@ -11,7 +11,8 @@
 use serde_json::{Value, json};
 
 pub const SCHEMA_NAME: &str = "merope_take_back_check";
-/// Longest line of theirs shown.
+/// Longest line of theirs shown: a longer one is asked about part by part
+/// ([`line_parts`]).
 const LINE_CHARS: usize = 1200;
 /// Longest thing she kept shown.
 const KEPT_CHARS: usize = 600;
@@ -73,7 +74,24 @@ fn clip(text: &str, chars: usize) -> String {
         .collect()
 }
 
-/// Their line and what she kept, as the question sees them.
+/// Their line as it is asked about: whole, or in parts of which none is cut.
+/// Any part that takes it back does.
+pub fn line_parts(line: &str) -> Vec<String> {
+    let line: Vec<char> = line
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+        .collect();
+    if line.is_empty() {
+        return vec![String::new()];
+    }
+    line.chunks(LINE_CHARS)
+        .map(|part| part.iter().collect())
+        .collect()
+}
+
+/// Their line (a part of it) and what she kept, as the question sees them.
 pub fn input(line: &str, kept: &str) -> String {
     json!({
         "line": clip(line, LINE_CHARS),
@@ -107,6 +125,20 @@ pub fn read(raw: &str) -> Option<Says> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_long_line_is_asked_about_in_parts_none_cut() {
+        assert_eq!(line_parts("当我 \n 没说"), ["当我 没说"]);
+        let long = format!("{}当我没说", "长".repeat(2_600));
+        let parts = line_parts(&long);
+        assert_eq!(parts.len(), 3);
+        assert_eq!(parts.concat(), long);
+        assert!(
+            parts
+                .iter()
+                .all(|part| input(part, "").contains(part.as_str()))
+        );
+    }
 
     #[test]
     fn reads_the_answer_and_nothing_else() {
