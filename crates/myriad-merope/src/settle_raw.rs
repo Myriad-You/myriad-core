@@ -467,20 +467,46 @@ fn joined(lines: &[Line], who: Who) -> String {
         .join("\n")
 }
 
-/// The lines of theirs `evidence` is of, when an answer names none: one a
-/// part of more than a character of it is in.
+/// What is quoted with fewer letters than this may be in a line that says
+/// something else ('不是'): it is of a line only when that is all it says.
+const QUOTED_FROM: usize = 6;
+
+/// The lines of theirs `evidence` is of, when those an answer names do not
+/// say it: the one it is all in; else those a part of it is in, a short part
+/// being all a line says; else the first its longest part is in. A single
+/// character says none.
 fn quoted_lines(evidence: &str, lines: &[Line], said_by_them: &[bool]) -> Vec<usize> {
     let parts: Vec<&str> = evidence_parts(evidence)
         .into_iter()
         .filter(|part| letters(part) >= 2)
         .collect();
-    (0..lines.len())
+    let theirs: Vec<(usize, String)> = (0..lines.len())
         .filter(|index| said_by_them[*index])
-        .filter(|index| {
-            let line = one_spaced(lines[*index].text);
-            parts.iter().any(|part| holds(&line, part))
-        })
-        .collect()
+        .map(|index| (index, one_spaced(lines[index].text)))
+        .collect();
+    let of = |line: &str, part: &str| {
+        holds(line, part) && (letters(part) >= QUOTED_FROM || same_letters(line, part))
+    };
+    let whole = theirs
+        .iter()
+        .find(|(_, line)| parts.len() > 1 && parts.iter().all(|part| holds(line, part)));
+    if let Some((index, _)) = whole {
+        return vec![*index];
+    }
+    let quoted: Vec<usize> = theirs
+        .iter()
+        .filter(|(_, line)| parts.iter().any(|part| of(line, part)))
+        .map(|(index, _)| *index)
+        .collect();
+    if !quoted.is_empty() {
+        return quoted;
+    }
+    let longest = parts.iter().rev().max_by_key(|part| letters(part));
+    theirs
+        .iter()
+        .find(|(_, line)| longest.is_some_and(|part| holds(line, part)))
+        .map(|(index, _)| vec![*index])
+        .unwrap_or_default()
 }
 
 fn letters(text: &str) -> usize {

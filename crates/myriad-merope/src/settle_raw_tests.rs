@@ -432,6 +432,38 @@ fn what_is_quoted_is_in_the_lines_it_is_from() {
 
 /// A line of a game says nothing of them, whatever the answer takes from it.
 #[test]
+fn a_short_quote_names_no_line_that_says_something_else() {
+    let lines = [
+        them("不是吧，又下雨"),
+        them("我周五考试，不是周四"),
+        them("不是"),
+        them("那就不是我的问题"),
+        them("我下周三去看牙医"),
+        them("累"),
+    ];
+    let of = |evidence: &str, from: &[usize]| {
+        let raw = answer(
+            serde_json::json!([fact("一件事", evidence, from)]),
+            serde_json::json!({}),
+        );
+        let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+        got.settled.lasting[0].from.clone()
+    };
+    for from in [&[][..], &[5]] {
+        // All of it in one line.
+        assert_eq!(of("我周五考试 / 不是", from), [1]);
+        // A short part is of the line that says only that, a long one of any.
+        assert_eq!(of("不是", from), [2]);
+        assert_eq!(of("我下周三去看牙医 / 不是", from), [2, 4]);
+        assert_eq!(of("下周三去看牙医 / 又下雨", from), [4]);
+        // Else of the first line it is in.
+        assert_eq!(of("就不是", from), [3]);
+        assert_eq!(of("下雨 / 我的问题", from), [3]);
+    }
+    assert_eq!(of("不是", &[3]), [3]);
+}
+
+#[test]
 fn a_line_of_a_game_is_never_taken_from() {
     let mut guess = them("他是被房东推下去的吗，以后别记这个");
     guess.in_game = true;
