@@ -2,7 +2,7 @@
 //! and what she writes (how it left her, what to keep in mind about them,
 //! anything she got wrong).
 
-use chrono::{DateTime, Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, NaiveDate, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -186,7 +186,10 @@ fn before<Z: TimeZone>(
         return Some(at);
     };
     let (evening, morning) = if at < morning {
-        (day_of(at - Duration::days(1), zone)?.1, morning)
+        (
+            day(at.with_timezone(zone).date_naive().pred_opt()?, zone)?.1,
+            morning,
+        )
     } else if at > evening {
         (evening, next_morning(at, zone)?)
     } else {
@@ -205,7 +208,10 @@ fn before<Z: TimeZone>(
 
 /// The first and last moment of the day `at` falls on, on the clock of `zone`.
 fn day_of<Z: TimeZone>(at: DateTime<Utc>, zone: &Z) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
-    let date = at.with_timezone(zone).date_naive();
+    day(at.with_timezone(zone).date_naive(), zone)
+}
+
+fn day<Z: TimeZone>(date: NaiveDate, zone: &Z) -> Option<(DateTime<Utc>, DateTime<Utc>)> {
     let on = |hour| {
         zone.from_local_datetime(&date.and_hms_opt(hour, 0, 0)?)
             .earliest()
@@ -215,7 +221,7 @@ fn day_of<Z: TimeZone>(at: DateTime<Utc>, zone: &Z) -> Option<(DateTime<Utc>, Da
 }
 
 fn next_morning<Z: TimeZone>(at: DateTime<Utc>, zone: &Z) -> Option<DateTime<Utc>> {
-    Some(day_of(at + Duration::days(1), zone)?.0)
+    Some(day(at.with_timezone(zone).date_naive().succ_opt()?, zone)?.0)
 }
 
 pub fn schema_for(private: bool) -> Value {
@@ -335,6 +341,17 @@ mod tests {
         // Over at eleven at night, at three: the next morning.
         assert_eq!(due_on(At, Some(3.0), 20.0), (Some(33.0), None));
         assert_eq!(due_on(At, Some(3.0), 24.0), (Some(33.0), None));
+    }
+
+    #[test]
+    fn the_day_it_moves_to_is_the_one_on_the_clock() {
+        // Berlin, the night the clocks go forward: over at 23:30 on the 28th,
+        // so in the morning of the 29th, 23 hours long.
+        let zone = chrono_tz::Europe::Berlin;
+        let now = zone.with_ymd_and_hms(2026, 3, 28, 19, 30, 0).unwrap();
+        let at = due(When::At, Some(0.0), now.with_timezone(&Utc), &zone).at;
+        let morning = zone.with_ymd_and_hms(2026, 3, 29, 9, 0, 0).unwrap();
+        assert_eq!(at, Some(morning.with_timezone(&Utc)));
     }
 
     #[test]
