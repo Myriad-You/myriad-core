@@ -61,6 +61,7 @@ mod rig_state;
 pub mod seeing;
 pub mod screen;
 pub mod self_story;
+pub mod settle_raw;
 pub mod serial;
 pub mod sharing;
 pub mod sore;

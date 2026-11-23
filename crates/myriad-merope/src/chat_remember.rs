@@ -17,7 +17,7 @@ pub const MAX_PUT_ONTO: usize = 2;
 /// How long one thing she said about herself may be.
 pub const MAX_OWN_CHARS: usize = 200;
 
-fn concepts_schema() -> serde_json::Value {
+pub(crate) fn concepts_schema() -> serde_json::Value {
     json!({
         "type": "array",
         "maxItems": 5,
@@ -158,7 +158,7 @@ impl Examples {
         }
     }
 
-    fn wording(self) -> &'static Wording {
+    pub(crate) fn wording(self) -> &'static Wording {
         match self {
             Self::Chinese => &CHINESE,
             Self::English => &ENGLISH,
@@ -185,28 +185,28 @@ pub fn changed_language(fact: &str, theirs: &str) -> bool {
 }
 
 /// The examples in what she is asked, in one language.
-struct Wording {
-    pronouns: &'static str,
-    coffee: &'static str,
-    no_coffee: &'static str,
-    tea: &'static str,
-    wrong: &'static str,
-    forget: &'static str,
-    both_once: &'static str,
-    put_onto: &'static str,
-    own: &'static str,
-    own_not: &'static str,
-    own_them: &'static str,
-    own_short: &'static str,
-    own_changed: &'static str,
-    moment: &'static str,
-    did_and_came: &'static str,
-    named: &'static str,
-    when_for: &'static str,
-    still_true: &'static str,
-    took_back_words: &'static str,
-    took_back: &'static str,
-    both_stretch: &'static str,
+pub(crate) struct Wording {
+    pub(crate) pronouns: &'static str,
+    pub(crate) coffee: &'static str,
+    pub(crate) no_coffee: &'static str,
+    pub(crate) tea: &'static str,
+    pub(crate) wrong: &'static str,
+    pub(crate) forget: &'static str,
+    pub(crate) both_once: &'static str,
+    pub(crate) put_onto: &'static str,
+    pub(crate) own: &'static str,
+    pub(crate) own_not: &'static str,
+    pub(crate) own_them: &'static str,
+    pub(crate) own_short: &'static str,
+    pub(crate) own_changed: &'static str,
+    pub(crate) moment: &'static str,
+    pub(crate) did_and_came: &'static str,
+    pub(crate) named: &'static str,
+    pub(crate) when_for: &'static str,
+    pub(crate) still_true: &'static str,
+    pub(crate) took_back_words: &'static str,
+    pub(crate) took_back: &'static str,
+    pub(crate) both_stretch: &'static str,
 }
 
 const CHINESE: Wording = Wording {
