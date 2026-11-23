@@ -493,6 +493,27 @@ pub fn parse_settle(
     notes: usize,
     offered: usize,
 ) -> Option<Settled> {
+    parse_settle_at_most(
+        raw,
+        theirs,
+        said_by_them,
+        known,
+        notes,
+        offered,
+        MAX_LASTING,
+    )
+}
+
+/// [`parse_settle`], keeping at most `at_most` facts.
+pub(crate) fn parse_settle_at_most(
+    raw: &str,
+    theirs: &str,
+    said_by_them: &[bool],
+    known: &[String],
+    notes: usize,
+    offered: usize,
+    at_most: usize,
+) -> Option<Settled> {
     let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
     if answer.get("replaces").is_some() {
         return None;
@@ -588,7 +609,7 @@ pub fn parse_settle(
                 replaces: of_known(item.get("replaces")),
             })
         })
-        .take(MAX_LASTING)
+        .take(at_most)
         .map(|mut fact| {
             // An entry is replaced once, by the first fact that says so.
             fact.replaces.retain(|old| !replaced.contains(old));

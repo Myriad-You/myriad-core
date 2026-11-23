@@ -18,7 +18,7 @@
 use serde_json::json;
 
 use crate::chat_remember::{
-    Examples, Lasting, MAX_OWN_CHARS, Settled, concepts_schema, parse_settle, settle_schema,
+    Examples, Lasting, MAX_OWN_CHARS, Settled, concepts_schema, parse_settle_at_most, settle_schema,
     strip_json_fence,
 };
 
@@ -356,7 +356,15 @@ pub fn parse_raw_settle(
         .iter()
         .map(|line| line.who == Who::Them && !line.before)
         .collect();
-    let mut settled = parse_settle(raw, &theirs, &said_by_them, known, lines.len(), offered)?;
+    let mut settled = parse_settle_at_most(
+        raw,
+        &theirs,
+        &said_by_them,
+        known,
+        lines.len(),
+        offered,
+        MAX_RAW_LASTING,
+    )?;
     let asked = |index: &usize| only.is_none_or(|only| only.contains(index));
     for fact in &mut settled.lasting {
         fact.from

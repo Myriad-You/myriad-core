@@ -278,3 +278,23 @@ fn a_malformed_answer_gives_nothing() {
         None
     );
 }
+
+/// A pass may keep as many facts as the prompt allows it, not as many as a
+/// stretch of short notes.
+#[test]
+fn a_pass_keeps_as_many_facts_as_it_is_asked_for() {
+    let texts: Vec<String> = (0..MAX_RAW_LASTING)
+        .map(|n| format!("第{n}件事我买了东西"))
+        .collect();
+    let lines: Vec<Line> = texts.iter().map(|text| them(text)).collect();
+    let facts: Vec<serde_json::Value> = texts
+        .iter()
+        .enumerate()
+        .map(|(n, text)| fact(&format!("买了第{n}样东西"), text, &[n]))
+        .collect();
+    let raw = answer(serde_json::json!(facts), serde_json::json!({}));
+    let got = parse_raw_settle(&raw, &lines, &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), MAX_RAW_LASTING);
+    const { assert!(MAX_RAW_LASTING > crate::chat_remember::MAX_LASTING) };
+    assert!(got.left.is_empty());
+}
