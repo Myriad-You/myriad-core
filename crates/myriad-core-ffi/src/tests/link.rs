@@ -570,6 +570,89 @@ fn a_child_stepped_through_the_c_entry_point_is_the_crates_session() {
     assert!(!out.to_string().contains("私话"), "{out}");
 }
 
+/// A blob call in hand, stepped through the C entry point: named in `mayPut` once her host
+/// has granted it on the link, still the moment before its deadline (by her host's clock,
+/// here 5 s ahead of this end's), and not once a tick at the deadline has stopped it.
+#[test]
+fn a_blob_call_is_named_to_put_through_the_c_entry_point_until_its_deadline() {
+    let now = 1_760_140_800_000_i64;
+    let ahead = 5_000;
+    let made = ok(
+        "link.child_new",
+        json!({
+            "capabilities": ["calls"],
+            "app": { "name": "Child", "version": "1" },
+            "offers": [{ "name": "camera.take", "version": 1 }],
+        }),
+    );
+    let mut state = made["state"].clone();
+    let mut step = |at: i64, event: Value| {
+        let stepped = ok(
+            "link.child_step",
+            json!({ "state": state, "now": at * 1000, "event": event }),
+        );
+        state = stepped["state"].clone();
+        stepped
+    };
+    let frame = |t: &str, seq: u64, id: Option<&str>, body: Value| {
+        let mut frame =
+            json!({ "v": 1, "t": t, "seq": seq, "ack": 1, "at": now + ahead, "body": body });
+        if let Some(id) = id {
+            frame["id"] = json!(id);
+        }
+        json!({ "received": frame.to_string() })
+    };
+    assert_eq!(step(now, json!("connected"))["mayPut"], json!([]));
+    let welcome = frame(
+        "welcome",
+        1,
+        None,
+        json!({
+            "protocol": 2, "role": "host", "host": "site", "deviceId": "dev_1",
+            "heartbeatMs": 15000, "capabilities": ["calls"], "turns": [],
+            "serverTime": now + 50 + ahead, "sync": "off",
+        }),
+    );
+    assert_eq!(step(now + 50, welcome)["mayPut"], json!([]));
+    let granted = frame(
+        "call.granted",
+        2,
+        None,
+        json!({ "actions": [{ "name": "camera.take", "version": 1 }], "providing": [] }),
+    );
+    assert_eq!(
+        step(now + 60, granted)["mayPut"],
+        json!([]),
+        "no call in hand yet"
+    );
+    let ask = frame(
+        "call.ask",
+        3,
+        Some("call_cam"),
+        json!({
+            "callId": "call_cam", "action": "camera.take", "version": 1, "args": {},
+            "for": { "kind": "owner" }, "deadlineAt": now + ahead + 10_000,
+        }),
+    );
+    let asked = step(now + 100, ask);
+    assert_eq!(asked["mayPut"], json!(["call_cam"]), "{asked}");
+    // Asked again before each put: a tick, and what it says.
+    assert_eq!(
+        step(now + 9_999, json!("tick"))["mayPut"],
+        json!(["call_cam"])
+    );
+    let stopped = step(now + 10_000, json!("tick"));
+    assert_eq!(stopped["mayPut"], json!([]), "{stopped}");
+    assert!(
+        stopped["outputs"].as_array().unwrap().iter().any(|o| {
+            o["deliver"]["kind"] == "call_stop"
+                && o["deliver"]["callId"] == "call_cam"
+                && o["deliver"]["why"] == "timeout"
+        }),
+        "{stopped}"
+    );
+}
+
 #[test]
 fn the_abi_a_child_says_it_runs_is_this_librarys_whatever_its_state_says() {
     let made = ok(

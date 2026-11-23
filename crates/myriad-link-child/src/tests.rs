@@ -629,7 +629,8 @@ fn a_picture_is_put_only_while_its_action_is_granted_on_this_link() {
     assert!(named(&s, T0 + 140).is_empty(), "another version");
     s.received(&granted(6, both.clone()), T0 + 150);
     assert_eq!(named(&s, T0 + 160), cam);
-    // Its deadline passed, before any tick has stopped it: not named.
+    // Its deadline passed, before any tick has stopped it: not named; the moment before, named.
+    assert_eq!(named(&s, T0 + 599_999), cam, "just before its deadline");
     assert!(named(&s, T0 + 600_000).is_empty(), "past its deadline");
     // The link goes: nothing is put while down, nor on the next link before its word.
     s.disconnected();
@@ -656,6 +657,42 @@ fn a_picture_is_put_only_while_its_action_is_granted_on_this_link() {
     let blob = "ab".repeat(32);
     s.call_done("call_cam", &json!({}), &[blob], T0 + 3_100);
     assert!(named(&s, T0 + 3_110).is_empty(), "answered");
+}
+
+#[test]
+fn a_picture_is_named_by_her_hosts_clock_not_this_ends() {
+    let mut s = Session::new(contract(), &["calls"], ("Child", "0.1.0"), None, None);
+    s.offer(&[("camera.take", 1)]);
+    // Her host's clock is 7 s ahead of this end's.
+    let ahead = 7_000;
+    s.connected(T0);
+    s.received(
+        &host("welcome", 1, 1, |body| {
+            body["capabilities"] = json!(["calls"]);
+            body["turns"] = json!([]);
+            body["serverTime"] = json!(T0 + 50 + ahead);
+        }),
+        T0 + 50,
+    );
+    s.received(
+        &host("call.granted", 2, 1, |body| {
+            *body =
+                json!({ "actions": [{ "name": "camera.take", "version": 1 }], "providing": [] });
+        }),
+        T0 + 60,
+    );
+    let mut ask: Value = serde_json::from_str(&host("call.ask", 3, 1, |body| {
+        *body = json!({
+            "callId": "call_cam", "action": "camera.take", "version": 1, "args": {},
+            "for": { "kind": "owner" }, "deadlineAt": T0 + ahead + 600_000,
+        });
+    }))
+    .unwrap();
+    ask["id"] = json!("call_cam");
+    s.received(&ask.to_string(), T0 + 100);
+    // By this end's clock its deadline is 7 s sooner than the number says.
+    assert_eq!(s.may_put(T0 + 599_999), vec!["call_cam".to_string()]);
+    assert!(s.may_put(T0 + 600_000).is_empty());
 }
 
 #[test]

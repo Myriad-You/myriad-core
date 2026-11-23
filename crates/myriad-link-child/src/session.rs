@@ -943,9 +943,11 @@ impl Session {
     ///
     /// The bytes go first, then the answer ([`Session::call_done`] with their names): a call
     /// answered is no longer in hand and is never named here again. One that is not named
-    /// waits, neither put nor answered done: it is named once this link grants it, or her
-    /// host cancels it (a blob action is long, and her host cancels a long one when it takes
-    /// the action back), or its deadline passes; the session then hands the shell its stop.
+    /// waits, neither put nor answered done, nor failed `call_not_granted` for it: it is named
+    /// once this link grants it, or her host cancels it (a blob action is long, and her host
+    /// cancels a long one when it takes the action back), or its deadline passes; the session
+    /// then hands the shell its stop. The owner stopping or refusing it on the device is
+    /// answered as ever ([`Session::call_failed`], `declined` or `not_now`).
     pub fn may_put(&self, now_ms: i64) -> Vec<String> {
         if self.phase != Phase::Open || !self.both("calls") || !self.heard_granted {
             return Vec::new();
@@ -2782,8 +2784,11 @@ impl Session {
     }
 
     /// The call `call_id` was not done: `code` is one of the contract's `calls.failCodes`
-    /// (`declined`, `not_now`, `call_not_granted`, `internal_error`…). Anything else is
-    /// told `Unsent` and answered `internal_error`.
+    /// (`declined`, `not_now`, `internal_error`…). Anything else is told `Unsent` and
+    /// answered `internal_error`. A call waiting to be named by [`Session::may_put`] is not
+    /// failed `call_not_granted` for its not being named: her host knows what it took back,
+    /// and the session ends it itself (her host's cancel, or its deadline). The owner
+    /// stopping or refusing it on the device is failed here as ever, `declined` or `not_now`.
     pub fn call_failed(&mut self, call_id: &str, code: &str, now_ms: i64) -> Vec<Output> {
         let Some(call) = self.take_doing(call_id) else {
             return unsent("call.result", "bad_id", Some(call_id));
