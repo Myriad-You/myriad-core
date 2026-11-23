@@ -330,7 +330,9 @@ Known:\n{known}",
 pub const MAX_ASKED: usize = 4;
 
 /// Something they asked her not to keep from now on (`notToKeep`): kept
-/// for good, and shown every time she keeps what they say.
+/// for good. Going over a private talk is shown all of it, for that is
+/// where they take it back or narrow it; nothing else that keeps what they
+/// say is, and the host holds what that gives to it (`not_to_keep`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Asked {
     pub fact: String,
@@ -374,8 +376,21 @@ pub fn read_not_to_keep(
     said_by_them: Option<&[bool]>,
     asked_before: &[String],
 ) -> Vec<Asked> {
+    read_requests(answer, said_by_them, asked_before, |evidence, _| {
+        settle_evidence_holds(evidence, theirs)
+    })
+}
+
+/// [`read_not_to_keep`], each held to `evidence_holds` of its evidence and
+/// the line it names.
+pub(crate) fn read_requests(
+    answer: &serde_json::Value,
+    said_by_them: Option<&[bool]>,
+    asked_before: &[String],
+    evidence_holds: impl Fn(&str, Option<usize>) -> bool,
+) -> Vec<Asked> {
     let mut out: Vec<Asked> = Vec::new();
-    for mut one in requests(answer, theirs, said_by_them) {
+    for mut one in requests(answer, said_by_them, evidence_holds) {
         if asked_before.contains(&one.fact) || out.iter().any(|kept| kept.fact == one.fact) {
             continue;
         }
@@ -391,16 +406,16 @@ pub fn read_not_to_keep(
 }
 
 /// What of what they asked before the answer has them asking again, word for
-/// word: it stands, whatever else the answer says of it.
+/// word (and in which line): it stands, whatever else the answer says of it.
 pub(crate) fn asked_again(
     answer: &serde_json::Value,
-    theirs: &str,
     said_by_them: &[bool],
     asked_before: &[String],
-) -> Vec<String> {
-    requests(answer, theirs, Some(said_by_them))
-        .map(|one| one.fact)
-        .filter(|fact| asked_before.contains(fact))
+    evidence_holds: impl Fn(&str, Option<usize>) -> bool,
+) -> Vec<(String, Option<usize>)> {
+    requests(answer, Some(said_by_them), evidence_holds)
+        .map(|one| (one.fact, one.said))
+        .filter(|(fact, _)| asked_before.contains(fact))
         .collect()
 }
 
@@ -408,8 +423,8 @@ pub(crate) fn asked_again(
 /// in a line of theirs.
 fn requests<'a>(
     answer: &'a serde_json::Value,
-    theirs: &'a str,
     said_by_them: Option<&'a [bool]>,
+    evidence_holds: impl Fn(&str, Option<usize>) -> bool + 'a,
 ) -> impl Iterator<Item = Asked> + 'a {
     answer
         .get("notToKeep")
@@ -433,10 +448,7 @@ fn requests<'a>(
                         .filter(|index| by.get(*index) == Some(&true))?,
                 ),
             };
-            if fact.is_empty()
-                || fact.chars().count() > 240
-                || !settle_evidence_holds(&evidence, theirs)
-            {
+            if fact.is_empty() || fact.chars().count() > 240 || !evidence_holds(&evidence, said) {
                 return None;
             }
             let mut replaces: Vec<String> = item
@@ -482,7 +494,8 @@ pub(crate) fn not_a_request(wording: &Wording) -> String {
 
 /// [`extract_system_prompt`] keeping also what they ask her not to keep from
 /// now on (`notToKeep`, [`extract_schema_asked`]). What they asked before is
-/// not shown: the host holds what is kept to it.
+/// not shown here, where one line of theirs is kept (going over a private
+/// talk is shown it): the host holds what is kept to it (`not_to_keep`).
 pub fn extract_system_prompt_asked(existing: &[String], examples: Examples) -> String {
     let wording = examples.wording();
     let prompt = extract_system_prompt(existing, examples);
@@ -764,6 +777,64 @@ pub(crate) fn parse_settle_at_most(
     offered: usize,
     at_most: usize,
 ) -> Option<Settled> {
+    let mut read = read_settle(
+        raw,
+        theirs,
+        said_by_them,
+        known,
+        notes,
+        offered,
+        |evidence, _| settle_evidence_holds(evidence, theirs),
+    )?;
+    read.lasting.truncate(at_most);
+    Some(read.settled())
+}
+
+/// What going over a stretch answered, as it says it ([`read_settle`]).
+pub(crate) struct SettleRead {
+    /// Every fact that holds, and what each says it replaces.
+    pub lasting: Vec<Lasting>,
+    pub took_back: Vec<TookBack>,
+    /// What any fact says it replaces, kept or not.
+    named: std::collections::BTreeSet<String>,
+}
+
+impl SettleRead {
+    /// Those of it kept: an entry is replaced once, by the first fact kept
+    /// that says so, and what a fact replaces is not taken back as well.
+    pub(crate) fn settled(mut self) -> Settled {
+        let mut replaced: Vec<String> = Vec::new();
+        for fact in &mut self.lasting {
+            fact.replaces.retain(|old| !replaced.contains(old));
+            replaced.extend(fact.replaces.iter().cloned());
+        }
+        self.took_back.retain(|old| !replaced.contains(&old.entry));
+        let unkept_replaces = self
+            .named
+            .iter()
+            .filter(|old| {
+                !replaced.contains(old) && !self.took_back.iter().any(|one| &one.entry == *old)
+            })
+            .count();
+        Settled {
+            lasting: self.lasting,
+            took_back: self.took_back,
+            unkept_replaces,
+        }
+    }
+}
+
+/// The facts of an answer that hold, with what each says it replaces:
+/// `evidence_holds` of a fact's evidence and the notes it is from.
+pub(crate) fn read_settle(
+    raw: &str,
+    theirs: &str,
+    said_by_them: &[bool],
+    known: &[String],
+    notes: usize,
+    offered: usize,
+    evidence_holds: impl Fn(&str, &[usize]) -> bool,
+) -> Option<SettleRead> {
     let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
     if answer.get("replaces").is_some() {
         return None;
@@ -781,8 +852,7 @@ pub(crate) fn parse_settle_at_most(
         entries.dedup();
         entries
     };
-    let mut took_back = taken_back(&answer, said_by_them, known)?;
-    let mut replaced: Vec<String> = Vec::new();
+    let took_back = taken_back(&answer, said_by_them, known)?;
     let items = answer.get("lasting")?.as_array()?;
     // What any fact says it replaces, kept or not.
     let named: std::collections::BTreeSet<String> = items
@@ -799,22 +869,23 @@ pub(crate) fn parse_settle_at_most(
                 .collect::<Vec<_>>()
                 .join(" ");
             let evidence = item.get("evidence")?.as_str()?.trim().to_string();
+            let from: Vec<usize> = item
+                .get("from")
+                .and_then(serde_json::Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_u64)
+                .map(|index| index as usize)
+                .filter(|index| *index < notes)
+                .collect();
             let holds = !fact.is_empty()
                 && fact.chars().count() <= 240
-                && settle_evidence_holds(&evidence, theirs)
+                && evidence_holds(&evidence, &from)
                 && !changed_language(&fact, theirs);
             holds.then(|| Lasting {
                 fact,
                 evidence,
-                from: item
-                    .get("from")
-                    .and_then(serde_json::Value::as_array)
-                    .into_iter()
-                    .flatten()
-                    .filter_map(serde_json::Value::as_u64)
-                    .map(|index| index as usize)
-                    .filter(|index| *index < notes)
-                    .collect(),
+                from,
                 concepts: item.get("concepts").cloned().unwrap_or_default(),
                 when_for: item
                     .get("whenFor")
@@ -829,24 +900,11 @@ pub(crate) fn parse_settle_at_most(
                 replaces: of_known(item.get("replaces")),
             })
         })
-        .take(at_most)
-        .map(|mut fact| {
-            // An entry is replaced once, by the first fact that says so.
-            fact.replaces.retain(|old| !replaced.contains(old));
-            replaced.extend(fact.replaces.iter().cloned());
-            fact
-        })
         .collect();
-    // What a fact replaces is not taken back as well.
-    took_back.retain(|old| !replaced.contains(&old.entry));
-    let unkept_replaces = named
-        .iter()
-        .filter(|old| !replaced.contains(old) && !took_back.iter().any(|one| &one.entry == *old))
-        .count();
-    Some(Settled {
+    Some(SettleRead {
         lasting,
         took_back,
-        unkept_replaces,
+        named,
     })
 }
 

@@ -251,8 +251,8 @@ fn asked_again_only_the_lines_asked_about_count() {
     assert!(whole.left.is_empty());
 }
 
-/// What they took back within the stretch goes by its lines: a fact from
-/// those lines alone is dropped even when the answer kept it.
+/// What they took back within the stretch goes by its lines: a fact that is
+/// all those lines say is dropped even when the answer kept it.
 #[test]
 fn what_they_take_back_in_the_stretch_is_let_go_by_its_lines() {
     let lines = [
@@ -326,11 +326,144 @@ fn asked_again_a_line_may_take_back_what_she_knew() {
     let again = parse_raw_settle(&raw, &lines, &known, &[], 0, Some(&[1])).unwrap();
     assert_eq!(again.settled.took_back.len(), 1);
     assert!(again.left.is_empty());
-    // The line let go of was not asked about.
-    assert!(again.let_go.is_empty());
+    // An earlier line of the stretch it takes back too; not a later one.
+    assert_eq!(again.let_go, [0]);
     let other = parse_raw_settle(&raw, &lines, &known, &[], 0, Some(&[0])).unwrap();
     assert!(other.settled.took_back.is_empty());
     assert_eq!(other.let_go, [0]);
+    let later = answer(serde_json::json!([]), serde_json::json!({"letGo": [0, 1]}));
+    let other = parse_raw_settle(&later, &lines, &known, &[], 0, Some(&[0])).unwrap();
+    assert_eq!(other.let_go, [0]);
+}
+
+/// One line says something they take back later and something else: the
+/// other is kept, and the line is not let go whole. Said of what they ask her
+/// not to keep too.
+#[test]
+fn a_line_taken_back_in_part_keeps_the_rest() {
+    let lines = [
+        them("下个月去东京出差，另外我养了只猫"),
+        you("猫叫什么"),
+        them("叫年糕。出差的事当我没说"),
+    ];
+    for end in [
+        serde_json::json!({"letGo": [0]}),
+        serde_json::json!({"letGo": [0], "notToKeep": [{"fact": "不要记出差的事", "evidence": "出差的事当我没说", "said": 2, "replaces": []}]}),
+    ] {
+        for (evidence, from) in [("我养了只猫", &[0][..]), ("我养了只猫 / 叫年糕", &[0, 2])]
+        {
+            let raw = answer(
+                serde_json::json!([fact("养了只猫", evidence, from)]),
+                end.clone(),
+            );
+            let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+            assert_eq!(got.settled.lasting.len(), 1);
+            assert!(got.let_go.is_empty());
+        }
+    }
+    // Nothing else is taken from it: it is let go whole.
+    let raw = answer(serde_json::json!([]), serde_json::json!({"letGo": [0]}));
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.let_go, [0]);
+}
+
+/// What they say again another way takes the place of what she knew; what
+/// they took back of it does not keep it from that.
+#[test]
+fn a_fact_let_go_replaces_nothing() {
+    let lines = [them("我搬到上海了"), you("哇"), them("说错了，是杭州")];
+    let known = ["住在北京".to_string()];
+    let moved = |to: &str, evidence: &str, from: usize| {
+        let mut fact = fact(to, evidence, &[from]);
+        fact["replaces"] = serde_json::json!(["住在北京"]);
+        fact
+    };
+    let raw = answer(
+        serde_json::json!([
+            moved("搬到了上海", "我搬到上海了", 0),
+            moved("从北京搬到了杭州", "是杭州", 2),
+        ]),
+        serde_json::json!({"letGo": [0]}),
+    );
+    let got = parse_raw_settle(&raw, &lines, &known, &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), 1);
+    assert_eq!(got.settled.lasting[0].replaces, ["住在北京"]);
+    assert_eq!(got.settled.unkept_replaces, 0);
+    assert_eq!(got.let_go, [0]);
+}
+
+/// What is quoted is in the lines it is taken from; a single character is
+/// all a line says.
+#[test]
+fn what_is_quoted_is_in_the_lines_it_is_from() {
+    let lines = [
+        you("你吃素？"),
+        them("对"),
+        them("我是在成都长大的"),
+        them("分手了"),
+    ];
+    let kept = |evidence: &str, from: &[usize]| {
+        let raw = answer(
+            serde_json::json!([fact("一件事", evidence, from)]),
+            serde_json::json!({"moment": [2]}),
+        );
+        let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+        assert!(got.left.contains(&3) || from.contains(&3));
+        got.settled.lasting.len()
+    };
+    assert_eq!(kept("对", &[1]), 1);
+    assert_eq!(kept("我", &[2]), 0);
+    assert_eq!(kept("我 / 是", &[2]), 1);
+    assert_eq!(kept("我是在成都长大的", &[1]), 0);
+    assert_eq!(kept("我是在成都长大的 / 分手了", &[2, 3]), 1);
+    assert_eq!(kept("我是在成都长大的 / 分手了", &[2]), 0);
+    // With none named, the lines it quotes; a single character of a line
+    // names none.
+    assert!(quoted_lines("我 / 是", &lines, &[false, true, true, true]).is_empty());
+}
+
+/// A line of a game says nothing of them, whatever the answer takes from it.
+#[test]
+fn a_line_of_a_game_is_never_taken_from() {
+    let mut guess = them("他是被房东推下去的吗，以后别记这个");
+    guess.in_game = true;
+    let lines = [guess, you("不是"), them("我养了只猫叫年糕")];
+    let raw = answer(
+        serde_json::json!([
+            fact("被房东推下去", "他是被房东推下去的吗", &[0]),
+            fact("养了只猫叫年糕", "我养了只猫叫年糕", &[2]),
+        ]),
+        serde_json::json!({
+            "letGo": [0],
+            "putOnto": [{"thing": "有人说的", "evidence": "他是被房东推下去的吗"}],
+            "notToKeep": [{"fact": "不要记这个", "evidence": "以后别记这个", "said": 0, "replaces": []}],
+        }),
+    );
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), 1);
+    assert!(got.put_onto.is_empty() && got.asked.is_empty() && got.let_go.is_empty());
+}
+
+/// Asked again what they asked already, word for word, its line is accounted
+/// for; one quoting another line than it names is none.
+#[test]
+fn a_request_is_in_the_line_it_names() {
+    let lines = [them("我的体重你别记"), them("说过了，体重别记啊")];
+    let raw = answer(
+        serde_json::json!([]),
+        serde_json::json!({"notToKeep": [
+            {"fact": "不要记自己的体重", "evidence": "体重别记啊", "said": 1, "replaces": []},
+            {"fact": "不要记自己的身高", "evidence": "体重别记啊", "said": 0, "replaces": []},
+        ]}),
+    );
+    let before = ["不要记自己的体重".to_string()];
+    let got = parse_raw_settle(&raw, &lines, &[], &before, 0, None).unwrap();
+    assert!(got.asked.is_empty());
+    assert_eq!(got.left, [0]);
+    assert_eq!(
+        raw_settle_schema()["properties"]["tookBack"]["maxItems"],
+        80
+    );
 }
 
 /// A pass may keep as many facts as the prompt allows it, not as many as a

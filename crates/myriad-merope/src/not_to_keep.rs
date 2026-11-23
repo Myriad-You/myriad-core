@@ -1,8 +1,9 @@
 //! What someone asked her not to keep from now on, judged of what is about
-//! to be kept: which of it says something of that. Whoever writes what is
-//! kept never sees what they asked; this alone does, and its answer is only
-//! which to leave out, so nothing of what they asked can get into what is
-//! kept.
+//! to be kept: which of it says something of that. Its answer is only which
+//! to leave out, so nothing of what they asked can get into what is kept
+//! through it. Beside it only going over a private talk is shown what they
+//! asked (`settle_raw`), for that is where they take it back or narrow it;
+//! whatever else writes what is kept never sees it.
 
 use serde_json::{Value, json};
 
