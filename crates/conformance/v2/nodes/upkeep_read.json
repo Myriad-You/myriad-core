@@ -34119,6 +34119,152 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "input": {
+          "audience": "personal:7",
+          "bodies": {
+            "y1": {
+              "key": "person:7",
+              "kind": "person",
+              "name": "关于你",
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "version": 1
+            },
+            "y2": {
+              "audience": "personal:7",
+              "refs": [
+                "memory:r9"
+              ],
+              "saidBy": [
+                "partner"
+              ],
+              "sync": "shared",
+              "text": "喜欢慢慢走。",
+              "version": 1
+            },
+            "y3": {
+              "base": [],
+              "because": [
+                "memory:r1"
+              ],
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "text": "像老朋友一样松弛。",
+              "version": 1,
+              "view": "us"
+            }
+          },
+          "node": "8fca7d80a71f0ff968edd2a1162ac8ef",
+          "rows": [
+            {
+              "audience": "personal:7",
+              "author": "her",
+              "dseq": 1,
+              "epoch": 1,
+              "hlc": "001760000000010-000000-dev_mac",
+              "id": "y1",
+              "kind": "node.created",
+              "object": "node:8fca7d80a71f0ff968edd2a1162ac8ef",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "body:y1"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:7",
+              "author": "her",
+              "dseq": 2,
+              "epoch": 1,
+              "hlc": "001760000000020-000000-dev_mac",
+              "id": "y2",
+              "kind": "node.entry",
+              "object": "node:8fca7d80a71f0ff968edd2a1162ac8ef",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "body:y2"
+              },
+              "replicate": "shared",
+              "version": 1
+            },
+            {
+              "audience": "personal:7",
+              "author": "her",
+              "dseq": 3,
+              "epoch": 1,
+              "hlc": "001760000000030-000000-dev_mac",
+              "id": "y3",
+              "kind": "node.view_changed",
+              "object": "node:8fca7d80a71f0ff968edd2a1162ac8ef",
+              "origin": "dev_mac",
+              "payload": {
+                "ref": "body:y3"
+              },
+              "replicate": "shared",
+              "version": 1
+            }
+          ]
+        },
+        "output": "{\"actions\": [{\"do\": \"view\", \"view\": \"v1\", \"text\": \"最近有点生分。\", \"because\": [\"e1\"]}, {\"do\": \"view\", \"text\": \"走路不爱赶。\", \"because\": [\"e1\"]}]}",
+        "run": "run-9",
+        "sync": "shared"
+      },
+      "name": "a view that shows a memory row is held; a view of her own stands",
+      "output": {
+        "held": [
+          {
+            "action": 1,
+            "why": "kept_elsewhere"
+          }
+        ],
+        "writes": [
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "entry:y2"
+              ],
+              "saidBy": [
+                "her"
+              ],
+              "sync": "shared",
+              "text": "走路不爱赶。",
+              "version": 1,
+              "view": "v1e6daa2b64fb8099bce35a0c"
+            },
+            "id": "u2d43b9a128a7b78ab1b1a729",
+            "kind": "node.view_changed",
+            "node": "8fca7d80a71f0ff968edd2a1162ac8ef"
+          },
+          {
+            "body": {
+              "run": "run-9",
+              "saidBy": [
+                "her"
+              ],
+              "seen": {
+                "dev_mac": "001760000000030-000000-dev_mac"
+              },
+              "sync": "shared",
+              "version": 1,
+              "wrote": [
+                "u2d43b9a128a7b78ab1b1a729"
+              ]
+            },
+            "id": "u8a8d1635c141c07e46c599e7",
+            "kind": "node.upkept",
+            "node": "8fca7d80a71f0ff968edd2a1162ac8ef"
+          }
+        ]
+      }
     }
   ],
   "version": 1

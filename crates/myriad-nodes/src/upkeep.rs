@@ -48,7 +48,9 @@
 //! judged. A view changes only on what counts (算数, [`crate::trust`]):
 //! every piece of it a span, an entry or an inbox item whose tier counts
 //! (said only by the partner or her), and not said in a group; anything
-//! else is held (`not_counted`).
+//! else is held (`not_counted`). A view that shows a memory row the host
+//! hung there is not changed at all (`kept_elsewhere`): the row is what
+//! holds, and the host keeps it.
 //!
 //! The kind follows from her `done` alone: with a "done" it is something in
 //! progress; without one it is a topic, unless it is `ongoing` (always being
@@ -104,12 +106,12 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged, OpenItem,
-        Origin, Related, Relation, Revised, Sentence, Span, SplitOff, Standing, Status, Unrelated,
-        Upkept, ViewChanged,
+        Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged,
+        MEMORY_REF, OpenItem, Origin, Related, Relation, Revised, Sentence, Span, SplitOff,
+        Standing, Status, Unrelated, Upkept, ViewChanged,
     },
     check_token,
-    fold::{FoldInput, Full, IntentValue, Item, Node, Parts, fold_full},
+    fold::{FoldInput, Full, IntentValue, Item, Node, Parts, ViewValue, fold_full},
     key::{Key, Kind, node_id},
     limits::{
         BECAUSE_IDS, NAME_CHARS, PLACE_SUMMARY_CHARS, REASON_CHARS, REFS, SEEN_DEVICES,
@@ -216,6 +218,10 @@ pub struct ShownItem {
     /// Its current version is the partner's: only a hand against it.
     #[serde(skip_serializing_if = "is_false")]
     pub by_partner: bool,
+    /// A view that shows a memory row the host keeps up elsewhere: hers to
+    /// see here, not to change.
+    #[serde(skip_serializing_if = "is_false")]
+    pub kept_elsewhere: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -402,6 +408,22 @@ fn partners<T>(item: &Item<T>) -> bool {
             .rivals
             .iter()
             .any(|rival| rival.author == Author::Owner)
+}
+
+/// Whether a view shows a memory row: the host hung it there to say where
+/// the row belongs, and keeps the row's words up itself (her nightly review
+/// of how she and the partner are). Upkeep rests a view on spans, entries
+/// and inbox items, and no host puts a memory row in the inbox
+/// (`memory:…`), so nothing she sees herself is taken for one.
+fn shows_a_row(view: &Item<ViewValue>) -> bool {
+    std::iter::once(&view.current)
+        .chain(&view.rivals)
+        .any(|version| {
+            let because = &version.value.because;
+            because
+                .iter()
+                .any(|reference| reference.starts_with(MEMORY_REF))
+        })
 }
 
 /// Whether a span of what was said in `audience` may go on a node of `key`
@@ -618,6 +640,7 @@ fn kept(node: &Node) -> Kept {
                 label,
                 text: shown_text(&item.current.value.text),
                 by_partner: partners(item),
+                kept_elsewhere: false,
             }
         })
         .collect();
@@ -635,6 +658,7 @@ fn kept(node: &Node) -> Kept {
                 label,
                 text: shown_text(&view.current.value.text),
                 by_partner: partners(view),
+                kept_elsewhere: shows_a_row(view),
             }
         })
         .collect();
@@ -1068,7 +1092,8 @@ pub enum HeldWhy {
     NotCounted,
     /// How something on it stands is kept where this run does not write
     /// (a local standing, on a shared run): going into another node would
-    /// carry it where it may not go, or leave it behind.
+    /// carry it where it may not go, or leave it behind. Or a view that
+    /// shows a memory row: the row is what holds, and the host keeps it.
     KeptElsewhere,
 }
 
@@ -1868,7 +1893,9 @@ impl<'a> Reader<'a> {
     }
 
     /// One of her views, changed (`view`, a label she was shown) or new.
-    /// It changes only on what counts: anything else is held.
+    /// It changes only on what counts: anything else is held. A view that
+    /// shows a memory row is not changed here at all: written over, it would
+    /// no longer name the row, and whoever finds the row by it would lose it.
     fn view(&mut self, n: usize, action: &Value) -> Result<(), Fallback> {
         let me = self.me()?;
         let text = text(action, "text", TEXT_CHARS, false)?;
@@ -1890,6 +1917,10 @@ impl<'a> Reader<'a> {
         };
         if current.is_some_and(partners) {
             self.hold(n, HeldWhy::PartnerSet);
+            return Ok(());
+        }
+        if current.is_some_and(shows_a_row) {
+            self.hold(n, HeldWhy::KeptElsewhere);
             return Ok(());
         }
         if !counted {
@@ -2515,3 +2546,6 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
 #[cfg(test)]
 #[path = "upkeep_day_tests.rs"]
 mod day_tests;
+#[cfg(test)]
+#[path = "upkeep_views_tests.rs"]
+mod views_tests;
