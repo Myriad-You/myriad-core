@@ -1043,6 +1043,8 @@ func step(_ event: JSON) throws {
 | `speaking.share_section`、`share_links_section` | `{songs}`；`{songs: [[那一行, 链接]]}` | `speaking::format_share_section`、`format_share_links_section`；没有是 `null` |
 | `views.system`、`wants.system`、`inner.system`、`inner.system_for_group`、`doing.choice_system`、`explore.wonder_system`、`curiosity.wonder_system`、`sharing.system`、`sharing.come_back_system`、`chat_days.day_system`、`life.own_day_system` | `{soul}` | 各模块的 `system`（`life::own_day_prompt`） |
 | `inner.system_for` | `{soul, private}` | `inner::system_for` |
+| `inner.schema_for` | `{private}` | `{schema}`：`inner::schema_for`；私聊的 `keep` 每件答 `when`（`by`、`at`、`whenever`）和 `inHours`，群里的仍答 `dueInHours`（`inner.system_for_group` 不变） |
+| `inner.due_in_hours` | `{when, inHours}` | `{dueInHours}`：`inner::due_in_hours`，私聊里一件挂着的事什么时候提：截止前留时间，发生之后再问，没时间或超出 1440 小时是 `null` |
 | `doing.digest_system` | `{soul, what, why, how}` | `doing::digest_system` |
 | `explore.think_system` | `{soul, question}` | `explore::think_system` |
 | `explore.step_system` | `{search, searchIsWikipedia, read, video}` | `explore::step_system`（`reading::Senses`） |

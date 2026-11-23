@@ -188,6 +188,30 @@ pub(super) fn inner_system_for(raw: &[u8]) -> Result<Value, Failure> {
     Ok(text(Some(inner::system_for(&req.soul, req.private))))
 }
 
+/// The answer shape for `inner.system_for` (`private`) as the model is asked it.
+pub(super) fn inner_schema_for(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        private: bool,
+    }
+    let req: In = input(raw)?;
+    Ok(json!({ "schema": inner::schema_for(req.private) }))
+}
+
+/// Hours until she brings up what she keeps in private, from the moment she
+/// read off it (`inner::due_in_hours`).
+pub(super) fn inner_due_in_hours(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct In {
+        when: inner::When,
+        in_hours: Option<i64>,
+    }
+    let req: In = input(raw)?;
+    Ok(json!({ "dueInHours": inner::due_in_hours(req.when, req.in_hours) }))
+}
+
 pub(super) fn inner_system_for_group(raw: &[u8]) -> Result<Value, Failure> {
     soul(raw, inner::system_for_group)
 }
