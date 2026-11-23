@@ -6,6 +6,7 @@
 //! of them, her diary, her pace). Each is the crate's own text; a platform
 //! keeps no copy of it.
 
+use chrono::{DateTime, Utc};
 use myriad_merope::{
     chat_days, chat_history, chat_remember, curiosity, doing, explore, heard, inner, life, pace,
     reading, remembering, sharing, speaking, views, wants,
@@ -13,7 +14,7 @@ use myriad_merope::{
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-use super::{Nothing, at, input, text};
+use super::{Nothing, Zone, at, input, on_zone, text};
 use crate::Failure;
 
 #[derive(Deserialize)]
@@ -199,17 +200,22 @@ pub(super) fn inner_schema_for(raw: &[u8]) -> Result<Value, Failure> {
     Ok(json!({ "schema": inner::schema_for(req.private) }))
 }
 
-/// Hours until she brings up what she keeps in private, from the moment she
-/// read off it (`inner::due_in_hours`).
-pub(super) fn inner_due_in_hours(raw: &[u8]) -> Result<Value, Failure> {
+/// When she brings up what she keeps in private, from the moment she read
+/// off it, and until when it can be (`inner::due`).
+pub(super) fn inner_due(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase", deny_unknown_fields)]
     struct In {
         when: inner::When,
-        in_hours: Option<i64>,
+        in_hours: Option<f64>,
+        now: i64,
+        zone: String,
     }
     let req: In = input(raw)?;
-    Ok(json!({ "dueInHours": inner::due_in_hours(req.when, req.in_hours) }))
+    let (now, zone) = (at(req.now)?, Zone::parse(&req.zone)?);
+    let due = on_zone!(zone, |zone| inner::due(req.when, req.in_hours, now, &zone));
+    let micros = |at: Option<DateTime<Utc>>| at.map(|at| at.timestamp_micros());
+    Ok(json!({ "at": micros(due.at), "until": micros(due.until) }))
 }
 
 pub(super) fn inner_system_for_group(raw: &[u8]) -> Result<Value, Failure> {

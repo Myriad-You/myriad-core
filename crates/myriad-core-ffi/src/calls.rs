@@ -163,7 +163,7 @@ const CALLS: &[(&str, Call)] = &[
     ("handoff.stands", handoff::stands),
     ("handoff.work_input", handoff::work_input),
     ("heard.system", prompts::heard_system),
-    ("inner.due_in_hours", prompts::inner_due_in_hours),
+    ("inner.due", prompts::inner_due),
     ("inner.schema_for", prompts::inner_schema_for),
     ("inner.system", prompts::inner_system),
     ("inner.system_for", prompts::inner_system_for),

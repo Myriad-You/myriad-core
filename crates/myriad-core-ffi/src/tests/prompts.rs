@@ -27,7 +27,7 @@ pub(super) const TESTED: &[&str] = &[
     "explore.think_system",
     "explore.wonder_system",
     "heard.system",
-    "inner.due_in_hours",
+    "inner.due",
     "inner.schema_for",
     "inner.system",
     "inner.system_for",
@@ -155,18 +155,23 @@ fn what_she_keeps_in_private_comes_due_from_its_moment() {
             json!({ "schema": inner::schema_for(private) })
         );
     }
+    let now = Utc.with_ymd_and_hms(2026, 11, 23, 12, 0, 0).unwrap();
     for (when, kept) in [
         ("by", inner::When::By),
         ("at", inner::When::At),
         ("whenever", inner::When::Whenever),
     ] {
-        for hours in [None, Some(0), Some(3), Some(26), Some(1440)] {
+        for hours in [None, Some(0.0), Some(3.0), Some(14.5), Some(1440.0)] {
+            let due = inner::due(kept, hours, now, &chrono_tz::Asia::Shanghai);
             assert_eq!(
                 ok(
-                    "inner.due_in_hours",
-                    json!({ "when": when, "inHours": hours })
+                    "inner.due",
+                    json!({
+                        "when": when, "inHours": hours,
+                        "now": micros(now), "zone": "Asia/Shanghai",
+                    })
                 ),
-                json!({ "dueInHours": inner::due_in_hours(kept, hours) })
+                json!({ "at": due.at.map(micros), "until": due.until.map(micros) })
             );
         }
     }
