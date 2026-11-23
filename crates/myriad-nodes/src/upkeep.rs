@@ -48,7 +48,9 @@
 //! judged. A view changes only on what counts (算数, [`crate::trust`]):
 //! every piece of it a span, an entry or an inbox item whose tier counts
 //! (said only by the partner or her), and not said in a group; anything
-//! else is held (`not_counted`).
+//! else is held (`not_counted`). A view that shows a memory row the host
+//! hung there is not changed at all (`kept_elsewhere`): the row is what
+//! holds, and the host keeps it.
 //!
 //! The kind follows from her `done` alone: with a "done" it is something in
 //! progress; without one it is a topic, unless it is `ongoing` (always being
@@ -410,8 +412,9 @@ fn partners<T>(item: &Item<T>) -> bool {
 
 /// Whether a view shows a memory row: the host hung it there to say where
 /// the row belongs, and keeps the row's words up itself (her nightly review
-/// of how she and the partner are). Upkeep never rests a view on a memory
-/// row, so nothing she sees differently herself is taken for one.
+/// of how she and the partner are). Upkeep rests a view on spans, entries
+/// and inbox items, and no host puts a memory row in the inbox
+/// (`memory:…`), so nothing she sees herself is taken for one.
 fn shows_a_row(view: &Item<ViewValue>) -> bool {
     std::iter::once(&view.current)
         .chain(&view.rivals)

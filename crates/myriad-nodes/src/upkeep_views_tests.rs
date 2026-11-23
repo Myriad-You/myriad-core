@@ -9,13 +9,17 @@ const NODE: &str = "person:7";
 const AUDIENCE: &str = "personal:7";
 
 fn row(dseq: u64, kind: &str, author: &str) -> Value {
-    json!({
+    let mut row = json!({
         "id": format!("r{dseq}"), "kind": kind, "author": author, "audience": AUDIENCE,
         "object": format!("node:{}", node_id(AUDIENCE, NODE).unwrap()),
-        "origin": "dev_mac", "dseq": dseq, "epoch": 1, "version": 1,
+        "origin": "dev_mac", "dseq": dseq, "version": 1,
         "hlc": format!("{:015}-000000-dev_mac", 1_760_000_000_000_u64 + dseq * 10),
         "payload": { "ref": format!("body:r{dseq}") }, "replicate": "shared",
-    })
+    });
+    if author == "her" {
+        row["epoch"] = json!(1);
+    }
+    row
 }
 
 fn view(text: &str, base: &[&str], because: &str, said_by: &str) -> Value {
