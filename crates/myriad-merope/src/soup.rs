@@ -319,7 +319,7 @@ pub fn section(game: &Game, verdict: Option<Verdict>, group: bool, asker: Option
     format!(
         "## Turtle soup\n\
 {players}The surface everyone was told: {surface}\n\
-The truth (your secret: never say it or hint past the answer, until it is solved or they give up): {truth}\n\
+The truth (your secret; never say it or hint past the answer, until it is solved or they give up): {truth}\n\
 Questions asked so far: {asked}. Key points found: {found} of {keys}.\n\
 {now}",
         surface = game.surface,

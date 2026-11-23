@@ -823,7 +823,7 @@ const NO_VOTE: &str = "弃票";
 impl Rules for Werewolf {
     type State = Werewolf;
     const KIND: &'static str = KIND;
-    const RULES: &'static str = "In 狼人杀 each player was dealt a role in secret: werewolves (who know each other), villagers, and gods (the seer, who learns at night whether one player is a werewolf; the witch, with one potion to save whom the werewolves knifed and one to poison someone; the hunter, who may shoot someone when knifed or voted out; and with nine or more the guard, who guards one player a night). At night the werewolves knife one player; by day those left speak in turn and vote one out. The good side wins when no werewolf is left; the werewolves win when every god or every villager is out. Roles are not told when someone dies.";
+    const RULES: &'static str = "In 狼人杀 each player was dealt a secret role: werewolves (who know each other), villagers, and gods (the seer, who learns at night whether one player is a werewolf; the witch, with one potion to save whom the werewolves knifed and one to poison someone; the hunter, who may shoot someone when knifed or voted out; and with nine or more the guard, who guards one player a night). At night the werewolves knife one player; by day those left speak in turn and vote one out. The good side wins when no werewolf is left; the werewolves win when every god or every villager is out. Roles are not told when someone dies.";
     const NEWS_IN_PRIVATE: bool = true;
 
     fn seats(game: &Self) -> Vec<Seat> {
