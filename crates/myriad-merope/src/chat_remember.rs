@@ -17,7 +17,7 @@ pub const MAX_PUT_ONTO: usize = 2;
 /// How long one thing she said about herself may be.
 pub const MAX_OWN_CHARS: usize = 200;
 
-fn concepts_schema() -> serde_json::Value {
+pub(crate) fn concepts_schema() -> serde_json::Value {
     json!({
         "type": "array",
         "maxItems": 5,
@@ -158,7 +158,7 @@ impl Examples {
         }
     }
 
-    fn wording(self) -> &'static Wording {
+    pub(crate) fn wording(self) -> &'static Wording {
         match self {
             Self::Chinese => &CHINESE,
             Self::English => &ENGLISH,
@@ -185,28 +185,32 @@ pub fn changed_language(fact: &str, theirs: &str) -> bool {
 }
 
 /// The examples in what she is asked, in one language.
-struct Wording {
-    pronouns: &'static str,
-    coffee: &'static str,
-    no_coffee: &'static str,
-    tea: &'static str,
-    wrong: &'static str,
-    forget: &'static str,
-    both_once: &'static str,
-    put_onto: &'static str,
-    own: &'static str,
-    own_not: &'static str,
-    own_them: &'static str,
-    own_short: &'static str,
-    own_changed: &'static str,
-    moment: &'static str,
-    did_and_came: &'static str,
-    named: &'static str,
-    when_for: &'static str,
-    still_true: &'static str,
-    took_back_words: &'static str,
-    took_back: &'static str,
-    both_stretch: &'static str,
+pub(crate) struct Wording {
+    pub(crate) pronouns: &'static str,
+    pub(crate) coffee: &'static str,
+    pub(crate) no_coffee: &'static str,
+    pub(crate) tea: &'static str,
+    pub(crate) wrong: &'static str,
+    pub(crate) forget: &'static str,
+    pub(crate) both_once: &'static str,
+    pub(crate) put_onto: &'static str,
+    pub(crate) own: &'static str,
+    pub(crate) own_not: &'static str,
+    pub(crate) own_them: &'static str,
+    pub(crate) own_short: &'static str,
+    pub(crate) own_changed: &'static str,
+    pub(crate) moment: &'static str,
+    pub(crate) did_and_came: &'static str,
+    pub(crate) named: &'static str,
+    pub(crate) when_for: &'static str,
+    pub(crate) still_true: &'static str,
+    pub(crate) took_back_words: &'static str,
+    pub(crate) took_back: &'static str,
+    pub(crate) both_stretch: &'static str,
+    pub(crate) not_to_keep: &'static str,
+    pub(crate) not_to_keep_fact: &'static str,
+    pub(crate) not_to_keep_beside: &'static str,
+    pub(crate) not_to_keep_yet: &'static str,
 }
 
 const CHINESE: Wording = Wording {
@@ -231,6 +235,10 @@ const CHINESE: Wording = Wording {
     took_back_words: "'当我没说', 'forget I said that', '当没听过'",
     took_back: "'受够了组长，想辞职', then '辞职那个当没听过' → '受够了组长'",
     both_stretch: "'说过有个姐姐，又说自己是独生子，不清楚哪个对'",
+    not_to_keep: "'我打呼噜的事以后都别记'",
+    not_to_keep_fact: "'不要记打呼噜的事', never '昨晚打呼噜吵醒了室友，以后别记'",
+    not_to_keep_beside: "asked not to keep their snoring, '昨晚又打呼噜了，今天跟室友去挑枕头' still keeps the pillows",
+    not_to_keep_yet: "'这个先别记'",
 };
 
 const ENGLISH: Wording = Wording {
@@ -255,6 +263,10 @@ const ENGLISH: Wording = Wording {
     took_back_words: "'never mind', 'forget I said that', 'pretend you never heard that'",
     took_back: "'fed up with their team lead and wants to quit', then 'forget the quitting part' → 'fed up with their team lead'",
     both_stretch: "'said they have an older sister, then said they are an only child; not sure which is right'",
+    not_to_keep: "'don't keep anything about my snoring, now or later'",
+    not_to_keep_fact: "'does not want their snoring kept', never 'their snoring woke the flatmate last night, do not keep it'",
+    not_to_keep_beside: "asked not to keep their snoring, 'snored again, we went to pick pillows today' still keeps the pillows",
+    not_to_keep_yet: "'leave this out for now'",
 };
 
 /// Facts she already has that she sees: what their words recalled, and
@@ -312,6 +324,198 @@ Known:\n{known}",
         own_short = wording.own_short,
         own_changed = wording.own_changed,
     )
+}
+
+/// What they ask her not to keep from now on, at most, in one answer.
+pub const MAX_ASKED: usize = 4;
+
+/// Something they asked her not to keep from now on (`notToKeep`): kept
+/// for good. Going over a private talk is shown all of it, for that is
+/// where they take it back or narrow it; nothing else that keeps what they
+/// say is, and the host holds what that gives to it (`not_to_keep`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Asked {
+    pub fact: String,
+    pub evidence: String,
+    /// Their line asking it (none where the answer is of one line alone).
+    pub said: Option<usize>,
+    /// What they asked before that this takes the place of, verbatim.
+    pub replaces: Vec<String>,
+}
+
+/// `notToKeep`, with the index of the line asking it, and what it takes the
+/// place of, when `lines`.
+pub(crate) fn not_to_keep_schema(lines: bool) -> serde_json::Value {
+    let mut item = json!({
+        "type": "object",
+        "properties": {
+            "fact": { "type": "string", "maxLength": 240 },
+            "evidence": { "type": "string", "maxLength": 240 }
+        },
+        "required": ["fact", "evidence"],
+        "additionalProperties": false
+    });
+    if lines {
+        item["properties"]["said"] = json!({ "type": "integer", "minimum": 0 });
+        item["properties"]["replaces"] =
+            json!({ "type": "array", "items": {"type":"string", "maxLength":240}, "maxItems": 8 });
+        if let Some(required) = item["required"].as_array_mut() {
+            required.push("said".into());
+            required.push("replaces".into());
+        }
+    }
+    json!({ "type": "array", "maxItems": MAX_ASKED, "items": item })
+}
+
+/// `notToKeep` of an answer: each held to being in `theirs`, none they had
+/// asked already. `said_by_them` (of each line, whether it is theirs) when
+/// each names its line; None when the answer is of one line alone.
+pub fn read_not_to_keep(
+    answer: &serde_json::Value,
+    theirs: &str,
+    said_by_them: Option<&[bool]>,
+    asked_before: &[String],
+) -> Vec<Asked> {
+    read_requests(answer, asked_before, |evidence, said| {
+        let said = match said_by_them {
+            None => None,
+            Some(by) => Some(said.filter(|index| by.get(*index) == Some(&true))?),
+        };
+        settle_evidence_holds(evidence, theirs).then_some(said)
+    })
+}
+
+/// [`read_not_to_keep`], each asked in the line `asked_in` gives of its
+/// evidence and the line it names; with none given, not asked.
+pub(crate) fn read_requests(
+    answer: &serde_json::Value,
+    asked_before: &[String],
+    asked_in: impl Fn(&str, Option<usize>) -> Option<Option<usize>>,
+) -> Vec<Asked> {
+    let mut out: Vec<Asked> = Vec::new();
+    for mut one in requests(answer, asked_in) {
+        if asked_before.contains(&one.fact) || out.iter().any(|kept| kept.fact == one.fact) {
+            continue;
+        }
+        one.replaces.retain(|old| {
+            asked_before.contains(old) && !out.iter().any(|kept| kept.replaces.contains(old))
+        });
+        out.push(one);
+        if out.len() == MAX_ASKED {
+            break;
+        }
+    }
+    out
+}
+
+/// What of what they asked before the answer has them asking again, word for
+/// word (and in which line): it stands, whatever else the answer says of it.
+pub(crate) fn asked_again(
+    answer: &serde_json::Value,
+    asked_before: &[String],
+    asked_in: impl Fn(&str, Option<usize>) -> Option<Option<usize>>,
+) -> Vec<(String, Option<usize>)> {
+    requests(answer, asked_in)
+        .map(|one| (one.fact, one.said))
+        .filter(|(fact, _)| asked_before.contains(fact))
+        .collect()
+}
+
+/// What the answer says they ask her not to keep, each held to being asked
+/// in a line of theirs.
+fn requests<'a>(
+    answer: &'a serde_json::Value,
+    asked_in: impl Fn(&str, Option<usize>) -> Option<Option<usize>> + 'a,
+) -> impl Iterator<Item = Asked> + 'a {
+    answer
+        .get("notToKeep")
+        .and_then(serde_json::Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(move |item| {
+            let text = |key: &str| {
+                item.get(key)
+                    .and_then(serde_json::Value::as_str)
+                    .map(one_spaced)
+                    .unwrap_or_default()
+            };
+            let (fact, evidence) = (text("fact"), text("evidence"));
+            if fact.is_empty() || fact.chars().count() > 240 {
+                return None;
+            }
+            let named = item
+                .get("said")
+                .and_then(serde_json::Value::as_u64)
+                .map(|index| index as usize);
+            let said = asked_in(&evidence, named)?;
+            let mut replaces: Vec<String> = item
+                .get("replaces")
+                .and_then(serde_json::Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_str)
+                .map(str::to_string)
+                .collect();
+            replaces.sort();
+            replaces.dedup();
+            Some(Asked {
+                fact,
+                evidence,
+                said,
+                replaces,
+            })
+        })
+}
+
+/// What they asked her not to keep, as she is shown it, last of all.
+pub(crate) fn asked_shown(asked: &[String]) -> String {
+    let asked = if asked.is_empty() {
+        "(nothing)".to_string()
+    } else {
+        asked
+            .iter()
+            .map(|one| format!("- {one}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    format!("Asked not to keep:\n{asked}")
+}
+
+/// What is no request not to keep something from now on.
+pub(crate) fn not_a_request(wording: &Wording) -> String {
+    format!(
+        "Not one: taking back one thing they said ('never mind'); leaving it out for now, with no word of later ({yet}), which takes back only what they told, so it is kept when they tell it again; not telling others; not bringing it up or teasing them with it, however often; or your own promise not to keep it.",
+        yet = wording.not_to_keep_yet,
+    )
+}
+
+/// [`extract_system_prompt`] keeping also what they ask her not to keep from
+/// now on (`notToKeep`, [`extract_schema_asked`]). What they asked before is
+/// not shown here, where one line of theirs is kept (going over a private
+/// talk is shown it): the host holds what is kept to it (`not_to_keep`).
+pub fn extract_system_prompt_asked(existing: &[String], examples: Examples) -> String {
+    let wording = examples.wording();
+    let prompt = extract_system_prompt(existing, examples);
+    let at = prompt.find("Known:\n").unwrap_or(prompt.len());
+    format!(
+        "{before}notToKeep: 0 to {MAX_ASKED} things they ask you in userText not to keep from now on, whatever they say of them later ({not_to_keep}). It is no fact: facts has nothing of it, and supersedes copies every known fact about that thing. Its fact is one short sentence saying not to keep that thing, in the language of their message, named so it can be told on its own (what 'this' is, not 'this') and no wider or narrower than they asked, with nothing of what they told of it ({not_to_keep_fact}); its evidence is a contiguous verbatim excerpt from userText. {not_a_request} \
+{known}",
+        before = &prompt[..at],
+        known = &prompt[at..],
+        not_to_keep = wording.not_to_keep,
+        not_to_keep_fact = wording.not_to_keep_fact,
+        not_a_request = not_a_request(wording),
+    )
+}
+
+/// [`extract_schema`] with `notToKeep`.
+pub fn extract_schema_asked() -> serde_json::Value {
+    let mut schema = extract_schema();
+    schema["properties"]["notToKeep"] = not_to_keep_schema(false);
+    if let Some(required) = schema["required"].as_array_mut() {
+        required.push("notToKeep".into());
+    }
+    schema
 }
 
 /// Going over a stretch of talk once it is over: which of the short notes
@@ -409,15 +613,31 @@ pub fn settle_schema() -> serde_json::Value {
 }
 
 /// Whether `evidence` is what they said: one excerpt, or several joined with
-/// ` / `, each verbatim in `theirs` (their lines of the stretch).
+/// ` / `, each verbatim in `theirs` (their lines of the stretch). Runs of
+/// space are one where `theirs` has them so: a line shown with its line
+/// breaks is quoted with them.
 pub fn settle_evidence_holds(evidence: &str, theirs: &str) -> bool {
     let evidence = evidence.trim();
     evidence.chars().filter(|ch| ch.is_alphanumeric()).count() >= 2
         && evidence.chars().count() <= 240
-        && evidence
-            .split(" / ")
-            .map(str::trim)
-            .all(|part| !part.is_empty() && theirs.contains(part))
+        && evidence_parts(evidence)
+            .iter()
+            .all(|part| !part.is_empty() && holds(theirs, part))
+}
+
+/// Each excerpt `evidence` is of.
+pub(crate) fn evidence_parts(evidence: &str) -> Vec<&str> {
+    evidence.split(" / ").map(str::trim).collect()
+}
+
+/// Whether `part` is in `theirs`, as it is or with its runs of space as one.
+pub(crate) fn holds(theirs: &str, part: &str) -> bool {
+    theirs.contains(part) || theirs.contains(&one_spaced(part))
+}
+
+/// Runs of space as one.
+pub(crate) fn one_spaced(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// One fact a stretch of talk gives to keep for good.
@@ -493,25 +713,25 @@ pub fn parse_settle(
     notes: usize,
     offered: usize,
 ) -> Option<Settled> {
-    let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
-    if answer.get("replaces").is_some() {
-        return None;
-    }
-    let of_known = |value: Option<&serde_json::Value>| -> Vec<String> {
-        let mut entries: Vec<String> = value
-            .and_then(serde_json::Value::as_array)
-            .into_iter()
-            .flatten()
-            .filter_map(serde_json::Value::as_str)
-            .filter(|old| known.iter().any(|fact| fact == old))
-            .map(str::to_string)
-            .collect();
-        entries.sort();
-        entries.dedup();
-        entries
-    };
-    // Each entry once, with the first line given for it that is theirs. An
-    // entry alone (the shape before lines were given) has no line.
+    parse_settle_at_most(
+        raw,
+        theirs,
+        said_by_them,
+        known,
+        notes,
+        offered,
+        MAX_LASTING,
+    )
+}
+
+/// What of `known` the answer says they took back (`tookBack`), each entry
+/// once, with the first line given for it that is theirs. An entry alone
+/// (the shape before lines were given) has no line.
+pub(crate) fn taken_back(
+    answer: &serde_json::Value,
+    said_by_them: &[bool],
+    known: &[String],
+) -> Option<Vec<TookBack>> {
     let mut took_back: Vec<TookBack> = Vec::new();
     for one in answer.get("tookBack")?.as_array()? {
         let (entry, said) = match one {
@@ -541,7 +761,95 @@ pub fn parse_settle(
         }
     }
     took_back.sort();
-    let mut replaced: Vec<String> = Vec::new();
+    Some(took_back)
+}
+
+/// [`parse_settle`], keeping at most `at_most` facts.
+pub(crate) fn parse_settle_at_most(
+    raw: &str,
+    theirs: &str,
+    said_by_them: &[bool],
+    known: &[String],
+    notes: usize,
+    offered: usize,
+    at_most: usize,
+) -> Option<Settled> {
+    let mut read = read_settle(
+        raw,
+        theirs,
+        said_by_them,
+        known,
+        notes,
+        offered,
+        |evidence, _| settle_evidence_holds(evidence, theirs),
+    )?;
+    read.lasting.truncate(at_most);
+    Some(read.settled())
+}
+
+/// What going over a stretch answered, as it says it ([`read_settle`]).
+pub(crate) struct SettleRead {
+    /// Every fact that holds, and what each says it replaces.
+    pub lasting: Vec<Lasting>,
+    pub took_back: Vec<TookBack>,
+    /// What any fact says it replaces, kept or not.
+    named: std::collections::BTreeSet<String>,
+}
+
+impl SettleRead {
+    /// Those of it kept: an entry is replaced once, by the first fact kept
+    /// that says so, and what a fact replaces is not taken back as well.
+    pub(crate) fn settled(mut self) -> Settled {
+        let mut replaced: Vec<String> = Vec::new();
+        for fact in &mut self.lasting {
+            fact.replaces.retain(|old| !replaced.contains(old));
+            replaced.extend(fact.replaces.iter().cloned());
+        }
+        self.took_back.retain(|old| !replaced.contains(&old.entry));
+        let unkept_replaces = self
+            .named
+            .iter()
+            .filter(|old| {
+                !replaced.contains(old) && !self.took_back.iter().any(|one| &one.entry == *old)
+            })
+            .count();
+        Settled {
+            lasting: self.lasting,
+            took_back: self.took_back,
+            unkept_replaces,
+        }
+    }
+}
+
+/// The facts of an answer that hold, with what each says it replaces:
+/// `evidence_holds` of a fact's evidence and the notes it is from.
+pub(crate) fn read_settle(
+    raw: &str,
+    theirs: &str,
+    said_by_them: &[bool],
+    known: &[String],
+    notes: usize,
+    offered: usize,
+    evidence_holds: impl Fn(&str, &[usize]) -> bool,
+) -> Option<SettleRead> {
+    let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
+    if answer.get("replaces").is_some() {
+        return None;
+    }
+    let of_known = |value: Option<&serde_json::Value>| -> Vec<String> {
+        let mut entries: Vec<String> = value
+            .and_then(serde_json::Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(serde_json::Value::as_str)
+            .filter(|old| known.iter().any(|fact| fact == old))
+            .map(str::to_string)
+            .collect();
+        entries.sort();
+        entries.dedup();
+        entries
+    };
+    let took_back = taken_back(&answer, said_by_them, known)?;
     let items = answer.get("lasting")?.as_array()?;
     // What any fact says it replaces, kept or not.
     let named: std::collections::BTreeSet<String> = items
@@ -558,22 +866,23 @@ pub fn parse_settle(
                 .collect::<Vec<_>>()
                 .join(" ");
             let evidence = item.get("evidence")?.as_str()?.trim().to_string();
+            let from: Vec<usize> = item
+                .get("from")
+                .and_then(serde_json::Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_u64)
+                .map(|index| index as usize)
+                .filter(|index| *index < notes)
+                .collect();
             let holds = !fact.is_empty()
                 && fact.chars().count() <= 240
-                && settle_evidence_holds(&evidence, theirs)
+                && evidence_holds(&evidence, &from)
                 && !changed_language(&fact, theirs);
             holds.then(|| Lasting {
                 fact,
                 evidence,
-                from: item
-                    .get("from")
-                    .and_then(serde_json::Value::as_array)
-                    .into_iter()
-                    .flatten()
-                    .filter_map(serde_json::Value::as_u64)
-                    .map(|index| index as usize)
-                    .filter(|index| *index < notes)
-                    .collect(),
+                from,
                 concepts: item.get("concepts").cloned().unwrap_or_default(),
                 when_for: item
                     .get("whenFor")
@@ -588,24 +897,11 @@ pub fn parse_settle(
                 replaces: of_known(item.get("replaces")),
             })
         })
-        .take(MAX_LASTING)
-        .map(|mut fact| {
-            // An entry is replaced once, by the first fact that says so.
-            fact.replaces.retain(|old| !replaced.contains(old));
-            replaced.extend(fact.replaces.iter().cloned());
-            fact
-        })
         .collect();
-    // What a fact replaces is not taken back as well.
-    took_back.retain(|old| !replaced.contains(&old.entry));
-    let unkept_replaces = named
-        .iter()
-        .filter(|old| !replaced.contains(old) && !took_back.iter().any(|one| &one.entry == *old))
-        .count();
-    Some(Settled {
+    Some(SettleRead {
         lasting,
         took_back,
-        unkept_replaces,
+        named,
     })
 }
 
@@ -1069,12 +1365,21 @@ mod tests {
             {"fact":"对芒果过敏","evidence":"芒果不能吃","from":[3],"concepts":[],"whenFor":[]}
         ],"tookBack":[],"moment":[1],"known":[2]}"#;
         let lasting = parse_settle(raw, theirs, &[], &[], 5, 0).unwrap().lasting;
-        assert_eq!(lasting.len(), 1, "the allergy's evidence was not what they said");
+        assert_eq!(
+            lasting.len(),
+            1,
+            "the allergy's evidence was not what they said"
+        );
         assert_eq!(settle_left(raw, &lasting, 5), [3, 4]);
         assert!(settle_left("not json", &lasting, 5).is_empty());
         let required = settle_schema()["required"].clone();
         for key in ["moment", "known"] {
-            assert!(required.as_array().unwrap().contains(&serde_json::json!(key)));
+            assert!(
+                required
+                    .as_array()
+                    .unwrap()
+                    .contains(&serde_json::json!(key))
+            );
         }
         assert!(
             settle_system_prompt(&[], Examples::Chinese)

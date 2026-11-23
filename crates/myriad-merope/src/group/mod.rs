@@ -783,6 +783,10 @@ pub struct Stretch {
     /// RFC 3339, as the line was kept.
     pub at: String,
     pub name: String,
+    /// Who said it, as the platform knows them; none on hers, or when it
+    /// does not tell.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub from: Option<String>,
     pub text: String,
     pub hers: bool,
 }

@@ -106,6 +106,7 @@ pub(crate) fn take_in(cx: &mut Cx) {
         .map(|line| Stretch {
             at: line.at.fixed_offset().to_rfc3339(),
             name: line.name.clone(),
+            from: line.from.clone().filter(|_| !line.hers),
             text: line.said(),
             hers: line.hers,
         })
