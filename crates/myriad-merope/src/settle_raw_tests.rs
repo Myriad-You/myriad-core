@@ -365,3 +365,45 @@ fn what_they_ask_her_not_to_keep_is_kept_beside_what_they_take_back() {
     let again = parse_raw_settle(&raw, &lines, &known, &asked_before, 0, Some(&[2])).unwrap();
     assert!(again.asked.is_empty());
 }
+
+/// What every talk is asked about requests not to keep something is there
+/// in both ways of keeping, and one answer gives so many at most.
+#[test]
+fn requests_not_to_keep_are_asked_for_and_held_to_one_line() {
+    use crate::chat_remember::{
+        MAX_ASKED, extract_schema, extract_schema_asked, extract_system_prompt,
+        extract_system_prompt_asked, read_not_to_keep,
+    };
+    for examples in [Examples::Chinese, Examples::English] {
+        let known = ["喜欢喝茶".to_string()];
+        let asked = extract_system_prompt_asked(&known, examples);
+        // Only added to: what is kept as ever is asked as ever.
+        let plain = extract_system_prompt(&known, examples);
+        let at = plain.rfind("Known:\n").unwrap();
+        assert!(asked.starts_with(&plain[..at]));
+        assert!(asked.ends_with(&plain[at..]));
+        assert!(asked.contains("notToKeep"));
+        assert!(!plain.contains("notToKeep"));
+    }
+    let item = &extract_schema_asked()["properties"]["notToKeep"]["items"];
+    assert_eq!(item["required"], serde_json::json!(["fact", "evidence"]));
+    assert!(extract_schema()["properties"]["notToKeep"].is_null());
+
+    let theirs = "体重的事你以后都别记 对了我养了只龟";
+    let answer = |count: usize| {
+        serde_json::json!({"notToKeep": (0..count)
+            .map(|one| serde_json::json!({"fact": format!("不要记第{one}件事"), "evidence": "体重的事你以后都别记"}))
+            .collect::<Vec<_>>()})
+    };
+    let got = read_not_to_keep(&answer(1), theirs, None, &[]);
+    assert_eq!(got.len(), 1);
+    assert_eq!(got[0].said, None);
+    assert!(got[0].replaces.is_empty());
+    assert_eq!(
+        read_not_to_keep(&answer(9), theirs, None, &[]).len(),
+        MAX_ASKED
+    );
+    // Asked already, or in words they did not say: not again.
+    assert!(read_not_to_keep(&answer(1), theirs, None, &["不要记第0件事".into()]).is_empty());
+    assert!(read_not_to_keep(&answer(1), "没说过", None, &[]).is_empty());
+}
