@@ -17,6 +17,7 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.card_check",
     "nodes.card_id",
     "nodes.cards_fold",
+    "nodes.carried_id",
     "nodes.fact_rows",
     "nodes.fold",
     "nodes.home_owed",

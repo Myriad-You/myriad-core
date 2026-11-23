@@ -150,6 +150,9 @@ mod tests;
 mod intent_tests;
 
 #[cfg(test)]
+mod carried_id_tests;
+
+#[cfg(test)]
 mod sync_tests;
 
 #[cfg(test)]

@@ -735,6 +735,7 @@ func step(_ event: JSON) throws {
 | 调用 | 输入 → 输出 |
 | --- | --- |
 | `nodes.body` | `{kind, body}` → `{body, canonical, digest}` |
+| `nodes.carried_id` | `{kind: intent \| open \| standing, node, item}` → `{id}`：并入时这个节点（`node` 是节点 id，不带 `node:`）上的一条意图、没收尾的事、「现在」在对方那里的 id（`m` 加 24 位十六进制），和整理写的是同一份；再并一次，拿这个 id 和它那时所在的节点再算 |
 | `nodes.fact_rows` | `{audience, sync?, start?: {key?, name, aliases?}, key?, facts?: [{memory, text, saidBy, refs?, revision?, audience?, happened?, state?, open?}]}` → `{node, key, rows: [{id, kind, body}]}`（见下面「记下的事挂在哪」） |
 | `nodes.fold` | `{rows, bodies?, ledger}` → `{nodes, relations?, stubbed?, skipped?, reached?}`；节点多 `retracted?`（写过撤回的各端）；`reached` 是这一端的忘掉经过并入、拆出够到的节点，只给调用方自己清理（删 `stubbed` 列的 body），不写成行；家还留着行的节点不列 |
 | `nodes.home_send` | `{audience, rows, bodies?, ledger, holder, elsewhere?}` → 家页 `{audience, rows, payloads?, withheld?}`：这一端留着的整行、body 和标记，body 照 `wire_send` 的检查（`local` 标签的也放），不通过的只放行（`withheld`）；`holder` 不是 `pc` 是 `bad_input` |

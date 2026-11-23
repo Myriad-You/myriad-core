@@ -244,6 +244,7 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.card_check", nodes::card_check),
     ("nodes.card_id", nodes::card_id),
     ("nodes.cards_fold", nodes::cards_fold),
+    ("nodes.carried_id", nodes::carried_id),
     ("nodes.fact_rows", nodes::fact_rows),
     ("nodes.fold", nodes::fold),
     ("nodes.home_owed", nodes::home_owed),
