@@ -644,11 +644,11 @@ fn a_blob_call_is_named_to_put_through_the_c_entry_point_until_its_deadline() {
     let stopped = step(now + 10_000, json!("tick"));
     assert_eq!(stopped["mayPut"], json!([]), "{stopped}");
     assert!(
-        stopped["outputs"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|o| o.to_string().contains("call_stop") || o.to_string().contains("callStop")),
+        stopped["outputs"].as_array().unwrap().iter().any(|o| {
+            o["deliver"]["kind"] == "call_stop"
+                && o["deliver"]["callId"] == "call_cam"
+                && o["deliver"]["why"] == "timeout"
+        }),
         "{stopped}"
     );
 }

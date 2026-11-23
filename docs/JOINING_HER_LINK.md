@@ -222,7 +222,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 - **开关关着的动作照样报。** `call.offer` 报的是「能做」，不是「主人允许」。主人在设备上关掉的动作放进 `refused`，被调时答 `call_not_granted`。
 - **授予只认这条连接上主机说的。** 每条新连接上，`call.granted` 到之前来的调用先搁着，不做也不答。
-- **看到的东西只在仍被批准时交出去。** `calls.seen` 里的动作（看屏幕、拍照、录音）结果是子端看到、听到的伙伴的东西。断线时没被确认的这类结果，新连接上要等 `call.granted`：仍批准就发，不再批准就改答 `call_not_granted`，内容不发。拍照、录音还是 blob 动作，字节不在 `call.result` 里，是外壳自己 PUT 到 `transports.blobs` 的：外壳只给这条连接仍批准的调用 PUT，每次 PUT 前都再问一次：经 C 入口的端送一个 `"tick"` 事件，看这一步 `link.child_step` 回答里的 `mayPut`（现在可以 PUT 的调用号）；Rust 的端直接调 `Session::may_put(now_ms)`。字节到了主机就收不回来了。先 PUT，再答 `callDone`（带 blob 名）：答完的调用不再被列出，先答了就再也传不上去。一直不被列出就等着，不 PUT，不答 done，也不要自己答失败（`call_not_granted`）：主机收回时会取消它（blob 动作都是长调用），不然到期限会话也会交出停止。主机收 PUT 时也查这台设备现在还批不批准这个动作，不批准就拒收。别的动作的结果说的是已经发生的事，一连上就发。`call.result` 这一半，用核心子端（`link.child_*`）的端自动照做；PUT 那一半要外壳照 `mayPut` 做；自己写连接的端两半都要自己做到。
+- **看到的东西只在仍被批准时交出去。** `calls.seen` 里的动作（看屏幕、拍照、录音）结果是子端看到、听到的伙伴的东西。断线时没被确认的这类结果，新连接上要等 `call.granted`：仍批准就发，不再批准就改答 `call_not_granted`，内容不发。拍照、录音还是 blob 动作，字节不在 `call.result` 里，是外壳自己 PUT 到 `transports.blobs` 的：外壳只给这条连接仍批准的调用 PUT，每次 PUT 前都再问一次：经 C 入口的端送一个 `"tick"` 事件，看这一步 `link.child_step` 回答里的 `mayPut`（现在可以 PUT 的调用号）；Rust 的端直接调 `Session::may_put(now_ms)`。字节到了主机就收不回来了。先 PUT，再答 `callDone`（带 blob 名）：答完的调用不再被列出，先答了就再也传不上去。一直不被列出就等着，不 PUT，不答 done，也不要因为没被列出就自己答 `call_not_granted`（主人在设备上自己停掉或拒绝的，照常答 `declined` 或 `not_now`）：主机收回时会取消它（blob 动作都是长调用），不然到期限会话也会交出停止。主机收 PUT 时也查这台设备现在还批不批准这个动作，不批准就拒收。别的动作的结果说的是已经发生的事，一连上就发。`call.result` 这一半，用核心子端（`link.child_*`）的端自动照做；PUT 那一半要外壳照 `mayPut` 做；自己写连接的端两半都要自己做到。
 
 ## 7. 一致性用例怎么跑
 
