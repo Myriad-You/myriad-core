@@ -44,6 +44,7 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.queue",
     "nodes.range_dates",
     "nodes.repo_key",
+    "nodes.resting_on",
     "nodes.retract",
     "nodes.row_id",
     "nodes.session_rows",

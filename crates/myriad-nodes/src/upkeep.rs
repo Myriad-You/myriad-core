@@ -108,9 +108,9 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged,
-        MEMORY_REF, OpenItem, Origin, Related, Relation, Revised, Sentence, Span, SplitOff,
-        Standing, Status, Unrelated, Upkept, ViewChanged,
+        Absorbed, Body, Created, DoneWhen, ENTRY_REF, Field, How, Intent, IntentStatus,
+        KindChanged, MEMORY_REF, OpenItem, Origin, Related, Relation, Revised, SPAN_REF, Sentence,
+        Span, SplitOff, Standing, Status, Unrelated, Upkept, ViewChanged,
     },
     check_token,
     fold::{FoldInput, Full, IntentValue, Item, Node, Parts, ViewValue, fold_full},
@@ -1399,7 +1399,7 @@ impl<'a> Reader<'a> {
                     .find(|span| span.row == *row)
                     .ok_or(NoEvidence::NotShown)?;
                 counted &= counts(Some(span.author), &span.said_by, &span.audience);
-                ids.insert(format!("span:{row}"));
+                ids.insert(format!("{SPAN_REF}{row}"));
             } else if let Some(row) = self.context.entries.get(label) {
                 let entry = self
                     .me()
@@ -1409,7 +1409,7 @@ impl<'a> Reader<'a> {
                     .find(|entry| entry.row == *row)
                     .ok_or(NoEvidence::NotShown)?;
                 counted &= counts(Some(entry.author), &entry.said_by, &entry.audience);
-                ids.insert(format!("entry:{row}"));
+                ids.insert(format!("{ENTRY_REF}{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
                 let item = &self.context.items[at];
                 counted &= counts(None, &item.said_by, item.said_in(&self.context.audience));

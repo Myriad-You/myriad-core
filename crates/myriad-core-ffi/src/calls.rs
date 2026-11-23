@@ -271,6 +271,7 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.queue", nodes::queue),
     ("nodes.range_dates", nodes::range_dates),
     ("nodes.repo_key", nodes::repo_key),
+    ("nodes.resting_on", nodes::resting_on),
     ("nodes.retract", nodes::retract),
     ("nodes.row_id", nodes::row_id),
     ("nodes.session_rows", nodes::session_rows),

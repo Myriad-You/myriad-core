@@ -730,6 +730,12 @@ fn is_false(value: &bool) -> bool {
 /// The reference form that names a memory row: `memory:<id>`.
 pub const MEMORY_REF: &str = "memory:";
 
+/// The forms a ground (`because`) names a span, an entry and a loose end
+/// of her inbox by: `span:<row>`, `entry:<row>`, `loose:<id>`.
+pub const SPAN_REF: &str = "span:";
+pub const ENTRY_REF: &str = "entry:";
+pub const LOOSE_REF: &str = "loose:";
+
 /// Whether a reference on an entry points at an original (a message, a
 /// record…), not at the memory row the entry is the place of.
 pub fn is_original(reference: &str) -> bool {

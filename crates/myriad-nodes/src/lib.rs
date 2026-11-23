@@ -94,6 +94,7 @@ pub mod migrate;
 pub mod place;
 pub mod queue;
 pub mod recall;
+pub mod resting_on;
 pub mod session_look;
 pub mod sessions;
 pub mod stands;
