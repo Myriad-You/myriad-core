@@ -190,11 +190,16 @@ impl BoundEnd {
         if self.how == How::Hours {
             return self.hours().map(|hours| said + hours);
         }
+        if self.how == How::Days {
+            return self.days(today);
+        }
         let time = self.clock()?;
         if self.how == How::Tonight {
             let mut end = tonight(said, time);
-            // Past midnight, an evening's time is that of the day begun.
-            if end <= said && said.hour() < NIGHT_ENDS {
+            // Past midnight, an evening's time is that of the day begun; a
+            // morning's, gone by, the one this night ends in.
+            let morning = time.is_some_and(|time| (NIGHT_ENDS..12).contains(&time.hour()));
+            if end <= said && (morning || said.hour() < NIGHT_ENDS) {
                 end += Duration::days(1);
             }
             return (end > said).then_some(end);
@@ -233,19 +238,8 @@ impl BoundEnd {
                 };
                 (first, on(after(first)?, -1)?)
             }
-            How::Days => {
-                if !(1..=COUNT_AT_MOST).contains(&self.count) {
-                    return None;
-                }
-                let days = i64::from(self.count);
-                // From tomorrow, however they said it: which of the two they
-                // meant is not told apart reliably, and a day too long is the
-                // smaller wrong. Over with the last of them, whatever edge
-                // says: 三天内, 三天后 and 三天 end the same day.
-                return on(today, days + 1)?.and_hms_opt(0, 0, 0);
-            }
             How::Date => span_of(self.date.trim())?,
-            How::Tonight | How::Hours | How::Weekday | How::Unsaid => return None,
+            How::Tonight | How::Hours | How::Weekday | How::Days | How::Unsaid => return None,
         };
         // What today is of is not over before it began: 今天之内, 这周内.
         let first = if first <= today && today <= last && (time.is_none() || first != last) {
@@ -277,6 +271,18 @@ impl BoundEnd {
             (_, Edge::Before) => first.and_time(NaiveTime::MIN),
             (_, Edge::After | Edge::Through | Edge::None) => on(last, 1)?.and_time(NaiveTime::MIN),
         })
+    }
+
+    /// From tomorrow, however they said it: which of the two they meant is
+    /// not told apart reliably, and a day too long is the smaller wrong. Over
+    /// with the last of them, whatever edge and time say: 三天内, 三天后 and 三天
+    /// end the same day.
+    fn days(&self, today: NaiveDate) -> Option<NaiveDateTime> {
+        (1..=COUNT_AT_MOST)
+            .contains(&self.count)
+            .then(|| on(today, i64::from(self.count) + 1))
+            .flatten()?
+            .and_hms_opt(0, 0, 0)
     }
 
     fn hours(&self) -> Option<Duration> {
@@ -443,6 +449,36 @@ mod tests {
             "2026-11-24T01:30",
             "2026-11-24T22:30",
         );
+    }
+
+    /// 今晚别找我，明早八点再说: the morning the night ends in.
+    #[test]
+    fn a_morning_of_tonight_is_the_next() {
+        let eight = json!({"how": "tonight", "time": "08:00"});
+        is(eight.clone(), MONDAY, "2026-11-24T08:00");
+        is(eight.clone(), "2026-11-23T09:00", "2026-11-24T08:00");
+        is(eight, "2026-11-24T01:30", "2026-11-24T08:00");
+        is(
+            json!({"how": "tonight", "time": "11:59"}),
+            MONDAY,
+            "2026-11-24T11:59",
+        );
+        assert_eq!(
+            ends(json!({"how": "tonight", "time": "12:00"}), MONDAY),
+            None
+        );
+    }
+
+    /// 三天后下午三点: the days hold, whatever the time says.
+    #[test]
+    fn days_hold_though_the_time_does_not_read() {
+        for time in ["三点", "15:00", "25:00"] {
+            is(
+                json!({"how": "days", "count": 3, "time": time}),
+                MONDAY,
+                "2026-11-27T00:00",
+            );
+        }
     }
 
     /// 今天之内, 这周内, 三天内, 三天后: what edge says never ends them sooner.

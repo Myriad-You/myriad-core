@@ -51,9 +51,14 @@ pub const MAX_RAW_LASTING: usize = 12;
 pub const MAX_RAW_SAID: usize = 4;
 /// Things they suggested she try herself, at most.
 pub const MAX_RAW_PUT_ONTO: usize = 4;
-/// A line of theirs with fewer letters or characters than this ('ok', '嗯',
-/// '哈哈') need not be accounted for.
+/// A line of theirs with fewer characters than this ('嗯', '哈哈') need not
+/// be accounted for; of letters alone, with fewer than
+/// [`PLACED_FROM_LETTERS`] ('ok', 'lol').
 pub const PLACED_FROM_CHARS: usize = 3;
+pub const PLACED_FROM_LETTERS: usize = 4;
+/// What a fact leaves unquoted of a line it is from, in characters or in
+/// words of letters, from which it may be of something else the line says.
+const BESIDE_FROM: usize = 3;
 
 /// A line longer than this many characters is gone over in parts
 /// ([`line_parts`]).
@@ -139,7 +144,12 @@ impl Line<'_> {
         self.who == Who::Them
             && !self.before
             && !self.in_game
-            && self.text.chars().filter(|ch| ch.is_alphanumeric()).count() >= PLACED_FROM_CHARS
+            && letters(self.text)
+                >= if self.text.chars().any(is_character) {
+                    PLACED_FROM_CHARS
+                } else {
+                    PLACED_FROM_LETTERS
+                }
     }
 }
 
@@ -377,6 +387,75 @@ pub struct RawSettled {
     /// stretch may be among them: what the first answer took from those is
     /// the host's to let go.
     pub let_go: Vec<usize>,
+    /// Of the facts kept, those from no line they did not take back: each
+    /// said something else there, or is what they took back, for the host to
+    /// tell (`take_back_check`).
+    pub doubted: Vec<Doubted>,
+}
+
+/// A fact kept from lines they took back ([`RawSettled::doubted`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Doubted {
+    /// Its place among the facts kept.
+    pub fact: usize,
+    /// What it says it replaces: so only once told to be something else.
+    pub replaces: Vec<String>,
+}
+
+impl RawSettled {
+    /// Each doubted fact, as it was told to be: what they took back (true) is
+    /// not kept, and its lines that no other fact is from are let go; something
+    /// else they said (false) replaces what it says it does, unless another
+    /// fact already does. Untold (None), it is kept and replaces nothing.
+    pub fn doubts_told(&mut self, told: &[Option<bool>]) {
+        let doubted = std::mem::take(&mut self.doubted);
+        let mut gone = Vec::new();
+        for (doubt, told) in doubted.into_iter().zip(told) {
+            match told {
+                Some(true) => gone.push(doubt.fact),
+                Some(false) => self.replaces_after_all(doubt),
+                None => {}
+            }
+        }
+        let mut lines = Vec::new();
+        for fact in gone.into_iter().rev() {
+            if fact < self.settled.lasting.len() {
+                lines.extend(self.settled.lasting.remove(fact).from);
+            }
+        }
+        lines.retain(|line| {
+            !self.let_go.contains(line)
+                && !self
+                    .settled
+                    .lasting
+                    .iter()
+                    .any(|fact| fact.from.contains(line))
+        });
+        self.let_go.extend(lines);
+        self.let_go.sort();
+        self.let_go.dedup();
+    }
+
+    fn replaces_after_all(&mut self, doubt: Doubted) {
+        let settled = &mut self.settled;
+        let mut replaces = doubt.replaces;
+        replaces.retain(|old| {
+            !settled
+                .lasting
+                .iter()
+                .any(|fact| fact.replaces.contains(old))
+        });
+        for old in &replaces {
+            let before = settled.took_back.len();
+            settled.took_back.retain(|one| &one.entry != old);
+            if settled.took_back.len() == before {
+                settled.unkept_replaces = settled.unkept_replaces.saturating_sub(1);
+            }
+        }
+        if let Some(fact) = settled.lasting.get_mut(doubt.fact) {
+            fact.replaces = replaces;
+        }
+    }
 }
 
 fn joined(lines: &[Line], who: Who) -> String {
@@ -408,19 +487,47 @@ fn letters(text: &str) -> usize {
     text.chars().filter(|ch| ch.is_alphanumeric()).count()
 }
 
-/// How much of a line `evidence` leaves unsaid, in letters or characters.
-fn unquoted(line: &str, evidence: &str) -> usize {
-    let mut line = one_spaced(line);
+/// Whether `ch` is a character of Chinese, Japanese or Korean, where one says
+/// about as much as a word of letters.
+fn is_character(ch: char) -> bool {
+    matches!(ch,
+        '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}'
+        | '\u{ac00}'..='\u{d7af}' | '\u{f900}'..='\u{faff}' | '\u{20000}'..='\u{3ffff}')
+}
+
+/// How much of a line `evidence` leaves unquoted, and whether it quotes any
+/// of it: in characters, or words of letters none of which is quoted.
+fn unquoted(line: &str, evidence: &str) -> (usize, bool) {
+    let line = one_spaced(line);
+    let mut quoted = vec![false; line.len()];
     for part in evidence_parts(evidence) {
-        if !part.is_empty() {
-            line = line.replace(&one_spaced(part), " ");
+        let part = one_spaced(part);
+        if part.is_empty() {
+            continue;
+        }
+        for (at, _) in line.match_indices(&part) {
+            quoted[at..at + part.len()].fill(true);
         }
     }
-    letters(&line)
+    let mut left = 0;
+    // A word so far, none of it quoted yet.
+    let mut word = None;
+    for (at, ch) in line.char_indices().chain([(line.len(), ' ')]) {
+        let letter = (ch.is_alphanumeric() && !is_character(ch))
+            // "I'm" is one.
+            || (word.is_some() && matches!(ch, '\'' | '\u{2019}'));
+        if letter {
+            word = Some(word.unwrap_or(true) && !quoted[at]);
+            continue;
+        }
+        left += usize::from(word.take() == Some(true));
+        left += usize::from(is_character(ch) && !quoted[at]);
+    }
+    (left, quoted.contains(&true))
 }
 
 /// Whether each part of `evidence` is in one of the lines `of`. A single
-/// character is, only when it is all a line of them says ('对').
+/// character is, only when it is all a line of them says ('对', '对。').
 fn quotes_lines(evidence: &str, lines: &[Line], of: &[usize]) -> bool {
     let evidence = evidence.trim();
     let of: Vec<String> = of
@@ -430,10 +537,17 @@ fn quotes_lines(evidence: &str, lines: &[Line], of: &[usize]) -> bool {
         .collect();
     let in_one = |part: &str| of.iter().any(|line| holds(line, part));
     evidence.chars().count() <= 240
-        && (letters(evidence) >= 2 || of.iter().any(|line| line == evidence))
+        && (letters(evidence) >= 2 || of.iter().any(|line| same_letters(line, evidence)))
         && evidence_parts(evidence)
             .into_iter()
             .all(|part| !part.is_empty() && in_one(part))
+}
+
+/// Whether two texts say the same, but for spaces and punctuation.
+fn same_letters(one: &str, other: &str) -> bool {
+    let of = |text: &str| -> String { text.chars().filter(|ch| ch.is_alphanumeric()).collect() };
+    let one = of(one);
+    !one.is_empty() && one == of(other)
 }
 
 fn verbatim_in(evidence: &str, lines: &str) -> bool {
@@ -480,16 +594,20 @@ pub fn parse_raw_settle(
         known,
         lines.len(),
         offered,
-        |evidence, from| match of_theirs(from) {
-            from if from.is_empty() => settle_evidence_holds(evidence, &theirs),
-            from => quotes_lines(evidence, lines, &from),
+        |evidence, from| {
+            settle_evidence_holds(evidence, &theirs)
+                || quotes_lines(evidence, lines, &of_theirs(from))
         },
     )?;
     let asked = |index: &usize| only.is_none_or(|only| only.contains(index));
     for fact in &mut read.lasting {
         fact.from = of_theirs(&fact.from);
-        if fact.from.is_empty() {
-            fact.from = quoted_lines(&fact.evidence, lines, &said_by_them);
+        // Of the lines it quotes, when those it names do not say it.
+        if !quotes_lines(&fact.evidence, lines, &fact.from) {
+            let quoted = quoted_lines(&fact.evidence, lines, &said_by_them);
+            if !quoted.is_empty() {
+                fact.from = quoted;
+            }
         }
         fact.from.retain(asked);
         fact.from.sort();
@@ -514,30 +632,42 @@ pub fn parse_raw_settle(
     let_go.sort();
     let_go.dedup();
     // A fact the answer takes from lines it lets go all the same, quoting only
-    // a part of them, is something else they said there. One quoting all of
-    // them, or one of two that would replace the same entry, is what they
-    // took back, and goes.
+    // a part of them, may be something else they said there: kept after the
+    // rest, for the host to look at again ([`RawSettled::doubted`]). One
+    // quoting all of them, or one of two that would replace the same entry, is
+    // what they took back, and goes.
     let beside = |fact: &Lasting, index: usize| {
-        let line = lines[index].text;
-        let unquoted = unquoted(line, &fact.evidence);
-        (PLACED_FROM_CHARS..letters(line)).contains(&unquoted)
+        let (left, any) = unquoted(lines[index].text, &fact.evidence);
+        any && left >= BESIDE_FROM
     };
-    let (gone, kept): (Vec<Lasting>, Vec<Lasting>) = std::mem::take(&mut read.lasting)
+    let (gone, mut kept): (Vec<Lasting>, Vec<Lasting>) = std::mem::take(&mut read.lasting)
         .into_iter()
         .partition(|fact| {
             !fact.from.is_empty() && fact.from.iter().all(|index| let_go.contains(index))
         });
-    let gone = gone.into_iter().filter(|fact| {
-        fact.from.iter().any(|index| beside(fact, *index))
-            && !fact
-                .replaces
-                .iter()
-                .any(|old| kept.iter().any(|one| one.replaces.contains(old)))
-    });
-    // As the answer gives them.
-    read.lasting = gone.collect();
-    read.lasting.extend(kept);
-    read.lasting.truncate(MAX_RAW_LASTING);
+    let mut maybe: Vec<Lasting> = gone
+        .into_iter()
+        .filter(|fact| {
+            fact.from.iter().any(|index| beside(fact, *index))
+                && !fact
+                    .replaces
+                    .iter()
+                    .any(|old| kept.iter().any(|one| one.replaces.contains(old)))
+        })
+        .collect();
+    kept.truncate(MAX_RAW_LASTING);
+    maybe.truncate(MAX_RAW_LASTING - kept.len());
+    // Replacing nothing till it is looked at.
+    let doubted: Vec<Doubted> = maybe
+        .iter_mut()
+        .enumerate()
+        .map(|(nth, fact)| Doubted {
+            fact: kept.len() + nth,
+            replaces: std::mem::take(&mut fact.replaces),
+        })
+        .collect();
+    kept.append(&mut maybe);
+    read.lasting = kept;
     // A line a kept fact takes only a part of is not let go whole.
     let_go.retain(|index| {
         !read
@@ -604,8 +734,17 @@ pub fn parse_raw_settle(
             }
         }
     }
+    // Asked in the line it names, what it is of told in that or another.
+    let all_theirs: Vec<usize> = (0..lines.len())
+        .filter(|index| said_by_them[*index])
+        .collect();
     let in_its_line = |evidence: &str, said: Option<usize>| {
-        said.is_some_and(|said| quotes_lines(evidence, lines, &[said]))
+        said.is_some_and(|said| {
+            quotes_lines(evidence, lines, &all_theirs)
+                && evidence_parts(evidence)
+                    .into_iter()
+                    .any(|part| quotes_lines(part, lines, &[said]))
+        })
     };
     let not_to_keep: Vec<Asked> =
         read_requests(&answer, Some(&said_by_them), asked_before, in_its_line)
@@ -637,6 +776,7 @@ pub fn parse_raw_settle(
         asked: not_to_keep,
         left,
         let_go,
+        doubted,
     })
 }
 

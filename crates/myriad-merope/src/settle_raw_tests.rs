@@ -398,7 +398,7 @@ fn a_fact_let_go_replaces_nothing() {
 fn what_is_quoted_is_in_the_lines_it_is_from() {
     let lines = [
         you("你吃素？"),
-        them("对"),
+        them("对。"),
         them("我是在成都长大的"),
         them("分手了"),
     ];
@@ -408,15 +408,23 @@ fn what_is_quoted_is_in_the_lines_it_is_from() {
             serde_json::json!({"moment": [2]}),
         );
         let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
-        assert!(got.left.contains(&3) || from.contains(&3));
-        got.settled.lasting.len()
+        let mut from: Vec<_> = got
+            .settled
+            .lasting
+            .into_iter()
+            .map(|one| one.from)
+            .collect();
+        assert!(from.len() <= 1);
+        from.pop()
     };
-    assert_eq!(kept("对", &[1]), 1);
-    assert_eq!(kept("我", &[2]), 0);
-    assert_eq!(kept("我 / 是", &[2]), 1);
-    assert_eq!(kept("我是在成都长大的", &[1]), 0);
-    assert_eq!(kept("我是在成都长大的 / 分手了", &[2, 3]), 1);
-    assert_eq!(kept("我是在成都长大的 / 分手了", &[2]), 0);
+    assert_eq!(kept("对", &[1]), Some(vec![1]));
+    assert_eq!(kept("我", &[2]), None);
+    assert_eq!(kept("我 / 是", &[2]), Some(vec![2]));
+    assert_eq!(kept("我搬家了", &[2]), None);
+    assert_eq!(kept("我是在成都长大的 / 分手了", &[2, 3]), Some(vec![2, 3]));
+    // Those it quotes, when those it names do not say it.
+    assert_eq!(kept("我是在成都长大的", &[1]), Some(vec![2]));
+    assert_eq!(kept("我是在成都长大的 / 分手了", &[2]), Some(vec![2, 3]));
     // With none named, the lines it quotes; a single character of a line
     // names none.
     assert!(quoted_lines("我 / 是", &lines, &[false, true, true, true]).is_empty());
@@ -464,6 +472,162 @@ fn a_request_is_in_the_line_it_names() {
         raw_settle_schema()["properties"]["tookBack"]["maxItems"],
         80
     );
+}
+
+#[test]
+fn a_request_may_say_what_it_is_of_in_another_line() {
+    let lines = [them("我体重的事"), them("以后都别记了"), them("我养了只猫")];
+    for (evidence, said, asked) in [
+        ("我体重的事 / 以后都别记了", 1, 1),
+        ("我体重的事 / 以后都别记了", 2, 0),
+        ("我身高的事 / 以后都别记了", 1, 0),
+    ] {
+        let raw = answer(
+            serde_json::json!([]),
+            serde_json::json!({"notToKeep": [
+                {"fact": "不要记自己的体重", "evidence": evidence, "said": said, "replaces": []},
+            ]}),
+        );
+        let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+        assert_eq!(got.asked.len(), asked, "{evidence} {said}");
+    }
+}
+
+#[test]
+fn what_is_left_of_a_line_is_counted_as_it_is_written() {
+    for (line, evidence, left) in [
+        ("下个月去东京出差，另外我养了只猫", "我养了只猫", 10),
+        ("我下个月要去东京出差一周", "我下个月要去东京出差", 2),
+        // Its punctuation, and what two parts both quote, count once at most.
+        ("我去东京出差一周。", "我去东京出差 / 出差一周", 0),
+        ("我养猫。我养猫了", "我养猫", 1),
+        // Words, not letters (an apostrophe does not part one).
+        ("I am going to Tokyo well", "I am going to Tokyo", 1),
+        (
+            "I'm off to Tokyo, and I have a cat now",
+            "I have a cat now",
+            5,
+        ),
+        ("东京 business trip 下周", "东京", 4),
+    ] {
+        assert_eq!(unquoted(line, evidence), (left, true), "{line}");
+    }
+    assert_eq!(unquoted("分手了", "猫"), (3, false));
+}
+
+#[test]
+fn a_fact_of_a_line_let_go_stays_only_beside_enough_of_it() {
+    for (line, evidence, kept) in [
+        (
+            "I have a trip to Tokyo next week",
+            "I have a trip to Tokyo next",
+            0,
+        ),
+        ("I am going to Tokyo well", "I am going to Tokyo", 0),
+        ("I have a trip to Tokyo, and I got a cat", "I got a cat", 1),
+        ("我去东京出差一周。", "我去东京出差 / 出差一周", 0),
+    ] {
+        let lines = [them(line), them("当我没说")];
+        let raw = answer(
+            serde_json::json!([fact("一件事", evidence, &[0])]),
+            serde_json::json!({"letGo": [0]}),
+        );
+        let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+        assert_eq!(got.settled.lasting.len(), kept, "{line}");
+        assert_eq!(got.doubted.len(), kept, "{line}");
+        assert_eq!(got.let_go.is_empty(), kept > 0, "{line}");
+    }
+}
+
+#[test]
+fn a_fact_of_lines_let_go_is_looked_at_again_before_it_replaces_anything() {
+    let lines = [
+        them("我下个月要去东京出差一周"),
+        them("我养了只猫"),
+        them("出差的事当我没说"),
+    ];
+    let known = ["下个月要去大阪出差".to_string()];
+    let mut trip = fact("下个月要去东京出差", "我下个月要去东京出差一", &[0]);
+    trip["evidence"] = "下个月要去东京".into();
+    trip["replaces"] = serde_json::json!(known);
+    let raw = answer(
+        serde_json::json!([trip, fact("养了只猫", "我养了只猫", &[1])]),
+        serde_json::json!({"letGo": [0]}),
+    );
+    let got = || parse_raw_settle(&raw, &lines, &known, &[], 1, None).unwrap();
+    let kept = |got: &RawSettled| -> Vec<String> {
+        got.settled
+            .lasting
+            .iter()
+            .map(|one| one.fact.clone())
+            .collect()
+    };
+    let first = got();
+    // Those no one doubts come first.
+    assert_eq!(kept(&first), ["养了只猫", "下个月要去东京出差"]);
+    assert_eq!(
+        first.doubted,
+        [Doubted {
+            fact: 1,
+            replaces: known.to_vec()
+        }]
+    );
+    assert!(first.settled.lasting[1].replaces.is_empty());
+    assert_eq!(first.settled.unkept_replaces, 1);
+    assert!(first.let_go.is_empty());
+
+    let mut taken = got();
+    taken.doubts_told(&[Some(true)]);
+    assert_eq!(kept(&taken), ["养了只猫"]);
+    assert_eq!(taken.let_go, [0]);
+    assert!(taken.doubted.is_empty());
+
+    let mut said = got();
+    said.doubts_told(&[Some(false)]);
+    assert_eq!(said.settled.lasting[1].replaces, known);
+    assert_eq!(said.settled.unkept_replaces, 0);
+    assert!(said.let_go.is_empty());
+
+    let mut untold = got();
+    untold.doubts_told(&[None]);
+    assert_eq!(kept(&untold).len(), 2);
+    assert!(untold.settled.lasting[1].replaces.is_empty());
+    assert!(untold.let_go.is_empty());
+}
+
+#[test]
+fn a_fact_no_one_doubts_is_never_the_one_left_out() {
+    let mut lines = vec![them("下个月去东京出差，另外我养了只猫")];
+    let texts: Vec<String> = (0..MAX_RAW_LASTING)
+        .map(|at| format!("第{at}件事情"))
+        .collect();
+    lines.extend(texts.iter().map(|text| them(text)));
+    let mut facts = vec![fact("养了只猫", "我养了只猫", &[0])];
+    facts.extend(
+        texts
+            .iter()
+            .enumerate()
+            .map(|(at, text)| fact(text, text, &[at + 1])),
+    );
+    // As many as may be: the doubted one gives way.
+    for more in [0, 1] {
+        let raw = answer(
+            serde_json::json!(facts[..MAX_RAW_LASTING + more]),
+            serde_json::json!({"letGo": [0]}),
+        );
+        let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+        assert_eq!(got.settled.lasting.len(), MAX_RAW_LASTING);
+        assert_eq!(got.settled.lasting[0].fact, texts[0]);
+        assert_eq!(got.doubted.len(), 1 - more);
+    }
+}
+
+#[test]
+fn a_short_line_of_letters_need_not_be_accounted_for() {
+    let lines = [them("lol"), them("well"), them("嗯嗯"), them("分手了")];
+    let raw = answer(serde_json::json!([]), serde_json::json!({}));
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.left, [1, 3]);
 }
 
 /// A pass may keep as many facts as the prompt allows it, not as many as a
