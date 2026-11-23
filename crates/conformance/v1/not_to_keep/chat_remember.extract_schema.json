@@ -1,0 +1,1198 @@
+{
+  "call": "chat_remember.extract_schema",
+  "cases": [
+    {
+      "input": {},
+      "name": "as it ever was",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "facts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            "own": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "line": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "putOnto": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "thing": {
+                    "maxLength": 160,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "thing",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "said": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "said": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "said",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "supersedes": {
+              "items": {
+                "maxLength": 240,
+                "type": "string"
+              },
+              "maxItems": 8,
+              "type": "array"
+            },
+            "supersedesEvidence": {
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "facts",
+            "supersedes",
+            "supersedesEvidence",
+            "said",
+            "own",
+            "putOnto"
+          ],
+          "type": "object"
+        }
+      }
+    },
+    {
+      "input": {
+        "dated": true
+      },
+      "name": "dated",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "facts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "happened": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "about": {
+                        "type": "boolean"
+                      },
+                      "from": {
+                        "maxLength": 10,
+                        "type": "string"
+                      },
+                      "to": {
+                        "maxLength": 10,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "about"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence",
+                  "concepts",
+                  "happened"
+                ],
+                "type": "object"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            "own": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "line": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "putOnto": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "thing": {
+                    "maxLength": 160,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "thing",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "said": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "said": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "said",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "supersedes": {
+              "items": {
+                "maxLength": 240,
+                "type": "string"
+              },
+              "maxItems": 8,
+              "type": "array"
+            },
+            "supersedesEvidence": {
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "facts",
+            "supersedes",
+            "supersedesEvidence",
+            "said",
+            "own",
+            "putOnto"
+          ],
+          "type": "object"
+        }
+      }
+    },
+    {
+      "input": {
+        "asked": false
+      },
+      "name": "asked said false, as it ever was",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "facts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            "own": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "line": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "putOnto": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "thing": {
+                    "maxLength": 160,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "thing",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "said": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "said": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "said",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "supersedes": {
+              "items": {
+                "maxLength": 240,
+                "type": "string"
+              },
+              "maxItems": 8,
+              "type": "array"
+            },
+            "supersedesEvidence": {
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "facts",
+            "supersedes",
+            "supersedesEvidence",
+            "said",
+            "own",
+            "putOnto"
+          ],
+          "type": "object"
+        }
+      }
+    },
+    {
+      "input": {
+        "asked": false,
+        "dated": true
+      },
+      "name": "dated, asked said false, as it ever was",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "facts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "happened": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "about": {
+                        "type": "boolean"
+                      },
+                      "from": {
+                        "maxLength": 10,
+                        "type": "string"
+                      },
+                      "to": {
+                        "maxLength": 10,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "about"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence",
+                  "concepts",
+                  "happened"
+                ],
+                "type": "object"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            "own": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "line": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "putOnto": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "thing": {
+                    "maxLength": 160,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "thing",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "said": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "said": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "said",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "supersedes": {
+              "items": {
+                "maxLength": 240,
+                "type": "string"
+              },
+              "maxItems": 8,
+              "type": "array"
+            },
+            "supersedesEvidence": {
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "facts",
+            "supersedes",
+            "supersedesEvidence",
+            "said",
+            "own",
+            "putOnto"
+          ],
+          "type": "object"
+        }
+      }
+    },
+    {
+      "input": {
+        "asked": true
+      },
+      "name": "asked",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "facts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            "notToKeep": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 4,
+              "type": "array"
+            },
+            "own": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "line": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "putOnto": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "thing": {
+                    "maxLength": 160,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "thing",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "said": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "said": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "said",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "supersedes": {
+              "items": {
+                "maxLength": 240,
+                "type": "string"
+              },
+              "maxItems": 8,
+              "type": "array"
+            },
+            "supersedesEvidence": {
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "facts",
+            "supersedes",
+            "supersedesEvidence",
+            "said",
+            "own",
+            "putOnto",
+            "notToKeep"
+          ],
+          "type": "object"
+        }
+      }
+    },
+    {
+      "input": {
+        "asked": true,
+        "dated": true
+      },
+      "name": "dated and asked",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "facts": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "happened": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "about": {
+                        "type": "boolean"
+                      },
+                      "from": {
+                        "maxLength": 10,
+                        "type": "string"
+                      },
+                      "to": {
+                        "maxLength": 10,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "about"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence",
+                  "concepts",
+                  "happened"
+                ],
+                "type": "object"
+              },
+              "maxItems": 6,
+              "type": "array"
+            },
+            "notToKeep": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "fact": {
+                    "maxLength": 240,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "fact",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 4,
+              "type": "array"
+            },
+            "own": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "concepts": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "aliases": {
+                          "items": {
+                            "maxLength": 24,
+                            "type": "string"
+                          },
+                          "maxItems": 5,
+                          "type": "array"
+                        },
+                        "name": {
+                          "maxLength": 24,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "aliases"
+                      ],
+                      "type": "object"
+                    },
+                    "maxItems": 5,
+                    "type": "array"
+                  },
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "line": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "line",
+                  "evidence",
+                  "concepts"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "putOnto": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "thing": {
+                    "maxLength": 160,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "thing",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "said": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "evidence": {
+                    "maxLength": 240,
+                    "type": "string"
+                  },
+                  "said": {
+                    "maxLength": 200,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "said",
+                  "evidence"
+                ],
+                "type": "object"
+              },
+              "maxItems": 2,
+              "type": "array"
+            },
+            "supersedes": {
+              "items": {
+                "maxLength": 240,
+                "type": "string"
+              },
+              "maxItems": 8,
+              "type": "array"
+            },
+            "supersedesEvidence": {
+              "maxLength": 240,
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "facts",
+            "supersedes",
+            "supersedesEvidence",
+            "said",
+            "own",
+            "putOnto",
+            "notToKeep"
+          ],
+          "type": "object"
+        }
+      }
+    },
+    {
+      "input": {
+        "aske": true
+      },
+      "name": "a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

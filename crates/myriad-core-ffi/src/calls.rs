@@ -32,6 +32,7 @@ mod log;
 mod memory;
 mod motion;
 mod nodes;
+mod not_to_keep;
 mod notify;
 mod outfit;
 mod own;
@@ -91,6 +92,10 @@ const CALLS: &[(&str, Call)] = &[
     (
         "chat_remember.extract_system",
         prompts::remember_extract_system,
+    ),
+    (
+        "chat_remember.read_not_to_keep",
+        not_to_keep::remember_read_not_to_keep,
     ),
     (
         "chat_remember.settle_system",
@@ -285,6 +290,16 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.view_may_change", nodes::view_may_change),
     ("nodes.wire_send", nodes::wire_send),
     ("nodes.wire_take", nodes::wire_take),
+    ("not_asked.input", not_to_keep::not_asked_input),
+    ("not_asked.read", not_to_keep::not_asked_read),
+    ("not_asked.schema", not_to_keep::not_asked_schema),
+    ("not_asked.system", not_to_keep::not_asked_system),
+    ("not_to_keep.input", not_to_keep::input_of),
+    ("not_to_keep.parts", not_to_keep::parts),
+    ("not_to_keep.read", not_to_keep::read),
+    ("not_to_keep.schema", not_to_keep::schema),
+    ("not_to_keep.sources", not_to_keep::sources),
+    ("not_to_keep.system", not_to_keep::system),
     ("notify.kind", notify::kind),
     ("onboarding.import_system", voice::onboarding_import),
     ("onboarding.name_system", voice::onboarding_name),

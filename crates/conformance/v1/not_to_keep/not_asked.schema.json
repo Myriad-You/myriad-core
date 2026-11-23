@@ -1,0 +1,38 @@
+{
+  "call": "not_asked.schema",
+  "cases": [
+    {
+      "input": {},
+      "name": "what it answers in",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "notAsked": {
+              "items": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "notAsked"
+          ],
+          "type": "object"
+        },
+        "schemaName": "merope_not_asked"
+      }
+    },
+    {
+      "input": {
+        "x": 1
+      },
+      "name": "takes nothing",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

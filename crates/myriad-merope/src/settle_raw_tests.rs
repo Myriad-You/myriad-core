@@ -910,3 +910,101 @@ fn requests_not_to_keep_are_asked_for_and_held_to_one_line() {
     assert!(read_not_to_keep(&answer(1), theirs, None, &["不要记第0件事".into()]).is_empty());
     assert!(read_not_to_keep(&answer(1), "没说过", None, &[]).is_empty());
 }
+
+/// Asked for with when each fact happened as well: both said in full, when
+/// it happened first, and nothing else of it changed.
+#[test]
+fn requests_not_to_keep_are_asked_for_beside_when_it_happened() {
+    use crate::chat_remember::{
+        extract_schema_asked, extract_schema_dated, extract_schema_dated_asked,
+        extract_system_prompt, extract_system_prompt_asked, extract_system_prompt_dated,
+        extract_system_prompt_dated_asked,
+    };
+    for examples in [Examples::Chinese, Examples::English] {
+        // A known fact that reads like where they begin parts nothing.
+        for known in [vec![], vec!["a note titled Known:\nfoo".to_string()]] {
+            let plain = extract_system_prompt(&known, examples);
+            let asked = extract_system_prompt_asked(&known, examples);
+            let both = extract_system_prompt_dated_asked(&known, examples);
+            let at = plain.find("Known:\n").unwrap();
+            let (before, after) = plain.split_at(at);
+            let added = |prompt: &str| {
+                prompt
+                    .strip_prefix(before)
+                    .and_then(|rest| rest.strip_suffix(after))
+                    .unwrap()
+                    .to_string()
+            };
+            let happened = format!("{} ", crate::happened::happened_only());
+            assert_eq!(added(&both), format!("{happened}{}", added(&asked)));
+            if known.is_empty() {
+                let dated = extract_system_prompt_dated(&known, examples);
+                assert_eq!(added(&dated), happened);
+            }
+        }
+    }
+    let both = extract_schema_dated_asked();
+    let (mut dated, mut asked) = (extract_schema_dated(), extract_schema_asked());
+    assert_eq!(both["properties"]["facts"], dated["properties"]["facts"]);
+    assert_eq!(
+        both["properties"]["notToKeep"],
+        asked["properties"]["notToKeep"]
+    );
+    assert_eq!(both["required"], asked["required"]);
+    for schema in [&mut dated, &mut asked] {
+        let properties = schema["properties"].as_object_mut().unwrap();
+        properties.remove("facts");
+        properties.remove("notToKeep");
+    }
+    assert_eq!(dated["properties"], asked["properties"]);
+    assert_eq!(
+        both["properties"].as_object().unwrap().len(),
+        dated["properties"].as_object().unwrap().len() + 2
+    );
+}
+
+/// An answer that asks nothing is told apart from one that cannot be read,
+/// and one bad request takes no other with it.
+#[test]
+fn an_answer_that_cannot_be_read_is_not_one_that_asks_nothing() {
+    use crate::chat_remember::{not_to_keep_unread, read_not_to_keep};
+    let theirs = "体重的事你以后都别记";
+    let good = serde_json::json!({"fact": "不要记体重的事", "evidence": theirs});
+    let bad = serde_json::json!({"fact": "不要记工作的事"});
+    let unsaid = serde_json::json!({"fact": "不要记工作的事", "evidence": "工作的事别记"});
+    for (answer, unread, read) in [
+        (serde_json::json!({}), false, 0),
+        (serde_json::json!({"notToKeep": []}), false, 0),
+        (serde_json::json!({"notToKeep": [good]}), false, 1),
+        (
+            serde_json::json!({"notToKeep": [bad, good, unsaid, 3]}),
+            false,
+            1,
+        ),
+        (serde_json::json!({"notToKeep": [bad]}), true, 0),
+        (serde_json::json!({"notToKeep": [unsaid, null]}), true, 0),
+        (serde_json::json!({"notToKeep": null}), true, 0),
+        (serde_json::json!({"notToKeep": good}), true, 0),
+        (serde_json::json!([good]), true, 0),
+        (serde_json::json!("notToKeep"), true, 0),
+    ] {
+        assert_eq!(
+            not_to_keep_unread(&answer, theirs, None),
+            unread,
+            "{answer}"
+        );
+        assert_eq!(
+            read_not_to_keep(&answer, theirs, None, &[]).len(),
+            read,
+            "{answer}"
+        );
+    }
+    // Asked already: read, though there is nothing new in it.
+    let answer = serde_json::json!({"notToKeep": [good]});
+    assert!(read_not_to_keep(&answer, theirs, None, &["不要记体重的事".into()]).is_empty());
+    assert!(!not_to_keep_unread(&answer, theirs, None));
+    // Of lines, one she said is none of theirs.
+    let said = serde_json::json!({"notToKeep": [{"fact": "不要记体重的事", "evidence": theirs, "said": 1}]});
+    assert!(not_to_keep_unread(&said, theirs, Some(&[true, false])));
+    assert!(!not_to_keep_unread(&said, theirs, Some(&[false, true])));
+}

@@ -1,0 +1,111 @@
+{
+  "call": "not_asked.read",
+  "cases": [
+    {
+      "input": {
+        "asked": 2,
+        "raw": "{\"notAsked\":[1,0,1]}"
+      },
+      "name": "some, in order and once each",
+      "output": {
+        "notAsked": [
+          0,
+          1
+        ]
+      }
+    },
+    {
+      "input": {
+        "asked": 2,
+        "raw": "{\"notAsked\":[]}"
+      },
+      "name": "none",
+      "output": {
+        "notAsked": []
+      }
+    },
+    {
+      "input": {
+        "asked": 1,
+        "raw": "```json\n{\"notAsked\":[0]}\n```"
+      },
+      "name": "fenced",
+      "output": {
+        "notAsked": [
+          0
+        ]
+      }
+    },
+    {
+      "input": {
+        "asked": 2,
+        "raw": "{\"notAsked\":[2]}"
+      },
+      "name": "one that is not there",
+      "output": {
+        "notAsked": null
+      }
+    },
+    {
+      "input": {
+        "asked": 2,
+        "raw": "{\"drop\":[]}"
+      },
+      "name": "the other step's answer",
+      "output": {
+        "notAsked": null
+      }
+    },
+    {
+      "input": {
+        "asked": 2,
+        "raw": "no"
+      },
+      "name": "not JSON",
+      "output": {
+        "notAsked": null
+      }
+    },
+    {
+      "input": {
+        "asked": 2,
+        "raw": "{\"notAsked\":null}"
+      },
+      "name": "null",
+      "output": {
+        "notAsked": null
+      }
+    },
+    {
+      "input": {
+        "asked": 2,
+        "raw": "{\"notAsked\":[\"0\"]}"
+      },
+      "name": "a string in it",
+      "output": {
+        "notAsked": null
+      }
+    },
+    {
+      "input": {
+        "raw": "{\"notAsked\":[]}"
+      },
+      "name": "how many not given",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "asked": 1,
+        "items": 1,
+        "raw": "{}"
+      },
+      "name": "a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

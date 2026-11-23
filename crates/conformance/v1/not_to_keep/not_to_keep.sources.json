@@ -1,0 +1,23 @@
+{
+  "call": "not_to_keep.sources",
+  "cases": [
+    {
+      "input": {},
+      "name": "what holds back and is no fact",
+      "output": {
+        "asked": "asked",
+        "leftAlone": "left_alone"
+      }
+    },
+    {
+      "input": {
+        "x": 1
+      },
+      "name": "takes nothing",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

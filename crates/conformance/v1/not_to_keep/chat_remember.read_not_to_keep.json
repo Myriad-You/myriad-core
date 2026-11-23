@@ -1,0 +1,837 @@
+{
+  "call": "chat_remember.read_not_to_keep",
+  "cases": [
+    {
+      "input": {
+        "answer": {
+          "facts": []
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "no such key: nothing asked",
+      "output": {
+        "asked": [],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": []
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "an empty list: nothing asked",
+      "output": {
+        "asked": [],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "one",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            },
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "two",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          },
+          {
+            "evidence": "前任的事也别记",
+            "fact": "不要记前任的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": null
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "null: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": "不要记体重的事"
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "a string: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事"
+          }
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "an object: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": 0
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "a number: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事"
+          }
+        ],
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "an answer that is no object: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": "{\"notToKeep\": [{\"fact\": \"不要记体重的事\", \"evidence\": \"体重的事你以后都别记\"}]}",
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "an answer that is a string: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            },
+            {
+              "fact": "不要记工作的事"
+            },
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "one without its words among good ones: only it goes",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          },
+          {
+            "evidence": "前任的事也别记",
+            "fact": "不要记前任的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "工作的事别记",
+              "fact": "不要记工作的事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "one in words they did not say among good ones: only it goes",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            "体重",
+            null,
+            3,
+            [
+              {
+                "evidence": "体重的事你以后都别记",
+                "fact": "不要记体重的事"
+              }
+            ],
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "no objects among good ones: only they go",
+      "output": {
+        "asked": [
+          {
+            "evidence": "前任的事也别记",
+            "fact": "不要记前任的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": 3
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "a fact that is no string, among good ones: only it goes",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "a fact longer than it may be, among good ones: only it goes",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "a fact as long as it may be",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "fact": "不要记工作的事"
+            },
+            {
+              "evidence": "体重的事你以后都别记"
+            },
+            7
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "every one bad: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "工作的事别记",
+              "fact": "不要记工作的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "the only one in words they did not say: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "words too short to hold to: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [
+          "不要记体重的事"
+        ],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "asked already: read, nothing new",
+      "output": {
+        "asked": [],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            },
+            {
+              "fact": "不要记工作的事"
+            }
+          ]
+        },
+        "askedBefore": [
+          "不要记体重的事"
+        ],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "asked already, and a bad one: read, nothing new",
+      "output": {
+        "asked": [],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "the same twice: once",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "对了我养了只龟  还有前任的事也别记",
+              "fact": " 不要记 体重的事\n"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "runs of space as one, in what is asked and its words",
+      "output": {
+        "asked": [
+          {
+            "evidence": "对了我养了只龟 还有前任的事也别记",
+            "fact": "不要记 体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记 / 前任的事也别记",
+              "fact": "不要记体重和前任的事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "words from two places",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记 / 前任的事也别记",
+            "fact": "不要记体重和前任的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记第0件事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记第1件事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记第2件事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记第3件事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记第4件事"
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记第5件事"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "more than one answer gives",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记第0件事",
+            "replaces": []
+          },
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记第1件事",
+            "replaces": []
+          },
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记第2件事",
+            "replaces": []
+          },
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记第3件事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事",
+              "replaces": [
+                "不要记前任的生日",
+                "没问过的",
+                3
+              ]
+            }
+          ]
+        },
+        "askedBefore": [
+          "不要记前任的生日"
+        ],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "what it takes the place of, only what was asked before",
+      "output": {
+        "asked": [
+          {
+            "evidence": "前任的事也别记",
+            "fact": "不要记前任的事",
+            "replaces": [
+              "不要记前任的生日"
+            ]
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事",
+              "replaces": [],
+              "said": 2
+            },
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事",
+              "replaces": [],
+              "said": 0
+            }
+          ]
+        },
+        "askedBefore": [],
+        "saidByThem": [
+          true,
+          false,
+          true
+        ],
+        "theirs": "体重的事你以后都别记\n好\n前任的事也别记"
+      },
+      "name": "of lines: in a line of theirs",
+      "output": {
+        "asked": [
+          {
+            "evidence": "前任的事也别记",
+            "fact": "不要记前任的事",
+            "replaces": [],
+            "said": 2
+          },
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": [],
+            "said": 0
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事",
+              "replaces": [],
+              "said": 1
+            },
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事",
+              "replaces": [],
+              "said": 2
+            }
+          ]
+        },
+        "askedBefore": [],
+        "saidByThem": [
+          true,
+          false,
+          true
+        ],
+        "theirs": "体重的事你以后都别记\n好\n前任的事也别记"
+      },
+      "name": "of lines: one in her own line, only it goes",
+      "output": {
+        "asked": [
+          {
+            "evidence": "前任的事也别记",
+            "fact": "不要记前任的事",
+            "replaces": [],
+            "said": 2
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事",
+              "replaces": [],
+              "said": 9
+            },
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事",
+              "replaces": []
+            },
+            {
+              "evidence": "前任的事也别记",
+              "fact": "不要记前任的事",
+              "said": "2"
+            }
+          ]
+        },
+        "askedBefore": [],
+        "saidByThem": [
+          true,
+          false,
+          true
+        ],
+        "theirs": "体重的事你以后都别记\n好\n前任的事也别记"
+      },
+      "name": "of lines: no such line, and none named: not read",
+      "output": {
+        "asked": [],
+        "unread": true
+      }
+    },
+    {
+      "input": {
+        "answer": {
+          "facts": [],
+          "notToKeep": [
+            {
+              "evidence": "体重的事你以后都别记",
+              "fact": "不要记体重的事",
+              "said": 3
+            }
+          ]
+        },
+        "askedBefore": [],
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "of one line: a line it names is let be",
+      "output": {
+        "asked": [
+          {
+            "evidence": "体重的事你以后都别记",
+            "fact": "不要记体重的事",
+            "replaces": []
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "input": {
+        "answer": {},
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "what was asked before not given",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "answer": {},
+        "askedBefore": [],
+        "more": 1,
+        "theirs": "体重的事你以后都别记 对了我养了只龟 还有前任的事也别记"
+      },
+      "name": "a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}
