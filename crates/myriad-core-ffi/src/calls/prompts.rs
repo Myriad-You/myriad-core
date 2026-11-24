@@ -340,31 +340,42 @@ pub(super) fn remember_extract_system(raw: &[u8]) -> Result<Value, Failure> {
         /// Ask also when each fact happened ([`remember_extract_schema`]).
         #[serde(default)]
         dated: bool,
+        /// Ask also what they ask her not to keep from now on
+        /// ([`remember_read_not_to_keep`]).
+        #[serde(default)]
+        asked: bool,
     }
     let req: In = input(raw)?;
     let examples = examples(req.theirs.as_deref());
-    Ok(text(Some(if req.dated {
-        chat_remember::extract_system_prompt_dated(&req.existing, examples)
-    } else {
-        chat_remember::extract_system_prompt(&req.existing, examples)
-    })))
+    let system = match (req.dated, req.asked) {
+        (false, false) => chat_remember::extract_system_prompt,
+        (true, false) => chat_remember::extract_system_prompt_dated,
+        (false, true) => chat_remember::extract_system_prompt_asked,
+        (true, true) => chat_remember::extract_system_prompt_dated_asked,
+    };
+    Ok(text(Some(system(&req.existing, examples))))
 }
 
-/// `{dated?}` → `{schema}`: what keeping what they said answers in; dated,
-/// with when each fact happened.
+/// `{dated?, asked?}` → `{schema}`: what keeping what they said answers in;
+/// dated, with when each fact happened; asked, with what they ask her not
+/// to keep from now on.
 pub(super) fn remember_extract_schema(raw: &[u8]) -> Result<Value, Failure> {
     #[derive(Deserialize)]
     #[serde(deny_unknown_fields)]
     struct In {
         #[serde(default)]
         dated: bool,
+        #[serde(default)]
+        asked: bool,
     }
     let req: In = input(raw)?;
-    Ok(serde_json::json!({ "schema": if req.dated {
-        chat_remember::extract_schema_dated()
-    } else {
-        chat_remember::extract_schema()
-    } }))
+    let schema = match (req.dated, req.asked) {
+        (false, false) => chat_remember::extract_schema,
+        (true, false) => chat_remember::extract_schema_dated,
+        (false, true) => chat_remember::extract_schema_asked,
+        (true, true) => chat_remember::extract_schema_dated_asked,
+    };
+    Ok(json!({ "schema": schema() }))
 }
 
 /// `known`: what she knows of them for good; `theirs`: their lines in the

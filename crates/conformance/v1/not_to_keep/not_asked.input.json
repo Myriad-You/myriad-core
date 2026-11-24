@@ -1,0 +1,61 @@
+{
+  "call": "not_asked.input",
+  "cases": [
+    {
+      "input": {
+        "asked": [
+          "不要记体重"
+        ],
+        "line": "体重别记了"
+      },
+      "name": "one",
+      "output": {
+        "input": "{\"asked\":[{\"index\":0,\"text\":\"不要记体重\"}],\"line\":\"体重别记了\"}"
+      }
+    },
+    {
+      "input": {
+        "asked": [
+          "不要记甲",
+          "不要记乙"
+        ],
+        "line": "“别跟别人说”\n\"don't\""
+      },
+      "name": "two, quotes kept as they are",
+      "output": {
+        "input": "{\"asked\":[{\"index\":0,\"text\":\"不要记甲\"},{\"index\":1,\"text\":\"不要记乙\"}],\"line\":\"“别跟别人说”\\n\\\"don't\\\"\"}"
+      }
+    },
+    {
+      "input": {
+        "asked": [],
+        "line": ""
+      },
+      "name": "none",
+      "output": {
+        "input": "{\"asked\":[],\"line\":\"\"}"
+      }
+    },
+    {
+      "input": {
+        "asked": []
+      },
+      "name": "the line not given",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "asked": [],
+        "line": "",
+        "who": "x"
+      },
+      "name": "a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,6 +1,7 @@
 //! Keeping what someone tells her, the rules of it: whether a line is worth
 //! extracting from, what she is asked, and the shape of what she keeps.
 
+use serde::Serialize;
 use serde_json::json;
 
 pub const EXTRACT_SCHEMA_NAME: &str = "merope_chat_remember";
@@ -333,11 +334,12 @@ pub const MAX_ASKED: usize = 4;
 /// for good. Going over a private talk is shown all of it, for that is
 /// where they take it back or narrow it; nothing else that keeps what they
 /// say is, and the host holds what that gives to it (`not_to_keep`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Asked {
     pub fact: String,
     pub evidence: String,
     /// Their line asking it (none where the answer is of one line alone).
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub said: Option<usize>,
     /// What they asked before that this takes the place of, verbatim.
     pub replaces: Vec<String>,
@@ -369,20 +371,59 @@ pub(crate) fn not_to_keep_schema(lines: bool) -> serde_json::Value {
 
 /// `notToKeep` of an answer: each held to being in `theirs`, none they had
 /// asked already. `said_by_them` (of each line, whether it is theirs) when
-/// each names its line; None when the answer is of one line alone.
+/// each names its line; None when the answer is of one line alone, and then
+/// `asked_before` is empty: that answer was shown none of it, and asking
+/// again is something they did, told by whatever keeps it.
 pub fn read_not_to_keep(
     answer: &serde_json::Value,
     theirs: &str,
     said_by_them: Option<&[bool]>,
     asked_before: &[String],
 ) -> Vec<Asked> {
-    read_requests(answer, asked_before, |evidence, said| {
+    read_requests(answer, asked_before, asked_in_theirs(theirs, said_by_them))
+}
+
+/// Whether what an answer gives as `notToKeep` cannot be read: the answer
+/// is no object, the key is there and no list, or the list has something in
+/// it and none of it holds ([`read_not_to_keep`]). One that does not hold
+/// among others that do goes alone, and what they had asked already holds:
+/// neither makes it unread. With no such key, nothing was asked.
+///
+/// `read_not_to_keep` gives nothing for such an answer, as for one that
+/// asks nothing; a host that would lose the request by it asks again.
+pub fn not_to_keep_unread(
+    answer: &serde_json::Value,
+    theirs: &str,
+    said_by_them: Option<&[bool]>,
+) -> bool {
+    match answer.get("notToKeep") {
+        None => !answer.is_object(),
+        Some(serde_json::Value::Array(items)) => {
+            !items.is_empty()
+                && requests(answer, asked_in_theirs(theirs, said_by_them))
+                    .next()
+                    .is_none()
+        }
+        Some(_) => true,
+    }
+}
+
+/// Each request held to being in `theirs`, and in a line of theirs when it
+/// names one. Its evidence has its runs of space as one already, so `theirs`
+/// is looked in so too: what they sent in two goes is there over two lines.
+fn asked_in_theirs<'a>(
+    theirs: &'a str,
+    said_by_them: Option<&'a [bool]>,
+) -> impl Fn(&str, Option<usize>) -> Option<Option<usize>> + 'a {
+    let spaced = one_spaced(theirs);
+    move |evidence, said| {
         let said = match said_by_them {
             None => None,
             Some(by) => Some(said.filter(|index| by.get(*index) == Some(&true))?),
         };
-        settle_evidence_holds(evidence, theirs).then_some(said)
-    })
+        (settle_evidence_holds(evidence, theirs) || settle_evidence_holds(evidence, &spaced))
+            .then_some(said)
+    }
 }
 
 /// [`read_not_to_keep`], each asked in the line `asked_in` gives of its
@@ -494,14 +535,37 @@ pub(crate) fn not_a_request(wording: &Wording) -> String {
 /// not shown here, where one line of theirs is kept (going over a private
 /// talk is shown it): the host holds what is kept to it (`not_to_keep`).
 pub fn extract_system_prompt_asked(existing: &[String], examples: Examples) -> String {
-    let wording = examples.wording();
     let prompt = extract_system_prompt(existing, examples);
-    let at = prompt.find("Known:\n").unwrap_or(prompt.len());
+    let (before, known) = at_known(&prompt);
+    format!("{before}{} {known}", not_to_keep_asked(examples))
+}
+
+/// [`extract_system_prompt`] asking both when each fact happened, as
+/// [`extract_system_prompt_dated`], and what they ask her not to keep, as
+/// [`extract_system_prompt_asked`] ([`extract_schema_dated_asked`]). When a
+/// fact happened comes first and what is not to be kept after it, the order
+/// going over a private talk has them in (`settle_raw`).
+pub fn extract_system_prompt_dated_asked(existing: &[String], examples: Examples) -> String {
+    let prompt = extract_system_prompt(existing, examples);
+    let (before, known) = at_known(&prompt);
     format!(
-        "{before}notToKeep: 0 to {MAX_ASKED} things they ask you in userText not to keep from now on, whatever they say of them later ({not_to_keep}). It is no fact: facts has nothing of it, and supersedes copies every known fact about that thing. Its fact is one short sentence saying not to keep that thing, in the language of their message, named so it can be told on its own (what 'this' is, not 'this') and no wider or narrower than they asked, with nothing of what they told of it ({not_to_keep_fact}); its evidence is a contiguous verbatim excerpt from userText. {not_a_request} \
-{known}",
-        before = &prompt[..at],
-        known = &prompt[at..],
+        "{before}{} {} {known}",
+        crate::happened::happened_only(),
+        not_to_keep_asked(examples)
+    )
+}
+
+/// What she is asked, parted where what she knows begins. Whatever her
+/// facts say comes after that, so the first is it.
+fn at_known(prompt: &str) -> (&str, &str) {
+    prompt.split_at(prompt.find("Known:\n").unwrap_or(prompt.len()))
+}
+
+/// What she is told of `notToKeep` where one line of theirs is kept.
+fn not_to_keep_asked(examples: Examples) -> String {
+    let wording = examples.wording();
+    format!(
+        "notToKeep: 0 to {MAX_ASKED} things they ask you in userText not to keep from now on, whatever they say of them later ({not_to_keep}). It is no fact: facts has nothing of it, and supersedes copies every known fact about that thing. Its fact is one short sentence saying not to keep that thing, in the language of their message, named so it can be told on its own (what 'this' is, not 'this') and no wider or narrower than they asked, with nothing of what they told of it ({not_to_keep_fact}); its evidence is a contiguous verbatim excerpt from userText. {not_a_request}",
         not_to_keep = wording.not_to_keep,
         not_to_keep_fact = wording.not_to_keep_fact,
         not_a_request = not_a_request(wording),
@@ -510,7 +574,15 @@ pub fn extract_system_prompt_asked(existing: &[String], examples: Examples) -> S
 
 /// [`extract_schema`] with `notToKeep`.
 pub fn extract_schema_asked() -> serde_json::Value {
-    let mut schema = extract_schema();
+    with_not_to_keep(extract_schema())
+}
+
+/// [`extract_schema_dated`] with `notToKeep`.
+pub fn extract_schema_dated_asked() -> serde_json::Value {
+    with_not_to_keep(extract_schema_dated())
+}
+
+fn with_not_to_keep(mut schema: serde_json::Value) -> serde_json::Value {
     schema["properties"]["notToKeep"] = not_to_keep_schema(false);
     if let Some(required) = schema["required"].as_array_mut() {
         required.push("notToKeep".into());

@@ -1,0 +1,38 @@
+{
+  "call": "not_to_keep.schema",
+  "cases": [
+    {
+      "input": {},
+      "name": "what it answers in",
+      "output": {
+        "schema": {
+          "additionalProperties": false,
+          "properties": {
+            "drop": {
+              "items": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "drop"
+          ],
+          "type": "object"
+        },
+        "schemaName": "merope_not_to_keep"
+      }
+    },
+    {
+      "input": {
+        "x": 1
+      },
+      "name": "takes nothing",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -1,0 +1,203 @@
+{
+  "call": "not_to_keep.read",
+  "cases": [
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[2,0,2]}"
+      },
+      "name": "some, in order and once each",
+      "output": {
+        "drop": [
+          0,
+          2
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[]}"
+      },
+      "name": "none",
+      "output": {
+        "drop": []
+      }
+    },
+    {
+      "input": {
+        "items": 2,
+        "raw": "```json\n{\"drop\":[1]}\n```"
+      },
+      "name": "fenced",
+      "output": {
+        "drop": [
+          1
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": 1,
+        "raw": "{\"drop\":[0],\"why\":\"x\"}"
+      },
+      "name": "another key beside it",
+      "output": {
+        "drop": [
+          0
+        ]
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[0,3]}"
+      },
+      "name": "one that is not there",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 0,
+        "raw": "{\"drop\":[0]}"
+      },
+      "name": "none to judge, and one named",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "0"
+      },
+      "name": "not JSON",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": ""
+      },
+      "name": "no answer",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "none of them"
+      },
+      "name": "words",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[0"
+      },
+      "name": "cut off",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{}"
+      },
+      "name": "no such key",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":null}"
+      },
+      "name": "null",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":1}"
+      },
+      "name": "no list",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[0,\"1\"]}"
+      },
+      "name": "a string in it",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[-1]}"
+      },
+      "name": "below none",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": 3,
+        "raw": "{\"drop\":[0.5]}"
+      },
+      "name": "a part",
+      "output": {
+        "drop": null
+      }
+    },
+    {
+      "input": {
+        "items": -1,
+        "raw": "{\"drop\":[]}"
+      },
+      "name": "how many, below none",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "raw": "{\"drop\":[]}"
+      },
+      "name": "how many not given",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "items": 1,
+        "raw": "{\"drop\":[]}",
+        "who": "x"
+      },
+      "name": "a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

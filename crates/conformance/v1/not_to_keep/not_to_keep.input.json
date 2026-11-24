@@ -1,0 +1,92 @@
+{
+  "call": "not_to_keep.input",
+  "cases": [
+    {
+      "input": {
+        "asked": [
+          "不要记体重的事"
+        ],
+        "items": [
+          "周六爬山",
+          "瘦了两公斤"
+        ]
+      },
+      "name": "all theirs",
+      "output": {
+        "input": "{\"asked\":[\"不要记体重的事\"],\"items\":[{\"index\":0,\"text\":\"周六爬山\"},{\"index\":1,\"text\":\"瘦了两公斤\"}]}"
+      }
+    },
+    {
+      "input": {
+        "asked": [
+          "不要记体重的事",
+          "不要记前任的事"
+        ],
+        "items": [
+          "阿北说周六爬山"
+        ],
+        "who": "阿北"
+      },
+      "name": "a group's, by the name they go by there",
+      "output": {
+        "input": "{\"asked\":[\"不要记体重的事\",\"不要记前任的事\"],\"items\":[{\"index\":0,\"text\":\"阿北说周六爬山\"}],\"who\":\"阿北\"}"
+      }
+    },
+    {
+      "input": {
+        "asked": [
+          "不要记「\"体重\"」"
+        ],
+        "items": [
+          "第一行\n第二行 \\ \"引\" 🐢"
+        ]
+      },
+      "name": "quotes and lines kept as they are",
+      "output": {
+        "input": "{\"asked\":[\"不要记「\\\"体重\\\"」\"],\"items\":[{\"index\":0,\"text\":\"第一行\\n第二行 \\\\ \\\"引\\\" 🐢\"}]}"
+      }
+    },
+    {
+      "input": {
+        "asked": [],
+        "items": []
+      },
+      "name": "none",
+      "output": {
+        "input": "{\"asked\":[],\"items\":[]}"
+      }
+    },
+    {
+      "input": {
+        "asked": [],
+        "items": [],
+        "who": null
+      },
+      "name": "who, said null, as left out",
+      "output": {
+        "input": "{\"asked\":[],\"items\":[]}"
+      }
+    },
+    {
+      "input": {
+        "asked": []
+      },
+      "name": "items not given",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "asked": [],
+        "items": [],
+        "line": "x"
+      },
+      "name": "a field it does not know",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

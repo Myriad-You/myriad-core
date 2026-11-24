@@ -9,6 +9,15 @@ use serde_json::{Value, json};
 
 use crate::chat_remember::strip_json_fence;
 
+/// Source of the row of what someone asked her not to keep from now on.
+/// It only holds back what is kept: it is no fact of theirs, nothing recalls
+/// it and it never fades; deleting or taking it back goes as for any row.
+pub const ASKED_SOURCE: &str = "asked";
+/// Source of the row of their asking to be left alone for a while. It only
+/// holds back her reaching out, as [`ASKED_SOURCE`] holds back what is kept,
+/// and is no fact either.
+pub const LEFT_ALONE_SOURCE: &str = "left_alone";
+
 pub const NOT_TO_KEEP_SCHEMA_NAME: &str = "merope_not_to_keep";
 /// Items judged in one ask, at most, and how long they are together: more
 /// are asked about in parts ([`parts`]). None is cut short: what is kept of
