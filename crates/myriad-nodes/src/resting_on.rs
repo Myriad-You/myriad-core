@@ -7,7 +7,10 @@
 //! does (an intent let go of, or kept on other grounds, carries the words
 //! on): a version of the same intent, wherever it is, or of the one it was
 //! carried on from as its node went into another ([`carried_id`]). One
-//! whose words were changed and whose grounds were too does not.
+//! whose words were changed and whose grounds were too does not. A version
+//! forgotten already whose body is still given says which words those were,
+//! and whose the intent is, and nothing else: so a host asks before it
+//! deletes the bodies.
 //!
 //! Which versions of an intent stand is the fold's ([`crate::fold`]), on
 //! its rows alone: whether its node folds here makes no difference.
@@ -208,15 +211,26 @@ fn the_partners(body: &Value) -> bool {
 /// One intent on one node: its audience, its object and its id.
 type Place<'a> = (&'a str, &'a str, &'a str);
 
-/// One intent's rows here that are not forgotten, in log order, each with
-/// its body.
+/// One intent's rows here.
 #[derive(Default)]
 struct Intent<'a> {
+    /// Those not forgotten, in log order, each with its body.
     written: Vec<(&'a Row, &'a Value)>,
+    /// The bodies still given of those forgotten: only for whose the intent
+    /// is and what words it said.
+    forgotten: Vec<&'a Value>,
     /// Every version is the partner's.
     theirs: bool,
     /// The words of those resting on what goes.
     words: BTreeSet<&'a str>,
+}
+
+impl<'a> Intent<'a> {
+    /// Every body given, of those forgotten too.
+    fn bodies(&self) -> impl Iterator<Item = &'a Value> {
+        let written = self.written.iter().map(|(_, body)| *body);
+        written.chain(self.forgotten.iter().copied())
+    }
 }
 
 fn text_of(body: &Value) -> Option<&str> {
@@ -255,11 +269,7 @@ fn spread<'a>(intents: &mut BTreeMap<Place<'a>, Intent<'a>>) {
                 continue;
             }
             let had = intent.words.len();
-            let said: BTreeSet<&str> = intent
-                .written
-                .iter()
-                .filter_map(|(_, body)| text_of(body))
-                .collect();
+            let said: BTreeSet<&str> = intent.bodies().filter_map(text_of).collect();
             intent.words.extend(words.intersection(&said));
             if intent.words.len() > had {
                 from.push(*to);
@@ -313,34 +323,39 @@ pub fn resting_on(input: RestingOnInput) -> Result<RestingOn, NodeError> {
     let mut intents: BTreeMap<Place, Intent> = BTreeMap::new();
     // The rows whose body is not here, and what each is about.
     let mut bare: BTreeMap<&str, (&str, &str)> = BTreeMap::new();
-    for row in &full.rows {
-        if row.kind != INTENT || row.forgotten {
-            continue;
-        }
+    for row in full.rows.iter().filter(|row| row.kind == INTENT) {
         let Some(body) = bodies.get(&row.id) else {
-            bare.insert(&row.id, (&row.audience, &row.object));
+            if !row.forgotten {
+                bare.insert(&row.id, (&row.audience, &row.object));
+            }
             continue;
         };
         match body.get("intent").and_then(Value::as_str) {
-            Some(intent) => intents
-                .entry((&row.audience, &row.object, intent))
-                .or_default()
-                .written
-                .push((row, body)),
-            None if rests(body, &gone, the_partners(body)) => {
+            Some(intent) => {
+                let intent = intents
+                    .entry((&row.audience, &row.object, intent))
+                    .or_default();
+                if row.forgotten {
+                    intent.forgotten.push(body);
+                } else {
+                    intent.written.push((row, body));
+                }
+            }
+            None if !row.forgotten && rests(body, &gone, the_partners(body)) => {
                 out.insert(&row.id);
             }
             None => {}
         }
     }
     for intent in intents.values_mut() {
-        intent.theirs = intent.written.iter().all(|(_, body)| the_partners(body));
-        intent.words = intent
-            .written
-            .iter()
-            .filter(|(_, body)| rests(body, &gone, intent.theirs))
-            .filter_map(|(_, body)| text_of(body))
+        let theirs = intent.bodies().all(the_partners);
+        let words = intent
+            .bodies()
+            .filter(|body| rests(body, &gone, theirs))
+            .filter_map(text_of)
             .collect();
+        intent.theirs = theirs;
+        intent.words = words;
     }
     spread(&mut intents);
     for (place, intent) in &intents {
