@@ -5180,7 +5180,9 @@
       "name": "evidence she was not shown changes nothing",
       "output": {
         "failed": 1,
+        "failedDo": "relate",
         "fallback": "no_evidence",
+        "noEvidence": "not_shown",
         "writes": [
           {
             "body": {
@@ -30454,7 +30456,9 @@
       "name": "an answer that cannot be read twice in a row sees what it was shown the second time",
       "output": {
         "failed": 1,
+        "failedDo": "relate",
         "fallback": "no_evidence",
+        "noEvidence": "not_shown",
         "writes": [
           {
             "body": {

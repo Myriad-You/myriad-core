@@ -89,13 +89,15 @@
 //!
 //! An answer that cannot be read as it stands changes nothing: no row but
 //! the `node.upkept` mark, which says why (`fallback`) and which action
-//! (`failed` in what is read back). The first such mark sees nothing, so the
-//! node stays due and is asked once more (a host waits for its next upkeep
-//! rather than asking again in the same one); a second in a row sees what it
-//! was shown, so the queue moves on and the node is due again at its next
-//! change. Either way nothing she answered is written: her actions name
-//! each other (`new1`, labels), and half an answer is not hers.
+//! (`failed` in what is read back; with no evidence, also which kind,
+//! `noEvidence`, and the action's `do`, `failedDo`). The first such mark sees
+//! nothing, so the node stays due and is asked once more (a host waits for
+//! its next upkeep rather than asking again in the same one); a second in a
+//! row sees what it was shown, so the queue moves on and the node is due
+//! again at its next change. Either way nothing she answered is written: her
+//! actions name each other (`new1`, labels), and half an answer is not hers.
 
+use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use myriad_persona_log::{forget, row::Author};
@@ -1153,6 +1155,23 @@ impl Fallback {
     }
 }
 
+/// What was wrong with the evidence an answer gave ([`Fallback::NoEvidence`]):
+/// which kind, for a host to count; nothing of what it said.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NoEvidence {
+    /// No `because`, or one that is no list.
+    NotGiven,
+    /// An empty list.
+    Empty,
+    /// A label she was not shown.
+    NotShown,
+    /// Only labels she was shown that rest on nothing themselves.
+    RestsOnNothing,
+    /// More than a row holds ([`BECAUSE_IDS`]).
+    TooMany,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpkeepRead {
@@ -1169,6 +1188,12 @@ pub struct UpkeepRead {
     /// when one could not.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub failed: Option<usize>,
+    /// With [`Fallback::NoEvidence`]: what was wrong with it, and the `do`
+    /// of that action.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub no_evidence: Option<NoEvidence>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub failed_do: Option<String>,
 }
 
 /// A node an answer can name: one in the fold, or one it creates.
@@ -1198,6 +1223,8 @@ struct Reader<'a> {
     /// row), with what the answer adds and takes back: the fold's rule is
     /// replayed over it, so what stands here is what will stand there.
     part_of: Vec<(String, String, String)>,
+    /// What was wrong with the evidence given last.
+    no_evidence: Cell<Option<NoEvidence>>,
 }
 
 fn field<'v>(action: &'v Value, name: &str) -> Option<&'v Value> {
@@ -1281,6 +1308,7 @@ impl<'a> Reader<'a> {
             written: BTreeSet::new(),
             ended: false,
             part_of,
+            no_evidence: Cell::new(None),
         }
     }
 
@@ -1346,31 +1374,40 @@ impl<'a> Reader<'a> {
     /// counts (算数) for a view: shown as it is (not through the head),
     /// said only by the partner or her, and not in a group.
     fn weighed(&self, given: &Value) -> Result<(Vec<String>, bool), Fallback> {
+        self.weighs(given).map_err(|why| {
+            self.no_evidence.set(Some(why));
+            Fallback::NoEvidence
+        })
+    }
+
+    fn weighs(&self, given: &Value) -> Result<(Vec<String>, bool), NoEvidence> {
         let given = field(given, "because")
             .and_then(Value::as_array)
-            .ok_or(Fallback::NoEvidence)?;
+            .ok_or(NoEvidence::NotGiven)?;
         // The one rule of what counts (`trust`), as M5 has it everywhere.
         let counts = crate::trust::counts_for_view;
         let mut ids = BTreeSet::new();
         let mut counted = true;
         for label in given {
-            let label = label.as_str().ok_or(Fallback::NoEvidence)?.trim();
+            let label = label.as_str().ok_or(NoEvidence::NotShown)?.trim();
             if let Some(row) = self.context.spans.get(label) {
                 let span = self
-                    .me()?
+                    .me()
+                    .map_err(|_| NoEvidence::NotShown)?
                     .spans
                     .iter()
                     .find(|span| span.row == *row)
-                    .ok_or(Fallback::NoEvidence)?;
+                    .ok_or(NoEvidence::NotShown)?;
                 counted &= counts(Some(span.author), &span.said_by, &span.audience);
                 ids.insert(format!("span:{row}"));
             } else if let Some(row) = self.context.entries.get(label) {
                 let entry = self
-                    .me()?
+                    .me()
+                    .map_err(|_| NoEvidence::NotShown)?
                     .entries
                     .iter()
                     .find(|entry| entry.row == *row)
-                    .ok_or(Fallback::NoEvidence)?;
+                    .ok_or(NoEvidence::NotShown)?;
                 counted &= counts(Some(entry.author), &entry.said_by, &entry.audience);
                 ids.insert(format!("entry:{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
@@ -1382,11 +1419,17 @@ impl<'a> Reader<'a> {
                 counted = false;
                 ids.extend(rests_on.iter().cloned());
             } else {
-                return Err(Fallback::NoEvidence);
+                return Err(NoEvidence::NotShown);
             }
         }
-        if ids.is_empty() || ids.len() > BECAUSE_IDS {
-            return Err(Fallback::NoEvidence);
+        if ids.is_empty() {
+            return Err(match given.is_empty() {
+                true => NoEvidence::Empty,
+                false => NoEvidence::RestsOnNothing,
+            });
+        }
+        if ids.len() > BECAUSE_IDS {
+            return Err(NoEvidence::TooMany);
         }
         Ok((ids.into_iter().collect(), counted))
     }
@@ -2445,9 +2488,13 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
     }
     let mut reader = Reader::new(&context, &input.run, input.sync.clone());
     let mut failed = None;
+    let mut did = None;
     let read = actions(&input.output).and_then(|actions| {
         for (at, action) in actions.iter().enumerate() {
             failed = Some(at + 1);
+            did = field(action, "do")
+                .and_then(Value::as_str)
+                .map(|what| what.trim().to_string());
             reader.action(at + 1, action)?;
         }
         failed = None;
@@ -2462,6 +2509,7 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         }
         Ok(())
     });
+    let no_evidence = reader.no_evidence.take();
     let (mut writes, placed, held, fallback) = match read {
         Ok(()) => (
             reader.writes,
@@ -2472,6 +2520,9 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         Err(why) => (Vec::new(), Vec::new(), Vec::new(), Some(why)),
     };
     let failed = fallback.and(failed);
+    let no_evidence = no_evidence.filter(|_| fallback == Some(Fallback::NoEvidence));
+    // Of one of the actions: evidence is read only once it is known to be.
+    let failed_do = no_evidence.and(did);
     // Filing the inbox with no node kept leaves no mark: the inbox items
     // she placed leave the inbox, and the nodes they went on are due.
     if let Some(at) = context.at {
@@ -2540,12 +2591,17 @@ pub fn read(input: ReadInput) -> Result<UpkeepRead, NodeError> {
         held,
         fallback,
         failed,
+        no_evidence,
+        failed_do,
     })
 }
 
 #[cfg(test)]
 #[path = "upkeep_day_tests.rs"]
 mod day_tests;
+#[cfg(test)]
+#[path = "upkeep_evidence_tests.rs"]
+mod evidence_tests;
 #[cfg(test)]
 #[path = "upkeep_views_tests.rs"]
 mod views_tests;
