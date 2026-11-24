@@ -102,10 +102,10 @@ pub(super) fn carried_id(raw: &[u8]) -> Result<Value, Failure> {
 /// `{rows, bodies?, ledger, gone?, messages?, memories?, loose?}` →
 /// `{intents}`: the `node.intent` rows that go with what is being
 /// forgotten, each by a forget of its own. `gone` is the spans and entries
-/// by row id (or a Mac's slot); the rest by id. An intent a version of which
-/// stands on one, as the fold has it, goes whole; else only its older
-/// versions that rest on one, with any that would stand again. The
-/// partner's goes by a message or a memory only.
+/// by row id (or a Mac's slot); the rest by id. A version rests on one it
+/// names, or whose words it carries on. An intent a version of which stands
+/// so goes whole; else only its older versions that do, with any that would
+/// stand again. The partner's goes by a message or a memory only.
 pub(super) fn resting_on(raw: &[u8]) -> Result<Value, Failure> {
     answer(&resting::resting_on(quiet_input(raw)?).map_err(refused)?)
 }

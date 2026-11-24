@@ -77,33 +77,38 @@ fn what_upkeep_writes_goes_with_what_it_rests_on() {
     assert!(hands > 0);
 }
 
-/// What is left after the rows listed go stands as it did, however the
-/// versions of one intent are written on each other: every way four may be.
-#[test]
-fn what_stands_after_is_what_stood_or_nothing() {
+/// Every way `n` versions of one intent may be written on those before
+/// them, each with every way they may rest on what goes; `copied` bit `k`:
+/// the version after `k` says the words of the one before it.
+fn each_way(n: usize, copied: usize) -> usize {
     let ids = ["u1", "u2", "u3", "u4"];
     let mut kept = 0;
-    // A base per later version (any of those before it) and who rests on it.
-    for shape in 0..(2 * 4 * 8) {
-        let (second, third, fourth) = (shape & 1, (shape >> 1) & 3, shape >> 3);
-        for rests in 1..16_usize {
-            let bodies: Vec<Value> = [0, second, third, fourth]
-                .iter()
-                .enumerate()
-                .map(|(n, named)| {
-                    let base: Vec<&str> = (0..n)
-                        .filter(|at| named >> at & 1 == 1)
-                        .map(|at| ids[at])
+    for shape in 0..1_usize << (n * (n - 1) / 2) {
+        for named in 1..1_usize << n {
+            let text: Vec<usize> = (0..n).fold(Vec::new(), |mut text, at| {
+                let same = at > 0 && copied >> (at - 1) & 1 == 1;
+                text.push(if same { text[at - 1] } else { at });
+                text
+            });
+            let rests =
+                |at: usize| (0..n).any(|other| named >> other & 1 == 1 && text[other] == text[at]);
+            let bodies: Vec<Value> = (0..n)
+                .map(|at| {
+                    // Any of the ones before it, from its own bits.
+                    let bits = shape >> (at * at.saturating_sub(1) / 2);
+                    let base: Vec<&str> = (0..at)
+                        .filter(|on| bits >> on & 1 == 1)
+                        .map(|on| ids[on])
                         .collect();
-                    let ground = if rests >> n & 1 == 1 {
+                    let ground = if named >> at & 1 == 1 {
                         "span:s1"
                     } else {
                         "message:9"
                     };
                     json!({
                         "version": 1, "sync": "shared", "saidBy": ["her"], "base": base,
-                        "intent": "h1", "text": format!("一段{n}"), "because": [ground],
-                        "status": "waiting",
+                        "intent": "h1", "text": format!("一段{}", text[at]),
+                        "because": [ground], "status": "waiting",
                     })
                 })
                 .collect();
@@ -114,27 +119,31 @@ fn what_stands_after_is_what_stood_or_nothing() {
             };
             let before = stands(&all);
             let going = resting_on(input(&all, &["s1"])).unwrap().intents;
-            let left: Vec<(&str, &Value)> = all
-                .iter()
-                .copied()
-                .filter(|(id, _)| !going.iter().any(|gone| gone == id))
-                .collect();
-            for (n, id) in ids.iter().enumerate() {
-                assert!(rests >> n & 1 == 0 || going.iter().any(|gone| gone == id));
-            }
-            let rested = ids
-                .iter()
-                .enumerate()
-                .any(|(n, id)| rests >> n & 1 == 1 && before.contains(*id));
-            if rested {
-                assert!(left.is_empty(), "{shape} {rests}");
+            let goes = |id: &str| going.iter().any(|gone| gone == id);
+            let left: Vec<(&str, &Value)> =
+                all.iter().copied().filter(|(id, _)| !goes(id)).collect();
+            let at = format!("{n} versions, {shape}, {named}, {copied}: {going:?}");
+            assert!((0..n).all(|one| !rests(one) || goes(ids[one])), "{at}");
+            if (0..n).any(|one| rests(one) && before.contains(ids[one])) {
+                assert!(left.is_empty(), "{at}");
             } else {
-                assert_eq!(stands(&left), before, "{shape} {rests}");
+                assert_eq!(stands(&left), before, "{at}");
                 kept += 1;
             }
         }
     }
-    assert!(kept > 0);
+    kept
+}
+
+/// What is left after the rows listed go stands as it did, or nothing is
+/// left; and none left says the words of one that went for resting on it.
+#[test]
+fn what_stands_after_is_what_stood_or_nothing() {
+    assert!(each_way(4, 0) > 0);
+    for copied in 0..4 {
+        // All in the same words: whichever rests, all do.
+        assert_eq!(each_way(3, copied) == 0, copied == 3, "{copied}");
+    }
 }
 
 /// The partner's words are never quoted in a refusal.

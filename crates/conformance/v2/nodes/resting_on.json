@@ -1995,7 +1995,7 @@
             ],
             "status": "dropped",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u3": {
@@ -2109,7 +2109,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           }
         },
@@ -2191,7 +2191,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u3": {
@@ -2208,7 +2208,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改2）",
             "version": 1
           }
         },
@@ -2307,7 +2307,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u2": {
@@ -2324,7 +2324,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改2）",
             "version": 1
           },
           "u3": {
@@ -2341,7 +2341,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改3）",
             "version": 1
           }
         },
@@ -2457,7 +2457,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u3": {
@@ -2474,7 +2474,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改2）",
             "version": 1
           }
         },
@@ -2572,7 +2572,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u3": {
@@ -2590,7 +2590,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改2）",
             "version": 1
           }
         },
@@ -2688,7 +2688,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u2": {
@@ -2705,7 +2705,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "改问另一段",
+            "text": "问问一段怎么样了（改2）",
             "version": 1
           }
         },
@@ -2805,7 +2805,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           },
           "u2": {
@@ -2822,7 +2822,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "改问另一段",
+            "text": "问问一段怎么样了（改2）",
             "version": 1
           }
         },
@@ -2935,7 +2935,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           }
         },
@@ -3145,7 +3145,7 @@
             ],
             "status": "dropped",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           }
         },
@@ -3298,6 +3298,89 @@
               "u1"
             ],
             "because": [
+              "entry:e1"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "dropped",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "let go of on other grounds, in the same words: the words rest on it still, and it goes whole",
+      "output": {
+        "intents": [
+          "u1",
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
               "message:9"
             ],
             "intent": "h1",
@@ -3308,6 +3391,1359 @@
             "status": "waiting",
             "sync": "shared",
             "text": "问问一段怎么样了",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "kept on other grounds, in the same words: it goes whole",
+      "output": {
+        "intents": [
+          "u1",
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "message:8"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [
+              "u2"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改2）",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "an older one in the same words goes with it, what stands in other words stays",
+      "output": {
+        "intents": [
+          "u1",
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "entry:e1"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u3": {
+            "base": [],
+            "because": [
+              "entry:e1"
+            ],
+            "intent": "m1a389a68b6c067844ffafe50",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u4": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "m75923cb20a64bfafb6e6c6d3",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u5": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "m3f21",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u6": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h9",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "另一段",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 4,
+            "epoch": 1,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "u4",
+            "kind": "node.intent",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u4"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 5,
+            "epoch": 1,
+            "hlc": "001760000000005-000000-dev_mac",
+            "id": "u5",
+            "kind": "node.intent",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u5"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 6,
+            "epoch": 1,
+            "hlc": "001760000000006-000000-dev_mac",
+            "id": "u6",
+            "kind": "node.intent",
+            "object": "node:69192ad55e973984fc259bc057995248",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u6"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "carried on, twice, in the same words on other grounds: each goes, and one in other words stays",
+      "output": {
+        "intents": [
+          "u1",
+          "u2",
+          "u3",
+          "u4"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "m1a389a68b6c067844ffafe50",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问另一段",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "carried on in other words, on other grounds: it stays",
+      "output": {
+        "intents": [
+          "u1"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "moved to another node under its own id, in the same words on other grounds: it goes there too",
+      "output": {
+        "intents": [
+          "u1",
+          "u3"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [
+          {
+            "at": "001760000000900-000000-dev_mac",
+            "audience": "personal:local-owner",
+            "homes": [
+              "dev_two"
+            ],
+            "kind": "retract",
+            "target": "node:4b50145fec289d687982b9ef9d33bbf7"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "local",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a node taken back on another side does not fold here: what stands of this side's own rows is the same",
+      "output": {
+        "intents": [
+          "u1"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [
+          {
+            "at": "001760000000900-000000-dev_mac",
+            "audience": "personal:local-owner",
+            "homes": [
+              "dev_mac"
+            ],
+            "kind": "retract",
+            "target": "node:4b50145fec289d687982b9ef9d33bbf7"
+          },
+          {
+            "at": "001760000000900-000000-dev_mac",
+            "audience": "personal:local-owner",
+            "kind": "home",
+            "target": "node:4b50145fec289d687982b9ef9d33bbf7"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a node kept on its home: what stands is the same",
+      "output": {
+        "intents": [
+          "u1"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "dropped",
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h2",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": {
+              "local": "dev_mac"
+            },
+            "text": "问问一段怎么样了",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [
+          {
+            "at": "001760000000900-000000-dev_mac",
+            "audience": "personal:local-owner",
+            "homes": [
+              "dev_two"
+            ],
+            "kind": "retract",
+            "target": "node:4b50145fec289d687982b9ef9d33bbf7"
+          }
+        ],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "local",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "local",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a node taken back on another side: one that stands rests on it, and it goes whole",
+      "output": {
+        "intents": [
+          "u1",
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "dropped",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h2",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "one whose body is not here goes with the one written on it",
+      "output": {
+        "intents": [
+          "u1",
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [
+              "u2"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改2）",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "only older ones go: one whose body is not here goes with the one written on it",
+      "output": {
+        "intents": [
+          "u1",
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [
+              "u1",
+              "u2"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改2）",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "only older ones go: one whose body is not here stays, what stands was written on it too",
+      "output": {
+        "intents": [
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "dropped",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
+            "version": 1
+          },
+          "u3": {
+            "base": [],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h2",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          }
+        },
+        "gone": [
+          "p-5f1c@dev_mac"
+        ],
+        "ledger": [],
+        "rows": [
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "u1",
+            "kind": "node.intent",
+            "object": "node:20f18911b98aa0b65728234cef5d20ac",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 2,
+            "epoch": 1,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "u2",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:local-owner",
+            "author": "her",
+            "dseq": 3,
+            "epoch": 1,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "u3",
+            "kind": "node.intent",
+            "object": "node:4b50145fec289d687982b9ef9d33bbf7",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "body:u3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "one whose body is not here, named from another node's, stays",
+      "output": {
+        "intents": [
+          "u2"
+        ]
+      }
+    },
+    {
+      "input": {
+        "bodies": {
+          "u1": {
+            "base": [],
+            "because": [
+              "span:p-5f1c@dev_mac"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了",
+            "version": 1
+          },
+          "u2": {
+            "base": [
+              "u1"
+            ],
+            "because": [
+              "message:9"
+            ],
+            "intent": "h1",
+            "origin": "her",
+            "saidBy": [
+              "her"
+            ],
+            "status": "waiting",
+            "sync": "shared",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           }
         },
@@ -3466,7 +4902,7 @@
             ],
             "status": "waiting",
             "sync": "shared",
-            "text": "问问一段怎么样了",
+            "text": "问问一段怎么样了（改1）",
             "version": 1
           }
         },

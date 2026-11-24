@@ -2,17 +2,30 @@
 //! (`nodes.resting_on`): both hosts forget the same rows, each by a forget
 //! of its own.
 //!
-//! An intent names its grounds in `because`. Which versions of it stand is
-//! the fold's ([`crate::fold`]), on the rows, bodies and ledger given:
+//! An intent names its grounds in `because`. A version rests on what goes
+//! when it names it, or when its `text` is word for word that of one that
+//! does (an intent let go of, or kept on other grounds, carries the words
+//! on): a version of the same intent, wherever it is, or of the one it was
+//! carried on from as its node went into another ([`carried_id`]). One
+//! whose words were changed and whose grounds were too does not.
 //!
-//! - One that stands (a rival too) names what goes: the intent goes whole,
+//! Which versions of an intent stand is the fold's ([`crate::fold`]), on
+//! its rows alone: whether its node folds here makes no difference.
+//!
+//! - One that stands (a rival too) rests on it: the intent goes whole,
 //!   every version of it here. One left behind would stand again, a hand
 //!   she let go of among them.
-//! - Only versions written over name it: those go, and what stands stays. A
-//!   version left out no longer says which it was written on, so one older
+//! - Only versions written over rest on it: those go, and what stands stays.
+//!   A version left out no longer says which it was written on, so one older
 //!   still would stand again beside it: that goes too, until none does.
 //!
-//! A row the fold does not place (a body it cannot check) goes on its own.
+//! A row whose body is not here (withheld, not arrived) says no intent and
+//! no grounds. One a going version was written on goes with it (and when
+//! only older versions go, unless one that stays was written on it too),
+//! for a side that has its body would have it stand again. Any other is not
+//! seen: the host asks again when a body comes, and with every intent row
+//! that comes after the forgetting. A row the fold does not place (a body
+//! it cannot check) goes on its own.
 //!
 //! The names are:
 //!
@@ -49,6 +62,7 @@ use crate::{
     body::{ENTRY_REF, LOOSE_REF, MEMORY_REF, SPAN_REF},
     check_token,
     fold::{FoldInput, fold, fold_full},
+    upkeep::{Carried, carried_id},
 };
 
 const MESSAGE_REF: &str = "message:";
@@ -191,9 +205,68 @@ fn the_partners(body: &Value) -> bool {
     }
 }
 
-/// Every row one intent was written in, on one node: those not forgotten,
-/// in log order, each with its body.
-type Versions<'a> = BTreeMap<(&'a str, &'a str, &'a str), Vec<(&'a Row, &'a Value)>>;
+/// One intent on one node: its audience, its object and its id.
+type Place<'a> = (&'a str, &'a str, &'a str);
+
+/// One intent's rows here that are not forgotten, in log order, each with
+/// its body.
+#[derive(Default)]
+struct Intent<'a> {
+    written: Vec<(&'a Row, &'a Value)>,
+    /// Every version is the partner's.
+    theirs: bool,
+    /// The words of those resting on what goes.
+    words: BTreeSet<&'a str>,
+}
+
+fn text_of(body: &Value) -> Option<&str> {
+    body.get("text").and_then(Value::as_str)
+}
+
+fn base_of(body: &Value) -> impl Iterator<Item = &str> {
+    body.get("base")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter_map(Value::as_str)
+}
+
+/// The words of one intent go wherever it is again in its audience: on
+/// another node under its own id (a Mac moves it so), or under what it goes
+/// on as when its node goes into another. Never into what is the partner's
+/// from what is not.
+fn spread<'a>(intents: &mut BTreeMap<Place<'a>, Intent<'a>>) {
+    let mut from: Vec<Place> = intents
+        .iter()
+        .filter(|(_, intent)| !intent.words.is_empty())
+        .map(|(place, _)| *place)
+        .collect();
+    while let Some(place) = from.pop() {
+        let (audience, object, id) = place;
+        let node = object.strip_prefix("node:").unwrap_or(object);
+        let carried = carried_id(Carried::Intent, node, id);
+        let (words, theirs) = {
+            let intent = &intents[&place];
+            (intent.words.clone(), intent.theirs)
+        };
+        for (to, intent) in intents.iter_mut() {
+            let again = to.0 == audience && to.1 != object && (to.2 == id || to.2 == carried);
+            if !again || (intent.theirs && !theirs) {
+                continue;
+            }
+            let had = intent.words.len();
+            let said: BTreeSet<&str> = intent
+                .written
+                .iter()
+                .filter_map(|(_, body)| text_of(body))
+                .collect();
+            intent.words.extend(words.intersection(&said));
+            if intent.words.len() > had {
+                from.push(*to);
+            }
+        }
+    }
+}
 
 fn rests(body: &Value, gone: &Gone, the_partners: bool) -> bool {
     body.get("because")
@@ -236,26 +309,23 @@ pub fn resting_on(input: RestingOnInput) -> Result<RestingOn, NodeError> {
         bodies: bodies.clone(),
         ledger: input.ledger,
     })?;
-    let stands: BTreeSet<&str> = full
-        .folded
-        .nodes
-        .iter()
-        .flat_map(|node| node.intents.values())
-        .flat_map(|intent| intent.base.iter().map(String::as_str))
-        .collect();
     let mut out: BTreeSet<&str> = BTreeSet::new();
-    let mut versions: Versions = BTreeMap::new();
+    let mut intents: BTreeMap<Place, Intent> = BTreeMap::new();
+    // The rows whose body is not here, and what each is about.
+    let mut bare: BTreeMap<&str, (&str, &str)> = BTreeMap::new();
     for row in &full.rows {
         if row.kind != INTENT || row.forgotten {
             continue;
         }
         let Some(body) = bodies.get(&row.id) else {
+            bare.insert(&row.id, (&row.audience, &row.object));
             continue;
         };
         match body.get("intent").and_then(Value::as_str) {
-            Some(intent) => versions
+            Some(intent) => intents
                 .entry((&row.audience, &row.object, intent))
                 .or_default()
+                .written
                 .push((row, body)),
             None if rests(body, &gone, the_partners(body)) => {
                 out.insert(&row.id);
@@ -263,20 +333,33 @@ pub fn resting_on(input: RestingOnInput) -> Result<RestingOn, NodeError> {
             None => {}
         }
     }
-    for written in versions.values() {
-        let theirs = written.iter().all(|(_, body)| the_partners(body));
-        let rows: Vec<&Row> = written.iter().map(|(row, _)| *row).collect();
-        let mut going: BTreeSet<&str> = written
+    for intent in intents.values_mut() {
+        intent.theirs = intent.written.iter().all(|(_, body)| the_partners(body));
+        intent.words = intent
+            .written
             .iter()
-            .filter(|(_, body)| rests(body, &gone, theirs))
+            .filter(|(_, body)| rests(body, &gone, intent.theirs))
+            .filter_map(|(_, body)| text_of(body))
+            .collect();
+    }
+    spread(&mut intents);
+    for (place, intent) in &intents {
+        let rows: Vec<&Row> = intent.written.iter().map(|(row, _)| *row).collect();
+        let mut going: BTreeSet<&str> = intent
+            .written
+            .iter()
+            .filter(|(_, body)| {
+                rests(body, &gone, intent.theirs)
+                    || text_of(body).is_some_and(|text| intent.words.contains(text))
+            })
             .map(|(row, _)| row.id.as_str())
             .collect();
         if going.is_empty() {
             continue;
         }
-        if going.iter().any(|id| stands.contains(id)) {
-            out.extend(rows.iter().map(|row| row.id.as_str()));
-            continue;
+        let stands = standing(&rows, &bodies)?;
+        if going.iter().any(|id| stands.contains(*id)) {
+            going.extend(rows.iter().map(|row| row.id.as_str()));
         }
         loop {
             let left: Vec<&Row> = rows
@@ -288,13 +371,23 @@ pub fn resting_on(input: RestingOnInput) -> Result<RestingOn, NodeError> {
             let risen: Vec<&str> = left
                 .iter()
                 .map(|row| row.id.as_str())
-                .filter(|id| again.contains(*id) && !stands.contains(id))
+                .filter(|id| again.contains(*id) && !stands.contains(*id))
                 .collect();
             if risen.is_empty() {
                 break;
             }
             going.extend(risen);
         }
+        let (went, stay): (Vec<_>, Vec<_>) = intent
+            .written
+            .iter()
+            .partition(|(row, _)| going.contains(row.id.as_str()));
+        let held: BTreeSet<&str> = stay.iter().flat_map(|(_, body)| base_of(body)).collect();
+        out.extend(
+            went.iter()
+                .flat_map(|(_, body)| base_of(body))
+                .filter(|id| bare.get(id) == Some(&(place.0, place.1)) && !held.contains(id)),
+        );
         out.extend(going);
     }
     Ok(RestingOn {
