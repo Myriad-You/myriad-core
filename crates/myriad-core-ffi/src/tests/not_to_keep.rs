@@ -154,7 +154,7 @@ fn what_they_asked_is_read_as_the_crate_does_and_not_quoted_back() {
     let by = [true, false, true];
     let good = json!({ "fact": "不要记前任的事", "evidence": "前任的事也别记", "said": 2,
         "replaces": ["不要记前任的生日"] });
-    let before = vec!["不要记前任的生日".to_string()];
+    let before = ["不要记前任的生日".to_string()];
     for list in [
         json!([]),
         json!(null),
