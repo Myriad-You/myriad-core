@@ -9,7 +9,7 @@
 
 use myriad_nodes::{
     Body, NodeError, entries, fold as fold_rows, home, intents, limits as node_limits, listing,
-    place, queue as due, recall, stands, trust, upkeep, wire,
+    place, queue as due, recall, resting_on as resting, stands, trust, upkeep, wire,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -89,6 +89,25 @@ pub(super) fn fold(raw: &[u8]) -> Result<Value, Failure> {
 /// in the node, which a forget takes only when it lists them.
 pub(super) fn retract(raw: &[u8]) -> Result<Value, Failure> {
     answer(&fold_rows::retract_lists(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{kind: intent | open | standing, node, item}` → `{id}`: the id `item`
+/// on the node of id `node` goes on under (`m…`) when that node goes into
+/// another, as her upkeep writes it. Carried on again, it is made from that
+/// id on the node it is on then.
+pub(super) fn carried_id(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&upkeep::carried(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{rows, bodies?, ledger, gone?, messages?, memories?, loose?}` →
+/// `{intents}`: the `node.intent` rows that go with what is being
+/// forgotten, each by a forget of its own. `gone` is the spans and entries
+/// by row id (or a Mac's slot); the rest by id. A version rests on one it
+/// names, or whose words it carries on. An intent a version of which stands
+/// so goes whole; else only its older versions that do, with any that would
+/// stand again. The partner's goes by a message or a memory only.
+pub(super) fn resting_on(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&resting::resting_on(quiet_input(raw)?).map_err(refused)?)
 }
 
 /// `{audience, rows, bodies?, ledger, holder, elsewhere?}` → a home page

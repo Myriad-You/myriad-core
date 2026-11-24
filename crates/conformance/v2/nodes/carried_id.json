@@ -1,0 +1,149 @@
+{
+  "call": "nodes.carried_id",
+  "cases": [
+    {
+      "input": {
+        "item": "ask",
+        "kind": "intent",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "an intent, as her upkeep carries it on",
+      "output": {
+        "id": "m11f486afa294e725bb22668d"
+      }
+    },
+    {
+      "input": {
+        "item": "shots",
+        "kind": "open",
+        "node": "69192ad55e973984fc259bc057995248"
+      },
+      "name": "an open item",
+      "output": {
+        "id": "m7a53d44b54a427940fbf72b3"
+      }
+    },
+    {
+      "input": {
+        "item": "running",
+        "kind": "standing",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "how something stands",
+      "output": {
+        "id": "m45d9c5ada94fe85f8d72c5fe"
+      }
+    },
+    {
+      "input": {
+        "item": "ask",
+        "kind": "open",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "the same item of another kind is another",
+      "output": {
+        "id": "m4800e4770e30d798b45ea712"
+      }
+    },
+    {
+      "input": {
+        "item": "ask",
+        "kind": "intent",
+        "node": "69192ad55e973984fc259bc057995248"
+      },
+      "name": "the same item on another node is another",
+      "output": {
+        "id": "m9dd5a28428348963f833c04c"
+      }
+    },
+    {
+      "input": {
+        "item": "m11f486afa294e725bb22668d",
+        "kind": "intent",
+        "node": "69192ad55e973984fc259bc057995248"
+      },
+      "name": "carried on again, from the node it is on then",
+      "output": {
+        "id": "m159ca3fb4debb9fc334ef717"
+      }
+    },
+    {
+      "input": {
+        "item": "m159ca3fb4debb9fc334ef717",
+        "kind": "intent",
+        "node": "4b50145fec289d687982b9ef9d33bbf7"
+      },
+      "name": "and once more",
+      "output": {
+        "id": "m8c1d8ee0f75774cc86f1d17c"
+      }
+    },
+    {
+      "input": {
+        "item": "m7a53d44b54a427940fbf72b3",
+        "kind": "open",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "an open item carried on again",
+      "output": {
+        "id": "mf237a2838acd16e815487c28"
+      }
+    },
+    {
+      "input": {
+        "item": "m45d9c5ada94fe85f8d72c5fe",
+        "kind": "standing",
+        "node": "69192ad55e973984fc259bc057995248"
+      },
+      "name": "how something stands carried on again",
+      "output": {
+        "id": "ma260acdc082be518c610173d"
+      }
+    },
+    {
+      "input": {
+        "item": "evt_9",
+        "kind": "intent",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "a hand an event raised",
+      "output": {
+        "id": "m61a01e59e25d6e73b2843373"
+      }
+    },
+    {
+      "input": {
+        "item": "v1",
+        "kind": "view",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "refused: a kind that is not carried on",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "item": "ask",
+        "kind": "intent",
+        "node": "node:a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "refused: a node by its object",
+      "output": {
+        "error": "bad_input"
+      }
+    },
+    {
+      "input": {
+        "item": "a b",
+        "kind": "intent",
+        "node": "a623d5fa498a9c6539bd12ac285ecb18"
+      },
+      "name": "refused: an item that is no item id",
+      "output": {
+        "error": "bad_input"
+      }
+    }
+  ],
+  "version": 1
+}

@@ -108,9 +108,9 @@ use serde_json::Value;
 use crate::{
     NodeError,
     body::{
-        Absorbed, Body, Created, DoneWhen, Field, How, Intent, IntentStatus, KindChanged,
-        MEMORY_REF, OpenItem, Origin, Related, Relation, Revised, Sentence, Span, SplitOff,
-        Standing, Status, Unrelated, Upkept, ViewChanged,
+        Absorbed, Body, Created, DoneWhen, ENTRY_REF, Field, How, Intent, IntentStatus,
+        KindChanged, MEMORY_REF, OpenItem, Origin, Related, Relation, Revised, SPAN_REF, Sentence,
+        Span, SplitOff, Standing, Status, Unrelated, Upkept, ViewChanged,
     },
     check_token,
     fold::{FoldInput, Full, IntentValue, Item, Node, Parts, ViewValue, fold_full},
@@ -1275,6 +1275,55 @@ fn enum_of<T: serde::de::DeserializeOwned>(action: &Value, name: &str) -> Result
         .ok_or(Fallback::BadField)
 }
 
+/// What is written again on the node this one goes into (`absorb`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Carried {
+    Intent,
+    Open,
+    Standing,
+}
+
+/// The id an intent, an open item or how something stands, `item` on
+/// `node` (a node's id), goes on under when `node` goes into another: `m`
+/// and 24 hex of the three. Carried on again, from the node it is on then,
+/// it is made from this id.
+pub fn carried_id(kind: Carried, node: &str, item: &str) -> String {
+    let kind = match kind {
+        Carried::Intent => "intent",
+        Carried::Open => "open",
+        Carried::Standing => "standing",
+    };
+    format!("m{}", minted(&format!("{kind}\u{1f}{node}\u{1f}{item}")))
+}
+
+/// `nodes.carried_id`.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CarriedIdInput {
+    pub kind: Carried,
+    /// The id of the node it was on (not `node:<id>`).
+    pub node: String,
+    pub item: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CarriedId {
+    pub id: String,
+}
+
+/// [`carried_id`], checked.
+pub fn carried(input: CarriedIdInput) -> Result<CarriedId, NodeError> {
+    check_token("node", &input.node)?;
+    if input.node.starts_with("node:") {
+        return Err(NodeError::new("node is a node's id, not its object"));
+    }
+    crate::tags::check_item_id("item", &input.item)?;
+    Ok(CarriedId {
+        id: carried_id(input.kind, &input.node, &input.item),
+    })
+}
+
 fn minted(seed: &str) -> String {
     sha256_hex(seed.as_bytes())[..24].to_string()
 }
@@ -1399,7 +1448,7 @@ impl<'a> Reader<'a> {
                     .find(|span| span.row == *row)
                     .ok_or(NoEvidence::NotShown)?;
                 counted &= counts(Some(span.author), &span.said_by, &span.audience);
-                ids.insert(format!("span:{row}"));
+                ids.insert(format!("{SPAN_REF}{row}"));
             } else if let Some(row) = self.context.entries.get(label) {
                 let entry = self
                     .me()
@@ -1409,7 +1458,7 @@ impl<'a> Reader<'a> {
                     .find(|entry| entry.row == *row)
                     .ok_or(NoEvidence::NotShown)?;
                 counted &= counts(Some(entry.author), &entry.said_by, &entry.audience);
-                ids.insert(format!("entry:{row}"));
+                ids.insert(format!("{ENTRY_REF}{row}"));
             } else if let Some(&at) = self.context.inbox.get(label) {
                 let item = &self.context.items[at];
                 counted &= counts(None, &item.said_by, item.said_in(&self.context.audience));
@@ -2160,7 +2209,7 @@ impl<'a> Reader<'a> {
                     sync: self.sync.clone(),
                     said_by: open.current.said_by.clone(),
                     base: Vec::new(),
-                    item: format!("m{}", minted(&format!("open\u{1f}{id}\u{1f}{item}"))),
+                    item: carried_id(Carried::Open, &id, item),
                     text: open.current.value.text.clone(),
                     because: open.current.value.because.clone(),
                     closed: false,
@@ -2178,7 +2227,7 @@ impl<'a> Reader<'a> {
                     sync: self.sync.clone(),
                     said_by: said.current.said_by.clone(),
                     base: Vec::new(),
-                    intent: format!("m{}", minted(&format!("intent\u{1f}{id}\u{1f}{intent}"))),
+                    intent: carried_id(Carried::Intent, &id, intent),
                     text: said.current.value.text.clone(),
                     because: said.current.value.because.clone(),
                     status: IntentStatus::Waiting,
@@ -2203,7 +2252,7 @@ impl<'a> Reader<'a> {
                     sync: self.sync.clone(),
                     said_by: current.said_by.clone(),
                     base: Vec::new(),
-                    item: format!("m{}", minted(&format!("standing\u{1f}{id}\u{1f}{item}"))),
+                    item: carried_id(Carried::Standing, &id, item),
                     text: current.value.text.clone(),
                     since: current.value.since.clone(),
                     state: current.value.state,

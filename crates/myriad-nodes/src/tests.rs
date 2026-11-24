@@ -105,6 +105,8 @@ fn run(call: &str, raw: Value) -> Result<Value, NodeError> {
         "nodes.look_status" => json!({ "card": crate::look_cards::status(input(raw)?)? }),
         "nodes.look_settled" => json!({ "card": crate::look_cards::settled(input(raw)?)? }),
         "nodes.look_progress" => json_of(&crate::look_progress::progress(input(raw)?)?),
+        "nodes.carried_id" => json_of(&upkeep::carried(input(raw)?)?),
+        "nodes.resting_on" => json_of(&crate::resting_on::resting_on(input(raw)?)?),
         "nodes.row_id" => json_of(&entries::row_id(input(raw)?)?),
         "nodes.pick" => json_of(&recall::pick(input(raw)?)?),
         "nodes.standing_read" => json_of(&entries::standing_read(input(raw)?)),
@@ -149,7 +151,7 @@ fn case_files() -> Vec<PathBuf> {
 #[test]
 fn every_conformance_case_answers_as_recorded() {
     let files = case_files();
-    assert_eq!(files.len(), 50, "{files:?}");
+    assert_eq!(files.len(), 52, "{files:?}");
     for path in files {
         let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(file["version"], 1, "{}", path.display());
@@ -499,6 +501,18 @@ fn every_refused_case_is_refused_for_its_own_reason() {
             "refused: a row id of a kind the core does not read",
             "the core reads",
         ),
+        // nodes.carried_id
+        ("refused: a kind that is not carried on", "unknown variant"),
+        ("refused: a node by its object", "not its object"),
+        ("refused: an item that is no item id", "item is 1 to"),
+        // nodes.resting_on
+        ("refused: a ground of no id", "messages must be 1 to"),
+        (
+            "refused: a gone row with a control character",
+            "gone holds a control character",
+        ),
+        ("refused: the spans under another name", "unknown field"),
+        ("refused: no ledger", "missing field"),
         // nodes.session_rows
         (
             "refused: a remote not as repoKey writes it",
