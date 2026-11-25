@@ -27,6 +27,7 @@ pub(super) const TESTED: &[&str] = &[
     "memory.gap_in",
     "memory.of_row",
     "memory.overlap",
+    "memory.rank_marked",
     "memory.readiness",
     "memory.score_all",
     "memory.spread",
@@ -374,4 +375,158 @@ fn what_she_always_knows_matches_the_crate() {
         assert_eq!(got["chosen"], json!(want));
     }
     assert!(recall::always_known(&view, now.fixed_offset()).is_empty());
+}
+
+#[test]
+fn rank_marked_matches_the_crate_and_is_deterministic() {
+    let now: DateTime<Utc> = "2026-11-25T06:00:00Z".parse().unwrap();
+    let base_rows = [
+        ("m0", "   ", vec![], "chat", 1, 0, None),
+        (
+            "m1",
+            "她家的猫叫年糕，很胖",
+            vec![concept("猫", &["cat", "喵"])],
+            "chat",
+            2,
+            1,
+            Some(1),
+        ),
+        (
+            "m2",
+            "她家的猫叫年糕，很胖",
+            vec![concept("猫", &["cat", "喵"])],
+            "chat",
+            3,
+            0,
+            None,
+        ),
+        (
+            "m3",
+            "年糕又偷吃了",
+            vec![concept("猫", &[]), concept("年糕", &[])],
+            "chat",
+            4,
+            0,
+            None,
+        ),
+        (
+            "m4",
+            "昨天刚在玩 Hades II",
+            vec![concept("游戏", &["Hades"])],
+            "game",
+            5,
+            0,
+            None,
+        ),
+        (
+            "m5",
+            "周末打算去河边骑车",
+            vec![concept("骑车", &["bike"])],
+            "chat",
+            6,
+            2,
+            Some(2),
+        ),
+    ];
+    let rows_json: Value = json!(
+        base_rows
+            .iter()
+            .map(|(id, content, concepts, source, days, access, last)| {
+                json!({
+                    "id": id,
+                    "content": content,
+                    "concepts": concepts,
+                    "source": source,
+                    "createdAt": micros(now - Duration::days(*days)),
+                    "accessCount": access,
+                    "lastAccessedAt": last.map(|d| micros(now - Duration::days(d))),
+                })
+            })
+            .collect::<Vec<_>>()
+    );
+    let view: Vec<rank::Row> = base_rows
+        .iter()
+        .map(
+            |(id, content, concepts, source, days, access, last)| rank::Row {
+                id,
+                content,
+                concepts,
+                source,
+                created_at: (now - Duration::days(*days)).fixed_offset(),
+                access_count: *access,
+                last_accessed_at: last.map(|d| (now - Duration::days(d)).fixed_offset()),
+            },
+        )
+        .collect();
+
+    let empty_f64 = std::collections::HashMap::new();
+    let priming: std::collections::HashMap<String, f64> = [("m3".to_string(), 0.7)].into();
+    let by_meaning: std::collections::HashMap<String, f64> = [("m5".to_string(), 2.5)].into();
+
+    let cases = [
+        (Some("猫"), 4usize, &priming, 1.0, &empty_f64),
+        (Some("猫"), 4usize, &empty_f64, 0.5, &by_meaning),
+        (None, 3usize, &empty_f64, 1.0, &empty_f64),
+        (Some("完全没提过的词"), 3usize, &empty_f64, 1.0, &empty_f64),
+    ];
+
+    for (query, limit, priming, breadth, by_meaning) in cases {
+        let want = rank::rank_marked(
+            &view,
+            query,
+            limit,
+            priming,
+            breadth,
+            by_meaning,
+            now.fixed_offset(),
+        );
+        let input = json!({
+            "rows": rows_json,
+            "query": query,
+            "limit": limit,
+            "priming": priming,
+            "breadth": breadth,
+            "byMeaning": by_meaning,
+            "now": micros(now),
+        });
+        let got = ok("memory.rank_marked", input.clone());
+        let got_again = ok("memory.rank_marked", input);
+        assert_eq!(got, got_again, "rank_marked must be deterministic");
+
+        let chosen_want: Vec<Value> = want
+            .chosen
+            .iter()
+            .map(|(index, brought)| json!({ "index": index, "broughtToMind": brought }))
+            .collect();
+        assert_eq!(got["chosen"], json!(chosen_want));
+        assert_eq!(got["filler"], json!(want.filler));
+        let next_want: std::collections::BTreeMap<String, f64> =
+            want.next.iter().map(|(k, v)| (k.clone(), *v)).collect();
+        assert_eq!(got["nextPriming"], json!(next_want));
+    }
+
+    // Recency fallback must never include `game` ("m4") as filler, and blank/dup indices stay aligned.
+    let fallback = ok(
+        "memory.rank_marked",
+        json!({
+            "rows": rows_json,
+            "limit": 4,
+            "now": micros(now),
+        }),
+    );
+    let filler_indices: Vec<u64> = fallback["filler"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_u64().unwrap())
+        .collect();
+    assert!(!filler_indices.contains(&0), "blank row must be skipped");
+    assert!(
+        !filler_indices.contains(&2),
+        "duplicate row must be skipped"
+    );
+    assert!(
+        !filler_indices.contains(&4),
+        "RECALLED_WHEN_NAMED source must not fill recency"
+    );
 }

@@ -3,6 +3,8 @@
 //! knows little about; who may hear a memory at all (`memory::audience`);
 //! and what a chat line keeps (`myriad_merope::diary`).
 
+use std::collections::{BTreeMap, HashMap};
+
 use chrono::{DateTime, FixedOffset};
 use myriad_agent_rules::{
     Concept,
@@ -257,30 +259,23 @@ pub(super) fn of_row(raw: &[u8]) -> Result<Value, Failure> {
     }))
 }
 
-/// What she always has in mind about someone (`recall::always_known`).
-pub(super) fn always_known(raw: &[u8]) -> Result<Value, Failure> {
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase", deny_unknown_fields)]
-    struct Row {
-        id: String,
-        content: String,
-        #[serde(default)]
-        concepts: Vec<Concept>,
-        source: String,
-        created_at: i64,
-        access_count: i32,
-        #[serde(default)]
-        last_accessed_at: Option<i64>,
-    }
-    #[derive(Deserialize)]
-    #[serde(deny_unknown_fields)]
-    struct In {
-        rows: Vec<Row>,
-        now: i64,
-    }
-    let req: In = input(raw)?;
-    let mut view = Vec::with_capacity(req.rows.len());
-    for row in &req.rows {
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct Row {
+    id: String,
+    content: String,
+    #[serde(default)]
+    concepts: Vec<Concept>,
+    source: String,
+    created_at: i64,
+    access_count: i32,
+    #[serde(default)]
+    last_accessed_at: Option<i64>,
+}
+
+fn row_views(rows: &[Row]) -> Result<Vec<rank::Row<'_>>, Failure> {
+    let mut view = Vec::with_capacity(rows.len());
+    for row in rows {
         view.push(rank::Row {
             id: &row.id,
             content: &row.content,
@@ -291,7 +286,77 @@ pub(super) fn always_known(raw: &[u8]) -> Result<Value, Failure> {
             last_accessed_at: opt_at(row.last_accessed_at)?.map(|at| at.fixed_offset()),
         });
     }
+    Ok(view)
+}
+
+/// What she always has in mind about someone (`recall::always_known`).
+pub(super) fn always_known(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        rows: Vec<Row>,
+        now: i64,
+    }
+    let req: In = input(raw)?;
+    let view = row_views(&req.rows)?;
     Ok(json!({ "chosen": recall::always_known(&view, fixed(req.now)?) }))
+}
+
+fn default_breadth() -> f64 {
+    1.0
+}
+
+/// Memories brought to mind for a query (`rank::rank_marked`), with indices
+/// into the caller's `rows`, priming for the next turn, and recency filler.
+pub(super) fn rank_marked(raw: &[u8]) -> Result<Value, Failure> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase", deny_unknown_fields)]
+    struct In {
+        rows: Vec<Row>,
+        #[serde(default)]
+        query: Option<String>,
+        limit: usize,
+        #[serde(default)]
+        priming: HashMap<String, f64>,
+        #[serde(default = "default_breadth")]
+        breadth: f64,
+        #[serde(default)]
+        by_meaning: HashMap<String, f64>,
+        now: i64,
+    }
+    let req: In = input(raw)?;
+    if !req.breadth.is_finite()
+        || req.priming.values().any(|value| !value.is_finite())
+        || req.by_meaning.values().any(|value| !value.is_finite())
+    {
+        return Err(Failure::BadInput("non-finite weight".into()));
+    }
+    let view = row_views(&req.rows)?;
+    let ranked = rank::rank_marked(
+        &view,
+        req.query.as_deref(),
+        req.limit,
+        &req.priming,
+        req.breadth,
+        &req.by_meaning,
+        fixed(req.now)?,
+    );
+    let chosen: Vec<Value> = ranked
+        .chosen
+        .into_iter()
+        .map(|(index, brought_to_mind)| {
+            json!({
+                "index": index,
+                "broughtToMind": brought_to_mind,
+            })
+        })
+        .collect();
+    let next_priming: BTreeMap<String, f64> = ranked.next.into_iter().collect();
+    Ok(json!({
+        "chosen": chosen,
+        "nextPriming": next_priming,
+        "filler": ranked.filler,
+    }))
 }
 
 pub(super) fn should_write_chat_diary(raw: &[u8]) -> Result<Value, Failure> {

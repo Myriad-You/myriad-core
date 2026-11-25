@@ -975,6 +975,12 @@ func step(_ event: JSON) throws {
 
 - **一致性对照** `crates/conformance/v1/wander/`（`memory.wander` 的前 40 个用例和 `wander.quiet`、`wander.thought` 的录制用例是原生照站点录下的参照，两端今天都过）和 `v1/notify/notify.kind.json`（每个用例另带 `today`：站点和原生今天的结论；两端一致的，核心说的一样，`myriad-core-ffi` 的测试核对）。`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi wander` 只随一次写明理由的改动用。
 
+### 记忆回想排序（`memory.rank_marked`）
+
+| 调用 | 输入 → 输出 |
+| --- | --- |
+| `memory.rank_marked` | `{rows: [{id, content, concepts?, source, createdAt, accessCount, lastAccessedAt?}], query?, limit, priming?, breadth?, byMeaning?, now}` → `{chosen: [{index, broughtToMind}], nextPriming, filler}`：与站点共用的记忆回想排序（`myriad_agent_rules::memory::rank::rank_marked`）。`rows` 按最新在前传入；返回的 `index` 与 `filler` 均指向传入 `rows` 的原始下标（空白与重复正文已去重），`nextPriming` 为下一轮留在心上的记忆激活度映射 |
+
 ## 屏幕上的一眼成为她的什么（`screen.*`）
 
 一眼屏幕（`agent.merope.screen` 的 moment，原生在本机看到的或者子机告诉主机的）接不接过来，由她在本来就要做的决定里自己说。下面三条只管：她的话里哪些能留下、给她看哪些笔记、只知道的那条事实怎么写。两端都调这里（2026-11-10 起；原生跟钉以后改用它，站点做主机时直接用），不各写一份。规则在 `myriad_merope::screen`。

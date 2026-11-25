@@ -279,7 +279,7 @@ pub fn rank_marked(
         .map(|(_, index)| *index)
         .collect();
     let mut order: Vec<usize> = picked.into_iter().map(|(_, index)| index).collect();
-    let mut filled = HashSet::new();
+    let mut filled = Vec::new();
     if strongest <= 0.0 {
         for (_, index) in by_recency {
             if order.len() == limit {
@@ -287,12 +287,11 @@ pub fn rank_marked(
             }
             if !order.contains(&index) {
                 order.push(index);
-                filled.insert(index);
+                filled.push(index);
             }
         }
     }
-    // Filler ids in the order the set held them, as the site kept them.
-    let filler = filled.iter().map(|index| original(*index)).collect();
+    let filler = filled.into_iter().map(original).collect();
     let mut taken = vec![false; rows.len()];
     let chosen = order
         .into_iter()
