@@ -360,6 +360,48 @@ pub struct SaidLine {
     pub concepts: serde_json::Value,
 }
 
+/// Counts of items in a raw-settle answer dropped during parsing, by reason
+/// (counts only, never words).
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct RawDropped {
+    pub raw_lasting: usize,
+    pub empty_or_too_long: usize,
+    pub bad_evidence: usize,
+    pub changed_language: usize,
+    pub outside_only: usize,
+    pub let_go: usize,
+    pub over_limit: usize,
+    pub said_dropped: usize,
+    pub put_onto_dropped: usize,
+}
+
+impl RawDropped {
+    /// Add `other`'s counts into `self`.
+    pub fn merge(&mut self, other: &Self) {
+        self.raw_lasting += other.raw_lasting;
+        self.empty_or_too_long += other.empty_or_too_long;
+        self.bad_evidence += other.bad_evidence;
+        self.changed_language += other.changed_language;
+        self.outside_only += other.outside_only;
+        self.let_go += other.let_go;
+        self.over_limit += other.over_limit;
+        self.said_dropped += other.said_dropped;
+        self.put_onto_dropped += other.put_onto_dropped;
+    }
+
+    /// Whether anything in the answer was dropped during parsing.
+    pub fn any(&self) -> bool {
+        self.empty_or_too_long > 0
+            || self.bad_evidence > 0
+            || self.changed_language > 0
+            || self.outside_only > 0
+            || self.let_go > 0
+            || self.over_limit > 0
+            || self.said_dropped > 0
+            || self.put_onto_dropped > 0
+    }
+}
+
 /// What going over a stretch from its lines gives ([`parse_raw_settle`]).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct RawSettled {
@@ -391,6 +433,8 @@ pub struct RawSettled {
     /// said something else there, or is what they took back, for the host to
     /// tell (`take_back_check`).
     pub doubted: Vec<Doubted>,
+    /// Counts of items dropped while reading the answer, by reason.
+    pub dropped: RawDropped,
 }
 
 /// A fact kept from lines they took back ([`RawSettled::doubted`]).
@@ -625,6 +669,13 @@ pub fn parse_raw_settle(
                 || quotes_lines(evidence, lines, &of_theirs(from))
         },
     )?;
+    let mut dropped = RawDropped {
+        raw_lasting: read.dropped.raw_lasting,
+        empty_or_too_long: read.dropped.empty_or_too_long,
+        bad_evidence: read.dropped.bad_evidence,
+        changed_language: read.dropped.changed_language,
+        ..RawDropped::default()
+    };
     let asked = |index: &usize| only.is_none_or(|only| only.contains(index));
     for fact in &mut read.lasting {
         fact.from = of_theirs(&fact.from);
@@ -640,7 +691,9 @@ pub fn parse_raw_settle(
         fact.from.dedup();
     }
     if only.is_some() {
+        let before = read.lasting.len();
         read.lasting.retain(|fact| !fact.from.is_empty());
+        dropped.outside_only += before - read.lasting.len();
     }
     let answer: serde_json::Value = serde_json::from_str(strip_json_fence(raw)).ok()?;
     let mut let_go: Vec<usize> = answer
@@ -671,6 +724,7 @@ pub fn parse_raw_settle(
         .partition(|fact| {
             !fact.from.is_empty() && fact.from.iter().all(|index| let_go.contains(index))
         });
+    let gone_len = gone.len();
     let mut maybe: Vec<Lasting> = gone
         .into_iter()
         .filter(|fact| {
@@ -681,8 +735,12 @@ pub fn parse_raw_settle(
                     .any(|old| kept.iter().any(|one| one.replaces.contains(old)))
         })
         .collect();
+    dropped.let_go += gone_len - maybe.len();
+    let kept_before = kept.len();
     kept.truncate(MAX_RAW_LASTING);
+    let maybe_before = maybe.len();
     maybe.truncate(MAX_RAW_LASTING - kept.len());
+    dropped.over_limit += (kept_before - kept.len()) + (maybe_before - maybe.len());
     // Replacing nothing till it is looked at.
     let doubted: Vec<Doubted> = maybe
         .iter_mut()
@@ -736,10 +794,12 @@ pub fn parse_raw_settle(
                     || !verbatim_in(&evidence, &hers)
                     || said.iter().any(|one: &SaidLine| one.said == line)
                 {
+                    dropped.said_dropped += 1;
                     continue;
                 }
                 if said.iter().filter(|one| one.hers == is_hers).count() >= at_most {
-                    break;
+                    dropped.said_dropped += 1;
+                    continue;
                 }
                 said.push(SaidLine {
                     said: line,
@@ -749,15 +809,18 @@ pub fn parse_raw_settle(
                 });
             }
         }
-        for item in items("putOnto").iter().take(MAX_RAW_PUT_ONTO) {
-            let thing = text(item, "thing");
-            if !thing.is_empty()
-                && thing.chars().count() <= 160
-                && verbatim_in(&text(item, "evidence"), &theirs)
-                && !put_onto.contains(&thing)
+        for item in items("putOnto") {
+            let thing = text(&item, "thing");
+            if put_onto.len() >= MAX_RAW_PUT_ONTO
+                || thing.is_empty()
+                || thing.chars().count() > 160
+                || !verbatim_in(&text(&item, "evidence"), &theirs)
+                || put_onto.contains(&thing)
             {
-                put_onto.push(thing);
+                dropped.put_onto_dropped += 1;
+                continue;
             }
+            put_onto.push(thing);
         }
     }
     // Asked in the line it names, what it is of told in that or another; one
@@ -816,6 +879,7 @@ pub fn parse_raw_settle(
         left,
         let_go,
         doubted,
+        dropped,
     })
 }
 

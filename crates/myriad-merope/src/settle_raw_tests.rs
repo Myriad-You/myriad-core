@@ -1039,3 +1039,79 @@ fn a_request_sent_in_two_goes_is_in_their_words() {
         }
     }
 }
+
+/// Items dropped while reading a raw-settle answer are counted by reason.
+#[test]
+fn dropped_items_are_counted_by_reason() {
+    let lines = [
+        them("养了一只叫年糕的三岁橘猫"),
+        them("周末在学做欧包"),
+        you("我也很喜欢欧包，周末常烤"),
+        them("推荐你看看《白塔》这本书，讲得很有意思"),
+    ];
+    let mut lasting = vec![
+        // Kept (0)
+        fact("在学做欧包", "在学做欧包", &[1]),
+        // empty fact -> empty_or_too_long (1)
+        fact("", "在学做欧包", &[1]),
+        // bad evidence -> bad_evidence (2)
+        fact("养了一只黑狗", "我养了一只黑狗", &[0]),
+        // let_go whole line -> let_go (3)
+        fact("养了一只叫年糕的三岁橘猫", "养了一只叫年糕的三岁橘猫", &[0]),
+    ];
+    // Push 13 more valid facts so total kept exceeds MAX_RAW_LASTING (12) -> 2 over_limit
+    for n in 0..13 {
+        lasting.push(fact(&format!("在学做第{n}种欧包"), "周末在学做欧包", &[1]));
+    }
+    let raw = answer(
+        serde_json::Value::Array(lasting),
+        serde_json::json!({
+            "letGo": [0],
+            "said": [
+                {"said": "我也喜欢欧包", "evidence": "我也很喜欢欧包", "concepts": []},
+                {"said": "没说过的推荐", "evidence": "完全没说过", "concepts": []}
+            ],
+            "putOnto": [
+                {"thing": "《白塔》", "evidence": "《白塔》这本书"},
+                {"thing": "错的", "evidence": "完全没提过"}
+            ]
+        }),
+    );
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.dropped.raw_lasting, 17);
+    assert_eq!(got.dropped.empty_or_too_long, 1);
+    assert_eq!(got.dropped.bad_evidence, 1);
+    assert_eq!(got.dropped.changed_language, 0);
+    assert_eq!(got.dropped.let_go, 1);
+    assert_eq!(got.dropped.over_limit, 2);
+    assert_eq!(got.dropped.said_dropped, 1);
+    assert_eq!(got.dropped.put_onto_dropped, 1);
+    assert_eq!(got.dropped.outside_only, 0);
+    assert!(got.dropped.any());
+
+    // Chinese fact for non-Chinese user line -> changed_language
+    let english_raw = answer(
+        serde_json::json!([fact("喜欢烘焙", "I love baking bread", &[0])]),
+        serde_json::json!({}),
+    );
+    let english = parse_raw_settle(
+        &english_raw,
+        &[them("I love baking bread")],
+        &[],
+        &[],
+        0,
+        None,
+    )
+    .unwrap();
+    assert_eq!(english.dropped.raw_lasting, 1);
+    assert_eq!(english.dropped.changed_language, 1);
+    assert!(english.settled.lasting.is_empty());
+
+    // Asking again filters facts not from `only` -> outside_only
+    let again_raw = answer(
+        serde_json::json!([fact("在学做欧包", "在学做欧包", &[1])]),
+        serde_json::json!({}),
+    );
+    let again = parse_raw_settle(&again_raw, &lines, &[], &[], 0, Some(&[3])).unwrap();
+    assert_eq!(again.dropped.outside_only, 1);
+}
