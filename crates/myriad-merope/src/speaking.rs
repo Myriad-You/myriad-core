@@ -179,6 +179,13 @@ pub fn with_their_words(fact: &str, said: &str) -> String {
     format!("{fact} (their words: \"{said}\")")
 }
 
+/// A fact she kept, with when what it tells of happened
+/// (`crate::happened::Happened::shown`), so she sees when it was beside
+/// the day she learned it.
+pub fn with_happened(fact: &str, happened: &crate::happened::Happened) -> String {
+    format!("{fact} (happened {})", happened.shown())
+}
+
 /// How much of what they said goes beside a fact: enough for the sentence
 /// a name or detail was in.
 pub const THEIR_WORDS_CHARS: usize = 160;
@@ -1774,5 +1781,37 @@ mod tests {
         assert!(section.contains("「我刚在查十八世纪放血到底用什么刀止不住血呢」"));
         assert_eq!(format_already_told_section(&[]), None);
         assert!(already_told("You are listening to a song.", &hers).is_empty());
+    }
+
+    #[test]
+    fn with_happened_formats_single_day_span_and_rough() {
+        use crate::happened::Happened;
+        let single = Happened {
+            from: "2026-10-03".into(),
+            to: None,
+            about: false,
+        };
+        assert_eq!(
+            with_happened("[10-05] had a check-up", &single),
+            "[10-05] had a check-up (happened 2026-10-03)"
+        );
+        let span = Happened {
+            from: "2026-10-03".into(),
+            to: Some("2026-10-20".into()),
+            about: false,
+        };
+        assert_eq!(
+            with_happened("[10-21] went on a trip", &span),
+            "[10-21] went on a trip (happened 2026-10-03 to 2026-10-20)"
+        );
+        let rough = Happened {
+            from: "2026-10".into(),
+            to: None,
+            about: true,
+        };
+        assert_eq!(
+            with_happened("[11-02] started pottery", &rough),
+            "[11-02] started pottery (happened around 2026-10)"
+        );
     }
 }
