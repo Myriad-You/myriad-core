@@ -223,6 +223,7 @@ const CALLS: &[(&str, Call)] = &[
     ("memory.gap_in", memory::gap_in),
     ("memory.of_row", memory::of_row),
     ("memory.overlap", memory::overlap),
+    ("memory.rank_marked", memory::rank_marked),
     ("memory.readiness", memory::readiness),
     ("memory.score_all", memory::score_all),
     ("memory.spread", memory::spread),
