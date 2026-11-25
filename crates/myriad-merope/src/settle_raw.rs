@@ -809,9 +809,9 @@ pub fn parse_raw_settle(
                 });
             }
         }
-        for item in items("putOnto") {
+        for (index, item) in items("putOnto").into_iter().enumerate() {
             let thing = text(&item, "thing");
-            if put_onto.len() >= MAX_RAW_PUT_ONTO
+            if index >= MAX_RAW_PUT_ONTO
                 || thing.is_empty()
                 || thing.chars().count() > 160
                 || !verbatim_in(&text(&item, "evidence"), &theirs)
