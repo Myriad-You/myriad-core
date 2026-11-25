@@ -1115,3 +1115,26 @@ fn dropped_items_are_counted_by_reason() {
     let again = parse_raw_settle(&again_raw, &lines, &[], &[], 0, Some(&[3])).unwrap();
     assert_eq!(again.dropped.outside_only, 1);
 }
+
+/// Only the first [`MAX_RAW_PUT_ONTO`] items in `putOnto` are inspected:
+/// an invalid earlier item does not let a fifth item slip in, and both
+/// are counted in `put_onto_dropped`.
+#[test]
+fn put_onto_only_takes_the_first_four_items() {
+    let lines = [them("推荐看看第一本、第二本、第三本、第四本这几本书")];
+    let raw = answer(
+        serde_json::json!([]),
+        serde_json::json!({
+            "putOnto": [
+                {"thing": "没提过的书", "evidence": "完全没说过"},
+                {"thing": "第一本", "evidence": "第一本"},
+                {"thing": "第二本", "evidence": "第二本"},
+                {"thing": "第三本", "evidence": "第三本"},
+                {"thing": "第四本", "evidence": "第四本"}
+            ]
+        }),
+    );
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.put_onto, ["第一本", "第二本", "第三本"]);
+    assert_eq!(got.dropped.put_onto_dropped, 2);
+}
