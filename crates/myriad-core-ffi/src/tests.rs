@@ -93,6 +93,8 @@ fn every_call_is_tested_and_version_lists_them() {
         "affect.transition",
         "making_sense.told_section",
         "meta.version",
+        "nodes.stands_step_batch_input",
+        "nodes.stands_step_batch_read",
         "reminder.due",
         "speaking.acquaintance_section",
         "speaking.activity_section",

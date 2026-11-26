@@ -319,6 +319,19 @@ pub(super) fn stands_step_read(raw: &[u8]) -> Result<Value, Failure> {
     answer(&stands::step_read(quiet_input(raw)?).map_err(refused)?)
 }
 
+/// `{facts, known?, nodes?}` → `{skip?, system, schema, input}`: stretch-batched
+/// standing step over placed facts in one call.
+pub(super) fn stands_step_batch_input(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&stands::step_batch_prepare(quiet_input(raw)?).map_err(refused)?)
+}
+
+/// `{output, sync, facts, known?, nodes?}` → `{rows, left, setAside,
+/// unreadable?, stillSo?}`: reads a stretch-batched standing answer keeping
+/// strict per-fact `because` refs.
+pub(super) fn stands_step_batch_read(raw: &[u8]) -> Result<Value, Failure> {
+    answer(&stands::step_batch_read(quiet_input(raw)?).map_err(refused)?)
+}
+
 /// `{nodes: [{node, standing?: [{author, item?}]}]}` → `{due, nodes}`:
 /// which of the nodes a stretch's facts are put on to build 「现在」 on
 /// from what she knew, before those facts are read.

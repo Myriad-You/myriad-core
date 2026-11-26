@@ -243,3 +243,42 @@ fn every_log_capability_the_contract_lists_is_an_abi_this_core_reads() {
         assert!(listed.contains(&abi), "the contract does not list log{abi}");
     }
 }
+
+#[test]
+fn stands_step_batch_ffi_roundtrips_and_keeps_per_fact_refs() {
+    let input = json!({
+        "facts": [
+            {"memory": "m1", "text": "weekly yoga", "learned": "2026-11-26", "on": ["n-yoga"]},
+            {"memory": "m-skip", "text": "one-off coffee", "on": []},
+            {"memory": "m2", "text": "adopted a cat", "learned": "2026-11-26", "on": ["n-pets"]}
+        ],
+        "nodes": [
+            {"id": "n-yoga", "name": "exercise", "folded": {"standing": {}}},
+            {"id": "n-pets", "name": "pets", "folded": {"standing": {}}}
+        ]
+    });
+    let prepared = super::ok("nodes.stands_step_batch_input", input.clone());
+    assert!(prepared.get("skip").is_none());
+    let prompt_in: Value = serde_json::from_str(prepared["input"].as_str().unwrap()).unwrap();
+    assert_eq!(prompt_in["facts"].as_array().unwrap().len(), 2);
+
+    let read_in = json!({
+        "output": serde_json::json!({
+            "set": [],
+            "end": [],
+            "add": [
+                {"fact": 1, "whose": "them", "topic": "exercise", "text": "practices yoga weekly"},
+                {"fact": 2, "whose": "them", "topic": "pets", "text": "has a pet cat"}
+            ]
+        }).to_string(),
+        "sync": {"local": "site"},
+        "facts": input["facts"],
+        "nodes": input["nodes"],
+    });
+    let out = super::ok("nodes.stands_step_batch_read", read_in);
+    let rows = out["rows"].as_array().unwrap();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0]["body"]["because"], json!(["memory:m1"]));
+    assert_eq!(rows[1]["body"]["because"], json!(["memory:m2"]));
+    assert!(out.get("unreadable").is_none());
+}
