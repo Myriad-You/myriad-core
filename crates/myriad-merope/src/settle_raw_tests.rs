@@ -294,15 +294,19 @@ fn a_malformed_answer_gives_nothing() {
 #[test]
 fn a_long_line_is_gone_over_in_parts_none_of_it_left_out() {
     assert_eq!(line_parts("短的"), ["短的"]);
-    let long = format!("{}。{}", "说".repeat(550), "完".repeat(700));
+    let long = format!(
+        "{}。{}",
+        "说".repeat(PART_CHARS - 50),
+        "完".repeat(PART_CHARS + 100)
+    );
     let parts = line_parts(&long);
     assert_eq!(parts.concat(), long);
     assert_eq!(parts.len(), 3);
     assert!(parts[0].ends_with('。'));
     assert!(parts.iter().all(|part| part.chars().count() <= PART_CHARS));
     // With nowhere to end, at the length; the whole of it shown.
-    assert_eq!(line_parts(&"说".repeat(600)).len(), 1);
-    assert_eq!(line_parts(&"说".repeat(601)).len(), 2);
+    assert_eq!(line_parts(&"说".repeat(PART_CHARS)).len(), 1);
+    assert_eq!(line_parts(&"说".repeat(PART_CHARS + 1)).len(), 2);
     let shown = raw_settle_input(
         &[them(&long)],
         "2026-11-23 (Monday)",
@@ -1149,4 +1153,57 @@ fn raw_settle_prompt_anchors_happened_dates_to_at_first() {
         );
         assert!(!prompt.contains("Work it out from today"), "{examples:?}");
     }
+}
+
+#[test]
+fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_blocked() {
+    let part1 = Line {
+        who: Who::Them,
+        text: "I bought “Specialty Coffee Beans” on ",
+        in_game: false,
+        before: false,
+        at: Some("2026-11-26 10:00"),
+    };
+    let part2 = Line {
+        who: Who::Them,
+        text: "Tuesday morning for $18.",
+        in_game: false,
+        before: false,
+        at: Some("2026-11-26 10:00"),
+    };
+    let reply = Line {
+        who: Who::You,
+        text: "Nice beans!",
+        in_game: false,
+        before: false,
+        at: Some("2026-11-26 10:00"),
+    };
+    let next_turn = Line {
+        who: Who::Them,
+        text: "Next day follow up.",
+        in_game: false,
+        before: false,
+        at: Some("2026-11-27 09:00"),
+    };
+    let lines = [part1, part2, reply, next_turn];
+
+    // Cross-seam contiguous quote across same-timestamp `Who::Them` parts +
+    // curly quote & case normalization passes.
+    let raw = answer(
+        serde_json::json!([
+            fact(
+                "Bought specialty coffee beans on Tuesday morning for $18",
+                "bought \"specialty coffee beans\" on Tuesday morning",
+                &[0, 1]
+            ),
+            // Across different timestamps (`at`), must NOT stitch part2 + next_turn.
+            fact("bad cross turn", "for $18. Next day", &[1, 3]),
+            // Assistant line must stay rejected even if normalized.
+            fact("from assistant", "nice beans!", &[2]),
+        ]),
+        serde_json::json!({}),
+    );
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert_eq!(got.settled.lasting.len(), 1);
+    assert_eq!(got.dropped.bad_evidence, 2);
 }
