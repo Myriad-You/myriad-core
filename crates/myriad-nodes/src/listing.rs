@@ -599,7 +599,11 @@ mod tests {
             run(json!({"zone": "+00:00", "limit": 3, "nodes": [{"id": "t", "entries": entries}]}));
         assert_eq!(ids(&out), ["e2", "e3", "e4"]);
         assert_eq!((out.looked, out.of), (3, 5));
-        assert!(out.section.unwrap().contains("the newest 3 of the 5 facts"));
+        assert!(
+            out.section
+                .unwrap()
+                .contains("Code went through all 5 facts you keep of this kind; the 2 oldest are not here.")
+        );
         let none = run(json!({"zone": "+00:00", "nodes": []}));
         assert_eq!((none.of, none.section), (0, None));
         for bad in [
