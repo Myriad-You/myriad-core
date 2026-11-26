@@ -38,8 +38,9 @@
 //!   it is), not on her own node (`her`, whose head the host shows every
 //!   time), and not shown above already. Items on active and ongoing nodes
 //!   first, then the rest; within each, the newest written first. At most
-//!   [`Budget::resident`] items and [`Budget::resident_chars`] chars, each
-//!   counted as the host shows it (`node name：text`). One that does not
+//!   [`Budget::resident`] items and [`Budget::resident_chars`] chars,
+//!   counted on `node name：text` before any host-appended date suffix
+//!   (hosts enforce any additional display room). One that does not
 //!   fit in the room left is left out and the next one tried; one longer
 //!   than all the room alone is cut short (ending in `…`) to the room left,
 //!   and to half of all the room at most, keeping 12 chars of its words at
