@@ -96,6 +96,10 @@ pub struct Budget {
     pub resident: usize,
     /// The chars those items take, at most.
     pub resident_chars: usize,
+    /// Extra characters reserved per resident item for a host-appended suffix
+    /// (such as `, since 2026-11`). Zero by default so core callers count only
+    /// `node name：text` unless a host sets its display allowance.
+    pub resident_suffix_chars: usize,
     /// Items of how things stand on each picked node, at most, so a node
     /// whose stands grew long over months does not crowd out the rest: by
     /// default 8, the default room of how their life stands every time
@@ -120,6 +124,7 @@ impl Default for Budget {
             together: 24,
             resident: 24,
             resident_chars: 600,
+            resident_suffix_chars: 0,
             standing: 8,
         }
     }
@@ -188,6 +193,9 @@ pub struct PickNode {
     /// Its name, as the host shows it before an item of how things stand.
     #[serde(default)]
     pub name: Option<String>,
+    /// Other names or aliases this node goes by in the same audience.
+    #[serde(default)]
+    pub aliases: Vec<String>,
     /// Absent reads as active.
     #[serde(default)]
     pub status: Option<Status>,
@@ -207,6 +215,11 @@ impl PickNode {
         Self {
             id: node.id.clone(),
             name: node.name.as_ref().map(|name| name.current.value.clone()),
+            aliases: node
+                .aliases
+                .as_ref()
+                .map(|aliases| aliases.current.value.clone())
+                .unwrap_or_default(),
             status: node.status.as_ref().map(|status| status.current.value),
             gone: node.forgotten || node.absorbed_into.is_some(),
             entries: node
@@ -260,6 +273,9 @@ pub struct PickInput {
     /// Without it nothing is due.
     #[serde(default)]
     pub today: Option<String>,
+    /// The person's query words, used to match live non-empty nodes by name or alias.
+    #[serde(default)]
+    pub query: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -433,7 +449,7 @@ fn resident(
     for (_, _, node, one) in candidates {
         let name = node.name.as_deref().unwrap_or_default().trim();
         let words = one.text.trim();
-        let head = name.chars().count() + 1;
+        let head = name.chars().count() + 1 + budget.resident_suffix_chars;
         let line = head + words.chars().count();
         let room = budget.resident_chars.saturating_sub(chars);
         let text = if out.len() >= budget.resident {
@@ -506,6 +522,80 @@ fn best(
     out
 }
 
+fn latin_stem(word: &str) -> &str {
+    for suffix in ["ies", "ing"] {
+        if word.len() >= suffix.len() + 3
+            && word.is_ascii()
+            && let Some(stem) = word.strip_suffix(suffix)
+        {
+            return stem;
+        }
+    }
+    for suffix in ["ed", "es"] {
+        if word.len() >= suffix.len() + 3
+            && word.is_ascii()
+            && let Some(stem) = word.strip_suffix(suffix)
+        {
+            return stem;
+        }
+    }
+    if word.len() >= 4
+        && word.is_ascii()
+        && !word.ends_with("ss")
+        && let Some(stem) = word.strip_suffix('s').or_else(|| word.strip_suffix('e'))
+    {
+        return stem;
+    }
+    word
+}
+
+fn label_matches_query(label: &str, query_lower: &str, query_tokens: &[&str]) -> bool {
+    let label_lower = label.trim().to_lowercase();
+    if label_lower.is_empty() {
+        return false;
+    }
+    let has_cjk = label_lower.chars().any(|ch| {
+        matches!(
+            ch,
+            '\u{3040}'..='\u{30ff}'
+                | '\u{3400}'..='\u{4dbf}'
+                | '\u{4e00}'..='\u{9fff}'
+                | '\u{ac00}'..='\u{d7af}'
+        )
+    });
+    if has_cjk {
+        return label_lower.chars().count() >= 2 && query_lower.contains(&label_lower);
+    }
+    let label_words: Vec<&str> = label_lower
+        .split(|ch: char| !ch.is_alphanumeric())
+        .filter(|token| !token.is_empty())
+        .collect();
+    match label_words.as_slice() {
+        [] => false,
+        [single] => {
+            single.chars().count() >= 3
+                && query_tokens.iter().any(|token| {
+                    *token == *single
+                        || (token.chars().count() >= 3 && latin_stem(token) == latin_stem(single))
+                })
+        }
+        phrase => {
+            label_lower.chars().count() >= 3
+                && query_tokens
+                    .windows(phrase.len())
+                    .any(|window| window == phrase)
+        }
+    }
+}
+
+fn node_matches_query(node: &PickNode, query_lower: &str, query_tokens: &[&str]) -> bool {
+    node.name
+        .iter()
+        .map(String::as_str)
+        .chain(node.aliases.iter().map(String::as_str))
+        .any(|label| label_matches_query(label, query_lower, query_tokens))
+}
+
 pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
     let today = input.today.as_deref();
     let mut ids = BTreeSet::new();
@@ -561,6 +651,41 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
             && !by_rank.contains(&at)
         {
             by_rank.push(at);
+        }
+    }
+    if let Some(query) = input.query.as_deref() {
+        let query_lower = query.trim().to_lowercase();
+        if !query_lower.is_empty() {
+            let query_tokens: Vec<&str> = query_lower
+                .split(|ch: char| !ch.is_alphanumeric())
+                .filter(|token| !token.is_empty())
+                .collect();
+            let mut matched: Vec<(i64, usize)> = input
+                .nodes
+                .iter()
+                .enumerate()
+                .filter(|(at, node)| {
+                    !node.gone
+                        && !own(*at)
+                        && !node.entries.is_empty()
+                        && !by_rank.contains(at)
+                        && node_matches_query(node, &query_lower, &query_tokens)
+                })
+                .map(|(at, node)| {
+                    let newest_at = node
+                        .entries
+                        .iter()
+                        .map(|entry| entry.at)
+                        .max()
+                        .unwrap_or(i64::MIN);
+                    (newest_at, at)
+                })
+                .collect();
+            matched.sort_by(|a, b| {
+                b.0.cmp(&a.0)
+                    .then_with(|| input.nodes[a.1].id.cmp(&input.nodes[b.1].id))
+            });
+            by_rank.extend(matched.into_iter().map(|(_, at)| at));
         }
     }
     let mut order = by_rank.clone();
@@ -1097,5 +1222,56 @@ mod tests {
         assert_eq!(about(Some("2026-11-14")), std::slice::from_ref(&work));
         assert!(about(today).is_empty());
         assert_eq!(every(&out(json!([]), today)), std::slice::from_ref(&job));
+    }
+
+    #[test]
+    fn query_matches_live_non_empty_nodes_by_name_or_alias_without_leaking_gone_or_empty() {
+        let out = run(json!({
+            "ranked": [],
+            "query": "Did we go on any hikes or buy plants?",
+            "nodes": [
+                {"id": "n-hike", "name": "hiking", "entries": [{"id": "h1", "at": 10}]},
+                {"id": "n-flora", "name": "botany", "aliases": ["plants"], "entries": [{"id": "p1", "at": 20}]},
+                {"id": "n-gone", "name": "hiking club", "gone": true, "entries": [{"id": "g1", "at": 99}]},
+                {"id": "n-empty", "name": "hike solo", "entries": [], "standing": [{"item": "them-0000000001", "at": 99, "text": "only standing"}]},
+                {"id": "me", "name": "plants", "entries": [{"id": "m1", "at": 99}]},
+            ],
+            "aboutThem": "me"
+        }));
+        let picked_ids: Vec<&str> = out.picked.iter().map(|p| p.node.as_str()).collect();
+        // Newest matched node comes first, excluding gone / name-only / own nodes.
+        assert_eq!(picked_ids, ["n-flora", "n-hike"]);
+        assert_eq!(out.picked[0].entries, ["p1"]);
+        assert_eq!(out.picked[1].entries, ["h1"]);
+        // CJK alias match too.
+        let zh = run(json!({
+            "ranked": [],
+            "query": "我家里养了哪些绿植",
+            "nodes": [{"id": "n-zh", "name": "家居", "aliases": ["绿植"], "entries": [{"id": "z1", "at": 5}]}]
+        }));
+        assert_eq!(zh.picked.len(), 1);
+        assert_eq!(zh.picked[0].node, "n-zh");
+    }
+
+    #[test]
+    fn resident_suffix_chars_reserves_display_room_per_item() {
+        let item = |n: &str| crate::stands::item_id("them", n, "memory:m", 1);
+        let input = |suffix: usize| {
+            json!({
+                "ranked": [],
+                "nodes": [
+                    {"id": "n1", "name": "work", "standing": [{"item": item("n1"), "at": 9, "text": "builds software"}]},
+                    {"id": "n2", "name": "home", "standing": [{"item": item("n2"), "at": 5, "text": "lives in tokyo"}]}
+                ],
+                "budget": {"residentChars": 45, "residentSuffixChars": suffix}
+            })
+        };
+        // Without suffix allowance: 20 + 20 = 40 <= 45, both fit.
+        let without = run(input(0));
+        assert_eq!(without.resident.len(), 2);
+        // With 14-char host date suffix allowance: (20+14)=34, second would need 68 > 45.
+        let with_suffix = run(input(14));
+        assert_eq!(with_suffix.resident.len(), 1);
+        assert_eq!(with_suffix.resident_left_out, 1);
     }
 }
