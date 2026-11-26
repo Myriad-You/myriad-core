@@ -8,7 +8,8 @@ const PROJECT_NAME: &str = "Anime2.5DRig";
 const FIGURE_KIND: &str = "myriad-figure";
 const FIGURE_VERSION: u64 = 8;
 const MAX_CREDITS: usize = 16;
-const MAX_CREDIT_CHARS: usize = 512;
+/// Credit texts are measured in UTF-16 code units, as the players measure them.
+const MAX_CREDIT_UNITS: usize = 512;
 
 /// What one package version fixes: its identity fields and the names of the
 /// pose axes its corrections are keyed by.
@@ -20,7 +21,7 @@ struct PackageFormat {
     /// Pose axes in canonical order: head yaw, head pitch, left lid, right
     /// lid, jaw. The first two are the head axes.
     axes: [&'static str; 5],
-    /// Whether the version carries an optional `credits` list.
+    /// Whether the version requires a non-empty `credits` list.
     credits: bool,
 }
 
@@ -49,7 +50,7 @@ const FORMATS: [PackageFormat; 2] = [
 
 /// The format named by the package's `version`, if it is a known one.
 fn package_format(playback: &Map<String, Value>) -> Option<&'static PackageFormat> {
-    let version = playback.get("version").and_then(Value::as_u64)?;
+    let version = version_number(playback.get("version"))?;
     FORMATS.iter().find(|format| format.version == version)
 }
 
@@ -107,7 +108,7 @@ pub(crate) fn playback_is_valid(value: &Value) -> bool {
         && format
             .engine
             .is_none_or(|engine| playback.get("engine").and_then(Value::as_str) == Some(engine))
-        && (!format.credits || playback.get("credits").is_none_or(credits_are_valid))
+        && (!format.credits || playback.get("credits").is_some_and(credits_are_valid))
         && playback
             .get("layers")
             .and_then(Value::as_array)
@@ -128,7 +129,8 @@ fn credits_are_valid(value: &Value) -> bool {
     let Some(credits) = value.as_array() else {
         return false;
     };
-    credits.len() <= MAX_CREDITS
+    !credits.is_empty()
+        && credits.len() <= MAX_CREDITS
         && credits.iter().all(|credit| {
             let Some(credit) = credit.as_object() else {
                 return false;
@@ -136,7 +138,7 @@ fn credits_are_valid(value: &Value) -> bool {
             credit
                 .get("name")
                 .and_then(Value::as_str)
-                .is_some_and(|name| !name.trim().is_empty() && credit_text_fits(name))
+                .is_some_and(|name| has_content(name) && credit_text_fits(name))
                 && ["url", "license", "copyright"].iter().all(|field| {
                     credit
                         .get(*field)
@@ -146,14 +148,33 @@ fn credits_are_valid(value: &Value) -> bool {
 }
 
 fn credit_text_fits(text: &str) -> bool {
-    text.chars().count() <= MAX_CREDIT_CHARS
+    text.encode_utf16().count() <= MAX_CREDIT_UNITS
+}
+
+/// Not blank: some character is neither Unicode `White_Space` nor U+FEFF.
+fn has_content(text: &str) -> bool {
+    text.chars()
+        .any(|character| !character.is_whitespace() && character != '\u{feff}')
+}
+
+/// A `version` field: a JSON number whose value is a non-negative integer,
+/// however it is written (`8`, `8.0` and `80e-1` are all 8), as every reader
+/// sees it once parsed.
+fn version_number(value: Option<&Value>) -> Option<u64> {
+    let value = value?;
+    if let Some(version) = value.as_u64() {
+        return Some(version);
+    }
+    let version = value.as_f64()?;
+    (version.fract() == 0.0 && (0.0..=9_007_199_254_740_991.0).contains(&version))
+        .then_some(version as u64)
 }
 
 fn mouth_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
     let Some(profile) = value.as_object() else {
         return false;
     };
-    if profile.get("version").and_then(Value::as_u64) != Some(1)
+    if version_number(profile.get("version")) != Some(1)
         || !matches!(
             profile.get("source").and_then(Value::as_str),
             Some("alpha-contour" | "bounds-fallback")
@@ -240,7 +261,7 @@ fn chest_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
     let Some(profile) = value.as_object() else {
         return false;
     };
-    profile.get("version").and_then(Value::as_u64) == Some(2)
+    version_number(profile.get("version")) == Some(2)
         && profile.get("enabled").is_some_and(Value::is_boolean)
         && matches!(
             profile.get("source").and_then(Value::as_str),
@@ -283,7 +304,7 @@ fn shell_profile_is_valid(value: &Value, width: f64, height: f64, format: &Packa
     let Some(end_y) = finite_number(face_profile.get("endY")) else {
         return false;
     };
-    if profile.get("version").and_then(Value::as_u64) != Some(1)
+    if version_number(profile.get("version")) != Some(1)
         || !matches!(
             profile.get("source").and_then(Value::as_str),
             Some("anchor-derived" | "authored")
@@ -712,13 +733,13 @@ mod tests {
     }
 
     #[test]
-    fn accepts_complete_v8_figure_with_or_without_engine_and_credits() {
+    fn accepts_complete_v8_figure_with_or_without_engine() {
         let figure = sample_figure();
         assert!(playback_is_valid(&figure));
 
         let mut bare = figure.clone();
         bare.as_object_mut().unwrap().remove("credits");
-        assert!(playback_is_valid(&bare));
+        assert!(!playback_is_valid(&bare), "v8 requires its credits");
 
         let mut with_engine = figure.clone();
         with_engine["engine"] = serde_json::json!("anything");
@@ -793,7 +814,7 @@ mod tests {
 
     #[test]
     fn rejects_badly_shaped_credits() {
-        let long = "x".repeat(MAX_CREDIT_CHARS + 1);
+        let long = "x".repeat(MAX_CREDIT_UNITS + 1);
         let many = vec![serde_json::json!({ "name": "a" }); MAX_CREDITS + 1];
         for bad in [
             serde_json::json!({}),
@@ -807,6 +828,7 @@ mod tests {
             serde_json::json!([{ "name": "a", "url": 1 }]),
             serde_json::json!([{ "name": "a", "license": null }]),
             serde_json::json!([{ "name": "a", "copyright": long }]),
+            serde_json::json!([]),
             Value::Array(many),
         ] {
             let mut figure = sample_figure();
@@ -815,7 +837,7 @@ mod tests {
         }
         let mut figure = sample_figure();
         figure["credits"] = Value::Array(vec![
-            serde_json::json!({ "name": "x".repeat(MAX_CREDIT_CHARS) });
+            serde_json::json!({ "name": "x".repeat(MAX_CREDIT_UNITS) });
             MAX_CREDITS
         ]);
         assert!(playback_is_valid(&figure));
@@ -847,6 +869,68 @@ mod tests {
                 &serde_json::json!([other])
             ));
             assert_eq!(package, before, "rejection is atomic");
+        }
+    }
+
+    /// The value a vector's `set` names: "FLOAT:<literal>" is that JSON number literal as written.
+    fn vector_value(value: &Value) -> Value {
+        match value.as_str().and_then(|text| text.strip_prefix("FLOAT:")) {
+            Some(literal) => serde_json::from_str(literal).unwrap(),
+            None => value.clone(),
+        }
+    }
+
+    #[test]
+    fn agrees_with_every_validator_on_the_shared_vectors() {
+        let vectors: Value =
+            serde_json::from_str(include_str!("../../conformance/v1/figure/package.json")).unwrap();
+        let cases = vectors["cases"].as_array().unwrap();
+        assert!(!cases.is_empty());
+        for case in cases {
+            let name = case["name"].as_str().unwrap();
+            let mut package = vectors["packages"][case["package"].as_str().unwrap()].clone();
+            for pair in case
+                .get("set")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let (parent, key) = pair[0].as_str().unwrap().rsplit_once('/').unwrap();
+                let parent = package
+                    .pointer_mut(parent)
+                    .unwrap_or_else(|| panic!("{name}"));
+                match parent {
+                    Value::Array(items) => {
+                        items[key.parse::<usize>().unwrap()] = vector_value(&pair[1])
+                    }
+                    _ => {
+                        parent
+                            .as_object_mut()
+                            .unwrap()
+                            .insert(key.to_owned(), vector_value(&pair[1]));
+                    }
+                }
+            }
+            for pointer in case
+                .get("remove")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let pointer = pointer.as_str().unwrap();
+                let (parent, key) = pointer.rsplit_once('/').unwrap();
+                package
+                    .pointer_mut(parent)
+                    .unwrap()
+                    .as_object_mut()
+                    .unwrap()
+                    .remove(key);
+            }
+            assert_eq!(
+                playback_is_valid(&package),
+                case["valid"].as_bool().unwrap(),
+                "{name}"
+            );
         }
     }
 }

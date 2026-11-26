@@ -1,0 +1,1515 @@
+{
+ "about": "Accept and reject cases for the figure package's identity, versions, credits and pose-correction axes, for every validator of the package (myriad-merope's playback_is_valid, the player's isAnime25DPlayback). Each case takes one of the packages, sets each [JSON pointer, value] in `set` in order (adding the key where it is absent), removes each pointer in `remove`, and expects `valid`. A string value \"FLOAT:<literal>\" stands for that JSON number literal written as is (the file holds it as a string so that every JSON reader sees the literal); a reader that cannot tell literals apart uses the number. Only rules every validator checks are here: the players check far more of a package than the server.",
+ "packages": {
+  "v7": {
+   "kind": "anime-2.5d-rig",
+   "version": 7,
+   "engine": "Anime2.5DRig",
+   "engineUrl": "https://github.com/852wa/Anime2.5DRig",
+   "license": "MIT",
+   "copyright": "Copyright (c) 2026 hakoniwa",
+   "pixelCanvas": {
+    "width": 100,
+    "height": 120
+   },
+   "layers": [
+    {
+     "name": "face",
+     "role": "face",
+     "depth": 1,
+     "group": "head",
+     "phys": null,
+     "fade": null,
+     "side": null,
+     "x": 20,
+     "y": 10,
+     "w": 60,
+     "h": 70,
+     "atlas": {
+      "x": 0,
+      "y": 0,
+      "w": 0.5,
+      "h": 0.5
+     },
+     "strands": []
+    }
+   ],
+   "anchors": {
+    "face": {
+     "x0": 25,
+     "y0": 12,
+     "x1": 75,
+     "y1": 78,
+     "cx": 50,
+     "cy": 45
+    },
+    "neckPivot": {
+     "x": 50,
+     "y": 80
+    },
+    "neckTop": 76,
+    "neckBottom": 90,
+    "bodyPivot": {
+     "x": 50,
+     "y": 110
+    },
+    "mouth": {
+     "x0": 42,
+     "y0": 60,
+     "x1": 58,
+     "y1": 66,
+     "cx": 50,
+     "cy": 63
+    },
+    "faceScale": 1
+   },
+   "mouthProfile": {
+    "version": 1,
+    "source": "alpha-contour",
+    "silhouettes": [
+     {
+      "material": "mouthClose",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthOpen",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthWide",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthRound",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthNarrow",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthManiac",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     }
+    ],
+    "bridges": [
+     {
+      "first": "mouthClose",
+      "second": "mouthOpen",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthWide",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthRound",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthWide",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthRound",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthWide",
+      "second": "mouthRound",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthWide",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthWide",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthRound",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthRound",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthNarrow",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     }
+    ]
+   },
+   "chestProfile": {
+    "version": 2,
+    "enabled": true,
+    "source": "geometry-fallback",
+    "centerX": 50,
+    "centerY": 100,
+    "radiusX": 20,
+    "radiusY": 15,
+    "visibleScale": 0.5,
+    "motionScale": 1,
+    "frequencyScale": 1,
+    "supportScale": 0.45,
+    "garmentMotionScale": 0.65,
+    "confidence": 0
+   },
+   "shellProfile": {
+    "version": 1,
+    "source": "anchor-derived",
+    "enabled": true,
+    "blend": 0.5,
+    "head": {
+     "centerX": 50,
+     "centerY": 40,
+     "radiusX": 25,
+     "radiusY": 30,
+     "radiusZ": 18
+    },
+    "faceProfile": {
+     "enabled": true,
+     "startY": 10,
+     "endY": 80,
+     "points": [
+      {
+       "v": 0.06,
+       "z": 0.1
+      },
+      {
+       "v": 0.42,
+       "z": 0.1
+      },
+      {
+       "v": 0.62,
+       "z": 0.1
+      },
+      {
+       "v": 0.78,
+       "z": 0.1
+      },
+      {
+       "v": 0.97,
+       "z": 0.1
+      }
+     ]
+    },
+    "hair": {
+     "centerX": 50,
+     "centerY": 38,
+     "radiusX": 28,
+     "radiusY": 33,
+     "radiusZ": 19,
+     "frontGap": 0.18,
+     "frontBulge": 1,
+     "backDepth": 0.35,
+     "crownRound": 0,
+     "hairlinePin": {
+      "enabled": true,
+      "mode": "strand-roots",
+      "centerX": 0,
+      "centerY": -0.45,
+      "halfWidth": 1.1,
+      "halfHeight": 0.32,
+      "feather": 0.06
+     }
+    },
+    "torso": {
+     "enabled": true,
+     "blend": 0.5,
+     "centerX": 50,
+     "radiusX": 40,
+     "radiusZ": 25
+    },
+    "poseCorrections": [
+     {
+      "surface": "head",
+      "at": {
+       "angleX": 0.8,
+       "angleY": -0.6
+      },
+      "patches": [
+       {
+        "x": 0,
+        "y": 0,
+        "radiusX": 0.6,
+        "radiusY": 0.4,
+        "dx": 0.05,
+        "dy": -0.04
+       }
+      ]
+     },
+     {
+      "surface": "front-hair",
+      "at": {
+       "angleY": 0.5,
+       "eyeCloseL": 1,
+       "mouthOpen": 0.4
+      },
+      "patches": [
+       {
+        "x": 0,
+        "y": 0,
+        "radiusX": 0.6,
+        "radiusY": 0.4,
+        "dx": 0.05,
+        "dy": -0.04
+       }
+      ]
+     }
+    ]
+   },
+   "figureStance": "ground"
+  },
+  "v8": {
+   "kind": "myriad-figure",
+   "version": 8,
+   "credits": [
+    {
+     "name": "Anime2.5DRig",
+     "url": "https://github.com/852wa/Anime2.5DRig",
+     "license": "MIT",
+     "copyright": "Copyright (c) 2026 hakoniwa"
+    }
+   ],
+   "pixelCanvas": {
+    "width": 100,
+    "height": 120
+   },
+   "layers": [
+    {
+     "name": "face",
+     "role": "face",
+     "depth": 1,
+     "group": "head",
+     "phys": null,
+     "fade": null,
+     "side": null,
+     "x": 20,
+     "y": 10,
+     "w": 60,
+     "h": 70,
+     "atlas": {
+      "x": 0,
+      "y": 0,
+      "w": 0.5,
+      "h": 0.5
+     },
+     "strands": []
+    }
+   ],
+   "anchors": {
+    "face": {
+     "x0": 25,
+     "y0": 12,
+     "x1": 75,
+     "y1": 78,
+     "cx": 50,
+     "cy": 45
+    },
+    "neckPivot": {
+     "x": 50,
+     "y": 80
+    },
+    "neckTop": 76,
+    "neckBottom": 90,
+    "bodyPivot": {
+     "x": 50,
+     "y": 110
+    },
+    "mouth": {
+     "x0": 42,
+     "y0": 60,
+     "x1": 58,
+     "y1": 66,
+     "cx": 50,
+     "cy": 63
+    },
+    "faceScale": 1
+   },
+   "mouthProfile": {
+    "version": 1,
+    "source": "alpha-contour",
+    "silhouettes": [
+     {
+      "material": "mouthClose",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthOpen",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthWide",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthRound",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthNarrow",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     },
+     {
+      "material": "mouthManiac",
+      "centerX": 50,
+      "centerY": 63,
+      "width": 16,
+      "height": 6,
+      "leftCornerY": 63,
+      "rightCornerY": 63,
+      "fillRatio": 0.5,
+      "aperture": 0.5
+     }
+    ],
+    "bridges": [
+     {
+      "first": "mouthClose",
+      "second": "mouthOpen",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthWide",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthRound",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthClose",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthWide",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthRound",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthOpen",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthWide",
+      "second": "mouthRound",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthWide",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthWide",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthRound",
+      "second": "mouthNarrow",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthRound",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     },
+     {
+      "first": "mouthNarrow",
+      "second": "mouthManiac",
+      "widthScale": 1,
+      "heightScale": 1,
+      "neutralization": 0,
+      "centerOffsetX": 0,
+      "centerOffsetY": 0
+     }
+    ]
+   },
+   "chestProfile": {
+    "version": 2,
+    "enabled": true,
+    "source": "geometry-fallback",
+    "centerX": 50,
+    "centerY": 100,
+    "radiusX": 20,
+    "radiusY": 15,
+    "visibleScale": 0.5,
+    "motionScale": 1,
+    "frequencyScale": 1,
+    "supportScale": 0.45,
+    "garmentMotionScale": 0.65,
+    "confidence": 0
+   },
+   "shellProfile": {
+    "version": 1,
+    "source": "anchor-derived",
+    "enabled": true,
+    "blend": 0.5,
+    "head": {
+     "centerX": 50,
+     "centerY": 40,
+     "radiusX": 25,
+     "radiusY": 30,
+     "radiusZ": 18
+    },
+    "faceProfile": {
+     "enabled": true,
+     "startY": 10,
+     "endY": 80,
+     "points": [
+      {
+       "v": 0.06,
+       "z": 0.1
+      },
+      {
+       "v": 0.42,
+       "z": 0.1
+      },
+      {
+       "v": 0.62,
+       "z": 0.1
+      },
+      {
+       "v": 0.78,
+       "z": 0.1
+      },
+      {
+       "v": 0.97,
+       "z": 0.1
+      }
+     ]
+    },
+    "hair": {
+     "centerX": 50,
+     "centerY": 38,
+     "radiusX": 28,
+     "radiusY": 33,
+     "radiusZ": 19,
+     "frontGap": 0.18,
+     "frontBulge": 1,
+     "backDepth": 0.35,
+     "crownRound": 0,
+     "hairlinePin": {
+      "enabled": true,
+      "mode": "strand-roots",
+      "centerX": 0,
+      "centerY": -0.45,
+      "halfWidth": 1.1,
+      "halfHeight": 0.32,
+      "feather": 0.06
+     }
+    },
+    "torso": {
+     "enabled": true,
+     "blend": 0.5,
+     "centerX": 50,
+     "radiusX": 40,
+     "radiusZ": 25
+    },
+    "poseCorrections": [
+     {
+      "surface": "head",
+      "at": {
+       "headYaw": 0.8,
+       "headPitch": -0.6
+      },
+      "patches": [
+       {
+        "x": 0,
+        "y": 0,
+        "radiusX": 0.6,
+        "radiusY": 0.4,
+        "dx": 0.05,
+        "dy": -0.04
+       }
+      ]
+     },
+     {
+      "surface": "front-hair",
+      "at": {
+       "headPitch": 0.5,
+       "lidCloseL": 1,
+       "jaw": 0.4
+      },
+      "patches": [
+       {
+        "x": 0,
+        "y": 0,
+        "radiusX": 0.6,
+        "radiusY": 0.4,
+        "dx": 0.05,
+        "dy": -0.04
+       }
+      ]
+     }
+    ]
+   },
+   "figureStance": "ground"
+  }
+ },
+ "cases": [
+  {
+   "name": "version 7 as written",
+   "package": "v7",
+   "valid": true
+  },
+  {
+   "name": "version 8 as written",
+   "package": "v8",
+   "valid": true
+  },
+  {
+   "name": "version 7 written as 7.0",
+   "package": "v7",
+   "set": [
+    [
+     "/version",
+     "FLOAT:7.0"
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "version 8 written as 8.0",
+   "package": "v8",
+   "set": [
+    [
+     "/version",
+     "FLOAT:8.0"
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "version 8 written as 80e-1",
+   "package": "v8",
+   "set": [
+    [
+     "/version",
+     "FLOAT:80e-1"
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a sub-block version written as 1.0",
+   "package": "v8",
+   "set": [
+    [
+     "/mouthProfile/version",
+     "FLOAT:1.0"
+    ],
+    [
+     "/shellProfile/version",
+     "FLOAT:1e0"
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "no version",
+   "package": "v8",
+   "remove": [
+    "/version"
+   ],
+   "valid": false
+  },
+  {
+   "name": "version as a string",
+   "package": "v8",
+   "set": [
+    [
+     "/version",
+     "8"
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version null",
+   "package": "v8",
+   "set": [
+    [
+     "/version",
+     null
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8.5",
+   "package": "v8",
+   "set": [
+    [
+     "/version",
+     8.5
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 6",
+   "package": "v7",
+   "set": [
+    [
+     "/version",
+     6
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 9",
+   "package": "v8",
+   "set": [
+    [
+     "/version",
+     9
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a sub-block version 1.5",
+   "package": "v8",
+   "set": [
+    [
+     "/mouthProfile/version",
+     1.5
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a sub-block version as a string",
+   "package": "v8",
+   "set": [
+    [
+     "/chestProfile/version",
+     "2"
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 of the version 7 kind",
+   "package": "v8",
+   "set": [
+    [
+     "/kind",
+     "anime-2.5d-rig"
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 7 of the version 8 kind",
+   "package": "v7",
+   "set": [
+    [
+     "/kind",
+     "myriad-figure"
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 7 without its engine",
+   "package": "v7",
+   "remove": [
+    "/engine"
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 7 with another engine",
+   "package": "v7",
+   "set": [
+    [
+     "/engine",
+     "other"
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 with a field version 8 does not define",
+   "package": "v8",
+   "set": [
+    [
+     "/engine",
+     "anything"
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "version 8 with the axes of version 7",
+   "package": "v8",
+   "set": [
+    [
+     "/shellProfile/poseCorrections",
+     [
+      {
+       "surface": "head",
+       "at": {
+        "angleX": 0.8,
+        "angleY": -0.6
+       },
+       "patches": [
+        {
+         "x": 0,
+         "y": 0,
+         "radiusX": 0.6,
+         "radiusY": 0.4,
+         "dx": 0.05,
+         "dy": -0.04
+        }
+       ]
+      },
+      {
+       "surface": "front-hair",
+       "at": {
+        "angleY": 0.5,
+        "eyeCloseL": 1,
+        "mouthOpen": 0.4
+       },
+       "patches": [
+        {
+         "x": 0,
+         "y": 0,
+         "radiusX": 0.6,
+         "radiusY": 0.4,
+         "dx": 0.05,
+         "dy": -0.04
+        }
+       ]
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 7 with the axes of version 8",
+   "package": "v7",
+   "set": [
+    [
+     "/shellProfile/poseCorrections",
+     [
+      {
+       "surface": "head",
+       "at": {
+        "headYaw": 0.8,
+        "headPitch": -0.6
+       },
+       "patches": [
+        {
+         "x": 0,
+         "y": 0,
+         "radiusX": 0.6,
+         "radiusY": 0.4,
+         "dx": 0.05,
+         "dy": -0.04
+        }
+       ]
+      },
+      {
+       "surface": "front-hair",
+       "at": {
+        "headPitch": 0.5,
+        "lidCloseL": 1,
+        "jaw": 0.4
+       },
+       "patches": [
+        {
+         "x": 0,
+         "y": 0,
+         "radiusX": 0.6,
+         "radiusY": 0.4,
+         "dx": 0.05,
+         "dy": -0.04
+        }
+       ]
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 with the axes mixed",
+   "package": "v8",
+   "set": [
+    [
+     "/shellProfile/poseCorrections/0/at",
+     {
+      "headYaw": 0.8,
+      "angleY": -0.6
+     }
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 without credits",
+   "package": "v8",
+   "remove": [
+    "/credits"
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 with no credit",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     []
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 credits not a list",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     {
+      "name": "Anime2.5DRig",
+      "url": "https://github.com/852wa/Anime2.5DRig",
+      "license": "MIT",
+      "copyright": "Copyright (c) 2026 hakoniwa"
+     }
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "version 8 with 16 credits",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "version 8 with 17 credits",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      },
+      {
+       "name": "a"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit with only a name",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a"
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a credit with no name",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "url": "https://example.com"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit name of 512 UTF-16 units",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a credit name of 513 UTF-16 units",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit name of 256 astral characters (512 UTF-16 units)",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a credit name of 257 astral characters (514 UTF-16 units)",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit copyright of 513 UTF-16 units",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a",
+       "copyright": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit url that is empty",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a",
+       "url": ""
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a credit name of spaces",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "  \t\n"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit name of U+0085",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": ""
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit name of U+FEFF",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "﻿"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit name of U+00A0 and U+3000",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": " 　"
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit name with one non-space among U+0085 and U+FEFF",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a﻿"
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a credit name of U+200B (not White_Space)",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "​"
+      }
+     ]
+    ]
+   ],
+   "valid": true
+  },
+  {
+   "name": "a credit name that is a number",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": 1
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit url that is a number",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a",
+       "url": 1
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  },
+  {
+   "name": "a credit licence that is null",
+   "package": "v8",
+   "set": [
+    [
+     "/credits",
+     [
+      {
+       "name": "a",
+       "license": null
+      }
+     ]
+    ]
+   ],
+   "valid": false
+  }
+ ]
+}
