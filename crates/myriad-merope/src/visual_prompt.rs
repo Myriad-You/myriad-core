@@ -10,7 +10,7 @@ const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 12_000;
 /// Bump when the shared construction/rendering school or its reference role changes.
 /// The value is part of the portrait fingerprint, so an old portrait cannot be
 /// mistaken for one generated under the current art-direction contract.
-pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "mihoyo-rpg-reference-v4";
+pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "anime-cel-gradient-reference-v5";
 pub const MEROPE_STYLE_REFERENCE_SHA256: &str =
     "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67";
 
@@ -18,7 +18,7 @@ const MASTER_PORTRAIT_INSTRUCTION: &str = "One polished upper-body portrait on a
 
 /// Shared character-construction and rendering lock for design sheets and image prompts.
 /// Identity fields still own the actual hair, costume family, palette, and ornaments.
-pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-RPG character key art in the polished miHoYo character-design language associated with Genshin Impact and Honkai: Star Rail. Use a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, tiny clean nose and mouth, and readable medium-to-large eyes whose layered irises occupy most of the eye opening. Shape the eyes with crisp graphic upper lashes, precise lower-lid accents, clear pupils, and deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Build hair from a few broad tapered ribbon masses with clean overlaps, controlled color shifts, broad specular bands, and only a few flyaways. Use thin colored linework, crisp focal contours, and a clear hard/soft edge hierarchy. Build the selected costume as an unmistakable layered silhouette with a designed open neckline and closure that leaves the neck uncovered, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes. Render with a clean cel-to-gradient hybrid: two or three intentional value planes, controlled soft gradients, graphic shadows, pearlescent frontal light, a restrained cool rim, and sharp accents on eyes, hair, metal, and gems. Finish with luminous near-white presentation, clear values, selective saturation, and polished game-production color clarity. Keep the person, costume, emblem, and name original";
+pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-game character key art: a finished digital cel illustration with a cel-to-gradient finish, not a sketch, a painting, or a three-dimensional model. Proportions: a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, and a tiny clean nose and mouth, on balanced young-adult anime anatomy with a neck and shoulder line of natural proportion. Eyes: readable medium-to-large eyes whose layered irises occupy most of the eye opening, each iris a darker upper band over a lighter lower gradient around a clear pupil; crisp graphic upper lashes, precise lower-lid accents, and one or two deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Hair: a few broad tapered ribbon masses with clean overlaps, each shaded with one shadow plane and a soft gradient, controlled color shifts, broad specular bands that follow the curve of the head, and only a few flyaways. Linework: thin colored linework in a darker tint of each enclosed fill rather than black, slightly heavier on the outer silhouette, crisp focal contours, and a clear hard/soft edge hierarchy. Costume: an unmistakable layered silhouette with a designed open neckline and closure that leaves the neck uncovered, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes; a moderate level of detail that stays readable at thumbnail size, without micro-texture or dense filigree. Shading: a clean cel-to-gradient hybrid with two or three intentional value planes per material, graphic shadow shapes with hard edges, and controlled soft gradients inside each plane. Materials: cloth as matte planes with soft folds, metal and gems with hard-edged bright highlights and one sharp reflected accent, skin with soft low-contrast blush gradients. Light and color: pearlescent frontal light, a restrained cool rim along the silhouette, sharp accents on eyes, hair, metal, and gems, clear values, selective saturation on a light pastel-leaning palette, and polished game-production color clarity. Background: the figure alone on a plain near-white backdrop with no scenery, effects, or text. Keep the person, costume, emblem, and name original";
 
 const STYLE_REFERENCE_ROLE_INSTRUCTION: &str = "Use the attached image as a rendering-technique reference only. Match its compact anime face scale, prominent jewel-eye scale, graphic lashes, broad hair-group construction, thin colored contours, clean cel-gradient planes, pastel clarity, and material separation. The confirmed identity below remains authoritative for gender, maturity, face variant, eye acting and colors, hair cut and colors, costume family and construction, palette, motif, and every accessory; do not transfer the reference character's pink hair, lavender sailor outfit, stars, birdcage earrings, or identity.";
 
@@ -1718,10 +1718,7 @@ mod tests {
             "Vertical 3:4 width-to-height canvas",
             "inside the locked visual school",
             MEROPE_VISUAL_SCHOOL,
-            "miHoYo",
-            "Genshin Impact",
-            "Honkai: Star Rail",
-            "2D anime-RPG character key art",
+            "2D anime-game character key art",
             "polished game-production color clarity",
             "compact non-chibi anime face",
             "short simplified midface",
@@ -2301,5 +2298,167 @@ mod tests {
             &identity("线条带一点女性化的柔和"),
             "male",
         ));
+    }
+
+    /// Studios, publishers, games, franchises and artists that a picture
+    /// prompt must never name as a style to follow.
+    const NAMED_STYLE_TARGETS: &[&str] = &[
+        "mihoyo",
+        "hoyoverse",
+        "genshin",
+        "honkai",
+        "star rail",
+        "zenless",
+        "wuthering waves",
+        "kuro games",
+        "arknights",
+        "hypergryph",
+        "blue archive",
+        "nexon",
+        "azur lane",
+        "nikke",
+        "granblue",
+        "cygames",
+        "uma musume",
+        "fate/",
+        "type-moon",
+        "ghibli",
+        "miyazaki",
+        "shinkai",
+        "kyoto animation",
+        "ufotable",
+        "pokemon",
+        "pokémon",
+        "nintendo",
+        "final fantasy",
+        "square enix",
+        "atlus",
+        "hololive",
+        "disney",
+        "pixar",
+        "makoto",
+        "in the style of",
+        "米哈游",
+        "原神",
+        "崩坏",
+        "星穹铁道",
+        "绝区零",
+        "鸣潮",
+        "明日方舟",
+        "碧蓝档案",
+        "吉卜力",
+        "宫崎骏",
+        "新海诚",
+        "京阿尼",
+        "ミホヨ",
+        "ジブリ",
+        "崩壊",
+    ];
+
+    fn named_style_target_in(prompt: &str) -> Option<&'static str> {
+        let lower = prompt.to_lowercase();
+        NAMED_STYLE_TARGETS
+            .iter()
+            .copied()
+            .find(|name| lower.contains(name))
+    }
+
+    #[test]
+    fn picture_prompts_name_no_studio_or_franchise_and_keep_what_the_rig_needs() {
+        let profile = json!({
+            "gender": "female",
+            "clothingStyle": "idol",
+            "visualIdentity": {
+                "faceDesign": "feminine young-adult read, refined oval face",
+                "eyeDesign": "layered gold jewel eyes",
+                "hairShape": "short silver bob",
+                "hairLayerPlan": "separate back mass, bangs, and side locks",
+                "upperBodySilhouette": "compact shoulder silhouette with an open neckline",
+                "outfitConstruction": "layered windcut coat with an open neckline",
+                "sleeveArmDesign": "short side sleeve fragments at both edges",
+                "materialPlan": "matte cloth, silver metal, and restrained gem highlights",
+                "heroAccessory": "star-track chest clasp",
+                "paletteHint": "mist blue and silver",
+                "motif": "one restrained star-track arc"
+            }
+        });
+        let bust = build_character_visual_prompt("Nova", &profile, Some("soft morning light"));
+        let full_from_design = build_full_body_design_prompt("Nova", &profile);
+        let prompts = [
+            ("bust", bust.clone()),
+            ("full body from design", full_from_design.clone()),
+            ("full body from bust", build_full_body_portrait_prompt()),
+            (
+                "edit",
+                build_character_visual_edit_prompt("soft morning light"),
+            ),
+            (
+                "upright bust",
+                build_upright_portrait_prompt(CharacterAssetProfile::Bust),
+            ),
+            (
+                "upright full body",
+                build_upright_portrait_prompt(CharacterAssetProfile::FullBody),
+            ),
+            (
+                "design sheet",
+                crate::onboarding_prompts::visual_design_system_prompt(),
+            ),
+        ];
+        for (which, prompt) in &prompts {
+            assert_eq!(
+                named_style_target_in(prompt),
+                None,
+                "{which} prompt names a style target: {prompt}"
+            );
+        }
+        assert!(!style_lock_violation_in(MEROPE_VISUAL_SCHOOL));
+        assert!(!camera_composition_drift_in(MEROPE_VISUAL_SCHOOL));
+        assert!(!high_collar_violation_in(MEROPE_VISUAL_SCHOOL));
+
+        for drawn_from_design in [&bust, &full_from_design] {
+            for needed in [
+                "Keep the person, costume, emblem, and name original",
+                "Use the attached image as a rendering-technique reference only",
+                "strict centered eye-level frontal",
+                "near-white studio backdrop",
+                "opaque finished illustration",
+                "leaves the neck uncovered",
+            ] {
+                assert!(
+                    drawn_from_design.contains(needed),
+                    "missing {needed}: {drawn_from_design}"
+                );
+            }
+        }
+        for needed in [
+            "zero head yaw, roll, and pitch",
+            "complete head and hair silhouette",
+            "neck from jaw to collarbone stays fully visible",
+            "Crop through lower chest",
+        ] {
+            assert!(bust.contains(needed), "bust is missing {needed}: {bust}");
+        }
+        for needed in [
+            "arms hanging naturally at the sides slightly away from the body",
+            "legs straight and slightly apart",
+            "both feet flat on one ground line",
+            "no cast shadow",
+        ] {
+            assert!(
+                full_from_design.contains(needed),
+                "full body is missing {needed}: {full_from_design}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_style_target_list_catches_a_named_studio() {
+        assert_eq!(
+            named_style_target_in("in the polished miHoYo character-design language"),
+            Some("mihoyo")
+        );
+        assert_eq!(named_style_target_in("原神风格的立绘"), Some("原神"));
+        assert_eq!(named_style_target_in(MEROPE_VISUAL_SCHOOL), None);
     }
 }

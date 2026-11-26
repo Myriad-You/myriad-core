@@ -257,18 +257,21 @@ mod tests {
         assert_eq!(character_asset_contract_fingerprint(&contract).len(), 64);
     }
 
-    /// Every stored portrait was fingerprinted with this exact contract; a
-    /// different byte here detaches every rig built before it.
+    /// Every stored portrait was fingerprinted with this exact contract
+    /// layout. A stored portrait is checked against the current identity with
+    /// its own `rendering` block (how it was drawn), so a different byte
+    /// anywhere else detaches every rig built before it.
     #[test]
     fn bust_contract_fingerprint_is_unchanged_by_the_profile_split() {
-        let contract = build_character_asset_contract(
+        let mut contract = build_character_asset_contract(
             "Nova",
             &json!({ "gender": "female", "visualIdentity": { "hairShape": "bob" } }),
             Some("extra"),
         );
+        contract["rendering"]["visualSchoolVersion"] = json!("pinned-school");
         assert_eq!(
             character_asset_contract_fingerprint(&contract),
-            "1e6c2e4e94adb0b45320230aab71fcd6a2aa4c2f441b19b7b2a77f0e0a62b641"
+            "9f1d7a72466d522c577ad42f472ef51dcc70250a921092817b0eb02bf46bd7aa"
         );
     }
 
