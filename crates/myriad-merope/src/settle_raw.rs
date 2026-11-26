@@ -609,9 +609,10 @@ fn fold_evidence(text: &str) -> String {
 }
 
 /// Whether each part of `evidence` is in one of the lines `of` (or spans two
-/// adjacent `Who::Them` lines from the same turn/timestamp created by part
-/// splitting), with normalized whitespace, curly quotes, and ASCII case. A
-/// single character is allowed only when it is all a line of theirs says.
+/// adjacent `Who::Them` lines whose caller-provided `at` strings match —
+/// note `at` carries host granularity, e.g. minute precision on the site),
+/// with normalized whitespace, curly quotes, and ASCII case. A single character
+/// is allowed only when it is all a line of theirs says.
 fn quotes_lines(evidence: &str, lines: &[Line], of: &[usize]) -> bool {
     let evidence = evidence.trim();
     let of_folded: Vec<(usize, String)> = of
