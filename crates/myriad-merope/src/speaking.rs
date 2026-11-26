@@ -161,16 +161,16 @@ pub fn format_remembered_section(contents: &[String]) -> Option<String> {
         return None;
     }
     Some(format!(
-        "## About this person\nFacts you kept: all you know of their life outside this talk. What they told you is plain; anything else says how you came by it ((older): kept from before, you no longer know how) and may be out of date or wrong, so hold it loosely. Dates marked (happened around ...) are approximate. What they told you still holds unless a later fact says it changed: go by it as how things are now, however long ago it was, and where it may have moved on, ask lightly as one who remembers ('still learning Japanese?') rather than say you do not know. Where a later fact says it changed, or makes it unlikely for now (a new baby, and weekend trips away), go by the later one and do not advise as if the earlier still held. When what is being said now touches something they told you of their own life (a smell, a place, a sound, a thing that was part of it), take it up, gently and in your own words; otherwise bring one up only when the talk needs it. Never recite them.\n{}",
+        "## About this person\nFacts you kept from earlier talks. Plain lines are what they told you; other lines note their source ((older): kept from before, origin unknown — hold it loosely), and dates marked (happened around ...) are approximate. What they told you still holds unless a later fact says it changed (where something may have moved on, ask lightly rather than say you do not know, and go by the later fact when there is one). Let relevant details inform your reply naturally when the talk touches them, and leave unrelated ones aside. Never recite them.\n{}",
         myriad_agent_rules::untrusted_block("about_them", &lines.join("\n"))
     ))
 }
 
 /// When answering needs everything she knows on it (how many, which came
-/// first, how often): she goes through what she kept one by one before she
-/// counts, so nothing is counted twice, missed, or counted for being alike.
+/// first, how often): she goes through kept facts with dates and quoted
+/// original words and answers from what is here.
 pub fn format_going_through_all_section() -> String {
-    "## Going through all of it\nAnswering this needs everything you know on it. Before you answer, go through the facts you kept one by one and pick out each that bears on it, with when it was; count, compare or order only those, and leave out what is only alike. Where their words are beside a fact, that is what they said: go by them to tell whether two facts are one thing or two (one doctor under two names). What is not there, you do not know.".to_string()
+    "## Going through all of it\nAnswering this needs everything you know on it. Check dates and any (their words: \"...\") across the facts you kept to tell whether entries refer to the same thing or distinct ones, and count, compare, or order only what bears on the question. What is not here, you do not know.".to_string()
 }
 
 /// A fact she kept, going through all of it, with what they said that it
@@ -190,9 +190,10 @@ pub fn with_happened(fact: &str, happened: &crate::happened::Happened) -> String
 /// a name or detail was in.
 pub const THEIR_WORDS_CHARS: usize = 160;
 
-/// How she answers from a list code made of all of a kind: from the list,
-/// counting only what it shows fits, what only might named apart.
-pub const LISTED_RULE: &str = "When a list is given, count from it only those it shows fit what they asked, and give that answer; one that only might (its time, or what it says, leaves it open) is not in the count: name it apart and say why, instead of giving no answer.";
+/// Guideline for answering from a code-filtered list of all of a kind:
+/// give a direct answer, leaving genuinely ambiguous entries out of the count
+/// and noting them briefly apart.
+pub const LISTED_RULE: &str = "Use this list to give a direct answer, counting only entries that clearly fit; if an entry only might fit (ambiguous timing or wording), leave it out of the count and note it briefly apart rather than refusing to answer.";
 
 /// One fact of a list of all of a kind, as she reads it: the day she
 /// learned it, the fact, when it happened (shown, as
@@ -311,7 +312,7 @@ pub fn format_listed_section(listing: &Listing) -> Option<String> {
     let list = if listing.lines.is_empty() {
         "None of them is left.".to_string()
     } else {
-        said.push("Below is each that is left, once, with the day you learned it, and when it happened and where it stands where you know; a fact whose time is not known may or may not fall in that time, so judge it by what it says and the day you learned it. Count, compare or order only those that bear on the question.".to_string());
+        said.push("Each line shows when you learned it, plus its date, status, and original words where known; judge undated items by what they say and when you learned them.".to_string());
         myriad_agent_rules::untrusted_block(
             "all_of_a_kind",
             &listing
@@ -1166,7 +1167,8 @@ mod tests {
             ),
             "[05-21] diagnosed with chronic sinusitis (their words: \"my ENT, Dr. Patel, said it's chronic\")"
         );
-        assert!(format_going_through_all_section().contains("Where their words are beside a fact"));
+        assert!(format_going_through_all_section().contains("same thing or distinct ones"));
+        assert!(format_going_through_all_section().contains("What is not here, you do not know."));
     }
 
     /// A list code made of all of a kind says what it went through and
@@ -1216,7 +1218,8 @@ mod tests {
         })
         .unwrap();
         assert!(section.starts_with("## All of it, listed\nCode went through all 7 facts you keep of this kind, for what happened between 2026-10-01 and 2026-10-31; the 2 oldest are not here. Left out: 3 that happened outside that time."));
-        assert!(section.contains("When a list is given, count from it only those it shows fit"));
+        assert!(section.contains(super::LISTED_RULE));
+        assert!(section.contains("leave it out of the count"));
         assert!(section.contains("- [2026-10-09] 退了一双鞋"));
         let empty = format_listed_section(&Listing {
             lines: &[],
@@ -1687,20 +1690,19 @@ mod tests {
         assert!(block.contains("## About this person"));
         assert!(block.contains("Facts you kept"));
         assert!(block.contains("(older): kept from before"));
+        assert!(block.contains("origin unknown"));
         assert!(block.contains("hold it loosely"));
-        assert!(block.contains("Dates marked (happened around ...) are approximate."));
-        // What they told her holds until something later says it changed:
-        // she asks lightly rather than say she does not know, and goes by
-        // the later fact when there is one.
-        assert!(block.contains("still holds unless a later fact says it changed"));
+        assert!(block.contains("(happened around ...)"));
+        assert!(block.contains("What they told you still holds unless a later fact says it changed"));
         assert!(block.contains("rather than say you do not know"));
-        assert!(block.contains("or makes it unlikely for now"));
-        assert!(block.contains("go by the later one"));
-        // Something of their own life the talk touches is taken up.
-        assert!(block.contains("take it up, gently"));
+        assert!(block.contains("go by the later fact"));
+        assert!(block.contains("Never recite them."));
         assert!(block.contains("- 晚上想打独立游戏"));
         assert!(block.contains("about_them"), "fenced as data");
         assert!(!block.contains("diary"));
+        assert!(PERSONA_SPEAKING_CONTRACT.contains("You are not a human"));
+        assert!(PERSONA_SPEAKING_CONTRACT.contains("You have no body"));
+        assert!(PERSONA_SPEAKING_CONTRACT.contains("Do not name the mood"));
         let greeted = |line: &str| ("2 days ago".to_string(), line.to_string());
         assert!(format_openers_section(&[greeted("你可算冒头了！")]).is_none());
         let openers = format_openers_section(&[
