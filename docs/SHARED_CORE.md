@@ -1133,6 +1133,7 @@ func step(_ event: JSON) throws {
 - `log/`：信封、版本向量、收、合并、折叠、时钟；`lease/`：移动、自己停下、epoch 先后；`link/`：帧的检查（`myriad-her-link` 的测试跑它）；`grants/`：三层授予、自治上限、执行前的检查和个人自治授权，每个 `grants.*` 调用一份；`audience/`：一条记忆能在谁面前说；`nodes/`：节点的键和 id、body、折叠、上限、放置、整理队列和整理、在端之间发和收，每个 `nodes.*` 调用一份。`handoff/`：她的交办标记、各件怎么读、话送到哪件，每个 `handoff.*` 调用一份；`motion/`：她的演出，每个 `motion.*` 调用一份；`voice/`：她怎么说（soul、性格文字、回复怎么发出去、看到和打字的时间、发前再看、写法提示），每个调用一份；`consistency/`：她是不是同一个人，每个 `consistency.*` 调用一份；`wander/`：走神；`notify/`：事件键是哪一种；`not_to_keep/`：对方要她以后别记什么（抽取怎么问、怎么读，判断小步），每个调用一份，经 C 入口跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi not_to_keep` 重写 `output`，只随一次写明理由的改动用；其中 `chat_remember.extract_*` 不带 `asked` 的用例是加 `asked` 之前（57fd42be4）录的。
 - `v2/nodes/` 由 `myriad-nodes` 的测试经 crate 跑，`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-nodes` 重写它的 `output`。
 - `log/`、`lease/` 由 `myriad-persona-log` 的测试经 crate 跑，`grants/`、`audience/` 由 `myriad-agent-rules` 的 `tests/conformance.rs` 经 crate 跑；`myriad-core-ffi` 的测试都经 C 入口再跑一遍。别的平台照样把每个用例交给 `myriad_core_call`。
+- `v1/figure/package.json` 不是调用的输入输出，是形象包（播放文档）的接受和拒收用例：两个版本（7、8）的一个包，每个用例按 JSON 指针改几处，再说该不该收。服务端的 `myriad-merope`（`anime25d_contract.rs` 的测试）和渲染层 myriad-figure-player（`contracts/` 里逐字节的副本，`isAnime25DPlayback` 的测试）都跑它，只放两边都查的规则：版本、种类、署名、姿势修正的轴。改它等于改两边，先在这里改，再把副本拷过去。
 - 只随本仓库一次写明理由的改动改：`MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-persona-log` 重写 `v2/log/`、`v2/lease/` 的 `output`；`grants/`、`audience/` 的 `output` 照后端的规则手写（`own` 和批准超出声明照原生，主人 2026-10-27 定），没有重写的开关。不兼容的改动另开 `v2/`，`v1/` 留到没有平台再钉它。
 
 ### 她的连接：子机一侧的剧本（`v1/child/`）

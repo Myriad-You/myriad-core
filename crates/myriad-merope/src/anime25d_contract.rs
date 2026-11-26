@@ -1,14 +1,70 @@
 use std::collections::HashSet;
 
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 const PLAYBACK_KIND: &str = "anime-2.5d-rig";
 const PLAYBACK_VERSION: u64 = 7;
 const PROJECT_NAME: &str = "Anime2.5DRig";
+const FIGURE_KIND: &str = "myriad-figure";
+const FIGURE_VERSION: u64 = 8;
+const MAX_CREDITS: usize = 16;
+/// Credit texts are measured in UTF-16 code units, as the players measure them.
+const MAX_CREDIT_UNITS: usize = 512;
 
-/// The authoring endpoint may change only these residuals, not the rest of a package.
+/// What one package version fixes: its identity fields and the names of the
+/// pose axes its corrections are keyed by.
+struct PackageFormat {
+    version: u64,
+    kind: &'static str,
+    /// The `engine` value the version requires, if it requires one.
+    engine: Option<&'static str>,
+    /// Pose axes in canonical order: head yaw, head pitch, left lid, right
+    /// lid, jaw. The first two are the head axes.
+    axes: [&'static str; 5],
+    /// Whether the version requires a non-empty `credits` list.
+    credits: bool,
+}
+
+impl PackageFormat {
+    fn head_axes(&self) -> &[&'static str] {
+        &self.axes[..2]
+    }
+}
+
+const FORMATS: [PackageFormat; 2] = [
+    PackageFormat {
+        version: PLAYBACK_VERSION,
+        kind: PLAYBACK_KIND,
+        engine: Some(PROJECT_NAME),
+        axes: ["angleX", "angleY", "eyeCloseL", "eyeCloseR", "mouthOpen"],
+        credits: false,
+    },
+    PackageFormat {
+        version: FIGURE_VERSION,
+        kind: FIGURE_KIND,
+        engine: None,
+        axes: ["headYaw", "headPitch", "lidCloseL", "lidCloseR", "jaw"],
+        credits: true,
+    },
+];
+
+/// The format named by the package's `version`, if it is a known one.
+fn package_format(playback: &Map<String, Value>) -> Option<&'static PackageFormat> {
+    let version = version_number(playback.get("version"))?;
+    FORMATS.iter().find(|format| format.version == version)
+}
+
+/// The authoring endpoint may change only these residuals, not the rest of a
+/// package. The corrections are checked against the axes of the package's own
+/// version.
 pub fn replace_anime25d_pose_corrections(playback: &mut Value, corrections: &Value) -> bool {
-    if !playback_is_valid(playback) || !pose_corrections_are_valid(corrections) {
+    if !playback_is_valid(playback) {
+        return false;
+    }
+    let Some(format) = playback.as_object().and_then(package_format) else {
+        return false;
+    };
+    if !pose_corrections_are_valid(corrections, format) {
         return false;
     }
     let profile = playback["shellProfile"].as_object_mut().unwrap();
@@ -19,6 +75,7 @@ pub fn replace_anime25d_pose_corrections(playback: &mut Value, corrections: &Val
     }
     true
 }
+
 const MOUTH_MATERIALS: [&str; 6] = [
     "mouthClose",
     "mouthOpen",
@@ -44,9 +101,14 @@ pub(crate) fn playback_is_valid(value: &Value) -> bool {
     if width <= 0.0 || height <= 0.0 {
         return false;
     }
-    playback.get("kind").and_then(Value::as_str) == Some(PLAYBACK_KIND)
-        && playback.get("version").and_then(Value::as_u64) == Some(PLAYBACK_VERSION)
-        && playback.get("engine").and_then(Value::as_str) == Some(PROJECT_NAME)
+    let Some(format) = package_format(playback) else {
+        return false;
+    };
+    playback.get("kind").and_then(Value::as_str) == Some(format.kind)
+        && format
+            .engine
+            .is_none_or(|engine| playback.get("engine").and_then(Value::as_str) == Some(engine))
+        && (!format.credits || playback.get("credits").is_some_and(credits_are_valid))
         && playback
             .get("layers")
             .and_then(Value::as_array)
@@ -60,14 +122,59 @@ pub(crate) fn playback_is_valid(value: &Value) -> bool {
             .is_some_and(|profile| chest_profile_is_valid(profile, width, height))
         && playback
             .get("shellProfile")
-            .is_some_and(|profile| shell_profile_is_valid(profile, width, height))
+            .is_some_and(|profile| shell_profile_is_valid(profile, width, height, format))
+}
+
+fn credits_are_valid(value: &Value) -> bool {
+    let Some(credits) = value.as_array() else {
+        return false;
+    };
+    !credits.is_empty()
+        && credits.len() <= MAX_CREDITS
+        && credits.iter().all(|credit| {
+            let Some(credit) = credit.as_object() else {
+                return false;
+            };
+            credit
+                .get("name")
+                .and_then(Value::as_str)
+                .is_some_and(|name| has_content(name) && credit_text_fits(name))
+                && ["url", "license", "copyright"].iter().all(|field| {
+                    credit
+                        .get(*field)
+                        .is_none_or(|value| value.as_str().is_some_and(credit_text_fits))
+                })
+        })
+}
+
+fn credit_text_fits(text: &str) -> bool {
+    text.encode_utf16().count() <= MAX_CREDIT_UNITS
+}
+
+/// Not blank: some character is neither Unicode `White_Space` nor U+FEFF.
+fn has_content(text: &str) -> bool {
+    text.chars()
+        .any(|character| !character.is_whitespace() && character != '\u{feff}')
+}
+
+/// A `version` field: a JSON number whose value is a non-negative integer,
+/// however it is written (`8`, `8.0` and `80e-1` are all 8), as every reader
+/// sees it once parsed.
+fn version_number(value: Option<&Value>) -> Option<u64> {
+    let value = value?;
+    if let Some(version) = value.as_u64() {
+        return Some(version);
+    }
+    let version = value.as_f64()?;
+    (version.fract() == 0.0 && (0.0..=9_007_199_254_740_991.0).contains(&version))
+        .then_some(version as u64)
 }
 
 fn mouth_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
     let Some(profile) = value.as_object() else {
         return false;
     };
-    if profile.get("version").and_then(Value::as_u64) != Some(1)
+    if version_number(profile.get("version")) != Some(1)
         || !matches!(
             profile.get("source").and_then(Value::as_str),
             Some("alpha-contour" | "bounds-fallback")
@@ -154,7 +261,7 @@ fn chest_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
     let Some(profile) = value.as_object() else {
         return false;
     };
-    profile.get("version").and_then(Value::as_u64) == Some(2)
+    version_number(profile.get("version")) == Some(2)
         && profile.get("enabled").is_some_and(Value::is_boolean)
         && matches!(
             profile.get("source").and_then(Value::as_str),
@@ -172,7 +279,7 @@ fn chest_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
         && number_in_range(profile.get("confidence"), 0.0, 1.0)
 }
 
-fn shell_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
+fn shell_profile_is_valid(value: &Value, width: f64, height: f64, format: &PackageFormat) -> bool {
     let Some(profile) = value.as_object() else {
         return false;
     };
@@ -197,7 +304,7 @@ fn shell_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
     let Some(end_y) = finite_number(face_profile.get("endY")) else {
         return false;
     };
-    if profile.get("version").and_then(Value::as_u64) != Some(1)
+    if version_number(profile.get("version")) != Some(1)
         || !matches!(
             profile.get("source").and_then(Value::as_str),
             Some("anchor-derived" | "authored")
@@ -238,7 +345,7 @@ fn shell_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
             .is_some_and(|value| !number_in_range(Some(value), 0.0, 1.0))
         || profile
             .get("poseCorrections")
-            .is_some_and(|value| !pose_corrections_are_valid(value))
+            .is_some_and(|value| !pose_corrections_are_valid(value, format))
     {
         return false;
     }
@@ -262,8 +369,8 @@ fn shell_profile_is_valid(value: &Value, width: f64, height: f64) -> bool {
     true
 }
 
-fn pose_corrections_are_valid(value: &Value) -> bool {
-    const AXES: [&str; 5] = ["angleX", "angleY", "eyeCloseL", "eyeCloseR", "mouthOpen"];
+fn pose_corrections_are_valid(value: &Value, format: &PackageFormat) -> bool {
+    let head_axes = format.head_axes();
     let Some(corrections) = value.as_array() else {
         return false;
     };
@@ -285,7 +392,7 @@ fn pose_corrections_are_valid(value: &Value) -> bool {
         };
         if !(2..=3).contains(&at.len())
             || !(1..=8).contains(&patches.len())
-            || !(at.contains_key("angleX") || at.contains_key("angleY"))
+            || !head_axes.iter().any(|axis| at.contains_key(*axis))
         {
             return false;
         }
@@ -293,9 +400,9 @@ fn pose_corrections_are_valid(value: &Value) -> bool {
             let Some(value) = finite_number(Some(value)) else {
                 return false;
             };
-            if !AXES.contains(&axis.as_str())
+            if !format.axes.contains(&axis.as_str())
                 || !(-1.0..=1.0).contains(&value)
-                || if matches!(axis.as_str(), "angleX" | "angleY") {
+                || if head_axes.contains(&axis.as_str()) {
                     value.abs() < 0.05
                 } else {
                     value < 0.05
@@ -304,7 +411,8 @@ fn pose_corrections_are_valid(value: &Value) -> bool {
                 return false;
             }
         }
-        let signature = AXES
+        let signature = format
+            .axes
             .iter()
             .filter_map(|axis| {
                 finite_number(at.get(*axis)).map(|v| format!("{axis}:{}", v.signum()))
@@ -591,6 +699,238 @@ mod tests {
             let mut playback = sample_playback();
             playback["shellProfile"]["torso"]["yawFollowScale"] = serde_json::json!(scale);
             assert!(!playback_is_valid(&playback), "{scale}");
+        }
+    }
+
+    fn sample_figure() -> Value {
+        let mut figure = sample_playback();
+        let package = figure.as_object_mut().unwrap();
+        package.insert("kind".to_owned(), serde_json::json!(FIGURE_KIND));
+        package.insert("version".to_owned(), serde_json::json!(FIGURE_VERSION));
+        package.remove("engine");
+        package.insert(
+            "credits".to_owned(),
+            serde_json::json!([
+                { "name": "Rig author", "url": "https://example.com", "license": "MIT", "copyright": "2026" },
+                { "name": "Painter" }
+            ]),
+        );
+        figure
+    }
+
+    fn v7_correction() -> Value {
+        serde_json::json!({
+            "surface": "head", "at": { "angleX": 0.8, "angleY": -0.6 },
+            "patches": [{ "x": 0, "y": 0, "radiusX": 0.6, "radiusY": 0.4, "dx": 0.05, "dy": -0.04 }]
+        })
+    }
+
+    fn v8_correction() -> Value {
+        serde_json::json!({
+            "surface": "head", "at": { "headYaw": 0.8, "headPitch": -0.6 },
+            "patches": [{ "x": 0, "y": 0, "radiusX": 0.6, "radiusY": 0.4, "dx": 0.05, "dy": -0.04 }]
+        })
+    }
+
+    #[test]
+    fn accepts_complete_v8_figure_with_or_without_engine() {
+        let figure = sample_figure();
+        assert!(playback_is_valid(&figure));
+
+        let mut bare = figure.clone();
+        bare.as_object_mut().unwrap().remove("credits");
+        assert!(!playback_is_valid(&bare), "v8 requires its credits");
+
+        let mut with_engine = figure.clone();
+        with_engine["engine"] = serde_json::json!("anything");
+        with_engine["engineUrl"] = serde_json::json!("https://example.com");
+        assert!(playback_is_valid(&with_engine));
+
+        let mut with_corrections = figure;
+        with_corrections["shellProfile"]["poseCorrections"] = serde_json::json!([
+            v8_correction(),
+            {
+                "surface": "front-hair", "at": { "headPitch": 0.5, "lidCloseL": 0.4, "jaw": 1 },
+                "patches": [{ "x": 0, "y": 0, "radiusX": 0.6, "radiusY": 0.4, "dx": 0, "dy": 0 }]
+            }
+        ]);
+        assert!(playback_is_valid(&with_corrections));
+    }
+
+    #[test]
+    fn kind_and_axes_follow_the_version() {
+        let mut figure = sample_figure();
+        figure["shellProfile"]["poseCorrections"] = serde_json::json!([v7_correction()]);
+        assert!(!playback_is_valid(&figure), "v8 with v7 axes");
+
+        let mut playback = sample_playback();
+        playback["shellProfile"]["poseCorrections"] = serde_json::json!([v8_correction()]);
+        assert!(!playback_is_valid(&playback), "v7 with v8 axes");
+
+        let mut figure = sample_figure();
+        figure["kind"] = serde_json::json!(PLAYBACK_KIND);
+        assert!(!playback_is_valid(&figure), "v8 with the v7 kind");
+
+        let mut playback = sample_playback();
+        playback["kind"] = serde_json::json!(FIGURE_KIND);
+        assert!(!playback_is_valid(&playback), "v7 with the v8 kind");
+
+        let mut playback = sample_playback();
+        playback.as_object_mut().unwrap().remove("engine");
+        assert!(
+            !playback_is_valid(&playback),
+            "v7 still requires its engine"
+        );
+
+        for version in [6, 9] {
+            for mut package in [sample_playback(), sample_figure()] {
+                package["version"] = serde_json::json!(version);
+                assert!(!playback_is_valid(&package), "{version}");
+            }
+        }
+    }
+
+    #[test]
+    fn v8_corrections_follow_the_same_rules_on_the_new_axes() {
+        let mut figure = sample_figure();
+        for bad_at in [
+            serde_json::json!({ "headYaw": 1 }),
+            serde_json::json!({ "headYaw": 0, "headPitch": 1 }),
+            serde_json::json!({ "headYaw": 1, "lidCloseL": -1 }),
+            serde_json::json!({ "headYaw": 1, "headPitch": 2 }),
+            serde_json::json!({ "headYaw": 1, "angleY": 1 }),
+            serde_json::json!({ "lidCloseL": 1, "jaw": 1 }),
+            serde_json::json!({ "headYaw": 1, "lidCloseL": 1, "lidCloseR": 1, "jaw": 1 }),
+        ] {
+            let mut bad = v8_correction();
+            bad["at"] = bad_at.clone();
+            figure["shellProfile"]["poseCorrections"] = serde_json::json!([bad]);
+            assert!(!playback_is_valid(&figure), "{bad_at}");
+        }
+        figure["shellProfile"]["poseCorrections"] =
+            serde_json::json!([v8_correction(), v8_correction()]);
+        assert!(!playback_is_valid(&figure), "duplicate corner");
+    }
+
+    #[test]
+    fn rejects_badly_shaped_credits() {
+        let long = "x".repeat(MAX_CREDIT_UNITS + 1);
+        let many = vec![serde_json::json!({ "name": "a" }); MAX_CREDITS + 1];
+        for bad in [
+            serde_json::json!({}),
+            serde_json::json!("Rig author"),
+            serde_json::json!([null]),
+            serde_json::json!(["Rig author"]),
+            serde_json::json!([{}]),
+            serde_json::json!([{ "name": "  " }]),
+            serde_json::json!([{ "name": 1 }]),
+            serde_json::json!([{ "name": long }]),
+            serde_json::json!([{ "name": "a", "url": 1 }]),
+            serde_json::json!([{ "name": "a", "license": null }]),
+            serde_json::json!([{ "name": "a", "copyright": long }]),
+            serde_json::json!([]),
+            Value::Array(many),
+        ] {
+            let mut figure = sample_figure();
+            figure["credits"] = bad.clone();
+            assert!(!playback_is_valid(&figure), "{bad}");
+        }
+        let mut figure = sample_figure();
+        figure["credits"] = Value::Array(vec![
+            serde_json::json!({ "name": "x".repeat(MAX_CREDIT_UNITS) });
+            MAX_CREDITS
+        ]);
+        assert!(playback_is_valid(&figure));
+    }
+
+    #[test]
+    fn replacing_corrections_uses_the_package_own_axes_and_keeps_its_identity() {
+        for (original, own, other) in [
+            (sample_figure(), v8_correction(), v7_correction()),
+            (sample_playback(), v7_correction(), v8_correction()),
+        ] {
+            let mut package = original.clone();
+            assert!(!replace_anime25d_pose_corrections(
+                &mut package,
+                &serde_json::json!([other])
+            ));
+            assert_eq!(package, original, "rejection is atomic");
+
+            let own = serde_json::json!([own]);
+            assert!(replace_anime25d_pose_corrections(&mut package, &own));
+            assert_eq!(package["shellProfile"]["poseCorrections"], own);
+            assert_eq!(package["version"], original["version"]);
+            assert_eq!(package["kind"], original["kind"]);
+            assert!(playback_is_valid(&package));
+
+            let before = package.clone();
+            assert!(!replace_anime25d_pose_corrections(
+                &mut package,
+                &serde_json::json!([other])
+            ));
+            assert_eq!(package, before, "rejection is atomic");
+        }
+    }
+
+    /// The value a vector's `set` names: "FLOAT:<literal>" is that JSON number literal as written.
+    fn vector_value(value: &Value) -> Value {
+        match value.as_str().and_then(|text| text.strip_prefix("FLOAT:")) {
+            Some(literal) => serde_json::from_str(literal).unwrap(),
+            None => value.clone(),
+        }
+    }
+
+    #[test]
+    fn agrees_with_every_validator_on_the_shared_vectors() {
+        let vectors: Value =
+            serde_json::from_str(include_str!("../../conformance/v1/figure/package.json")).unwrap();
+        let cases = vectors["cases"].as_array().unwrap();
+        assert!(!cases.is_empty());
+        for case in cases {
+            let name = case["name"].as_str().unwrap();
+            let mut package = vectors["packages"][case["package"].as_str().unwrap()].clone();
+            for pair in case
+                .get("set")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let (parent, key) = pair[0].as_str().unwrap().rsplit_once('/').unwrap();
+                let parent = package
+                    .pointer_mut(parent)
+                    .unwrap_or_else(|| panic!("{name}"));
+                match parent {
+                    Value::Array(items) => {
+                        items[key.parse::<usize>().unwrap()] = vector_value(&pair[1])
+                    }
+                    _ => {
+                        parent
+                            .as_object_mut()
+                            .unwrap()
+                            .insert(key.to_owned(), vector_value(&pair[1]));
+                    }
+                }
+            }
+            for pointer in case
+                .get("remove")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let pointer = pointer.as_str().unwrap();
+                let (parent, key) = pointer.rsplit_once('/').unwrap();
+                package
+                    .pointer_mut(parent)
+                    .unwrap()
+                    .as_object_mut()
+                    .unwrap()
+                    .remove(key);
+            }
+            assert_eq!(
+                playback_is_valid(&package),
+                case["valid"].as_bool().unwrap(),
+                "{name}"
+            );
         }
     }
 }
