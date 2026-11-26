@@ -10,17 +10,43 @@ const MAX_CHARACTER_VISUAL_PROMPT_CHARS: usize = 12_000;
 /// Bump when the shared construction/rendering school or its reference role changes.
 /// The value is part of the portrait fingerprint, so an old portrait cannot be
 /// mistaken for one generated under the current art-direction contract.
-pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "mihoyo-rpg-reference-v4";
+pub const MEROPE_VISUAL_SCHOOL_VERSION: &str = "anime-cel-gradient-reference-v5";
 pub const MEROPE_STYLE_REFERENCE_SHA256: &str =
     "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67";
+
+/// How a bust master portrait was rendered: the `rendering` block of its
+/// generation contract, apart from the fixed reference role.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PortraitRendering {
+    pub visual_school_version: &'static str,
+    pub style_reference_sha256: &'static str,
+}
+
+/// Every rendering a stored bust contract may carry and still be the contract
+/// this build would write for the same identity. The current rendering comes
+/// first. A bump that changes only the rendering (not how identity reaches the
+/// contract) appends the outgoing rendering here; anything not listed is
+/// compared as it always was.
+pub const MEROPE_RECOGNISED_PORTRAIT_RENDERINGS: &[PortraitRendering] = &[
+    PortraitRendering {
+        visual_school_version: MEROPE_VISUAL_SCHOOL_VERSION,
+        style_reference_sha256: MEROPE_STYLE_REFERENCE_SHA256,
+    },
+    // The school paragraph before it stopped naming a studio; the stored
+    // version string is kept byte for byte so those contracts still match.
+    PortraitRendering {
+        visual_school_version: "mihoyo-rpg-reference-v4",
+        style_reference_sha256: MEROPE_STYLE_REFERENCE_SHA256,
+    },
+];
 
 const MASTER_PORTRAIT_INSTRUCTION: &str = "One polished upper-body portrait on a vertical 3:4 canvas. Use a strict centered eye-level frontal reference view with zero head yaw, roll, and pitch: the face plane and torso are square to the camera; nose bridge, philtrum, chin, neck, and sternum share one vertical centerline; both eyes sit level at equal perspective scale; both cheeks have balanced frontal projection; and the anatomical shoulders are level with equal foreshortening. Preserve confirmed asymmetric lid acting as eye expression, while hairstyle, costume, and accessory asymmetry remain decorative around the square frontal anatomy. Preserve the confirmed apparent maturity, gaze direction, lid acting, stable brow design and tension, pupil focus, catchlights, and default mouth. Fill the canvas with a large readable head and shoulders almost the full width. Keep the complete head and hair silhouette inside the frame with a slim near-white top gutter and equal one-sixteenth-width side clearance. The neck from jaw to collarbone stays fully visible and unobstructed by fabric. Place the anatomical shoulder line in the lower third of the canvas so the band from shoulder to the bottom edge is only lower chest—a short crop, not a long torso. Do not pull the camera back, shrink the head, or drop the crop to waist, midriff, belt, or skirt to show more costume. Crop through lower chest with both sleeves, cuffs, or short arm fragments visible; hands are optional. Use a seamless near-white studio backdrop and an opaque finished illustration.";
 
 /// Shared character-construction and rendering lock for design sheets and image prompts.
 /// Identity fields still own the actual hair, costume family, palette, and ornaments.
-pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-RPG character key art in the polished miHoYo character-design language associated with Genshin Impact and Honkai: Star Rail. Use a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, tiny clean nose and mouth, and readable medium-to-large eyes whose layered irises occupy most of the eye opening. Shape the eyes with crisp graphic upper lashes, precise lower-lid accents, clear pupils, and deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Build hair from a few broad tapered ribbon masses with clean overlaps, controlled color shifts, broad specular bands, and only a few flyaways. Use thin colored linework, crisp focal contours, and a clear hard/soft edge hierarchy. Build the selected costume as an unmistakable layered silhouette with a designed open neckline and closure that leaves the neck uncovered, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes. Render with a clean cel-to-gradient hybrid: two or three intentional value planes, controlled soft gradients, graphic shadows, pearlescent frontal light, a restrained cool rim, and sharp accents on eyes, hair, metal, and gems. Finish with luminous near-white presentation, clear values, selective saturation, and polished game-production color clarity. Keep the person, costume, emblem, and name original";
+pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-game character key art: a finished, fully rendered digital cel illustration built from clean drawn shapes with a cel-to-gradient finish. Proportions: a compact non-chibi anime face with a short simplified midface, smooth cheeks, a compact rounded-to-soft-tapered lower face, and a tiny clean nose and mouth, on balanced anime anatomy with a neck and shoulder line of natural proportion. Eyes: readable medium-to-large eyes whose layered irises occupy most of the eye opening, each iris a darker upper band over a lighter lower gradient around a clear pupil; crisp graphic upper lashes, precise lower-lid accents, and one or two deliberately placed jewel-like catchlights; express identity through lid acting, gaze, brow tension, and catchlight geometry. Hair: a few broad tapered ribbon masses with clean overlaps, each shaded with one shadow plane and a soft gradient, controlled color shifts, broad specular bands that follow the curve of the head, and only a few flyaways. Linework: thin colored linework in a darker tint of each enclosed fill, slightly heavier on the outer silhouette, crisp focal contours, and a clear hard/soft edge hierarchy. Costume: an unmistakable layered silhouette with a designed open neckline and closure that leaves the neck uncovered, rhythmic color-block planes, precise seams and trim, separated material families, one dimensional hero ornament anchored to the construction, and two or three smaller echoes; every ornament the identity names is drawn with clean, readable construction that holds at thumbnail size. Shading: a clean cel-to-gradient hybrid with two or three intentional value planes per material, graphic shadow shapes with hard edges, and controlled soft gradients inside each plane. Materials: cloth as matte planes with soft folds, metal and gems with hard-edged bright highlights and one sharp reflected accent, skin with soft low-contrast blush gradients. Light and color: pearlescent frontal light, a restrained cool rim along the silhouette, sharp accents on eyes, hair, metal, and gems, clear value separation between neighboring colors, selective saturation, and polished game-production color clarity in whatever palette the identity sets. Keep the person, costume, emblem, and name original";
 
-const STYLE_REFERENCE_ROLE_INSTRUCTION: &str = "Use the attached image as a rendering-technique reference only. Match its compact anime face scale, prominent jewel-eye scale, graphic lashes, broad hair-group construction, thin colored contours, clean cel-gradient planes, pastel clarity, and material separation. The confirmed identity below remains authoritative for gender, maturity, face variant, eye acting and colors, hair cut and colors, costume family and construction, palette, motif, and every accessory; do not transfer the reference character's pink hair, lavender sailor outfit, stars, birdcage earrings, or identity.";
+const STYLE_REFERENCE_ROLE_INSTRUCTION: &str = "Use the attached image as a rendering-technique reference only. Match its compact anime face scale, prominent jewel-eye scale, graphic lashes, broad hair-group construction, thin colored contours, clean cel-gradient planes, color clarity, and material separation. The confirmed identity below remains authoritative for gender, maturity, face variant, eye acting and colors, hair cut and colors, costume family and construction, palette, motif, and every accessory; do not transfer the reference character's pink hair, lavender sailor outfit, stars, birdcage earrings, or identity.";
 
 const IDENTITY_PROMPT_FIELDS: &[(&str, &str)] = &[
     (
@@ -116,6 +142,124 @@ const STYLE_LOCK_BANS: &[&str] = &[
     "エアブラシ",
     "太い輪郭線",
     "3dレンダリング",
+];
+
+/// Studios, publishers, games and franchises, and artists that no design field
+/// or rendering note may set as the style to draw in. A clause naming one is
+/// handled like any other style-lock violation: stripped from design input and
+/// identity fields, rejected as a portrait adjustment. Matched case-insensitively,
+/// ASCII entries as whole words.
+const NAMED_STYLE_TARGETS: &[&str] = &[
+    "in the style of",
+    "mihoyo",
+    "hoyoverse",
+    "genshin",
+    "honkai",
+    "star rail",
+    "zenless",
+    "wuthering waves",
+    "kuro games",
+    "arknights",
+    "hypergryph",
+    "blue archive",
+    "nexon",
+    "azur lane",
+    "nikke",
+    "granblue",
+    "cygames",
+    "uma musume",
+    "fate/grand order",
+    "fate/stay night",
+    "type-moon",
+    "ghibli",
+    "kyoto animation",
+    "kyoani",
+    "ufotable",
+    "pokemon",
+    "pokémon",
+    "nintendo",
+    "final fantasy",
+    "square enix",
+    "atlus",
+    "hololive",
+    "nijisanji",
+    "idolmaster",
+    "love live",
+    "hatsune miku",
+    "disney",
+    "pixar",
+    "dreamworks",
+    "miyazaki",
+    "shinkai",
+    "toriyama",
+    "yoshitaka amano",
+    "range murata",
+    "greg rutkowski",
+    "artgerm",
+    "wlop",
+    "sakimichan",
+    "kuvshinov",
+    "mika pikazo",
+    "redjuice",
+    "米哈游",
+    "原神",
+    "崩坏3",
+    "崩坏三",
+    "崩坏学园",
+    "星穹铁道",
+    "星铁",
+    "绝区零",
+    "鸣潮",
+    "库洛游戏",
+    "明日方舟",
+    "鹰角",
+    "碧蓝档案",
+    "蔚蓝档案",
+    "碧蓝航线",
+    "胜利女神",
+    "碧蓝幻想",
+    "赛马娘",
+    "命运冠位指定",
+    "型月",
+    "吉卜力",
+    "宫崎骏",
+    "新海诚",
+    "京阿尼",
+    "京都动画",
+    "飞碟社",
+    "宝可梦",
+    "任天堂",
+    "最终幻想",
+    "迪士尼",
+    "皮克斯",
+    "初音未来",
+    "鸟山明",
+    "ミホヨ",
+    "ホヨバース",
+    "崩壊3rd",
+    "スターレイル",
+    "ゼンレスゾーンゼロ",
+    "鳴潮",
+    "アークナイツ",
+    "ブルーアーカイブ",
+    "ブルアカ",
+    "アズールレーン",
+    "メガニケ",
+    "グランブルーファンタジー",
+    "グラブル",
+    "サイゲームス",
+    "ウマ娘",
+    "ジブリ",
+    "宮崎駿",
+    "新海誠",
+    "京アニ",
+    "京都アニメーション",
+    "ポケモン",
+    "ファイナルファンタジー",
+    "ディズニー",
+    "ピクサー",
+    "初音ミク",
+    "鳥山明",
 ];
 
 const CAMERA_COMPOSITION_DRIFT_BANS: &[&str] = &[
@@ -1051,7 +1195,12 @@ pub fn style_lock_violation_in(text: &str) -> bool {
         } else {
             text.contains(ban)
         }
-    })
+    }) || named_style_target_in(text)
+}
+
+/// Whether the text names a studio, franchise, or artist as a style target.
+fn named_style_target_in(text: &str) -> bool {
+    phrase_list_matches(&text.to_lowercase(), NAMED_STYLE_TARGETS)
 }
 
 pub fn portrait_adjustment_changes_identity(text: &str) -> bool {
@@ -1718,10 +1867,7 @@ mod tests {
             "Vertical 3:4 width-to-height canvas",
             "inside the locked visual school",
             MEROPE_VISUAL_SCHOOL,
-            "miHoYo",
-            "Genshin Impact",
-            "Honkai: Star Rail",
-            "2D anime-RPG character key art",
+            "2D anime-game character key art",
             "polished game-production color clarity",
             "compact non-chibi anime face",
             "short simplified midface",
@@ -2301,5 +2447,226 @@ mod tests {
             &identity("线条带一点女性化的柔和"),
             "male",
         ));
+    }
+
+    fn design_profile(clothing_style: &str) -> Value {
+        json!({
+            "gender": "female",
+            "clothingStyle": clothing_style,
+            "visualIdentity": {
+                "faceDesign": "feminine young-adult read, refined oval face",
+                "eyeDesign": "layered gold jewel eyes",
+                "hairShape": "short silver bob",
+                "hairLayerPlan": "separate back mass, bangs, and side locks",
+                "upperBodySilhouette": "compact shoulder silhouette with an open neckline",
+                "outfitConstruction": "layered windcut coat with an open neckline",
+                "sleeveArmDesign": "short side sleeve fragments at both edges",
+                "materialPlan": "matte cloth, silver metal, and restrained gem highlights",
+                "heroAccessory": "star-track chest clasp",
+                "paletteHint": "mist blue and silver",
+                "motif": "one restrained star-track arc"
+            }
+        })
+    }
+
+    fn assert_names_no_style_target(which: &str, prompt: &str) {
+        assert!(
+            !named_style_target_in(prompt),
+            "{which} names a studio, franchise, or artist: {prompt}"
+        );
+    }
+
+    #[test]
+    fn no_portrait_prompt_names_a_studio_franchise_or_artist() {
+        let profile = design_profile("idol");
+        for (which, prompt) in [
+            (
+                "bust",
+                build_character_visual_prompt("Nova", &profile, Some("soft morning light")),
+            ),
+            (
+                "full body from design",
+                build_full_body_design_prompt("Nova", &profile),
+            ),
+            ("full body from bust", build_full_body_portrait_prompt()),
+            (
+                "edit",
+                build_character_visual_edit_prompt("soft morning light"),
+            ),
+            (
+                "upright bust",
+                build_upright_portrait_prompt(CharacterAssetProfile::Bust),
+            ),
+            (
+                "upright full body",
+                build_upright_portrait_prompt(CharacterAssetProfile::FullBody),
+            ),
+            (
+                "design sheet",
+                crate::onboarding_prompts::visual_design_system_prompt(),
+            ),
+        ] {
+            assert_names_no_style_target(which, &prompt);
+        }
+    }
+
+    #[test]
+    fn no_clothing_grammar_names_a_studio_franchise_or_artist() {
+        for style in crate::visual_design::CLOTHING_STYLES {
+            let grammar = crate::visual_design::clothing_style_grammar(style)
+                .unwrap_or_else(|| panic!("{style} has no grammar"));
+            assert_names_no_style_target(style, grammar);
+            assert_names_no_style_target(
+                style,
+                &build_character_visual_prompt("Nova", &design_profile(style), None),
+            );
+        }
+    }
+
+    #[test]
+    fn no_sticker_prompt_names_a_studio_franchise_or_artist() {
+        let profile = design_profile("idol");
+        assert_names_no_style_target(
+            "sticker avatar",
+            &crate::sticker_avatar::build_sticker_avatar_prompt("Nova", &profile),
+        );
+        assert_names_no_style_target(
+            "sticker",
+            &crate::stickers::sticker_prompt("Nova", &profile, "waving hello"),
+        );
+        assert_names_no_style_target(
+            "captioned sticker",
+            &crate::stickers::sticker_prompt("Nova", &profile, "thumbs up 「好耶」"),
+        );
+    }
+
+    #[test]
+    fn prompts_drawn_from_a_design_keep_originality_reference_role_and_backdrop() {
+        let profile = design_profile("idol");
+        for prompt in [
+            build_character_visual_prompt("Nova", &profile, None),
+            build_full_body_design_prompt("Nova", &profile),
+        ] {
+            for needed in [
+                "Keep the person, costume, emblem, and name original",
+                "Use the attached image as a rendering-technique reference only",
+                "strict centered eye-level frontal",
+                "near-white studio backdrop",
+                "opaque finished illustration",
+                "leaves the neck uncovered",
+            ] {
+                assert!(prompt.contains(needed), "missing {needed}: {prompt}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_bust_prompt_keeps_the_crop_the_rig_needs() {
+        let bust = build_character_visual_prompt("Nova", &design_profile("idol"), None);
+        for needed in [
+            "zero head yaw, roll, and pitch",
+            "complete head and hair silhouette",
+            "neck from jaw to collarbone stays fully visible",
+            "Crop through lower chest",
+        ] {
+            assert!(bust.contains(needed), "bust is missing {needed}: {bust}");
+        }
+    }
+
+    #[test]
+    fn the_full_body_design_prompt_keeps_the_pose_the_rig_needs() {
+        let full = build_full_body_design_prompt("Nova", &design_profile("idol"));
+        for needed in [
+            "arms hanging naturally at the sides slightly away from the body",
+            "legs straight and slightly apart",
+            "both feet flat on one ground line",
+            "no cast shadow",
+        ] {
+            assert!(
+                full.contains(needed),
+                "full body is missing {needed}: {full}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_school_leaves_maturity_palette_and_backdrop_to_their_owners() {
+        for owned_elsewhere in ["young-adult", "pastel", "backdrop", "Background"] {
+            assert!(
+                !MEROPE_VISUAL_SCHOOL.contains(owned_elsewhere),
+                "the school states {owned_elsewhere}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_design_sheet_is_told_about_the_backdrop_nowhere() {
+        let sheet = crate::onboarding_prompts::visual_design_system_prompt();
+        assert!(!sheet.contains("backdrop"), "{sheet}");
+    }
+
+    #[test]
+    fn a_design_field_naming_a_style_target_never_reaches_the_portrait_prompt() {
+        for target in [
+            "drawn like Genshin Impact key art",
+            "原神风格的厚重金饰",
+            "崩壊：スターレイル風の衣装",
+        ] {
+            let mut profile = design_profile("idol");
+            profile["visualIdentity"]["outfitConstruction"] = json!(format!(
+                "layered windcut coat with an open neckline。{target}"
+            ));
+            let prompt = build_character_visual_prompt("Nova", &profile, None);
+            assert!(!prompt.contains(target), "{target} reached: {prompt}");
+            assert!(prompt.contains("layered windcut coat with an open neckline"));
+        }
+    }
+
+    #[test]
+    fn rendering_notes_naming_a_style_target_are_dropped_from_the_portrait_prompt() {
+        let prompt = build_character_visual_prompt(
+            "Nova",
+            &design_profile("idol"),
+            Some("soft morning light. in the style of Makoto Shinkai"),
+        );
+        assert!(prompt.contains("soft morning light"));
+        assert!(!prompt.to_lowercase().contains("shinkai"), "{prompt}");
+    }
+
+    #[test]
+    fn owner_requirements_naming_a_style_target_are_stripped_before_design() {
+        for (requirements, kept, target) in [
+            ("silver bob, Arknights style", "silver bob", "Arknights"),
+            ("银色短发，米哈游那种画风", "银色短发", "米哈游"),
+            ("銀髪ボブ、ジブリっぽく", "銀髪ボブ", "ジブリ"),
+        ] {
+            let normalized =
+                normalize_visual_requirements_for_design_with_gender(requirements, "female");
+            assert!(normalized.contains(kept), "{normalized}");
+            assert!(!normalized.contains(target), "{normalized}");
+        }
+    }
+
+    #[test]
+    fn a_portrait_adjustment_naming_a_style_target_is_rejected() {
+        assert!(portrait_adjustment_is_within_scope("softer lighting"));
+        for adjustment in [
+            "softer lighting like Honkai",
+            "宫崎骏那样的柔和光线",
+            "新海誠みたいな光",
+        ] {
+            assert!(
+                !portrait_adjustment_is_within_scope(adjustment),
+                "{adjustment}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_style_target_name_inside_another_word_is_not_a_match() {
+        assert!(!named_style_target_in("a pixarray of beads"));
+        assert!(!named_style_target_in("atlusian trim"));
+        assert!(named_style_target_in("Pixar look"));
+        assert!(named_style_target_in("Pokémon-like"));
     }
 }

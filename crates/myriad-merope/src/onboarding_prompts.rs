@@ -446,9 +446,6 @@ mod tests {
         let locked = visual_design_system_prompt();
         assert!(locked.contains(crate::MEROPE_VISUAL_SCHOOL));
         assert!(locked.contains("Locked visual school"));
-        assert!(locked.contains("Genshin Impact"));
-        assert!(locked.contains("Honkai: Star Rail"));
-        assert!(locked.contains("miHoYo"));
         assert!(locked.contains("polished game-production color clarity"));
         assert!(locked.contains("non-chibi anime face"));
         assert!(locked.contains("short simplified midface"));
