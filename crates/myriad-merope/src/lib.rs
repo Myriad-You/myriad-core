@@ -147,6 +147,7 @@ pub use sticker_avatar::{
 pub use visual_contract::{
     FullBodySource, appearance_visual_profile, build_character_asset_contract,
     build_full_body_asset_contract, character_asset_contract_fingerprint,
+    is_recognised_portrait_rendering,
 };
 pub use visual_design::{
     BustPortraitRefusal, CLOTHING_STYLES, DEFAULT_WARDROBE_ID, FullBodyOutfit,
@@ -162,8 +163,9 @@ pub use visual_design::{
     upper_body_visual_identity_is_complete, visual_profile_wearing, wardrobe_bust_portrait,
 };
 pub use visual_prompt::{
-    FULL_BODY_PORTRAIT_INSTRUCTION_VERSION, MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL,
-    MEROPE_VISUAL_SCHOOL_VERSION, build_character_visual_edit_prompt,
+    FULL_BODY_PORTRAIT_INSTRUCTION_VERSION, MEROPE_RECOGNISED_PORTRAIT_RENDERINGS,
+    MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
+    PortraitRendering, build_character_visual_edit_prompt,
     build_character_visual_prompt, build_full_body_design_prompt, build_full_body_portrait_prompt,
     build_upright_portrait_prompt,
     ensure_visual_identity_states_gender, normalize_visual_identity_for_prompt,

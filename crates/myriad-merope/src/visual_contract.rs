@@ -73,11 +73,7 @@ pub fn build_character_asset_contract(
             "view": "strict-centered-eye-level-zero-yaw-front",
             "background": bust.background,
         },
-        "rendering": {
-            "visualSchoolVersion": crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION,
-            "styleReferenceSha256": crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256,
-            "styleReferenceRole": "rendering-technique-only",
-        },
+        "rendering": portrait_rendering_block(&crate::visual_prompt::MEROPE_RECOGNISED_PORTRAIT_RENDERINGS[0]),
         "rig": {
             "maxRigidArmRotationDegrees": bust.max_rigid_arm_rotation_degrees,
             "requiredCapabilities": bust.required_capabilities,
@@ -86,6 +82,24 @@ pub fn build_character_asset_contract(
             .map(|value| bounded_text(value, 2_000))
             .filter(|value| !value.is_empty()),
     })
+}
+
+/// The `rendering` block a bust contract carries for this rendering.
+fn portrait_rendering_block(rendering: &crate::visual_prompt::PortraitRendering) -> Value {
+    json!({
+        "visualSchoolVersion": rendering.visual_school_version,
+        "styleReferenceSha256": rendering.style_reference_sha256,
+        "styleReferenceRole": "rendering-technique-only",
+    })
+}
+
+/// Whether a stored bust contract's `rendering` block is exactly one this
+/// build recognises (`MEROPE_RECOGNISED_PORTRAIT_RENDERINGS`). A missing,
+/// malformed, or unlisted block is not.
+pub fn is_recognised_portrait_rendering(rendering: &Value) -> bool {
+    crate::visual_prompt::MEROPE_RECOGNISED_PORTRAIT_RENDERINGS
+        .iter()
+        .any(|known| portrait_rendering_block(known) == *rendering)
 }
 
 /// What a full-body set is drawn from.
@@ -257,10 +271,11 @@ mod tests {
         assert_eq!(character_asset_contract_fingerprint(&contract).len(), 64);
     }
 
-    /// Every stored portrait was fingerprinted with this exact contract
-    /// layout. A stored portrait is checked against the current identity with
-    /// its own `rendering` block (how it was drawn), so a different byte
-    /// anywhere else detaches every rig built before it.
+    /// Stored fingerprints are hashes of this exact contract layout. Outside
+    /// the `rendering` block (whose recognised values are listed in
+    /// `MEROPE_RECOGNISED_PORTRAIT_RENDERINGS`), any changed byte gives the
+    /// same identity a different fingerprint. The school version is pinned
+    /// here so a rendering bump does not move this hash.
     #[test]
     fn bust_contract_fingerprint_is_unchanged_by_the_profile_split() {
         let mut contract = build_character_asset_contract(
@@ -273,6 +288,65 @@ mod tests {
             character_asset_contract_fingerprint(&contract),
             "9f1d7a72466d522c577ad42f472ef51dcc70250a921092817b0eb02bf46bd7aa"
         );
+    }
+
+    #[test]
+    fn a_new_bust_contract_carries_the_current_recognised_rendering() {
+        let contract = build_character_asset_contract("Nova", &json!({ "gender": "female" }), None);
+        let current = crate::visual_prompt::MEROPE_RECOGNISED_PORTRAIT_RENDERINGS[0];
+        assert_eq!(
+            current.visual_school_version,
+            crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION
+        );
+        assert_eq!(
+            current.style_reference_sha256,
+            crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256
+        );
+        assert!(is_recognised_portrait_rendering(&contract["rendering"]));
+    }
+
+    #[test]
+    fn the_rendering_before_this_school_version_is_recognised() {
+        assert!(is_recognised_portrait_rendering(&json!({
+            "visualSchoolVersion": "mihoyo-rpg-reference-v4",
+            "styleReferenceSha256": crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256,
+            "styleReferenceRole": "rendering-technique-only",
+        })));
+    }
+
+    #[test]
+    fn an_unlisted_rendering_is_not_recognised() {
+        assert!(!is_recognised_portrait_rendering(&json!({
+            "visualSchoolVersion": "mihoyo-rpg-reference-v3",
+            "styleReferenceSha256": crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256,
+            "styleReferenceRole": "rendering-technique-only",
+        })));
+        assert!(!is_recognised_portrait_rendering(&json!({
+            "visualSchoolVersion": crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION,
+            "styleReferenceSha256": "0".repeat(64),
+            "styleReferenceRole": "rendering-technique-only",
+        })));
+    }
+
+    #[test]
+    fn a_malformed_rendering_is_not_recognised() {
+        let current = build_character_asset_contract("Nova", &json!({}), None)["rendering"].clone();
+        let mut with_extra_key = current.clone();
+        with_extra_key["note"] = json!("x");
+        let mut without_role = current;
+        without_role
+            .as_object_mut()
+            .unwrap()
+            .remove("styleReferenceRole");
+        for malformed in [
+            Value::Null,
+            json!("anime-cel-gradient-reference-v5"),
+            json!({}),
+            with_extra_key,
+            without_role,
+        ] {
+            assert!(!is_recognised_portrait_rendering(&malformed), "{malformed}");
+        }
     }
 
     #[test]
