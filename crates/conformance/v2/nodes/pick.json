@@ -1119,6 +1119,201 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "nodes": [
+          {
+            "aliases": [
+              "plants"
+            ],
+            "entries": [
+              {
+                "at": 10,
+                "id": "p1"
+              }
+            ],
+            "id": "botany",
+            "name": "botany"
+          },
+          {
+            "entries": [
+              {
+                "at": 20,
+                "id": "e1"
+              }
+            ],
+            "id": "tim",
+            "name": "Tim"
+          }
+        ],
+        "query": "what time will my plants bloom?",
+        "ranked": []
+      },
+      "name": "query matches live non-empty node by alias and ignores stopwords like time",
+      "output": {
+        "picked": [
+          {
+            "entries": [
+              "p1"
+            ],
+            "node": "botany"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "budget": {
+          "residentChars": 45,
+          "residentSuffixChars": 14
+        },
+        "nodes": [
+          {
+            "id": "n1",
+            "name": "work",
+            "standing": [
+              {
+                "at": 9,
+                "item": "them-0000000001",
+                "text": "builds software"
+              }
+            ]
+          },
+          {
+            "id": "n2",
+            "name": "home",
+            "standing": [
+              {
+                "at": 5,
+                "item": "them-0000000002",
+                "text": "lives in tokyo"
+              }
+            ]
+          }
+        ],
+        "ranked": []
+      },
+      "name": "residentSuffixChars reserves per-item host display allowance",
+      "output": {
+        "resident": [
+          {
+            "item": "them-0000000001",
+            "node": "n1",
+            "text": "builds software"
+          }
+        ],
+        "residentLeftOut": 1
+      }
+    },
+    {
+      "input": {
+        "nodes": [
+          {
+            "entries": [
+              {
+                "at": 10,
+                "id": "h1"
+              }
+            ],
+            "id": "hobby",
+            "name": "hobby"
+          },
+          {
+            "entries": [
+              {
+                "at": 20,
+                "id": "e1"
+              }
+            ],
+            "id": "parts",
+            "name": "parts"
+          }
+        ],
+        "query": "what are my hobbies and parties?",
+        "ranked": []
+      },
+      "name": "query matches plural hobbies->hobby without false parties->parts hit",
+      "output": {
+        "picked": [
+          {
+            "entries": [
+              "h1"
+            ],
+            "node": "hobby"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "nodes": [
+          {
+            "aliases": [
+              "camping"
+            ],
+            "entries": [
+              {
+                "at": 80,
+                "id": "q1"
+              }
+            ],
+            "id": "qact",
+            "name": "weekend"
+          },
+          {
+            "entries": [
+              {
+                "at": 99,
+                "id": "r1"
+              }
+            ],
+            "id": "qrest",
+            "name": "camping",
+            "status": "resting"
+          },
+          {
+            "entries": [
+              {
+                "at": 10,
+                "id": "e1"
+              }
+            ],
+            "id": "eact",
+            "name": "other"
+          }
+        ],
+        "query": "camping",
+        "ranked": [
+          {
+            "id": "e1",
+            "named": true
+          }
+        ]
+      },
+      "name": "active query match follows active named match and precedes resting match",
+      "output": {
+        "picked": [
+          {
+            "entries": [
+              "e1"
+            ],
+            "node": "eact"
+          },
+          {
+            "entries": [
+              "q1"
+            ],
+            "node": "qact"
+          },
+          {
+            "entries": [
+              "r1"
+            ],
+            "node": "qrest"
+          }
+        ]
+      }
     }
   ],
   "version": 1

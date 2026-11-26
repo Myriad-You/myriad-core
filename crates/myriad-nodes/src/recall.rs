@@ -7,16 +7,16 @@
 //! the host's to leave out before calling. [`pick`] turns that ranking
 //! into nodes, by these rules:
 //!
-//! - **Picked nodes**: only a named entry picks its node (one that only
-//!   fills was not about these words). Active and ongoing nodes first, then
-//!   resting ones, then done or dropped ones; within each, by where their
-//!   first named entry ranks. A node gone (forgotten, or gone into another:
-//!   its entries are on that one now) is never picked; a done or dropped
-//!   one only when named, which is the only way any node is picked, so it
-//!   comes when they ask after it and after everything still going. Their
-//!   own node (「关于你」) and hers (`her`) are never picked: the first has
-//!   its own place below, the second's head is the host's to show every
-//!   time. At most [`Budget::picked`].
+//! - **Picked nodes**: a node is picked when a `named` entry picks it, OR
+//!   when `query` matches the `name` or `aliases` of a live non-empty node
+//!   (excluding `gone`, own system nodes, and name-only nodes with zero
+//!   entries). Active and ongoing nodes first, then resting ones, then
+//!   done or dropped ones; within each status tier, nodes matched by a
+//!   `named` entry rank first (in the order their first named entry ranks),
+//!   followed by nodes matched only by `query` (ordered newest-entry-first,
+//!   then by id). A node gone (forgotten, or gone into another: its entries
+//!   are on that one now) is never picked. Their own node (「关于你」) and
+//!   hers (`her`) are never picked. At most [`Budget::picked`].
 //! - **Each picked node's entries**: its ranked entries first, in rank
 //!   order, then its newest to fill, at most [`Budget::entries`]; with two
 //!   places or more its newest entry always among them (it takes the last
@@ -522,31 +522,117 @@ fn best(
     out
 }
 
-fn latin_stem(word: &str) -> &str {
-    for suffix in ["ies", "ing"] {
+fn latin_forms(word: &str) -> Vec<String> {
+    let mut forms = vec![word.to_string()];
+    if !word.is_ascii() {
+        return forms;
+    }
+    if word.len() >= 5
+        && let Some(prefix) = word.strip_suffix("ies")
+    {
+        forms.push(format!("{prefix}y"));
+        forms.push(format!("{prefix}ie"));
+        return forms;
+    }
+    for suffix in ["ing", "ed"] {
         if word.len() >= suffix.len() + 3
-            && word.is_ascii()
             && let Some(stem) = word.strip_suffix(suffix)
         {
-            return stem;
+            if stem.len() >= 3 {
+                forms.push(format!("{stem}e"));
+            }
+            if stem.len() >= 4 {
+                forms.push(stem.to_string());
+            }
+            return forms;
         }
     }
-    for suffix in ["ed", "es"] {
-        if word.len() >= suffix.len() + 3
-            && word.is_ascii()
-            && let Some(stem) = word.strip_suffix(suffix)
+    if word.len() >= 5
+        && let Some(stem) = word.strip_suffix("es")
+    {
+        forms.push(word[..word.len() - 1].to_string());
+        if stem.ends_with("sh")
+            || stem.ends_with("ch")
+            || stem.ends_with('x')
+            || stem.ends_with("ss")
+            || stem.ends_with("zz")
+            || stem.ends_with('o')
         {
-            return stem;
+            forms.push(stem.to_string());
         }
+        return forms;
     }
     if word.len() >= 4
-        && word.is_ascii()
         && !word.ends_with("ss")
-        && let Some(stem) = word.strip_suffix('s').or_else(|| word.strip_suffix('e'))
+        && !word.ends_with("us")
+        && !word.ends_with("is")
+        && let Some(stem) = word.strip_suffix('s')
     {
-        return stem;
+        forms.push(stem.to_string());
     }
-    word
+    forms
+}
+
+fn latin_token_matches(a: &str, b: &str) -> bool {
+    if a == b {
+        return true;
+    }
+    if is_latin_stopword(a) || is_latin_stopword(b) {
+        return false;
+    }
+    let fa = latin_forms(a);
+    let fb = latin_forms(b);
+    fa.iter()
+        .any(|x| x.len() >= 3 && fb.iter().any(|y| x == y))
+}
+
+fn is_latin_stopword(word: &str) -> bool {
+    matches!(
+        word,
+        "all"
+            | "and"
+            | "any"
+            | "are"
+            | "been"
+            | "but"
+            | "can"
+            | "did"
+            | "does"
+            | "for"
+            | "from"
+            | "had"
+            | "has"
+            | "have"
+            | "her"
+            | "his"
+            | "how"
+            | "may"
+            | "new"
+            | "not"
+            | "now"
+            | "one"
+            | "our"
+            | "out"
+            | "she"
+            | "that"
+            | "the"
+            | "them"
+            | "they"
+            | "this"
+            | "time"
+            | "two"
+            | "was"
+            | "were"
+            | "what"
+            | "when"
+            | "where"
+            | "which"
+            | "who"
+            | "will"
+            | "with"
+            | "you"
+            | "your"
+    )
 }
 
 fn label_matches_query(label: &str, query_lower: &str, query_tokens: &[&str]) -> bool {
@@ -574,9 +660,9 @@ fn label_matches_query(label: &str, query_lower: &str, query_tokens: &[&str]) ->
         [] => false,
         [single] => {
             single.chars().count() >= 3
+                && !is_latin_stopword(single)
                 && query_tokens.iter().any(|token| {
-                    *token == *single
-                        || (token.chars().count() >= 3 && latin_stem(token) == latin_stem(single))
+                    token.chars().count() >= 3 && latin_token_matches(single, token)
                 })
         }
         phrase => {
@@ -1251,6 +1337,52 @@ mod tests {
         }));
         assert_eq!(zh.picked.len(), 1);
         assert_eq!(zh.picked[0].node, "n-zh");
+        // Stopwords and stem/suffix collisions do not falsely match, while true
+        // morphological variants (hobbies/hobby, exercises/exercise, sizes/size,
+        // cookies/cookie, boxes/box) do match.
+        let no_false = run(json!({
+            "ranked": [],
+            "query": "what time will I go and may not see parties cookies brownies?",
+            "nodes": [
+                {"id": "n-tim", "name": "Tim", "entries": [{"id": "e1", "at": 10}]},
+                {"id": "n-notes", "name": "notes", "entries": [{"id": "e2", "at": 11}]},
+                {"id": "n-will", "name": "Will", "entries": [{"id": "e3", "at": 12}]},
+                {"id": "n-may", "name": "May", "entries": [{"id": "e4", "at": 13}]},
+                {"id": "n-parts", "name": "parts", "entries": [{"id": "e5", "at": 14}]},
+                {"id": "n-cook", "name": "cook", "entries": [{"id": "e6", "at": 15}]},
+                {"id": "n-brown", "name": "Brown", "entries": [{"id": "e7", "at": 16}]}
+            ]
+        }));
+        assert!(no_false.picked.is_empty(), "{:?}", no_false.picked);
+
+        let morph = run(json!({
+            "ranked": [],
+            "query": "tell me about my hobbies exercises sizes cookies and boxes",
+            "budget": {"picked": 5},
+            "nodes": [
+                {"id": "n-hobby", "name": "hobby", "entries": [{"id": "m1", "at": 10}]},
+                {"id": "n-ex", "name": "exercise", "entries": [{"id": "m2", "at": 20}]},
+                {"id": "n-size", "name": "size", "entries": [{"id": "m3", "at": 30}]},
+                {"id": "n-cookie", "name": "cookie", "entries": [{"id": "m4", "at": 40}]},
+                {"id": "n-box", "name": "box", "entries": [{"id": "m5", "at": 50}]}
+            ]
+        }));
+        let morph_ids: Vec<&str> = morph.picked.iter().map(|p| p.node.as_str()).collect();
+        assert_eq!(morph_ids, ["n-box", "n-cookie", "n-size", "n-ex", "n-hobby"]);
+
+        // Ranking order: within active tier, entry-matched precedes query-matched;
+        // query-matched active precedes resting.
+        let ordered = run(json!({
+            "ranked": [{"id": "e-active", "named": true}],
+            "query": "camping",
+            "nodes": [
+                {"id": "n-rest", "name": "camping", "status": "resting", "entries": [{"id": "r1", "at": 99}]},
+                {"id": "n-qact", "aliases": ["camping"], "entries": [{"id": "q1", "at": 80}]},
+                {"id": "n-eact", "name": "other", "entries": [{"id": "e-active", "at": 10}]}
+            ]
+        }));
+        let ordered_ids: Vec<&str> = ordered.picked.iter().map(|p| p.node.as_str()).collect();
+        assert_eq!(ordered_ids, ["n-eact", "n-qact", "n-rest"]);
     }
 
     #[test]
