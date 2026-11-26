@@ -807,7 +807,7 @@ fn due_only_when_all_it_rests_on_was_still_to_come() {
 }
 
 #[test]
-fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
+fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_end() {
     let mom_key = whose_key("mom").unwrap();
     let mom_item = item_id(&mom_key, "run", "memory:old", 0);
     let my_item = item_id("them", "run", "memory:old2", 0);
@@ -837,7 +837,8 @@ fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
             folded: json!({"standing": {}}),
         },
     ];
-    let nowhere_only = step_batch_prepare(BatchStepInput {
+    // Placement::Nowhere with no `known` reaching any node still skips.
+    let nowhere_isolated = step_batch_prepare(BatchStepInput {
         facts: vec![FactIn {
             memory: "m0".into(),
             text: "random note".into(),
@@ -850,7 +851,28 @@ fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
         nodes: nodes.clone(),
     })
     .unwrap();
-    assert!(nowhere_only.skip);
+    assert!(nowhere_isolated.skip);
+
+    // Placement::Nowhere (`on: []`) CAN still change nodes reached via `known`.
+    let nowhere_via_known = step_batch_prepare(BatchStepInput {
+        facts: vec![FactIn {
+            memory: "m-end".into(),
+            text: "stopped running completely".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: false,
+            on: vec![],
+        }],
+        known: vec![KnownIn {
+            text: "runs twice a week".into(),
+            on: vec!["run".into()],
+        }],
+        nodes: nodes.clone(),
+    })
+    .unwrap();
+    assert!(!nowhere_via_known.skip);
+    let asked_nowhere: Value = serde_json::from_str(&nowhere_via_known.input).unwrap();
+    assert_eq!(asked_nowhere["facts"].as_array().unwrap().len(), 1);
 
     let facts = vec![
         FactIn {
@@ -863,7 +885,7 @@ fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
         },
         FactIn {
             memory: "m-nowhere".into(),
-            text: "ordered lunch today".into(),
+            text: "actually quit running after knee pain".into(),
             happened: None,
             learned: Some("2026-11-26".into()),
             replaced: false,
@@ -877,6 +899,14 @@ fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
             replaced: false,
             on: vec!["cats".into()],
         },
+        FactIn {
+            memory: "m-replaced-unknown".into(),
+            text: "moved somewhere else".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: true,
+            on: vec!["cats".into()],
+        },
     ];
     let prep = step_batch_prepare(BatchStepInput {
         facts: facts.clone(),
@@ -886,19 +916,24 @@ fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
     .unwrap();
     assert!(!prep.skip);
     let asked: Value = serde_json::from_str(&prep.input).unwrap();
-    assert_eq!(asked["facts"].as_array().unwrap().len(), 2);
+    assert_eq!(asked["facts"].as_array().unwrap().len(), 4);
 
-    // Out-of-range fact index (fact=99) is set aside; touching mom_item as
-    // "them" triggers Left guard; valid actions keep strict single-fact refs.
+    // 1) Touching mom_item as "them" triggers Left guard.
+    // 2) Same-batch `set` (fact 1) followed by `end` (fact 2, Nowhere) on my_item
+    //    must supersede the `set` and emit the `end` row (`ended: true`).
+    // 3) Out-of-range fact=99 is set aside.
+    // 4) Fact 4 (`replaced: true`, no action -> unknown whose) must NOT emit a `them-` fallback.
     let output = json!({
         "set": [
             {"fact": 1, "whose": "them", "item": 1, "text": "trying to touch mom item"},
             {"fact": 1, "whose": "them", "item": 2, "text": "runs four times a week"},
             {"fact": 99, "whose": "them", "item": 2, "text": "invalid fact ref"}
         ],
-        "end": [],
+        "end": [
+            {"fact": 2, "whose": "them", "item": 2}
+        ],
         "add": [
-            {"fact": 2, "whose": "them", "topic": "cats", "text": "cares for kitten Miso"}
+            {"fact": 3, "whose": "them", "topic": "cats", "text": "cares for kitten Miso"}
         ]
     })
     .to_string();
@@ -915,7 +950,8 @@ fn stretch_batch_skips_nowhere_keeps_single_fact_refs_and_guards_whose() {
     assert_eq!(res.left[0].item, mom_item);
     assert_eq!(res.rows.len(), 2);
     assert_eq!(res.rows[0].node, "run");
-    assert_eq!(res.rows[0].body["because"], json!(["memory:m1"]));
+    assert_eq!(res.rows[0].body["ended"], json!(true));
+    assert_eq!(res.rows[0].body["because"], json!(["memory:m-nowhere"]));
     assert_eq!(res.rows[1].node, "cats");
     assert_eq!(res.rows[1].body["because"], json!(["memory:m2"]));
 }

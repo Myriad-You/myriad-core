@@ -923,7 +923,7 @@ pub struct BatchStepRead {
 }
 
 struct BatchContext<'a> {
-    placed: Vec<&'a FactIn>,
+    facts: Vec<&'a FactIn>,
     reach: Vec<String>,
     shown: Vec<Shown>,
     may: Vec<(String, String)>,
@@ -939,19 +939,20 @@ fn batch_context<'a>(
     if !nodes.iter().all(|node| seen.insert(node.id.as_str())) {
         return Err(NodeError::new("node ids repeat"));
     }
-    let mut placed: Vec<&'a FactIn> = Vec::new();
+    let mut kept_facts: Vec<&'a FactIn> = Vec::new();
     for fact in facts {
         if fact.memory.trim().is_empty() {
             return Err(NodeError::new("fact memory is empty"));
         }
-        if !fact.on.is_empty() {
-            placed.push(fact);
-        }
+        kept_facts.push(fact);
     }
     let known: Vec<&KnownIn> = known.iter().take(KNOWN).collect();
     let known_on: Vec<Vec<String>> = known.iter().map(|one| one.on.clone()).collect();
-    let own_all: Vec<String> = placed.iter().flat_map(|fact| fact.on.iter().cloned()).collect();
-    let reach = if placed.is_empty() {
+    let own_all: Vec<String> = kept_facts
+        .iter()
+        .flat_map(|fact| fact.on.iter().cloned())
+        .collect();
+    let reach = if kept_facts.is_empty() {
         Vec::new()
     } else {
         nodes_it_may_change(&own_all, &known_on)
@@ -968,7 +969,7 @@ fn batch_context<'a>(
         .filter_map(|id| Some((id.clone(), node(id)?.name.clone()?)))
         .collect();
     Ok(BatchContext {
-        placed,
+        facts: kept_facts,
         reach,
         shown,
         may,
@@ -976,10 +977,12 @@ fn batch_context<'a>(
     })
 }
 
-/// Prepare one stretch-wide prompt covering only facts placed onto nodes.
+/// Prepare one stretch-wide prompt over all facts kept by the stretch,
+/// including unplaced (`Placement::Nowhere`) facts that may still update or
+/// end existing standing items via `known`.
 pub fn step_batch_prepare(input: BatchStepInput) -> Result<StepPrepared, NodeError> {
     let ctx = batch_context(&input.facts, &input.known, &input.nodes)?;
-    if ctx.placed.is_empty() || ctx.reach.is_empty() {
+    if ctx.facts.is_empty() || ctx.reach.is_empty() {
         return Ok(StepPrepared {
             skip: true,
             system: String::new(),
@@ -993,7 +996,7 @@ pub fn step_batch_prepare(input: BatchStepInput) -> Result<StepPrepared, NodeErr
         .map(|(id, name)| (id.as_str(), name.as_str()))
         .collect();
     let asked = json!({
-        "facts": ctx.placed.iter().enumerate()
+        "facts": ctx.facts.iter().enumerate()
             .map(|(n, fact)| json!({"n": n + 1, "text": fact.text}))
             .collect::<Vec<_>>(),
         "list": ctx.shown.iter().enumerate().map(|(n, item)| json!({
@@ -1019,7 +1022,7 @@ pub fn step_batch_prepare(input: BatchStepInput) -> Result<StepPrepared, NodeErr
 /// fact's `memory:<id>` reference to each emitted `node.standing` row.
 pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeError> {
     let ctx = batch_context(&input.facts, &input.known, &input.nodes)?;
-    if ctx.placed.is_empty() || ctx.reach.is_empty() {
+    if ctx.facts.is_empty() || ctx.reach.is_empty() {
         return Ok(BatchStepRead::default());
     }
     let Some(answer) = answer_of(&input.output) else {
@@ -1029,16 +1032,17 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
         });
     };
     let mut out = BatchStepRead::default();
-    let mut per_fact: Vec<Vec<Change>> = vec![Vec::new(); ctx.placed.len()];
-    let mut touched_items: Vec<String> = Vec::new();
-    let mut touched_by_fact: Vec<Vec<String>> = vec![Vec::new(); ctx.placed.len()];
-    let mut fact_whoses: Vec<Option<String>> = vec![None; ctx.placed.len()];
-    let mut fact_invalid: Vec<bool> = vec![false; ctx.placed.len()];
-    let mut started = vec![0usize; ctx.placed.len()];
+    let mut per_fact: Vec<Vec<Change>> = vec![Vec::new(); ctx.facts.len()];
+    let mut set_items: Vec<String> = Vec::new();
+    let mut ended_items: Vec<String> = Vec::new();
+    let mut touched_by_fact: Vec<Vec<String>> = vec![Vec::new(); ctx.facts.len()];
+    let mut fact_whoses: Vec<Option<String>> = vec![None; ctx.facts.len()];
+    let mut fact_invalid: Vec<bool> = vec![false; ctx.facts.len()];
+    let mut started = vec![0usize; ctx.facts.len()];
 
     let resolve_fact = |n: &Value| {
         let idx = usize::try_from(n.as_u64()?).ok()?.checked_sub(1)?;
-        (idx < ctx.placed.len()).then_some(idx)
+        (idx < ctx.facts.len()).then_some(idx)
     };
     let resolve_item = |n: &Value| {
         let idx = usize::try_from(n.as_u64()?).ok()?.checked_sub(1)?;
@@ -1076,11 +1080,11 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
             .chars()
             .take(TEXT_CHARS)
             .collect();
-        if text.is_empty() || touched_items.contains(&to.item) {
+        if text.is_empty() || set_items.contains(&to.item) || ended_items.contains(&to.item) {
             out.set_aside += 1;
             continue;
         }
-        touched_items.push(to.item.clone());
+        set_items.push(to.item.clone());
         touched_by_fact[fidx].push(to.item.clone());
         per_fact[fidx].push(Change {
             node: to.node.clone(),
@@ -1117,12 +1121,23 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
             });
             continue;
         }
-        let text: String = ctx.placed[fidx].text.trim().chars().take(TEXT_CHARS).collect();
-        if text.is_empty() || touched_items.contains(&to.item) {
+        let text: String = ctx.facts[fidx].text.trim().chars().take(TEXT_CHARS).collect();
+        if text.is_empty() || ended_items.contains(&to.item) {
             out.set_aside += 1;
             continue;
         }
-        touched_items.push(to.item.clone());
+        // Same-batch `end` supersedes an earlier `set` on the same item so it
+        // does not stay stuck in a modified open state.
+        if let Some(pos) = set_items.iter().position(|id| id == &to.item) {
+            set_items.swap_remove(pos);
+            for changes in &mut per_fact {
+                changes.retain(|c| c.item != to.item || c.ended);
+            }
+            for touched in &mut touched_by_fact {
+                touched.retain(|id| id != &to.item);
+            }
+        }
+        ended_items.push(to.item.clone());
         touched_by_fact[fidx].push(to.item.clone());
         per_fact[fidx].push(Change {
             node: to.node.clone(),
@@ -1146,7 +1161,7 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
             continue;
         };
         fact_whoses[fidx].get_or_insert_with(|| whose.clone());
-        let fact = ctx.placed[fidx];
+        let fact = ctx.facts[fidx];
         let asked = one["topic"].as_str().unwrap_or_default().trim();
         let asked = ctx
             .may
@@ -1183,12 +1198,12 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
         });
     }
 
-    for (fidx, fact) in ctx.placed.iter().enumerate() {
+    for (fidx, fact) in ctx.facts.iter().enumerate() {
         if fact.replaced
             && let Some(home) = fact.on.first()
             && !per_fact[fidx].iter().any(|change| &change.node == home)
+            && let Some(fallback_whose) = fact_whoses[fidx].as_deref()
         {
-            let fallback_whose = fact_whoses[fidx].as_deref().unwrap_or("them");
             let text: String = fact.text.trim().chars().take(TEXT_CHARS).collect();
             let item = item_id(fallback_whose, home, &fact.memory, started[fidx]);
             if !text.is_empty() && item.len() <= ITEM_BYTES {

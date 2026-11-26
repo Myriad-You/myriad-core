@@ -55,6 +55,8 @@ pub(super) const TESTED: &[&str] = &[
     "nodes.stands_build_due",
     "nodes.stands_build_input",
     "nodes.stands_build_read",
+    "nodes.stands_step_batch_input",
+    "nodes.stands_step_batch_read",
     "nodes.stands_step_input",
     "nodes.stands_step_read",
     "nodes.trust_tier",
@@ -249,7 +251,7 @@ fn stands_step_batch_ffi_roundtrips_and_keeps_per_fact_refs() {
     let input = json!({
         "facts": [
             {"memory": "m1", "text": "weekly yoga", "learned": "2026-11-26", "on": ["n-yoga"]},
-            {"memory": "m-skip", "text": "one-off coffee", "on": []},
+            {"memory": "m-nowhere", "text": "one-off coffee", "on": []},
             {"memory": "m2", "text": "adopted a cat", "learned": "2026-11-26", "on": ["n-pets"]}
         ],
         "nodes": [
@@ -260,7 +262,7 @@ fn stands_step_batch_ffi_roundtrips_and_keeps_per_fact_refs() {
     let prepared = super::ok("nodes.stands_step_batch_input", input.clone());
     assert!(prepared.get("skip").is_none());
     let prompt_in: Value = serde_json::from_str(prepared["input"].as_str().unwrap()).unwrap();
-    assert_eq!(prompt_in["facts"].as_array().unwrap().len(), 2);
+    assert_eq!(prompt_in["facts"].as_array().unwrap().len(), 3);
 
     let read_in = json!({
         "output": serde_json::json!({
@@ -268,7 +270,7 @@ fn stands_step_batch_ffi_roundtrips_and_keeps_per_fact_refs() {
             "end": [],
             "add": [
                 {"fact": 1, "whose": "them", "topic": "exercise", "text": "practices yoga weekly"},
-                {"fact": 2, "whose": "them", "topic": "pets", "text": "has a pet cat"}
+                {"fact": 3, "whose": "them", "topic": "pets", "text": "has a pet cat"}
             ]
         }).to_string(),
         "sync": {"local": "site"},
