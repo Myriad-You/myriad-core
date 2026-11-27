@@ -62,7 +62,7 @@ const BESIDE_FROM: usize = 3;
 
 /// A line longer than this many characters is gone over in parts
 /// ([`line_parts`]).
-pub const PART_CHARS: usize = 600;
+pub const PART_CHARS: usize = 1200;
 /// How far back from where a part would end it ends at an ending instead.
 const PART_END_WITHIN: usize = 120;
 
@@ -596,21 +596,67 @@ fn unquoted(line: &str, evidence: &str) -> (usize, bool) {
     (left, quoted.contains(&true))
 }
 
-/// Whether each part of `evidence` is in one of the lines `of`. A single
-/// character is, only when it is all a line of them says ('对', '对。').
+fn fold_evidence(text: &str) -> String {
+    let mapped: String = text
+        .chars()
+        .map(|ch| match ch {
+            '“' | '”' => '"',
+            '‘' | '’' => '\'',
+            _ => ch.to_ascii_lowercase(),
+        })
+        .collect();
+    one_spaced(&mapped)
+}
+
+/// Whether each part of `evidence` is in one of the lines `of` (or spans two
+/// adjacent `Who::Them` lines whose caller-provided `at` strings match —
+/// note `at` carries host granularity, e.g. minute precision on the site),
+/// with normalized whitespace, curly quotes, and ASCII case. A single character
+/// is allowed only when it is all a line of theirs says.
 fn quotes_lines(evidence: &str, lines: &[Line], of: &[usize]) -> bool {
     let evidence = evidence.trim();
-    let of: Vec<String> = of
+    let of_folded: Vec<(usize, String)> = of
+        .iter()
+        .copied()
+        .filter_map(|index| lines.get(index).map(|line| (index, fold_evidence(line.text))))
+        .collect();
+    let in_one_or_seam = |part: &str| {
+        let part_folded = fold_evidence(part);
+        if part_folded.is_empty() {
+            return false;
+        }
+        if of_folded
+            .iter()
+            .any(|(_, line)| holds(line, part) || line.contains(&part_folded))
+        {
+            return true;
+        }
+        of_folded.iter().any(|&(idx, ref left)| {
+            lines[idx].who == Who::Them
+                && of.contains(&(idx + 1))
+                && lines
+                    .get(idx + 1)
+                    .is_some_and(|next| next.who == Who::Them && next.at == lines[idx].at)
+                && of_folded
+                    .iter()
+                    .find(|&&(i, _)| i == idx + 1)
+                    .is_some_and(|(_, right)| {
+                        let joined_tight = format!("{left}{right}");
+                        let joined_spaced = format!("{left} {right}");
+                        joined_tight.contains(&part_folded) || joined_spaced.contains(&part_folded)
+                    })
+        })
+    };
+    let of_plain: Vec<String> = of
         .iter()
         .filter_map(|index| lines.get(*index))
         .map(|line| one_spaced(line.text))
         .collect();
-    let in_one = |part: &str| of.iter().any(|line| holds(line, part));
     evidence.chars().count() <= 240
-        && (letters(evidence) >= 2 || of.iter().any(|line| same_letters(line, evidence)))
+        && (letters(evidence) >= 2 || of_plain.iter().any(|line| same_letters(line, evidence)))
         && evidence_parts(evidence)
             .into_iter()
-            .all(|part| !part.is_empty() && in_one(part))
+            .all(|part| !part.is_empty() && in_one_or_seam(part))
 }
 
 /// Whether two texts say the same, but for spaces and punctuation.
