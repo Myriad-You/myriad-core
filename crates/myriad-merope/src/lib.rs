@@ -168,8 +168,11 @@ pub use visual_design::{
 pub use visual_prompt::{
     FULL_BODY_PORTRAIT_INSTRUCTION_VERSION, MEROPE_RECOGNISED_PORTRAIT_RENDERINGS,
     MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
-    PortraitRendering, build_character_visual_edit_prompt,
-    build_character_visual_prompt, build_full_body_design_prompt, build_full_body_portrait_prompt,
+    PortraitRendering, StyleRecipe, StyleRecipeIssue, build_character_visual_edit_prompt,
+    build_character_visual_edit_prompt_with, build_character_visual_prompt,
+    build_character_visual_prompt_with, build_full_body_design_prompt,
+    build_full_body_design_prompt_with, build_full_body_portrait_prompt,
+    build_full_body_portrait_prompt_with,
     build_upright_portrait_prompt,
     ensure_visual_identity_states_gender, normalize_visual_identity_for_prompt,
     normalize_visual_identity_for_prompt_checked,

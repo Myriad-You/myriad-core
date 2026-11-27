@@ -1091,10 +1091,10 @@ func step(_ event: JSON) throws {
 | 调用 | 输入 | 输出与 crate 函数 |
 | --- | --- | --- |
 | `visual.texts` | `{}` | `{school, schoolVersion, styleReferenceSha256, fullBodyInstructionVersion, clothingStyles, sticker: {contractVersion, size, styleReferenceSha256}}` |
-| `visual.character_prompt` | `{name, profile, notes?}` | `build_character_visual_prompt`：半身主立绘 |
-| `visual.full_body_design_prompt` | `{name, profile}` | `build_full_body_design_prompt`：照设计画全身 |
-| `visual.edit_prompt` | `{notes}` | `build_character_visual_edit_prompt`：在主立绘上改 |
-| `visual.full_body_portrait_prompt` | `{}` | `build_full_body_portrait_prompt`：从半身立绘重画全身 |
+| `visual.character_prompt` | `{name, profile, notes?, style?}` | `build_character_visual_prompt_with`：半身主立绘 |
+| `visual.full_body_design_prompt` | `{name, profile, style?}` | `build_full_body_design_prompt_with`：照设计画全身 |
+| `visual.edit_prompt` | `{notes, style?}` | `build_character_visual_edit_prompt_with`：在主立绘上改 |
+| `visual.full_body_portrait_prompt` | `{style?}` | `build_full_body_portrait_prompt_with`：从半身立绘重画全身 |
 | `visual.upright_prompt` | `{profile: "bust" \| "fullBody"}` | `build_upright_portrait_prompt`：上传的图照原画风正过来重画 |
 | `visual.adjustment_in_scope` | `{text}` | `{inScope}`：`portrait_adjustment_is_within_scope` |
 | `visual.requirements` | `{text, gender}` | `normalize_visual_requirements_for_design_with_gender` |
@@ -1108,6 +1108,8 @@ func step(_ event: JSON) throws {
 | `sticker.avatar_contract` | `{name, profile, sourcePortraitAssetId}` | `{contract, text}`：`build_sticker_avatar_contract` |
 | `persona.fallback` | `{name, language, tags}` | `{draft}`：`fallback_persona_draft` |
 | `persona.draft` | `{value, fallback}` | `{draft, complete, sludge}`：`sanitize_persona_draft`、`persona_draft_is_complete`、`persona_has_literary_sludge` |
+
+`style` 是提示里带画风的那几句（`StyleRecipe`）：`{school, referenceRole?, priority, editFinish, redrawFinish}`——画风段、附参考图时说明参考图做什么用、照设计画时收尾的优先级一句、改主立绘和从半身重画全身时要保留的成图质感。不给就是本构建自己的（`StyleRecipe::builtin()`），提示逐字节同以前（`crates/conformance/v1/visual` 对照）；构图、正面相机、画布、背景、身份各节不随 `style` 变。`referenceRole` 为空时不写参考图那句。空的、含控制字符或超长（画风段 6000 字，其余 2000 字）的回 `bad_input`。
 
 `rendering` 是画这张图的配方出处（`RenderingProvenance`）：`{recipe?, visualSchoolVersion, styleReferenceSha256?, fullBodyInstructionVersion}`。不给就是本构建自己的配方（`rendering` 一节不带 `recipe` 键）；配方服务画的图给它自己的出处，`recipe` 是服务的名字（小写字母、数字、`-`，不能是保留的 `builtin`），契约的 `rendering` 一节多出 `"recipe"`，所以不会和本构建的指纹撞上；`styleReferenceSha256` 为 `null` 表示没附风格参考图（`styleReferenceRole` 记 `none`）。越界的值回 `bad_input`。宿主只用自己画图时拿到的出处写契约，契约存在服务端，不从客户端收。
 

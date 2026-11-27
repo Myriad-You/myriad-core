@@ -48,6 +48,101 @@ pub const MEROPE_VISUAL_SCHOOL: &str = "Premium original 2D anime-game character
 
 const STYLE_REFERENCE_ROLE_INSTRUCTION: &str = "Use the attached image as a rendering-technique reference only. Match its compact anime face scale, prominent jewel-eye scale, graphic lashes, broad hair-group construction, thin colored contours, clean cel-gradient planes, color clarity, and material separation. The confirmed identity below remains authoritative for gender, maturity, face variant, eye acting and colors, hair cut and colors, costume family and construction, palette, motif, and every accessory; do not transfer the reference character's pink hair, lavender sailor outfit, stars, birdcage earrings, or identity.";
 
+/// The closing priority line of a picture drawn from the design.
+const BUILTIN_PRIORITY: &str = "Priority order: locked visual school and technique reference; strict frontal camera, framing, and gender; confirmed character module; selected costume grammar; confirmed outfit module; optional rendering notes. Resolve each fact once through its highest-priority owner. Treat faceDesign, eyeDesign, and body proportions as bounded identity cues inside the fixed house anatomy. Keep one stable person and one coherent costume language. Optional notes are limited to lighting, a small expression adjustment, or tighter frame occupancy inside the fixed crop.";
+
+/// The finish an edit of the master portrait keeps.
+const BUILTIN_EDIT_FINISH: &str = "locked 2D anime-game finish";
+
+/// The finish a full-body figure redrawn from a bust keeps.
+const BUILTIN_REDRAW_FINISH: &str =
+    "the same locked 2D anime-game cel-to-gradient finish and lighting";
+
+const MAX_STYLE_SCHOOL_CHARS: usize = 6_000;
+const MAX_STYLE_PART_CHARS: usize = 2_000;
+
+/// The style-bearing words of her pictures, apart from the framing the rig
+/// needs and the identity: the school paragraph, what the attached style
+/// reference is for, the closing priority line, and the finish an edit and
+/// a redraw keep. Everything else in a prompt (camera, crop, canvas,
+/// backdrop, identity, notes) is the same whichever recipe draws it.
+///
+/// [`StyleRecipe::builtin`] is this build's own, the words the prompts have
+/// always had.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct StyleRecipe {
+    /// Rendered as "Render one confirmed original character in this visual
+    /// school: {school}."
+    pub school: String,
+    /// What an attached style reference image is for; `None` when none is
+    /// attached.
+    #[serde(default)]
+    pub reference_role: Option<String>,
+    /// The closing line of a bust or full-body prompt drawn from the design.
+    pub priority: String,
+    /// The finish an edit of the master portrait keeps, inside its
+    /// "Preserve ... and {editFinish}." list.
+    pub edit_finish: String,
+    /// The finish a full-body redraw from a bust keeps, inside its "keep ...
+    /// and {redrawFinish}." list.
+    pub redraw_finish: String,
+}
+
+/// Which part of a [`StyleRecipe`] is not usable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum StyleRecipeIssue {
+    #[error("school must be 1-6000 characters without control characters")]
+    School,
+    #[error("reference role must be 1-2000 characters without control characters")]
+    ReferenceRole,
+    #[error("priority must be 1-2000 characters without control characters")]
+    Priority,
+    #[error("edit finish must be 1-2000 characters without control characters")]
+    EditFinish,
+    #[error("redraw finish must be 1-2000 characters without control characters")]
+    RedrawFinish,
+}
+
+impl StyleRecipe {
+    /// This build's own recipe.
+    pub fn builtin() -> Self {
+        Self {
+            school: MEROPE_VISUAL_SCHOOL.to_string(),
+            reference_role: Some(STYLE_REFERENCE_ROLE_INSTRUCTION.to_string()),
+            priority: BUILTIN_PRIORITY.to_string(),
+            edit_finish: BUILTIN_EDIT_FINISH.to_string(),
+            redraw_finish: BUILTIN_REDRAW_FINISH.to_string(),
+        }
+    }
+
+    /// Every part non-empty, bounded, and free of control characters.
+    pub fn check(&self) -> Result<(), StyleRecipeIssue> {
+        let usable = |text: &str, max: usize| {
+            let count = text.trim().chars().count();
+            count > 0 && count <= max && !text.chars().any(char::is_control)
+        };
+        if !usable(&self.school, MAX_STYLE_SCHOOL_CHARS) {
+            return Err(StyleRecipeIssue::School);
+        }
+        if let Some(role) = &self.reference_role
+            && !usable(role, MAX_STYLE_PART_CHARS)
+        {
+            return Err(StyleRecipeIssue::ReferenceRole);
+        }
+        if !usable(&self.priority, MAX_STYLE_PART_CHARS) {
+            return Err(StyleRecipeIssue::Priority);
+        }
+        if !usable(&self.edit_finish, MAX_STYLE_PART_CHARS) {
+            return Err(StyleRecipeIssue::EditFinish);
+        }
+        if !usable(&self.redraw_finish, MAX_STYLE_PART_CHARS) {
+            return Err(StyleRecipeIssue::RedrawFinish);
+        }
+        Ok(())
+    }
+}
+
 const IDENTITY_PROMPT_FIELDS: &[(&str, &str)] = &[
     (
         "faceDesign",
@@ -1035,11 +1130,27 @@ pub fn build_character_visual_prompt(
     onboarding: &Value,
     additional_requirements: Option<&str>,
 ) -> String {
+    build_character_visual_prompt_with(
+        name,
+        onboarding,
+        additional_requirements,
+        &StyleRecipe::builtin(),
+    )
+}
+
+/// [`build_character_visual_prompt`] in the words of `style`.
+pub fn build_character_visual_prompt_with(
+    name: &str,
+    onboarding: &Value,
+    additional_requirements: Option<&str>,
+    style: &StyleRecipe,
+) -> String {
     let bust = CharacterAssetProfile::Bust.contract();
     character_prompt(
         name,
         onboarding,
         additional_requirements,
+        style,
         MASTER_PORTRAIT_INSTRUCTION,
         &format!(
             "Vertical {}:{} width-to-height canvas.",
@@ -1051,11 +1162,21 @@ pub fn build_character_visual_prompt(
 /// A full-body set drawn from the confirmed design with its outfit on, when
 /// no bust portrait anchors it.
 pub fn build_full_body_design_prompt(name: &str, onboarding: &Value) -> String {
+    build_full_body_design_prompt_with(name, onboarding, &StyleRecipe::builtin())
+}
+
+/// [`build_full_body_design_prompt`] in the words of `style`.
+pub fn build_full_body_design_prompt_with(
+    name: &str,
+    onboarding: &Value,
+    style: &StyleRecipe,
+) -> String {
     let full = CharacterAssetProfile::FullBody.contract();
     character_prompt(
         name,
         onboarding,
         None,
+        style,
         &format!(
             "One polished full-body standing illustration of the confirmed character. Complete the lower body in the costume's own design language and palette: the matching lower garment, legwear, and shoes, with no new motifs. {}",
             full_body_frame(),
@@ -1071,19 +1192,21 @@ fn character_prompt(
     name: &str,
     onboarding: &Value,
     additional_requirements: Option<&str>,
+    style: &StyleRecipe,
     framing: &str,
     canvas: &str,
 ) -> String {
     let visual_identity = normalize_visual_identity_for_prompt(onboarding)
         .and_then(|identity| crate::visual_design::flatten_visual_identity(&identity))
         .unwrap_or(Value::Null);
-    let mut header = vec![
-        format!(
-            "Render one confirmed original character in this visual school: {MEROPE_VISUAL_SCHOOL}."
-        ),
-        STYLE_REFERENCE_ROLE_INSTRUCTION.to_string(),
-        format!("Identity name: {}.", bounded_text(name, 50)),
-    ];
+    let mut header = vec![format!(
+        "Render one confirmed original character in this visual school: {}.",
+        style.school
+    )];
+    if let Some(role) = &style.reference_role {
+        header.push(role.clone());
+    }
+    header.push(format!("Identity name: {}.", bounded_text(name, 50)));
     if let Some(gender) = gender_presentation_instruction(onboarding) {
         header.push(gender.to_string());
     }
@@ -1114,7 +1237,7 @@ fn character_prompt(
         );
     }
 
-    let closer = "Priority order: locked visual school and technique reference; strict frontal camera, framing, and gender; confirmed character module; selected costume grammar; confirmed outfit module; optional rendering notes. Resolve each fact once through its highest-priority owner. Treat faceDesign, eyeDesign, and body proportions as bounded identity cues inside the fixed house anatomy. Keep one stable person and one coherent costume language. Optional notes are limited to lighting, a small expression adjustment, or tighter frame occupancy inside the fixed crop.";
+    let closer = style.priority.as_str();
     let reserved = header.chars().count() + closer.chars().count() + 4;
     let identity_text = identity
         .join("\n")
@@ -1131,9 +1254,15 @@ fn character_prompt(
 }
 
 pub fn build_character_visual_edit_prompt(notes: &str) -> String {
+    build_character_visual_edit_prompt_with(notes, &StyleRecipe::builtin())
+}
+
+/// [`build_character_visual_edit_prompt`] in the words of `style`.
+pub fn build_character_visual_edit_prompt_with(notes: &str, style: &StyleRecipe) -> String {
     let notes = neutralize_style_overrides(&bounded_text(notes, 2_000));
+    let finish = &style.edit_finish;
     format!(
-        "Edit this existing upper-body master portrait with the source image as the immutable identity anchor. Preserve the same person, apparent maturity, gender presentation, face and eye geometry, hair identity, costume, palette, materials, ornaments, strict frontal viewing angle, and locked 2D anime-game finish. Apply the exact bounded lighting, small expression, or tighter frame-occupancy adjustment requested below while preserving every other identity and design feature. Maintain the 3:4 fill, near-white studio backdrop, complete head and hair silhouette, both visible sleeve or arm fragments, equal one-sixteenth-width side clearance, and lower-chest crop. Apply these adjustments: {notes}."
+        "Edit this existing upper-body master portrait with the source image as the immutable identity anchor. Preserve the same person, apparent maturity, gender presentation, face and eye geometry, hair identity, costume, palette, materials, ornaments, strict frontal viewing angle, and {finish}. Apply the exact bounded lighting, small expression, or tighter frame-occupancy adjustment requested below while preserving every other identity and design feature. Maintain the 3:4 fill, near-white studio backdrop, complete head and hair silhouette, both visible sleeve or arm fragments, equal one-sixteenth-width side clearance, and lower-chest crop. Apply these adjustments: {notes}."
     )
 }
 
@@ -1144,8 +1273,14 @@ pub const FULL_BODY_PORTRAIT_INSTRUCTION_VERSION: &str = "full-body-standing-v1"
 /// pose serves the rig: square to the camera, arms clear of the body, legs
 /// apart, so decomposition gets each limb whole and the feet stand on one line.
 pub fn build_full_body_portrait_prompt() -> String {
+    build_full_body_portrait_prompt_with(&StyleRecipe::builtin())
+}
+
+/// [`build_full_body_portrait_prompt`] in the words of `style`.
+pub fn build_full_body_portrait_prompt_with(style: &StyleRecipe) -> String {
     format!(
-        "Redraw the character in the source image as one full-body standing illustration of the same person. The source image is the immutable identity anchor: keep the same apparent maturity, gender presentation, face and eye geometry, gaze and default expression, hair cut, length, colors and gradient, every hair ornament and accessory, the upper-body costume, palette, materials, line weight, and the same locked 2D anime-game cel-to-gradient finish and lighting. Complete the lower body in the costume's own design language and palette: the matching lower garment, legwear, and shoes, with no new motifs. {}",
+        "Redraw the character in the source image as one full-body standing illustration of the same person. The source image is the immutable identity anchor: keep the same apparent maturity, gender presentation, face and eye geometry, gaze and default expression, hair cut, length, colors and gradient, every hair ornament and accessory, the upper-body costume, palette, materials, line weight, and {}. Complete the lower body in the costume's own design language and palette: the matching lower garment, legwear, and shoes, with no new motifs. {}",
+        style.redraw_finish,
         full_body_frame(),
     )
 }
@@ -2668,5 +2803,91 @@ mod tests {
         assert!(!named_style_target_in("atlusian trim"));
         assert!(named_style_target_in("Pixar look"));
         assert!(named_style_target_in("Pokémon-like"));
+    }
+
+    fn other_style() -> StyleRecipe {
+        StyleRecipe {
+            school: "Plain flat-colour anime illustration".into(),
+            reference_role: None,
+            priority: "Priority order: framing first, then identity.".into(),
+            edit_finish: "the same flat finish".into(),
+            redraw_finish: "the same flat finish and lighting".into(),
+        }
+    }
+
+    #[test]
+    fn the_builtin_style_is_the_prompts_own_words() {
+        let profile = design_profile("everyday");
+        let builtin = StyleRecipe::builtin();
+        assert!(builtin.check().is_ok());
+        assert_eq!(
+            build_character_visual_prompt_with("Nova", &profile, Some("soft light"), &builtin),
+            build_character_visual_prompt("Nova", &profile, Some("soft light"))
+        );
+        assert_eq!(
+            build_full_body_design_prompt_with("Nova", &profile, &builtin),
+            build_full_body_design_prompt("Nova", &profile)
+        );
+        assert_eq!(
+            build_character_visual_edit_prompt_with("soft light", &builtin),
+            build_character_visual_edit_prompt("soft light")
+        );
+        assert_eq!(
+            build_full_body_portrait_prompt_with(&builtin),
+            build_full_body_portrait_prompt()
+        );
+    }
+
+    /// Another recipe changes only its own words: the framing the rig needs
+    /// and the identity are the same whichever recipe draws.
+    #[test]
+    fn another_style_changes_only_the_style_words() {
+        let profile = design_profile("everyday");
+        let style = other_style();
+        let builtin = build_character_visual_prompt("Nova", &profile, None);
+        let other = build_character_visual_prompt_with("Nova", &profile, None, &style);
+        assert!(other.starts_with(
+            "Render one confirmed original character in this visual school: Plain flat-colour anime illustration.\n\nIdentity name: Nova."
+        ));
+        assert!(!other.contains(MEROPE_VISUAL_SCHOOL));
+        assert!(!other.contains(STYLE_REFERENCE_ROLE_INSTRUCTION));
+        assert!(other.ends_with("Priority order: framing first, then identity."));
+        assert!(other.contains(MASTER_PORTRAIT_INSTRUCTION));
+        let identity = |prompt: &str| {
+            let start = prompt.find(MASTER_PORTRAIT_INSTRUCTION).unwrap();
+            let end = prompt.rfind("\n\n").unwrap();
+            prompt[start..end].to_string()
+        };
+        assert_eq!(identity(&builtin), identity(&other));
+
+        let full = build_full_body_design_prompt_with("Nova", &profile, &style);
+        assert!(full.contains(&full_body_frame()));
+        assert!(!full.contains(MEROPE_VISUAL_SCHOOL));
+        let edit = build_character_visual_edit_prompt_with("soft light", &style);
+        assert!(edit.contains("strict frontal viewing angle, and the same flat finish. Apply"));
+        assert!(!edit.contains("anime-game"));
+        let redraw = build_full_body_portrait_prompt_with(&style);
+        assert!(redraw.contains("line weight, and the same flat finish and lighting. Complete"));
+        assert!(redraw.contains(&full_body_frame()));
+    }
+
+    #[test]
+    fn a_style_is_checked_part_by_part() {
+        let mut style = other_style();
+        style.school = " ".into();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::School));
+        style = other_style();
+        style.reference_role = Some("x\u{0}".into());
+        assert_eq!(style.check(), Err(StyleRecipeIssue::ReferenceRole));
+        style = other_style();
+        style.priority = "p".repeat(2_001);
+        assert_eq!(style.check(), Err(StyleRecipeIssue::Priority));
+        style = other_style();
+        style.edit_finish = "line\nbreak".into();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::EditFinish));
+        style = other_style();
+        style.redraw_finish = String::new();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::RedrawFinish));
+        assert!(other_style().check().is_ok());
     }
 }
