@@ -156,14 +156,25 @@ impl Standing {
 
 /// What a fact she keeps carries beside it, the same wherever she keeps
 /// one: going over a stretch of talk, or sorting what she knew before.
+/// `$anchor` tells which date field relative words like 'last Friday' are
+/// worked out from (`today` when only today is given, `at` in `settle_raw`,
+/// `said` when sorting older facts).
 macro_rules! happened_and_state {
-    ($words:literal) => {
-        concat!("happened is when what the fact tells of happened, which is not when they said it: from is the day (YYYY-MM-DD), or only the month (YYYY-MM) or the year (YYYY) when that is all that is known; to is the last day, month or year when it went on past from, else empty; about is true when the time is only rough (around then, early that month, a few weeks ago; also a month worked out from 'last month', which people say of a few weeks back). Work it out from today and what they said ('last Friday', 'the week before'); a plan has the day it is planned for. from and to are empty when the fact tells of no time of its own (a liking, who someone is, where they live) or none was given. \
+    ($anchor:literal, $words:literal) => {
+        concat!("happened is when what the fact tells of happened, which is not when they said it: from is the day (YYYY-MM-DD), or only the month (YYYY-MM) or the year (YYYY) when that is all that is known; to is the last day, month or year when it went on past from, else empty; about is true when the time is only rough (around then, early that month, a few weeks ago; also a month worked out from 'last month', which people say of a few weeks back). Work it out from ", $anchor, " and what they said ('last Friday', 'the week before'); a plan has the day it is planned for. from and to are empty when the fact tells of no time of its own (a liking, who someone is, where they live) or none was given. \
 state is where it stands now, in a word or two in the language of the fact ", $words, ", for something that is still to be done or can be over (a thing to pick up or return, an order, a booking, a project); else empty. open is true while something is still to be done about it or it is still going on, false once it is over (picked up, returned, finished, called off), and null when state is empty.")
     };
 }
 
-pub const HAPPENED_AND_STATE: &str = happened_and_state!("(待取, 已退, 已完成, 还在用, picked up)");
+pub const HAPPENED_AND_STATE: &str =
+    happened_and_state!("today", "(待取, 已退, 已完成, 还在用, picked up)");
+
+/// [`HAPPENED_AND_STATE`] for sorting existing facts, which carry `said` (the
+/// day each fact was learned) beside `today`.
+pub const HAPPENED_AND_STATE_FROM_SAID: &str = happened_and_state!(
+    "the day you learned it (said, or today when no said is given)",
+    "(待取, 已退, 已完成, 还在用, picked up)"
+);
 
 /// When a fact happened, the first half of [`HAPPENED_AND_STATE`], for an
 /// end that asks when each fact happened and not where it stands.
@@ -179,8 +190,23 @@ pub fn happened_and_state(examples: crate::chat_remember::Examples) -> &'static 
     match examples {
         crate::chat_remember::Examples::Chinese => HAPPENED_AND_STATE,
         crate::chat_remember::Examples::English => {
-            happened_and_state!("(to pick up, returned, done, still in use, picked up)")
+            happened_and_state!("today", "(to pick up, returned, done, still in use, picked up)")
         }
+    }
+}
+
+/// [`happened_and_state`] for raw talk settlement, where lines carry `at`
+/// (when each line was said) and relative dates resolve against `at` first.
+pub fn happened_and_state_from_at(examples: crate::chat_remember::Examples) -> &'static str {
+    match examples {
+        crate::chat_remember::Examples::Chinese => happened_and_state!(
+            "when the line was said (at, or today when a line has no at)",
+            "(待取, 已退, 已完成, 还在用, picked up)"
+        ),
+        crate::chat_remember::Examples::English => happened_and_state!(
+            "when the line was said (at, or today when a line has no at)",
+            "(to pick up, returned, done, still in use, picked up)"
+        ),
     }
 }
 
@@ -521,6 +547,15 @@ mod tests {
             None
         );
         assert!(HAPPENED_AND_STATE.contains("which is not when they said it"));
+        assert!(HAPPENED_AND_STATE.contains("Work it out from today"));
+        assert!(
+            HAPPENED_AND_STATE_FROM_SAID
+                .contains("Work it out from the day you learned it (said, or today when no said is given)")
+        );
+        assert!(
+            happened_and_state_from_at(crate::chat_remember::Examples::Chinese)
+                .contains("Work it out from when the line was said (at, or today when a line has no at)")
+        );
     }
 
     #[test]

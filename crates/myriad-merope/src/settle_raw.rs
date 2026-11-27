@@ -262,7 +262,7 @@ Known for good:\n{known}\n\
 {asked}",
         aliases = crate::topics::ALIASES,
         of_a_kind = crate::topics::OF_A_KIND,
-        happened_and_state = crate::happened::happened_and_state(examples),
+        happened_and_state = crate::happened::happened_and_state_from_at(examples),
         pronouns = wording.pronouns,
         moment = wording.moment,
         did_and_came = wording.did_and_came,

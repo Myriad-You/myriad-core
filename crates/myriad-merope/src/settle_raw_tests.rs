@@ -1138,3 +1138,15 @@ fn put_onto_only_takes_the_first_four_items() {
     assert_eq!(got.put_onto, ["第一本", "第二本", "第三本"]);
     assert_eq!(got.dropped.put_onto_dropped, 2);
 }
+
+#[test]
+fn raw_settle_prompt_anchors_happened_dates_to_at_first() {
+    for examples in [Examples::Chinese, Examples::English] {
+        let prompt = crate::settle_raw::raw_settle_system_prompt(&[], &[], examples);
+        assert!(
+            prompt.contains("when the line was said (at, or today when a line has no at)"),
+            "{examples:?}"
+        );
+        assert!(!prompt.contains("Work it out from today"), "{examples:?}");
+    }
+}
