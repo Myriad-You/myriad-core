@@ -100,20 +100,20 @@ pub struct StyleRecipe {
 /// Which part of a [`StyleRecipe`] is not usable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum StyleRecipeIssue {
-    #[error("school must be 1-6000 characters, trimmed, without control or direction characters")]
+    #[error("school must be 1-6000 characters, trimmed, without control, direction or zero-width characters")]
     School,
     #[error(
-        "reference role must be 1-2000 characters, trimmed, without control or direction characters"
+        "reference role must be 1-2000 characters, trimmed, without control, direction or zero-width characters"
     )]
     ReferenceRole,
-    #[error("priority must be 1-2000 characters, trimmed, without control or direction characters")]
+    #[error("priority must be 1-2000 characters, trimmed, without control, direction or zero-width characters")]
     Priority,
     #[error(
-        "edit finish must be 1-300 characters, trimmed, without control or direction characters"
+        "edit finish must be 1-300 characters, trimmed, without control, direction or zero-width characters"
     )]
     EditFinish,
     #[error(
-        "redraw finish must be 1-300 characters, trimmed, without control or direction characters"
+        "redraw finish must be 1-300 characters, trimmed, without control, direction or zero-width characters"
     )]
     RedrawFinish,
     #[error("a style part names a studio, franchise, or artist")]
@@ -123,7 +123,9 @@ pub enum StyleRecipeIssue {
 }
 
 /// Characters a style part may not carry: C0/C1 controls, line and
-/// paragraph separators, and the bidirectional formatting controls.
+/// paragraph separators, the bidirectional formatting controls, and the
+/// zero-width characters (which could split a studio name past the
+/// substring screen).
 fn forbidden_in_style(character: char) -> bool {
     character.is_control()
         || matches!(
@@ -135,6 +137,9 @@ fn forbidden_in_style(character: char) -> bool {
                 | '\u{200F}'
                 | '\u{202A}'..='\u{202E}'
                 | '\u{2066}'..='\u{2069}'
+                | '\u{200B}'..='\u{200D}'
+                | '\u{2060}'
+                | '\u{FEFF}'
         )
 }
 
@@ -3028,6 +3033,20 @@ mod tests {
                 Err(StyleRecipeIssue::RedrawFinish),
                 "{bad:?}"
             );
+        }
+    }
+
+    /// A zero-width character inside a studio name would hide it from the
+    /// substring screen; such characters are refused outright.
+    #[test]
+    fn zero_width_characters_are_refused_so_a_name_cannot_be_split() {
+        for bad in ['\u{200B}', '\u{200C}', '\u{200D}', '\u{2060}', '\u{FEFF}'] {
+            let mut style = other_style();
+            style.school = format!("Anime key art in the style of Gh{bad}ibli");
+            assert_eq!(style.check(), Err(StyleRecipeIssue::School), "{bad:?}");
+            let mut style = other_style();
+            style.edit_finish = format!("the same{bad}finish");
+            assert_eq!(style.check(), Err(StyleRecipeIssue::EditFinish), "{bad:?}");
         }
     }
 

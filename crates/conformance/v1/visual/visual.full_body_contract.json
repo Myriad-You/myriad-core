@@ -619,6 +619,194 @@
         "fingerprint": "fb7c82618943ffdef4fed9397b3287a45c642abff654a9c4b4cec118f7b5354e",
         "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"female\"}}}}"
       }
+    },
+    {
+      "input": {
+        "rendering": {
+          "fullBodyInstructionVersion": "full-body-standing-v1",
+          "recipe": "merope-persona",
+          "styleReferenceSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visualSchoolVersion": "house-v6"
+        },
+        "source": {
+          "bust": {
+            "generationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "portrait": "/media/bust.png"
+          }
+        }
+      },
+      "name": "from a bust under a recipe service's rendering",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "recipe": "merope-persona",
+            "referenceRole": "bust-portrait-identity-anchor"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "bustGenerationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bustPortrait": "/media/bust.png"
+          }
+        },
+        "fingerprint": "6a3115dca99dc3f5876730a1a21651bfcdcdf7833ab459816434afdbbfdfffcb",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"recipe\":\"merope-persona\",\"referenceRole\":\"bust-portrait-identity-anchor\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"bustGenerationFingerprint\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"bustPortrait\":\"/media/bust.png\"}}"
+      }
+    },
+    {
+      "input": {
+        "rendering": {
+          "fullBodyInstructionVersion": "full-body-standing-v1",
+          "recipe": "merope-persona",
+          "styleReferenceSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visualSchoolVersion": "house-v6"
+        },
+        "source": {
+          "design": {
+            "name": "星见",
+            "profile": {
+              "clothingStyle": "everyday",
+              "gender": "female",
+              "language": "en-US",
+              "visualIdentity": {
+                "character": {
+                  "eyeDesign": "violet eyes with layered irises",
+                  "faceDesign": "feminine young-adult read, elongated oval face with a calm gaze",
+                  "hairLayerPlan": "a few broad front locks over a long back mass",
+                  "hairShape": "long silver hair in broad ribbon masses"
+                },
+                "outfit": {
+                  "clothingStyle": "everyday",
+                  "heroAccessory": "a crescent brooch",
+                  "materialPlan": "matte wool and polished silver",
+                  "motif": "crescent moons",
+                  "outfitConstruction": "asymmetric closure with an open neckline",
+                  "paletteHint": "silver, violet and white",
+                  "sleeveArmDesign": "split sleeves with ribbon cuffs",
+                  "upperBodySilhouette": "fitted jacket over a wrapped layer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "name": "design under a recipe service's rendering",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "recipe": "merope-persona",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "visualSchoolVersion": "house-v6"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "identity": {
+              "name": "星见",
+              "visualProfile": {
+                "gender": "female",
+                "visualIdentity": {
+                  "character": {
+                    "eyeDesign": "violet eyes with layered irises",
+                    "faceDesign": "feminine young-adult read, compact soft-tapered anime oval face with a calm gaze",
+                    "hairLayerPlan": "a few broad front locks over a long back mass",
+                    "hairShape": "long silver hair in broad ribbon masses"
+                  },
+                  "outfit": {
+                    "clothingStyle": "everyday",
+                    "heroAccessory": "a crescent brooch",
+                    "materialPlan": "matte wool and polished silver",
+                    "motif": "crescent moons",
+                    "outfitConstruction": "asymmetric closure with an open neckline",
+                    "paletteHint": "silver, violet and white",
+                    "sleeveArmDesign": "split sleeves with ribbon cuffs",
+                    "upperBodySilhouette": "fitted jacket over a wrapped layer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fingerprint": "5b198408daeea13007f752b6efa81360924826d28f529282cb87384fa8577466",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"recipe\":\"merope-persona\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"visualSchoolVersion\":\"house-v6\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"female\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"violet eyes with layered irises\",\"faceDesign\":\"feminine young-adult read, compact soft-tapered anime oval face with a calm gaze\",\"hairLayerPlan\":\"a few broad front locks over a long back mass\",\"hairShape\":\"long silver hair in broad ribbon masses\"},\"outfit\":{\"clothingStyle\":\"everyday\",\"heroAccessory\":\"a crescent brooch\",\"materialPlan\":\"matte wool and polished silver\",\"motif\":\"crescent moons\",\"outfitConstruction\":\"asymmetric closure with an open neckline\",\"paletteHint\":\"silver, violet and white\",\"sleeveArmDesign\":\"split sleeves with ribbon cuffs\",\"upperBodySilhouette\":\"fitted jacket over a wrapped layer\"}}}}}}"
+      }
     }
   ]
 }
