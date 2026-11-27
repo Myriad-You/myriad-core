@@ -283,6 +283,8 @@ const CALLS: &[(&str, Call)] = &[
     ("nodes.stands_build_due", nodes::stands_build_due),
     ("nodes.stands_build_input", nodes::stands_build_input),
     ("nodes.stands_build_read", nodes::stands_build_read),
+    ("nodes.stands_step_batch_input", nodes::stands_step_batch_input),
+    ("nodes.stands_step_batch_read", nodes::stands_step_batch_read),
     ("nodes.stands_step_input", nodes::stands_step_input),
     ("nodes.stands_step_read", nodes::stands_step_read),
     ("nodes.trust_tier", nodes::trust_tier),

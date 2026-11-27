@@ -805,3 +805,153 @@ fn due_only_when_all_it_rests_on_was_still_to_come() {
     assert!(!due_passed("2026-11-14", "2026-11-13"));
     assert!(!due_passed("someday", "2026-11-15"));
 }
+
+#[test]
+fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_end() {
+    let mom_key = whose_key("mom").unwrap();
+    let mom_item = item_id(&mom_key, "run", "memory:old", 0);
+    let my_item = item_id("them", "run", "memory:old2", 0);
+    let sync = site();
+    let nodes = vec![
+        NodeIn {
+            id: "run".into(),
+            name: Some("running".into()),
+            kind: Some("topic".into()),
+            folded: json!({
+                "standing": {
+                    mom_item.clone(): {
+                        "base": ["b1"],
+                        "value": {"text": "mom runs 5km", "ended": false}
+                    },
+                    my_item.clone(): {
+                        "base": ["b2"],
+                        "value": {"text": "runs twice a week", "ended": false}
+                    }
+                }
+            }),
+        },
+        NodeIn {
+            id: "cats".into(),
+            name: Some("cats".into()),
+            kind: Some("topic".into()),
+            folded: json!({"standing": {}}),
+        },
+    ];
+    // Placement::Nowhere with no `known` reaching any node still skips.
+    let nowhere_isolated = step_batch_prepare(BatchStepInput {
+        facts: vec![FactIn {
+            memory: "m0".into(),
+            text: "random note".into(),
+            happened: None,
+            learned: None,
+            replaced: false,
+            on: vec![],
+        }],
+        known: vec![],
+        nodes: nodes.clone(),
+    })
+    .unwrap();
+    assert!(nowhere_isolated.skip);
+
+    // Placement::Nowhere (`on: []`) CAN still change nodes reached via `known`.
+    let nowhere_via_known = step_batch_prepare(BatchStepInput {
+        facts: vec![FactIn {
+            memory: "m-end".into(),
+            text: "stopped running completely".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: false,
+            on: vec![],
+        }],
+        known: vec![KnownIn {
+            text: "runs twice a week".into(),
+            on: vec!["run".into()],
+        }],
+        nodes: nodes.clone(),
+    })
+    .unwrap();
+    assert!(!nowhere_via_known.skip);
+    let asked_nowhere: Value = serde_json::from_str(&nowhere_via_known.input).unwrap();
+    assert_eq!(asked_nowhere["facts"].as_array().unwrap().len(), 1);
+
+    let facts = vec![
+        FactIn {
+            memory: "m1".into(),
+            text: "now runs four times a week".into(),
+            happened: Some("2026-11-20".into()),
+            learned: Some("2026-11-26".into()),
+            replaced: false,
+            on: vec!["run".into()],
+        },
+        FactIn {
+            memory: "m-nowhere".into(),
+            text: "actually quit running after knee pain".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: false,
+            on: vec![],
+        },
+        FactIn {
+            memory: "m2".into(),
+            text: "adopted a kitten named Miso".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: false,
+            on: vec!["cats".into()],
+        },
+        FactIn {
+            memory: "m-replaced-unknown".into(),
+            text: "moved somewhere else".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: true,
+            on: vec!["cats".into()],
+        },
+    ];
+    let prep = step_batch_prepare(BatchStepInput {
+        facts: facts.clone(),
+        known: vec![],
+        nodes: nodes.clone(),
+    })
+    .unwrap();
+    assert!(!prep.skip);
+    let asked: Value = serde_json::from_str(&prep.input).unwrap();
+    assert_eq!(asked["facts"].as_array().unwrap().len(), 4);
+
+    // 1) Touching mom_item as "them" triggers Left guard.
+    // 2) Same-batch `set` (fact 1) followed by `end` (fact 2, Nowhere) on my_item
+    //    must supersede the `set` and emit the `end` row (`ended: true`).
+    // 3) Out-of-range fact=99 is set aside.
+    // 4) Fact 4 (`replaced: true`, no action -> unknown whose) must NOT emit a `them-` fallback.
+    let output = json!({
+        "set": [
+            {"fact": 1, "whose": "them", "item": 1, "text": "trying to touch mom item"},
+            {"fact": 1, "whose": "them", "item": 2, "text": "runs four times a week"},
+            {"fact": 99, "whose": "them", "item": 2, "text": "invalid fact ref"}
+        ],
+        "end": [
+            {"fact": 2, "whose": "them", "item": 2}
+        ],
+        "add": [
+            {"fact": 3, "whose": "them", "topic": "cats", "text": "cares for kitten Miso"}
+        ]
+    })
+    .to_string();
+    let res = step_batch_read(BatchStepReadInput {
+        output,
+        sync,
+        facts,
+        known: vec![],
+        nodes,
+    })
+    .unwrap();
+    assert_eq!(res.set_aside, 1);
+    assert_eq!(res.left.len(), 1);
+    assert_eq!(res.left[0].item, mom_item);
+    assert_eq!(res.rows.len(), 2);
+    assert_eq!(res.rows[0].node, "run");
+    assert_eq!(res.rows[0].body["ended"], json!(true));
+    assert_eq!(res.rows[0].body["because"], json!(["memory:m-nowhere"]));
+    assert_eq!(res.rows[1].node, "cats");
+    assert_eq!(res.rows[1].body["because"], json!(["memory:m2"]));
+}
