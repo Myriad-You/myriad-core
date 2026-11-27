@@ -75,8 +75,8 @@ const MAX_PROMPT_NAME_CHARS: usize = 50;
 /// a redraw keep. Everything else in a prompt (camera, crop, canvas,
 /// backdrop, identity, notes) is the same whichever recipe draws it.
 ///
-/// [`StyleRecipe::builtin`] is this build's own, the words the prompts have
-/// always had.
+/// [`StyleRecipe::builtin`] is this build's own: the words the plain
+/// builders (`build_character_visual_prompt` and the rest) write.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct StyleRecipe {
