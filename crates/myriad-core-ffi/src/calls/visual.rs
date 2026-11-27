@@ -9,9 +9,10 @@
 use myriad_merope::{
     CLOTHING_STYLES, CharacterAssetProfile, FULL_BODY_PORTRAIT_INSTRUCTION_VERSION, FullBodySource,
     MEROPE_STICKER_STYLE_REFERENCE_SHA256, MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL,
-    MEROPE_VISUAL_SCHOOL_VERSION, STICKER_AVATAR_CONTRACT_VERSION, STICKER_AVATAR_SIZE,
-    VisualProfileIssue, build_character_asset_contract, build_character_visual_edit_prompt,
-    build_character_visual_prompt, build_full_body_asset_contract, build_full_body_design_prompt,
+    MEROPE_VISUAL_SCHOOL_VERSION, RenderingProvenance, STICKER_AVATAR_CONTRACT_VERSION,
+    STICKER_AVATAR_SIZE, VisualProfileIssue, build_character_asset_contract_with,
+    build_character_visual_edit_prompt, build_character_visual_prompt,
+    build_full_body_asset_contract_with, build_full_body_design_prompt,
     build_full_body_portrait_prompt, build_sticker_avatar_contract, build_sticker_avatar_prompt,
     build_upright_portrait_prompt, character_asset_contract_fingerprint, clothing_style_grammar,
     ensure_visual_identity_states_gender, fallback_persona_draft, normalize_clothing_style,
@@ -229,13 +230,38 @@ fn contract(contract: Value) -> Result<Value, Failure> {
     Ok(json!({ "contract": contract, "text": text, "fingerprint": fingerprint }))
 }
 
+/// How a contract's picture was rendered: this build's own recipe when
+/// absent, or the provenance a recipe service supplied.
+fn rendering(given: Option<RenderingProvenance>) -> Result<RenderingProvenance, Failure> {
+    match given {
+        None => Ok(RenderingProvenance::builtin()),
+        Some(rendering) => {
+            rendering
+                .check()
+                .map_err(|issue| Failure::BadInput(issue.to_string()))?;
+            Ok(rendering)
+        }
+    }
+}
+
 /// The bust master portrait's contract.
 pub(super) fn character_contract(raw: &[u8]) -> Result<Value, Failure> {
-    let req: Drawn = input(raw)?;
-    contract(build_character_asset_contract(
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        name: String,
+        profile: Value,
+        #[serde(default)]
+        notes: Option<String>,
+        #[serde(default)]
+        rendering: Option<RenderingProvenance>,
+    }
+    let req: In = input(raw)?;
+    contract(build_character_asset_contract_with(
         &req.name,
         &req.profile,
         req.notes.as_deref(),
+        &rendering(req.rendering)?,
     ))
 }
 
@@ -260,21 +286,27 @@ pub(super) fn full_body_contract(raw: &[u8]) -> Result<Value, Failure> {
     #[serde(deny_unknown_fields)]
     struct In {
         source: Source,
+        #[serde(default)]
+        rendering: Option<RenderingProvenance>,
     }
     let req: In = input(raw)?;
-    contract(build_full_body_asset_contract(match &req.source {
-        Source::Bust {
-            portrait,
-            generation_fingerprint,
-        } => FullBodySource::Bust {
-            portrait,
-            generation_fingerprint: generation_fingerprint.as_deref(),
+    let rendering = rendering(req.rendering)?;
+    contract(build_full_body_asset_contract_with(
+        match &req.source {
+            Source::Bust {
+                portrait,
+                generation_fingerprint,
+            } => FullBodySource::Bust {
+                portrait,
+                generation_fingerprint: generation_fingerprint.as_deref(),
+            },
+            Source::Design { name, profile } => FullBodySource::Design {
+                name,
+                visual_profile: profile,
+            },
         },
-        Source::Design { name, profile } => FullBodySource::Design {
-            name,
-            visual_profile: profile,
-        },
-    }))
+        &rendering,
+    ))
 }
 
 /// Her sticker avatar's prompt.

@@ -1,0 +1,624 @@
+{
+  "call": "visual.full_body_contract",
+  "cases": [
+    {
+      "input": {
+        "source": {
+          "bust": {
+            "generationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "portrait": "/media/bust.png"
+          }
+        }
+      },
+      "name": "from a bust",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "referenceRole": "bust-portrait-identity-anchor"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "bustGenerationFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "bustPortrait": "/media/bust.png"
+          }
+        },
+        "fingerprint": "53877481ce4805bb22d9ee4abab8c73e981328a136ba7db7e19dea6e9f7ccc14",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"referenceRole\":\"bust-portrait-identity-anchor\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"bustGenerationFingerprint\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"bustPortrait\":\"/media/bust.png\"}}"
+      }
+    },
+    {
+      "input": {
+        "source": {
+          "bust": {
+            "portrait": "/media/bust.png"
+          }
+        }
+      },
+      "name": "from a bust without fingerprint",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "referenceRole": "bust-portrait-identity-anchor"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "bustGenerationFingerprint": null,
+            "bustPortrait": "/media/bust.png"
+          }
+        },
+        "fingerprint": "39fc89a929e50b52157f476b2cdc427178b41ea5a212b7991535d2a162535c5c",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"referenceRole\":\"bust-portrait-identity-anchor\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"bustGenerationFingerprint\":null,\"bustPortrait\":\"/media/bust.png\"}}"
+      }
+    },
+    {
+      "input": {
+        "source": {
+          "design": {
+            "name": "星见",
+            "profile": {
+              "clothingStyle": "everyday",
+              "gender": "female",
+              "language": "en-US",
+              "visualIdentity": {
+                "character": {
+                  "eyeDesign": "violet eyes with layered irises",
+                  "faceDesign": "feminine young-adult read, elongated oval face with a calm gaze",
+                  "hairLayerPlan": "a few broad front locks over a long back mass",
+                  "hairShape": "long silver hair in broad ribbon masses"
+                },
+                "outfit": {
+                  "clothingStyle": "everyday",
+                  "heroAccessory": "a crescent brooch",
+                  "materialPlan": "matte wool and polished silver",
+                  "motif": "crescent moons",
+                  "outfitConstruction": "asymmetric closure with an open neckline",
+                  "paletteHint": "silver, violet and white",
+                  "sleeveArmDesign": "split sleeves with ribbon cuffs",
+                  "upperBodySilhouette": "fitted jacket over a wrapped layer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "name": "design: female everyday",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67",
+            "visualSchoolVersion": "anime-cel-gradient-reference-v5"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "identity": {
+              "name": "星见",
+              "visualProfile": {
+                "gender": "female",
+                "visualIdentity": {
+                  "character": {
+                    "eyeDesign": "violet eyes with layered irises",
+                    "faceDesign": "feminine young-adult read, compact soft-tapered anime oval face with a calm gaze",
+                    "hairLayerPlan": "a few broad front locks over a long back mass",
+                    "hairShape": "long silver hair in broad ribbon masses"
+                  },
+                  "outfit": {
+                    "clothingStyle": "everyday",
+                    "heroAccessory": "a crescent brooch",
+                    "materialPlan": "matte wool and polished silver",
+                    "motif": "crescent moons",
+                    "outfitConstruction": "asymmetric closure with an open neckline",
+                    "paletteHint": "silver, violet and white",
+                    "sleeveArmDesign": "split sleeves with ribbon cuffs",
+                    "upperBodySilhouette": "fitted jacket over a wrapped layer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fingerprint": "eb81a2f518d577439dbc2349b3b1048554f6531e1f63dbbce5ba875eb973d44c",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"female\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"violet eyes with layered irises\",\"faceDesign\":\"feminine young-adult read, compact soft-tapered anime oval face with a calm gaze\",\"hairLayerPlan\":\"a few broad front locks over a long back mass\",\"hairShape\":\"long silver hair in broad ribbon masses\"},\"outfit\":{\"clothingStyle\":\"everyday\",\"heroAccessory\":\"a crescent brooch\",\"materialPlan\":\"matte wool and polished silver\",\"motif\":\"crescent moons\",\"outfitConstruction\":\"asymmetric closure with an open neckline\",\"paletteHint\":\"silver, violet and white\",\"sleeveArmDesign\":\"split sleeves with ribbon cuffs\",\"upperBodySilhouette\":\"fitted jacket over a wrapped layer\"}}}}}}"
+      }
+    },
+    {
+      "input": {
+        "source": {
+          "design": {
+            "name": "星见",
+            "profile": {
+              "clothingStyle": "formal",
+              "gender": "male",
+              "language": "zh-CN",
+              "visualIdentity": {
+                "eyeDesign": "中等偏大的琥珀色眼睛",
+                "faceDesign": "男性化读取，偏长的鹅蛋脸，眉眼沉静",
+                "hairLayerPlan": "后发、刘海和左右侧发形成独立轮廓",
+                "hairShape": "黑色短发与偏分刘海",
+                "heroAccessory": "左胸星轨扣饰",
+                "materialPlan": "哑光布料，半写实厚涂",
+                "motif": "单一星轨弧线",
+                "outfitConstruction": "敞开领口内搭叠短外套",
+                "paletteHint": "深蓝为主、银白为辅",
+                "sleeveArmDesign": "左右袖片携局部前臂进入画面",
+                "upperBodySilhouette": "紧凑肩线、清楚领口"
+              }
+            }
+          }
+        }
+      },
+      "name": "design: male formal zh",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67",
+            "visualSchoolVersion": "anime-cel-gradient-reference-v5"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "identity": {
+              "name": "星见",
+              "visualProfile": {
+                "gender": "male",
+                "visualIdentity": {
+                  "character": {
+                    "eyeDesign": "中等偏大的琥珀色眼睛",
+                    "faceDesign": "男性化读取，紧凑柔和的鹅蛋脸，眉眼沉静",
+                    "hairLayerPlan": "后发、刘海和左右侧发形成独立轮廓",
+                    "hairShape": "黑色短发与偏分刘海"
+                  },
+                  "outfit": {
+                    "heroAccessory": "左胸星轨扣饰",
+                    "materialPlan": "哑光布料",
+                    "motif": "单一星轨弧线",
+                    "outfitConstruction": "敞开领口内搭叠短外套",
+                    "paletteHint": "深蓝为主、银白为辅",
+                    "sleeveArmDesign": "左右袖片携局部前臂进入画面",
+                    "upperBodySilhouette": "紧凑肩线、清楚领口"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fingerprint": "0a1ca61b97ce689f3d6c8cb42908a521fc6e7d1c276aa96e5301aa54f21063db",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"male\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"中等偏大的琥珀色眼睛\",\"faceDesign\":\"男性化读取，紧凑柔和的鹅蛋脸，眉眼沉静\",\"hairLayerPlan\":\"后发、刘海和左右侧发形成独立轮廓\",\"hairShape\":\"黑色短发与偏分刘海\"},\"outfit\":{\"heroAccessory\":\"左胸星轨扣饰\",\"materialPlan\":\"哑光布料\",\"motif\":\"单一星轨弧线\",\"outfitConstruction\":\"敞开领口内搭叠短外套\",\"paletteHint\":\"深蓝为主、银白为辅\",\"sleeveArmDesign\":\"左右袖片携局部前臂进入画面\",\"upperBodySilhouette\":\"紧凑肩线、清楚领口\"}}}}}}"
+      }
+    },
+    {
+      "input": {
+        "source": {
+          "design": {
+            "name": "星见",
+            "profile": {
+              "clothingStyle": "fantasy",
+              "gender": "nonbinary",
+              "language": "en-US",
+              "visualIdentity": {
+                "character": {
+                  "eyeDesign": "green eyes, three-quarter view",
+                  "faceDesign": "androgynous read, chibi proportions, photorealistic skin",
+                  "hairLayerPlan": "two layers",
+                  "hairShape": "teal bob with a high collar of hair"
+                },
+                "outfit": {
+                  "clothingStyle": "fantasy",
+                  "heroAccessory": "a lantern pin",
+                  "materialPlan": "velvet",
+                  "motif": "lanterns",
+                  "outfitConstruction": "turtleneck under a cape",
+                  "paletteHint": "teal and gold",
+                  "sleeveArmDesign": "long sleeves",
+                  "upperBodySilhouette": "high-collar cloak"
+                }
+              }
+            }
+          }
+        }
+      },
+      "name": "design: nonbinary with style-lock words",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67",
+            "visualSchoolVersion": "anime-cel-gradient-reference-v5"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "identity": {
+              "name": "星见",
+              "visualProfile": {
+                "gender": "nonbinary",
+                "visualIdentity": {
+                  "character": {
+                    "eyeDesign": "green eyes",
+                    "faceDesign": "androgynous read。chibi proportions",
+                    "hairLayerPlan": "two layers",
+                    "hairShape": "teal bob with a high collar of hair"
+                  },
+                  "outfit": {
+                    "clothingStyle": "fantasy",
+                    "heroAccessory": "a lantern pin",
+                    "materialPlan": "velvet",
+                    "motif": "lanterns",
+                    "outfitConstruction": "open neckline that leaves the neck uncovered under a cape",
+                    "paletteHint": "teal and gold",
+                    "sleeveArmDesign": "long sleeves",
+                    "upperBodySilhouette": "open neckline that leaves the neck uncovered cloak"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fingerprint": "c58328ca8af822ed4466acb44723564c16f09a1679075f439686802da2cfff64",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"nonbinary\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"green eyes\",\"faceDesign\":\"androgynous read。chibi proportions\",\"hairLayerPlan\":\"two layers\",\"hairShape\":\"teal bob with a high collar of hair\"},\"outfit\":{\"clothingStyle\":\"fantasy\",\"heroAccessory\":\"a lantern pin\",\"materialPlan\":\"velvet\",\"motif\":\"lanterns\",\"outfitConstruction\":\"open neckline that leaves the neck uncovered under a cape\",\"paletteHint\":\"teal and gold\",\"sleeveArmDesign\":\"long sleeves\",\"upperBodySilhouette\":\"open neckline that leaves the neck uncovered cloak\"}}}}}}"
+      }
+    },
+    {
+      "input": {
+        "source": {
+          "design": {
+            "name": "星见",
+            "profile": {
+              "gender": "unspecified",
+              "visualIdentity": {
+                "eyeDesign": "brown eyes",
+                "hairShape": "short brown hair"
+              }
+            }
+          }
+        }
+      },
+      "name": "design: unspecified flat legacy",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67",
+            "visualSchoolVersion": "anime-cel-gradient-reference-v5"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "identity": {
+              "name": "星见",
+              "visualProfile": {
+                "gender": "unspecified"
+              }
+            }
+          }
+        },
+        "fingerprint": "8a6fdb337d7b75bf03ac6d0e2c4c8e9dad7978f63a4a658df6524b223e4438b5",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"unspecified\"}}}}"
+      }
+    },
+    {
+      "input": {
+        "source": {
+          "design": {
+            "name": "星见",
+            "profile": {
+              "clothingStyle": "idol",
+              "gender": "female",
+              "language": "en-US",
+              "visualIdentity": {
+                "character": {
+                  "eyeDesign": "pink eyes like a Honkai: Star Rail heroine",
+                  "faceDesign": "feminine read in the style of Genshin Impact",
+                  "hairLayerPlan": "two tails and bangs",
+                  "hairShape": "pink twin tails"
+                },
+                "outfit": {
+                  "clothingStyle": "idol",
+                  "heroAccessory": "a star microphone pin",
+                  "materialPlan": "satin",
+                  "motif": "stars",
+                  "outfitConstruction": "open neckline with ribbon",
+                  "paletteHint": "pink and white",
+                  "sleeveArmDesign": "puff sleeves",
+                  "upperBodySilhouette": "idol stage top"
+                }
+              }
+            }
+          }
+        }
+      },
+      "name": "design: names a game",
+      "output": {
+        "contract": {
+          "contractVersion": 1,
+          "output": {
+            "background": "clean-near-white",
+            "framing": "full-figure-crown-to-soles",
+            "height": 2048,
+            "portraitAspect": {
+              "height": 16,
+              "width": 9
+            },
+            "rigCanvas": {
+              "height": 1.7777777910232544,
+              "width": 1.0
+            },
+            "width": 1152
+          },
+          "rendering": {
+            "instructionVersion": "full-body-standing-v1",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67",
+            "visualSchoolVersion": "anime-cel-gradient-reference-v5"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "fullBody",
+          "source": {
+            "identity": {
+              "name": "星见",
+              "visualProfile": {
+                "gender": "female"
+              }
+            }
+          }
+        },
+        "fingerprint": "fb7c82618943ffdef4fed9397b3287a45c642abff654a9c4b4cec118f7b5354e",
+        "text": "{\"contractVersion\":1,\"output\":{\"background\":\"clean-near-white\",\"framing\":\"full-figure-crown-to-soles\",\"height\":2048,\"portraitAspect\":{\"height\":16,\"width\":9},\"rigCanvas\":{\"height\":1.7777777910232544,\"width\":1.0},\"width\":1152},\"rendering\":{\"instructionVersion\":\"full-body-standing-v1\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"fullBody\",\"source\":{\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"female\"}}}}"
+      }
+    }
+  ]
+}
