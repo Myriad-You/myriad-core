@@ -27,6 +27,21 @@
       "output": {
         "text": "Edit this existing upper-body master portrait with the source image as the immutable identity anchor. Preserve the same person, apparent maturity, gender presentation, face and eye geometry, hair identity, costume, palette, materials, ornaments, strict frontal viewing angle, and locked 2D anime-game finish. Apply the exact bounded lighting, small expression, or tighter frame-occupancy adjustment requested below while preserving every other identity and design feature. Maintain the 3:4 fill, near-white studio backdrop, complete head and hair silhouette, both visible sleeve or arm fragments, equal one-sixteenth-width side clearance, and lower-chest crop. Apply these adjustments: ."
       }
+    },
+    {
+      "input": {
+        "notes": "softer rim light",
+        "style": {
+          "editFinish": "the same flat-colour finish",
+          "priority": "Priority order: framing first, then identity, then notes.",
+          "redrawFinish": "the same flat-colour finish and lighting",
+          "school": "Plain flat-colour anime illustration with clean outlines"
+        }
+      },
+      "name": "another style",
+      "output": {
+        "text": "Edit this existing upper-body master portrait with the source image as the immutable identity anchor. Preserve the same person, apparent maturity, gender presentation, face and eye geometry, hair identity, costume, palette, materials, ornaments, strict frontal viewing angle, and the same flat-colour finish. Apply the exact bounded lighting, small expression, or tighter frame-occupancy adjustment requested below while preserving every other identity and design feature. Maintain the 3:4 fill, near-white studio backdrop, complete head and hair silhouette, both visible sleeve or arm fragments, equal one-sixteenth-width side clearance, and lower-chest crop. Apply these adjustments: softer rim light."
+      }
     }
   ]
 }

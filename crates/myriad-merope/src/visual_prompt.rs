@@ -60,6 +60,14 @@ const BUILTIN_REDRAW_FINISH: &str =
 
 const MAX_STYLE_SCHOOL_CHARS: usize = 6_000;
 const MAX_STYLE_PART_CHARS: usize = 2_000;
+const MAX_STYLE_FINISH_CHARS: usize = 300;
+/// Room a bust or full-body prompt drawn from the design keeps for the
+/// identity sections whatever recipe draws it: a recipe whose words leave
+/// less is refused.
+pub const MIN_IDENTITY_PROMPT_CHARS: usize = 4_000;
+const SCHOOL_SENTENCE_PREFIX: &str =
+    "Render one confirmed original character in this visual school: ";
+const MAX_PROMPT_NAME_CHARS: usize = 50;
 
 /// The style-bearing words of her pictures, apart from the framing the rig
 /// needs and the identity: the school paragraph, what the attached style
@@ -92,16 +100,81 @@ pub struct StyleRecipe {
 /// Which part of a [`StyleRecipe`] is not usable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum StyleRecipeIssue {
-    #[error("school must be 1-6000 characters without control characters")]
+    #[error("school must be 1-6000 characters, trimmed, without control or direction characters")]
     School,
-    #[error("reference role must be 1-2000 characters without control characters")]
+    #[error(
+        "reference role must be 1-2000 characters, trimmed, without control or direction characters"
+    )]
     ReferenceRole,
-    #[error("priority must be 1-2000 characters without control characters")]
+    #[error("priority must be 1-2000 characters, trimmed, without control or direction characters")]
     Priority,
-    #[error("edit finish must be 1-2000 characters without control characters")]
+    #[error(
+        "edit finish must be 1-300 characters, trimmed, without control or direction characters"
+    )]
     EditFinish,
-    #[error("redraw finish must be 1-2000 characters without control characters")]
+    #[error(
+        "redraw finish must be 1-300 characters, trimmed, without control or direction characters"
+    )]
     RedrawFinish,
+    #[error("a style part names a studio, franchise, or artist")]
+    NamesStyleTarget,
+    #[error("school, reference role and priority together leave too little room for the identity")]
+    IdentityBudget,
+}
+
+/// Characters a style part may not carry: C0/C1 controls, line and
+/// paragraph separators, and the bidirectional formatting controls.
+fn forbidden_in_style(character: char) -> bool {
+    character.is_control()
+        || matches!(
+            character,
+            '\u{2028}'
+                | '\u{2029}'
+                | '\u{061C}'
+                | '\u{200E}'
+                | '\u{200F}'
+                | '\u{202A}'..='\u{202E}'
+                | '\u{2066}'..='\u{2069}'
+        )
+}
+
+/// The most characters a bust or full-body prompt drawn from the design
+/// spends outside the identity sections and the recipe's own words: the
+/// school sentence's frame, the name line at its limit, the longest gender
+/// lock, the longer framing and canvas, and the blank lines between them.
+fn fixed_design_prompt_chars() -> usize {
+    let bust = CharacterAssetProfile::Bust.contract();
+    let full = CharacterAssetProfile::FullBody.contract();
+    let framing = MASTER_PORTRAIT_INSTRUCTION
+        .chars()
+        .count()
+        .max(full_body_design_framing().chars().count());
+    let canvas = format!(
+        "Vertical {}:{} width-to-height canvas.",
+        bust.aspect_width, bust.aspect_height
+    )
+    .chars()
+    .count()
+    .max(
+        format!(
+            "Vertical {}:{} width-to-height canvas.",
+            full.aspect_width, full.aspect_height
+        )
+        .chars()
+        .count(),
+    );
+    let gender = ["female", "male", "nonbinary", "unspecified"]
+        .iter()
+        .filter_map(|gender| {
+            gender_presentation_instruction(&serde_json::json!({ "gender": gender }))
+        })
+        .map(|text| text.chars().count())
+        .max()
+        .unwrap_or(0);
+    let name = "Identity name: .".chars().count() + MAX_PROMPT_NAME_CHARS;
+    // Six header parts joined by five blank lines, then the 4 the prompt
+    // reserves around the identity block and the closer.
+    SCHOOL_SENTENCE_PREFIX.chars().count() + 1 + name + gender + framing + canvas + 5 * 2 + 4
 }
 
 impl StyleRecipe {
@@ -116,11 +189,29 @@ impl StyleRecipe {
         }
     }
 
-    /// Every part non-empty, bounded, and free of control characters.
+    /// Characters a design-drawn prompt keeps for the identity under this
+    /// recipe, at the worst case of everything else.
+    pub fn identity_budget(&self) -> usize {
+        let words = self.school.chars().count()
+            + self
+                .reference_role
+                .as_ref()
+                .map_or(0, |role| role.chars().count())
+            + self.priority.chars().count();
+        MAX_CHARACTER_VISUAL_PROMPT_CHARS.saturating_sub(fixed_design_prompt_chars() + words)
+    }
+
+    /// Every part non-empty, trimmed, bounded, free of control and
+    /// direction characters, and naming no studio, franchise, or artist;
+    /// and together leaving [`MIN_IDENTITY_PROMPT_CHARS`] for the identity.
+    /// The wording itself is the recipe's own and is not screened further.
     pub fn check(&self) -> Result<(), StyleRecipeIssue> {
         let usable = |text: &str, max: usize| {
-            let count = text.trim().chars().count();
-            count > 0 && count <= max && !text.chars().any(char::is_control)
+            let count = text.chars().count();
+            count > 0
+                && count <= max
+                && text.trim() == text
+                && !text.chars().any(forbidden_in_style)
         };
         if !usable(&self.school, MAX_STYLE_SCHOOL_CHARS) {
             return Err(StyleRecipeIssue::School);
@@ -133,11 +224,24 @@ impl StyleRecipe {
         if !usable(&self.priority, MAX_STYLE_PART_CHARS) {
             return Err(StyleRecipeIssue::Priority);
         }
-        if !usable(&self.edit_finish, MAX_STYLE_PART_CHARS) {
+        if !usable(&self.edit_finish, MAX_STYLE_FINISH_CHARS) {
             return Err(StyleRecipeIssue::EditFinish);
         }
-        if !usable(&self.redraw_finish, MAX_STYLE_PART_CHARS) {
+        if !usable(&self.redraw_finish, MAX_STYLE_FINISH_CHARS) {
             return Err(StyleRecipeIssue::RedrawFinish);
+        }
+        let parts = [
+            Some(self.school.as_str()),
+            self.reference_role.as_deref(),
+            Some(self.priority.as_str()),
+            Some(self.edit_finish.as_str()),
+            Some(self.redraw_finish.as_str()),
+        ];
+        if parts.into_iter().flatten().any(named_style_target_in) {
+            return Err(StyleRecipeIssue::NamesStyleTarget);
+        }
+        if self.identity_budget() < MIN_IDENTITY_PROMPT_CHARS {
+            return Err(StyleRecipeIssue::IdentityBudget);
         }
         Ok(())
     }
@@ -1177,14 +1281,19 @@ pub fn build_full_body_design_prompt_with(
         onboarding,
         None,
         style,
-        &format!(
-            "One polished full-body standing illustration of the confirmed character. Complete the lower body in the costume's own design language and palette: the matching lower garment, legwear, and shoes, with no new motifs. {}",
-            full_body_frame(),
-        ),
+        &full_body_design_framing(),
         &format!(
             "Vertical {}:{} width-to-height canvas.",
             full.aspect_width, full.aspect_height,
         ),
+    )
+}
+
+/// The framing of a full-body set drawn from the design.
+fn full_body_design_framing() -> String {
+    format!(
+        "One polished full-body standing illustration of the confirmed character. Complete the lower body in the costume's own design language and palette: the matching lower garment, legwear, and shoes, with no new motifs. {}",
+        full_body_frame(),
     )
 }
 
@@ -1206,7 +1315,10 @@ fn character_prompt(
     if let Some(role) = &style.reference_role {
         header.push(role.clone());
     }
-    header.push(format!("Identity name: {}.", bounded_text(name, 50)));
+    header.push(format!(
+        "Identity name: {}.",
+        bounded_text(name, MAX_PROMPT_NAME_CHARS)
+    ));
     if let Some(gender) = gender_presentation_instruction(onboarding) {
         header.push(gender.to_string());
     }
@@ -2889,5 +3001,127 @@ mod tests {
         style.redraw_finish = String::new();
         assert_eq!(style.check(), Err(StyleRecipeIssue::RedrawFinish));
         assert!(other_style().check().is_ok());
+    }
+
+    #[test]
+    fn a_style_part_is_counted_as_it_is_inserted() {
+        let mut style = other_style();
+        style.school = " Plain flat-colour anime illustration".into();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::School));
+        style = other_style();
+        style.priority = "Priority order: framing first. ".into();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::Priority));
+    }
+
+    #[test]
+    fn separators_and_direction_controls_are_refused() {
+        for bad in [
+            '\u{2028}', '\u{2029}', '\u{202E}', '\u{2066}', '\u{200F}', '\u{061C}', '\u{85}',
+        ] {
+            let mut style = other_style();
+            style.school = format!("Plain{bad}illustration");
+            assert_eq!(style.check(), Err(StyleRecipeIssue::School), "{bad:?}");
+            let mut style = other_style();
+            style.redraw_finish = format!("the same{bad}finish");
+            assert_eq!(
+                style.check(),
+                Err(StyleRecipeIssue::RedrawFinish),
+                "{bad:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_style_naming_a_studio_is_refused() {
+        let mut style = other_style();
+        style.school = "Anime key art in the style of Studio Ghibli".into();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::NamesStyleTarget));
+        let mut style = other_style();
+        style.edit_finish = "the same Pixar look".into();
+        assert_eq!(style.check(), Err(StyleRecipeIssue::NamesStyleTarget));
+    }
+
+    #[test]
+    fn the_builtin_style_leaves_the_identity_its_room() {
+        let builtin = StyleRecipe::builtin();
+        assert!(builtin.identity_budget() >= MIN_IDENTITY_PROMPT_CHARS);
+        assert!(builtin.check().is_ok());
+    }
+
+    /// The longest school a recipe may carry next to a full reference role
+    /// and priority: one more character is refused, and with it every
+    /// prompt drawn from the design stays within the cap and keeps at least
+    /// [`MIN_IDENTITY_PROMPT_CHARS`] for the identity.
+    #[test]
+    fn a_style_at_its_limits_cannot_squeeze_out_the_identity() {
+        let mut style = other_style();
+        style.reference_role = Some("r".repeat(MAX_STYLE_PART_CHARS));
+        style.priority = "p".repeat(MAX_STYLE_PART_CHARS);
+        let mut school = MAX_STYLE_SCHOOL_CHARS;
+        style.school = "s".repeat(school);
+        while style.check() == Err(StyleRecipeIssue::IdentityBudget) {
+            school -= 1;
+            style.school = "s".repeat(school);
+        }
+        assert_eq!(style.check(), Ok(()));
+        assert_eq!(style.identity_budget(), MIN_IDENTITY_PROMPT_CHARS);
+        let mut over = style.clone();
+        over.school.push('s');
+        assert_eq!(over.check(), Err(StyleRecipeIssue::IdentityBudget));
+
+        let long = |field: &str, prefix: &str| -> String {
+            format!(
+                "{prefix}{}",
+                " with layered silver ribbon trim and crescent detail,".repeat(30)
+            )
+            .chars()
+            .take(field_limit(field))
+            .collect()
+        };
+        let profile = json!({
+            "gender": "female",
+            "language": "en-US",
+            "clothingStyle": "everyday",
+            "visualIdentity": {
+                "character": {
+                    "faceDesign": long("faceDesign", "feminine read,"),
+                    "eyeDesign": long("eyeDesign", ""),
+                    "hairShape": long("hairShape", ""),
+                    "hairLayerPlan": long("hairLayerPlan", ""),
+                },
+                "outfit": {
+                    "upperBodySilhouette": long("upperBodySilhouette", "open neckline,"),
+                    "outfitConstruction": long("outfitConstruction", "open neckline,"),
+                    "sleeveArmDesign": long("sleeveArmDesign", ""),
+                    "materialPlan": long("materialPlan", ""),
+                    "heroAccessory": long("heroAccessory", ""),
+                    "paletteHint": long("paletteHint", ""),
+                    "motif": long("motif", ""),
+                    "clothingStyle": "everyday",
+                },
+            }
+        });
+        let name = "N".repeat(80);
+        for prompt in [
+            build_character_visual_prompt_with(
+                &name,
+                &profile,
+                Some(&"soft light, ".repeat(200)),
+                &style,
+            ),
+            build_full_body_design_prompt_with(&name, &profile, &style),
+        ] {
+            // The identity is longer than the room left, so it is cut there.
+            assert_eq!(prompt.chars().count(), MAX_CHARACTER_VISUAL_PROMPT_CHARS);
+            let canvas = prompt.find("width-to-height canvas.\n\n").unwrap()
+                + "width-to-height canvas.\n\n".len();
+            let identity = &prompt[canvas..prompt.len() - style.priority.len() - 2];
+            assert!(
+                identity.chars().count() >= MIN_IDENTITY_PROMPT_CHARS,
+                "identity kept {} characters of a {}-character prompt",
+                identity.chars().count(),
+                prompt.chars().count()
+            );
+        }
     }
 }
