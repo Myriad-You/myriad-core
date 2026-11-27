@@ -261,11 +261,18 @@ fn stands_step_batch_ffi_roundtrips_and_keeps_per_fact_refs() {
     });
     let prepared = super::ok("nodes.stands_step_batch_input", input.clone());
     assert!(prepared.get("skip").is_none());
+    let required = prepared["schema"]["required"].as_array().unwrap();
+    assert!(required.iter().any(|v| v == "whose"));
     let prompt_in: Value = serde_json::from_str(prepared["input"].as_str().unwrap()).unwrap();
     assert_eq!(prompt_in["facts"].as_array().unwrap().len(), 3);
 
     let read_in = json!({
         "output": serde_json::json!({
+            "whose": [
+                {"fact": 1, "whose": "them"},
+                {"fact": 2, "whose": "them"},
+                {"fact": 3, "whose": "them"}
+            ],
             "set": [],
             "end": [],
             "add": [

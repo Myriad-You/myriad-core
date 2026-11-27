@@ -81,7 +81,7 @@
             "name": "妈妈"
           }
         ],
-        "output": "{\"set\": [{\"fact\": 1, \"whose\": \"them\", \"item\": 1, \"text\": \"在游戏公司做策划\"}, {\"fact\": 1, \"whose\": \"them\", \"item\": 2, \"text\": \"尝试改妈妈的\"}], \"end\": [{\"fact\": 2, \"whose\": \"them\", \"item\": 1}], \"add\": [{\"fact\": 1, \"whose\": \"them\", \"topic\": \"新工作\", \"text\": \"十月起在游戏公司上班\"}]}",
+        "output": "{\"whose\": [{\"fact\": 1, \"whose\": \"them\"}, {\"fact\": 2, \"whose\": \"them\"}], \"set\": [{\"fact\": 1, \"whose\": \"them\", \"item\": 1, \"text\": \"在游戏公司做策划\"}, {\"fact\": 1, \"whose\": \"them\", \"item\": 2, \"text\": \"尝试改妈妈的\"}], \"end\": [{\"fact\": 2, \"whose\": \"them\", \"item\": 1}], \"add\": [{\"fact\": 1, \"whose\": \"them\", \"topic\": \"新工作\", \"text\": \"十月起在游戏公司上班\"}]}",
         "sync": {
           "local": "site"
         }
@@ -143,6 +143,133 @@
           }
         ],
         "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          {
+            "learned": "2026-11-26",
+            "memory": "m1",
+            "on": [
+              "run"
+            ],
+            "text": "stopped running for a bit"
+          },
+          {
+            "learned": "2026-11-27",
+            "memory": "m2",
+            "on": [
+              "run"
+            ],
+            "text": "resumed running 3 times a week"
+          },
+          {
+            "learned": "2026-11-27",
+            "memory": "m3",
+            "on": [
+              "run"
+            ],
+            "replaced": true,
+            "text": "trains for half marathon"
+          }
+        ],
+        "known": [],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "them-16eaa64fbb": {
+                  "base": [
+                    "u-shoe"
+                  ],
+                  "value": {
+                    "text": "wears Pegasus 40"
+                  }
+                },
+                "them-50f3b0f3f4": {
+                  "base": [
+                    "u-run"
+                  ],
+                  "value": {
+                    "text": "runs twice a week"
+                  }
+                }
+              }
+            },
+            "id": "run",
+            "kind": "topic",
+            "name": "running"
+          }
+        ],
+        "output": "{\"whose\": [{\"fact\": 1, \"whose\": \"them\"}, {\"fact\": 2, \"whose\": \"them\"}, {\"fact\": 3, \"whose\": \"them\"}], \"set\": [{\"fact\": 2, \"whose\": \"them\", \"item\": 2, \"text\": \"runs 3 times a week\"}], \"end\": [{\"fact\": 1, \"whose\": \"them\", \"item\": 2}], \"add\": []}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "later set supersedes earlier end, top-level whose drives replaced fallback, and stillSo tracks untouched items",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [
+                "u-run"
+              ],
+              "because": [
+                "memory:m2"
+              ],
+              "item": "them-50f3b0f3f4",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-27",
+              "sync": {
+                "local": "site"
+              },
+              "text": "runs 3 times a week",
+              "version": 1
+            },
+            "id": "u8dd8c5e744f2d65c577f864d",
+            "kind": "node.standing",
+            "node": "run"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m3"
+              ],
+              "item": "them-0a064a8cb6",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-27",
+              "sync": {
+                "local": "site"
+              },
+              "text": "trains for half marathon",
+              "version": 1
+            },
+            "id": "u6111c5692454416a61bea719",
+            "kind": "node.standing",
+            "node": "run"
+          }
+        ],
+        "setAside": 0,
+        "stillSo": [
+          {
+            "item": "them-16eaa64fbb",
+            "memory": "m1",
+            "node": "run"
+          },
+          {
+            "item": "them-16eaa64fbb",
+            "memory": "m2",
+            "node": "run"
+          }
+        ]
       }
     },
     {
