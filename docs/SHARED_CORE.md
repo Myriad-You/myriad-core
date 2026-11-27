@@ -1109,7 +1109,7 @@ func step(_ event: JSON) throws {
 | `persona.fallback` | `{name, language, tags}` | `{draft}`：`fallback_persona_draft` |
 | `persona.draft` | `{value, fallback}` | `{draft, complete, sludge}`：`sanitize_persona_draft`、`persona_draft_is_complete`、`persona_has_literary_sludge` |
 
-`rendering` 是画这张图的配方出处（`RenderingProvenance`）：`{recipe?, visualSchoolVersion, styleReferenceSha256?, fullBodyInstructionVersion}`。不给就是本构建自己的配方，契约和以前逐字节相同；配方服务画的图给它自己的出处，`recipe` 是服务的名字（小写字母、数字、`-`），契约的 `rendering` 一节多出 `"recipe"`，所以不会和本构建的指纹撞上；`styleReferenceSha256` 为 `null` 表示没附风格参考图（`styleReferenceRole` 记 `none`）。越界的值回 `bad_input`。宿主只用自己画图时拿到的出处写契约，契约存在服务端，不从客户端收。
+`rendering` 是画这张图的配方出处（`RenderingProvenance`）：`{recipe?, visualSchoolVersion, styleReferenceSha256?, fullBodyInstructionVersion}`。不给就是本构建自己的配方（`rendering` 一节不带 `recipe` 键）；配方服务画的图给它自己的出处，`recipe` 是服务的名字（小写字母、数字、`-`，不能是保留的 `builtin`），契约的 `rendering` 一节多出 `"recipe"`，所以不会和本构建的指纹撞上；`styleReferenceSha256` 为 `null` 表示没附风格参考图（`styleReferenceRole` 记 `none`）。越界的值回 `bad_input`。宿主只用自己画图时拿到的出处写契约，契约存在服务端，不从客户端收。
 
 血统对照：站点按已存契约比对现在的身份时，`rendering` 一节要么是本构建认得的（`is_recognised_portrait_rendering`，见 `MEROPE_RECOGNISED_PORTRAIT_RENDERINGS`），要么是形状完整的配方服务出处（`is_recipe_portrait_rendering`），两者合起来是 `portrait_rendering_keeps_lineage`。配方服务换版本不让它以前的立绘失去血统；身份变了照样失去。
 

@@ -105,8 +105,8 @@ pub fn build_character_asset_contract_with(
 /// `rendering` block: which recipe drew it, the visual school version, the
 /// style reference image (by hash) and the full-body instruction version.
 ///
-/// `recipe: None` is this build's own recipe; its blocks are byte for byte
-/// the ones this crate always wrote. `recipe: Some(id)` names a recipe
+/// `recipe: None` is this build's own recipe; its blocks carry no `recipe`
+/// key. `recipe: Some(id)` names a recipe
 /// service that supplied its own prompt, versions and reference; its blocks
 /// carry `"recipe": id` as well, so they never collide with this build's.
 /// The host writes a contract only from what it drew itself and keeps it
@@ -127,7 +127,7 @@ pub struct RenderingProvenance {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum RenderingProvenanceIssue {
     #[error(
-        "recipe id must be 1-40 lower-case letters, digits or '-', starting with a letter or digit"
+        "recipe id must be 1-40 lower-case letters, digits or '-', starting with a letter or digit, and not `builtin`"
     )]
     Recipe,
     #[error("visual school version must be 1-80 letters, digits or '.', '_', ':', '-'")]
@@ -139,6 +139,8 @@ pub enum RenderingProvenanceIssue {
 }
 
 const RENDERING_TECHNIQUE_ONLY: &str = "rendering-technique-only";
+/// The name of this build's own recipe; a recipe service may not take it.
+pub const BUILTIN_RECIPE_ID: &str = "builtin";
 const NO_STYLE_REFERENCE: &str = "none";
 
 impl RenderingProvenance {
@@ -180,11 +182,7 @@ impl RenderingProvenance {
     }
 
     fn style_reference_role(&self) -> &'static str {
-        if self.style_reference_sha256.is_some() {
-            RENDERING_TECHNIQUE_ONLY
-        } else {
-            NO_STYLE_REFERENCE
-        }
+        style_reference_role(self.style_reference_sha256.as_deref())
     }
 
     fn with_recipe(&self, mut block: Value) -> Value {
@@ -196,11 +194,11 @@ impl RenderingProvenance {
 
     /// The `rendering` block of a bust master portrait's contract.
     pub fn bust_block(&self) -> Value {
-        self.with_recipe(json!({
-            "visualSchoolVersion": self.visual_school_version,
-            "styleReferenceSha256": self.style_reference_sha256,
-            "styleReferenceRole": self.style_reference_role(),
-        }))
+        bust_block_of(
+            self.recipe.as_deref(),
+            &self.visual_school_version,
+            self.style_reference_sha256.as_deref(),
+        )
     }
 
     /// The `rendering` block of a full-body set drawn from the design.
@@ -222,8 +220,30 @@ impl RenderingProvenance {
     }
 }
 
+fn style_reference_role(sha256: Option<&str>) -> &'static str {
+    if sha256.is_some() {
+        RENDERING_TECHNIQUE_ONLY
+    } else {
+        NO_STYLE_REFERENCE
+    }
+}
+
+/// A bust contract's `rendering` block from its parts.
+fn bust_block_of(recipe: Option<&str>, school_version: &str, sha256: Option<&str>) -> Value {
+    let mut block = json!({
+        "visualSchoolVersion": school_version,
+        "styleReferenceSha256": sha256,
+        "styleReferenceRole": style_reference_role(sha256),
+    });
+    if let (Some(recipe), Some(object)) = (recipe, block.as_object_mut()) {
+        object.insert("recipe".into(), json!(recipe));
+    }
+    block
+}
+
 fn recipe_id_is_valid(value: &str) -> bool {
-    (1..=40).contains(&value.len())
+    value != BUILTIN_RECIPE_ID
+        && (1..=40).contains(&value.len())
         && value
             .bytes()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
@@ -264,26 +284,21 @@ pub fn is_recipe_portrait_rendering(rendering: &Value) -> bool {
     let Some(object) = rendering.as_object() else {
         return false;
     };
-    let text = |key: &str| object.get(key).and_then(Value::as_str).map(str::to_owned);
-    let Some(recipe) = text("recipe") else {
+    let Some(recipe) = object.get("recipe").and_then(Value::as_str) else {
         return false;
     };
-    let Some(visual_school_version) = text("visualSchoolVersion") else {
+    let Some(school_version) = object.get("visualSchoolVersion").and_then(Value::as_str) else {
         return false;
     };
-    let style_reference_sha256 = match object.get("styleReferenceSha256") {
+    let sha256 = match object.get("styleReferenceSha256") {
         Some(Value::Null) => None,
-        Some(Value::String(sha)) => Some(sha.clone()),
+        Some(Value::String(sha)) => Some(sha.as_str()),
         _ => return false,
     };
-    let provenance = RenderingProvenance {
-        recipe: Some(recipe),
-        visual_school_version,
-        style_reference_sha256,
-        // Not part of a bust block; any valid value rebuilds the same block.
-        full_body_instruction_version: "unused".into(),
-    };
-    provenance.check().is_ok() && provenance.bust_block() == *rendering
+    recipe_id_is_valid(recipe)
+        && version_is_valid(school_version)
+        && sha256.is_none_or(sha256_is_valid)
+        && bust_block_of(Some(recipe), school_version, sha256) == *rendering
 }
 
 /// Whether a stored bust contract's `rendering` block lets the portrait keep
@@ -540,10 +555,11 @@ mod tests {
         }
     }
 
-    /// The wrappers write the blocks this crate wrote before rendering became
-    /// an input, key for key.
+    /// This build's own blocks: the current school version and reference,
+    /// no `recipe` key, and the wrappers equal the `_with` builders given
+    /// [`RenderingProvenance::builtin`].
     #[test]
-    fn builtin_rendering_blocks_are_the_ones_written_before() {
+    fn builtin_rendering_blocks_carry_the_current_school_and_no_recipe() {
         let builtin = RenderingProvenance::builtin();
         let sha = crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256;
         let school = crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION;
@@ -675,6 +691,17 @@ mod tests {
             assert!(!is_recipe_portrait_rendering(&malformed), "{malformed}");
             assert!(!portrait_rendering_keeps_lineage(&malformed), "{malformed}");
         }
+    }
+
+    #[test]
+    fn a_recipe_service_may_not_call_itself_builtin() {
+        let mut named = remote("v");
+        named.recipe = Some(BUILTIN_RECIPE_ID.into());
+        assert_eq!(named.check(), Err(RenderingProvenanceIssue::Recipe));
+        let mut block = remote("v").bust_block();
+        block["recipe"] = json!(BUILTIN_RECIPE_ID);
+        assert!(!is_recipe_portrait_rendering(&block));
+        assert!(!portrait_rendering_keeps_lineage(&block));
     }
 
     #[test]

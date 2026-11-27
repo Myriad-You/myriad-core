@@ -145,7 +145,8 @@ pub use sticker_avatar::{
     build_sticker_avatar_contract, build_sticker_avatar_prompt,
 };
 pub use visual_contract::{
-    FullBodySource, RenderingProvenance, RenderingProvenanceIssue, appearance_visual_profile,
+    BUILTIN_RECIPE_ID, FullBodySource, RenderingProvenance, RenderingProvenanceIssue,
+    appearance_visual_profile,
     build_character_asset_contract, build_character_asset_contract_with,
     build_full_body_asset_contract, build_full_body_asset_contract_with,
     character_asset_contract_fingerprint, is_recipe_portrait_rendering,
