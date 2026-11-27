@@ -16,8 +16,11 @@
 //!   same words of theirs are one too. The same words alone are not: one
 //!   sentence can tell of two things ("the shirt and the coat went to the
 //!   cleaner's").
-//! - **Newest first, up to [`LIMIT`]**: it looks at that many and says how
-//!   many there are (`looked` of `of`), so she knows when not all are here.
+//! - **In the stretch asked about**, **in the state asked about**, **up to
+//!   [`LIMIT`]**: all deduplicated entries are filtered by time and `open`
+//!   first so older matching facts are never hidden behind newer unrelated
+//!   ones, then kept up to `limit` (newest first); `looked` of `of` says
+//!   how many entries were checked (`outside + otherState + kept`).
 //! - **In the stretch asked about**: an entry whose `happened` falls
 //!   outside it is left out (`outside`); one only partly in it is kept and
 //!   marked; one with no `happened` is kept and marked, for her to judge by
@@ -314,7 +317,7 @@ pub fn list(input: ListInput) -> Result<Listed, NodeError> {
     for at in 0..all.len() {
         groups.entry(root(&mut joined, at)).or_default().push(at);
     }
-    let mut once: Vec<(&str, ListEntry)> = groups
+    let once: Vec<(&str, ListEntry)> = groups
         .into_values()
         .map(|members| {
             let (node, newest) = all[members[0]];
@@ -336,8 +339,6 @@ pub fn list(input: ListInput) -> Result<Listed, NodeError> {
         })
         .collect();
     let of = once.len();
-    once.truncate(input.limit);
-    let looked = once.len();
     let (mut outside, mut other_state) = (0, 0);
     let mut kept: Vec<(NaiveDate, i64, Item)> = Vec::new();
     for (node, entry) in &once {
@@ -402,6 +403,8 @@ pub fn list(input: ListInput) -> Result<Listed, NodeError> {
             },
         ));
     }
+    kept.truncate(input.limit);
+    let looked = outside + other_state + kept.len();
     kept.sort_by(|a, b| {
         a.0.cmp(&b.0)
             .then(a.1.cmp(&b.1))
@@ -596,7 +599,11 @@ mod tests {
             run(json!({"zone": "+00:00", "limit": 3, "nodes": [{"id": "t", "entries": entries}]}));
         assert_eq!(ids(&out), ["e2", "e3", "e4"]);
         assert_eq!((out.looked, out.of), (3, 5));
-        assert!(out.section.unwrap().contains("the newest 3 of the 5 facts"));
+        assert!(
+            out.section
+                .unwrap()
+                .contains("Code went through all 5 facts you keep of this kind; the 2 oldest are not here.")
+        );
         let none = run(json!({"zone": "+00:00", "nodes": []}));
         assert_eq!((none.of, none.section), (0, None));
         for bad in [
@@ -611,6 +618,29 @@ mod tests {
                 "{bad}"
             );
         }
+
+        // Older in-range entries are not lost behind newer out-of-range noise.
+        let mut mixed: Vec<Value> = vec![
+            json!({"id": "in0", "at": OCT_1, "happened": {"from": "2026-10-05"}, "text": "旧范围内0"}),
+            json!({"id": "in1", "at": OCT_1 + DAY, "happened": {"from": "2026-10-06"}, "text": "旧范围内1"}),
+        ];
+        for n in 0..5 {
+            mixed.push(json!({
+                "id": format!("out{n}"),
+                "at": OCT_1 + (n + 10) * DAY,
+                "happened": {"from": "2026-11-15"},
+                "text": format!("较新不在范围内{n}")
+            }));
+        }
+        let filtered = run(json!({
+            "zone": "+00:00",
+            "from": "2026-10-01",
+            "to": "2026-10-31",
+            "limit": 3,
+            "nodes": [{"id": "t", "entries": mixed}]
+        }));
+        assert_eq!(ids(&filtered), ["in0", "in1"]);
+        assert_eq!((filtered.outside, filtered.looked, filtered.of), (5, 7, 7));
     }
 
     #[test]

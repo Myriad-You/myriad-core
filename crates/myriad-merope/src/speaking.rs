@@ -272,8 +272,7 @@ pub fn format_listed_section(listing: &Listing) -> Option<String> {
     }
     let mut said = vec![if listing.looked < listing.of {
         format!(
-            "Code went through the newest {} of the {} facts you keep of this kind{about}; the {} oldest are not here.",
-            listing.looked,
+            "Code went through all {} facts you keep of this kind{about}; the {} oldest are not here.",
             listing.of,
             listing.of - listing.looked
         )
@@ -1216,7 +1215,7 @@ mod tests {
             other_state: 0,
         })
         .unwrap();
-        assert!(section.starts_with("## All of it, listed\nCode went through the newest 5 of the 7 facts you keep of this kind, for what happened between 2026-10-01 and 2026-10-31; the 2 oldest are not here. Left out: 3 that happened outside that time."));
+        assert!(section.starts_with("## All of it, listed\nCode went through all 7 facts you keep of this kind, for what happened between 2026-10-01 and 2026-10-31; the 2 oldest are not here. Left out: 3 that happened outside that time."));
         assert!(section.contains("When a list is given, count from it only those it shows fit"));
         assert!(section.contains("- [2026-10-09] 退了一双鞋"));
         let empty = format_listed_section(&Listing {
