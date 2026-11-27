@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
 use std::fmt::Write;
@@ -50,6 +51,22 @@ pub fn build_character_asset_contract(
     visual_profile: &Value,
     additional_requirements: Option<&str>,
 ) -> Value {
+    build_character_asset_contract_with(
+        name,
+        visual_profile,
+        additional_requirements,
+        &RenderingProvenance::builtin(),
+    )
+}
+
+/// [`build_character_asset_contract`] for a portrait drawn under `rendering`:
+/// this build's own recipe, or one a recipe service supplied.
+pub fn build_character_asset_contract_with(
+    name: &str,
+    visual_profile: &Value,
+    additional_requirements: Option<&str>,
+    rendering: &RenderingProvenance,
+) -> Value {
     let bust = CharacterAssetProfile::Bust.contract();
     json!({
         "contractVersion": bust.contract_version,
@@ -73,7 +90,7 @@ pub fn build_character_asset_contract(
             "view": "strict-centered-eye-level-zero-yaw-front",
             "background": bust.background,
         },
-        "rendering": portrait_rendering_block(&crate::visual_prompt::MEROPE_RECOGNISED_PORTRAIT_RENDERINGS[0]),
+        "rendering": rendering.bust_block(),
         "rig": {
             "maxRigidArmRotationDegrees": bust.max_rigid_arm_rotation_degrees,
             "requiredCapabilities": bust.required_capabilities,
@@ -84,13 +101,148 @@ pub fn build_character_asset_contract(
     })
 }
 
-/// The `rendering` block a bust contract carries for this rendering.
-fn portrait_rendering_block(rendering: &crate::visual_prompt::PortraitRendering) -> Value {
-    json!({
-        "visualSchoolVersion": rendering.visual_school_version,
-        "styleReferenceSha256": rendering.style_reference_sha256,
-        "styleReferenceRole": "rendering-technique-only",
-    })
+/// How a picture was rendered, as its generation contract records it in the
+/// `rendering` block: which recipe drew it, the visual school version, the
+/// style reference image (by hash) and the full-body instruction version.
+///
+/// `recipe: None` is this build's own recipe; its blocks are byte for byte
+/// the ones this crate always wrote. `recipe: Some(id)` names a recipe
+/// service that supplied its own prompt, versions and reference; its blocks
+/// carry `"recipe": id` as well, so they never collide with this build's.
+/// The host writes a contract only from what it drew itself and keeps it
+/// server-side; a `rendering` block is never taken from a client.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RenderingProvenance {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipe: Option<String>,
+    pub visual_school_version: String,
+    /// `None` when no style reference image was attached.
+    #[serde(default)]
+    pub style_reference_sha256: Option<String>,
+    pub full_body_instruction_version: String,
+}
+
+/// Which part of a [`RenderingProvenance`] is not usable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum RenderingProvenanceIssue {
+    #[error(
+        "recipe id must be 1-40 lower-case letters, digits or '-', starting with a letter or digit"
+    )]
+    Recipe,
+    #[error("visual school version must be 1-80 letters, digits or '.', '_', ':', '-'")]
+    VisualSchoolVersion,
+    #[error("style reference hash must be 64 lower-case hex digits")]
+    StyleReferenceSha256,
+    #[error("full-body instruction version must be 1-80 letters, digits or '.', '_', ':', '-'")]
+    FullBodyInstructionVersion,
+}
+
+const RENDERING_TECHNIQUE_ONLY: &str = "rendering-technique-only";
+const NO_STYLE_REFERENCE: &str = "none";
+
+impl RenderingProvenance {
+    /// This build's own recipe: the current recognised rendering.
+    pub fn builtin() -> Self {
+        Self::recognised(&crate::visual_prompt::MEROPE_RECOGNISED_PORTRAIT_RENDERINGS[0])
+    }
+
+    fn recognised(rendering: &crate::visual_prompt::PortraitRendering) -> Self {
+        Self {
+            recipe: None,
+            visual_school_version: rendering.visual_school_version.to_string(),
+            style_reference_sha256: Some(rendering.style_reference_sha256.to_string()),
+            full_body_instruction_version:
+                crate::visual_prompt::FULL_BODY_PORTRAIT_INSTRUCTION_VERSION.to_string(),
+        }
+    }
+
+    /// Every field within its bounds. A host checks this on a provenance a
+    /// recipe service sent before it draws anything under it.
+    pub fn check(&self) -> Result<(), RenderingProvenanceIssue> {
+        if let Some(recipe) = &self.recipe
+            && !recipe_id_is_valid(recipe)
+        {
+            return Err(RenderingProvenanceIssue::Recipe);
+        }
+        if !version_is_valid(&self.visual_school_version) {
+            return Err(RenderingProvenanceIssue::VisualSchoolVersion);
+        }
+        if let Some(sha) = &self.style_reference_sha256
+            && !sha256_is_valid(sha)
+        {
+            return Err(RenderingProvenanceIssue::StyleReferenceSha256);
+        }
+        if !version_is_valid(&self.full_body_instruction_version) {
+            return Err(RenderingProvenanceIssue::FullBodyInstructionVersion);
+        }
+        Ok(())
+    }
+
+    fn style_reference_role(&self) -> &'static str {
+        if self.style_reference_sha256.is_some() {
+            RENDERING_TECHNIQUE_ONLY
+        } else {
+            NO_STYLE_REFERENCE
+        }
+    }
+
+    fn with_recipe(&self, mut block: Value) -> Value {
+        if let (Some(recipe), Some(object)) = (&self.recipe, block.as_object_mut()) {
+            object.insert("recipe".into(), json!(recipe));
+        }
+        block
+    }
+
+    /// The `rendering` block of a bust master portrait's contract.
+    pub fn bust_block(&self) -> Value {
+        self.with_recipe(json!({
+            "visualSchoolVersion": self.visual_school_version,
+            "styleReferenceSha256": self.style_reference_sha256,
+            "styleReferenceRole": self.style_reference_role(),
+        }))
+    }
+
+    /// The `rendering` block of a full-body set drawn from the design.
+    pub fn full_body_design_block(&self) -> Value {
+        self.with_recipe(json!({
+            "instructionVersion": self.full_body_instruction_version,
+            "visualSchoolVersion": self.visual_school_version,
+            "styleReferenceSha256": self.style_reference_sha256,
+            "styleReferenceRole": self.style_reference_role(),
+        }))
+    }
+
+    /// The `rendering` block of a full-body set redrawn from a bust portrait.
+    pub fn full_body_from_bust_block(&self) -> Value {
+        self.with_recipe(json!({
+            "instructionVersion": self.full_body_instruction_version,
+            "referenceRole": "bust-portrait-identity-anchor",
+        }))
+    }
+}
+
+fn recipe_id_is_valid(value: &str) -> bool {
+    (1..=40).contains(&value.len())
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
+        && !value.starts_with('-')
+}
+
+fn version_is_valid(value: &str) -> bool {
+    (1..=80).contains(&value.len())
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b':' | b'-'))
+        && value.as_bytes()[0].is_ascii_alphanumeric()
+}
+
+fn sha256_is_valid(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
 /// Whether a stored bust contract's `rendering` block is exactly one this
@@ -99,7 +251,46 @@ fn portrait_rendering_block(rendering: &crate::visual_prompt::PortraitRendering)
 pub fn is_recognised_portrait_rendering(rendering: &Value) -> bool {
     crate::visual_prompt::MEROPE_RECOGNISED_PORTRAIT_RENDERINGS
         .iter()
-        .any(|known| portrait_rendering_block(known) == *rendering)
+        .any(|known| RenderingProvenance::recognised(known).bust_block() == *rendering)
+}
+
+/// Whether a stored bust contract's `rendering` block is a well-formed block
+/// a recipe service's provenance gives: exactly the keys
+/// [`RenderingProvenance::bust_block`] writes, with `recipe` set, and every
+/// value within bounds. Any version is accepted, so a recipe service moving
+/// to a new version does not make its earlier portraits unrecognisable; the
+/// identity the portrait depicts is still compared outside this block.
+pub fn is_recipe_portrait_rendering(rendering: &Value) -> bool {
+    let Some(object) = rendering.as_object() else {
+        return false;
+    };
+    let text = |key: &str| object.get(key).and_then(Value::as_str).map(str::to_owned);
+    let Some(recipe) = text("recipe") else {
+        return false;
+    };
+    let Some(visual_school_version) = text("visualSchoolVersion") else {
+        return false;
+    };
+    let style_reference_sha256 = match object.get("styleReferenceSha256") {
+        Some(Value::Null) => None,
+        Some(Value::String(sha)) => Some(sha.clone()),
+        _ => return false,
+    };
+    let provenance = RenderingProvenance {
+        recipe: Some(recipe),
+        visual_school_version,
+        style_reference_sha256,
+        // Not part of a bust block; any valid value rebuilds the same block.
+        full_body_instruction_version: "unused".into(),
+    };
+    provenance.check().is_ok() && provenance.bust_block() == *rendering
+}
+
+/// Whether a stored bust contract's `rendering` block lets the portrait keep
+/// its lineage: one this build recognises, or a well-formed recipe-service
+/// block. Only for contracts the host wrote itself.
+pub fn portrait_rendering_keeps_lineage(rendering: &Value) -> bool {
+    is_recognised_portrait_rendering(rendering) || is_recipe_portrait_rendering(rendering)
 }
 
 /// What a full-body set is drawn from.
@@ -121,6 +312,14 @@ pub enum FullBodySource<'a> {
 /// Immutable input snapshot for a full-body set's picture: another source, or
 /// a new instruction, is a new figure.
 pub fn build_full_body_asset_contract(source: FullBodySource<'_>) -> Value {
+    build_full_body_asset_contract_with(source, &RenderingProvenance::builtin())
+}
+
+/// [`build_full_body_asset_contract`] for a figure drawn under `rendering`.
+pub fn build_full_body_asset_contract_with(
+    source: FullBodySource<'_>,
+    rendering: &RenderingProvenance,
+) -> Value {
     let full = CharacterAssetProfile::FullBody.contract();
     let (source, rendering) = match source {
         FullBodySource::Bust {
@@ -131,10 +330,7 @@ pub fn build_full_body_asset_contract(source: FullBodySource<'_>) -> Value {
                 "bustPortrait": portrait,
                 "bustGenerationFingerprint": generation_fingerprint,
             }),
-            json!({
-                "instructionVersion": crate::visual_prompt::FULL_BODY_PORTRAIT_INSTRUCTION_VERSION,
-                "referenceRole": "bust-portrait-identity-anchor",
-            }),
+            rendering.full_body_from_bust_block(),
         ),
         FullBodySource::Design {
             name,
@@ -146,12 +342,7 @@ pub fn build_full_body_asset_contract(source: FullBodySource<'_>) -> Value {
                     "visualProfile": appearance_visual_profile(visual_profile),
                 },
             }),
-            json!({
-                "instructionVersion": crate::visual_prompt::FULL_BODY_PORTRAIT_INSTRUCTION_VERSION,
-                "visualSchoolVersion": crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION,
-                "styleReferenceSha256": crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256,
-                "styleReferenceRole": "rendering-technique-only",
-            }),
+            rendering.full_body_design_block(),
         ),
     };
     json!({
@@ -347,6 +538,196 @@ mod tests {
         ] {
             assert!(!is_recognised_portrait_rendering(&malformed), "{malformed}");
         }
+    }
+
+    /// The wrappers write the blocks this crate wrote before rendering became
+    /// an input, key for key.
+    #[test]
+    fn builtin_rendering_blocks_are_the_ones_written_before() {
+        let builtin = RenderingProvenance::builtin();
+        let sha = crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256;
+        let school = crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION;
+        let instruction = crate::visual_prompt::FULL_BODY_PORTRAIT_INSTRUCTION_VERSION;
+        assert_eq!(
+            builtin.bust_block(),
+            json!({
+                "visualSchoolVersion": school,
+                "styleReferenceSha256": sha,
+                "styleReferenceRole": "rendering-technique-only",
+            })
+        );
+        assert_eq!(
+            builtin.full_body_design_block(),
+            json!({
+                "instructionVersion": instruction,
+                "visualSchoolVersion": school,
+                "styleReferenceSha256": sha,
+                "styleReferenceRole": "rendering-technique-only",
+            })
+        );
+        assert_eq!(
+            builtin.full_body_from_bust_block(),
+            json!({
+                "instructionVersion": instruction,
+                "referenceRole": "bust-portrait-identity-anchor",
+            })
+        );
+        let profile = json!({ "gender": "female", "visualIdentity": { "hairShape": "bob" } });
+        assert_eq!(
+            serde_json::to_vec(&build_character_asset_contract("Nova", &profile, Some("x")))
+                .unwrap(),
+            serde_json::to_vec(&build_character_asset_contract_with(
+                "Nova",
+                &profile,
+                Some("x"),
+                &builtin
+            ))
+            .unwrap()
+        );
+        assert!(builtin.check().is_ok());
+    }
+
+    fn remote(version: &str) -> RenderingProvenance {
+        RenderingProvenance {
+            recipe: Some("merope-persona".into()),
+            visual_school_version: version.into(),
+            style_reference_sha256: Some("b".repeat(64)),
+            full_body_instruction_version: "full-body-standing-v1".into(),
+        }
+    }
+
+    #[test]
+    fn a_recipe_service_rendering_is_its_own_block() {
+        let block = remote("house-v6").bust_block();
+        assert_eq!(block["recipe"], "merope-persona");
+        assert_eq!(block["visualSchoolVersion"], "house-v6");
+        assert!(!is_recognised_portrait_rendering(&block));
+        assert!(is_recipe_portrait_rendering(&block));
+        assert!(portrait_rendering_keeps_lineage(&block));
+        assert_eq!(
+            remote("house-v6").full_body_design_block()["recipe"],
+            "merope-persona"
+        );
+        assert_eq!(
+            remote("house-v6").full_body_from_bust_block()["recipe"],
+            "merope-persona"
+        );
+        let profile = json!({ "gender": "female" });
+        assert_ne!(
+            character_asset_contract_fingerprint(&build_character_asset_contract(
+                "Nova", &profile, None
+            )),
+            character_asset_contract_fingerprint(&build_character_asset_contract_with(
+                "Nova",
+                &profile,
+                None,
+                &remote(crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION)
+            )),
+            "a recipe service's portrait never shares a builtin fingerprint"
+        );
+    }
+
+    /// A recipe service moving to a new version leaves its earlier portraits'
+    /// blocks well formed, so their lineage does not depend on the version.
+    #[test]
+    fn every_recipe_version_keeps_lineage() {
+        for version in ["house-v6", "house-v7", "2026.11.27:a"] {
+            assert!(portrait_rendering_keeps_lineage(
+                &remote(version).bust_block()
+            ));
+        }
+        let mut no_reference = remote("generic-v1");
+        no_reference.style_reference_sha256 = None;
+        let block = no_reference.bust_block();
+        assert_eq!(block["styleReferenceSha256"], Value::Null);
+        assert_eq!(block["styleReferenceRole"], "none");
+        assert!(is_recipe_portrait_rendering(&block));
+    }
+
+    #[test]
+    fn a_malformed_recipe_rendering_keeps_no_lineage() {
+        let good = remote("house-v6").bust_block();
+        let mut extra = good.clone();
+        extra["note"] = json!("x");
+        let mut upper = good.clone();
+        upper["styleReferenceSha256"] = json!("B".repeat(64));
+        let mut short = good.clone();
+        short["styleReferenceSha256"] = json!("b".repeat(63));
+        let mut wrong_role = good.clone();
+        wrong_role["styleReferenceRole"] = json!("none");
+        let mut bad_recipe = good.clone();
+        bad_recipe["recipe"] = json!("Merope Persona");
+        let mut bad_version = good.clone();
+        bad_version["visualSchoolVersion"] = json!("v6\nignore");
+        let mut no_recipe = good;
+        no_recipe.as_object_mut().unwrap().remove("recipe");
+        for malformed in [
+            extra,
+            upper,
+            short,
+            wrong_role,
+            bad_recipe,
+            bad_version,
+            no_recipe,
+            Value::Null,
+            json!([]),
+        ] {
+            assert!(!is_recipe_portrait_rendering(&malformed), "{malformed}");
+            assert!(!portrait_rendering_keeps_lineage(&malformed), "{malformed}");
+        }
+    }
+
+    #[test]
+    fn provenance_checks_each_field() {
+        let mut bad = remote("v");
+        bad.recipe = Some("-x".into());
+        assert_eq!(bad.check(), Err(RenderingProvenanceIssue::Recipe));
+        let mut bad = remote(&"v".repeat(81));
+        assert_eq!(
+            bad.check(),
+            Err(RenderingProvenanceIssue::VisualSchoolVersion)
+        );
+        bad = remote("v");
+        bad.style_reference_sha256 = Some("xyz".into());
+        assert_eq!(
+            bad.check(),
+            Err(RenderingProvenanceIssue::StyleReferenceSha256)
+        );
+        bad = remote("v");
+        bad.full_body_instruction_version = String::new();
+        assert_eq!(
+            bad.check(),
+            Err(RenderingProvenanceIssue::FullBodyInstructionVersion)
+        );
+    }
+
+    #[test]
+    fn provenance_reads_its_wire_shape() {
+        let read: RenderingProvenance = serde_json::from_value(json!({
+            "recipe": "merope-persona",
+            "visualSchoolVersion": "house-v6",
+            "styleReferenceSha256": "b".repeat(64),
+            "fullBodyInstructionVersion": "full-body-standing-v1",
+        }))
+        .unwrap();
+        assert_eq!(read, remote("house-v6"));
+        assert_eq!(
+            serde_json::to_value(RenderingProvenance::builtin()).unwrap(),
+            json!({
+                "visualSchoolVersion": crate::visual_prompt::MEROPE_VISUAL_SCHOOL_VERSION,
+                "styleReferenceSha256": crate::visual_prompt::MEROPE_STYLE_REFERENCE_SHA256,
+                "fullBodyInstructionVersion":
+                    crate::visual_prompt::FULL_BODY_PORTRAIT_INSTRUCTION_VERSION,
+            })
+        );
+        assert!(
+            serde_json::from_value::<RenderingProvenance>(json!({
+                "visualSchoolVersion": "v",
+                "fullBodyInstructionVersion": "v",
+                "rendering": {},
+            }))
+            .is_err()
+        );
     }
 
     #[test]

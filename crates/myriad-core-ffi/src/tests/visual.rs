@@ -1,14 +1,20 @@
 //! How she is drawn, and the persona a new one starts from: through the C
-//! entry point and straight from the crate.
+//! entry point and straight from the crate. The prompts and contracts are
+//! also pinned byte for byte by the shared conformance files
+//! (`crates/conformance/v1/visual`);
+//! `MYRIAD_CONFORMANCE_BLESS=1 cargo test -p myriad-core-ffi visual_case`
+//! writes their outputs again after a deliberate change.
 
 use myriad_merope::{
-    CharacterAssetProfile, FullBodySource, MEROPE_STYLE_REFERENCE_SHA256,
+    CharacterAssetProfile, FullBodySource, MEROPE_STYLE_REFERENCE_SHA256, RenderingProvenance,
     STICKER_AVATAR_CONTRACT_VERSION, build_character_asset_contract,
-    build_character_visual_edit_prompt, build_character_visual_prompt,
-    build_full_body_asset_contract, build_full_body_design_prompt, build_full_body_portrait_prompt,
-    build_sticker_avatar_contract, build_sticker_avatar_prompt, build_upright_portrait_prompt,
-    character_asset_contract_fingerprint, ensure_visual_identity_states_gender,
-    fallback_persona_draft, normalize_visual_identity_for_prompt_checked,
+    build_character_asset_contract_with, build_character_visual_edit_prompt,
+    build_character_visual_prompt, build_full_body_asset_contract,
+    build_full_body_asset_contract_with, build_full_body_design_prompt,
+    build_full_body_portrait_prompt, build_sticker_avatar_contract, build_sticker_avatar_prompt,
+    build_upright_portrait_prompt, character_asset_contract_fingerprint,
+    ensure_visual_identity_states_gender, fallback_persona_draft,
+    normalize_visual_identity_for_prompt_checked,
     normalize_visual_requirements_for_design_with_gender, sanitize_persona_draft,
 };
 use serde_json::{Value, json};
@@ -178,6 +184,54 @@ fn her_picture_contracts_are_the_crates_and_their_text_is_what_is_fingerprinted(
     assert_eq!(sticker["text"], serde_json::to_string(&expected).unwrap());
 }
 
+/// A contract for a portrait a recipe service drew records that service's
+/// provenance; without `rendering` it is this build's own, as before.
+#[test]
+fn a_contract_carries_the_rendering_it_is_given() {
+    let profile = profile();
+    let rendering = json!({
+        "recipe": "merope-persona",
+        "visualSchoolVersion": "house-v6",
+        "styleReferenceSha256": "b".repeat(64),
+        "fullBodyInstructionVersion": "full-body-standing-v1",
+    });
+    let provenance: RenderingProvenance = serde_json::from_value(rendering.clone()).unwrap();
+    let bust = ok(
+        "visual.character_contract",
+        json!({ "name": "星见", "profile": profile, "rendering": rendering }),
+    );
+    assert_eq!(
+        bust["contract"],
+        build_character_asset_contract_with("星见", &profile, None, &provenance)
+    );
+    assert_eq!(bust["contract"]["rendering"]["recipe"], "merope-persona");
+    let from_design = ok(
+        "visual.full_body_contract",
+        json!({
+            "source": { "design": { "name": "星见", "profile": profile } },
+            "rendering": rendering,
+        }),
+    );
+    assert_eq!(
+        from_design["contract"],
+        build_full_body_asset_contract_with(
+            FullBodySource::Design {
+                name: "星见",
+                visual_profile: &profile,
+            },
+            &provenance
+        )
+    );
+    let mut bad = rendering;
+    bad["styleReferenceSha256"] = json!("not-a-hash");
+    let (status, out) = super::ffi(
+        "visual.character_contract",
+        &json!({ "name": "星见", "profile": profile, "rendering": bad }),
+    );
+    assert_ne!(status, crate::STATUS_OK);
+    assert_eq!(out["error"]["kind"], "bad_input");
+}
+
 #[test]
 fn a_design_is_checked_as_the_crate_checks_it() {
     let checked = ok("visual.identity_for_prompt", json!({ "value": profile() }));
@@ -274,5 +328,57 @@ fn a_new_persona_starts_from_the_crates_fallback() {
             json!({ "what": "listening to a song" })
         )["activity"],
         "listening to a song, and the person who has her face open is listening along with her",
+    );
+}
+
+/// Every case in `crates/conformance/v1/visual`, through the C entry point.
+/// A recipe service that copies these prompts compares itself against the
+/// same files.
+#[test]
+fn every_visual_case_answers_through_the_c_entry_point() {
+    use myriad_persona_sync::canonical::canonical_bytes;
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../conformance/v1/visual");
+    let bless = std::env::var_os("MYRIAD_CONFORMANCE_BLESS").is_some();
+    let mut files: Vec<std::path::PathBuf> = std::fs::read_dir(&dir)
+        .unwrap()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
+        .collect();
+    files.sort();
+    let mut calls = Vec::new();
+    for path in files {
+        let mut file: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        let call = file["call"].as_str().unwrap().to_string();
+        for case in file["cases"].as_array_mut().unwrap() {
+            let got = ok(&call, case["input"].clone());
+            if bless {
+                case["output"] = got;
+                continue;
+            }
+            assert_eq!(
+                canonical_bytes(&got),
+                canonical_bytes(&case["output"]),
+                "{} › {}",
+                path.display(),
+                case["name"]
+            );
+        }
+        if bless {
+            let mut written = serde_json::to_string_pretty(&file).unwrap();
+            written.push('\n');
+            std::fs::write(&path, written).unwrap();
+        }
+        calls.push(call);
+    }
+    assert_eq!(
+        calls,
+        [
+            "visual.character_contract",
+            "visual.character_prompt",
+            "visual.edit_prompt",
+            "visual.full_body_contract",
+            "visual.full_body_design_prompt",
+            "visual.full_body_portrait_prompt",
+        ]
     );
 }
