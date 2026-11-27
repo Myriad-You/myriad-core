@@ -294,8 +294,8 @@ pub(super) fn row_id(raw: &[u8]) -> Result<Value, Failure> {
     answer(&entries::row_id(quiet_input(raw)?).map_err(refused)?)
 }
 
-/// `{ranked, nodes, aboutThem?, her?, thorough?, budget?}` → `{picked?,
-/// aboutThem?, loose?, together?}`.
+/// `{ranked, nodes, aboutThem?, her?, query?, today?, thorough?, resident?,
+/// aboutThemStanding?, budget?}` → `{picked?, aboutThem?, loose?, together?}`.
 pub(super) fn pick(raw: &[u8]) -> Result<Value, Failure> {
     answer(&recall::pick(quiet_input(raw)?).map_err(refused)?)
 }

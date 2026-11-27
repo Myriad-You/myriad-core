@@ -39,8 +39,8 @@
 //!   time), and not shown above already. Items on active and ongoing nodes
 //!   first, then the rest; within each, the newest written first. At most
 //!   [`Budget::resident`] items and [`Budget::resident_chars`] chars,
-//!   counted on `node name：text` before any host-appended date suffix
-//!   (hosts enforce any additional display room). One that does not
+//!   counted on `node name：text` plus [`Budget::resident_suffix_chars`]
+//!   extra characters per item reserved for host-appended date suffixes. One that does not
 //!   fit in the room left is left out and the next one tried; one longer
 //!   than all the room alone is cut short (ending in `…`) to the room left,
 //!   and to half of all the room at most, keeping 12 chars of its words at
@@ -449,15 +449,19 @@ fn resident(
     for (_, _, node, one) in candidates {
         let name = node.name.as_deref().unwrap_or_default().trim();
         let words = one.text.trim();
-        let head = name.chars().count() + 1 + budget.resident_suffix_chars;
-        let line = head + words.chars().count();
+        let head = name
+            .chars()
+            .count()
+            .saturating_add(1)
+            .saturating_add(budget.resident_suffix_chars);
+        let line = head.saturating_add(words.chars().count());
         let room = budget.resident_chars.saturating_sub(chars);
         let text = if out.len() >= budget.resident {
             None
         } else if line <= room {
             Some(words.to_string())
         } else if line > budget.resident_chars
-            && room.min(budget.resident_chars / 2) > head + RESIDENT_CUT_LEAST
+            && room.min(budget.resident_chars / 2) > head.saturating_add(RESIDENT_CUT_LEAST)
         {
             // Longer than all the room alone: cut, rather than leave it out
             // (or, when it comes first, leave none); to half the room at
@@ -475,7 +479,7 @@ fn resident(
             left_out += 1;
             continue;
         };
-        chars += head + text.chars().count();
+        chars = chars.saturating_add(head.saturating_add(text.chars().count()));
         out.push(Resident {
             node: node.id.clone(),
             item: one.item.clone(),
@@ -635,6 +639,49 @@ fn is_latin_stopword(word: &str) -> bool {
     )
 }
 
+fn tokenize_lower(lower: &str) -> Vec<&str> {
+    lower
+        .split(|ch: char| !ch.is_alphanumeric() && ch != '\'' && ch != '’')
+        .filter_map(|part| {
+            let base = part
+                .strip_suffix("'s")
+                .or_else(|| part.strip_suffix("’s"))
+                .unwrap_or(part);
+            (!base.is_empty()).then_some(base)
+        })
+        .flat_map(|part| part.split(|ch: char| !ch.is_alphanumeric()))
+        .filter(|tok| !tok.is_empty())
+        .collect()
+}
+
+fn cjk_label_matches_query(label_lower: &str, query_lower: &str) -> bool {
+    if label_lower.chars().count() < 2 {
+        return false;
+    }
+    let lead_ascii = label_lower
+        .chars()
+        .next()
+        .is_some_and(|ch| ch.is_ascii_alphanumeric());
+    let tail_ascii = label_lower
+        .chars()
+        .next_back()
+        .is_some_and(|ch| ch.is_ascii_alphanumeric());
+    query_lower.match_indices(label_lower).any(|(start, _)| {
+        let end = start + label_lower.len();
+        let before_ok = !lead_ascii
+            || query_lower[..start]
+                .chars()
+                .next_back()
+                .is_none_or(|ch| !ch.is_ascii_alphanumeric());
+        let after_ok = !tail_ascii
+            || query_lower[end..]
+                .chars()
+                .next()
+                .is_none_or(|ch| !ch.is_ascii_alphanumeric());
+        before_ok && after_ok
+    })
+}
+
 fn label_matches_query(label: &str, query_lower: &str, query_tokens: &[&str]) -> bool {
     let label_lower = label.trim().to_lowercase();
     if label_lower.is_empty() {
@@ -650,12 +697,9 @@ fn label_matches_query(label: &str, query_lower: &str, query_tokens: &[&str]) ->
         )
     });
     if has_cjk {
-        return label_lower.chars().count() >= 2 && query_lower.contains(&label_lower);
+        return cjk_label_matches_query(&label_lower, query_lower);
     }
-    let label_words: Vec<&str> = label_lower
-        .split(|ch: char| !ch.is_alphanumeric())
-        .filter(|token| !token.is_empty())
-        .collect();
+    let label_words = tokenize_lower(&label_lower);
     match label_words.as_slice() {
         [] => false,
         [single] => {
@@ -666,10 +710,17 @@ fn label_matches_query(label: &str, query_lower: &str, query_tokens: &[&str]) ->
                 })
         }
         phrase => {
-            label_lower.chars().count() >= 3
-                && query_tokens
-                    .windows(phrase.len())
-                    .any(|window| window == phrase)
+            let has_content = phrase
+                .iter()
+                .any(|tok| tok.chars().count() >= 3 && !is_latin_stopword(tok));
+            has_content
+                && label_lower.chars().count() >= 3
+                && query_tokens.windows(phrase.len()).any(|window| {
+                    window
+                        .iter()
+                        .zip(phrase.iter())
+                        .all(|(q, l)| q == l || (l.chars().count() >= 3 && latin_token_matches(q, l)))
+                })
         }
     }
 }
@@ -739,13 +790,11 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
             by_rank.push(at);
         }
     }
+    let mut order = by_rank.clone();
     if let Some(query) = input.query.as_deref() {
         let query_lower = query.trim().to_lowercase();
         if !query_lower.is_empty() {
-            let query_tokens: Vec<&str> = query_lower
-                .split(|ch: char| !ch.is_alphanumeric())
-                .filter(|token| !token.is_empty())
-                .collect();
+            let query_tokens = tokenize_lower(&query_lower);
             let mut matched: Vec<(i64, usize)> = input
                 .nodes
                 .iter()
@@ -754,7 +803,7 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
                     !node.gone
                         && !own(*at)
                         && !node.entries.is_empty()
-                        && !by_rank.contains(at)
+                        && !order.contains(at)
                         && node_matches_query(node, &query_lower, &query_tokens)
                 })
                 .map(|(at, node)| {
@@ -771,10 +820,9 @@ pub fn pick(input: PickInput) -> Result<Pick, NodeError> {
                 b.0.cmp(&a.0)
                     .then_with(|| input.nodes[a.1].id.cmp(&input.nodes[b.1].id))
             });
-            by_rank.extend(matched.into_iter().map(|(_, at)| at));
+            order.extend(matched.into_iter().map(|(_, at)| at));
         }
     }
-    let mut order = by_rank.clone();
     // Stable: within a tier, the rank order stands.
     order.sort_by_key(|at| tier(input.nodes[*at].status));
     order.truncate(input.budget.picked);
@@ -1405,5 +1453,47 @@ mod tests {
         let with_suffix = run(input(14));
         assert_eq!(with_suffix.resident.len(), 1);
         assert_eq!(with_suffix.resident_left_out, 1);
+
+        // Extreme residentSuffixChars saturates instead of panicking.
+        let huge_suffix = run(input(usize::MAX));
+        assert!(huge_suffix.resident.is_empty());
+    }
+
+    #[test]
+    fn query_match_edge_cases_and_thorough_isolation() {
+        // 1. Thorough includes ONLY nodes from named ranked entries, never query-only nodes.
+        let thorough_check = run(json!({
+            "ranked": [{"id": "e1", "named": true}],
+            "query": "gardening",
+            "thorough": true,
+            "nodes": [
+                {"id": "n-named", "name": "cooking", "entries": [{"id": "e1", "at": 10}, {"id": "e2", "at": 20}]},
+                {"id": "n-query-only", "name": "gardening", "entries": [{"id": "g1", "at": 99}]}
+            ]
+        }));
+        let picked_ids: Vec<&str> = thorough_check.picked.iter().map(|p| p.node.as_str()).collect();
+        assert_eq!(picked_ids, ["n-named", "n-query-only"]);
+        let together_ids: Vec<&str> = thorough_check.together.iter().map(|t| t.node.as_str()).collect();
+        assert_eq!(together_ids, ["n-named"]);
+
+        // 2. Possessives match root name; stopword/short phrases do not; hyphen/plural phrases match;
+        // mixed CJK+ASCII labels respect ASCII word boundaries.
+        let edge = run(json!({
+            "ranked": [],
+            "query": "Tim said I'm going to do board game on e-bikes in mango课程",
+            "budget": {"picked": 10},
+            "nodes": [
+                {"id": "n-tim-pos", "name": "Tim's", "entries": [{"id": "m1", "at": 50}]},
+                {"id": "n-board", "name": "board games", "entries": [{"id": "m2", "at": 40}]},
+                {"id": "n-ebike", "name": "e-bike", "entries": [{"id": "m3", "at": 30}]},
+                {"id": "n-todo", "name": "to do", "entries": [{"id": "m4", "at": 20}]},
+                {"id": "n-im", "name": "I'm", "entries": [{"id": "m5", "at": 19}]},
+                {"id": "n-its", "name": "It's", "entries": [{"id": "m6", "at": 18}]},
+                {"id": "n-ab", "name": "a-b", "entries": [{"id": "m7", "at": 17}]},
+                {"id": "n-gocourse", "name": "go课", "entries": [{"id": "m8", "at": 16}]}
+            ]
+        }));
+        let edge_ids: Vec<&str> = edge.picked.iter().map(|p| p.node.as_str()).collect();
+        assert_eq!(edge_ids, ["n-tim-pos", "n-board", "n-ebike"]);
     }
 }
