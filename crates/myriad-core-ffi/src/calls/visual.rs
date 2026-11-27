@@ -10,11 +10,12 @@ use myriad_merope::{
     CLOTHING_STYLES, CharacterAssetProfile, FULL_BODY_PORTRAIT_INSTRUCTION_VERSION, FullBodySource,
     MEROPE_STICKER_STYLE_REFERENCE_SHA256, MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL,
     MEROPE_VISUAL_SCHOOL_VERSION, RenderingProvenance, STICKER_AVATAR_CONTRACT_VERSION,
-    STICKER_AVATAR_SIZE, VisualProfileIssue, build_character_asset_contract_with,
-    build_character_visual_edit_prompt, build_character_visual_prompt,
-    build_full_body_asset_contract_with, build_full_body_design_prompt,
-    build_full_body_portrait_prompt, build_sticker_avatar_contract, build_sticker_avatar_prompt,
-    build_upright_portrait_prompt, character_asset_contract_fingerprint, clothing_style_grammar,
+    STICKER_AVATAR_SIZE, StyleRecipe, VisualProfileIssue, build_character_asset_contract_with,
+    build_character_visual_edit_prompt_with, build_character_visual_prompt_with,
+    build_full_body_asset_contract_with, build_full_body_design_prompt_with,
+    build_full_body_portrait_prompt_with, build_sticker_avatar_contract,
+    build_sticker_avatar_prompt, build_upright_portrait_prompt,
+    character_asset_contract_fingerprint, clothing_style_grammar,
     ensure_visual_identity_states_gender, fallback_persona_draft, normalize_clothing_style,
     normalize_visual_identity_for_prompt_checked,
     normalize_visual_requirements_for_design_with_gender, persona_draft_is_complete,
@@ -57,15 +58,34 @@ struct Drawn {
     profile: Value,
     #[serde(default)]
     notes: Option<String>,
+    /// The style words to draw in; this build's own when absent.
+    #[serde(default)]
+    style: Option<StyleRecipe>,
+}
+
+/// The style a prompt is written in: this build's own when absent, or the
+/// one given, checked.
+fn style(given: Option<StyleRecipe>) -> Result<StyleRecipe, Failure> {
+    match given {
+        None => Ok(StyleRecipe::builtin()),
+        Some(style) => {
+            style
+                .check()
+                .map_err(|issue| Failure::BadInput(issue.to_string()))?;
+            Ok(style)
+        }
+    }
 }
 
 /// The bust master portrait's prompt (`build_character_visual_prompt`).
 pub(super) fn character_prompt(raw: &[u8]) -> Result<Value, Failure> {
     let req: Drawn = input(raw)?;
-    Ok(text(Some(build_character_visual_prompt(
+    let style = style(req.style)?;
+    Ok(text(Some(build_character_visual_prompt_with(
         &req.name,
         &req.profile,
         req.notes.as_deref(),
+        &style,
     ))))
 }
 
@@ -77,9 +97,11 @@ pub(super) fn full_body_design_prompt(raw: &[u8]) -> Result<Value, Failure> {
             "a full-body design takes no notes".into(),
         ));
     }
-    Ok(text(Some(build_full_body_design_prompt(
+    let style = style(req.style)?;
+    Ok(text(Some(build_full_body_design_prompt_with(
         &req.name,
         &req.profile,
+        &style,
     ))))
 }
 
@@ -89,15 +111,27 @@ pub(super) fn edit_prompt(raw: &[u8]) -> Result<Value, Failure> {
     #[serde(deny_unknown_fields)]
     struct In {
         notes: String,
+        #[serde(default)]
+        style: Option<StyleRecipe>,
     }
     let req: In = input(raw)?;
-    Ok(text(Some(build_character_visual_edit_prompt(&req.notes))))
+    let style = style(req.style)?;
+    Ok(text(Some(build_character_visual_edit_prompt_with(
+        &req.notes, &style,
+    ))))
 }
 
 /// A full-body set redrawn from a bust master portrait.
 pub(super) fn full_body_portrait_prompt(raw: &[u8]) -> Result<Value, Failure> {
-    let _: Nothing = input(raw)?;
-    Ok(text(Some(build_full_body_portrait_prompt())))
+    #[derive(Deserialize)]
+    #[serde(deny_unknown_fields)]
+    struct In {
+        #[serde(default)]
+        style: Option<StyleRecipe>,
+    }
+    let req: In = input(raw)?;
+    let style = style(req.style)?;
+    Ok(text(Some(build_full_body_portrait_prompt_with(&style))))
 }
 
 /// An uploaded picture redrawn upright, as a bust (`bust`) or a full-body

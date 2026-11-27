@@ -573,6 +573,231 @@
         "fingerprint": "2d8e4a93a513204f4a6a8df5530f5559ea8286982ed3ecee1d9d2c925a1d35fd",
         "text": "{\"additionalRequirements\":\"softer light\",\"contractVersion\":13,\"identity\":{\"name\":\"Nova\",\"visualProfile\":{\"gender\":\"female\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"violet eyes with layered irises\",\"faceDesign\":\"feminine young-adult read, compact soft-tapered anime oval face with a calm gaze\",\"hairLayerPlan\":\"a few broad front locks over a long back mass\",\"hairShape\":\"long silver hair in broad ribbon masses\"},\"outfit\":{\"clothingStyle\":\"everyday\",\"heroAccessory\":\"a crescent brooch\",\"materialPlan\":\"matte wool and polished silver\",\"motif\":\"crescent moons\",\"outfitConstruction\":\"asymmetric closure with an open neckline\",\"paletteHint\":\"silver, violet and white\",\"sleeveArmDesign\":\"split sleeves with ribbon cuffs\",\"upperBodySilhouette\":\"fitted jacket over a wrapped layer\"}}}},\"output\":{\"background\":\"clean-near-white\",\"framing\":\"close-full-head-through-lower-chest\",\"height\":1536,\"portraitAspect\":{\"height\":4,\"width\":3},\"rigCanvas\":{\"height\":1.3333333730697632,\"width\":1.0},\"view\":\"strict-centered-eye-level-zero-yaw-front\",\"width\":1152},\"rendering\":{\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"fbeb294a1ec260274d7c562adf746c17bd349847f4fe3ece0b2f3f300106eb67\",\"visualSchoolVersion\":\"anime-cel-gradient-reference-v5\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"master\"}"
       }
+    },
+    {
+      "input": {
+        "name": "星见",
+        "profile": {
+          "clothingStyle": "everyday",
+          "gender": "female",
+          "language": "en-US",
+          "visualIdentity": {
+            "character": {
+              "eyeDesign": "violet eyes with layered irises",
+              "faceDesign": "feminine young-adult read, elongated oval face with a calm gaze",
+              "hairLayerPlan": "a few broad front locks over a long back mass",
+              "hairShape": "long silver hair in broad ribbon masses"
+            },
+            "outfit": {
+              "clothingStyle": "everyday",
+              "heroAccessory": "a crescent brooch",
+              "materialPlan": "matte wool and polished silver",
+              "motif": "crescent moons",
+              "outfitConstruction": "asymmetric closure with an open neckline",
+              "paletteHint": "silver, violet and white",
+              "sleeveArmDesign": "split sleeves with ribbon cuffs",
+              "upperBodySilhouette": "fitted jacket over a wrapped layer"
+            }
+          }
+        },
+        "rendering": {
+          "fullBodyInstructionVersion": "full-body-standing-v1",
+          "recipe": "merope-persona",
+          "styleReferenceSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "visualSchoolVersion": "house-v6"
+        }
+      },
+      "name": "a recipe service's rendering",
+      "output": {
+        "contract": {
+          "additionalRequirements": null,
+          "contractVersion": 13,
+          "identity": {
+            "name": "星见",
+            "visualProfile": {
+              "gender": "female",
+              "visualIdentity": {
+                "character": {
+                  "eyeDesign": "violet eyes with layered irises",
+                  "faceDesign": "feminine young-adult read, compact soft-tapered anime oval face with a calm gaze",
+                  "hairLayerPlan": "a few broad front locks over a long back mass",
+                  "hairShape": "long silver hair in broad ribbon masses"
+                },
+                "outfit": {
+                  "clothingStyle": "everyday",
+                  "heroAccessory": "a crescent brooch",
+                  "materialPlan": "matte wool and polished silver",
+                  "motif": "crescent moons",
+                  "outfitConstruction": "asymmetric closure with an open neckline",
+                  "paletteHint": "silver, violet and white",
+                  "sleeveArmDesign": "split sleeves with ribbon cuffs",
+                  "upperBodySilhouette": "fitted jacket over a wrapped layer"
+                }
+              }
+            }
+          },
+          "output": {
+            "background": "clean-near-white",
+            "framing": "close-full-head-through-lower-chest",
+            "height": 1536,
+            "portraitAspect": {
+              "height": 4,
+              "width": 3
+            },
+            "rigCanvas": {
+              "height": 1.3333333730697632,
+              "width": 1.0
+            },
+            "view": "strict-centered-eye-level-zero-yaw-front",
+            "width": 1152
+          },
+          "rendering": {
+            "recipe": "merope-persona",
+            "styleReferenceRole": "rendering-technique-only",
+            "styleReferenceSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "visualSchoolVersion": "house-v6"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "master"
+        },
+        "fingerprint": "92e8793182cce9a2642d6b60a55ef56546614336f6c598d8837ded198df77b00",
+        "text": "{\"additionalRequirements\":null,\"contractVersion\":13,\"identity\":{\"name\":\"星见\",\"visualProfile\":{\"gender\":\"female\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"violet eyes with layered irises\",\"faceDesign\":\"feminine young-adult read, compact soft-tapered anime oval face with a calm gaze\",\"hairLayerPlan\":\"a few broad front locks over a long back mass\",\"hairShape\":\"long silver hair in broad ribbon masses\"},\"outfit\":{\"clothingStyle\":\"everyday\",\"heroAccessory\":\"a crescent brooch\",\"materialPlan\":\"matte wool and polished silver\",\"motif\":\"crescent moons\",\"outfitConstruction\":\"asymmetric closure with an open neckline\",\"paletteHint\":\"silver, violet and white\",\"sleeveArmDesign\":\"split sleeves with ribbon cuffs\",\"upperBodySilhouette\":\"fitted jacket over a wrapped layer\"}}}},\"output\":{\"background\":\"clean-near-white\",\"framing\":\"close-full-head-through-lower-chest\",\"height\":1536,\"portraitAspect\":{\"height\":4,\"width\":3},\"rigCanvas\":{\"height\":1.3333333730697632,\"width\":1.0},\"view\":\"strict-centered-eye-level-zero-yaw-front\",\"width\":1152},\"rendering\":{\"recipe\":\"merope-persona\",\"styleReferenceRole\":\"rendering-technique-only\",\"styleReferenceSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"visualSchoolVersion\":\"house-v6\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"master\"}"
+      }
+    },
+    {
+      "input": {
+        "name": "Nova",
+        "notes": "softer light",
+        "profile": {
+          "clothingStyle": "everyday",
+          "gender": "female",
+          "language": "en-US",
+          "visualIdentity": {
+            "character": {
+              "eyeDesign": "violet eyes with layered irises",
+              "faceDesign": "feminine young-adult read, elongated oval face with a calm gaze",
+              "hairLayerPlan": "a few broad front locks over a long back mass",
+              "hairShape": "long silver hair in broad ribbon masses"
+            },
+            "outfit": {
+              "clothingStyle": "everyday",
+              "heroAccessory": "a crescent brooch",
+              "materialPlan": "matte wool and polished silver",
+              "motif": "crescent moons",
+              "outfitConstruction": "asymmetric closure with an open neckline",
+              "paletteHint": "silver, violet and white",
+              "sleeveArmDesign": "split sleeves with ribbon cuffs",
+              "upperBodySilhouette": "fitted jacket over a wrapped layer"
+            }
+          }
+        },
+        "rendering": {
+          "fullBodyInstructionVersion": "full-body-standing-v1",
+          "recipe": "generic-flat",
+          "styleReferenceSha256": null,
+          "visualSchoolVersion": "house-v6"
+        }
+      },
+      "name": "a recipe service's rendering without a reference, with notes",
+      "output": {
+        "contract": {
+          "additionalRequirements": "softer light",
+          "contractVersion": 13,
+          "identity": {
+            "name": "Nova",
+            "visualProfile": {
+              "gender": "female",
+              "visualIdentity": {
+                "character": {
+                  "eyeDesign": "violet eyes with layered irises",
+                  "faceDesign": "feminine young-adult read, compact soft-tapered anime oval face with a calm gaze",
+                  "hairLayerPlan": "a few broad front locks over a long back mass",
+                  "hairShape": "long silver hair in broad ribbon masses"
+                },
+                "outfit": {
+                  "clothingStyle": "everyday",
+                  "heroAccessory": "a crescent brooch",
+                  "materialPlan": "matte wool and polished silver",
+                  "motif": "crescent moons",
+                  "outfitConstruction": "asymmetric closure with an open neckline",
+                  "paletteHint": "silver, violet and white",
+                  "sleeveArmDesign": "split sleeves with ribbon cuffs",
+                  "upperBodySilhouette": "fitted jacket over a wrapped layer"
+                }
+              }
+            }
+          },
+          "output": {
+            "background": "clean-near-white",
+            "framing": "close-full-head-through-lower-chest",
+            "height": 1536,
+            "portraitAspect": {
+              "height": 4,
+              "width": 3
+            },
+            "rigCanvas": {
+              "height": 1.3333333730697632,
+              "width": 1.0
+            },
+            "view": "strict-centered-eye-level-zero-yaw-front",
+            "width": 1152
+          },
+          "rendering": {
+            "recipe": "generic-flat",
+            "styleReferenceRole": "none",
+            "styleReferenceSha256": null,
+            "visualSchoolVersion": "house-v6"
+          },
+          "rig": {
+            "maxRigidArmRotationDegrees": 15.0,
+            "requiredCapabilities": [
+              "separate-face",
+              "independent-eyes",
+              "blink",
+              "dizzy-eye-variant",
+              "squeeze-eye-variant",
+              "cry-eye-variant",
+              "silly-eye-variant",
+              "lovestruck-heart-pupils",
+              "lovestruck-face-effects",
+              "cry-mouth-variant",
+              "maniac-mouth-variant",
+              "silly-mouth-variant",
+              "mouth-shapes",
+              "separate-front-hair",
+              "separate-back-hair",
+              "separate-topwear",
+              "rigid-left-arm-fragment",
+              "rigid-right-arm-fragment"
+            ]
+          },
+          "slot": "master"
+        },
+        "fingerprint": "033ca945a74381b2d4ca39af46a02136e2b2773ddd375f9ae8a0752e035f48f3",
+        "text": "{\"additionalRequirements\":\"softer light\",\"contractVersion\":13,\"identity\":{\"name\":\"Nova\",\"visualProfile\":{\"gender\":\"female\",\"visualIdentity\":{\"character\":{\"eyeDesign\":\"violet eyes with layered irises\",\"faceDesign\":\"feminine young-adult read, compact soft-tapered anime oval face with a calm gaze\",\"hairLayerPlan\":\"a few broad front locks over a long back mass\",\"hairShape\":\"long silver hair in broad ribbon masses\"},\"outfit\":{\"clothingStyle\":\"everyday\",\"heroAccessory\":\"a crescent brooch\",\"materialPlan\":\"matte wool and polished silver\",\"motif\":\"crescent moons\",\"outfitConstruction\":\"asymmetric closure with an open neckline\",\"paletteHint\":\"silver, violet and white\",\"sleeveArmDesign\":\"split sleeves with ribbon cuffs\",\"upperBodySilhouette\":\"fitted jacket over a wrapped layer\"}}}},\"output\":{\"background\":\"clean-near-white\",\"framing\":\"close-full-head-through-lower-chest\",\"height\":1536,\"portraitAspect\":{\"height\":4,\"width\":3},\"rigCanvas\":{\"height\":1.3333333730697632,\"width\":1.0},\"view\":\"strict-centered-eye-level-zero-yaw-front\",\"width\":1152},\"rendering\":{\"recipe\":\"generic-flat\",\"styleReferenceRole\":\"none\",\"styleReferenceSha256\":null,\"visualSchoolVersion\":\"house-v6\"},\"rig\":{\"maxRigidArmRotationDegrees\":15.0,\"requiredCapabilities\":[\"separate-face\",\"independent-eyes\",\"blink\",\"dizzy-eye-variant\",\"squeeze-eye-variant\",\"cry-eye-variant\",\"silly-eye-variant\",\"lovestruck-heart-pupils\",\"lovestruck-face-effects\",\"cry-mouth-variant\",\"maniac-mouth-variant\",\"silly-mouth-variant\",\"mouth-shapes\",\"separate-front-hair\",\"separate-back-hair\",\"separate-topwear\",\"rigid-left-arm-fragment\",\"rigid-right-arm-fragment\"]},\"slot\":\"master\"}"
+      }
     }
   ]
 }

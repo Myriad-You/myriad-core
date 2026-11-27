@@ -7,14 +7,16 @@
 
 use myriad_merope::{
     CharacterAssetProfile, FullBodySource, MEROPE_STYLE_REFERENCE_SHA256, RenderingProvenance,
-    STICKER_AVATAR_CONTRACT_VERSION, build_character_asset_contract,
+    STICKER_AVATAR_CONTRACT_VERSION, StyleRecipe, build_character_asset_contract,
     build_character_asset_contract_with, build_character_visual_edit_prompt,
-    build_character_visual_prompt, build_full_body_asset_contract,
+    build_character_visual_edit_prompt_with, build_character_visual_prompt,
+    build_character_visual_prompt_with, build_full_body_asset_contract,
     build_full_body_asset_contract_with, build_full_body_design_prompt,
-    build_full_body_portrait_prompt, build_sticker_avatar_contract, build_sticker_avatar_prompt,
-    build_upright_portrait_prompt, character_asset_contract_fingerprint,
-    ensure_visual_identity_states_gender, fallback_persona_draft,
-    normalize_visual_identity_for_prompt_checked,
+    build_full_body_design_prompt_with, build_full_body_portrait_prompt,
+    build_full_body_portrait_prompt_with, build_sticker_avatar_contract,
+    build_sticker_avatar_prompt, build_upright_portrait_prompt,
+    character_asset_contract_fingerprint, ensure_visual_identity_states_gender,
+    fallback_persona_draft, normalize_visual_identity_for_prompt_checked,
     normalize_visual_requirements_for_design_with_gender, sanitize_persona_draft,
 };
 use serde_json::{Value, json};
@@ -329,6 +331,60 @@ fn a_new_persona_starts_from_the_crates_fallback() {
         )["activity"],
         "listening to a song, and the person who has her face open is listening along with her",
     );
+}
+
+/// A prompt in another recipe's words is the crate's `_with` builder; an
+/// unusable style is `bad_input`.
+#[test]
+fn a_prompt_is_written_in_the_style_it_is_given() {
+    let profile = profile();
+    let style = json!({
+        "school": "Plain flat-colour anime illustration",
+        "priority": "Priority order: framing first, then identity.",
+        "editFinish": "the same flat finish",
+        "redrawFinish": "the same flat finish and lighting",
+    });
+    let recipe: StyleRecipe = serde_json::from_value(style.clone()).unwrap();
+    assert_eq!(
+        text(
+            "visual.character_prompt",
+            json!({ "name": "星见", "profile": profile, "style": style })
+        ),
+        Some(build_character_visual_prompt_with(
+            "星见", &profile, None, &recipe
+        )),
+    );
+    assert_eq!(
+        text(
+            "visual.full_body_design_prompt",
+            json!({ "name": "星见", "profile": profile, "style": style })
+        ),
+        Some(build_full_body_design_prompt_with(
+            "星见", &profile, &recipe
+        )),
+    );
+    assert_eq!(
+        text(
+            "visual.edit_prompt",
+            json!({ "notes": "softer light", "style": style })
+        ),
+        Some(build_character_visual_edit_prompt_with(
+            "softer light",
+            &recipe
+        )),
+    );
+    assert_eq!(
+        text(
+            "visual.full_body_portrait_prompt",
+            json!({ "style": style })
+        ),
+        Some(build_full_body_portrait_prompt_with(&recipe)),
+    );
+    let mut bad = style;
+    bad["school"] = json!("");
+    let (status, out) = super::ffi("visual.full_body_portrait_prompt", &json!({ "style": bad }));
+    assert_ne!(status, crate::STATUS_OK);
+    assert_eq!(out["error"]["kind"], "bad_input");
 }
 
 /// Every case in `crates/conformance/v1/visual`, through the C entry point.
