@@ -167,6 +167,7 @@ pub use visual_design::{
 };
 pub use visual_prompt::{
     FULL_BODY_PORTRAIT_INSTRUCTION_VERSION, MEROPE_RECOGNISED_PORTRAIT_RENDERINGS,
+    MIN_IDENTITY_PROMPT_CHARS,
     MEROPE_STYLE_REFERENCE_SHA256, MEROPE_VISUAL_SCHOOL, MEROPE_VISUAL_SCHOOL_VERSION,
     PortraitRendering, StyleRecipe, StyleRecipeIssue, build_character_visual_edit_prompt,
     build_character_visual_edit_prompt_with, build_character_visual_prompt,
