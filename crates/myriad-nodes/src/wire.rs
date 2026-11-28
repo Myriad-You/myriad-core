@@ -32,7 +32,9 @@
 //! body that fails is dropped (the row stays, its body `withheld`): the
 //! fold passes a row without a body by (`no_body`). A row this side asked
 //! again for comes back as it holds it (`held`): it is not admitted again,
-//! only its body taken.
+//! only its body taken. A row refused for good is taken as its place
+//! (`log.refused`, `myriad_persona_log::admit`), which goes on as a row
+//! with no body like any other.
 //!
 //! **What every side folds.** Every side that holds a row's body holds the
 //! same bytes of it. A body withheld for good ([`Why::lasting`]: it is
@@ -1074,6 +1076,8 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
                 id: row.id.clone(),
                 reason: Reason::Envelope,
                 detail: Some("not of the batch's audience".into()),
+                // Its count is another audience's: no place here.
+                placed: false,
             });
         } else if let Some(mine) = held.get(row.id.as_str()) {
             if *mine == row {
@@ -1083,6 +1087,8 @@ pub fn take(input: TakeInput) -> Result<Taken, NodeError> {
                     id: row.id.clone(),
                     reason: Reason::Envelope,
                     detail: Some("not the row this side holds".into()),
+                    // Its place is held already, by the row held.
+                    placed: false,
                 });
             }
         } else {

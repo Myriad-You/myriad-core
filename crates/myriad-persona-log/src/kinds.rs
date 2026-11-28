@@ -77,6 +77,10 @@ const KINDS: &[(&str, Object, Rule)] = &[
     // What a thing (a talk, a loose end) hangs on: the row is about the
     // thing, its payload names the node. Re-hanging shows in its history.
     ("link.attach", None, Rule::Latest),
+    // The place of a row this side refused for good ([`crate::admit`]):
+    // it says nothing, only keeps its side's count whole. About
+    // `refused:<the row's id>`; it folds to nothing.
+    ("log.refused", Some("refused"), Rule::Event),
     ("memory.restore", Some("memory"), Rule::Restore),
     ("memory.retire", Some("memory"), Rule::Retire),
     ("memory.write", Some("memory"), Rule::Event),
@@ -152,6 +156,13 @@ pub const SUBJECT: &str = "subject";
 /// about it.
 pub const ROW: &str = "row";
 
+/// The kind of a refused row's place ([`crate::Row::place_of_refused`]).
+pub const PLACE: &str = "log.refused";
+
+/// The object type a refused row's place is about: `refused:<row id>`. No
+/// other row is about it but a forget.
+pub const REFUSED: &str = "refused";
+
 fn entry(kind: &str) -> Option<&'static (&'static str, Object, Rule)> {
     KINDS
         .binary_search_by(|(known, _, _)| (*known).cmp(kind))
@@ -193,5 +204,7 @@ mod tests {
         assert_eq!(names("node.span"), Names::None);
         assert_eq!(rule("speech.said"), Some(Rule::Event));
         assert_eq!(object_type("speech.said"), Some("speech"));
+        assert_eq!(rule(PLACE), Some(Rule::Event));
+        assert_eq!(object_type(PLACE), Some(REFUSED));
     }
 }

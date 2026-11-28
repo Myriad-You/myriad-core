@@ -313,6 +313,14 @@ fn every_refused_row_is_refused_for_its_own_reason() {
             "a record of no kind it carries",
             "no entity kind it carries",
         ),
+        (
+            "a place about another row",
+            "is about refused:<its own id>",
+        ),
+        (
+            "a kind about anything about a refused row",
+            "only a refused row's place and a forget",
+        ),
     ];
     let file: Value = serde_json::from_slice(
         &std::fs::read(conformance().join("v2/log/canonical.json")).unwrap(),

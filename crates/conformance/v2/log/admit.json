@@ -262,6 +262,18 @@
           {
             "audience": "personal:o1",
             "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000015-000000-dev_mac",
+            "id": "d-6",
+            "kind": "log.refused",
+            "object": "refused:d-6",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:o1",
+            "author": "owner",
             "dseq": 4,
             "forgotten": true,
             "hlc": "001760000000016-000000-dev_mac",
@@ -335,6 +347,7 @@
           {
             "detail": "kind \"node.whispered\" is not one the log holds",
             "id": "d-6",
+            "placed": true,
             "reason": "envelope"
           }
         ]
@@ -3470,6 +3483,354 @@
           }
         },
         "ledger": []
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:z": "own:"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.from_a_newer_core",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "p-3",
+            "kind": "node.noted",
+            "object": "node:z",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a row refused for good is taken as its place (log.refused, placed): a kind this core does not read; the rows past it are taken; an object in another audience takes none (audience_changed is the first row's)",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "log.refused",
+            "object": "refused:p-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "detail": "kind \"node.from_a_newer_core\" is not one the log holds",
+            "id": "p-1",
+            "placed": true,
+            "reason": "envelope"
+          },
+          {
+            "id": "p-3",
+            "reason": "audience_changed"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "epochs": {
+          "personal:partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 2
+          }
+        },
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "members": {
+          "group:g1": [
+            "o2"
+          ]
+        },
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "q-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:q-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "q-2",
+            "kind": "memory.write",
+            "object": "memory:m",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:q-2"
+            },
+            "replicate": "shared",
+            "subject": "o9",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "q-3",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:q-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a row refused for now takes no place: an epoch back, a subject outside the group, a row this side may not hold",
+      "output": {
+        "accepted": [],
+        "epochs": {
+          "personal:partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 2
+          }
+        },
+        "ledger": [],
+        "refused": [
+          {
+            "id": "q-1",
+            "reason": "epoch_back"
+          },
+          {
+            "id": "q-2",
+            "reason": "not_a_member"
+          },
+          {
+            "id": "q-3",
+            "reason": "not_held"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "g-1",
+            "kind": "node.from_a_newer_core",
+            "object": "node:g",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:g-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a PC takes no place in an audience it may not hold",
+      "output": {
+        "accepted": [],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "detail": "kind \"node.from_a_newer_core\" is not one the log holds",
+            "id": "g-1",
+            "reason": "envelope"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "r-1",
+            "kind": "forget",
+            "object": "memory:m",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:r-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "r-2",
+            "kind": "forget.part",
+            "object": "memory:m",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "r-3",
+            "kind": "retract_all",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "r-4",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:r-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a forget or a retract refused for its envelope takes no place: it stays a gap and is asked for again (a forget with a payload, a newer forget kind, a newer retract kind)",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "r-4",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:r-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "detail": "a forget holds no payload",
+            "id": "r-1",
+            "reason": "envelope"
+          },
+          {
+            "detail": "kind \"forget.part\" is not one the log holds",
+            "id": "r-2",
+            "reason": "envelope"
+          },
+          {
+            "detail": "kind \"retract_all\" is not one the log holds",
+            "id": "r-3",
+            "reason": "envelope"
+          }
+        ]
       }
     }
   ],

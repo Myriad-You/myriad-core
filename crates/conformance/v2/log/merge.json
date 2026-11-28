@@ -3077,6 +3077,153 @@
           }
         ]
       }
+    },
+    {
+      "input": {
+        "incoming": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "log.refused",
+            "object": "refused:p-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a refused row's place that comes for the row held is a duplicate: the row stays",
+      "output": {
+        "duplicates": 1,
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "incoming": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "ledger": [],
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "log.refused",
+            "object": "refused:p-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "the row coming to its refused place takes it up (filled), so a side that takes the row holds it whichever came first",
+      "output": {
+        "duplicates": 0,
+        "filled": [
+          "p-1"
+        ],
+        "log": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      }
     }
   ],
   "version": 1

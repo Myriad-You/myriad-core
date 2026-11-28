@@ -271,6 +271,12 @@ impl Row {
         if object == kinds::ROW && rule != Rule::Forget {
             return Err(LogError::new("only a forget is about one row"));
         }
+        if object == kinds::REFUSED && rule != Rule::Forget && self.kind != kinds::PLACE {
+            return Err(LogError::new("only a refused row's place and a forget are about one"));
+        }
+        if self.kind == kinds::PLACE {
+            self.check_place()?;
+        }
         if self.author == Author::Rule
             && self.kind != "card.version"
             && (object != "node" || rule != Rule::Event)
@@ -378,6 +384,22 @@ impl Row {
         Ok(())
     }
 
+    /// A refused row's place ([`Row::place_of_refused`]): shared, the
+    /// owner's, about `refused:<its own id>`, with no subject and no
+    /// payload. It says nothing; it keeps a count whole.
+    fn check_place(&self) -> Result<(), LogError> {
+        if self.author != Author::Owner || self.replicate != Replicate::Shared {
+            return Err(LogError::new("a refused row's place is shared and the owner's"));
+        }
+        if self.object != format!("{}:{}", kinds::REFUSED, self.id) {
+            return Err(LogError::new("a refused row's place is about refused:<its own id>"));
+        }
+        if self.subject.is_some() || self.payload.is_some() {
+            return Err(LogError::new("a refused row's place has no subject and no payload"));
+        }
+        Ok(())
+    }
+
     /// `to` and `takes`: only where a kind names another node, never the
     /// row's own object, the spans sorted and each once. A merge always
     /// names the node it went into, and a split the part and the spans it
@@ -453,6 +475,75 @@ impl Row {
             forgotten: true,
             ..self.clone()
         }
+    }
+
+    /// The place `self`, a row refused for good, keeps in this side's log
+    /// ([`crate::admit`]): its id, side, count, clock and audience, and
+    /// nothing it said. The same on every side that refuses it, whatever
+    /// else that side holds. `None` when the row holds no place to keep (a
+    /// local row, no count, a side or clock that does not read), when its
+    /// place would not pass [`Row::check`] (an id too long to name it), and
+    /// when the row may forget or reach other rows ([`Row::may_forget`]).
+    pub fn place_of_refused(&self) -> Option<Self> {
+        if self.replicate != Replicate::Shared || self.may_forget() {
+            return None;
+        }
+        let place = Self {
+            version: LOG_VERSION,
+            id: self.id.clone(),
+            origin: self.origin.clone(),
+            author: Author::Owner,
+            epoch: None,
+            dseq: self.dseq,
+            hlc: self.hlc.clone(),
+            audience: self.audience.clone(),
+            subject: None,
+            object: format!("{}:{}", kinds::REFUSED, self.id),
+            kind: kinds::PLACE.to_string(),
+            payload: None,
+            replicate: Replicate::Shared,
+            // A stub refused keeps a stub's place.
+            forgotten: self.forgotten,
+            to: None,
+            takes: Vec::new(),
+        };
+        place.check().is_ok().then_some(place)
+    }
+
+    /// Whether a row, read or not, may forget or take back what other rows
+    /// say, or reach them: a forget or a retract (or a kind named like one,
+    /// which a newer core may hold), a row about a subject or one row, or a
+    /// row naming another node (`to`) or listing rows (`takes`). Such a row
+    /// is never taken as a place ([`crate::admit`]).
+    pub fn may_forget(&self) -> bool {
+        let named = |prefix: &str| {
+            self.kind == prefix
+                || self
+                    .kind
+                    .strip_prefix(prefix)
+                    .is_some_and(|rest| rest.starts_with(['.', '_']))
+        };
+        let object = object_type(&self.object);
+        named("forget")
+            || named("retract")
+            || matches!(
+                kinds::rule(&self.kind),
+                Some(Rule::Forget | Rule::Retract | Rule::Home)
+            )
+            || object == Some(kinds::SUBJECT)
+            || object == Some(kinds::ROW)
+            || self.to.is_some()
+            || !self.takes.is_empty()
+    }
+
+    /// Whether this is the place of `other`, refused
+    /// ([`Row::place_of_refused`]), either of them forgotten or not.
+    pub fn is_place_of(&self, other: &Self) -> bool {
+        self.kind == kinds::PLACE
+            && other.kind != kinds::PLACE
+            && other
+                .place_of_refused()
+                .is_some_and(|place| self.stub() == place.stub())
     }
 
     /// Whether this is `other` forgotten.
