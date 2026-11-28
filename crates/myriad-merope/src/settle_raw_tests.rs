@@ -7,6 +7,7 @@ fn them(text: &str) -> Line<'_> {
         in_game: false,
         before: false,
         at: None,
+        message: None,
     }
 }
 
@@ -1163,6 +1164,7 @@ fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_b
         in_game: false,
         before: false,
         at: Some("2026-11-26 10:00"),
+        message: Some("41"),
     };
     let part2 = Line {
         who: Who::Them,
@@ -1170,6 +1172,7 @@ fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_b
         in_game: false,
         before: false,
         at: Some("2026-11-26 10:00"),
+        message: Some("41"),
     };
     let reply = Line {
         who: Who::You,
@@ -1177,6 +1180,7 @@ fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_b
         in_game: false,
         before: false,
         at: Some("2026-11-26 10:00"),
+        message: Some("42"),
     };
     let next_turn = Line {
         who: Who::Them,
@@ -1184,11 +1188,12 @@ fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_b
         in_game: false,
         before: false,
         at: Some("2026-11-27 09:00"),
+        message: Some("43"),
     };
     let lines = [part1, part2, reply, next_turn];
 
-    // Cross-seam contiguous quote across same-timestamp `Who::Them` parts +
-    // curly quote & case normalization passes.
+    // Cross-seam contiguous quote across two parts of one message of theirs
+    // + curly quote & case normalization passes.
     let raw = answer(
         serde_json::json!([
             fact(
@@ -1196,7 +1201,7 @@ fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_b
                 "bought \"specialty coffee beans\" on Tuesday morning",
                 &[0, 1]
             ),
-            // Across different timestamps (`at`), must NOT stitch part2 + next_turn.
+            // Across two messages, must NOT stitch part2 + next_turn.
             fact("bad cross turn", "for $18. Next day", &[1, 3]),
             // Assistant line must stay rejected even if normalized.
             fact("from assistant", "nice beans!", &[2]),
@@ -1206,4 +1211,59 @@ fn evidence_normalization_and_same_turn_split_seams_hold_while_assistant_stays_b
     let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
     assert_eq!(got.settled.lasting.len(), 1);
     assert_eq!(got.dropped.bad_evidence, 2);
+}
+
+/// Two messages of theirs said in the same minute are two: a quote is not
+/// stitched from the end of one and the start of the next, though the
+/// host's `at` (to the minute) is the same.
+#[test]
+fn a_quote_does_not_run_across_two_messages_said_in_one_minute() {
+    let lines = [
+        Line {
+            at: Some("2026-11-26 10:00"),
+            ..them("我周六要去医院")
+        },
+        Line {
+            at: Some("2026-11-26 10:00"),
+            ..them("复查膝盖的事就算了")
+        },
+    ];
+    let raw = answer(
+        serde_json::json!([fact("周六要去医院复查膝盖", "去医院复查膝盖", &[0, 1])]),
+        serde_json::json!({}),
+    );
+    let got = parse_raw_settle(&raw, &lines, &[], &[], 0, None).unwrap();
+    assert!(got.settled.lasting.is_empty(), "{:?}", got.settled.lasting);
+    assert_eq!(got.dropped.bad_evidence, 1);
+}
+
+/// The parts of one long message are one: a quote runs on from one into
+/// the next. Two messages are two whatever their `at`, and a line with no
+/// message given runs on into none.
+#[test]
+fn a_quote_runs_on_across_the_parts_of_one_message_only() {
+    let said = |text, message| Line {
+        at: Some("2026-11-26 10:00"),
+        message,
+        ..them(text)
+    };
+    let quote = || {
+        answer(
+            serde_json::json!([fact("周六要去医院复查膝盖", "去医院复查膝盖", &[0, 1])]),
+            serde_json::json!({}),
+        )
+    };
+    let kept = |lines: &[Line]| {
+        parse_raw_settle(&quote(), lines, &[], &[], 0, None)
+            .unwrap()
+            .settled
+            .lasting
+            .len()
+    };
+    let one = [said("我周六要去医院", Some("7")), said("复查膝盖", Some("7"))];
+    assert_eq!(kept(&one), 1);
+    let two = [said("我周六要去医院", Some("7")), said("复查膝盖", Some("8"))];
+    assert_eq!(kept(&two), 0);
+    let unknown = [said("我周六要去医院", None), said("复查膝盖", None)];
+    assert_eq!(kept(&unknown), 0);
 }
