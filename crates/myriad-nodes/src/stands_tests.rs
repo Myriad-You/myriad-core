@@ -955,3 +955,165 @@ fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_
     assert_eq!(res.rows[1].node, "cats");
     assert_eq!(res.rows[1].body["because"], json!(["memory:m2"]));
 }
+
+#[test]
+fn stretch_batch_respects_fact_order_and_top_level_whose_for_replaced_fallback_and_still_so() {
+    let my_run = item_id("them", "run", "memory:old-run", 0);
+    let my_shoe = item_id("them", "run", "memory:old-shoe", 0);
+    let nodes = vec![NodeIn {
+        id: "run".into(),
+        name: Some("running".into()),
+        kind: Some("topic".into()),
+        folded: json!({
+            "standing": {
+                my_run.clone(): {"base": ["b1"], "value": {"text": "runs twice a week", "ended": false}},
+                my_shoe.clone(): {"base": ["b2"], "value": {"text": "wears Pegasus 40", "ended": false}}
+            }
+        }),
+    }];
+    let facts = vec![
+        FactIn {
+            memory: "m1-end".into(),
+            text: "stopped running for a bit".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: false,
+            on: vec!["run".into()],
+        },
+        FactIn {
+            memory: "m2-resume".into(),
+            text: "resumed running 3 times a week".into(),
+            happened: None,
+            learned: Some("2026-11-27".into()),
+            replaced: false,
+            on: vec!["run".into()],
+        },
+        FactIn {
+            memory: "m3-replaced".into(),
+            text: "now trains for a half marathon".into(),
+            happened: None,
+            learned: Some("2026-11-27".into()),
+            replaced: true,
+            on: vec!["run".into()],
+        },
+    ];
+    // Fact 1 ends item 1, Fact 2 later sets item 1 -> Fact 2's `set` MUST win (ended=false).
+    // Fact 3 is `replaced: true` with zero actions; top-level `whose` enables fallback row on `run`,
+    // while Fact 1/2 leave `my_shoe` untouched -> `still_so` includes `my_shoe`.
+    let output = json!({
+        "whose": [
+            {"fact": 1, "whose": "them"},
+            {"fact": 2, "whose": "them"},
+            {"fact": 3, "whose": "them"}
+        ],
+        "set": [{"fact": 2, "whose": "them", "item": 1, "text": "runs 3 times a week"}],
+        "end": [{"fact": 1, "whose": "them", "item": 1}],
+        "add": []
+    })
+    .to_string();
+    let res = step_batch_read(BatchStepReadInput {
+        output,
+        sync: site(),
+        facts,
+        known: vec![],
+        nodes,
+    })
+    .unwrap();
+    assert_eq!(res.set_aside, 0);
+    assert_eq!(res.rows.len(), 2);
+    assert_eq!(res.rows[0].body["item"], json!(my_run));
+    assert!(res.rows[0].body.get("ended").is_none());
+    assert_eq!(res.rows[0].body["text"], json!("runs 3 times a week"));
+    assert_eq!(res.rows[0].body["because"], json!(["memory:m2-resume"]));
+    assert_eq!(res.rows[1].node, "run");
+    assert_eq!(res.rows[1].body["text"], json!("now trains for a half marathon"));
+    assert_eq!(res.rows[1].body["because"], json!(["memory:m3-replaced"]));
+    assert!(res.still_so.iter().any(|s| s.memory == "m2-resume" && s.item == my_shoe));
+    assert!(!res.still_so.iter().any(|s| s.memory == "m1-end" && s.item == my_run));
+}
+
+#[test]
+fn stretch_batch_review_edge_cases_do_not_resurrect_bypass_left_or_leak_still_so() {
+    let my_run = item_id("them", "run", "memory:old-run", 0);
+    let my_shoe = item_id("them", "run", "memory:old-shoe", 0);
+    let mom_run = item_id(&whose_key("妈妈").unwrap(), "run", "memory:mom-run", 0);
+    let nodes = vec![NodeIn {
+        id: "run".into(),
+        name: Some("running".into()),
+        kind: Some("topic".into()),
+        folded: json!({
+            "standing": {
+                mom_run.clone(): {"base": ["bm"], "value": {"text": "mom jogs slowly", "ended": false}},
+                my_run.clone(): {"base": ["b1"], "value": {"text": "runs twice a week", "ended": false}},
+                my_shoe.clone(): {"base": ["b2"], "value": {"text": "wears Pegasus 40", "ended": false}}
+            }
+        }),
+    }];
+    // Note `BTreeMap` inside `standing` orders items lexicographically:
+    // find 1-based `shown` indices cleanly.
+    let shown = shown_on("run", &nodes[0].folded);
+    let idx = |id: &str| shown.iter().position(|s| s.item == id).unwrap() + 1;
+    let i_run = idx(&my_run);
+    let i_shoe = idx(&my_shoe);
+    let i_mom = idx(&mom_run);
+
+    let facts = vec![
+        // Fact 1 (replaced) sets my_run, then Fact 2 ends my_run -> Fact 1 MUST NOT trigger replaced fallback.
+        // Fact 1 also tries to set mom's item by copying "妈妈" on the action while top-level whose is "them" -> Left!
+        FactIn {
+            memory: "m1-rep".into(),
+            text: "runs 4 times a week".into(),
+            happened: None,
+            learned: Some("2026-11-26".into()),
+            replaced: true,
+            on: vec!["run".into()],
+        },
+        FactIn {
+            memory: "m2-end".into(),
+            text: "stopped running for winter".into(),
+            happened: None,
+            learned: Some("2026-11-27".into()),
+            replaced: false,
+            on: vec!["run".into()],
+        },
+        // Fact 3 sets my_shoe with blank text -> my_shoe MUST be excluded from Fact 3's still_so,
+        // and Fact 3 MUST NOT mark already-ended my_run as still_so.
+        FactIn {
+            memory: "m3-blank".into(),
+            text: "new running playlist".into(),
+            happened: None,
+            learned: Some("2026-11-27".into()),
+            replaced: false,
+            on: vec!["run".into()],
+        },
+    ];
+    let output = json!({
+        "whose": [
+            {"fact": 1, "whose": "them"},
+            {"fact": 2, "whose": "them"},
+            {"fact": 3, "whose": "them"}
+        ],
+        "set": [
+            {"fact": 1, "whose": "them", "item": i_run, "text": "runs 4 times"},
+            {"fact": 1, "whose": "妈妈", "item": i_mom, "text": "spoofed"},
+            {"fact": 3, "whose": "them", "item": i_shoe, "text": "   "}
+        ],
+        "end": [{"fact": 2, "whose": "them", "item": i_run}],
+        "add": []
+    })
+    .to_string();
+    let res = step_batch_read(BatchStepReadInput {
+        output,
+        sync: site(),
+        facts,
+        known: vec![],
+        nodes,
+    })
+    .unwrap();
+    assert_eq!(res.left.len(), 1, "top-level whose anchored Left guard");
+    assert_eq!(res.left[0].item, mom_run);
+    assert_eq!(res.rows.len(), 1, "no duplicate replaced fallback row from m1-rep");
+    assert_eq!(res.rows[0].body["because"], json!(["memory:m2-end"]));
+    assert_eq!(res.rows[0].body["ended"], json!(true));
+    assert!(!res.still_so.iter().any(|s| s.memory == "m3-blank"));
+}
