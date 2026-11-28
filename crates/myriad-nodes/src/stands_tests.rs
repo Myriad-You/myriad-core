@@ -77,6 +77,12 @@ fn whose_life_an_item_is_reads_back_from_its_id() {
     assert_ne!(whose_key("them们"), Some("them".into()));
     assert_ne!(whose_key("them's mom"), Some("them".into()));
     assert_ne!(whose_key("them’s 妈妈"), Some("them".into()));
+    // Written full width, the same.
+    assert_eq!(whose_key("ｔｈｅｍ"), Some("them".into()));
+    assert_eq!(whose_key("ＴＨＥＭ，与朋友"), Some("them".into()));
+    assert_eq!(whose_key("ｔｈｅｍ（和妈妈）"), Some("them".into()));
+    assert_ne!(whose_key("ｔｈｅｍｉｓ"), Some("them".into()));
+    assert_ne!(whose_key("ｔｈｅｍ＇ｓ mom"), Some("them".into()));
     assert_eq!(whose_key("  "), None);
     // A rule's item is not one of hers.
     assert_eq!(whose_of("now"), None);

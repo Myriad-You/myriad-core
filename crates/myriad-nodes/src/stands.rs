@@ -140,16 +140,18 @@ pub fn where_it_starts<'a>(asked: &str, may: &'a [String], own: &'a [String]) ->
 /// characters. `None` for no name. `them` with more after it (「them，与朋友」,
 /// `them and Mei`: something they share, said with whom) is still them;
 /// a name that only begins so (`Themis`), or someone of theirs
-/// (`them's mom`), is not.
+/// (`them's mom`), is not. Written full width (`ｔｈｅｍ`), it is read as
+/// written half width ([`narrow`]).
 pub fn whose_key(whose: &str) -> Option<String> {
     let whose = whose.trim();
     if whose.is_empty() {
         return None;
     }
-    let them = whose
+    let narrowed: String = whose.chars().map(narrow).collect();
+    let them = narrowed
         .get(..4)
         .is_some_and(|head| head.eq_ignore_ascii_case("them"))
-        && whose[4..]
+        && narrowed[4..]
             .chars()
             .next()
             .is_none_or(|next| !next.is_alphanumeric() && !matches!(next, '\'' | '’'));
@@ -201,13 +203,19 @@ fn folded_name(name: &str) -> String {
     name.trim()
         .chars()
         .take(NAME_CHARS)
-        .map(|ch| match ch {
-            '\u{ff01}'..='\u{ff5e}' => char::from_u32(ch as u32 - 0xfee0).unwrap_or(ch),
-            '\u{3000}' => ' ',
-            _ => ch,
-        })
+        .map(narrow)
         .map(|ch| ch.to_ascii_lowercase())
         .collect()
+}
+
+/// `ch` written half width: a full-width letter, digit or sign as its
+/// ASCII one, the ideographic space as a space; any other as it is.
+fn narrow(ch: char) -> char {
+    match ch {
+        '\u{ff01}'..='\u{ff5e}' => char::from_u32(ch as u32 - 0xfee0).unwrap_or(ch),
+        '\u{3000}' => ' ',
+        _ => ch,
+    }
 }
 
 /// Who a `whose` key stands for, as [`Whom`] tells it.
