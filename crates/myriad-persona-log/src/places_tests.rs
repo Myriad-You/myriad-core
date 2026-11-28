@@ -50,7 +50,7 @@ fn newer() -> Row {
     row("m1", 1, "node:a", "node.from_a_newer_core")
 }
 
-fn admitted(rows: Vec<Row>, holder: Holder, known: BTreeMap<String, String>) -> Admitted {
+fn admit_as(rows: Vec<Row>, holder: Holder, known: BTreeMap<String, String>) -> Admitted {
     admit(AdmitInput {
         rows,
         now: 1_760_000_100_000_000,
@@ -75,7 +75,7 @@ fn merged(log: Vec<Row>, incoming: Vec<Row>) -> Merged {
 }
 
 fn take(log: Vec<Row>, rows: Vec<Row>, side: Holder) -> Vec<Row> {
-    let admitted = admitted(rows, side, BTreeMap::new());
+    let admitted = admit_as(rows, side, BTreeMap::new());
     merged(log, admitted.accepted).log
 }
 
@@ -91,7 +91,7 @@ fn folded(rows: Vec<Row>) -> Folded {
 
 #[test]
 fn a_row_refused_for_good_is_taken_as_its_place_and_still_listed() {
-    let admitted = admitted(
+    let admitted = admit_as(
         vec![newer(), row("m2", 2, "node:a", "node.noted")],
         holder(Core::Server),
         BTreeMap::new(),
@@ -119,7 +119,7 @@ fn a_row_refused_for_good_is_taken_as_its_place_and_still_listed() {
     let mut moved = newer();
     moved.kind = "node.noted".into();
     let known = BTreeMap::from([("node:a".to_string(), "own:".to_string())]);
-    let admitted = admitted(vec![moved.clone()], holder(Core::Server), known);
+    let admitted = admit_as(vec![moved.clone()], holder(Core::Server), known);
     assert_eq!(admitted.refused[0].reason, Reason::AudienceChanged);
     assert!(admitted.refused[0].placed);
     assert_eq!(admitted.accepted, vec![moved.place_of_refused().unwrap()]);
@@ -169,7 +169,7 @@ fn a_row_refused_for_now_or_with_no_place_takes_none() {
         (group, Core::Pc),
     ] {
         assert!(one.place_of_refused().is_none() || side == Core::Pc, "{one:?}");
-        let admitted = admitted(vec![one.clone()], holder(side), BTreeMap::new());
+        let admitted = admit_as(vec![one.clone()], holder(side), BTreeMap::new());
         assert!(admitted.accepted.is_empty(), "{one:?}: {:?}", admitted.accepted);
         assert!(!admitted.refused[0].placed);
     }
@@ -274,8 +274,7 @@ fn only_a_place_is_about_a_refused_row_and_it_says_nothing() {
     local.dseq = None;
     let mut about = place.clone();
     about.subject = Some(PARTNER.into());
-    let mut noted = row("m9", 9, "refused:m1", "node.noted");
-    noted.object = "refused:m1".into();
+    let noted = row("m9", 9, "refused:m1", "node.noted");
     let mut noting = noted.clone();
     noting.kind = "link.attach".into();
     for (name, one) in [

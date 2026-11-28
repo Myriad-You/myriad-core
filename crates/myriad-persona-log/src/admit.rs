@@ -225,11 +225,12 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
                   row: &Row,
                   reason: Reason,
                   detail: Option<String>| {
-        let place = reason
-            .lasting()
-            .then(|| row.place_of_refused())
-            .flatten()
-            .filter(|place| holder.holds_row(place));
+        let place = match reason.lasting() {
+            true => row
+                .place_of_refused()
+                .filter(|place| holder.holds_row(place)),
+            false => None,
+        };
         let placed = place.is_some();
         accepted.extend(place);
         Refusal {

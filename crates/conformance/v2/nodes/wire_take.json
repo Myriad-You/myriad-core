@@ -3814,7 +3814,44 @@
         "peer": "partner_0199d5c0b00044444444444444444444"
       },
       "name": "a row refused for good is taken as its place, its body left behind; the row past it is taken",
-      "output": null
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "log.refused",
+            "object": "refused:p-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "detail": "kind \"node.from_a_newer_core\" is not one the log holds",
+            "id": "p-1",
+            "placed": true,
+            "reason": "envelope"
+          }
+        ]
+      }
     }
   ],
   "version": 1

@@ -1628,7 +1628,22 @@
         }
       },
       "name": "a refused row's place",
-      "output": null
+      "output": {
+        "canonical": "{\"audience\":\"personal:partner_0199d5c0b00044444444444444444444\",\"author\":\"owner\",\"dseq\":1,\"hlc\":\"001760000000001-000000-dev_mac\",\"id\":\"p-1\",\"kind\":\"log.refused\",\"object\":\"refused:p-1\",\"origin\":\"dev_mac\",\"replicate\":\"shared\",\"version\":1}",
+        "digest": "f88421b7b0b61afe319b169bdc402edd",
+        "row": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "author": "owner",
+          "dseq": 1,
+          "hlc": "001760000000001-000000-dev_mac",
+          "id": "p-1",
+          "kind": "log.refused",
+          "object": "refused:p-1",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      }
     },
     {
       "input": {
@@ -1646,7 +1661,9 @@
         }
       },
       "name": "refused: a place about another row",
-      "output": null
+      "output": {
+        "error": "bad_input"
+      }
     },
     {
       "input": {
@@ -1667,7 +1684,9 @@
         }
       },
       "name": "refused: a kind about anything about a refused row",
-      "output": null
+      "output": {
+        "error": "bad_input"
+      }
     }
   ],
   "version": 1

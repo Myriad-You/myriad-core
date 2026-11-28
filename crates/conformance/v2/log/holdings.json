@@ -274,7 +274,11 @@
         ]
       },
       "name": "a refused row's place holds its count like any row",
-      "output": null
+      "output": {
+        "vector": {
+          "dev_mac": 2
+        }
+      }
     }
   ],
   "version": 1

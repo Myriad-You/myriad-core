@@ -1976,7 +1976,17 @@
         ]
       },
       "name": "a refused row's place folds to nothing",
-      "output": null
+      "output": {
+        "objects": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "object": "node:a",
+            "rows": [
+              "p-2"
+            ]
+          }
+        ]
+      }
     }
   ],
   "version": 1
