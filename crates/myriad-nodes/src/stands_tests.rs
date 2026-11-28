@@ -127,6 +127,7 @@ fn read(step: &StepInput, answer: Value) -> StepRead {
         fact: step.fact.clone(),
         known: step.known.clone(),
         nodes: step.nodes.clone(),
+        people: step.people.clone(),
     })
     .unwrap()
 }
@@ -154,6 +155,7 @@ fn a_change_is_written_where_the_item_stands_and_only_of_whose_life_it_is() {
             node("food", "饮食口味", folded(&[])),
             node("far", "不相干", folded(&[])),
         ],
+        people: Vec::new(),
     };
     let asked = step_prepare(step.clone()).unwrap();
     assert!(!asked.skip);
@@ -226,6 +228,7 @@ fn a_change_is_written_where_the_item_stands_and_only_of_whose_life_it_is() {
         fact: step.fact.clone(),
         known: step.known.clone(),
         nodes: step.nodes.clone(),
+        people: step.people.clone(),
     })
     .unwrap();
     assert!(got.unreadable && got.rows.is_empty());
@@ -257,6 +260,7 @@ fn what_a_fact_was_put_to_and_left_standing_is_said_back() {
             ),
             node("work", "工作", folded(&[(&job, "在会展公司做策划", false)])),
         ],
+        people: Vec::new(),
     };
     let still = |got: &StepRead| -> Vec<String> {
         let mut items: Vec<String> = got
@@ -368,6 +372,7 @@ fn a_replacing_fact_starting_what_a_build_gave_it_says_nothing_still_holds() {
             "日常",
             folded(&[(&built, "改成游泳了", false), (&other, "睡前读书", false)]),
         )],
+        people: Vec::new(),
     };
     step.fact.replaced = true;
     let got = read(
@@ -393,6 +398,7 @@ fn a_change_the_rules_refuse_is_set_aside_and_the_rest_are_written() {
         fact: fact("m1", "膝盖伤了\u{7}不跑了", &["run"]),
         known: Vec::new(),
         nodes: vec![node("run", "跑步", folded(&[(&run, "每周三夜跑", false)]))],
+        people: Vec::new(),
     };
     let got = read(
         &step,
@@ -421,6 +427,7 @@ fn since_is_when_it_happened_else_the_day_she_was_told() {
         },
         known: Vec::new(),
         nodes: vec![node("commute", "通勤", folded(&[]))],
+        people: Vec::new(),
     };
     let got = read(
         &step,
@@ -479,6 +486,7 @@ fn what_replaced_something_stands_on_its_own_node_when_nothing_else_does() {
         },
         known: Vec::new(),
         nodes: vec![node("own", "跑步", folded(&[]))],
+        people: Vec::new(),
     };
     let empty = json!({"whose": "them", "set": [], "end": [], "add": []});
     let got = read(&step, empty.clone());
@@ -501,6 +509,7 @@ fn a_fact_on_no_node_with_nothing_brought_to_mind_asks_nothing() {
             on: Vec::new(),
         }],
         nodes: Vec::new(),
+        people: Vec::new(),
     };
     assert!(step_prepare(step).unwrap().skip);
 }
@@ -849,6 +858,7 @@ fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_
         }],
         known: vec![],
         nodes: nodes.clone(),
+        people: Vec::new(),
     })
     .unwrap();
     assert!(nowhere_isolated.skip);
@@ -868,6 +878,7 @@ fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_
             on: vec!["run".into()],
         }],
         nodes: nodes.clone(),
+        people: Vec::new(),
     })
     .unwrap();
     assert!(!nowhere_via_known.skip);
@@ -912,6 +923,7 @@ fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_
         facts: facts.clone(),
         known: vec![],
         nodes: nodes.clone(),
+        people: Vec::new(),
     })
     .unwrap();
     assert!(!prep.skip);
@@ -943,6 +955,7 @@ fn stretch_batch_handles_nowhere_via_known_strict_refs_whose_guard_and_set_then_
         facts,
         known: vec![],
         nodes,
+        people: Vec::new(),
     })
     .unwrap();
     assert_eq!(res.set_aside, 1);
@@ -1017,6 +1030,7 @@ fn stretch_batch_respects_fact_order_and_top_level_whose_for_replaced_fallback_a
         facts,
         known: vec![],
         nodes,
+        people: Vec::new(),
     })
     .unwrap();
     assert_eq!(res.set_aside, 0);
@@ -1108,6 +1122,7 @@ fn stretch_batch_review_edge_cases_do_not_resurrect_bypass_left_or_leak_still_so
         facts,
         known: vec![],
         nodes,
+        people: Vec::new(),
     })
     .unwrap();
     assert_eq!(res.left.len(), 1, "top-level whose anchored Left guard");
@@ -1116,4 +1131,63 @@ fn stretch_batch_review_edge_cases_do_not_resurrect_bypass_left_or_leak_still_so
     assert_eq!(res.rows[0].body["because"], json!(["memory:m2-end"]));
     assert_eq!(res.rows[0].body["ended"], json!(true));
     assert!(!res.still_so.iter().any(|s| s.memory == "m3-blank"));
+}
+
+/// A name is read as the same but for ASCII case and full or half width,
+/// and nothing more loosely.
+#[test]
+fn a_name_is_the_same_but_for_case_and_width() {
+    assert_eq!(folded_name("Mom"), folded_name("ｍｏｍ"));
+    assert_eq!(folded_name("MOM"), folded_name("mom"));
+    assert_eq!(folded_name("Ａｎｎ　Ｌｅｅ"), folded_name("ann lee"));
+    assert_eq!(folded_name("小林１"), folded_name("小林1"));
+    assert_ne!(folded_name("妈妈"), folded_name("老妈"));
+    assert_ne!(folded_name("Mom"), folded_name("Mum"));
+    assert_ne!(folded_name("Mom"), folded_name("Moms"));
+    // Only what an item's id keeps counts.
+    assert_eq!(folded_name("一二三四五六七八九"), folded_name("一二三四五六七八十"));
+}
+
+/// Two keys are one person by case and width, or by one person's names;
+/// a name two people go by is neither's, and "them" is no one else.
+#[test]
+fn two_keys_are_one_person_only_by_case_width_or_one_persons_names() {
+    let key = |name: &str| whose_key(name).unwrap();
+    let person = |name: &str, aliases: &[&str]| PersonIn {
+        name: name.into(),
+        aliases: names(aliases),
+    };
+    let none = Whom::new(&[]);
+    assert!(none.same(&key("Mom"), &key("ｍｏｍ")));
+    assert!(!none.same(&key("妈妈"), &key("老妈")));
+    assert!(!none.same(&key("them"), &key("Them's mom")));
+    let people = [person("妈妈", &["老妈", "Mom"]), person("小林", &["林林"])];
+    let whom = Whom::new(&people);
+    assert!(whom.same(&key("妈妈"), &key("老妈")));
+    assert!(whom.same(&key("妈妈"), &key("MOM")));
+    assert!(!whom.same(&key("妈妈"), &key("林林")));
+    assert!(!whom.same(&key("them"), &key("妈妈")));
+    // 老妈 is both of theirs: neither's, nor case-folded into either.
+    let both = [person("妈妈", &["老妈"]), person("婆婆", &["老妈"])];
+    let whom = Whom::new(&both);
+    assert!(!whom.same(&key("妈妈"), &key("老妈")));
+    assert!(!whom.same(&key("婆婆"), &key("老妈")));
+    assert!(whom.same(&key("老妈"), &key("老妈")));
+    let cased = [person("Mom", &[]), person("mom", &[])];
+    assert!(!Whom::new(&cased).same(&key("Mom"), &key("mom")));
+    // Read as the key already there, else as the name their node goes by.
+    let mama = item_id(&key("妈妈"), "mom", "m0", 0);
+    let shown = [Shown {
+        node: "mom".into(),
+        item: mama,
+        text: "妈妈在社区合唱团唱歌".into(),
+        base: Vec::new(),
+    }];
+    let whom = Whom::new(&people);
+    assert_eq!(whom.key_of("老妈", &shown, &people), Some(key("妈妈")));
+    assert_eq!(whom.key_of("Mom", &[], &people), Some(key("妈妈")));
+    assert_eq!(whom.key_of("林林", &shown, &people), Some(key("小林")));
+    assert_eq!(whom.key_of("阿姨", &shown, &people), Some(key("阿姨")));
+    assert_eq!(whom.key_of("them", &shown, &people), Some("them".into()));
+    assert_eq!(Whom::new(&both).key_of("老妈", &shown, &both), Some(key("老妈")));
 }

@@ -754,6 +754,543 @@
     {
       "input": {
         "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "Mom swims every morning now instead of walking"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "p4d6f6d-0123456789": {
+                  "base": [
+                    "u-p4d6f6d-0123456789"
+                  ],
+                  "value": {
+                    "text": "Mom walks every morning"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "Mom"
+          }
+        ],
+        "output": "{\"whose\": \"ｍｏｍ\", \"set\": [{\"item\": 1, \"text\": \"Mom swims every morning\"}], \"end\": [], \"add\": []}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a later fact calling them in another case or width still changes their item (Mom, ｍｏｍ, MOM)",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [
+                "u-p4d6f6d-0123456789"
+              ],
+              "because": [
+                "memory:m2"
+              ],
+              "item": "p4d6f6d-0123456789",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "Mom swims every morning",
+              "version": 1
+            },
+            "id": "ue442eaa00ef199b5e62691c9",
+            "kind": "node.standing",
+            "node": "mom"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m3",
+          "on": [
+            "mom"
+          ],
+          "text": "Mom got a pool pass"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "p4d6f6d-0123456789": {
+                  "base": [
+                    "u-p4d6f6d-0123456789"
+                  ],
+                  "value": {
+                    "text": "Mom walks every morning"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "Mom"
+          }
+        ],
+        "output": "{\"whose\": \"MOM\", \"set\": [], \"end\": [], \"add\": [{\"topic\": \"Mom\", \"text\": \"Mom has a pool pass\"}]}",
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "something a name written another way starts stands under the key already there (MOM is Mom)",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m3"
+              ],
+              "item": "p4d6f6d-fd9a66f490",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "Mom has a pool pass",
+              "version": 1
+            },
+            "id": "u380d5ca89664c18829f7541c",
+            "kind": "node.standing",
+            "node": "mom"
+          }
+        ],
+        "setAside": 0,
+        "stillSo": [
+          {
+            "item": "p4d6f6d-0123456789",
+            "node": "mom"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "老妈不去合唱团了，改学太极"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "妈妈在社区合唱团唱歌"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"老妈\", \"set\": [], \"end\": [1], \"add\": [{\"topic\": \"妈妈\", \"text\": \"老妈在学太极\"}]}",
+        "people": [
+          {
+            "aliases": [
+              "Mom",
+              "老妈"
+            ],
+            "name": "妈妈"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "one of a person's other names ends what stands under the name their node goes by (老妈 is 妈妈)",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [
+                "u-pe5a688e5a688-abcdef0123"
+              ],
+              "because": [
+                "memory:m2"
+              ],
+              "ended": true,
+              "item": "pe5a688e5a688-abcdef0123",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "老妈不去合唱团了，改学太极",
+              "version": 1
+            },
+            "id": "ufc6ae984c85091eba1947820",
+            "kind": "node.standing",
+            "node": "mom"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m2"
+              ],
+              "item": "pe5a688e5a688-ce430955ba",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "老妈在学太极",
+              "version": 1
+            },
+            "id": "u17baa9e7380c2826857cb141",
+            "kind": "node.standing",
+            "node": "mom"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "老妈这周去看了牙医"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "妈妈在社区合唱团唱歌"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"老妈\", \"set\": [], \"end\": [], \"add\": []}",
+        "people": [
+          {
+            "aliases": [
+              "Mom",
+              "老妈"
+            ],
+            "name": "妈妈"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a fact naming a person by an other name says back their items that still hold",
+      "output": {
+        "left": [],
+        "rows": [],
+        "setAside": 0,
+        "stillSo": [
+          {
+            "item": "pe5a688e5a688-abcdef0123",
+            "node": "mom"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "Mom started tai chi on Sundays"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {}
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"mom\", \"set\": [], \"end\": [], \"add\": [{\"topic\": \"妈妈\", \"text\": \"Mom does tai chi on Sundays\"}]}",
+        "people": [
+          {
+            "aliases": [
+              "Mom",
+              "老妈"
+            ],
+            "name": "妈妈"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "what an other name starts where nothing of that person stands yet is under the name their node goes by",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m2"
+              ],
+              "item": "pe5a688e5a688-ce430955ba",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "Mom does tai chi on Sundays",
+              "version": 1
+            },
+            "id": "u17baa9e7380c2826857cb141",
+            "kind": "node.standing",
+            "node": "mom"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "老妈不去合唱团了"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "妈妈在社区合唱团唱歌"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"老妈\", \"set\": [], \"end\": [1], \"add\": []}",
+        "people": [
+          {
+            "aliases": [
+              "老妈"
+            ],
+            "name": "妈妈"
+          },
+          {
+            "aliases": [
+              "老妈"
+            ],
+            "name": "婆婆"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "a name two people go by is neither's: their item is left as it is",
+      "output": {
+        "left": [
+          {
+            "factWhose": "pe88081e5a688",
+            "item": "pe5a688e5a688-abcdef0123",
+            "itemWhose": "pe5a688e5a688"
+          }
+        ],
+        "rows": [],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "mom stopped walking"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "p4d6f6d-0123456789": {
+                  "base": [
+                    "u-p4d6f6d-0123456789"
+                  ],
+                  "value": {
+                    "text": "Mom walks every morning"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "Mom"
+          }
+        ],
+        "output": "{\"whose\": \"mom\", \"set\": [], \"end\": [1], \"add\": []}",
+        "people": [
+          {
+            "name": "Mom"
+          },
+          {
+            "aliases": [
+              "Mom's mom"
+            ],
+            "name": "mom"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "names only case apart that are two people's stay two people",
+      "output": {
+        "left": [
+          {
+            "factWhose": "p6d6f6d",
+            "item": "p4d6f6d-0123456789",
+            "itemWhose": "p4d6f6d"
+          }
+        ],
+        "rows": [],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
+          "learned": "2026-11-20",
+          "memory": "m2",
+          "on": [
+            "mom"
+          ],
+          "text": "林林搬去了上海"
+        },
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "妈妈在社区合唱团唱歌"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": \"林林\", \"set\": [{\"item\": 1, \"text\": \"妈妈搬去了上海\"}], \"end\": [], \"add\": []}",
+        "people": [
+          {
+            "aliases": [
+              "老妈"
+            ],
+            "name": "妈妈"
+          },
+          {
+            "aliases": [
+              "林林"
+            ],
+            "name": "小林"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "another person the end knows is not told one with them by their other names",
+      "output": {
+        "left": [
+          {
+            "factWhose": "pe5b08fe69e97",
+            "item": "pe5a688e5a688-abcdef0123",
+            "itemWhose": "pe5a688e5a688"
+          }
+        ],
+        "rows": [],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "fact": {
           "happened": "2026-10",
           "learned": "2026-11-12",
           "memory": "m1",
