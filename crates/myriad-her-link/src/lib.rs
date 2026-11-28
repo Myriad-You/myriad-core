@@ -470,11 +470,13 @@ pub fn call_receive(
 /// `providing` is what the host says it provides on this link
 /// (`call.granted.providing`), `[(name, version)]`. The host is the one that
 /// grants, so what it provides is both what it can do and what is granted:
-/// it never holds an ask. An action the contract has the host do but it does
-/// not provide on this link is one it refuses, `call_not_granted`; a device's
-/// action, or one the contract does not register, is `call_unknown`, even
-/// when `providing` names it: only the host's own actions are its to do. Then
-/// the version, the audience and the deadline as for any receiver.
+/// it never holds an ask. A device's action, or one the contract does not
+/// register, is `call_unknown`, even when `providing` names it: only the
+/// host's own actions are its to do. An action the contract has the host do
+/// but it does not provide on this link is one it refuses: it goes into
+/// `refused`, so the order stays [`call_receive`]'s, the version and the
+/// audience first (`version_unsupported`, `wrong_audience`), then
+/// `call_not_granted`, then the deadline.
 pub fn host_call_receive(
     action: &str,
     version: u64,

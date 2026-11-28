@@ -232,7 +232,7 @@ hello 里的 `capabilities` 是这一端能做什么。主机照它发帧，所�
 
 | 目录 | 管什么 | 哪一层要跑 |
 | --- | --- | --- |
-| `v1/link/` | 帧的检查（`check.json`）、收到调用怎么判（`call_receive.json`） | 都跑 |
+| `v1/link/` | 帧的检查（`check.json`）、收到调用怎么判（`call_receive.json`）；主机收到设备的调用怎么判（`host_call_receive.json`） | 都跑；`host_call_receive.json` 只有主机跑 |
 | `v2/log/` | 信封、版本向量、收、合并、折叠、时钟 | 第 3 层 |
 | `v2/nodes/` | 节点的规则，包括端之间的发和收 | 第 3 层 |
 | `v1/partner/` | 伙伴的 id | 第 3 层 |
@@ -275,7 +275,7 @@ git log 529c98f..<要钉的提交> -- crates/myriad-link-child crates/myriad-her
 - [ ] 经 C 入口时：时间是微秒；某一步失败就留着旧状态；JSON 库把数都当双精度的，两个调用都带 `text: true`。
 - [ ] 拿到 `unsent` 告诉主人这句没发出去；拿到 `unread` 记日志、提示版本不齐。例外：没开口子的端在账号同步时收到的 `lease.epoch` 也是 `unread`（`unknown_frame`），那不是版本不齐，按类型记一次就行（见「先定你是哪一种端」）。
 - [ ] 能力清单的测试：`link.child_claims` 的 `unread` 是空的。
-- [ ] `v1/child/` 里不带 `passthrough` 的剧本全过；`v1/link/` 的用例全过。
+- [ ] `v1/child/` 里不带 `passthrough` 的剧本全过；`v1/link/` 的用例全过（`host_call_receive.json` 是主机的，子机不跑）。
 
 第 2 层（加调用）：
 

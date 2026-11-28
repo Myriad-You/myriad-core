@@ -529,8 +529,8 @@ func step(_ event: JSON) throws {
 
 - 输入：`action`、`version`、`for`、`deadlineAt`、`takenAt` 同上；`providing` 是主机在这条连接上说提供的（`call.granted` 的 `providing`），`[{name, version}]`，每次都要写，什么都不提供就给空列表。
 - 主机就是授予的一方：它提供的就是它会做的、也是授予的，所以永远不会 `hold`。
-- 契约里登记由主机做、这条连接上没提供的动作，算主机会做但现在不让：`call_not_granted`。设备的动作、契约没登记的动作，即使写在 `providing` 里也不算主机的：`call_unknown`。
-- 之后的版本、受众、期限和 `call_receive` 的第 2、3、6 步一样。对照例子在 `crates/conformance/v1/link/host_call_receive.json`。
+- 设备的动作、契约没登记的动作，即使写在 `providing` 里也不算主机的：`call_unknown`（第 1 步）。
+- 契约里登记由主机做、这条连接上没提供的动作放进 `refused`，算主机会做但现在不让。判的顺序还是 `call_receive` 的：先第 2、3 步判版本和受众（问的版本契约里没有答 `version_unsupported`，不是给这个对象的答 `wrong_audience`），再第 5 步答 `call_not_granted`，最后第 6 步期限。对照例子在 `crates/conformance/v1/link/host_call_receive.json`。
 
 ### 能力清单要是真的
 

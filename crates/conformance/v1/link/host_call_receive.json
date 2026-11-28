@@ -225,6 +225,34 @@
     {
       "input": {
         "action": "model.chat",
+        "deadlineAt": 1760140830000,
+        "for": {
+          "kind": "owner"
+        },
+        "providing": [
+          {
+            "name": "model.chat",
+            "version": 1
+          },
+          {
+            "name": "model.chat",
+            "version": 2
+          }
+        ],
+        "takenAt": 1760140800000,
+        "version": 1
+      },
+      "name": "do: the host provides an action at two versions, and the one asked of it is done",
+      "output": {
+        "code": null,
+        "deadlineAt": 1760140830000,
+        "verdict": "do",
+        "version": 1
+      }
+    },
+    {
+      "input": {
+        "action": "model.chat",
         "deadlineAt": 1760141400000,
         "for": {
           "kind": "owner"
