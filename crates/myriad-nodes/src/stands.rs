@@ -17,7 +17,11 @@
 //!   person as they called them. Something they share with someone (calls,
 //!   visits, living apart) is theirs. The answer says whose life the fact
 //!   tells of; an item of anyone else is left as it is, and each one left
-//!   is said back ([`Left`]) for the end to note, ids and keys only.
+//!   is said back ([`Left`]) for the end to note, ids and keys only. One
+//!   person called two ways is one: the same name but for case and width
+//!   (`Mom`, `mom`, `ｍｏｍ`), or two names of one person the end keeps a
+//!   node for (`people`: 妈妈, 老妈). Nothing looser; a name two of them go
+//!   by is neither's ([`Whom`]).
 //! - **Since when** what it tells of happened; else the day she was told.
 //!   A day after the one she was told (a plan, a deadline) is when it is
 //!   due, not when it stood from: it stands since the day she was told.
@@ -136,16 +140,18 @@ pub fn where_it_starts<'a>(asked: &str, may: &'a [String], own: &'a [String]) ->
 /// characters. `None` for no name. `them` with more after it (「them，与朋友」,
 /// `them and Mei`: something they share, said with whom) is still them;
 /// a name that only begins so (`Themis`), or someone of theirs
-/// (`them's mom`), is not.
+/// (`them's mom`), is not. Written full width (`ｔｈｅｍ`), it is read as
+/// written half width ([`narrow`]).
 pub fn whose_key(whose: &str) -> Option<String> {
     let whose = whose.trim();
     if whose.is_empty() {
         return None;
     }
-    let them = whose
+    let narrowed: String = whose.chars().map(narrow).collect();
+    let them = narrowed
         .get(..4)
         .is_some_and(|head| head.eq_ignore_ascii_case("them"))
-        && whose[4..]
+        && narrowed[4..]
             .chars()
             .next()
             .is_none_or(|next| !next.is_alphanumeric() && !matches!(next, '\'' | '’'));
@@ -175,6 +181,119 @@ pub fn whose_of(item: &str) -> Option<(String, String)> {
     }
     let bytes = unhex(key.strip_prefix('p')?)?;
     Some((key.into(), String::from_utf8(bytes).ok()?))
+}
+
+/// One of the people of theirs the end keeps a node for: the name the node
+/// goes by and its other names (`aliases`), as the node's head has them.
+/// What tells that two names in `whose` are one person ([`Whom`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct PersonIn {
+    pub name: String,
+    #[serde(default)]
+    pub aliases: Vec<String>,
+}
+
+/// A name as an item's id keeps it ([`NAME_CHARS`]), read so that the same
+/// name written another way is the same: full-width letters, digits and
+/// signs as their ASCII ones, the ideographic space as a space, ASCII
+/// letters in lower case. Nothing else: 妈妈 and 老妈 are one person only
+/// when a person's names say so ([`PersonIn`]).
+fn folded_name(name: &str) -> String {
+    name.trim()
+        .chars()
+        .take(NAME_CHARS)
+        .map(narrow)
+        .map(|ch| ch.to_ascii_lowercase())
+        .collect()
+}
+
+/// `ch` written half width: a full-width letter, digit or sign as its
+/// ASCII one, the ideographic space as a space; any other as it is.
+fn narrow(ch: char) -> char {
+    match ch {
+        '\u{ff01}'..='\u{ff5e}' => char::from_u32(ch as u32 - 0xfee0).unwrap_or(ch),
+        '\u{3000}' => ' ',
+        _ => ch,
+    }
+}
+
+/// Who a `whose` key stands for, as [`Whom`] tells it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Someone {
+    Them,
+    /// One of the people the end gave, by its place among them.
+    Person(usize),
+    /// A name none of them goes by, folded ([`folded_name`]).
+    Named(String),
+    /// A name more than one of them goes by: only that very key is them.
+    Only(String),
+}
+
+/// Tells whether two keys of whose a life is ([`whose_key`]) are one
+/// person: the same key; else the same name written another way
+/// ([`folded_name`]); else two names of one of `people`. A name two of
+/// them go by is neither's: two people are never told one.
+struct Whom {
+    /// Each person's names, folded.
+    people: Vec<Vec<String>>,
+}
+
+impl Whom {
+    fn new(people: &[PersonIn]) -> Self {
+        Whom {
+            people: people
+                .iter()
+                .map(|person| {
+                    std::iter::once(&person.name)
+                        .chain(&person.aliases)
+                        .map(|name| folded_name(name))
+                        .filter(|name| !name.is_empty())
+                        .collect()
+                })
+                .collect(),
+        }
+    }
+
+    fn of(&self, key: &str) -> Option<Someone> {
+        if key == "them" {
+            return Some(Someone::Them);
+        }
+        let name = String::from_utf8(unhex(key.strip_prefix('p')?)?).ok()?;
+        let folded = folded_name(&name);
+        let mut hits = (0..self.people.len()).filter(|n| self.people[*n].contains(&folded));
+        Some(match (hits.next(), hits.next()) {
+            (Some(one), None) => Someone::Person(one),
+            (None, _) => Someone::Named(folded),
+            (Some(_), Some(_)) => Someone::Only(key.to_string()),
+        })
+    }
+
+    /// Whether keys `one` and `other` are one person's.
+    fn same(&self, one: &str, other: &str) -> bool {
+        one == other || self.of(one).is_some_and(|one| self.of(other) == Some(one))
+    }
+
+    /// The key of the person `whose` names, as `shown` already has it: the
+    /// very key when an item has it; else the first item's that is the same
+    /// person; else, of one of the people, the key of the name their node
+    /// goes by; else its own. `None` for no name.
+    fn key_of(&self, whose: &str, shown: &[Shown], people: &[PersonIn]) -> Option<String> {
+        let key = whose_key(whose)?;
+        let theirs = || shown.iter().filter_map(|one| whose_of(&one.item)).map(|(key, _)| key);
+        if key == "them" || theirs().any(|one| one == key) {
+            return Some(key);
+        }
+        if let Some(found) = theirs().find(|one| self.same(one, &key)) {
+            return Some(found);
+        }
+        if let Some(Someone::Person(n)) = self.of(&key)
+            && let Some(named) = whose_key(&people[n].name).filter(|named| self.same(named, &key))
+        {
+            return Some(named);
+        }
+        Some(key)
+    }
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -497,6 +616,12 @@ pub struct StepInput {
     pub known: Vec<KnownIn>,
     #[serde(default)]
     pub nodes: Vec<NodeIn>,
+    /// The people of theirs the end keeps nodes for, each with its names:
+    /// a fact naming one of them another way still changes what stands of
+    /// them ([`Whom`]). None given: a name is one person only as it is
+    /// written, but for case and width.
+    #[serde(default)]
+    pub people: Vec<PersonIn>,
 }
 
 /// What to ask: nothing when the fact may change no node.
@@ -608,6 +733,8 @@ pub struct StepReadInput {
     pub known: Vec<KnownIn>,
     #[serde(default)]
     pub nodes: Vec<NodeIn>,
+    #[serde(default)]
+    pub people: Vec<PersonIn>,
 }
 
 /// What an answer comes to: the rows to write, the items left as another
@@ -647,8 +774,14 @@ pub fn step_read(input: StepReadInput) -> Result<StepRead, NodeError> {
         fact,
         known,
         nodes,
+        people,
     } = input;
-    let step = StepInput { fact, known, nodes };
+    let step = StepInput {
+        fact,
+        known,
+        nodes,
+        people,
+    };
     check_step(&step)?;
     let Some(answer) = answer_of(&output) else {
         return Ok(StepRead {
@@ -660,9 +793,8 @@ pub fn step_read(input: StepReadInput) -> Result<StepRead, NodeError> {
     let fact = &step.fact;
     let decided = decide(
         &answer,
-        &shaped.shown,
-        &shaped.may,
-        shaped.own,
+        &shaped,
+        &step.people,
         &fact.text,
         &fact.memory,
         fact.replaced,
@@ -686,21 +818,27 @@ struct Decided {
     still_so: Vec<StillSo>,
 }
 
-/// What a fact (`memory`, said as `fact`) does to the items `shown`, as
-/// `answer` has it. `may` are the nodes it may change, each with its name;
-/// `own` the nodes it is kept on. When it replaced what she knew and
-/// nothing is written on its own node, it stands there in its own words.
+/// What a fact (`memory`, said as `fact`) does to the items `step` shows,
+/// as `answer` has it: `step.may` are the nodes it may change, each with
+/// its name; `step.own` the nodes it is kept on. Whose life the answer
+/// names is first read as a person an item already stands of, or one of
+/// `people` ([`Whom`]). When it replaced what she knew and nothing is
+/// written on its own node, it stands there in its own words.
 fn decide(
     answer: &Value,
-    shown: &[Shown],
-    may: &[(String, String)],
-    own: &[String],
+    step: &Step<'_>,
+    people: &[PersonIn],
     fact: &str,
     memory: &str,
     replaced: bool,
 ) -> Decided {
+    let (shown, may, own) = (&step.shown[..], &step.may[..], step.own);
     let mut decided = Decided::default();
-    let Some(whose) = answer["whose"].as_str().and_then(whose_key) else {
+    let whom = Whom::new(people);
+    let Some(whose) = answer["whose"]
+        .as_str()
+        .and_then(|whose| whom.key_of(whose, shown, people))
+    else {
         return decided;
     };
     let item = |n: &Value| {
@@ -727,7 +865,7 @@ fn decide(
         .iter()
         .filter(|_| !unread)
         .filter(|shown| own.contains(&shown.node))
-        .filter(|shown| whose_of(&shown.item).is_some_and(|(key, _)| key == whose))
+        .filter(|shown| whose_of(&shown.item).is_some_and(|(key, _)| whom.same(&key, &whose)))
         .filter(|shown| !named.contains(&shown.item.as_str()))
         .map(|shown| StillSo {
             node: shown.node.clone(),
@@ -741,7 +879,7 @@ fn decide(
             return;
         };
         let theirs = whose_of(&to.item).map(|(key, _)| key);
-        if theirs.as_ref() != Some(&whose) {
+        if !theirs.as_ref().is_some_and(|theirs| whom.same(theirs, &whose)) {
             decided.left.push(Left {
                 item: to.item.clone(),
                 item_whose: theirs.unwrap_or_default(),
@@ -895,6 +1033,9 @@ pub struct BatchStepInput {
     pub known: Vec<KnownIn>,
     #[serde(default)]
     pub nodes: Vec<NodeIn>,
+    /// As [`StepInput::people`].
+    #[serde(default)]
+    pub people: Vec<PersonIn>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -908,6 +1049,8 @@ pub struct BatchStepReadInput {
     pub known: Vec<KnownIn>,
     #[serde(default)]
     pub nodes: Vec<NodeIn>,
+    #[serde(default)]
+    pub people: Vec<PersonIn>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -1056,13 +1199,17 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
         let idx = usize::try_from(n.as_u64()?).ok()?.checked_sub(1)?;
         ctx.shown.get(idx)
     };
+    // Whose life a fact or an action names, read as a person an item
+    // already stands of, or one of `people` ([`Whom`]).
+    let whom = Whom::new(&input.people);
+    let key_of = |whose: &str| whom.key_of(whose, &ctx.shown, &input.people);
 
     for one in answer["whose"].as_array().into_iter().flatten() {
         let Some(fidx) = resolve_fact(&one["fact"]) else {
             out.set_aside += 1;
             continue;
         };
-        let Some(whose) = one["whose"].as_str().and_then(whose_key) else {
+        let Some(whose) = one["whose"].as_str().and_then(key_of) else {
             out.set_aside += 1;
             continue;
         };
@@ -1075,7 +1222,7 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
 
     let resolve_whose = |one: &Value, fact_whose: &mut Option<String>| -> Option<String> {
         let action_whose = match one.get("whose") {
-            Some(val) => Some(val.as_str().and_then(whose_key)?),
+            Some(val) => Some(val.as_str().and_then(key_of)?),
             None => None,
         };
         let resolved = fact_whose.clone().or(action_whose)?;
@@ -1103,7 +1250,7 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
                 continue;
             };
             let theirs = whose_of(&to.item).map(|(key, _)| key);
-            if theirs.as_ref() != Some(&whose) {
+            if !theirs.as_ref().is_some_and(|theirs| whom.same(theirs, &whose)) {
                 out.left.push(Left {
                     item: to.item.clone(),
                     item_whose: theirs.unwrap_or_default(),
@@ -1238,7 +1385,7 @@ pub fn step_batch_read(input: BatchStepReadInput) -> Result<BatchStepRead, NodeE
                     .is_some_and(|&(win_fidx, win_end)| win_end && win_fidx < fidx);
                 if !ended_earlier
                     && fact.on.contains(&shown.node)
-                    && whose_of(&shown.item).is_some_and(|(key, _)| key == *whose)
+                    && whose_of(&shown.item).is_some_and(|(key, _)| whom.same(&key, whose))
                     && !touched_by_fact[fidx].contains(&shown.item)
                 {
                     out.still_so.push(FactStillSo {

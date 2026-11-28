@@ -134,8 +134,14 @@ pub struct Line<'a> {
     pub before: bool,
     /// When it was said, as the host writes a time ('2026-11-23 21:40'):
     /// what it says of time is read from then, not from today (a stretch
-    /// gone over days late still reads its 'tomorrow' right).
+    /// gone over days late still reads its 'tomorrow' right). Only that:
+    /// two messages can be said in one minute.
     pub at: Option<&'a str>,
+    /// The message it is of, as the host knows it (its id): the parts of a
+    /// long one ([`line_parts`]) each give the same. A quote runs on from
+    /// one line into the next only within one message; none given, it
+    /// runs on into none.
+    pub message: Option<&'a str>,
 }
 
 impl Line<'_> {
@@ -609,10 +615,11 @@ fn fold_evidence(text: &str) -> String {
 }
 
 /// Whether each part of `evidence` is in one of the lines `of` (or spans two
-/// adjacent `Who::Them` lines whose caller-provided `at` strings match —
-/// note `at` carries host granularity, e.g. minute precision on the site),
-/// with normalized whitespace, curly quotes, and ASCII case. A single character
-/// is allowed only when it is all a line of theirs says.
+/// adjacent `Who::Them` lines that are parts of one message: the same
+/// [`Line::message`], never the same `at` alone, which two messages said in
+/// one minute share), with normalized whitespace, curly quotes, and ASCII
+/// case. A single character is allowed only when it is all a line of theirs
+/// says.
 fn quotes_lines(evidence: &str, lines: &[Line], of: &[usize]) -> bool {
     let evidence = evidence.trim();
     let of_folded: Vec<(usize, String)> = of
@@ -634,9 +641,11 @@ fn quotes_lines(evidence: &str, lines: &[Line], of: &[usize]) -> bool {
         of_folded.iter().any(|&(idx, ref left)| {
             lines[idx].who == Who::Them
                 && of.contains(&(idx + 1))
-                && lines
-                    .get(idx + 1)
-                    .is_some_and(|next| next.who == Who::Them && next.at == lines[idx].at)
+                && lines.get(idx + 1).is_some_and(|next| {
+                    next.who == Who::Them
+                        && next.message.is_some()
+                        && next.message == lines[idx].message
+                })
                 && of_folded
                     .iter()
                     .find(|&&(i, _)| i == idx + 1)

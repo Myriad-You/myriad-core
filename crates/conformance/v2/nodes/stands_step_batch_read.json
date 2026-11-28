@@ -276,6 +276,236 @@
       "input": {
         "facts": [
           {
+            "learned": "2026-11-20",
+            "memory": "m1",
+            "on": [
+              "mom"
+            ],
+            "text": "Mom swims every morning now"
+          },
+          {
+            "learned": "2026-11-20",
+            "memory": "m2",
+            "on": [
+              "mama"
+            ],
+            "text": "老妈不去合唱团了"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "p4d6f6d-0123456789": {
+                  "base": [
+                    "u-p4d6f6d-0123456789"
+                  ],
+                  "value": {
+                    "text": "Mom walks every morning"
+                  }
+                }
+              }
+            },
+            "id": "mom",
+            "kind": "person",
+            "name": "Mom"
+          },
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "妈妈在社区合唱团唱歌"
+                  }
+                }
+              }
+            },
+            "id": "mama",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": [{\"fact\": 1, \"whose\": \"mom\"}, {\"fact\": 2, \"whose\": \"老妈\"}], \"set\": [{\"fact\": 1, \"whose\": \"ＭＯＭ\", \"item\": 1, \"text\": \"Mom swims every morning\"}], \"end\": [{\"fact\": 2, \"whose\": \"老妈\", \"item\": 2}], \"add\": [{\"fact\": 2, \"whose\": \"老妈\", \"topic\": \"妈妈\", \"text\": \"老妈在学太极\"}]}",
+        "people": [
+          {
+            "aliases": [
+              "老妈"
+            ],
+            "name": "妈妈"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "each fact's name for a person is read as the one already there: case, width and a person's other names",
+      "output": {
+        "left": [],
+        "rows": [
+          {
+            "body": {
+              "base": [
+                "u-p4d6f6d-0123456789"
+              ],
+              "because": [
+                "memory:m1"
+              ],
+              "item": "p4d6f6d-0123456789",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "Mom swims every morning",
+              "version": 1
+            },
+            "id": "u92cd279ee02d5557b493834f",
+            "kind": "node.standing",
+            "node": "mom"
+          },
+          {
+            "body": {
+              "base": [
+                "u-pe5a688e5a688-abcdef0123"
+              ],
+              "because": [
+                "memory:m2"
+              ],
+              "ended": true,
+              "item": "pe5a688e5a688-abcdef0123",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "老妈不去合唱团了",
+              "version": 1
+            },
+            "id": "u7084642fb78a21b85aabcce6",
+            "kind": "node.standing",
+            "node": "mama"
+          },
+          {
+            "body": {
+              "base": [],
+              "because": [
+                "memory:m2"
+              ],
+              "item": "pe5a688e5a688-6686a3dcd7",
+              "saidBy": [
+                "her"
+              ],
+              "since": "2026-11-20",
+              "sync": {
+                "local": "site"
+              },
+              "text": "老妈在学太极",
+              "version": 1
+            },
+            "id": "ubb0474ba27a33a0fdcbab7e1",
+            "kind": "node.standing",
+            "node": "mama"
+          }
+        ],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          {
+            "learned": "2026-11-20",
+            "memory": "m1",
+            "on": [
+              "mama"
+            ],
+            "text": "老妈不去合唱团了"
+          },
+          {
+            "learned": "2026-11-20",
+            "memory": "m2",
+            "on": [
+              "mama"
+            ],
+            "text": "林林搬去了上海"
+          }
+        ],
+        "nodes": [
+          {
+            "folded": {
+              "entries": [],
+              "standing": {
+                "pe5a688e5a688-abcdef0123": {
+                  "base": [
+                    "u-pe5a688e5a688-abcdef0123"
+                  ],
+                  "value": {
+                    "text": "妈妈在社区合唱团唱歌"
+                  }
+                }
+              }
+            },
+            "id": "mama",
+            "kind": "person",
+            "name": "妈妈"
+          }
+        ],
+        "output": "{\"whose\": [{\"fact\": 1, \"whose\": \"老妈\"}, {\"fact\": 2, \"whose\": \"林林\"}], \"set\": [{\"fact\": 2, \"whose\": \"林林\", \"item\": 1, \"text\": \"妈妈搬去了上海\"}], \"end\": [{\"fact\": 1, \"whose\": \"老妈\", \"item\": 1}], \"add\": []}",
+        "people": [
+          {
+            "aliases": [
+              "老妈"
+            ],
+            "name": "妈妈"
+          },
+          {
+            "aliases": [
+              "老妈"
+            ],
+            "name": "婆婆"
+          },
+          {
+            "aliases": [
+              "林林"
+            ],
+            "name": "小林"
+          }
+        ],
+        "sync": {
+          "local": "site"
+        }
+      },
+      "name": "in a stretch a name two people go by is neither's",
+      "output": {
+        "left": [
+          {
+            "factWhose": "pe5b08fe69e97",
+            "item": "pe5a688e5a688-abcdef0123",
+            "itemWhose": "pe5a688e5a688"
+          },
+          {
+            "factWhose": "pe88081e5a688",
+            "item": "pe5a688e5a688-abcdef0123",
+            "itemWhose": "pe5a688e5a688"
+          }
+        ],
+        "rows": [],
+        "setAside": 0
+      }
+    },
+    {
+      "input": {
+        "facts": [
+          {
             "memory": "m1",
             "on": [
               "own"
