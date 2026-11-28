@@ -2,7 +2,11 @@
 //! row. A row seen twice counts once (by id); a stub beats the row it was,
 //! except on a home of the node it is about, where the whole row stays (and
 //! fills a stub held): a retract keeps everything there; after the union
-//! every row the ledger takes away here becomes a stub.
+//! every row the ledger takes away here becomes a stub. A refused row's
+//! place (`log.refused`, [`crate::admit`]) never stands in for the row: a
+//! place that comes for a row held is a duplicate, and the row coming to a
+//! place held takes it up (`filled`), so a side that takes the row ends
+//! with the row whichever came first.
 
 use std::collections::BTreeMap;
 
@@ -68,14 +72,16 @@ pub struct Merged {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub stubbed: Vec<String>,
     /// Stubs held that an incoming whole row filled, on a home of their
-    /// node, or that a row moved to this side's id filled (`holder`): store
-    /// their payloads. Never a row the ledger takes away here.
+    /// node, or that a row moved to this side's id filled (`holder`), and
+    /// refused rows' places the row itself took up: store their envelopes
+    /// and payloads. Never a row the ledger takes away here.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub filled: Vec<String>,
     /// Stubs held back under `local-owner` that the same row moved to this
     /// side's id (`holder`) came in for as a stub too, or whole but taken
-    /// away here by the ledger: they take its envelope. Store the envelope;
-    /// there is no payload either way.
+    /// away here by the ledger, and a forgotten place a row taken away here
+    /// took up: they take its envelope. Store the envelope; there is no
+    /// payload either way.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub relabelled: Vec<String>,
     /// Incoming rows already held.
@@ -129,6 +135,8 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
     // Stubs a whole row moved to this side's id filled: filled, or
     // relabelled if the ledger stubs them again here.
     let mut moved_whole = Vec::new();
+    // Places of refused rows the row itself took up.
+    let mut placed_whole = Vec::new();
     let mut duplicates = 0;
     let mut conflicts = Vec::new();
     for row in incoming {
@@ -147,6 +155,15 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
                 if !home {
                     by_id.insert(row.id.clone(), row);
                 }
+            } else if row.is_place_of(held) {
+                // The place another side keeps of a row refused there: the
+                // row stays here.
+                duplicates += 1;
+            } else if held.is_place_of(&row) {
+                // A row refused here before (another core, or its place
+                // from another side), taken now: it takes its own place.
+                placed_whole.push(row.id.clone());
+                by_id.insert(row.id.clone(), row);
             } else if held.forgotten
                 && !crate::forget::on_ledger(&row)
                 && moved.as_ref().is_some_and(|by| {
@@ -227,6 +244,15 @@ pub fn merge(input: MergeInput) -> Result<Merged, LogError> {
         match forgotten.get(id.as_str()) == Some(&false) {
             true => filled.push(id),
             false => relabelled.push(id),
+        }
+    }
+    // A place the row took up: its payload stored; forgotten here, its
+    // envelope at least (a place held whole is listed as stubbed already).
+    for id in placed_whole {
+        if forgotten.get(id.as_str()) == Some(&false) {
+            filled.push(id);
+        } else if !stubbed.contains(&id) {
+            relabelled.push(id);
         }
     }
     filled.sort();

@@ -240,6 +240,41 @@
           "dev_mac": 2
         }
       }
+    },
+    {
+      "input": {
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "log.refused",
+            "object": "refused:p-1",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a refused row's place holds its count like any row",
+      "output": null
     }
   ],
   "version": 1

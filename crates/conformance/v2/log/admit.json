@@ -3471,6 +3471,171 @@
         },
         "ledger": []
       }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "known": {
+          "node:z": "own:"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "p-1",
+            "kind": "node.from_a_newer_core",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "p-2",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-2"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "p-3",
+            "kind": "node.noted",
+            "object": "node:z",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:p-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a row refused for good is taken as its place (log.refused, placed): a kind this core does not read, an object in another audience; the rows past it are taken",
+      "output": null
+    },
+    {
+      "input": {
+        "epochs": {
+          "personal:partner_0199d5c0b00044444444444444444444": {
+            "dev_mac": 2
+          }
+        },
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "members": {
+          "group:g1": [
+            "o2"
+          ]
+        },
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "her",
+            "dseq": 1,
+            "epoch": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "q-1",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:q-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "q-2",
+            "kind": "memory.write",
+            "object": "memory:m",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:q-2"
+            },
+            "replicate": "shared",
+            "subject": "o9",
+            "version": 1
+          },
+          {
+            "audience": "own:",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "q-3",
+            "kind": "affect.change",
+            "object": "affect:local-owner",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:q-3"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a row refused for now takes no place: an epoch back, a subject outside the group, a row this side may not hold",
+      "output": null
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "pc",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "group:g1",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "g-1",
+            "kind": "node.from_a_newer_core",
+            "object": "node:g",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:g-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a PC takes no place in an audience it may not hold",
+      "output": null
     }
   ],
   "version": 1

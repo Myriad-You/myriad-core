@@ -3,8 +3,24 @@
 //! If any row's clock is more than five minutes ahead of this side's, the
 //! whole batch is refused and nothing is observed (`hlc::check_ahead`): one
 //! row from the future would win every later change. Otherwise each row is
-//! taken or refused on its own, and a refused row is only counted. A row
-//! already forgotten here is taken as a stub, so the vector still fills.
+//! taken or refused on its own. A row already forgotten here is taken as a
+//! stub, so the vector still fills.
+//!
+//! **Refused for good, or for now.** A row refused for a reason that comes
+//! out the same however often it is sent ([`Reason::lasting`]: its envelope
+//! does not read here, a kind from a newer core among them, or its object
+//! is in another audience) would keep this side's count of its side short
+//! for ever: the side would ask for it again on every link, hold every
+//! later row past a gap, and never be seen to keep up. Such a row is taken
+//! as its place instead ([`Row::place_of_refused`], kind `log.refused`):
+//! its id, side, count, clock and audience, nothing it said. The refusal is
+//! still listed, marked `placed`, for the host to count and warn of. The
+//! place is a function of the row alone, so every side that refuses it
+//! holds the same one; it goes on like any shared row, so a side that gets
+//! it from here keeps up too; and a side that takes the row itself keeps
+//! the row ([`crate::merge`]). A row refused for now (`epoch_back`,
+//! `not_a_member`, `not_held`: what this side knows may change, or the
+//! sender may yet send it right) takes no place and still holds the count.
 //!
 //! One side's her rows in one audience never go down in epoch along its own
 //! order: a side writes [`crate::lease::ALONE`] only before it knows any
@@ -115,6 +131,16 @@ pub enum Reason {
     NotHeld,
 }
 
+impl Reason {
+    /// Whether the row is refused however often it comes: its envelope
+    /// (this core reads it or not) and its object's audience (known only
+    /// grows). Such a row is taken as its place. The others hang on what
+    /// this side is told (epochs, members, its own id), which may change.
+    pub fn lasting(self) -> bool {
+        matches!(self, Reason::Envelope | Reason::AudienceChanged)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Refusal {
@@ -122,6 +148,14 @@ pub struct Refusal {
     pub reason: Reason,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
+    /// Refused for good and taken as its place (`log.refused`, in
+    /// `accepted`): its side's count here goes on past it.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub placed: bool,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 /// The whole batch refused: a clock too far ahead.
@@ -183,27 +217,43 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
         });
     }
     sort(&mut rows);
-    let refuse = |row: &Row, reason, detail: Option<String>| Refusal {
-        id: row.id.clone(),
-        reason,
-        detail,
-    };
     let mut accepted = Vec::new();
     let mut refused = Vec::new();
+    // A row refused for good is taken as its place, when it has one this
+    // side may hold.
+    let refuse = |accepted: &mut Vec<Row>,
+                  row: &Row,
+                  reason: Reason,
+                  detail: Option<String>| {
+        let place = reason
+            .lasting()
+            .then(|| row.place_of_refused())
+            .flatten()
+            .filter(|place| holder.holds_row(place));
+        let placed = place.is_some();
+        accepted.extend(place);
+        Refusal {
+            id: row.id.clone(),
+            reason,
+            detail,
+            placed,
+        }
+    };
     for row in rows {
         if let Err(error) = row.check() {
-            refused.push(refuse(&row, Reason::Envelope, Some(error.to_string())));
+            let detail = Some(error.to_string());
+            refused.push(refuse(&mut accepted, &row, Reason::Envelope, detail));
             continue;
         }
         if row.replicate == Replicate::Local {
-            refused.push(refuse(&row, Reason::Local, None));
+            refused.push(refuse(&mut accepted, &row, Reason::Local, None));
             continue;
         }
         // A stub of a row about the partner under another id is held: it
         // keeps only its place, so this side's count has no gap. Never a
         // forget's.
         if !holder.holds_row(&row) && !holder.holds_stub(&row) {
-            refused.push(refuse(&row, Reason::NotHeld, None));
+            refused.push(refuse(&mut accepted, &row, Reason::NotHeld, None));
             continue;
         }
         if let Some(epoch) = row.epoch
@@ -212,13 +262,14 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
                 .and_then(|sides| sides.get(&row.origin))
                 .is_some_and(|&held| epoch < held)
         {
-            refused.push(refuse(&row, Reason::EpochBack, None));
+            refused.push(refuse(&mut accepted, &row, Reason::EpochBack, None));
             continue;
         }
         if known.get(&row.object).is_some_and(|audience| {
             *audience != row.audience && same_partner(audience, &row.audience, &holder, &members)
         }) {
-            refused.push(refuse(&row, Reason::AudienceChanged, None));
+            let reason = Reason::AudienceChanged;
+            refused.push(refuse(&mut accepted, &row, reason, None));
             continue;
         }
         let outside = match (Audience::parse(&row.audience), row.subject.as_deref()) {
@@ -228,7 +279,7 @@ pub fn admit(input: AdmitInput) -> Result<Admitted, LogError> {
             _ => false,
         };
         if outside {
-            refused.push(refuse(&row, Reason::NotAMember, None));
+            refused.push(refuse(&mut accepted, &row, Reason::NotAMember, None));
             continue;
         }
         known

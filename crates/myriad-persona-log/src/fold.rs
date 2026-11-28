@@ -9,7 +9,9 @@
 //!   field, an outfit) takes the last row as current, the rest as history;
 //! - a memory retired stays retired unless restored later;
 //! - a forgotten object folds to nothing but the mark that it was, whatever
-//!   order its rows and the forget came in.
+//!   order its rows and the forget came in;
+//! - a refused row's place (`log.refused`, [`crate::admit`]) folds to
+//!   nothing at all.
 //!
 //! Her rows interleave only when the owner forced the lease while the old
 //! holder kept running, a side was used alone while she already lived
@@ -170,6 +172,10 @@ pub fn fold(input: FoldInput) -> Result<Folded, LogError> {
 
     let mut objects: BTreeMap<(String, String), ObjectFold> = BTreeMap::new();
     for row in &rows {
+        // A refused row's place says nothing: it only keeps a count whole.
+        if row.kind == crate::kinds::PLACE {
+            continue;
+        }
         let object = objects
             .entry((row.audience.clone(), row.object.clone()))
             .or_insert_with(|| ObjectFold::empty(&row.audience, &row.object));

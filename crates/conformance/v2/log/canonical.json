@@ -1611,6 +1611,63 @@
           "version": 1
         }
       }
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "author": "owner",
+          "dseq": 1,
+          "hlc": "001760000000001-000000-dev_mac",
+          "id": "p-1",
+          "kind": "log.refused",
+          "object": "refused:p-1",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "a refused row's place",
+      "output": null
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "author": "owner",
+          "dseq": 1,
+          "hlc": "001760000000001-000000-dev_mac",
+          "id": "p-1",
+          "kind": "log.refused",
+          "object": "refused:p-9",
+          "origin": "dev_mac",
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: a place about another row",
+      "output": null
+    },
+    {
+      "input": {
+        "row": {
+          "audience": "personal:partner_0199d5c0b00044444444444444444444",
+          "author": "owner",
+          "dseq": 4,
+          "hlc": "001760000000004-000000-dev_mac",
+          "id": "p-4",
+          "kind": "link.attach",
+          "object": "refused:p-1",
+          "origin": "dev_mac",
+          "payload": {
+            "ref": "blob:p-4"
+          },
+          "replicate": "shared",
+          "version": 1
+        }
+      },
+      "name": "refused: a kind about anything about a refused row",
+      "output": null
     }
   ],
   "version": 1

@@ -75,4 +75,8 @@ impl std::error::Error for LogError {}
 #[cfg(test)]
 mod deputy_tests;
 #[cfg(test)]
+mod places_tests;
+#[cfg(test)]
+mod refused_tests;
+#[cfg(test)]
 mod tests;
