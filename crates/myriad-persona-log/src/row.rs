@@ -481,10 +481,11 @@ impl Row {
     /// ([`crate::admit`]): its id, side, count, clock and audience, and
     /// nothing it said. The same on every side that refuses it, whatever
     /// else that side holds. `None` when the row holds no place to keep (a
-    /// local row, no count, a side or clock that does not read) or its
-    /// place would not pass [`Row::check`] (an id too long to name it).
+    /// local row, no count, a side or clock that does not read), when its
+    /// place would not pass [`Row::check`] (an id too long to name it), and
+    /// when the row may forget or reach other rows ([`Row::may_forget`]).
     pub fn place_of_refused(&self) -> Option<Self> {
-        if self.replicate != Replicate::Shared {
+        if self.replicate != Replicate::Shared || self.may_forget() {
             return None;
         }
         let place = Self {
@@ -507,6 +508,32 @@ impl Row {
             takes: Vec::new(),
         };
         place.check().is_ok().then_some(place)
+    }
+
+    /// Whether a row, read or not, may forget or take back what other rows
+    /// say, or reach them: a forget or a retract (or a kind named like one,
+    /// which a newer core may hold), a row about a subject or one row, or a
+    /// row naming another node (`to`) or listing rows (`takes`). Such a row
+    /// is never taken as a place ([`crate::admit`]).
+    pub fn may_forget(&self) -> bool {
+        let named = |prefix: &str| {
+            self.kind == prefix
+                || self
+                    .kind
+                    .strip_prefix(prefix)
+                    .is_some_and(|rest| rest.starts_with(['.', '_']))
+        };
+        let object = object_type(&self.object);
+        named("forget")
+            || named("retract")
+            || matches!(
+                kinds::rule(&self.kind),
+                Some(Rule::Forget | Rule::Retract | Rule::Home)
+            )
+            || object == Some(kinds::SUBJECT)
+            || object == Some(kinds::ROW)
+            || self.to.is_some()
+            || !self.takes.is_empty()
     }
 
     /// Whether this is the place of `other`, refused

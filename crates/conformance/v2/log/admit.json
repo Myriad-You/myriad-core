@@ -243,18 +243,6 @@
             "version": 1
           },
           {
-            "audience": "own:",
-            "author": "owner",
-            "dseq": 2,
-            "hlc": "001760000000012-000000-dev_mac",
-            "id": "d-3",
-            "kind": "log.refused",
-            "object": "refused:d-3",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          },
-          {
             "audience": "group:g7",
             "author": "her",
             "dseq": 2,
@@ -350,7 +338,6 @@
           },
           {
             "id": "d-3",
-            "placed": true,
             "reason": "audience_changed"
           },
           {
@@ -2010,26 +1997,12 @@
       },
       "name": "refused: the same partner moving an object from their private talk into a group they are in (audience_changed)",
       "output": {
-        "accepted": [
-          {
-            "audience": "group:g1",
-            "author": "owner",
-            "dseq": 1,
-            "hlc": "001760000000000-000000-dev_mac",
-            "id": "k-2",
-            "kind": "log.refused",
-            "object": "refused:k-2",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
+        "accepted": [],
         "epochs": {},
         "ledger": [],
         "refused": [
           {
             "id": "k-2",
-            "placed": true,
             "reason": "audience_changed"
           }
         ]
@@ -2072,26 +2045,12 @@
       },
       "name": "refused: the same partner moving an object from a group they are in into their private talk (audience_changed)",
       "output": {
-        "accepted": [
-          {
-            "audience": "personal:partner_0199d5c0b00044444444444444444444",
-            "author": "owner",
-            "dseq": 1,
-            "hlc": "001760000000000-000000-dev_mac",
-            "id": "k-3",
-            "kind": "log.refused",
-            "object": "refused:k-3",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
+        "accepted": [],
         "epochs": {},
         "ledger": [],
         "refused": [
           {
             "id": "k-3",
-            "placed": true,
             "reason": "audience_changed"
           }
         ]
@@ -2129,26 +2088,12 @@
       },
       "name": "refused: the same partner moving an object from her own audience into their private talk (audience_changed)",
       "output": {
-        "accepted": [
-          {
-            "audience": "personal:partner_0199d5c0b00044444444444444444444",
-            "author": "owner",
-            "dseq": 1,
-            "hlc": "001760000000000-000000-dev_mac",
-            "id": "k-4",
-            "kind": "log.refused",
-            "object": "refused:k-4",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
+        "accepted": [],
         "epochs": {},
         "ledger": [],
         "refused": [
           {
             "id": "k-4",
-            "placed": true,
             "reason": "audience_changed"
           }
         ]
@@ -2186,26 +2131,12 @@
       },
       "name": "refused: a group whose members are not given may be the partner's (audience_changed)",
       "output": {
-        "accepted": [
-          {
-            "audience": "personal:partner_0199d5c0b00044444444444444444444",
-            "author": "owner",
-            "dseq": 1,
-            "hlc": "001760000000000-000000-dev_mac",
-            "id": "k-5",
-            "kind": "log.refused",
-            "object": "refused:k-5",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
+        "accepted": [],
         "epochs": {},
         "ledger": [],
         "refused": [
           {
             "id": "k-5",
-            "placed": true,
             "reason": "audience_changed"
           }
         ]
@@ -2246,26 +2177,12 @@
       },
       "name": "refused: a group whose members list is empty may be the partner's (audience_changed)",
       "output": {
-        "accepted": [
-          {
-            "audience": "personal:partner_0199d5c0b00044444444444444444444",
-            "author": "owner",
-            "dseq": 1,
-            "hlc": "001760000000000-000000-dev_mac",
-            "id": "k-6",
-            "kind": "log.refused",
-            "object": "refused:k-6",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
+        "accepted": [],
         "epochs": {},
         "ledger": [],
         "refused": [
           {
             "id": "k-6",
-            "placed": true,
             "reason": "audience_changed"
           }
         ]
@@ -3402,85 +3319,28 @@
       },
       "name": "in every audience, a forget of all about the partner under another id is refused as a stub too: a forget is never forgotten (envelope)",
       "output": {
-        "accepted": [
-          {
-            "audience": "personal:partner_0199d5c0b00044444444444444444444",
-            "author": "owner",
-            "dseq": 1,
-            "forgotten": true,
-            "hlc": "001760000000000-000000-dev_mac",
-            "id": "f-1",
-            "kind": "log.refused",
-            "object": "refused:f-1",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          },
-          {
-            "audience": "group:g1",
-            "author": "owner",
-            "dseq": 1,
-            "forgotten": true,
-            "hlc": "001760000000001-000000-dev_mac",
-            "id": "f-2",
-            "kind": "log.refused",
-            "object": "refused:f-2",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          },
-          {
-            "audience": "own:",
-            "author": "owner",
-            "dseq": 1,
-            "forgotten": true,
-            "hlc": "001760000000002-000000-dev_mac",
-            "id": "f-3",
-            "kind": "log.refused",
-            "object": "refused:f-3",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          },
-          {
-            "audience": "own:",
-            "author": "owner",
-            "dseq": 2,
-            "forgotten": true,
-            "hlc": "001760000000003-000000-dev_mac",
-            "id": "f-4",
-            "kind": "log.refused",
-            "object": "refused:f-4",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
-          }
-        ],
+        "accepted": [],
         "epochs": {},
         "ledger": [],
         "refused": [
           {
             "detail": "a forget is never forgotten",
             "id": "f-1",
-            "placed": true,
             "reason": "envelope"
           },
           {
             "detail": "a forget is never forgotten",
             "id": "f-2",
-            "placed": true,
             "reason": "envelope"
           },
           {
             "detail": "a forget is never forgotten",
             "id": "f-3",
-            "placed": true,
             "reason": "envelope"
           },
           {
             "detail": "a forget is never forgotten",
             "id": "f-4",
-            "placed": true,
             "reason": "envelope"
           }
         ]
@@ -3685,7 +3545,7 @@
           }
         ]
       },
-      "name": "a row refused for good is taken as its place (log.refused, placed): a kind this core does not read, an object in another audience; the rows past it are taken",
+      "name": "a row refused for good is taken as its place (log.refused, placed): a kind this core does not read; the rows past it are taken; an object in another audience takes none (audience_changed is the first row's)",
       "output": {
         "accepted": [
           {
@@ -3714,18 +3574,6 @@
             },
             "replicate": "shared",
             "version": 1
-          },
-          {
-            "audience": "personal:partner_0199d5c0b00044444444444444444444",
-            "author": "owner",
-            "dseq": 3,
-            "hlc": "001760000000003-000000-dev_mac",
-            "id": "p-3",
-            "kind": "log.refused",
-            "object": "refused:p-3",
-            "origin": "dev_mac",
-            "replicate": "shared",
-            "version": 1
           }
         ],
         "epochs": {},
@@ -3739,7 +3587,6 @@
           },
           {
             "id": "p-3",
-            "placed": true,
             "reason": "audience_changed"
           }
         ]
@@ -3875,6 +3722,112 @@
           {
             "detail": "kind \"node.from_a_newer_core\" is not one the log holds",
             "id": "g-1",
+            "reason": "envelope"
+          }
+        ]
+      }
+    },
+    {
+      "input": {
+        "holder": {
+          "core": "server",
+          "owner": "partner_0199d5c0b00044444444444444444444"
+        },
+        "ledger": [],
+        "now": 1760000100000000,
+        "peer": "partner_0199d5c0b00044444444444444444444",
+        "rows": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 1,
+            "hlc": "001760000000001-000000-dev_mac",
+            "id": "r-1",
+            "kind": "forget",
+            "object": "memory:m",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:r-1"
+            },
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 2,
+            "hlc": "001760000000002-000000-dev_mac",
+            "id": "r-2",
+            "kind": "forget.part",
+            "object": "memory:m",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 3,
+            "hlc": "001760000000003-000000-dev_mac",
+            "id": "r-3",
+            "kind": "retract_all",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "replicate": "shared",
+            "version": 1
+          },
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "r-4",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:r-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ]
+      },
+      "name": "a forget or a retract refused for its envelope takes no place: it stays a gap and is asked for again (a forget with a payload, a newer forget kind, a newer retract kind)",
+      "output": {
+        "accepted": [
+          {
+            "audience": "personal:partner_0199d5c0b00044444444444444444444",
+            "author": "owner",
+            "dseq": 4,
+            "hlc": "001760000000004-000000-dev_mac",
+            "id": "r-4",
+            "kind": "node.noted",
+            "object": "node:a",
+            "origin": "dev_mac",
+            "payload": {
+              "ref": "blob:r-4"
+            },
+            "replicate": "shared",
+            "version": 1
+          }
+        ],
+        "epochs": {},
+        "ledger": [],
+        "refused": [
+          {
+            "detail": "a forget holds no payload",
+            "id": "r-1",
+            "reason": "envelope"
+          },
+          {
+            "detail": "kind \"forget.part\" is not one the log holds",
+            "id": "r-2",
+            "reason": "envelope"
+          },
+          {
+            "detail": "kind \"retract_all\" is not one the log holds",
+            "id": "r-3",
             "reason": "envelope"
           }
         ]

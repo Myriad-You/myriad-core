@@ -111,18 +111,43 @@ fn a_row_refused_for_good_keeps_its_sides_count_whole() {
     assert!(held.beyond.is_empty(), "{:?}", held.beyond);
     assert_eq!(sent, vec![3, 0, 0, 0], "nothing goes again");
     assert!(site.iter().all(|row| row.payload.is_none() || row.id != "m1"));
+}
 
-    // Its object already in another audience of the same partner.
+#[test]
+fn a_row_refused_for_what_came_first_still_holds_the_count() {
+    // Its object already in another audience of the same partner: which
+    // audience is the first row's, so two sides may refuse different rows.
+    // No place: it is sent again, and the count stays short of it.
     let mut moved = mac();
     moved[0].kind = "node.noted".into();
     let known = BTreeMap::from([("node:a".to_string(), "own:".to_string())]);
     let (sent, site) = rounds(&moved[..1], &known);
-    assert_eq!(
-        holdings(&site).unwrap().vector,
-        Vector::from([("dev_mac".into(), 1)]),
-        "{site:?}"
-    );
-    assert_eq!(sent, vec![1, 0, 0, 0]);
+    let held = holdings(&site).unwrap();
+    assert!(held.vector.is_empty(), "{site:?}");
+    assert_eq!(sent, vec![1, 1, 1, 1], "sent again on every round");
+}
+
+#[test]
+fn a_forget_refused_for_its_envelope_stays_a_gap_and_is_asked_for_again() {
+    // A forget this core cannot check (here one holding a payload, as a
+    // newer form might): a place would let every count move past it, and
+    // what it forgets would read back for good.
+    let mut forget = row("m1", 1, "memory:m", "forget");
+    forget.payload = Some(Payload {
+        reference: "blob:m1".into(),
+        key: None,
+    });
+    let mut newer = row("m1", 1, "memory:m", "forget.part");
+    newer.payload = None;
+    for first in [forget, newer] {
+        let rows = vec![first.clone(), row("m2", 2, "node:a", "node.noted")];
+        let (sent, site) = rounds(&rows, &BTreeMap::new());
+        let held = holdings(&site).unwrap();
+        assert!(held.vector.is_empty(), "{}: {site:?}", first.kind);
+        assert_eq!(held.beyond, BTreeMap::from([("dev_mac".to_string(), vec![2])]));
+        assert_eq!(sent, vec![2, 2, 2, 2], "{}: asked for again", first.kind);
+        assert!(site.iter().all(|row| row.id != "m1"), "{site:?}");
+    }
 }
 
 #[test]

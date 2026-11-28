@@ -115,14 +115,56 @@ fn a_row_refused_for_good_is_taken_as_its_place_and_still_listed() {
     let listed = serde_json::to_value(refusal).unwrap();
     assert_eq!(listed["placed"], true);
 
-    // Its object in another audience of the same partner: placed too.
+    // Its object in another audience of the same partner: which audience is
+    // the first row's, so no place.
     let mut moved = newer();
     moved.kind = "node.noted".into();
     let known = BTreeMap::from([("node:a".to_string(), "own:".to_string())]);
-    let admitted = admit_as(vec![moved.clone()], holder(Core::Server), known);
+    let admitted = admit_as(vec![moved], holder(Core::Server), known);
     assert_eq!(admitted.refused[0].reason, Reason::AudienceChanged);
-    assert!(admitted.refused[0].placed);
-    assert_eq!(admitted.accepted, vec![moved.place_of_refused().unwrap()]);
+    assert!(!admitted.refused[0].placed);
+    assert!(admitted.accepted.is_empty(), "{:?}", admitted.accepted);
+}
+
+#[test]
+fn a_row_that_may_forget_is_never_placed() {
+    // A forget with a payload: one this core cannot check.
+    let forget = row("f1", 1, "memory:m", "forget");
+    let newer_forget = row("f2", 2, "memory:m", "forget.part");
+    let newer_retract = row("f3", 3, "node:a", "retract_all");
+    let about_subject = row("f4", 4, "subject:o1", "node.from_a_newer_core");
+    let about_row = row("f5", 5, "row:m9", "node.from_a_newer_core");
+    let mut naming = row("f6", 6, "node:a", "node.from_a_newer_core");
+    naming.to = Some("node:b".into());
+    let mut listing = row("f7", 7, "node:a", "node.from_a_newer_core");
+    listing.takes = vec!["m9".into()];
+    let rows = vec![
+        forget,
+        newer_forget,
+        newer_retract,
+        about_subject,
+        about_row,
+        naming,
+        listing,
+    ];
+    for one in &rows {
+        assert!(one.may_forget(), "{one:?}");
+        assert!(one.place_of_refused().is_none(), "{one:?}");
+    }
+    let admitted = admit_as(rows.clone(), holder(Core::Server), BTreeMap::new());
+    assert!(admitted.accepted.is_empty(), "{:?}", admitted.accepted);
+    assert_eq!(admitted.refused.len(), rows.len());
+    assert!(
+        admitted
+            .refused
+            .iter()
+            .all(|refused| refused.reason == Reason::Envelope && !refused.placed),
+        "{:?}",
+        admitted.refused
+    );
+    // A kind that only begins like one is not taken for it.
+    assert!(!row("g1", 1, "node:a", "forgetful.node").may_forget());
+    assert!(!newer().may_forget());
 }
 
 #[test]
